@@ -44,5 +44,6 @@ CTestTestfile.cmake
 _deps
 
 bin/Debug
+bin/Release
 
 [Bb][Uu][Ii][Ll][Dd]/
