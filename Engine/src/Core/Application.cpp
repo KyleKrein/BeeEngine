@@ -3,3 +3,21 @@
 //
 
 #include "Application.h"
+
+namespace BeeEngine{
+    void Application::Run()
+    {
+        while (true);
+    }
+
+    Application::Application()
+    {
+
+    }
+
+    Application::~Application()
+    {
+
+    }
+}
+

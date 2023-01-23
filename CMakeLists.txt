@@ -1,16 +1,17 @@
 cmake_minimum_required(VERSION 3.24)
 project(BeeEngine_CPP)
 set(CMAKE_CXX_STANDARD 17)
+#[[set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})]]
 
-add_subdirectory(Engine)
+
 add_subdirectory(Sandbox2D)
-add_executable(
-        BeeEngine_CPP
-        Sandbox2D/main.cpp)
+add_subdirectory(Engine)
 
 
 
-target_include_directories( ${PROJECT_NAME}
+#[[target_include_directories( ${PROJECT_NAME}
         PUBLIC Engine/src
         PUBLIC Sandbox2D
 )
@@ -21,7 +22,7 @@ target_link_directories( ${PROJECT_NAME}
 
 target_link_libraries( ${PROJECT_NAME}
         BeeEngine
-)
+)]]
 
 
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Windowing/Window.h"
+//#include "Windowing/Window.h"
 
 
 namespace BeeEngine{
@@ -21,8 +21,10 @@ namespace BeeEngine{
         {
             return m_OSPlatform;
         }
+
+        void Run();
     private:
-        Window* m_Window;
+        //Window* m_Window;
         static OSPlatform m_OSPlatform;
     };
 }
