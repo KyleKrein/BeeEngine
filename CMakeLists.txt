@@ -6,8 +6,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})]]
 
 
-add_subdirectory(Sandbox2D)
-add_subdirectory(Engine)
+add_subdirectory(src/Sandbox2D)
+add_subdirectory(src/Engine)
 
 
 

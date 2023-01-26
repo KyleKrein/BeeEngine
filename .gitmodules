@@ -1,3 +1,9 @@
 [submodule "vendor/glfw"]
 	path = vendor/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "src/Engine/vendor/spdlog"]
+	path = src/Engine/vendor/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "src/Engine/vendor/debugbreak"]
+	path = src/Engine/vendor/debugbreak
+	url = https://github.com/scottt/debugbreak.git
