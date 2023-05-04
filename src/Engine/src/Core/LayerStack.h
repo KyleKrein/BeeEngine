@@ -16,12 +16,12 @@ namespace BeeEngine{
         inline void PushOverlay(Layer& overlay);
         inline void PopLayer(Layer& layer);
         inline void PopOverlay(Layer& overlay);
-        inline void SetGuiLayer(ImGuiLayer& guiLayer);
+        void SetGuiLayer(const ImGuiLayer& guiLayer);
 
         void OnEvent(EventDispatcher& dispatcher);
         void Update();
     private:
         std::vector<Layer*> m_layers;
-        ImGuiLayer* m_guiLayer;
+        ImGuiLayer m_guiLayer;
     };
 }

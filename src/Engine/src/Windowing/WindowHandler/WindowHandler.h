@@ -2,7 +2,6 @@
 
 #include "Core/TypeDefines.h"
 #include "Windowing/WindowProperties.h"
-#include "Windowing/Window.h"
 #include "Core/Events/EventQueue.h"
 
 namespace BeeEngine

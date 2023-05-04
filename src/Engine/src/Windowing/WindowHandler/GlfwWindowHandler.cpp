@@ -30,18 +30,20 @@ namespace BeeEngine
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-            m_Window = glfwCreateWindow(m_Width / 2, m_Height / 2, m_Title, nullptr, nullptr);
-            BeeCoreAssert(m_Window, "Window initialization failed");
             m_Width = properties.Width / 2;
             m_Height = properties.Height / 2;
+            m_Window = glfwCreateWindow(m_Width / 2, m_Height / 2, m_Title, nullptr, nullptr);
+            BeeCoreAssert(m_Window, "Window initialization failed");
         } else
         {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-            m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
-            BeeCoreAssert(m_Window, "Window initialization failed");
             m_Width = properties.Width;
             m_Height = properties.Height;
+
+            m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
+            BeeCoreAssert(m_Window, "Window initialization failed");
+
         }
         glfwMakeContextCurrent(m_Window);
         //LOAD GLAD

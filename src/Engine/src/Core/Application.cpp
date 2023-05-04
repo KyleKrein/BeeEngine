@@ -10,14 +10,24 @@ namespace BeeEngine{
     Application* Application::s_Instance = nullptr;
     void Application::Run()
     {
-        while (true);
+        while (m_Window->IsRunning())
+        {
+            m_Window->ProcessEvents();
+            m_EventQueue.Dispatch();
+            m_Layers.Update();
+            Update();
+        }
     }
 
-    Application::Application()
-    : m_IsMinimized(false)
+    Application::Application(WindowProperties& properties)
+    : m_IsMinimized(false), m_Layers(LayerStack()), m_EventQueue(EventQueue(m_Layers))
     {
-        BeeCoreAssert(s_Instance, "You can't have multiple instances of application");
+        BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");
         s_Instance = this;
+
+        m_Window = WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue);
+        ImGuiLayer guiLayer;
+        m_Layers.SetGuiLayer(guiLayer);
     }
 
     Application::~Application()
@@ -27,6 +37,7 @@ namespace BeeEngine{
 
     void Application::Dispatch(EventDispatcher &dispatcher)
     {
+        //dispatcher.Dispatch<WindowCloseEvent>(OnWindowClose);
         //dispatcher.Dispatch<WindowCloseEvent>(reinterpret_cast<bool (*)(WindowCloseEvent&)>(OnWindowClose));
     }
 

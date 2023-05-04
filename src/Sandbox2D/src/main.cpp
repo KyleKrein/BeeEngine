@@ -4,7 +4,8 @@
 class Game: public BeeEngine::Application
 {
 public:
-    Game()
+    Game(BeeEngine::WindowProperties& properties)
+    : BeeEngine::Application(properties)
     {
 
     }
@@ -18,5 +19,6 @@ private:
 
 BeeEngine::Application* BeeEngine::CreateApplication()
 {
-    return new Game();
+    WindowProperties properties = {1280, 720, "Pochemu", VSync::On};
+    return new Game(properties);
 }
