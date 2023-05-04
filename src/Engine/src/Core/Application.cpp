@@ -4,7 +4,6 @@
 
 #include "Application.h"
 #include "Core/Logging/Log.h"
-
 namespace BeeEngine{
     OSPlatform Application::s_OSPlatform = OSPlatform::None;
     Application* Application::s_Instance = nullptr;
@@ -24,6 +23,14 @@ namespace BeeEngine{
     {
         BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");
         s_Instance = this;
+#ifdef MACOS
+        Application::s_OSPlatform = OSPlatform::Mac;
+#elif WINDOWS
+        Application::s_OSPlatform = OSPlatform::Windows;
+#elif LINUX
+        Application::s_OSPlatform = OSPlatform::Linux;
+#endif
+
 
         m_Window = WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue);
         ImGuiLayer guiLayer;

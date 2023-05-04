@@ -9,6 +9,15 @@ add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/glad)
 add_subdirectory(vendor/spdlog)
 
+if(UNIX AND APPLE)
+    add_compile_definitions(MACOS)
+endif()
+if(UNIX AND NOT APPLE)
+    add_compile_definitions(LINUX)
+endif()
+if(WIN32)
+    add_compile_definitions(WINDOWS)
+endif()
 
 
 target_include_directories( ${PROJECT_NAME}
