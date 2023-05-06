@@ -6,6 +6,7 @@ namespace BeeEngine{
     public:
         EventQueue(LayerStack& layerStack);
         void AddEvent(Event& event);
+        void AddEvent(Event* event);
         void Dispatch();
     private:
         void ApplicationOnEvent(EventDispatcher& e);

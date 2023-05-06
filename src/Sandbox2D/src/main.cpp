@@ -1,5 +1,5 @@
-#include "BeeEngine.h"
-#include "iostream"
+#include "TestLayer.h"
+//#include "BeeEngine.h"
 
 class Game: public BeeEngine::Application
 {
@@ -7,7 +7,8 @@ public:
     Game(BeeEngine::WindowProperties& properties)
     : BeeEngine::Application(properties)
     {
-
+        m_TestLayer = TestLayer();
+        PushLayer(m_TestLayer);
     }
 
     virtual ~Game() override
@@ -15,6 +16,7 @@ public:
 
     }
 private:
+    TestLayer m_TestLayer;
 };
 
 BeeEngine::Application* BeeEngine::CreateApplication()

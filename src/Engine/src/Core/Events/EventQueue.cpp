@@ -17,16 +17,21 @@ namespace BeeEngine
     {
         m_Events.push_back(&event);
     }
+    void EventQueue::AddEvent(Event *event)
+    {
+        m_Events.push_back(event);
+    }
 
     void EventQueue::Dispatch()
     {
         for (int i = 0; i < m_Events.size(); ++i)
         {
             Event* event = m_Events[i];
-            EventDispatcher dispatcher(reinterpret_cast<Event &>(event));
+            EventDispatcher dispatcher(event);
             ApplicationOnEvent(dispatcher);
-            Input::OnEvent(reinterpret_cast<Event &>(event));
+            Input::OnEvent(event);
             m_LayerStack.OnEvent(dispatcher);
+            delete event;
         }
         m_Events.clear();
     }

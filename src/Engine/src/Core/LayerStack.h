@@ -12,10 +12,10 @@ namespace BeeEngine{
     public:
         LayerStack();
         ~LayerStack();
-        inline void PushLayer(Layer& layer);
-        inline void PushOverlay(Layer& overlay);
-        inline void PopLayer(Layer& layer);
-        inline void PopOverlay(Layer& overlay);
+        void PushLayer(Layer& layer);
+        void PushOverlay(Layer& overlay);
+        void PopLayer(Layer& layer);
+        void PopOverlay(Layer& overlay);
         void SetGuiLayer(const ImGuiLayer& guiLayer);
 
         void OnEvent(EventDispatcher& dispatcher);

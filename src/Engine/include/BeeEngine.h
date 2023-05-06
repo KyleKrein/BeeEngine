@@ -3,4 +3,7 @@
 #include "Core/TypeDefines.h"
 #include "Core/Application.h"
 #include "Core/Input.h"
+#include "Core/Layer.h"
+#include "Core/Events/EventImplementations.h"
+#include "Core/Logging/Log.h"
 //#include "Windowing/Window.h"

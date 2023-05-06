@@ -17,7 +17,7 @@ namespace BeeEngine
         inline static bool KeyPressed(Key key);
         inline static bool MouseKeyPressed(MouseButton button);
     private:
-        static void OnEvent(Event& event);
+        static void OnEvent(Event* event);
         inline static void Init();
 
     private:

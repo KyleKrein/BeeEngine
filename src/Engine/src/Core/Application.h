@@ -6,6 +6,7 @@
 #include "Core/Events/EventQueue.h"
 #include "Core/Events/EventImplementations.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
+#include "Core/Logging/Log.h"
 
 namespace BeeEngine{
     enum class OSPlatform

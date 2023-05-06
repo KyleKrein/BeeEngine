@@ -32,7 +32,7 @@ namespace BeeEngine
 
             m_Width = properties.Width / 2;
             m_Height = properties.Height / 2;
-            m_Window = glfwCreateWindow(m_Width / 2, m_Height / 2, m_Title, nullptr, nullptr);
+            m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
             BeeCoreAssert(m_Window, "Window initialization failed");
         } else
         {
@@ -66,12 +66,28 @@ namespace BeeEngine
 
     void GLFWWindowHandler::SetWidth(uint16_t width)
     {
-
+        if (Application::GetOsPlatform() == OSPlatform::Mac)
+        {
+            m_Width = width/2;
+        }
+        else
+        {
+            m_Width = width;
+        }
+        glfwSetWindowSize(m_Window, m_Width, m_Height);
     }
 
     void GLFWWindowHandler::SetHeight(uint16_t height)
     {
-
+        if (Application::GetOsPlatform() == OSPlatform::Mac)
+        {
+            m_Height = height/2;
+        }
+        else
+        {
+            m_Height = height;
+        }
+        glfwSetWindowSize(m_Window, m_Width, m_Height);
     }
 
     GLFWWindowHandler::~GLFWWindowHandler()
@@ -82,7 +98,8 @@ namespace BeeEngine
 
     void GLFWWindowHandler::SetVSync(VSync mode)
     {
-
+        m_vsync = mode;
+        glfwSwapInterval(mode);
     }
 
     void GLFWWindowHandler::HideCursor()
@@ -127,37 +144,43 @@ namespace BeeEngine
 
     void GLFWWindowHandler::CharCallback(GLFWwindow *window, unsigned int codepoint)
     {
-
+        auto event = new CharTypedEvent(codepoint);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
     }
 
     void GLFWWindowHandler::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
     {
-
+        auto event = new KeyPressedEvent(ConvertKeyCode(key));
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
     }
 
     void GLFWWindowHandler::ScrollCallback(GLFWwindow *window, double xoffset, double yoffset)
     {
-
+        auto event = new MouseScrolledEvent(xoffset, yoffset);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
     }
 
     void GLFWWindowHandler::CursorPosCallback(GLFWwindow *window, double xpos, double ypos)
     {
-
+        auto event = new MouseMovedEvent(xpos, ypos);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
     }
 
     void GLFWWindowHandler::FrameBufferSizeCallback(GLFWwindow *window, int width, int height)
     {
-
+        auto event = new WindowResizeEvent(width, height);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
     }
 
     void GLFWWindowHandler::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
     {
-
+        auto event = new MouseButtonPressedEvent((MouseButton)button);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
     }
 
     void GLFWWindowHandler::WindowCloseCallback(GLFWwindow *window)
     {
-        auto event = WindowCloseEvent();
+        auto event = new WindowCloseEvent();
         ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
         ((GLFWWindowHandler*)s_Instance)->m_IsRunning = false;
     }

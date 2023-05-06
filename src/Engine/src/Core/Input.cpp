@@ -19,9 +19,9 @@ namespace BeeEngine
         return s_MouseButtons[button];
     }
 
-    void Input::OnEvent(Event &event)
+    void Input::OnEvent(Event* event)
     {
-        if (!(event.Category & EventCategory::Input))
+        if (!(event->Category & EventCategory::Input))
             return;
         //TODO: Finish Input on event
     }
