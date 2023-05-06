@@ -27,6 +27,8 @@ void TestLayer::OnDetach()
 void TestLayer::OnUpdate()
 {
     //BeeTrace("TestLayer::OnUpdate");
+    if (BeeEngine::Input::KeyPressed(BeeEngine::Key::Tab))
+        BeeInfo("Tab key is pressed (poll)!");
 }
 
 void TestLayer::OnGUIRendering()

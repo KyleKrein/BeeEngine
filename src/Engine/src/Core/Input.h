@@ -14,8 +14,24 @@ namespace BeeEngine
     {
         friend EventQueue;
     public:
-        inline static bool KeyPressed(Key key);
-        inline static bool MouseKeyPressed(MouseButton button);
+        static bool KeyPressed(Key key);
+        static bool MouseKeyPressed(MouseButton button);
+        inline static const float GetMouseX()
+        {
+            return s_MouseX;
+        }
+        inline static const float GetMouseY()
+        {
+            return s_MouseY;
+        }
+        inline static const float GetMouseWheelX()
+        {
+            return s_MouseWheelX;
+        }
+        inline static const float GetMouseWheelY()
+        {
+            return s_MouseWheelY;
+        }
     private:
         static void OnEvent(Event* event);
         inline static void Init();
@@ -26,5 +42,10 @@ namespace BeeEngine
         static bool s_IsInit;
         typedef Iterator<MouseButton, MouseButton::Left, MouseButton::Last> MouseIterator;
         typedef Iterator<Key, Key::Space, Key::LastKey> KeyIterator;
+
+        static float s_MouseX;
+        static float s_MouseY;
+        static float s_MouseWheelX;
+        static float s_MouseWheelY;
     };
 }
