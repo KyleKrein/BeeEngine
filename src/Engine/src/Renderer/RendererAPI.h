@@ -8,10 +8,10 @@ namespace BeeEngine
 {
     enum RendererAPI
     {
-        None = 0,
-        OpenGL,
-        Metal,
-        DirectX,
-        Vulkan
+        NotAvailable = 0,
+        OpenGL = 1,
+        Metal = 2,
+        DirectX = 3,
+        Vulkan = 4
     };
 }

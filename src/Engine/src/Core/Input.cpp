@@ -8,7 +8,7 @@
 
 namespace BeeEngine
 {
-    bool Input::s_IsInit = false;
+    //bool Input::s_IsInit = false;
     std::unordered_map<Key, bool> Input::s_Keys;
     std::unordered_map<MouseButton, bool> Input::s_MouseButtons;
     float Input::s_MouseX = 0.0f;
@@ -59,8 +59,8 @@ namespace BeeEngine
         }
     }
 
-    void Input::Init()
+    /*void Input::Init()
     {
         s_IsInit = true;
-    }
+    }*/
 }

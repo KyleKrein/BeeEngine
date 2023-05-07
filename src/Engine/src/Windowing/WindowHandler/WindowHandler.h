@@ -26,6 +26,11 @@ namespace BeeEngine
         }
         virtual void SetWidth(uint16_t width) = 0;
         virtual void SetHeight(uint16_t height) = 0;
+        static WindowHandler* GetInstance()
+        {
+            return s_Instance;
+        }
+        virtual uint64_t GetWindow() = 0;
         VSync GetVSync() const
         {
             return m_vsync;
@@ -43,7 +48,7 @@ namespace BeeEngine
     protected:
         static WindowHandler* s_Instance;
         WindowHandler() = delete;
-        WindowHandler(EventQueue& eventQueue): m_Events(eventQueue){};
+        WindowHandler(EventQueue& eventQueue): m_Events(eventQueue), m_Width(0), m_Height(0) {};
         uint16_t m_Width;
         uint16_t m_Height;
         const char *m_Title;

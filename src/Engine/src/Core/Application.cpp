@@ -25,16 +25,18 @@ namespace BeeEngine{
         s_Instance = this;
 #ifdef MACOS
         Application::s_OSPlatform = OSPlatform::Mac;
+        Renderer::SetAPI(RendererAPI::OpenGL);
 #elif WINDOWS
         Application::s_OSPlatform = OSPlatform::Windows;
+        Renderer::SetAPI(RendererAPI::OpenGL);
 #elif LINUX
         Application::s_OSPlatform = OSPlatform::Linux;
+        Renderer::SetAPI(RendererAPI::OpenGL);
 #endif
 
 
         m_Window = WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue);
-        ImGuiLayer guiLayer;
-        m_Layers.SetGuiLayer(guiLayer);
+        m_Layers.SetGuiLayer(new ImGuiLayer());
     }
 
     Application::~Application()

@@ -1,6 +1,10 @@
 #pragma once
 
 #include "Core/Events/Event.h"
+#include "Platform/ImGui/ImGuiLoaderOpenGL.h"
+#include "Platform/ImGui/ImGuiController.h"
+#include "Renderer/Renderer.h"
+
 
 namespace BeeEngine
 {
@@ -18,7 +22,24 @@ namespace BeeEngine
     class ImGuiLayer: public Layer
     {
     public:
-        virtual void OnBegin() {};
-        virtual void OnEnd() {};
+        ImGuiLayer()
+        {
+            Init();
+        }
+        void OnBegin()
+        {
+            s_Controller->Update();
+        };
+        void OnEnd()
+        {
+            s_Controller->Render();
+        };
+        virtual void OnGUIRendering() override
+        {
+            ImGui::ShowDemoWindow();
+        }
+        static void Init();
+    private:
+        static ImGuiController* s_Controller;
     };
 }

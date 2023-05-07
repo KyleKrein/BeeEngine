@@ -5,7 +5,7 @@
 #include "Renderer.h"
 
 
-namespace Renderer
+namespace BeeEngine
 {
-
+    RendererAPI Renderer::s_Api = RendererAPI::NotAvailable;
 }

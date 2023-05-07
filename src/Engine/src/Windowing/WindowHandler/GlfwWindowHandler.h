@@ -1,8 +1,8 @@
 #pragma once
 
-#include "WindowHandler.h"
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+#include "WindowHandler.h"
 #include "KeyCodes.h"
 
 namespace BeeEngine
@@ -13,6 +13,7 @@ namespace BeeEngine
         GLFWWindowHandler(const WindowProperties& properties, EventQueue& eventQueue);
         virtual void SetWidth(uint16_t width) override;
         virtual void SetHeight(uint16_t height) override;
+        virtual uint64_t GetWindow() override;
 
         void SetVSync(VSync mode) override;
 

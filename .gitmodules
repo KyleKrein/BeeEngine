@@ -7,3 +7,10 @@
 [submodule "src/Engine/vendor/debugbreak"]
 	path = src/Engine/vendor/debugbreak
 	url = https://github.com/scottt/debugbreak.git
+[submodule "src/Engine/vendor/glm"]
+	path = src/Engine/vendor/glm
+	url = https://github.com/g-truc/glm
+[submodule "src/Engine/vendor/ImGui"]
+	path = src/Engine/vendor/ImGui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking

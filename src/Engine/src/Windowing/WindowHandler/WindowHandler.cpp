@@ -1,9 +1,9 @@
 //
 // Created by Александр Лебедев on 23.01.2023.
 //
-
-#include "WindowHandler.h"
 #include "GlfwWindowHandler.h"
+#include "WindowHandler.h"
+
 
 namespace BeeEngine{
     WindowHandler* WindowHandler::s_Instance = nullptr;

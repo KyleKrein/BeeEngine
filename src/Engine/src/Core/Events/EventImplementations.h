@@ -116,10 +116,9 @@ namespace BeeEngine
     {
     public:
         WindowResizeEvent(uint16_t width, uint16_t height)
+        : m_Width(width), m_Height(height)
         {
             Category = EventCategory::App;
-            m_Width = width;
-            m_Height = height;
             m_Type = EventType::WindowResize;
         }
         uint16_t GetWidth()

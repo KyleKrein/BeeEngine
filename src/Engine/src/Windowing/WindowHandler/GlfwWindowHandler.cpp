@@ -429,5 +429,10 @@ namespace BeeEngine
                 return Key::Unknown;
         }
     }
+
+    uint64_t GLFWWindowHandler::GetWindow()
+    {
+        return (uint64_t)m_Window;
+    }
 }
 

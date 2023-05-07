@@ -21,7 +21,8 @@ namespace BeeEngine{
             layer->OnDetach();
             delete layer;
         }
-        m_guiLayer.OnDetach();
+        m_guiLayer->OnDetach();
+        delete m_guiLayer;
     }
 
     void LayerStack::PushLayer(Layer &layer)
@@ -69,17 +70,17 @@ namespace BeeEngine{
                 layer->OnUpdate();
             }
 
-            m_guiLayer.OnBegin();
+            m_guiLayer->OnBegin();
             for (auto layer: m_layers)
             {
                 layer->OnGUIRendering();
             }
-            m_guiLayer.OnGUIRendering();
-            m_guiLayer.OnEnd();
+            m_guiLayer->OnGUIRendering();
+            m_guiLayer->OnEnd();
         }
     }
 
-    void LayerStack::SetGuiLayer(const ImGuiLayer &guiLayer)
+    void LayerStack::SetGuiLayer(ImGuiLayer* guiLayer)
     {
         m_guiLayer = guiLayer;
     }
