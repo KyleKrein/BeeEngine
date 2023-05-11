@@ -31,7 +31,7 @@ namespace BeeEngine{
 #define BeeCoreWarn(...)   ::BeeEngine::Log::GetCoreLogger()->warn(__VA_ARGS__)
 #define BeeCoreInfo(...)   ::BeeEngine::Log::GetCoreLogger()->info(__VA_ARGS__)
 #define BeeCoreTrace(...)  ::BeeEngine::Log::GetCoreLogger()->trace(__VA_ARGS__)
-#define BeeCoreAssert(x, ...) if(!x) {::BeeEngine::Log::GetCoreLogger()->error(__VA_ARGS__); debug_break();}
+#define BeeCoreAssert(x, ...) if(!(x)) {::BeeEngine::Log::GetCoreLogger()->error(__VA_ARGS__); debug_break();}
 
 
 
@@ -40,4 +40,4 @@ namespace BeeEngine{
 #define BeeWarn(...)   ::BeeEngine::Log::GetClientLogger()->warn(__VA_ARGS__)
 #define BeeInfo(...)   ::BeeEngine::Log::GetClientLogger()->info(__VA_ARGS__)
 #define BeeTrace(...)  ::BeeEngine::Log::GetClientLogger()->trace(__VA_ARGS__)
-#define BeeAssert(x, ...) if(!x) ::BeeEngine::Log::GetClientLogger()->error(__VA_ARGS__); debug_break()
+#define BeeAssert(x, ...) if(!(x)) ::BeeEngine::Log::GetClientLogger()->error(__VA_ARGS__); debug_break()

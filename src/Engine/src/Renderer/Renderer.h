@@ -3,24 +3,31 @@
 //
 
 #pragma once
-#include "RendererAPI.h"
 #include "Core/Logging/Log.h"
 
 namespace BeeEngine
 {
+    enum RenderAPI
+    {
+        NotAvailable = 0,
+        OpenGL = 1,
+        Metal = 2,
+        DirectX = 3,
+        Vulkan = 4
+    };
     class Renderer
     {
     public:
-        static const RendererAPI GetAPI()
+        static const RenderAPI GetAPI()
         {
             return s_Api;
         }
-        static void SetAPI(const RendererAPI& api)
+        static void SetAPI(const RenderAPI& api)
         {
-            BeeCoreAssert(s_Api == RendererAPI::NotAvailable, "Can't change Renderer API after initialization!");
+            BeeCoreAssert(s_Api == RenderAPI::NotAvailable, "Can't change Renderer API after initialization!");
             s_Api = api;
         }
     private:
-        static RendererAPI s_Api;
+        static RenderAPI s_Api;
     };
 }

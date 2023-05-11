@@ -7,5 +7,5 @@
 
 namespace BeeEngine
 {
-    RendererAPI Renderer::s_Api = RendererAPI::NotAvailable;
+    RenderAPI Renderer::s_Api = RenderAPI::NotAvailable;
 }

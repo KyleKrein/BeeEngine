@@ -25,7 +25,7 @@ namespace BeeEngine{
         s_Instance = this;
 #ifdef MACOS
         Application::s_OSPlatform = OSPlatform::Mac;
-        Renderer::SetAPI(RendererAPI::OpenGL);
+        Renderer::SetAPI(RenderAPI::OpenGL);
 #elif WINDOWS
         Application::s_OSPlatform = OSPlatform::Windows;
         Renderer::SetAPI(RendererAPI::OpenGL);
