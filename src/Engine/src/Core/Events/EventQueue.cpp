@@ -13,11 +13,7 @@ namespace BeeEngine
 
     }
 
-    void EventQueue::AddEvent(Event& event)
-    {
-        m_Events.push_back(&event);
-    }
-    void EventQueue::AddEvent(Event *event)
+    void EventQueue::AddEvent(Event* event)
     {
         m_Events.push_back(event);
     }
@@ -31,7 +27,10 @@ namespace BeeEngine
             ApplicationOnEvent(dispatcher);
             Input::OnEvent(event);
             m_LayerStack.OnEvent(dispatcher);
-            delete event;
+        }
+        for (int i = 0; i < m_Events.size(); ++i)
+        {
+            delete m_Events[i];
         }
         m_Events.clear();
     }

@@ -4,6 +4,8 @@
 
 #include "Application.h"
 #include "Core/Logging/Log.h"
+#include "Debug/DebugLayer.h"
+
 namespace BeeEngine{
     OSPlatform Application::s_OSPlatform = OSPlatform::None;
     Application* Application::s_Instance = nullptr;
@@ -38,6 +40,10 @@ namespace BeeEngine{
 
         m_Window = WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue);
         m_Layers.SetGuiLayer(new ImGuiLayer());
+
+#ifdef DEBUG
+        m_Layers.PushOverlay(CreateRef<DebugLayer>());
+#endif
     }
 
     Application::~Application()

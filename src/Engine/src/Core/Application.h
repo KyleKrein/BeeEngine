@@ -60,11 +60,11 @@ namespace BeeEngine{
         virtual void Update() {};
         virtual void OnEvent(EventDispatcher& dispatcher) {};
 
-        void PushLayer(Layer& layer)
+        inline void PushLayer(Ref<Layer> layer)
         {
             m_Layers.PushLayer(layer);
         }
-        void PushOverlay(Layer& overlay)
+        inline void PushOverlay(Ref<Layer> overlay)
         {
             m_Layers.PushOverlay(overlay);
         }

@@ -4,8 +4,7 @@ namespace BeeEngine{
     class EventQueue
     {
     public:
-        EventQueue(LayerStack& layerStack);
-        void AddEvent(Event& event);
+        explicit EventQueue(LayerStack& layerStack);
         void AddEvent(Event* event);
         void Dispatch();
     private:

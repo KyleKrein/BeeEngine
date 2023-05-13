@@ -1,7 +1,10 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 #include "Core/Logging/Log.h"
+#include "Core/TypeDefines.h"
+#include "ObjectPool.h"
 
 namespace BeeEngine
 {
@@ -49,6 +52,16 @@ namespace BeeEngine
     protected:
         bool m_Handled = false;
         EventType m_Type;
+
+    public:
+        //Events pool
+        static void* operator new(size_t size);
+        static void operator delete(void* ptr, size_t size) noexcept;
+        static void* operator new[](size_t size);
+        static void operator delete[](void* ptr, size_t size) noexcept;
+
+    private:
+        static ObjectPool s_EventPool;
     };
 
     class EventDispatcher

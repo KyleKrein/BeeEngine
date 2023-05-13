@@ -1,38 +1,37 @@
 //
 // Created by alexl on 13.05.2023.
 //
-#include "Shader.h"
+
+#include "Texture.h"
 #include "Core/Logging/Log.h"
 #include "Renderer.h"
-#include "Platform/OpenGL/OpenGLShader.h"
+#include "Platform/OpenGL/OpenGLTexture2D.h"
 
 
 namespace BeeEngine
 {
 
-    Ref<Shader> Shader::Create(Ref<String> name, const String &vertexSrc, const String &fragmentSrc)
+    Ref<Texture2D> Texture2D::Create(const String &path)
     {
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
+                return CreateRef<OpenGLTexture2D>(path);
             default:
                 BeeCoreError("Unknown RenderAPI");
                 return nullptr;
         }
     }
 
-    Ref<Shader> Shader::Create(Ref<String> name, const String &filepath)
+    Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
     {
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<OpenGLShader>(name, filepath);
+                return CreateRef<OpenGLTexture2D>(width, height);
             default:
                 BeeCoreError("Unknown RenderAPI");
                 return nullptr;
         }
     }
-
-
 }

@@ -4,6 +4,7 @@
 #include "Platform/ImGui/ImGuiLoaderOpenGL.h"
 #include "Platform/ImGui/ImGuiController.h"
 #include "Renderer/Renderer.h"
+#include "Allocator/Allocator.h"
 
 
 namespace BeeEngine

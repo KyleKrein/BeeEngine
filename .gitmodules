@@ -14,3 +14,6 @@
 	path = src/Engine/vendor/ImGui
 	url = https://github.com/KyleKrein/imgui-for-BeeEngine.git
 	branch = beeEngine
+[submodule "src/Engine/vendor/stb"]
+	path = src/Engine/vendor/stb
+	url = https://github.com/nothings/stb

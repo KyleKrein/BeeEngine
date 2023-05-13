@@ -11,7 +11,8 @@ namespace BeeEngine
     class OpenGLShader: public Shader
     {
     public:
-        OpenGLShader(const String &name, const String &vertexSrc, const String &fragmentSrc);
+        OpenGLShader(const Ref<String> &name, const String &vertexSrc, const String &fragmentSrc);
+        OpenGLShader(const Ref<String> &name, const String &filepath);
         virtual ~OpenGLShader() override;
 
         virtual void Bind() const override;
@@ -25,10 +26,12 @@ namespace BeeEngine
         virtual void SetFloat4(const String &name, const glm::vec4 &value) override;
         virtual void SetMat4(const String &name, const glm::mat4 &value) override;
 
-        virtual const String &GetName() const override { return m_Name; }
+        virtual const Ref<String> GetName() const override { return m_Name; }
 
     private:
+        void Compile(const std::unordered_map<ShaderType, Ref<String>> &shaders);
+        std::unordered_map<ShaderType, Ref<String>> Preprocess(const String &shaderSource);
         uint32_t m_RendererID;
-        String m_Name;
+        Ref<String> m_Name;
     };
 }

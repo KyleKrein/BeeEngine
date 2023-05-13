@@ -21,7 +21,13 @@ namespace BeeEngine{
         {
             return s_ClientLogger;
         }
+
+        inline bool static IsInit()
+        {
+            return s_IsInit;
+        }
     private:
+        static bool s_IsInit;
         static std::shared_ptr<spdlog::logger> s_CoreLogger;
         static std::shared_ptr<spdlog::logger> s_ClientLogger;
     };

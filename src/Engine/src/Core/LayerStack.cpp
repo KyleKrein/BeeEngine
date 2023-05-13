@@ -19,34 +19,33 @@ namespace BeeEngine{
         for (auto layer: m_layers)
         {
             layer->OnDetach();
-            delete layer;
         }
         m_guiLayer->OnDetach();
         delete m_guiLayer;
     }
 
-    void LayerStack::PushLayer(Layer &layer)
+    void LayerStack::PushLayer(Ref<Layer> layer)
     {
-        m_layers.insert(m_layers.begin(), &layer);
-        layer.OnAttach();
+        m_layers.insert(m_layers.begin(), layer);
+        layer->OnAttach();
     }
 
-    void LayerStack::PushOverlay( Layer &overlay)
+    void LayerStack::PushOverlay(Ref<Layer> overlay)
     {
-        m_layers.push_back(&overlay);
-        overlay.OnAttach();
+        m_layers.push_back(overlay);
+        overlay->OnAttach();
     }
 
-    void LayerStack::PopLayer(Layer &layer)
+    void LayerStack::PopLayer(Ref<Layer> layer)
     {
-        std::remove(m_layers.begin(), m_layers.end(), &layer);
-        layer.OnDetach();
+        std::remove(m_layers.begin(), m_layers.end(), layer);
+        layer->OnDetach();
     }
 
-    void LayerStack::PopOverlay(Layer &overlay)
+    void LayerStack::PopOverlay(Ref<Layer> overlay)
     {
-        std::remove(m_layers.begin(), m_layers.end(), &overlay);
-        overlay.OnDetach();
+        std::remove(m_layers.begin(), m_layers.end(), overlay);
+        overlay->OnDetach();
     }
 
     void LayerStack::OnEvent(EventDispatcher &dispatcher)

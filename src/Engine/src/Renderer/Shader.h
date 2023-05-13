@@ -3,11 +3,18 @@
 //
 
 #pragma once
+
+#include <unordered_map>
 #include "Core/TypeDefines.h"
 #include "glm/glm.hpp"
 
 namespace BeeEngine
 {
+    enum ShaderType
+    {
+        Vertex = 0,
+        Fragment = 1
+    };
     class Shader
     {
 public:
@@ -25,8 +32,12 @@ public:
         virtual void SetFloat4(const String& name, const glm::vec4& value) = 0;
         virtual void SetMat4(const String& name, const glm::mat4& value) = 0;
 
-        virtual const String& GetName() const = 0;
+        virtual const Ref<String> GetName() const = 0;
 
-        static Ref<Shader> Create(const String& name, const String& vertexSrc, const String& fragmentSrc);   
+        static Ref<Shader> Create(Ref<String> name, const String& vertexSrc, const String& fragmentSrc);
+        static Ref<Shader> Create(Ref<String> name, const String& filepath);
+    private:
+
+
     };
 }

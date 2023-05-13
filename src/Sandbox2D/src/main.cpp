@@ -7,8 +7,8 @@ public:
     Game(BeeEngine::WindowProperties& properties)
     : BeeEngine::Application(properties)
     {
-        m_TestLayer = TestLayer();
-        PushLayer(m_TestLayer);
+        BeeEngine::Ref<TestLayer> layer = BeeEngine::CreateRef<TestLayer>();
+        PushLayer(layer);
     }
 
     virtual ~Game() override
