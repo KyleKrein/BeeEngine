@@ -15,6 +15,7 @@ namespace BeeEngine{
             m_EventQueue.Dispatch();
             m_Layers.Update();
             Update();
+            m_Window->SwapBuffers();
         }
     }
 
@@ -28,7 +29,7 @@ namespace BeeEngine{
         Renderer::SetAPI(RenderAPI::OpenGL);
 #elif WINDOWS
         Application::s_OSPlatform = OSPlatform::Windows;
-        Renderer::SetAPI(RendererAPI::OpenGL);
+        Renderer::SetAPI(RenderAPI::OpenGL);
 #elif LINUX
         Application::s_OSPlatform = OSPlatform::Linux;
         Renderer::SetAPI(RendererAPI::OpenGL);

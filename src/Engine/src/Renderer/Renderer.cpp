@@ -8,4 +8,5 @@
 namespace BeeEngine
 {
     RenderAPI Renderer::s_Api = RenderAPI::NotAvailable;
+    Ref<RendererAPI> Renderer::s_RendererAPI = nullptr;
 }

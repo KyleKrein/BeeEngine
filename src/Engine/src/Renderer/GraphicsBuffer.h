@@ -7,10 +7,10 @@
 
 namespace BeeEngine
 {
-    class VertexBuffer
+    class GraphicsBuffer
     {
     public:
-        virtual ~VertexBuffer() = default;
+        virtual ~GraphicsBuffer() = default;
 
         virtual void Bind() const = 0;
         virtual void Unbind() const = 0;
@@ -19,7 +19,7 @@ namespace BeeEngine
 
         virtual uint32_t GetSize() const = 0;
 
-        static Ref<VertexBuffer> Create(uint32_t size);
-        static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+        static Ref<GraphicsBuffer> CreateVertexBuffer(uint32_t size);
+        static Ref<GraphicsBuffer> CreateIndexBuffer(uint32_t size);
     };
 }

@@ -1,0 +1,32 @@
+//
+// Created by alexl on 13.05.2023.
+//
+
+#pragma once
+#include "Core/TypeDefines.h"
+#include "glm/glm.hpp"
+
+namespace BeeEngine
+{
+    class Shader
+    {
+public:
+        Shader() = default;
+        virtual ~Shader() = 0;
+
+        virtual void Bind() const = 0;
+        virtual void Unbind() const = 0;
+
+        virtual void SetInt(const String& name, int value) = 0;
+        virtual void SetIntArray(const String& name, int* values, uint32_t count) = 0;
+        virtual void SetFloat(const String& name, float value) = 0;
+        virtual void SetFloat2(const String &name, const glm::vec2 &value) = 0;
+        virtual void SetFloat3(const String& name, const glm::vec3& value) = 0;
+        virtual void SetFloat4(const String& name, const glm::vec4& value) = 0;
+        virtual void SetMat4(const String& name, const glm::mat4& value) = 0;
+
+        virtual const String& GetName() const = 0;
+
+        static Ref<Shader> Create(const String& name, const String& vertexSrc, const String& fragmentSrc);   
+    };
+}

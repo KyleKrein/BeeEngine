@@ -1,7 +1,9 @@
 #pragma once
 #include <string>
+#include <memory>
 
-namespace BeeEngine{
+namespace BeeEngine
+{
     using String = std::string;
 
     template<typename T>

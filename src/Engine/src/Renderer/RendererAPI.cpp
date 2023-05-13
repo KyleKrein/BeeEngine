@@ -4,12 +4,13 @@
 
 #include "RendererAPI.h"
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
+#include "Renderer.h"
 
 namespace BeeEngine
 {
     Ref<RendererAPI> RendererAPI::Create()
     {
-        switch (GetAPI())
+        switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
                 return CreateRef<OpenGLRendererAPI>();

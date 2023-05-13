@@ -16,7 +16,7 @@ TestLayer::~TestLayer()
 
 void TestLayer::OnAttach()
 {
-
+    BeeEngine::Renderer::SetClearColor(BeeEngine::Color4::CornflowerBlue);
 }
 
 void TestLayer::OnDetach()
@@ -29,6 +29,7 @@ void TestLayer::OnUpdate()
     //BeeTrace("TestLayer::OnUpdate");
     if (BeeEngine::Input::KeyPressed(BeeEngine::Key::Tab))
         BeeInfo("Tab key is pressed (poll)!");
+    BeeEngine::Renderer::Clear();
 }
 
 void TestLayer::OnGUIRendering()
