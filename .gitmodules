@@ -13,4 +13,4 @@
 [submodule "src/Engine/vendor/ImGui"]
 	path = src/Engine/vendor/ImGui
 	url = https://github.com/KyleKrein/imgui-for-BeeEngine.git
-	branch = docking
+	branch = beeEngine
