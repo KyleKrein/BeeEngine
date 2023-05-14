@@ -5,6 +5,7 @@
 #include <regex>
 #include "ShaderLibrary.h"
 #include "Core/Logging/Log.h"
+#include "Core/ResourceManager.h"
 
 
 namespace BeeEngine
@@ -56,8 +57,7 @@ namespace BeeEngine
 
     Ref<String> ShaderLibrary::GetNameFromFilePath(const String &filepath)
     {
-        String result = filepath;
-        std::replace(result.begin(), result.end(), '\\', '/');
+        String result = ResourceManager::ProcessFilePath(filepath);
         int lastDot = result.find_last_of('.');
         int lastSlash = result.find_last_of('/') + 1;
         int count = lastDot == -1? result.size() - lastSlash: lastDot - lastSlash;

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Renderer/Texture.h"
+#include "glad/glad.h"
 
 namespace BeeEngine
 {
@@ -18,5 +19,7 @@ namespace BeeEngine
         virtual void SetData(void* data, uint32_t size) override;
 
         virtual void Bind(uint32_t slot = 0) const override;
+    private:
+        GLenum m_InternalFormat;
     };
 }

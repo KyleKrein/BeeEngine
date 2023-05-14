@@ -43,6 +43,7 @@ namespace BeeEngine
         { return m_Normalized; }
 
         static uint32_t GetSizeOfType(ShaderDataType type);
+        uint32_t GetComponentCount();
 
     private:
         String m_Name;
@@ -50,6 +51,8 @@ namespace BeeEngine
         uint32_t m_Size;
         uint32_t m_Offset;
         bool m_Normalized;
+
+
     };
 
     struct BufferLayout
