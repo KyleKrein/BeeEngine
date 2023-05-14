@@ -29,6 +29,7 @@ namespace BeeEngine
             BeeCoreAssert(s_Api == RenderAPI::NotAvailable, "Can't change Renderer API after initialization!");
             s_Api = api;
             s_RendererAPI = RendererAPI::Create();
+            s_RendererAPI->Init();
         }
         static void SetClearColor(const Color4& color)
         {
@@ -42,6 +43,12 @@ namespace BeeEngine
         {
             s_RendererAPI->SetViewport(x, y, width, height);
         }
+        static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
+        {
+            vertexArray->Bind();
+            s_RendererAPI->DrawIndexed(vertexArray, indexCount);
+        }
+
     private:
         static RenderAPI s_Api;
         static Ref<RendererAPI> s_RendererAPI;

@@ -11,7 +11,7 @@ namespace BeeEngine
     class OpenGLIndexBuffer: public GraphicsBuffer
     {
     public:
-        OpenGLIndexBuffer(uint32_t size);
+        OpenGLIndexBuffer(uint32_t data[], uint32_t size);
         ~OpenGLIndexBuffer() override;
 
         void Bind() const override;

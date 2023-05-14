@@ -2,6 +2,7 @@
 #include <string>
 #include <memory>
 #include "SharedPointer.h"
+#include <vector>
 
 namespace BeeEngine
 {
@@ -25,4 +26,7 @@ namespace BeeEngine
         return MakeShared<T>(args...);
         //return std::make_shared<T>(std::forward<Args>(args)...);
     }
+
+    template<typename T>
+    using List = std::vector<T>;
 }

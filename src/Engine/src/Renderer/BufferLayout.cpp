@@ -32,7 +32,7 @@ namespace BeeEngine
         return 0;
     }
 
-    uint32_t BufferElement::GetComponentCount()
+    uint32_t BufferElement::GetComponentCount() const
     {
         switch (m_Type)
         {

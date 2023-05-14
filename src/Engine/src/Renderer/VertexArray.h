@@ -13,7 +13,7 @@ namespace BeeEngine
     public:
         VertexArray() = default;
         static Ref<VertexArray> Create(Ref<GraphicsBuffer> vertexBuffer, Ref<GraphicsBuffer> indexBuffer);
-        virtual ~VertexArray() = 0;
+        virtual ~VertexArray() {};
 
         virtual void Bind() const = 0;
         virtual void Unbind() const = 0;

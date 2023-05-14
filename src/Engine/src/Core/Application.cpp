@@ -15,6 +15,7 @@ namespace BeeEngine{
         {
             m_Window->ProcessEvents();
             m_EventQueue.Dispatch();
+            m_Window->UpdateTime();
             m_Layers.Update();
             Update();
             m_Window->SwapBuffers();
@@ -28,17 +29,30 @@ namespace BeeEngine{
         s_Instance = this;
 #ifdef MACOS
         Application::s_OSPlatform = OSPlatform::Mac;
-        Renderer::SetAPI(RenderAPI::OpenGL);
 #elif WINDOWS
         Application::s_OSPlatform = OSPlatform::Windows;
-        Renderer::SetAPI(RenderAPI::OpenGL);
 #elif LINUX
         Application::s_OSPlatform = OSPlatform::Linux;
-        Renderer::SetAPI(RendererAPI::OpenGL);
 #endif
 
 
         m_Window = WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue);
+
+        switch (Application::GetOsPlatform())
+        {
+            case OSPlatform::Windows:
+                Renderer::SetAPI(RenderAPI::OpenGL);
+                break;
+            case OSPlatform::Mac:
+                Renderer::SetAPI(RenderAPI::OpenGL);
+                break;
+            case OSPlatform::Linux:
+                Renderer::SetAPI(RenderAPI::OpenGL);
+                break;
+            default:
+                BeeCoreAssert(false, "Unknown OS Platform");
+        }
+
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
 #ifdef DEBUG

@@ -19,7 +19,7 @@ namespace BeeEngine
     {
 public:
         Shader() = default;
-        virtual ~Shader() = 0;
+        virtual ~Shader() {};
 
         virtual void Bind() const = 0;
         virtual void Unbind() const = 0;

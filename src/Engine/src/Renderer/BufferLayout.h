@@ -12,7 +12,7 @@ namespace BeeEngine
 {
     enum ShaderDataType
     {
-        None = 0,
+        NoneData = 0,
         Float, Float2, Float3, Float4,
         Mat3, Mat4,
         Int, Int2, Int3, Int4,
@@ -43,7 +43,7 @@ namespace BeeEngine
         { return m_Normalized; }
 
         static uint32_t GetSizeOfType(ShaderDataType type);
-        uint32_t GetComponentCount();
+        uint32_t GetComponentCount() const;
 
     private:
         String m_Name;
@@ -66,10 +66,12 @@ namespace BeeEngine
         std::vector<BufferElement>::iterator end() { return m_Elements.end(); }
         std::vector<BufferElement>::const_iterator begin() const { return m_Elements.begin(); }
         std::vector<BufferElement>::const_iterator end() const { return m_Elements.end(); }
+
+        BufferLayout() = default;
+
     private:
         int m_Stride;
         std::vector<BufferElement> m_Elements;
-        BufferLayout() = default;
 
         void CalculateOffsetsAndStride();
     };

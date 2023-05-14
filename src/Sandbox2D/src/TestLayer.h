@@ -17,4 +17,6 @@ public:
     void OnUpdate() override;
     void OnGUIRendering() override;
     void OnEvent(BeeEngine::EventDispatcher& e) override;
+    private:
+    BeeEngine::OrthographicCameraController m_CameraController;
 };

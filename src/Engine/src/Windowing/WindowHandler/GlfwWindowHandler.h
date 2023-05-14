@@ -33,6 +33,8 @@ namespace BeeEngine
 
         bool IsRunning() const override;
 
+        void UpdateTime() override;
+
         ~GLFWWindowHandler() override;
     private:
         static Key ConvertKeyCode(int key);

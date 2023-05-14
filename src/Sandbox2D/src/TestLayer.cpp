@@ -17,6 +17,7 @@ TestLayer::~TestLayer()
 void TestLayer::OnAttach()
 {
     BeeEngine::Renderer::SetClearColor(BeeEngine::Color4::CornflowerBlue);
+    m_CameraController = BeeEngine::OrthographicCameraController();
 }
 
 void TestLayer::OnDetach()
@@ -26,10 +27,21 @@ void TestLayer::OnDetach()
 
 void TestLayer::OnUpdate()
 {
+    m_CameraController.OnUpdate();
+    BeeEngine::Renderer::Clear();
+    BeeEngine::Renderer2D::BeginScene(m_CameraController);
+
     //BeeTrace("TestLayer::OnUpdate");
     if (BeeEngine::Input::KeyPressed(BeeEngine::Key::Tab))
         BeeInfo("Tab key is pressed (poll)!");
-    BeeEngine::Renderer::Clear();
+
+
+
+
+    BeeEngine::Renderer2D::DrawRectangle(0,0,0.1,1,1, BeeEngine::Color4::Red);
+
+    BeeEngine::Renderer2D::EndScene();
+
 }
 
 void TestLayer::OnGUIRendering()
@@ -44,6 +56,7 @@ static bool ResizeEvent(BeeEngine::WindowResizeEvent& event)
 void TestLayer::OnEvent(BeeEngine::EventDispatcher &e)
 {
     e.Dispatch<BeeEngine::WindowResizeEvent&, BeeEngine::EventType::WindowResize>(ResizeEvent);
+    m_CameraController.OnEvent(e);
 }
 
 

@@ -9,12 +9,13 @@
 namespace BeeEngine
 {
 
-    OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t size)
+    OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t data[], uint32_t size)
     {
         glGenBuffers(1, &m_RendererID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
         m_Size = size;
+        SetData(data, size);
     }
 
     OpenGLIndexBuffer::~OpenGLIndexBuffer()

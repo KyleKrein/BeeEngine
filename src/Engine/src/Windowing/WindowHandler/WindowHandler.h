@@ -3,6 +3,7 @@
 #include "Core/TypeDefines.h"
 #include "Windowing/WindowProperties.h"
 #include "Core/Events/EventQueue.h"
+#include "Core/Time.h"
 
 namespace BeeEngine
 {
@@ -45,10 +46,16 @@ namespace BeeEngine
         virtual void MakeContextCurrent() = 0;
         virtual void MakeContextNonCurrent() = 0;
         virtual bool IsRunning() const = 0;
+        virtual void UpdateTime() = 0;
     protected:
         static WindowHandler* s_Instance;
         WindowHandler() = delete;
         WindowHandler(EventQueue& eventQueue): m_Events(eventQueue), m_Width(0), m_Height(0) {};
+
+        void UpdateDeltaTime(float currentTime)
+        {
+            Time::Update(currentTime);
+        }
         uint16_t m_Width;
         uint16_t m_Height;
         const char *m_Title;

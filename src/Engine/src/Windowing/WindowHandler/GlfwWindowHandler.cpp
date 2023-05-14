@@ -47,7 +47,13 @@ namespace BeeEngine
         }
         glfwMakeContextCurrent(m_Window);
         //LOAD GLAD
-        gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
+        if(!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+        {
+            BeeCoreError("GLAD initialization failed!");
+        } else
+        {
+            BeeCoreInfo("GLAD initialized successfully!");
+        }
 
         m_IsRunning = true;
 
@@ -62,6 +68,7 @@ namespace BeeEngine
         glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
         glfwSetWindowCloseCallback(m_Window, WindowCloseCallback);
 
+        glViewport(0, 0, m_Width, m_Height);
     }
 
     void GLFWWindowHandler::SetWidth(uint16_t width)
@@ -433,6 +440,11 @@ namespace BeeEngine
     uint64_t GLFWWindowHandler::GetWindow()
     {
         return (uint64_t)m_Window;
+    }
+
+    void GLFWWindowHandler::UpdateTime()
+    {
+        UpdateDeltaTime(glfwGetTime());
     }
 }
 

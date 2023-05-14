@@ -12,12 +12,12 @@
 namespace BeeEngine
 {
 
-    Ref<GraphicsBuffer> GraphicsBuffer::CreateIndexBuffer(uint32_t size)
+    Ref<GraphicsBuffer> GraphicsBuffer::CreateIndexBuffer(uint32_t data[], uint32_t size)
     {
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<OpenGLIndexBuffer>(size);
+                return CreateRef<OpenGLIndexBuffer>(data, size);
             default:
                 return nullptr;
         }
@@ -32,5 +32,10 @@ namespace BeeEngine
             default:
                 return nullptr;
         }
+    }
+
+    GraphicsBuffer::GraphicsBuffer()
+    {
+
     }
 }

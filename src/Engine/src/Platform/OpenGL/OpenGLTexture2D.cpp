@@ -4,6 +4,7 @@
 
 #include "OpenGLTexture2D.h"
 #include "Core/ResourceManager.h"
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "Core/Logging/Log.h"
 
@@ -60,6 +61,8 @@ namespace BeeEngine
     {
         m_Width = width;
         m_Height = height;
+
+        m_InternalFormat = GL_RGBA8;
 
         glGenTextures(1, &m_RendererID);
         glBindTexture(GL_TEXTURE_2D, m_RendererID);
