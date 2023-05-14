@@ -9,5 +9,6 @@ int main(int argc, char** argv)
     BeeEngine::Application* application = BeeEngine::CreateApplication();
     application->Run();
     delete application;
+    print_unfreed_mem();
     return 0;
 }

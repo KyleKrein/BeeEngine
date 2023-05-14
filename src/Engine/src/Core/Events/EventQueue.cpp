@@ -28,10 +28,7 @@ namespace BeeEngine
             Input::OnEvent(event);
             m_LayerStack.OnEvent(dispatcher);
         }
-        for (int i = 0; i < m_Events.size(); ++i)
-        {
-            delete m_Events[i];
-        }
+        Event::ClearPool();
         m_Events.clear();
     }
 

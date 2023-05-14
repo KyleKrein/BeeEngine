@@ -60,6 +60,11 @@ namespace BeeEngine
         static void* operator new[](size_t size);
         static void operator delete[](void* ptr, size_t size) noexcept;
 
+        static void ClearPool()
+        {
+            s_EventPool.Clear();
+        }
+
     private:
         static ObjectPool s_EventPool;
     };
