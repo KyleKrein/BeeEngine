@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include "MallocAndFree.h"
+#define MEMORY_ALIGNMENT 8
 
 
 //4 байта unsigned int - размер блока
@@ -12,10 +13,16 @@
 
 void* bee_malloc(unsigned long long size)
 {
-    return malloc(size);
+    void* ptr = malloc(size + MEMORY_ALIGNMENT - 1 + sizeof(void*));
+    if (!ptr) {
+        return nullptr;
+    }
+    void* aligned_ptr = (void*)(((uintptr_t)(ptr) + MEMORY_ALIGNMENT - 1) & ~(MEMORY_ALIGNMENT - 1));
+    ((void**)(aligned_ptr))[-1] = ptr;
+    return aligned_ptr;
 }
 
 void bee_free(void* ptr)
 {
-    free(ptr);
+    free(((void**)(ptr))[-1]);
 }

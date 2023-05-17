@@ -13,4 +13,6 @@ public:
     static void Free(void* ptr);
 private:
     static void(*LogCallbackFunc)(const char* message);
+
+    static void InitializeMemory(unsigned char *memory, unsigned long long size);
 };

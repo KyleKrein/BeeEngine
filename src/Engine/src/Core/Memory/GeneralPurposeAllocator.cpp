@@ -10,6 +10,27 @@
 #define BLOCK_SIZE_SIZE 4
 #define MEMORY_ALIGNMENT 8
 
+struct BlockHeader
+{
+    unsigned int size;
+    bool isFree;
+    unsigned int previousSize;
+    BlockHeader(unsigned int size, bool isFree, unsigned int previousSize)
+            :size(size), isFree(isFree), previousSize(previousSize) {}
+    BlockHeader* Next()
+    {
+        return (BlockHeader*)((unsigned char*)this + BLOCK_HEADER_SIZE + size);
+    }
+    BlockHeader* Previous()
+    {
+        return (BlockHeader*)((unsigned char*)this - BLOCK_HEADER_SIZE - previousSize);
+    }
+    void* Start()
+    {
+        return (void*)((unsigned char*)(&size) + BLOCK_HEADER_SIZE);
+    }
+};
+
 enum class FindBlock: unsigned char
 {
     First = 0,
@@ -20,6 +41,7 @@ enum CombineBlocks
     No = 0,
     Previous = 1,
     Next = 2,
+    Both = 3,
 };
 
 struct Node
@@ -44,24 +66,20 @@ void *GeneralPurposeAllocator::Allocate(unsigned long long int size)
     {
         GeneralPurposeAllocator::Initialize(nullptr);
     }
-    unsigned int* blockSizePtr = (unsigned int*)memory->ptr;
-    bool* boolPtr = (bool*)(blockSizePtr + 1);
-    unsigned int blockSize = *blockSizePtr;
+    BlockHeader* blockHeader = (BlockHeader*)memory->ptr;
     Node* memoryNode = memory;
     bool blockWasFound = false;
     while (!blockWasFound)
     {
-        while (blockSize < size + BLOCK_HEADER_SIZE || !*boolPtr)
+        while (blockHeader->size < size + BLOCK_HEADER_SIZE || !blockHeader->isFree)
         {
-            blockSizePtr = (unsigned int*)(boolPtr + 5 + blockSize);
-            boolPtr = (bool*)(blockSizePtr +1);
-            blockSize = *blockSizePtr;
-            if (blockSize == 0)
+            blockHeader = blockHeader->Next();
+            if (blockHeader->size == 0)
             {
                 break;
             }
         }
-        if (blockSize)
+        if (blockHeader->size)
         {
             blockWasFound = true;
             break;
@@ -79,55 +97,38 @@ void *GeneralPurposeAllocator::Allocate(unsigned long long int size)
             }
             memoryNode->next = (Node*)bee_malloc(sizeof(Node));
             *memoryNode->next = Node(newMemory);
+            InitializeMemory(newMemory, STANDART_MEMORY_SIZE);
         }
         memoryNode = memoryNode->next;
-        blockSizePtr = (unsigned int*)memoryNode->ptr;
-        boolPtr = (bool*)(blockSizePtr + 1);
-        blockSize = *blockSizePtr;
     }
 
-    if(blockSize/(size + BLOCK_HEADER_SIZE) > 1 && blockSize - (size + BLOCK_HEADER_SIZE * 2) >= 1)
+    if(blockHeader->size/(size + BLOCK_HEADER_SIZE) > 1 && blockHeader->size - (size + BLOCK_HEADER_SIZE * 2) >= 1)
     {
-        unsigned int* newBlockSizePtr = (unsigned int*)(((unsigned char*)blockSizePtr) + 4 + 1 + 4 + size);
-        *newBlockSizePtr = blockSize - size - BLOCK_HEADER_SIZE;
-        *blockSizePtr = size;
-        *((unsigned char*)newBlockSizePtr + 4) = 1;
-        *(unsigned int*)((unsigned char*)newBlockSizePtr + 5) = size;
+        blockHeader->size = size;
+        blockHeader->Next()->previousSize = size;
+        blockHeader->Next()->size = blockHeader->Next()->size - size - BLOCK_HEADER_SIZE;
+        blockHeader->Next()->isFree = true;
     }
-    *boolPtr = false;
-    return (void*)(((unsigned char*)blockSizePtr) + 9);
+    blockHeader->isFree = false;
+    return blockHeader->Start();
 }
 
 void GeneralPurposeAllocator::Free(void *ptr)
 {
-    unsigned int* blockSizePtr = (unsigned int*)((unsigned char*)ptr - 9);
-    bool* boolPtr = (bool*)(blockSizePtr + 1);
-    unsigned int* prevBlockSizePtr = (unsigned int*)(boolPtr + 1);
+    BlockHeader* blockHeader = (BlockHeader*)((unsigned char*)ptr - BLOCK_HEADER_SIZE);
 
-    *boolPtr = true;
+    blockHeader->isFree = true;
 
     int blocks = CombineBlocks::No;
 
-
-    if(*prevBlockSizePtr)
+    if(blockHeader->previousSize && blockHeader->Previous()->isFree)
     {
-        prevBlockSizePtr = (unsigned int*)(((unsigned char*)blockSizePtr)-*prevBlockSizePtr-9);
-        bool* prevBoolPtr = (bool*)(prevBlockSizePtr+1);
-        if(*prevBoolPtr)
-        {
-            *(unsigned int*)(prevBoolPtr-4)+=*blockSizePtr+5;
-            blocks |= CombineBlocks::Previous;
-        }
+        blocks |= CombineBlocks::Previous;
     }
-    unsigned int* nextBlockSizePtr = (unsigned int*)(((unsigned char*)blockSizePtr) + *blockSizePtr + 5);
-    if (*nextBlockSizePtr)
+
+    if (blockHeader->Next()->size && blockHeader->Next()->isFree)
     {
-        bool* nextBoolPtr = (bool*)(nextBlockSizePtr + 1);
-        if (*nextBoolPtr)
-        {
-            *blockSizePtr += *nextBlockSizePtr + 5;
-            blocks |= CombineBlocks::Next;
-        }
+        blocks |= CombineBlocks::Next;
     }
 
     if(blocks == CombineBlocks::No)
@@ -135,29 +136,27 @@ void GeneralPurposeAllocator::Free(void *ptr)
         return;
     }
 
-    if(blocks == 3)
+    unsigned int resultSize;
+
+    switch ((CombineBlocks)blocks)
     {
-        unsigned int resultSize = *blockSizePtr + *prevBlockSizePtr + *nextBlockSizePtr + 18;
-        *prevBlockSizePtr = resultSize;
-        unsigned int* afterNextBlockSizePtr = (unsigned int*)(((unsigned char*)nextBlockSizePtr) + 5 + *((bool*)(nextBlockSizePtr)+5));
-        *afterNextBlockSizePtr = resultSize;
-        return;
-    }
-    if (blocks == 1)
-    {
-        unsigned int resultSize = *blockSizePtr + *prevBlockSizePtr + 9;
-        *prevBlockSizePtr = resultSize;
-        nextBlockSizePtr = (unsigned int*)(((unsigned char*)nextBlockSizePtr) + 5);
-        *nextBlockSizePtr = resultSize;
-        return;
-    }
-    if (blocks == 2)
-    {
-        unsigned int resultSize = *blockSizePtr + *nextBlockSizePtr + 9;
-        *blockSizePtr = resultSize;
-        nextBlockSizePtr = (unsigned int*)(((unsigned char*)nextBlockSizePtr) + 5 + *nextBlockSizePtr);
-        *nextBlockSizePtr = resultSize;
-        return;
+        case CombineBlocks::No:
+            return;
+        case CombineBlocks::Previous:
+            resultSize = blockHeader->size + blockHeader->previousSize + BLOCK_HEADER_SIZE;
+            blockHeader->Previous()->size = resultSize;
+            blockHeader->Next()->previousSize = resultSize;
+            break;
+        case CombineBlocks::Next:
+            resultSize = blockHeader->size + blockHeader->Next()->size + BLOCK_HEADER_SIZE;
+            blockHeader->size = resultSize;
+            blockHeader->Next()->Next()->previousSize = resultSize;
+            break;
+        case CombineBlocks::Both:
+            resultSize = blockHeader->size + blockHeader->previousSize + blockHeader->Next()->size + BLOCK_HEADER_SIZE * 2;
+            blockHeader->Previous()->size = resultSize;
+            blockHeader->Next()->Next()->previousSize = resultSize;
+            break;
     }
 }
 
@@ -167,13 +166,22 @@ void GeneralPurposeAllocator::Initialize(void (*LogCallback)(const char *))
     findBlockSettings = FindBlock::First;
 
     memory = (Node*)bee_malloc(sizeof(Node));
-    *memory = Node((unsigned char*)bee_malloc(STANDART_MEMORY_SIZE + BLOCK_HEADER_SIZE));
+    *memory = Node((unsigned char*)bee_malloc(STANDART_MEMORY_SIZE));
     if (!memory->ptr)
     {
         LogCallbackFunc("Unable to allocate memory");
     }
 
-    *((unsigned int*)memory->ptr) = STANDART_MEMORY_SIZE;
-    *(memory->ptr + 4) = 1;
-    *(unsigned int*)(memory->ptr + 5) = 0;
+    InitializeMemory(memory->ptr, STANDART_MEMORY_SIZE);
+}
+
+void GeneralPurposeAllocator::InitializeMemory(unsigned char *memory, unsigned long long size)
+{
+    BlockHeader* blockHeader = (BlockHeader*)memory;
+    blockHeader->size = size - BLOCK_HEADER_SIZE * 2;
+    blockHeader->isFree = true;
+    blockHeader->previousSize = 0;
+    blockHeader->Next()->size = 0;
+    blockHeader->Next()->isFree = false;
+    blockHeader->Next()->previousSize = blockHeader->size;
 }
