@@ -5,10 +5,11 @@
 #pragma once
 
 
-#include "Debug/MemoryProfiler.h"
+//#include "Debug/MemoryProfiler.h"
 #include <iostream>
-#include "Core/TypeDefines.h"
-#include "Core/Logging/Log.h"
+//#include "Core/TypeDefines.h"
+//#include "Core/Logging/Log.h"
+#include "Core/Memory/GeneralPurposeAllocator.h"
 /*
 #ifdef WIN32 // если находимся на платформе Windows
 #include <Windows.h>
@@ -47,6 +48,7 @@ inline void free(void* ptr)
 
 }
 */
+#if 0
 typedef struct {
     void* ptr;
     size_t size;
@@ -104,10 +106,10 @@ inline void bee_free(void* ptr, const char* file, int line) {
 #define xmalloc(size) bee_malloc(size, __FILE__, __LINE__)
 #define xfree(ptr) bee_free(ptr, __FILE__, __LINE__)
 
-
+#endif
 inline void* operator new(size_t size)
 {
-    void* ptr = xmalloc(size);
+    void* ptr = GeneralPurposeAllocator::Allocate(size);
     if(!ptr)
     {
         throw std::bad_alloc();
@@ -131,12 +133,26 @@ inline void operator delete(void* ptr, size_t size) noexcept
 
     //std::cout << "Freed memory: " << size << " bytes" << std::endl;
 
-    xfree(ptr);
+    GeneralPurposeAllocator::Free(ptr);
+}
+
+inline void operator delete(void* ptr) noexcept
+{
+    if(ptr == nullptr)
+    {
+        return;
+    }
+
+    //BeeEngine::MemoryProfiler::Free(size);
+
+    //std::cout << "Freed memory: " << size << " bytes" << std::endl;
+
+    GeneralPurposeAllocator::Free(ptr);
 }
 
 inline void* operator new[](size_t size)
 {
-    void* ptr = xmalloc(size);
+    void* ptr = GeneralPurposeAllocator::Allocate(size);
     if (!ptr) {
         throw std::bad_alloc();
     }
@@ -159,7 +175,7 @@ inline void operator delete[](void* ptr, size_t size) noexcept
 
     //std::cout << "Freed memory: " << size << " bytes" << std::endl;
 
-    xfree(ptr);
+    GeneralPurposeAllocator::Free(ptr);
 }
 
 namespace BeeEngine

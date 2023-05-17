@@ -32,7 +32,7 @@ namespace BeeEngine
     void DebugLayer::OnGUIRendering()
     {
         ImGui::Begin("Debug Settings");
-        ImGui::Text("Allocated memory: %.10f MB", toMB(MemoryProfiler::GetAllocatedSize()));
+        //ImGui::Text("Allocated memory: %.10f MB", toMB(MemoryProfiler::GetAllocatedSize()));
         ImGui::End();
     }
 
