@@ -17,4 +17,8 @@ private:
     static void InitializeMemory(unsigned char *memory, unsigned long long size);
 
     static void* FindBlockHeader(void *pVoid);
+
+    static void TestAllocate();
+
+    static void TestALlocateAndFree();
 };

@@ -185,7 +185,7 @@ namespace BeeEngine
         float textureIndex = 0.0f;
         for (uint32_t i = 1; i < m_Data.TextureSlotIndex; i++)
         {
-            if (*m_Data.TextureSlots[i].Get() == *texture.Get())
+            if (*m_Data.TextureSlots[i].get() == *texture.get())
             {
                 textureIndex = (float)i;
                 break;
