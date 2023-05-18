@@ -7,6 +7,7 @@
 #include "Renderer/Renderer2D.h"
 #include "OpenGLRenderer2DAPI.h"
 #include "Core/Logging/Log.h"
+#include "Debug/OpenGLDebug.h"
 
 namespace BeeEngine
 {
@@ -54,6 +55,7 @@ namespace BeeEngine
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_LINE_SMOOTH);
+        OPENGL_CHECK_ERRORS
 
         Renderer2D::Init(new OpenGLRenderer2DAPI());
     }
@@ -61,6 +63,7 @@ namespace BeeEngine
     void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
     {
         glViewport(x, y, width, height);
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLRendererAPI::SetClearColor(const Color4& color)
@@ -70,16 +73,18 @@ namespace BeeEngine
         float b = color.B();
         float a = color.A();
         glClearColor(*((GLfloat*)(&r)), *((GLfloat*)(&g)), *((GLfloat*)(&b)), *((GLfloat*)(&a)));
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLRendererAPI::Clear()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray> &vertexArray, uint32_t indexCount)
     {
-        //vertexArray->Bind();
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+        OPENGL_CHECK_ERRORS
     }
 }

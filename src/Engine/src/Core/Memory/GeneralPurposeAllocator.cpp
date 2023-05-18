@@ -11,7 +11,11 @@
 #include "memory"
 #include "Core/Logging/Log.h"
 
-#define STANDART_MEMORY_SIZE 104857600//1024 * 1024 * 1024
+#ifdef WINDOWS
+#define STANDART_MEMORY_SIZE  1073741824
+#else
+#define STANDART_MEMORY_SIZE 104857600
+#endif
 //#define BLOCK_HEADER_SIZE 9 //4 байта unsigned int - размер блока, 1 байт - bool false/true - занят/свободен, 4 байта unsigned int - размер блока до этого
 #define BLOCK_SIZE_SIZE 4
 #define MEMORY_ALIGNMENT 8
@@ -331,7 +335,7 @@ void* GeneralPurposeAllocator::FindBlockHeader(void *pVoid)
 
     return currentBlock;
 }
-
+#ifdef DEBUG
 void GeneralPurposeAllocator::TestAllocate()
 {
     // Тест 1: Выделение памяти и проверка корректности выделенной памяти, memory alignment и BlockHeader
@@ -489,4 +493,5 @@ void GeneralPurposeAllocator::TestALlocateAndFree()
         std::cout << "Test 2: Last BlockHeader is corrupted." << std::endl;
     }
 }
+#endif
 

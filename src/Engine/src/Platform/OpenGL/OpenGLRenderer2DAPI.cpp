@@ -91,12 +91,16 @@ namespace BeeEngine
 
             offset += 4;
         }
-        m_Data.VertexArray = VertexArray::Create(m_Data.RectVertexBuffer, GraphicsBuffer::CreateIndexBuffer(rectangleIndices, m_Data.MaxIndices * sizeof(uint32_t)));
+
+        Ref<GraphicsBuffer> indexBuffer = GraphicsBuffer::CreateIndexBuffer(rectangleIndices, m_Data.MaxIndices * sizeof(uint32_t));
+        m_Data.VertexArray = VertexArray::Create(m_Data.RectVertexBuffer, indexBuffer);
         delete[] rectangleIndices;
         m_Data.BlankTexture = Texture2D::Create(1, 1);
         uint32_t blankTexturePixel = 0xffffffff;
         m_Data.BlankTexture->SetData(&blankTexturePixel, sizeof(uint32_t));
-        memset(m_Data.TextureSlots.data(), 0, m_Data.MaxTextureSlots * sizeof(SharedPointer<Texture2D>));
+        //memset(m_Data.TextureSlots.data(), 0, m_Data.MaxTextureSlots * sizeof(Ref<Texture2D>));
+        for(int i = 1; i < m_Data.MaxTextureSlots; i++)
+            m_Data.TextureSlots[i] = nullptr;
         m_Data.TextureSlots[0] = m_Data.BlankTexture;
         //m_Data.TextureSlots.push_back(m_Data.BlankTexture);
 
@@ -112,7 +116,7 @@ namespace BeeEngine
         m_Data.RectIndexCount = 0;
 
         m_Data.TextureSlotIndex = 1;
-        //memset(m_Data.TextureSlots.data() + 1, 0, (m_Data.MaxTextureSlots - 1)  * sizeof(SharedPointer<Texture2D>));
+        //memset(m_Data.TextureSlots.data() + 1, 0, (m_Data.MaxTextureSlots - 1)  * sizeof(Ref<Texture2D>));
         for(int i = 1; i < m_Data.MaxTextureSlots; i++)
             m_Data.TextureSlots[i] = nullptr;
     }

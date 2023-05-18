@@ -6,6 +6,7 @@
 #include "Core/Logging/Log.h"
 #include "glad/glad.h"
 #include "Core/Application.h"
+#include "Debug/OpenGLDebug.h"
 
 
 namespace BeeEngine
@@ -22,18 +23,21 @@ namespace BeeEngine
         glDeleteFramebuffers(1, &m_RendererID);
         glDeleteTextures(1, &m_ColorAttachment);
         glDeleteTextures(1, &m_DepthAttachment);
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLFrameBuffer::Bind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
         glViewport(0, 0, m_Preferences.Width, m_Preferences.Height);
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLFrameBuffer::Unbind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, Application::GetInstance()->GetWidth(), Application::GetInstance()->GetHeight());
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
@@ -55,6 +59,7 @@ namespace BeeEngine
             glDeleteFramebuffers(1, &m_RendererID);
             glDeleteTextures(1, &m_ColorAttachment);
             glDeleteTextures(1, &m_DepthAttachment);
+            OPENGL_CHECK_ERRORS
         }
         glGenFramebuffers(1, &m_RendererID);
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
@@ -77,5 +82,6 @@ namespace BeeEngine
                                m_DepthAttachment, 0); //возможно нужен GL_DEPTH_ATTACHMENT
         BeeCoreAssert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer creation failed!");
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        OPENGL_CHECK_ERRORS
     }
 }

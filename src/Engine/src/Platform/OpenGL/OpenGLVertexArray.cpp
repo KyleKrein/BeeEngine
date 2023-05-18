@@ -4,19 +4,22 @@
 
 #include "OpenGLVertexArray.h"
 #include "glad/glad.h"
+#include "Debug/OpenGLDebug.h"
 
 
 namespace BeeEngine
 {
 
     OpenGLVertexArray::OpenGLVertexArray(Ref<GraphicsBuffer> vertexBuffer, Ref<GraphicsBuffer> indexBuffer)
-    : m_RendererID(0)
+    : m_RendererID(0), m_VertexBuffer(vertexBuffer), m_IndexBuffer(indexBuffer)
     {
         glGenVertexArrays(1, &m_RendererID);
+        OPENGL_CHECK_ERRORS
         glBindVertexArray(m_RendererID);
+        OPENGL_CHECK_ERRORS
 
         vertexBuffer->Bind();
-        uint32_t index = 0;
+
         const auto& layout = vertexBuffer->GetLayout();
         uint32_t vertexBufferIndex = 0;
         for (const auto& element : layout)
@@ -65,7 +68,7 @@ namespace BeeEngine
                                               ShaderDataTypeToOpenGLBaseType(element.GetType()),
                                               element.IsNormalized() ? GL_TRUE : GL_FALSE,
                                               layout.GetStride(),
-                                              (const void*)(element.GetType() + sizeof(float) * count * i));
+                                              (const void*)(element.GetOffset() + sizeof(float) * count * i));
                         glVertexAttribDivisor(vertexBufferIndex, 1);
                         vertexBufferIndex++;
                     }
@@ -75,22 +78,25 @@ namespace BeeEngine
                     BeeCoreError("Unknown ShaderDataType!");
             }
         }
-        glBindVertexArray(m_RendererID);
+        OPENGL_CHECK_ERRORS
         indexBuffer->Bind();
     }
 
     OpenGLVertexArray::~OpenGLVertexArray()
     {
         glDeleteVertexArrays(1, &m_RendererID);
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLVertexArray::Bind() const
     {
         glBindVertexArray(m_RendererID);
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLVertexArray::Unbind() const
     {
         glBindVertexArray(0);
+        OPENGL_CHECK_ERRORS
     }
 }

@@ -7,6 +7,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "Core/Logging/Log.h"
+#include "Debug/OpenGLDebug.h"
 
 
 namespace BeeEngine
@@ -55,6 +56,7 @@ namespace BeeEngine
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         glBindTexture(GL_TEXTURE_2D, 0);
+        OPENGL_CHECK_ERRORS
     }
 
     OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
@@ -72,11 +74,13 @@ namespace BeeEngine
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         glBindTexture(GL_TEXTURE_2D, 0);
+        OPENGL_CHECK_ERRORS
     }
 
     OpenGLTexture2D::~OpenGLTexture2D()
     {
         glDeleteTextures(1, &m_RendererID);
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLTexture2D::SetData(void *data, uint32_t size)
@@ -85,6 +89,7 @@ namespace BeeEngine
         BeeCoreAssert(size == m_Width * m_Height * bpp, "Data must be entire texture!");
         glBindTexture(GL_TEXTURE_2D, m_RendererID);
         glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        OPENGL_CHECK_ERRORS
     }
 
     void OpenGLTexture2D::Bind(uint32_t slot) const
@@ -92,6 +97,7 @@ namespace BeeEngine
         BeeCoreAssert(slot < 32, "Texture slot out of range!");
         glActiveTexture(GL_TEXTURE0 + slot);
         glBindTexture(GL_TEXTURE_2D, m_RendererID);
+        OPENGL_CHECK_ERRORS
     }
 
 

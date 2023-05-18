@@ -21,6 +21,8 @@ namespace BeeEngine
         void Unbind() const override;
     private:
         uint32_t m_RendererID;
+        Ref<GraphicsBuffer> m_VertexBuffer;
+        Ref<GraphicsBuffer> m_IndexBuffer;
         static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
         {
             switch (type)
