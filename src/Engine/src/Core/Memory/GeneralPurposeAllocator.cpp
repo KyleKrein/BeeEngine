@@ -16,6 +16,21 @@
 #define BLOCK_SIZE_SIZE 4
 #define MEMORY_ALIGNMENT 8
 
+struct AllocatorStatistics
+{
+    size_t allocatedMemory;
+    size_t freedMemory;
+    size_t totalAllocatedBlocks;
+    size_t totalFreedBlocks;
+    size_t allocatedBlocks;
+    size_t freeBlocks;
+    size_t totalMemoryPages;
+    size_t blocksCombined;
+    AllocatorStatistics()
+            :allocatedMemory(0), freedMemory(0), totalAllocatedBlocks(0), totalFreedBlocks(0), allocatedBlocks(0), freeBlocks(0), totalMemoryPages(0), blocksCombined(0) {}
+
+};
+
 struct BlockHeader
 {
     unsigned int size;
@@ -45,6 +60,11 @@ public:
         BeeCoreAssert(alignof(aligned_ptr) == MEMORY_ALIGNMENT, "Wrong alignment");
         return aligned_ptr; //(void*)((unsigned char*)(&size) + BLOCK_HEADER_SIZE);
     }
+
+    inline void* StartWithoutAlignment()
+    {
+        return (void*)((unsigned char*)(&size) + sizeof(BlockHeader));
+    }
 };
 
 #define BLOCK_HEADER_SIZE sizeof(BlockHeader)
@@ -70,6 +90,7 @@ struct Node
     :ptr(pointer), next(nullptr) {}
 };
 Node* memory = nullptr;
+AllocatorStatistics statistics;
 
 FindBlock findBlockSettings = FindBlock::First;
 
@@ -128,6 +149,7 @@ void *GeneralPurposeAllocator::Allocate(unsigned long long int size, unsigned lo
             InitializeMemory(newMemory, STANDART_MEMORY_SIZE);
         }
         memoryNode = memoryNode->next;
+        blockHeader = (BlockHeader*)memoryNode->ptr;
     }
 
     if(blockHeader->size/(size + BLOCK_HEADER_SIZE) > 1 && blockHeader->size - (size + BLOCK_HEADER_SIZE * 2) >= 1)
@@ -151,6 +173,10 @@ void *GeneralPurposeAllocator::Allocate(unsigned long long int size, unsigned lo
 #endif
     }
     blockHeader->isFree = false;
+
+    statistics.allocatedBlocks++;
+    statistics.totalAllocatedBlocks++;
+    statistics.allocatedMemory += blockHeader->size;
 
     return blockHeader->Start();
 }
@@ -183,26 +209,68 @@ void GeneralPurposeAllocator::Free(void *ptr)
         blocks |= CombineBlocks::Next;
     }
 
+    statistics.allocatedBlocks--;
+    statistics.totalFreedBlocks++;
+    statistics.allocatedMemory -= blockHeader->size;
+    statistics.freedMemory += blockHeader->size;
+
     unsigned int resultSize;
+    BlockHeader* nextNextBlockHeader;
+    BlockHeader* previousBlockHeader;
+
 
     switch ((CombineBlocks)blocks)
     {
         case CombineBlocks::No:
+            statistics.freeBlocks++;
             return;
         case CombineBlocks::Previous:
-            resultSize = blockHeader->size + blockHeader->previousSize + BLOCK_HEADER_SIZE;
-            blockHeader->Previous()->size = resultSize;
-            blockHeader->Next()->previousSize = resultSize;
+            previousBlockHeader = blockHeader->Previous();
+            nextNextBlockHeader = blockHeader->Next();
+            resultSize = (uintptr_t)nextNextBlockHeader - (uintptr_t)previousBlockHeader->StartWithoutAlignment();
+            previousBlockHeader->size = resultSize;
+            nextNextBlockHeader->previousSize = resultSize;
+
+#ifdef DEBUG
+            if (nextNextBlockHeader != previousBlockHeader->Next())
+            {
+                std::cout << "GeneralPurposeAllocator: BlockHeader and BlockHeader->Next() don't match pointers after combining" << std::endl;
+            }
+#endif
+
+            statistics.blocksCombined++;
             break;
         case CombineBlocks::Next:
-            resultSize = blockHeader->size + blockHeader->Next()->size + BLOCK_HEADER_SIZE;
+            nextNextBlockHeader = blockHeader->Next()->Next();
+            resultSize = (uintptr_t)nextNextBlockHeader - (uintptr_t)blockHeader->StartWithoutAlignment();
             blockHeader->size = resultSize;
-            blockHeader->Next()->Next()->previousSize = resultSize;
+            nextNextBlockHeader->previousSize = resultSize;
+
+#ifdef DEBUG
+            if (nextNextBlockHeader != blockHeader->Next())
+            {
+                std::cout << "GeneralPurposeAllocator: BlockHeader and BlockHeader->Next() don't match pointers after combining" << std::endl;
+            }
+#endif
+
+            statistics.blocksCombined++;
             break;
         case CombineBlocks::Both:
-            resultSize = blockHeader->size + blockHeader->previousSize + blockHeader->Next()->size + BLOCK_HEADER_SIZE * 2;
-            blockHeader->Previous()->size = resultSize;
-            blockHeader->Next()->Next()->previousSize = resultSize;
+            nextNextBlockHeader = blockHeader->Next()->Next();
+            resultSize = (uintptr_t)nextNextBlockHeader - (uintptr_t)blockHeader->Previous()->StartWithoutAlignment();
+            previousBlockHeader = blockHeader->Previous();
+            previousBlockHeader->size = resultSize;
+            nextNextBlockHeader->previousSize = resultSize;
+
+#ifdef DEBUG
+            if (nextNextBlockHeader != previousBlockHeader->Next())
+            {
+                std::cout << "GeneralPurposeAllocator: BlockHeader and BlockHeader->Next() don't match pointers after combining" << std::endl;
+            }
+#endif
+
+            statistics.blocksCombined+=2;
+            statistics.freeBlocks--;
             break;
     }
 }
@@ -236,6 +304,9 @@ void GeneralPurposeAllocator::InitializeMemory(unsigned char *memory, unsigned l
     blockHeader->Next()->size = 0;
     blockHeader->Next()->isFree = false;
     blockHeader->Next()->previousSize = blockHeader->size;
+
+    statistics.totalMemoryPages++;
+    statistics.freeBlocks++;
 }
 
 void* GeneralPurposeAllocator::FindBlockHeader(void *pVoid)
@@ -373,8 +444,8 @@ void GeneralPurposeAllocator::TestALlocateAndFree()
             std::cout << "Test 2: Memory 2 previous size is incorrect." << std::endl;
             return;
         }
-        /*
-        if(!blockHeader2->Next()->isFree && blockHeader2->Next()->size == 0 && blockHeader2->Next()->previousSize == blockHeader2->size)
+
+        if(!blockHeader2->Next()->Next()->isFree && blockHeader2->Next()->Next()->size == 0)
         {
             std::cout << "Test 2: Memory 2 block is correct." << std::endl;
         }
@@ -383,7 +454,6 @@ void GeneralPurposeAllocator::TestALlocateAndFree()
             std::cout << "Test 2: Memory 2 block is incorrect." << std::endl;
             return;
         }
-         */
     }
     else
     {

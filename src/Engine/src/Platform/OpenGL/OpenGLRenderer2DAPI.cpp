@@ -112,16 +112,13 @@ namespace BeeEngine
         m_Data.RectIndexCount = 0;
 
         m_Data.TextureSlotIndex = 1;
-        memset(m_Data.TextureSlots.data() + 1, 0, (m_Data.MaxTextureSlots - 1)  * sizeof(SharedPointer<Texture2D>));
-        /*for(int i = 1; i < m_Data.MaxTextureSlots; i++)
-            m_Data.TextureSlots[i] = nullptr;*/
+        //memset(m_Data.TextureSlots.data() + 1, 0, (m_Data.MaxTextureSlots - 1)  * sizeof(SharedPointer<Texture2D>));
+        for(int i = 1; i < m_Data.MaxTextureSlots; i++)
+            m_Data.TextureSlots[i] = nullptr;
     }
 
     void OpenGLRenderer2DAPI::EndScene()
     {
-        uint32_t dataSize = (uint32_t)((uint8_t*)m_Data.CurrentVertex - (uint8_t*)m_Data.RectVerticesBuffer);
-        m_Data.RectVertexBuffer->SetData(m_Data.RectVerticesBuffer, dataSize);
-
         Flush();
     }
 

@@ -79,7 +79,7 @@ namespace BeeEngine
 
     void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray> &vertexArray, uint32_t indexCount)
     {
-        vertexArray->Bind();
+        //vertexArray->Bind();
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
     }
 }
