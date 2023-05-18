@@ -17,12 +17,15 @@ void* bee_malloc(unsigned long long size)
     if (!ptr) {
         return nullptr;
     }
-    void* aligned_ptr = (void*)(((uintptr_t)(ptr) + MEMORY_ALIGNMENT - 1) & ~(MEMORY_ALIGNMENT - 1));
+    void* aligned_ptr = (void*)(((uintptr_t)(ptr) + MEMORY_ALIGNMENT) & ~(MEMORY_ALIGNMENT));
     ((void**)(aligned_ptr))[-1] = ptr;
     return aligned_ptr;
 }
 
 void bee_free(void* ptr)
 {
+    if (!ptr) {
+        return;
+    }
     free(((void**)(ptr))[-1]);
 }

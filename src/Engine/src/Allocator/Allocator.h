@@ -9,7 +9,6 @@
 #include <iostream>
 //#include "Core/TypeDefines.h"
 //#include "Core/Logging/Log.h"
-#include "Core/Memory/GeneralPurposeAllocator.h"
 /*
 #ifdef WIN32 // если находимся на платформе Windows
 #include <Windows.h>
@@ -107,9 +106,22 @@ inline void bee_free(void* ptr, const char* file, int line) {
 #define xfree(ptr) bee_free(ptr, __FILE__, __LINE__)
 
 #endif
+
+#define USE_CUSTOM_ALLOCATOR 1
+
+#if USE_CUSTOM_ALLOCATOR
+#include "Core/Memory/GeneralPurposeAllocator.h"
+#define allocate_memory(size) GeneralPurposeAllocator::Allocate(size, 8)
+#define free_memory(ptr) GeneralPurposeAllocator::Free(ptr)
+#else
+#define allocate_memory(size) malloc(size)
+#define free_memory(ptr) free(ptr)
+#endif
+
+
 inline void* operator new(size_t size)
 {
-    void* ptr = GeneralPurposeAllocator::Allocate(size);
+    void* ptr = allocate_memory(size);
     if(!ptr)
     {
         throw std::bad_alloc();
@@ -133,7 +145,7 @@ inline void operator delete(void* ptr, size_t size) noexcept
 
     //std::cout << "Freed memory: " << size << " bytes" << std::endl;
 
-    GeneralPurposeAllocator::Free(ptr);
+    free_memory(ptr);
 }
 
 inline void operator delete(void* ptr) noexcept
@@ -147,19 +159,17 @@ inline void operator delete(void* ptr) noexcept
 
     //std::cout << "Freed memory: " << size << " bytes" << std::endl;
 
-    GeneralPurposeAllocator::Free(ptr);
+    free_memory(ptr);
 }
 
 inline void* operator new[](size_t size)
 {
-    void* ptr = GeneralPurposeAllocator::Allocate(size);
+    void* ptr = allocate_memory(size);
     if (!ptr) {
         throw std::bad_alloc();
     }
 
     //BeeEngine::MemoryProfiler::Allocate(size);
-
-    //std::cout << "Allocated memory: " << size << " bytes" << std::endl;
 
     return ptr;
 }
@@ -175,7 +185,7 @@ inline void operator delete[](void* ptr, size_t size) noexcept
 
     //std::cout << "Freed memory: " << size << " bytes" << std::endl;
 
-    GeneralPurposeAllocator::Free(ptr);
+    free_memory(ptr);
 }
 
 namespace BeeEngine

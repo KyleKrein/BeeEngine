@@ -3,10 +3,12 @@
 //
 
 #include "GeneralPurposeAllocator.h"
+#include <cstdlib>
 #include "MallocAndFree.h"
+#include "memory"
 
 #define STANDART_MEMORY_SIZE 104857600//1024 * 1024 * 1024
-#define BLOCK_HEADER_SIZE 9 //4 байта unsigned int - размер блока, 1 байт - bool false/true - занят/свободен, 4 байта unsigned int - размер блока до этого
+//#define BLOCK_HEADER_SIZE 9 //4 байта unsigned int - размер блока, 1 байт - bool false/true - занят/свободен, 4 байта unsigned int - размер блока до этого
 #define BLOCK_SIZE_SIZE 4
 #define MEMORY_ALIGNMENT 8
 
@@ -17,19 +19,24 @@ struct BlockHeader
     unsigned int previousSize;
     BlockHeader(unsigned int size, bool isFree, unsigned int previousSize)
             :size(size), isFree(isFree), previousSize(previousSize) {}
-    BlockHeader* Next()
+    inline BlockHeader* Next()
     {
-        return (BlockHeader*)((unsigned char*)this + BLOCK_HEADER_SIZE + size);
+        return (BlockHeader*)((unsigned char*)this + sizeof(BlockHeader) + size);
     }
-    BlockHeader* Previous()
+    inline BlockHeader* Previous()
     {
-        return (BlockHeader*)((unsigned char*)this - BLOCK_HEADER_SIZE - previousSize);
+        return (BlockHeader*)((unsigned char*)this - sizeof(BlockHeader) - previousSize);
     }
-    void* Start()
+    inline void* Start()
     {
-        return (void*)((unsigned char*)(&size) + BLOCK_HEADER_SIZE);
+        void* aligned_ptr = (unsigned char*)(&this->size) + sizeof(BlockHeader);//(void*)(((uintptr_t)(this) + sizeof(BlockHeader) + MEMORY_ALIGNMENT - 1) & ~(MEMORY_ALIGNMENT));
+        size_t S = size;
+        std::align(MEMORY_ALIGNMENT, size-MEMORY_ALIGNMENT+1, aligned_ptr, S);
+        return aligned_ptr; //(void*)((unsigned char*)(&size) + BLOCK_HEADER_SIZE);
     }
 };
+
+#define BLOCK_HEADER_SIZE sizeof(BlockHeader)
 
 enum class FindBlock: unsigned char
 {
@@ -60,7 +67,7 @@ FindBlock findBlockSettings = FindBlock::First;
 void (*GeneralPurposeAllocator::LogCallbackFunc)(const char *) = nullptr;
 
 
-void *GeneralPurposeAllocator::Allocate(unsigned long long int size)
+void *GeneralPurposeAllocator::Allocate(unsigned long long int size, unsigned long long int  alignment)
 {
     if (!memory)
     {
@@ -69,6 +76,10 @@ void *GeneralPurposeAllocator::Allocate(unsigned long long int size)
     BlockHeader* blockHeader = (BlockHeader*)memory->ptr;
     Node* memoryNode = memory;
     bool blockWasFound = false;
+
+    size = size + alignment - 1;
+
+
     while (!blockWasFound)
     {
         while (blockHeader->size < size + BLOCK_HEADER_SIZE || !blockHeader->isFree)
@@ -110,12 +121,21 @@ void *GeneralPurposeAllocator::Allocate(unsigned long long int size)
         blockHeader->Next()->isFree = true;
     }
     blockHeader->isFree = false;
+
+    //void* ptr = blockHeader->Start();
+    //unsigned long blocksize = blockHeader->size;
+    //void* aligned_ptr = nullptr;
+    //std::align(alignment, size-alignment, ptr, blocksize);
+    //aligned_ptr = (void*)(((uintptr_t)(blockHeader->Start()) + alignment - 1) & ~(alignment));
+    //((void**)(aligned_ptr))[-1] = blockHeader->Start();
+
     return blockHeader->Start();
 }
 
 void GeneralPurposeAllocator::Free(void *ptr)
 {
-    BlockHeader* blockHeader = (BlockHeader*)((unsigned char*)ptr - BLOCK_HEADER_SIZE);
+
+    BlockHeader* blockHeader = (BlockHeader*)FindBlockHeader(ptr);//(BlockHeader*)ptr - 1;//(BlockHeader*)((unsigned char*)*(uintptr_t*)((unsigned char*)(ptr) - sizeof(void*))- BLOCK_HEADER_SIZE);
 
     blockHeader->isFree = true;
 
@@ -129,11 +149,6 @@ void GeneralPurposeAllocator::Free(void *ptr)
     if (blockHeader->Next()->size && blockHeader->Next()->isFree)
     {
         blocks |= CombineBlocks::Next;
-    }
-
-    if(blocks == CombineBlocks::No)
-    {
-        return;
     }
 
     unsigned int resultSize;
@@ -184,4 +199,27 @@ void GeneralPurposeAllocator::InitializeMemory(unsigned char *memory, unsigned l
     blockHeader->Next()->size = 0;
     blockHeader->Next()->isFree = false;
     blockHeader->Next()->previousSize = blockHeader->size;
+}
+
+void* GeneralPurposeAllocator::FindBlockHeader(void *pVoid)
+{
+    Node* currentMemory = memory;
+    while (!(currentMemory == nullptr || currentMemory->ptr <= pVoid && pVoid < currentMemory->ptr + STANDART_MEMORY_SIZE))
+    {
+        currentMemory = currentMemory->next;
+    }
+
+    if (!currentMemory)
+    {
+        LogCallbackFunc("Unable to free memory: memory was allocated with different allocator");
+        return nullptr;
+    }
+
+    BlockHeader* currentBlock = reinterpret_cast<BlockHeader*>(currentMemory->ptr);
+    while (reinterpret_cast<unsigned char*>(currentBlock->Start()) + currentBlock->size < reinterpret_cast<unsigned char*>(pVoid))
+    {
+        currentBlock = currentBlock->Next();
+    }
+
+    return currentBlock;
 }
