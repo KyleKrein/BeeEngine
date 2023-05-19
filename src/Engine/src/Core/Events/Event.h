@@ -133,7 +133,7 @@ namespace BeeEngine
         Event* m_event;
     };
 
-#define DISPATCH_EVENT(Event, Type, Func) \
+#define DISPATCH_EVENT(dispatcher, Event, Type, Func) \
 dispatcher.Dispatch<Event, Type>([=](Event* event) -> bool\
         {\
             return Func(event);\

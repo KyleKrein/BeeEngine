@@ -111,7 +111,7 @@ inline void bee_free(void* ptr, const char* file, int line) {
 
 #if USE_CUSTOM_ALLOCATOR
 #include "Core/Memory/GeneralPurposeAllocator.h"
-#define allocate_memory(size) GeneralPurposeAllocator::Allocate(size, 8)
+#define allocate_memory(size) GeneralPurposeAllocator::Allocate(size)
 #define free_memory(ptr) GeneralPurposeAllocator::Free(ptr)
 #else
 #define allocate_memory(size) malloc(size)

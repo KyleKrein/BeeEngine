@@ -20,64 +20,34 @@
 #define BLOCK_SIZE_SIZE 4
 #define MEMORY_ALIGNMENT 8
 
-struct AllocatorStatistics
+AllocatorStatistics GeneralPurposeAllocator::s_Statistics;
+
+void *AllocatorBlockHeader::StartWithoutAlignment()
 {
-    size_t allocatedMemory;
-    size_t freedMemory;
-    size_t totalAllocatedBlocks;
-    size_t totalFreedBlocks;
-    size_t allocatedBlocks;
-    size_t freeBlocks;
-    size_t totalMemoryPages;
-    size_t blocksCombined;
-    AllocatorStatistics()
-            :allocatedMemory(0), freedMemory(0), totalAllocatedBlocks(0), totalFreedBlocks(0), allocatedBlocks(0), freeBlocks(0), totalMemoryPages(0), blocksCombined(0) {}
+    return (void*)((unsigned char*)(&size) + sizeof(AllocatorBlockHeader));
+}
 
-};
-
-struct BlockHeader
+void *AllocatorBlockHeader::Start()
 {
-    unsigned int size;
-    bool isFree;
-    unsigned int previousSize;
-    BlockHeader(unsigned int size, bool isFree, unsigned int previousSize)
-            :size(size), isFree(isFree), previousSize(previousSize) {}
-    inline BlockHeader* Next()
-    {
-        return (BlockHeader*)((unsigned char*)this + sizeof(BlockHeader) + size);
-    }
-    inline BlockHeader* Previous()
-    {
-        return (BlockHeader*)((unsigned char*)this - sizeof(BlockHeader) - previousSize);
-    }
-private:
-    inline void align(int alignment, unsigned int sizeOfObject, void*& pVoid, unsigned int sizeOfBlock)
-    {
-        pVoid = (void*)(((uintptr_t)(pVoid) + alignment - 1) & ~(alignment - 1));
-    }
-public:
-    inline void* Start()
-    {
-        void* aligned_ptr = (unsigned char*)(&this->size) + sizeof(BlockHeader);//(void*)(((uintptr_t)(this) + sizeof(BlockHeader) + MEMORY_ALIGNMENT - 1) & ~(MEMORY_ALIGNMENT));
-        size_t S = size;
-        std::align(MEMORY_ALIGNMENT, size-MEMORY_ALIGNMENT+1, aligned_ptr, S);
-        BeeCoreAssert(alignof(aligned_ptr) == MEMORY_ALIGNMENT, "Wrong alignment");
-        return aligned_ptr; //(void*)((unsigned char*)(&size) + BLOCK_HEADER_SIZE);
-    }
+    void* aligned_ptr = (unsigned char*)(&this->size) + sizeof(AllocatorBlockHeader);//(void*)(((uintptr_t)(this) + sizeof(BlockHeader) + MEMORY_ALIGNMENT - 1) & ~(MEMORY_ALIGNMENT));
+    size_t S = size;
+    std::align(MEMORY_ALIGNMENT, size-MEMORY_ALIGNMENT+1, aligned_ptr, S);
+    BeeCoreAssert(alignof(aligned_ptr) == MEMORY_ALIGNMENT, "Wrong alignment");
+    return aligned_ptr; //(void*)((unsigned char*)(&size) + BLOCK_HEADER_SIZE);
+}
 
-    inline void* StartWithoutAlignment()
-    {
-        return (void*)((unsigned char*)(&size) + sizeof(BlockHeader));
-    }
-};
-
-#define BLOCK_HEADER_SIZE sizeof(BlockHeader)
-
-enum class FindBlock: unsigned char
+void AllocatorBlockHeader::align(int alignment, unsigned int sizeOfObject, void *&pVoid, unsigned int sizeOfBlock)
 {
-    First = 0,
-    Best = 1,
-};
+    pVoid = (void*)(((uintptr_t)(pVoid) + alignment - 1) & ~(alignment - 1));
+}
+
+AllocatorBlockHeader *AllocatorBlockHeader::Previous()
+{
+    return (AllocatorBlockHeader*)((unsigned char*)this - sizeof(AllocatorBlockHeader) - previousSize);
+}
+
+#define BLOCK_HEADER_SIZE sizeof(AllocatorBlockHeader)
+
 enum CombineBlocks
 {
     No = 0,
@@ -86,37 +56,17 @@ enum CombineBlocks
     Both = 3,
 };
 
-struct Node
+thread_local GeneralPurposeAllocator GeneralPurposeAllocator::s_Instance = GeneralPurposeAllocator();
+
+void *GeneralPurposeAllocator::AllocateMemory(size_t size, unsigned int alignment)
 {
-    unsigned char* ptr;
-    Node* next;
-    Node(unsigned char* pointer)
-    :ptr(pointer), next(nullptr) {}
-};
-Node* memory = nullptr;
-AllocatorStatistics statistics;
-
-FindBlock findBlockSettings = FindBlock::First;
-
-
-
-void (*GeneralPurposeAllocator::LogCallbackFunc)(const char *) = nullptr;
-
-
-void *GeneralPurposeAllocator::Allocate(unsigned long long int size, unsigned long long int  alignment)
-{
-    if (!memory)
-    {
-        GeneralPurposeAllocator::Initialize(nullptr);
-    }
-
     if(size == 0)
     {
         return nullptr;
     }
 
-    BlockHeader* blockHeader = (BlockHeader*)memory->ptr;
-    Node* memoryNode = memory;
+    AllocatorBlockHeader* blockHeader = (AllocatorBlockHeader*)m_Memory->ptr;
+    Node* memoryNode = m_Memory;
     bool blockWasFound = false;
 
     size = size + MEMORY_ALIGNMENT - 1;
@@ -142,10 +92,7 @@ void *GeneralPurposeAllocator::Allocate(unsigned long long int size, unsigned lo
             unsigned char* newMemory = (unsigned char*)bee_malloc(STANDART_MEMORY_SIZE);
             if (!newMemory)
             {
-                if (LogCallbackFunc)
-                {
-                    LogCallbackFunc("GeneralPurposeAllocator: Not enough memory");
-                }
+                std::cout<<"GeneralPurposeAllocator: Not enough memory"<<std::endl;
                 return nullptr;
             }
             memoryNode->next = (Node*)bee_malloc(sizeof(Node));
@@ -153,12 +100,12 @@ void *GeneralPurposeAllocator::Allocate(unsigned long long int size, unsigned lo
             InitializeMemory(newMemory, STANDART_MEMORY_SIZE);
         }
         memoryNode = memoryNode->next;
-        blockHeader = (BlockHeader*)memoryNode->ptr;
+        blockHeader = (AllocatorBlockHeader*)memoryNode->ptr;
     }
 
     if(blockHeader->size/(size + BLOCK_HEADER_SIZE) > 1 && blockHeader->size - (size + BLOCK_HEADER_SIZE * 2) >= 1)
     {
-        BlockHeader* nextNextBlockHeader = blockHeader->Next();
+        AllocatorBlockHeader* nextNextBlockHeader = blockHeader->Next();
         blockHeader->size = size;
         blockHeader->Next()->previousSize = size;
         blockHeader->Next()->size = (uintptr_t)nextNextBlockHeader - (uintptr_t)blockHeader->Next() - BLOCK_HEADER_SIZE;
@@ -178,24 +125,21 @@ void *GeneralPurposeAllocator::Allocate(unsigned long long int size, unsigned lo
     }
     blockHeader->isFree = false;
 
-    statistics.allocatedBlocks++;
-    statistics.totalAllocatedBlocks++;
-    statistics.allocatedMemory += blockHeader->size;
+    s_Statistics.allocatedBlocks++;
+    s_Statistics.totalAllocatedBlocks++;
+    s_Statistics.allocatedMemory += blockHeader->size;
 
     return blockHeader->Start();
 }
 
-void GeneralPurposeAllocator::Free(void *ptr)
+void GeneralPurposeAllocator::FreeMemory(void *ptr)
 {
 
-    BlockHeader* blockHeader = (BlockHeader*)FindBlockHeader(ptr);//(BlockHeader*)ptr - 1;//(BlockHeader*)((unsigned char*)*(uintptr_t*)((unsigned char*)(ptr) - sizeof(void*))- BLOCK_HEADER_SIZE);
+    AllocatorBlockHeader* blockHeader = (AllocatorBlockHeader*)FindBlockHeader(ptr);//(BlockHeader*)ptr - 1;//(BlockHeader*)((unsigned char*)*(uintptr_t*)((unsigned char*)(ptr) - sizeof(void*))- BLOCK_HEADER_SIZE);
 
     if (blockHeader->isFree)
     {
-        if (LogCallbackFunc)
-        {
-            LogCallbackFunc("GeneralPurposeAllocator: Double free");
-        }
+        std::cout<<"GeneralPurposeAllocator: Double free" << std::endl;
         return;
     }
 
@@ -213,20 +157,20 @@ void GeneralPurposeAllocator::Free(void *ptr)
         blocks |= CombineBlocks::Next;
     }
 
-    statistics.allocatedBlocks--;
-    statistics.totalFreedBlocks++;
-    statistics.allocatedMemory -= blockHeader->size;
-    statistics.freedMemory += blockHeader->size;
+    s_Statistics.allocatedBlocks--;
+    s_Statistics.totalFreedBlocks++;
+    s_Statistics.allocatedMemory -= blockHeader->size;
+    s_Statistics.freedMemory += blockHeader->size;
 
     unsigned int resultSize;
-    BlockHeader* nextNextBlockHeader;
-    BlockHeader* previousBlockHeader;
+    AllocatorBlockHeader* nextNextBlockHeader;
+    AllocatorBlockHeader* previousBlockHeader;
 
 
     switch ((CombineBlocks)blocks)
     {
         case CombineBlocks::No:
-            statistics.freeBlocks++;
+            s_Statistics.freeBlocks++;
             return;
         case CombineBlocks::Previous:
             previousBlockHeader = blockHeader->Previous();
@@ -242,7 +186,7 @@ void GeneralPurposeAllocator::Free(void *ptr)
             }
 #endif
 
-            statistics.blocksCombined++;
+            s_Statistics.blocksCombined++;
             break;
         case CombineBlocks::Next:
             nextNextBlockHeader = blockHeader->Next()->Next();
@@ -257,7 +201,7 @@ void GeneralPurposeAllocator::Free(void *ptr)
             }
 #endif
 
-            statistics.blocksCombined++;
+            s_Statistics.blocksCombined++;
             break;
         case CombineBlocks::Both:
             nextNextBlockHeader = blockHeader->Next()->Next();
@@ -273,25 +217,23 @@ void GeneralPurposeAllocator::Free(void *ptr)
             }
 #endif
 
-            statistics.blocksCombined+=2;
-            statistics.freeBlocks--;
+            s_Statistics.blocksCombined+=2;
+            s_Statistics.freeBlocks--;
             break;
     }
 }
 
-void GeneralPurposeAllocator::Initialize(void (*LogCallback)(const char *))
+void GeneralPurposeAllocator::Initialize()
 {
-    LogCallbackFunc = LogCallback;
-    findBlockSettings = FindBlock::First;
 
-    memory = (Node*)bee_malloc(sizeof(Node));
-    *memory = Node((unsigned char*)bee_malloc(STANDART_MEMORY_SIZE));
-    if (!memory->ptr)
+    m_Memory = (Node*)bee_malloc(sizeof(Node));
+    *m_Memory = Node((unsigned char*)bee_malloc(STANDART_MEMORY_SIZE));
+    if (!m_Memory->ptr)
     {
-        LogCallbackFunc("Unable to allocate memory");
+        std::cout<<"Unable to allocate memory"<<std::endl;
     }
 
-    InitializeMemory(memory->ptr, STANDART_MEMORY_SIZE);
+    InitializeMemory(m_Memory->ptr, STANDART_MEMORY_SIZE);
 
 #ifdef DEBUG
     TestAllocate();
@@ -301,7 +243,7 @@ void GeneralPurposeAllocator::Initialize(void (*LogCallback)(const char *))
 
 void GeneralPurposeAllocator::InitializeMemory(unsigned char *memory, unsigned long long size)
 {
-    BlockHeader* blockHeader = (BlockHeader*)memory;
+    AllocatorBlockHeader* blockHeader = (AllocatorBlockHeader*)memory;
     blockHeader->size = size - BLOCK_HEADER_SIZE * 2;
     blockHeader->isFree = true;
     blockHeader->previousSize = 0;
@@ -309,13 +251,13 @@ void GeneralPurposeAllocator::InitializeMemory(unsigned char *memory, unsigned l
     blockHeader->Next()->isFree = false;
     blockHeader->Next()->previousSize = blockHeader->size;
 
-    statistics.totalMemoryPages++;
-    statistics.freeBlocks++;
+    s_Statistics.totalMemoryPages++;
+    s_Statistics.freeBlocks++;
 }
 
 void* GeneralPurposeAllocator::FindBlockHeader(void *pVoid)
 {
-    Node* currentMemory = memory;
+    Node* currentMemory = m_Memory;
     while (!(currentMemory == nullptr || currentMemory->ptr <= pVoid && pVoid < currentMemory->ptr + STANDART_MEMORY_SIZE))
     {
         currentMemory = currentMemory->next;
@@ -323,11 +265,11 @@ void* GeneralPurposeAllocator::FindBlockHeader(void *pVoid)
 
     if (!currentMemory)
     {
-        LogCallbackFunc("Unable to free memory: memory was allocated with different allocator");
+        std::cout<<"Unable to free memory: memory was allocated with different allocator"<<std::endl;
         return nullptr;
     }
 
-    BlockHeader* currentBlock = reinterpret_cast<BlockHeader*>(currentMemory->ptr);
+    AllocatorBlockHeader* currentBlock = reinterpret_cast<AllocatorBlockHeader*>(currentMemory->ptr);
     while (reinterpret_cast<unsigned char*>(currentBlock->Start()) + currentBlock->size < reinterpret_cast<unsigned char*>(pVoid))
     {
         currentBlock = currentBlock->Next();
@@ -340,11 +282,11 @@ void GeneralPurposeAllocator::TestAllocate()
 {
     // Тест 1: Выделение памяти и проверка корректности выделенной памяти, memory alignment и BlockHeader
     unsigned int size = 100;
-    void* ptr = GeneralPurposeAllocator::Allocate(size, 8);
+    void* ptr = GeneralPurposeAllocator::Allocate(size);
     if (ptr != nullptr)
     {
         // Проверка корректности выделенной памяти
-        BlockHeader* blockHeader = static_cast<BlockHeader*>(GeneralPurposeAllocator::FindBlockHeader(ptr));
+        AllocatorBlockHeader* blockHeader = static_cast<AllocatorBlockHeader*>(GeneralPurposeAllocator::s_Instance.FindBlockHeader(ptr));
         if (blockHeader != nullptr && blockHeader->size >= size)
         {
             std::cout << "Test 1: Memory allocation successful. Allocated size: " << blockHeader->size << std::endl;
@@ -394,10 +336,10 @@ void GeneralPurposeAllocator::TestALlocateAndFree()
     unsigned int size2 = 200;
 
     // Выделение первого блока памяти
-    void* ptr1 = GeneralPurposeAllocator::Allocate(size1, 8);
+    void* ptr1 = GeneralPurposeAllocator::Allocate(size1);
     if (ptr1 != nullptr)
     {
-        BlockHeader* blockHeader1 = static_cast<BlockHeader*>(GeneralPurposeAllocator::FindBlockHeader(ptr1));
+        AllocatorBlockHeader* blockHeader1 = static_cast<AllocatorBlockHeader*>(GeneralPurposeAllocator::s_Instance.FindBlockHeader(ptr1));
         if (blockHeader1 != nullptr)
         {
             std::cout << "Test 2: Memory 1 allocation successful. Allocated size: " << blockHeader1->size << std::endl;
@@ -415,10 +357,10 @@ void GeneralPurposeAllocator::TestALlocateAndFree()
     }
 
     // Выделение второго блока памяти
-    void* ptr2 = GeneralPurposeAllocator::Allocate(size2, 8);
+    void* ptr2 = GeneralPurposeAllocator::Allocate(size2);
     if (ptr2 != nullptr)
     {
-        BlockHeader* blockHeader2 = static_cast<BlockHeader*>(GeneralPurposeAllocator::FindBlockHeader(ptr2));
+        AllocatorBlockHeader* blockHeader2 = static_cast<AllocatorBlockHeader*>(GeneralPurposeAllocator::s_Instance.FindBlockHeader(ptr2));
         if (blockHeader2 != nullptr)
         {
             std::cout << "Test 2: Memory 2 allocation successful. Allocated size: " << blockHeader2->size << std::endl;
@@ -428,7 +370,7 @@ void GeneralPurposeAllocator::TestALlocateAndFree()
             std::cout << "Test 2: Memory 2 allocation failed. Invalid block header." << std::endl;
             return;
         }
-        BlockHeader* blockHeader1 = static_cast<BlockHeader*>(GeneralPurposeAllocator::FindBlockHeader(ptr1));
+        AllocatorBlockHeader* blockHeader1 = static_cast<AllocatorBlockHeader*>(GeneralPurposeAllocator::s_Instance.FindBlockHeader(ptr1));
         if (blockHeader1 != nullptr && !blockHeader1->isFree && blockHeader1->size >= size1 && blockHeader1->previousSize == 0)
         {
             std::cout << "Test 2: Memory 1 is correct." << std::endl;
@@ -474,7 +416,7 @@ void GeneralPurposeAllocator::TestALlocateAndFree()
     std::cout << "Test 2: Memory 2 freed." << std::endl;
 
     // Проверка целостности BlockHeader после освобождения памяти
-    BlockHeader* blockHeader1 = static_cast<BlockHeader*>(GeneralPurposeAllocator::FindBlockHeader(ptr1));
+    AllocatorBlockHeader* blockHeader1 = static_cast<AllocatorBlockHeader*>(GeneralPurposeAllocator::s_Instance.FindBlockHeader(ptr1));
     if (blockHeader1 != nullptr && blockHeader1->isFree && blockHeader1->size == STANDART_MEMORY_SIZE - BLOCK_HEADER_SIZE*2 && blockHeader1->previousSize == 0)
     {
         std::cout << "Test 2: BlockHeader 1 is intact." << std::endl;
@@ -493,5 +435,39 @@ void GeneralPurposeAllocator::TestALlocateAndFree()
         std::cout << "Test 2: Last BlockHeader is corrupted." << std::endl;
     }
 }
+
+GeneralPurposeAllocator::GeneralPurposeAllocator()
+{
+    Initialize();
+}
+
+GeneralPurposeAllocator::~GeneralPurposeAllocator()
+{
+    Shutdown();
+}
+
+void *GeneralPurposeAllocator::Allocate(size_t size)
+{
+    return s_Instance.AllocateMemory(size, 8);
+}
+
+void GeneralPurposeAllocator::Free(void *ptr)
+{
+    s_Instance.FreeMemory(ptr);
+}
+
+void GeneralPurposeAllocator::Shutdown()
+{
+    if (m_Memory != nullptr)
+    {
+        free(m_Memory);
+        m_Memory = nullptr;
+    }
+}
+
 #endif
 
+AllocatorBlockHeader *AllocatorBlockHeader::Next()
+{
+    return (AllocatorBlockHeader*)((unsigned char*)this + sizeof(AllocatorBlockHeader) + size);
+}

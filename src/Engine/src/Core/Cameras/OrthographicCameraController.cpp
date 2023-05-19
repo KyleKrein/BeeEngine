@@ -56,17 +56,18 @@ namespace BeeEngine
     {
         m_AspectRatio = (float)event->GetWidth() / (float)event->GetHeight();
         m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
+        Renderer::SetViewport(0, 0, event->GetWidth(), event->GetHeight());
         return false;
     }
     void OrthographicCameraController::OnEvent(EventDispatcher& dispatcher)
     {
 
-        DISPATCH_EVENT(WindowResizeEvent, EventType::WindowResize, OnWindowResize);
+        DISPATCH_EVENT(dispatcher, WindowResizeEvent, EventType::WindowResize, OnWindowResize);
 
         if(!m_IsEnabled)
             return;
 
-        DISPATCH_EVENT(MouseScrolledEvent, EventType::MouseScrolled, OnMouseScrolled);
+        DISPATCH_EVENT(dispatcher, MouseScrolledEvent, EventType::MouseScrolled, OnMouseScrolled);
     }
 
     bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent *event)
