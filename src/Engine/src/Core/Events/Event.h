@@ -54,7 +54,7 @@ namespace BeeEngine
         EventType m_Type;
 
     public:
-        //Events pool
+    /*    //Events pool
         static void* operator new(size_t size);
         static void operator delete(void* ptr, size_t size) noexcept;
         static void* operator new[](size_t size);
@@ -66,7 +66,7 @@ namespace BeeEngine
         }
 
     private:
-        static ObjectPool s_EventPool;
+        static ObjectPool s_EventPool;*/
     };
 
     class EventDispatcher

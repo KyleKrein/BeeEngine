@@ -17,3 +17,6 @@
 [submodule "src/Engine/vendor/stb"]
 	path = src/Engine/vendor/stb
 	url = https://github.com/nothings/stb
+[submodule "src/tests/vendor/gtest"]
+	path = src/tests/vendor/gtest
+	url = https://github.com/google/googletest

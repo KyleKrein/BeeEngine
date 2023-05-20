@@ -13,22 +13,22 @@ namespace BeeEngine
 
     }
 
-    void EventQueue::AddEvent(Event* event)
+    void EventQueue::AddEvent(Scope<Event>&& event)
     {
-        m_Events.push_back(event);
+        m_Events.push_back(std::move(event));
     }
 
     void EventQueue::Dispatch()
     {
         for (int i = 0; i < m_Events.size(); ++i)
         {
-            Event* event = m_Events[i];
+            Event* event = m_Events[i].get();
             EventDispatcher dispatcher(event);
             ApplicationOnEvent(dispatcher);
             Input::OnEvent(event);
             m_LayerStack.OnEvent(dispatcher);
         }
-        Event::ClearPool();
+        //Event::ClearPool();
         m_Events.clear();
     }
 

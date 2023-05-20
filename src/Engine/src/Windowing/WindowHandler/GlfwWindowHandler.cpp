@@ -151,44 +151,44 @@ namespace BeeEngine
 
     void GLFWWindowHandler::CharCallback(GLFWwindow *window, unsigned int codepoint)
     {
-        auto event = new CharTypedEvent(codepoint);
-        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
+        auto event = CreateScope<CharTypedEvent>(codepoint);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
     }
 
     void GLFWWindowHandler::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
     {
-        auto event = new KeyPressedEvent(ConvertKeyCode(key));
-        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
+        auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(key));
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
     }
 
     void GLFWWindowHandler::ScrollCallback(GLFWwindow *window, double xoffset, double yoffset)
     {
-        auto event = new MouseScrolledEvent(xoffset, yoffset);
-        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
+        auto event = CreateScope<MouseScrolledEvent>(xoffset, yoffset);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
     }
 
     void GLFWWindowHandler::CursorPosCallback(GLFWwindow *window, double xpos, double ypos)
     {
-        auto event = new MouseMovedEvent(xpos, ypos);
-        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
+        auto event = CreateScope<MouseMovedEvent>(xpos, ypos);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
     }
 
     void GLFWWindowHandler::FrameBufferSizeCallback(GLFWwindow *window, int width, int height)
     {
-        auto event = new WindowResizeEvent(width, height);
-        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
+        auto event = CreateScope<WindowResizeEvent>(width, height);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
     }
 
     void GLFWWindowHandler::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
     {
-        auto event = new MouseButtonPressedEvent((MouseButton)button);
-        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
+        auto event = CreateScope<MouseButtonPressedEvent>((MouseButton)button);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
     }
 
     void GLFWWindowHandler::WindowCloseCallback(GLFWwindow *window)
     {
-        auto event = new WindowCloseEvent();
-        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(event);
+        auto event = CreateScope<WindowCloseEvent>();
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
         ((GLFWWindowHandler*)s_Instance)->m_IsRunning = false;
     }
 

@@ -8,6 +8,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})]
 include_directories(src/Engine/src/Allocator)
 
 add_subdirectory(src/Sandbox2D)
+add_subdirectory(src/tests)
 add_subdirectory(src/Engine)
 
 

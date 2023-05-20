@@ -4,7 +4,7 @@
 
 #include <cstdlib>
 #include "MallocAndFree.h"
-#define MEMORY_ALIGNMENT 8
+#define BEE_MEMORY_ALIGNMENT 8
 #define USE_CUSTOM_ALLOCATION 0
 
 

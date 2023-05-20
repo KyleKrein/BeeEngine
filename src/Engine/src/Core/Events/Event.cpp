@@ -5,6 +5,7 @@
 
 namespace BeeEngine
 {
+    /*
     ObjectPool Event::s_EventPool(1024);
 
     void* Event::operator new(size_t size)
@@ -26,4 +27,5 @@ namespace BeeEngine
     {
         s_EventPool.Free(ptr);
     }
+     */
 }
