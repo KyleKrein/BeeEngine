@@ -12,17 +12,20 @@ namespace BeeEngine
 
     void Renderer2D::Init(Renderer2DAPI *api)
     {
+        BEE_PROFILE_FUNCTION();
         m_API = api;
         m_API->Init();
     }
     void Renderer2D::DrawRectangle(float x, float y, float z, float width, float height, const Color4 &color, float rotation)
     {
+        BEE_PROFILE_FUNCTION();
         m_API->DrawRectangle(x, y, z, width, height, color, rotation);
     }
 
     void Renderer2D::DrawImage(float x, float y, float z, float width, float height, const Ref<Texture2D> &texture,
                                float rotation, const Color4 &color, float textureMultiplier)
     {
+        BEE_PROFILE_FUNCTION();
         m_API->DrawImage(x, y, z, width, height, texture, rotation, color, textureMultiplier);
     }
 
@@ -35,12 +38,14 @@ namespace BeeEngine
 
     void Renderer2D::BeginScene(const Camera &camera)
     {
+        BEE_PROFILE_FUNCTION();
         m_API->SetCameraTransform(camera.GetViewProjectionMatrix());
         m_API->BeginScene();
     }
 
     void Renderer2D::EndScene()
     {
+        BEE_PROFILE_FUNCTION();
         m_API->EndScene();
     }
 

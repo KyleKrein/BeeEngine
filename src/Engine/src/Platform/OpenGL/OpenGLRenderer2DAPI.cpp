@@ -20,6 +20,7 @@ namespace BeeEngine
 
     void OpenGLRenderer2DAPI::Init()
     {
+        BEE_PROFILE_FUNCTION();
         m_Data = Renderer2DData(Renderer2D::GetStatistics());
 
         static const Ref<String> ShaderName = CreateRef<String>("StandartBeeEngine2DShader");
@@ -112,6 +113,7 @@ namespace BeeEngine
 
     void OpenGLRenderer2DAPI::BeginScene()
     {
+        BEE_PROFILE_FUNCTION();
         m_Data.CurrentVertex = m_Data.RectVerticesBuffer;
         m_Data.RectIndexCount = 0;
 
@@ -123,11 +125,13 @@ namespace BeeEngine
 
     void OpenGLRenderer2DAPI::EndScene()
     {
+        BEE_PROFILE_FUNCTION();
         Flush();
     }
 
     void OpenGLRenderer2DAPI::Flush()
     {
+        BEE_PROFILE_FUNCTION();
         if (m_Data.RectIndexCount)
         {
             uint32_t dataSize = (uint32_t)((uint8_t*)m_Data.CurrentVertex - (uint8_t*)m_Data.RectVerticesBuffer);
@@ -146,6 +150,7 @@ namespace BeeEngine
     void OpenGLRenderer2DAPI::DrawRectangle(float x, float y, float z, float width, float height, const Color4 &color,
                                             float rotation)
     {
+        BEE_PROFILE_FUNCTION();
         static const float blankTextureIndex = 0.0f;
         static const float TilingFactor = 1.0f;
 
@@ -170,6 +175,7 @@ namespace BeeEngine
 
     void OpenGLRenderer2DAPI::FlushAndReset()
     {
+        BEE_PROFILE_FUNCTION();
         if(m_Data.RectIndexCount >= m_Data.MaxIndices)
         {
             EndScene();
@@ -181,6 +187,7 @@ namespace BeeEngine
     OpenGLRenderer2DAPI::DrawImage(float x, float y, float z, float width, float height, const Ref<Texture2D> &texture,
                                    float rotation, const Color4 &color, float textureMultiplier)
     {
+        BEE_PROFILE_FUNCTION();
         FlushAndReset();
 
         float textureIndex = 0.0f;
@@ -224,6 +231,7 @@ namespace BeeEngine
 
     void OpenGLRenderer2DAPI::SetCameraTransform(const glm::mat4 &transform)
     {
+        BEE_PROFILE_FUNCTION();
         m_Data.TextureShader->Bind();
         m_Data.TextureShader->SetMat4("u_ViewProjection", transform);
     }

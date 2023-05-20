@@ -8,15 +8,18 @@
 
 namespace BeeEngine
 {
-    class DebugLayer: public Layer
+    namespace Debug
     {
-    public:
-        DebugLayer() {};
-        ~DebugLayer() override {};
-        void OnAttach() override;
-        void OnDetach() override;
-        void OnUpdate() override;
-        void OnGUIRendering() override;
-        void OnEvent(EventDispatcher& e) override;
-    };
+        class DebugLayer: public Layer
+        {
+        public:
+            DebugLayer() {};
+            ~DebugLayer() override {};
+            void OnAttach() override;
+            void OnDetach() override;
+            void OnUpdate() override;
+            void OnGUIRendering() override;
+            void OnEvent(EventDispatcher& e) override;
+        };
+    }
 }

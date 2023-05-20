@@ -14,6 +14,8 @@
 #if USE_CUSTOM_ALLOCATOR
 #ifndef BEE_TEST_MODE
 #include "Core/Memory/GeneralPurposeAllocator.h"
+#include "Debug/Instrumentor.h"
+
 #define bee_allocate_memory(size) GeneralPurposeAllocator::Allocate(size, 16)
 #define bee_allocate_aligned_memory(size, alignment) GeneralPurposeAllocator::Allocate(size, alignment)
 #define bee_free_memory(ptr) GeneralPurposeAllocator::Free(ptr)

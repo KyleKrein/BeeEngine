@@ -12,6 +12,7 @@ namespace BeeEngine
 
     Ref<VertexArray> VertexArray::Create(Ref<GraphicsBuffer> vertexBuffer, Ref<GraphicsBuffer> indexBuffer)
     {
+        BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:

@@ -13,6 +13,7 @@ namespace BeeEngine{
     {
         while (m_Window->IsRunning())
         {
+            BEE_PROFILE_SCOPE("Application::Run One Frame");
             m_Window->ProcessEvents();
             m_EventQueue.Dispatch();
             m_Window->UpdateTime();
@@ -25,6 +26,7 @@ namespace BeeEngine{
     Application::Application(WindowProperties& properties)
     : m_IsMinimized(false), m_Layers(LayerStack()), m_EventQueue(EventQueue(m_Layers))
     {
+        BEE_PROFILE_FUNCTION();
         BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");
         s_Instance = this;
 #ifdef MACOS
@@ -56,7 +58,7 @@ namespace BeeEngine{
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
 #ifdef DEBUG
-        m_Layers.PushOverlay(CreateRef<DebugLayer>());
+        m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
 #endif
     }
 

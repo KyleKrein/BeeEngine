@@ -12,6 +12,7 @@ namespace BeeEngine
 
     Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferPreferences &preferences)
     {
+        BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:

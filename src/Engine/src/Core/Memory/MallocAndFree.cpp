@@ -4,6 +4,8 @@
 
 #include <cstdlib>
 #include "MallocAndFree.h"
+#include "Debug/Instrumentor.h"
+
 #define BEE_MEMORY_ALIGNMENT 8
 #define USE_CUSTOM_ALLOCATION 0
 

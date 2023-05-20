@@ -10,6 +10,7 @@
 #include "streambuf"
 #include "gtc/type_ptr.hpp"
 #include "Debug/OpenGLDebug.h"
+#include "Debug/Instrumentor.h"
 
 
 namespace BeeEngine
@@ -18,6 +19,7 @@ namespace BeeEngine
     OpenGLShader::OpenGLShader(const Ref<String> &name, const String &vertexSrc, const String &fragmentSrc)
     : m_Name(name)
     {
+        BEE_PROFILE_FUNCTION();
         std::unordered_map<ShaderType, Ref<String>> shaders;
         shaders[ShaderType::Vertex] = CreateRef<String>(vertexSrc);
         shaders[ShaderType::Fragment] = CreateRef<String>(fragmentSrc);
@@ -27,6 +29,7 @@ namespace BeeEngine
     OpenGLShader::OpenGLShader(const Ref<String> &name, const String &filepath)
     : m_Name(name)
     {
+        BEE_PROFILE_FUNCTION();
         std::ifstream text(filepath);
         String shaderSource;
 
@@ -43,24 +46,28 @@ namespace BeeEngine
 
     OpenGLShader::~OpenGLShader()
     {
+        BEE_PROFILE_FUNCTION();
         glDeleteProgram(m_RendererID);
         OPENGL_CHECK_ERRORS
     }
 
     void OpenGLShader::Bind() const
     {
+        BEE_PROFILE_FUNCTION();
         glUseProgram(m_RendererID);
         OPENGL_CHECK_ERRORS
     }
 
     void OpenGLShader::Unbind() const
     {
+        BEE_PROFILE_FUNCTION();
         glUseProgram(0);
         OPENGL_CHECK_ERRORS
     }
 
     void OpenGLShader::SetInt(const String &name, int value)
     {
+        BEE_PROFILE_FUNCTION();
         int location = glGetUniformLocation(m_RendererID, name.c_str());
         BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
         glUniform1i(location, value);
@@ -69,6 +76,7 @@ namespace BeeEngine
 
     void OpenGLShader::SetIntArray(const String &name, int *values, uint32_t count)
     {
+        BEE_PROFILE_FUNCTION();
         int location = glGetUniformLocation(m_RendererID, name.c_str());
         BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
         glUniform1iv(location, count, values);
@@ -77,6 +85,7 @@ namespace BeeEngine
 
     void OpenGLShader::SetFloat(const String &name, float value)
     {
+        BEE_PROFILE_FUNCTION();
         int location = glGetUniformLocation(m_RendererID, name.c_str());
         BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
         glUniform1f(location, value);
@@ -85,6 +94,7 @@ namespace BeeEngine
 
     void OpenGLShader::SetFloat2(const String &name, const glm::vec2 &value)
     {
+        BEE_PROFILE_FUNCTION();
         int location = glGetUniformLocation(m_RendererID, name.c_str());
         BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
         glUniform2f(location, value.x, value.y);
@@ -93,6 +103,7 @@ namespace BeeEngine
 
     void OpenGLShader::SetFloat3(const String &name, const glm::vec3 &value)
     {
+        BEE_PROFILE_FUNCTION();
         int location = glGetUniformLocation(m_RendererID, name.c_str());
         BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
         glUniform3f(location, value.x, value.y, value.z);
@@ -101,6 +112,7 @@ namespace BeeEngine
 
     void OpenGLShader::SetFloat4(const String &name, const glm::vec4 &value)
     {
+        BEE_PROFILE_FUNCTION();
         int location = glGetUniformLocation(m_RendererID, name.c_str());
         BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
         glUniform4f(location, value.x, value.y, value.z, value.w);
@@ -109,6 +121,7 @@ namespace BeeEngine
 
     void OpenGLShader::SetMat4(const String &name, const glm::mat4 &value)
     {
+        BEE_PROFILE_FUNCTION();
         int location = glGetUniformLocation(m_RendererID, name.c_str());
         BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
@@ -117,6 +130,7 @@ namespace BeeEngine
 
     void OpenGLShader::Compile(const std::unordered_map<ShaderType, Ref<String>> &shaders)
     {
+        BEE_PROFILE_FUNCTION();
         int program = glCreateProgram();
         std::vector<uint32_t> shaderIDs;
         shaderIDs.reserve(shaders.size());
@@ -189,6 +203,7 @@ namespace BeeEngine
 
     std::unordered_map<ShaderType, Ref<String>> OpenGLShader::Preprocess(const String &shaderSource)
     {
+        BEE_PROFILE_FUNCTION();
         std::unordered_map<ShaderType, Ref<String>> shaders;
         shaders.reserve(2);
         size_t pos = shaderSource.find("#type");

@@ -8,6 +8,7 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#include "Debug/Instrumentor.h"
 #include <stdio.h>
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -33,6 +34,7 @@ namespace BeeEngine
     {
         void Initialize(uint16_t width, uint16_t height, uint64_t window) override
         {
+            BEE_PROFILE_FUNCTION();
             m_window = (GLFWwindow*)window;
             // Setup Dear ImGui context
             IMGUI_CHECKVERSION();
@@ -80,6 +82,7 @@ namespace BeeEngine
         }
         void Update() override
         {
+            BEE_PROFILE_FUNCTION();
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
@@ -87,7 +90,7 @@ namespace BeeEngine
         }
         void Render() override
         {
-
+            BEE_PROFILE_FUNCTION();
             // Rendering
             ImGui::Render();
             //int display_w, display_h;

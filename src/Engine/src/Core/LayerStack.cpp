@@ -16,6 +16,7 @@ namespace BeeEngine{
 
     LayerStack::~LayerStack()
     {
+        BEE_PROFILE_FUNCTION();
         for (auto layer: m_layers)
         {
             layer->OnDetach();
@@ -26,30 +27,35 @@ namespace BeeEngine{
 
     void LayerStack::PushLayer(Ref<Layer> layer)
     {
+        BEE_PROFILE_FUNCTION();
         m_layers.insert(m_layers.begin(), layer);
         layer->OnAttach();
     }
 
     void LayerStack::PushOverlay(Ref<Layer> overlay)
     {
+        BEE_PROFILE_FUNCTION();
         m_layers.push_back(overlay);
         overlay->OnAttach();
     }
 
     void LayerStack::PopLayer(Ref<Layer> layer)
     {
+        BEE_PROFILE_FUNCTION();
         std::remove(m_layers.begin(), m_layers.end(), layer);
         layer->OnDetach();
     }
 
     void LayerStack::PopOverlay(Ref<Layer> overlay)
     {
+        BEE_PROFILE_FUNCTION();
         std::remove(m_layers.begin(), m_layers.end(), overlay);
         overlay->OnDetach();
     }
 
     void LayerStack::OnEvent(EventDispatcher &dispatcher)
     {
+        BEE_PROFILE_FUNCTION();
         for (auto layer = m_layers.rbegin(); layer < m_layers.rend(); ++layer)
         {
             (*layer)->OnEvent(dispatcher);
@@ -62,20 +68,26 @@ namespace BeeEngine{
 
     void LayerStack::Update()
     {
+        BEE_PROFILE_FUNCTION();
         if (!Application::GetInstance()->IsMinimized())
         {
-            for (auto layer: m_layers)
             {
-                layer->OnUpdate();
+                BEE_PROFILE_SCOPE("Layers::Update");
+                for (auto layer: m_layers)
+                {
+                    layer->OnUpdate();
+                }
             }
-
-            m_guiLayer->OnBegin();
-            for (auto layer: m_layers)
             {
-                layer->OnGUIRendering();
+                BEE_PROFILE_SCOPE("Layers::GUIRendering");
+                m_guiLayer->OnBegin();
+                for (auto layer: m_layers)
+                {
+                    layer->OnGUIRendering();
+                }
+                m_guiLayer->OnGUIRendering();
+                m_guiLayer->OnEnd();
             }
-            m_guiLayer->OnGUIRendering();
-            m_guiLayer->OnEnd();
         }
     }
 

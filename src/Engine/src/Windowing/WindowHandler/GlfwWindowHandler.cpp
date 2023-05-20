@@ -13,6 +13,7 @@ namespace BeeEngine
     GLFWWindowHandler::GLFWWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
             : WindowHandler(eventQueue)
     {
+        BEE_PROFILE_FUNCTION();
         s_Instance = this;
         m_Title = properties.Title;
         m_vsync = properties.Vsync;
@@ -73,6 +74,7 @@ namespace BeeEngine
 
     void GLFWWindowHandler::SetWidth(uint16_t width)
     {
+        BEE_PROFILE_FUNCTION();
         if (Application::GetOsPlatform() == OSPlatform::Mac)
         {
             m_Width = width/2;
@@ -86,6 +88,7 @@ namespace BeeEngine
 
     void GLFWWindowHandler::SetHeight(uint16_t height)
     {
+        BEE_PROFILE_FUNCTION();
         if (Application::GetOsPlatform() == OSPlatform::Mac)
         {
             m_Height = height/2;
@@ -105,6 +108,7 @@ namespace BeeEngine
 
     void GLFWWindowHandler::SetVSync(VSync mode)
     {
+        BEE_PROFILE_FUNCTION();
         m_vsync = mode;
         glfwSwapInterval(mode);
     }
@@ -136,11 +140,13 @@ namespace BeeEngine
 
     void GLFWWindowHandler::MakeContextCurrent()
     {
+        BEE_PROFILE_FUNCTION();
         glfwMakeContextCurrent(m_Window);
     }
 
     void GLFWWindowHandler::MakeContextNonCurrent()
     {
+        BEE_PROFILE_FUNCTION();
         glfwMakeContextCurrent(nullptr);
     }
 
@@ -444,6 +450,7 @@ namespace BeeEngine
 
     void GLFWWindowHandler::UpdateTime()
     {
+        BEE_PROFILE_FUNCTION();
         UpdateDeltaTime(glfwGetTime());
     }
 }

@@ -8,6 +8,7 @@
 #include "OpenGLRenderer2DAPI.h"
 #include "Core/Logging/Log.h"
 #include "Debug/OpenGLDebug.h"
+#include "Debug/Instrumentor.h"
 
 namespace BeeEngine
 {
@@ -33,6 +34,7 @@ namespace BeeEngine
 
     void OpenGLRendererAPI::Init()
     {
+        BEE_PROFILE_FUNCTION();
 #ifdef DEBUG
 #ifndef MACOS
         glEnable(GL_DEBUG_OUTPUT);
@@ -62,12 +64,14 @@ namespace BeeEngine
 
     void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
     {
+        BEE_PROFILE_FUNCTION();
         glViewport(x, y, width, height);
         OPENGL_CHECK_ERRORS
     }
 
     void OpenGLRendererAPI::SetClearColor(const Color4& color)
     {
+        BEE_PROFILE_FUNCTION();
         float r = color.R();
         float g = color.G();
         float b = color.B();
@@ -78,12 +82,14 @@ namespace BeeEngine
 
     void OpenGLRendererAPI::Clear()
     {
+        BEE_PROFILE_FUNCTION();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         OPENGL_CHECK_ERRORS
     }
 
     void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray> &vertexArray, uint32_t indexCount)
     {
+        BEE_PROFILE_FUNCTION();
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
         OPENGL_CHECK_ERRORS
     }

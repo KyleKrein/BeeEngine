@@ -9,6 +9,7 @@ namespace BeeEngine{
     WindowHandler* WindowHandler::s_Instance = nullptr;
     WindowHandler* WindowHandler::Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue)
     {
+        BEE_PROFILE_FUNCTION();
         switch (api)
         {
             case WindowHandlerAPI::GLFW:

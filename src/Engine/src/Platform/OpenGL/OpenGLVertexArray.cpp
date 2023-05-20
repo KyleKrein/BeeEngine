@@ -5,6 +5,7 @@
 #include "OpenGLVertexArray.h"
 #include "glad/glad.h"
 #include "Debug/OpenGLDebug.h"
+#include "Debug/Instrumentor.h"
 
 
 namespace BeeEngine
@@ -13,6 +14,7 @@ namespace BeeEngine
     OpenGLVertexArray::OpenGLVertexArray(Ref<GraphicsBuffer> vertexBuffer, Ref<GraphicsBuffer> indexBuffer)
     : m_RendererID(0), m_VertexBuffer(vertexBuffer), m_IndexBuffer(indexBuffer)
     {
+        BEE_PROFILE_FUNCTION();
         glGenVertexArrays(1, &m_RendererID);
         OPENGL_CHECK_ERRORS
         glBindVertexArray(m_RendererID);
@@ -84,18 +86,21 @@ namespace BeeEngine
 
     OpenGLVertexArray::~OpenGLVertexArray()
     {
+        BEE_PROFILE_FUNCTION();
         glDeleteVertexArrays(1, &m_RendererID);
         OPENGL_CHECK_ERRORS
     }
 
     void OpenGLVertexArray::Bind() const
     {
+        BEE_PROFILE_FUNCTION();
         glBindVertexArray(m_RendererID);
         OPENGL_CHECK_ERRORS
     }
 
     void OpenGLVertexArray::Unbind() const
     {
+        BEE_PROFILE_FUNCTION();
         glBindVertexArray(0);
         OPENGL_CHECK_ERRORS
     }

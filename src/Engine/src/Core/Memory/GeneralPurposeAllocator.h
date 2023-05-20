@@ -52,6 +52,11 @@ public:
     static void Free(void* ptr);
     void FreeMemory(void* ptr);
     void Shutdown();
+
+    inline static const AllocatorStatistics& GetStatistics()
+    {
+        return s_Statistics;
+    }
 private:
     struct Node
     {
@@ -77,4 +82,6 @@ private:
     void CheckForUnfreedMemory();
 
     void PrintStatistics();
+
+    void MergeFreeBlocks(AllocatorBlockHeader *blockHeader, int blocks) const;
 };

@@ -19,6 +19,7 @@ namespace BeeEngine
 
     void OrthographicCameraController::OnUpdate()
     {
+        BEE_PROFILE_FUNCTION();
         if (!m_IsEnabled)
             return;
         if(Input::KeyPressed(Key::W))

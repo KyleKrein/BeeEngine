@@ -10,9 +10,10 @@
 #include "MallocAndFree.h"
 #include "memory"
 #include "Core/Logging/Log.h"
+#include "Debug/Instrumentor.h"
 
 #ifdef WINDOWS
-#define STANDART_MEMORY_SIZE  1073741824
+#define STANDART_MEMORY_SIZE  104857600//1073741824
 #else
 #define STANDART_MEMORY_SIZE 104857600
 #endif
@@ -145,7 +146,6 @@ void *GeneralPurposeAllocator::AllocateMemory(size_t size, size_t alignment)
 
 void GeneralPurposeAllocator::FreeMemory(void *ptr)
 {
-
     AllocatorBlockHeader* blockHeader = (AllocatorBlockHeader*)FindBlockHeader(ptr);//(BlockHeader*)ptr - 1;//(BlockHeader*)((unsigned char*)*(uintptr_t*)((unsigned char*)(ptr) - sizeof(void*))- BLOCK_HEADER_SIZE);
 
     if (blockHeader->isFree)
@@ -173,6 +173,11 @@ void GeneralPurposeAllocator::FreeMemory(void *ptr)
     s_Statistics.allocatedMemory -= blockHeader->size;
     s_Statistics.totalFreedMemory += blockHeader->size;
 
+    MergeFreeBlocks(blockHeader, blocks);
+}
+
+void GeneralPurposeAllocator::MergeFreeBlocks(AllocatorBlockHeader *blockHeader, int blocks) const
+{
     unsigned int resultSize;
     AllocatorBlockHeader* nextNextBlockHeader;
     AllocatorBlockHeader* previousBlockHeader;
@@ -180,10 +185,10 @@ void GeneralPurposeAllocator::FreeMemory(void *ptr)
 
     switch ((CombineBlocks)blocks)
     {
-        case CombineBlocks::No:
+        case No:
             s_Statistics.freeBlocks++;
             return;
-        case CombineBlocks::Previous:
+        case Previous:
             previousBlockHeader = blockHeader->Previous();
             nextNextBlockHeader = blockHeader->Next();
             resultSize = (uintptr_t)nextNextBlockHeader - (uintptr_t)previousBlockHeader->StartWithoutAlignment();
@@ -199,7 +204,7 @@ void GeneralPurposeAllocator::FreeMemory(void *ptr)
 
             s_Statistics.blocksCombined++;
             break;
-        case CombineBlocks::Next:
+        case Next:
             nextNextBlockHeader = blockHeader->Next()->Next();
             resultSize = (uintptr_t)nextNextBlockHeader - (uintptr_t)blockHeader->StartWithoutAlignment();
             blockHeader->size = resultSize;
@@ -214,7 +219,7 @@ void GeneralPurposeAllocator::FreeMemory(void *ptr)
 
             s_Statistics.blocksCombined++;
             break;
-        case CombineBlocks::Both:
+        case Both:
             nextNextBlockHeader = blockHeader->Next()->Next();
             resultSize = (uintptr_t)nextNextBlockHeader - (uintptr_t)blockHeader->Previous()->StartWithoutAlignment();
             previousBlockHeader = blockHeader->Previous();
@@ -236,7 +241,6 @@ void GeneralPurposeAllocator::FreeMemory(void *ptr)
 
 void GeneralPurposeAllocator::Initialize()
 {
-
     m_Memory = (Node*)bee_malloc(sizeof(Node));
     *m_Memory = Node((unsigned char*)bee_malloc(STANDART_MEMORY_SIZE));
     if (!m_Memory->ptr)

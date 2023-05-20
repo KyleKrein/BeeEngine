@@ -10,6 +10,7 @@ namespace BeeEngine
 
     void ImGuiLayer::Init()
     {
+        BEE_PROFILE_FUNCTION();
         if (s_Controller != nullptr)
         {
             return;

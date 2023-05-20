@@ -3,6 +3,7 @@
 //
 
 #include "BufferLayout.h"
+#include "Debug/Instrumentor.h"
 
 
 namespace BeeEngine
@@ -59,6 +60,7 @@ namespace BeeEngine
 
     void BufferLayout::CalculateOffsetsAndStride()
     {
+        BEE_PROFILE_FUNCTION();
         int offset = 0;
         for (auto &element : m_Elements)
         {

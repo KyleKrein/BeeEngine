@@ -25,19 +25,22 @@ namespace BeeEngine
     public:
         ImGuiLayer()
         {
+            BEE_PROFILE_FUNCTION();
             Init();
         }
         void OnBegin()
         {
+            BEE_PROFILE_FUNCTION();
             s_Controller->Update();
         };
         void OnEnd()
         {
+            BEE_PROFILE_FUNCTION();
             s_Controller->Render();
         };
         virtual void OnGUIRendering() override
         {
-            ImGui::ShowDemoWindow();
+
         }
         static void Init();
     private:

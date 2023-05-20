@@ -10,6 +10,7 @@ namespace BeeEngine
 {
     Ref<RendererAPI> RendererAPI::Create()
     {
+        BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:

@@ -15,11 +15,13 @@ namespace BeeEngine
     OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferPreferences &preferences)
             : FrameBuffer(preferences)
     {
+        BEE_PROFILE_FUNCTION();
         OpenGLFrameBuffer::Invalidate();
     }
 
     OpenGLFrameBuffer::~OpenGLFrameBuffer()
     {
+        BEE_PROFILE_FUNCTION();
         glDeleteFramebuffers(1, &m_RendererID);
         glDeleteTextures(1, &m_ColorAttachment);
         glDeleteTextures(1, &m_DepthAttachment);
@@ -28,6 +30,7 @@ namespace BeeEngine
 
     void OpenGLFrameBuffer::Bind()
     {
+        BEE_PROFILE_FUNCTION();
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
         glViewport(0, 0, m_Preferences.Width, m_Preferences.Height);
         OPENGL_CHECK_ERRORS
@@ -35,6 +38,7 @@ namespace BeeEngine
 
     void OpenGLFrameBuffer::Unbind()
     {
+        BEE_PROFILE_FUNCTION();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, Application::GetInstance()->GetWidth(), Application::GetInstance()->GetHeight());
         OPENGL_CHECK_ERRORS
@@ -42,6 +46,7 @@ namespace BeeEngine
 
     void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
     {
+        BEE_PROFILE_FUNCTION();
         m_Preferences.Width = width;
         m_Preferences.Height = height;
         Invalidate();
@@ -49,6 +54,7 @@ namespace BeeEngine
 
     void OpenGLFrameBuffer::Invalidate()
     {
+        BEE_PROFILE_FUNCTION();
         if (m_Preferences.Width == 0 || m_Preferences.Height == 0)
         {
             BeeCoreWarn("Invalid width {0} or height {1} specified for FrameBuffer", m_Preferences.Width, m_Preferences.Height);

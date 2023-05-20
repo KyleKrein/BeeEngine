@@ -18,6 +18,7 @@ namespace BeeEngine{
 
     static void InitEngine()
     {
+        BEE_PROFILE_FUNCTION();
         //GeneralPurposeAllocator::Initialize(nullptr);
         Log::Init();
     }

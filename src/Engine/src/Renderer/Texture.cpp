@@ -13,6 +13,7 @@ namespace BeeEngine
 
     Ref<Texture2D> Texture2D::Create(const String &path)
     {
+        BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
@@ -25,6 +26,7 @@ namespace BeeEngine
 
     Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
     {
+        BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
