@@ -20,7 +20,7 @@ namespace BeeEngine
                 return CreateRef<OpenGLTexture2D>(path);
             default:
                 BeeCoreError("Unknown RenderAPI");
-                return nullptr;
+                throw std::exception();
         }
     }
 
@@ -33,7 +33,7 @@ namespace BeeEngine
                 return CreateRef<OpenGLTexture2D>(width, height);
             default:
                 BeeCoreError("Unknown RenderAPI");
-                return nullptr;
+                throw std::exception();
         }
     }
 }

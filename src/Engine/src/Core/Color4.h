@@ -20,6 +20,11 @@ namespace BeeEngine
             return {r, g, b, a};
         }
 
+        Color4(Color4&& other) noexcept = default;
+        Color4(const Color4& other) = default;
+        Color4& operator=(Color4&& other) noexcept = default;
+        Color4& operator=(const Color4& other) = default;
+
         inline const float R() const { return m_R; }
         inline const float G() const { return m_G; }
         inline const float B() const { return m_B; }

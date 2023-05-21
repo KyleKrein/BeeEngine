@@ -31,7 +31,7 @@ namespace BeeEngine
     Ref<Shader> ShaderLibrary::Load(const String& filepath)
     {
         BEE_PROFILE_FUNCTION();
-        auto shader = Shader::Create(GetNameFromFilePath(filepath),filepath);
+        auto shader = Shader::Create(ResourceManager::GetNameFromFilePath(filepath),filepath);
         Add(shader);
         return shader;
     }
@@ -59,15 +59,5 @@ namespace BeeEngine
     {
         BEE_PROFILE_FUNCTION();
         return m_Shaders.find(name) != m_Shaders.end();
-    }
-
-    Ref<String> ShaderLibrary::GetNameFromFilePath(const String &filepath)
-    {
-        BEE_PROFILE_FUNCTION();
-        String result = ResourceManager::ProcessFilePath(filepath);
-        int lastDot = result.find_last_of('.');
-        int lastSlash = result.find_last_of('/') + 1;
-        int count = lastDot == -1? result.size() - lastSlash: lastDot - lastSlash;
-        return CreateRef<String>(result.substr(lastSlash, count));
     }
 }

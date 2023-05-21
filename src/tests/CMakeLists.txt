@@ -1,11 +1,12 @@
 # Настройка кода тестов
 cmake_minimum_required(VERSION 3.24)
 project(BeeEngine_Tests)
-set(CMAKE_CXX_STANDARD 17)
 
 
-add_executable(BeeEngine_Tests tests_main.cpp GeneralPurposeAllocatorTest.cpp)
 
+add_executable(BeeEngine_Tests tests_main.cpp GeneralPurposeAllocatorTest.cpp StringTests.cpp RenderingTests/TextureTest.cpp ApplicationInit.h "RenderingTests/GeneralRenderingTests.cpp")
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
 add_subdirectory(vendor/gtest)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})

@@ -93,4 +93,11 @@ namespace BeeEngine
         glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
         OPENGL_CHECK_ERRORS
     }
+
+    Color4 OpenGLRendererAPI::ReadPixel(uint32_t x, uint32_t y)
+    {
+        GLubyte pixel[4];
+        glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+        return Color4::FromRGBA(pixel[0], pixel[1], pixel[2], pixel[3]);
+    }
 }

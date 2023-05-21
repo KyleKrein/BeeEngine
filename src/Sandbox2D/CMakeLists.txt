@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(Sandbox2D)
 add_executable(Sandbox2D src/main.cpp src/TestLayer.cpp src/TestLayer.h)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
 #add_subdirectory(../Engine/ zh)
 

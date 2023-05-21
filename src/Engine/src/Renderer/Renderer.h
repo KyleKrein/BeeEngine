@@ -54,6 +54,11 @@ namespace BeeEngine
             vertexArray->Bind();
             s_RendererAPI->DrawIndexed(vertexArray, indexCount);
         }
+        static Color4 ReadPixel(uint32_t x, uint32_t y)
+        {
+            BEE_PROFILE_FUNCTION();
+            return s_RendererAPI->ReadPixel(x, y);
+        }
 
     private:
         static RenderAPI s_Api;

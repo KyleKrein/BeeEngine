@@ -28,7 +28,7 @@ namespace BeeEngine
         if (!data)
         {
             BeeCoreError("Failed to load image at filepath {0}!", filepath);
-            return;
+            throw std::exception();//return;
         }
 
         m_Width = width;

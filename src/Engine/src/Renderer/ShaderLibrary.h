@@ -22,7 +22,5 @@ namespace BeeEngine
 
     private:
         std::unordered_map<String, Ref<Shader>> m_Shaders;
-
-        Ref<String> GetNameFromFilePath(const String &filepath);
     };
 }
