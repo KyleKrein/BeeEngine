@@ -4,6 +4,7 @@
 
 #include "DebugLayer.h"
 #include "Instrumentor.h"
+#include "Core/Memory/GeneralPurposeAllocator.h"
 
 
 namespace BeeEngine
@@ -66,10 +67,10 @@ namespace BeeEngine
             ImGui::Begin("Allocator statistics");
             const AllocatorStatistics& stats = GeneralPurposeAllocator::GetStatistics();
             ImGui::Text("Allocated memory: %.10f MB", toMB(stats.allocatedMemory));
-            ImGui::Text("Allocated blocks: %d", stats.allocatedBlocks);
-            ImGui::Text("Free blocks: %d", stats.freeBlocks);
-            ImGui::Text("Free blocks combined: %d", stats.blocksCombined);
-            ImGui::Text("Memory pages: %d", stats.totalMemoryPages);
+            ImGui::Text("Allocated blocks: %d", stats.allocatedBlocks.load());
+            ImGui::Text("Free blocks: %d", stats.freeBlocks.load());
+            ImGui::Text("Free blocks combined: %d", stats.blocksCombined.load());
+            ImGui::Text("Memory pages: %d", stats.totalMemoryPages.load());
             ImGui::End();
         }
 

@@ -18,13 +18,19 @@
 //
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
 //
+#include "version"
 
 #ifdef DEBUG
+#if __cplusplus > 201703L && __has_builtin(__builtin_source_location)
+#define __FUNC __builtin_FUNCTION()
+#else
 #include "source_location"
+#define __FUNC std::source_location::current().function_name()
+#endif
 #define BEE_DEBUG_START_PROFILING_SESSION(name, filename) ::BeeEngine::Debug::Instrumentor::Get().BeginSession(name, filename)
 #define BEE_DEBUG_END_PROFILING_SESSION() ::BeeEngine::Debug::Instrumentor::Get().EndSession()
 #define BEE_PROFILE_SCOPE(name) ::BeeEngine::Debug::InstrumentationTimer timer##__LINE__(name)
-#define BEE_PROFILE_FUNCTION() BEE_PROFILE_SCOPE(std::source_location::current().function_name())
+#define BEE_PROFILE_FUNCTION() BEE_PROFILE_SCOPE(__FUNC)
 #else
 #define BEE_DEBUG_START_PROFILING_SESSION(name, filename)
 #define BEE_DEBUG_END_PROFILING_SESSION()

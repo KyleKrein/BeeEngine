@@ -9,7 +9,7 @@
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
     BeeEngine::InitEngine();
-    auto windowProperties = BeeEngine::WindowProperties(1280, 720, "BeeEngineTests");
+    auto windowProperties = BeeEngine::WindowProperties{1280, 720, "BeeEngineTests", VSync::On};
     auto app = TestApplication(windowProperties);
     return RUN_ALL_TESTS();
 }

@@ -18,21 +18,28 @@
 #define STANDART_MEMORY_SIZE 104857600
 #endif
 //#define BLOCK_HEADER_SIZE 9 //4 байта unsigned int - размер блока, 1 байт - bool false/true - занят/свободен, 4 байта unsigned int - размер блока до этого
-#define BLOCK_SIZE_SIZE 4
+//#define BLOCK_SIZE_SIZE 4
 //#define BEE_MEMORY_ALIGNMENT 32
+
+inline void* align(int alignment, void* pVoid, size_t& size)
+{
+    void* ptr = (void*)(((uintptr_t)(pVoid) + alignment - 1) & ~(alignment - 1));
+    size += ((uintptr_t)ptr - (uintptr_t)pVoid);
+    return ptr;
+}
 
 AllocatorStatistics GeneralPurposeAllocator::s_Statistics;
 
-void *AllocatorBlockHeader::StartWithoutAlignment()
+void *AllocatorBlockHeader::StartWithoutAlignment(std::atomic<AllocatorBlockHeader>* ptr)
 {
-    return (void*)((unsigned char*)(&size) + sizeof(AllocatorBlockHeader));
+    return (void*)((unsigned char*)(ptr) + sizeof(std::atomic<AllocatorBlockHeader>));
 }
 
-void *AllocatorBlockHeader::Start(unsigned int alignment)
+void* AllocatorBlockHeader::Start(std::atomic<AllocatorBlockHeader>* ptr, unsigned int alignment)
 {
-    void* aligned_ptr = (unsigned char*)(&this->size) + sizeof(AllocatorBlockHeader);//(void*)(((uintptr_t)(this) + sizeof(BlockHeader) + MEMORY_ALIGNMENT - 1) & ~(MEMORY_ALIGNMENT));
+    //(void*)(((uintptr_t)(this) + sizeof(BlockHeader) + MEMORY_ALIGNMENT - 1) & ~(MEMORY_ALIGNMENT));
     size_t S = size;
-    align(alignment, size - alignment + 1, aligned_ptr, S);
+    void* aligned_ptr = ::align(alignment, StartWithoutAlignment(ptr), S);
 #ifdef DEBUG
     if((uintptr_t)aligned_ptr%alignment != 0)
     {
@@ -49,12 +56,12 @@ void AllocatorBlockHeader::align(int alignment, unsigned int sizeOfObject, void 
     pVoid = ptr;
 }
 
-AllocatorBlockHeader *AllocatorBlockHeader::Previous()
+std::atomic<AllocatorBlockHeader>* AllocatorBlockHeader::Previous(std::atomic<AllocatorBlockHeader>* ptr)
 {
-    return (AllocatorBlockHeader*)((unsigned char*)this - sizeof(AllocatorBlockHeader) - previousSize);
+    return (std::atomic<AllocatorBlockHeader>*)((unsigned char*)ptr - sizeof(std::atomic<AllocatorBlockHeader>) - previousSize);
 }
 
-#define BLOCK_HEADER_SIZE sizeof(AllocatorBlockHeader)
+#define BLOCK_HEADER_SIZE sizeof(std::atomic<AllocatorBlockHeader>)
 
 enum CombineBlocks
 {
@@ -64,37 +71,38 @@ enum CombineBlocks
     Both = 3,
 };
 
-thread_local GeneralPurposeAllocator GeneralPurposeAllocator::s_Instance = GeneralPurposeAllocator();
+GeneralPurposeAllocator GeneralPurposeAllocator::s_Instance = GeneralPurposeAllocator();
 
 void *GeneralPurposeAllocator::AllocateMemory(size_t size, size_t alignment)
 {
     if(m_Memory == nullptr)
     {
-        debug_break();
+        throw std::runtime_error("GeneralPurposeAllocator: Memory is not initialized");
     }
     if(size == 0)
     {
         return nullptr;
     }
-
-    AllocatorBlockHeader* blockHeader = (AllocatorBlockHeader*)m_Memory->ptr;
+    std::atomic<AllocatorBlockHeader>* blockHeaderPtr = (std::atomic<AllocatorBlockHeader>*)m_Memory->ptr;
+    AllocatorBlockHeader blockHeader = blockHeaderPtr->load();
     Node* memoryNode = m_Memory;
     bool blockWasFound = false;
-
-    size = size + alignment - 1;
+    size_t originalSize = size;
+    size = size + alignment * 2 - 1 * 2;
 
 
     while (!blockWasFound)
     {
-        while (blockHeader->size < size + BLOCK_HEADER_SIZE || !blockHeader->isFree)
+        while (blockHeader.size < size + BLOCK_HEADER_SIZE || !blockHeader.isFree)
         {
-            blockHeader = blockHeader->Next();
-            if (blockHeader->size == 0)
+            blockHeaderPtr = blockHeader.Next(blockHeaderPtr);
+            blockHeader = blockHeaderPtr->load();
+            if (blockHeader.size == 0)
             {
                 break;
             }
         }
-        if (blockHeader->size)
+        if (blockHeader.size)
         {
             blockWasFound = true;
             break;
@@ -112,106 +120,211 @@ void *GeneralPurposeAllocator::AllocateMemory(size_t size, size_t alignment)
             InitializeMemory(newMemory, STANDART_MEMORY_SIZE);
         }
         memoryNode = memoryNode->next;
-        blockHeader = (AllocatorBlockHeader*)memoryNode->ptr;
+        blockHeaderPtr = (std::atomic<AllocatorBlockHeader>*)memoryNode->ptr;
+        blockHeader = blockHeaderPtr->load();
     }
-
-    if(blockHeader->size/(size + BLOCK_HEADER_SIZE) > 1 && blockHeader->size - (size + BLOCK_HEADER_SIZE * 2) >= 1)
+    AllocatorBlockHeader originalBlockHeader = blockHeader;
+    if(blockHeader.size/(size + BLOCK_HEADER_SIZE) > 1 && blockHeader.size - (size + BLOCK_HEADER_SIZE * 2 + alignment-1) >= 1)
     {
-        AllocatorBlockHeader* nextNextBlockHeader = blockHeader->Next();
-        blockHeader->size = size;
-        blockHeader->Next()->previousSize = size;
-        blockHeader->Next()->size = (uintptr_t)nextNextBlockHeader - (uintptr_t)blockHeader->Next() - BLOCK_HEADER_SIZE;
-        blockHeader->Next()->isFree = true;
-        nextNextBlockHeader->previousSize = blockHeader->Next()->size;
+        std::atomic<AllocatorBlockHeader>* nextNextBlockHeaderPtr = blockHeader.Next(blockHeaderPtr);
+        AllocatorBlockHeader nextNextBlockHeader = nextNextBlockHeaderPtr->load();
+        AllocatorBlockHeader originalNextNextBlockHeader = nextNextBlockHeader;
+        blockHeader.size = size;
+        std::atomic<AllocatorBlockHeader>* nextBlockHeaderPtr = (std::atomic<AllocatorBlockHeader> *)(align(
+                alignment, blockHeader.Next(blockHeaderPtr), size));
+        AllocatorBlockHeader originalNextBlockHeader = nextBlockHeaderPtr->load();
+        blockHeader.size = size;
+        blockHeader.isFree = false;
+        AllocatorBlockHeader nextBlockHeader(nextNextBlockHeader.previousSize - blockHeader.size - BLOCK_HEADER_SIZE, true, size);
 
 #ifdef DEBUG
-        if (blockHeader->Next()->size != nextNextBlockHeader->previousSize)
+        if(size != blockHeader.size)
+        {
+            std::cout << "GeneralPurposeAllocator: Incorrect size in block. Size was: " <<size<<" and now is "<< blockHeader.size << std::endl;
+        }
+#endif
+        nextBlockHeader.previousSize = blockHeader.size;
+        nextNextBlockHeader.previousSize = nextBlockHeader.size;
+        //int difference = memcmp(blockHeaderPtr, &originalBlockHeader, sizeof(AllocatorBlockHeader));
+        if(blockHeaderPtr->compare_exchange_strong(originalBlockHeader, blockHeader))
+        {
+            if(nextBlockHeaderPtr->compare_exchange_strong(originalNextBlockHeader, nextBlockHeader))
+            {
+                if(!nextNextBlockHeaderPtr->compare_exchange_strong(originalNextNextBlockHeader, nextNextBlockHeader))
+                {
+                    if(nextBlockHeaderPtr->compare_exchange_strong(nextBlockHeader, originalNextBlockHeader))
+                        std::cout<<"GeneralPurposeAllocator: Critical failure! Memory was corrupted"<<std::endl;
+                    if(blockHeaderPtr->compare_exchange_strong(blockHeader, originalBlockHeader))
+                        std::cout<<"GeneralPurposeAllocator: Critical failure! Memory was corrupted"<<std::endl;
+                    goto FAILURE;
+                }
+            }
+            else
+            {
+                if(blockHeaderPtr->compare_exchange_strong(blockHeader, originalBlockHeader))
+                    std::cout<<"GeneralPurposeAllocator: Critical failure! Memory was corrupted"<<std::endl;
+                goto FAILURE;
+            }
+        }
+        else
+        {
+            FAILURE:
+            return AllocateMemory(originalSize, alignment);
+        }
+
+
+#ifdef DEBUG
+        if (nextBlockHeader.size != nextNextBlockHeader.previousSize)
         {
             std::cout << "GeneralPurposeAllocator: Incorrect size in block" << std::endl;
         }
-        if(blockHeader->Next()->Next() != nextNextBlockHeader)
+        if(nextBlockHeaderPtr->load().Next(nextBlockHeaderPtr) != nextNextBlockHeaderPtr)
         {
             std::cout << "GeneralPurposeAllocator: BlockHeader->Next and Next BlockHeader don't match pointers" << std::endl;
         }
+        if(nextNextBlockHeaderPtr->load().Previous(nextNextBlockHeaderPtr) != nextBlockHeaderPtr)
+        {
+            std::cout << "GeneralPurposeAllocator: BlockHeader->Next and Next BlockHeader don't match pointers 2" << std::endl;
+        }
+        if(blockHeaderPtr->load().Next(blockHeaderPtr) != nextBlockHeaderPtr)
+        {
+            std::cout << "GeneralPurposeAllocator: BlockHeader->Next and Next BlockHeader don't match pointers 3" << std::endl;
+        }
+        if(nextBlockHeaderPtr->load().Previous(nextBlockHeaderPtr) != blockHeaderPtr)
+        {
+            std::cout << "GeneralPurposeAllocator: BlockHeader->Next and Next BlockHeader don't match pointers 4" << std::endl;
+        }
 #endif
     }
-    blockHeader->isFree = false;
+    else
+    {
+        blockHeader.isFree = false;
+        if (!blockHeaderPtr->compare_exchange_strong(originalBlockHeader, blockHeader))
+        {
+            return AllocateMemory(originalSize, alignment);
+        }
+    }
 
     s_Statistics.allocatedBlocks++;
     s_Statistics.totalAllocatedBlocks++;
-    s_Statistics.allocatedMemory += blockHeader->size;
+    s_Statistics.allocatedMemory += blockHeader.size;
 
-    return blockHeader->Start(alignment);
+    return blockHeader.Start(blockHeaderPtr, alignment);
 }
 
 void GeneralPurposeAllocator::FreeMemory(void *ptr)
 {
-    AllocatorBlockHeader* blockHeader = (AllocatorBlockHeader*)FindBlockHeader(ptr);//(BlockHeader*)ptr - 1;//(BlockHeader*)((unsigned char*)*(uintptr_t*)((unsigned char*)(ptr) - sizeof(void*))- BLOCK_HEADER_SIZE);
+    std::atomic<AllocatorBlockHeader>* blockHeaderPtr = (std::atomic<AllocatorBlockHeader>*)FindBlockHeader(ptr);//(BlockHeader*)ptr - 1;//(BlockHeader*)((unsigned char*)*(uintptr_t*)((unsigned char*)(ptr) - sizeof(void*))- BLOCK_HEADER_SIZE);
 
-    if (blockHeader->isFree)
+    AllocatorBlockHeader blockHeader = blockHeaderPtr->load();
+    AllocatorBlockHeader originalBlockHeader = blockHeader;
+    if (blockHeader.isFree)
     {
-        std::cout<<"GeneralPurposeAllocator: Double free" << std::endl;
-        return;
+        throw std::runtime_error("GeneralPurposeAllocator: Double free");
     }
 
-    blockHeader->isFree = true;
+    blockHeader.isFree = true;
 
     int blocks = CombineBlocks::No;
 
-    if(blockHeader->previousSize && blockHeader->Previous()->isFree)
+
+    std::atomic<AllocatorBlockHeader>* previousBlockHeaderPtr = blockHeader.Previous(blockHeaderPtr);
+    AllocatorBlockHeader previousBlockHeader = previousBlockHeaderPtr->load();
+
+    std::atomic<AllocatorBlockHeader>* nextBlockHeaderPtr = blockHeader.Next(blockHeaderPtr);
+    AllocatorBlockHeader nextBlockHeader = nextBlockHeaderPtr->load();
+
+    if(blockHeader.previousSize && previousBlockHeader.isFree)
     {
         blocks |= CombineBlocks::Previous;
     }
 
-    if (blockHeader->Next()->size && blockHeader->Next()->isFree)
+    if (nextBlockHeader.size && nextBlockHeader.isFree)
     {
         blocks |= CombineBlocks::Next;
     }
 
     s_Statistics.allocatedBlocks--;
     s_Statistics.totalFreedBlocks++;
-    s_Statistics.allocatedMemory -= blockHeader->size;
-    s_Statistics.totalFreedMemory += blockHeader->size;
+    s_Statistics.allocatedMemory -= blockHeader.size;
+    s_Statistics.totalFreedMemory += blockHeader.size;
 
-    MergeFreeBlocks(blockHeader, blocks);
-}
-
-void GeneralPurposeAllocator::MergeFreeBlocks(AllocatorBlockHeader *blockHeader, int blocks) const
-{
+    if (blocks == 0)
+    {
+        if(!blockHeaderPtr->compare_exchange_strong(originalBlockHeader, blockHeader))
+        {
+            FreeMemory(ptr);
+            return;
+        }
+        s_Statistics.freeBlocks++;
+        return;
+    }
     unsigned int resultSize;
-    AllocatorBlockHeader* nextNextBlockHeader;
-    AllocatorBlockHeader* previousBlockHeader;
+    if (blocks == 1)
+    {
+        resultSize = (uintptr_t)nextBlockHeaderPtr - (uintptr_t)previousBlockHeader.StartWithoutAlignment(previousBlockHeaderPtr);
+        previousBlockHeader.size = resultSize;
+        nextBlockHeader.previousSize = resultSize;
 
+        auto originalPreviousBlockHeader = previousBlockHeader;
+        auto originalNextBlockHeader = nextBlockHeader;
+        if (!previousBlockHeaderPtr->compare_exchange_strong(originalPreviousBlockHeader, previousBlockHeader))
+        {
+            FreeMemory(ptr);
+            return;
+        }
+        if (!nextBlockHeaderPtr->compare_exchange_strong(originalNextBlockHeader, nextBlockHeader))
+        {
+            if (!previousBlockHeaderPtr->compare_exchange_strong(previousBlockHeader, originalPreviousBlockHeader))
+            {
+                std::cout << "GeneralPurposeAllocator: Critical failure! Memory was corrupted" << std::endl;
+            }
+            FreeMemory(ptr);
+            return;
+        }
+
+
+#ifdef DEBUG
+        if (nextBlockHeaderPtr != previousBlockHeader.Next(previousBlockHeaderPtr))
+        {
+            std::cout << "GeneralPurposeAllocator: BlockHeader and BlockHeader->Next() don't match pointers after combining" << std::endl;
+        }
+#endif
+
+        s_Statistics.blocksCombined++;
+        return;
+    }
+
+
+    std::atomic<AllocatorBlockHeader>* nextNextBlockHeaderPtr = nextBlockHeader.Next(nextBlockHeaderPtr);
+    AllocatorBlockHeader nextNextBlockHeader = nextNextBlockHeaderPtr->load();
+    AllocatorBlockHeader originalNextNextBlockHeader = nextNextBlockHeader;
 
     switch ((CombineBlocks)blocks)
     {
-        case No:
-            s_Statistics.freeBlocks++;
-            return;
-        case Previous:
-            previousBlockHeader = blockHeader->Previous();
-            nextNextBlockHeader = blockHeader->Next();
-            resultSize = (uintptr_t)nextNextBlockHeader - (uintptr_t)previousBlockHeader->StartWithoutAlignment();
-            previousBlockHeader->size = resultSize;
-            nextNextBlockHeader->previousSize = resultSize;
-
-#ifdef DEBUG
-            if (nextNextBlockHeader != previousBlockHeader->Next())
-            {
-                std::cout << "GeneralPurposeAllocator: BlockHeader and BlockHeader->Next() don't match pointers after combining" << std::endl;
-            }
-#endif
-
-            s_Statistics.blocksCombined++;
-            break;
         case Next:
-            nextNextBlockHeader = blockHeader->Next()->Next();
-            resultSize = (uintptr_t)nextNextBlockHeader - (uintptr_t)blockHeader->StartWithoutAlignment();
-            blockHeader->size = resultSize;
-            nextNextBlockHeader->previousSize = resultSize;
+            resultSize = (uintptr_t)nextNextBlockHeaderPtr - (uintptr_t)blockHeader.StartWithoutAlignment(blockHeaderPtr);
+            blockHeader.size = resultSize;
+            nextNextBlockHeader.previousSize = resultSize;
+
+            if (!blockHeaderPtr->compare_exchange_strong(originalBlockHeader, blockHeader))
+            {
+                FreeMemory(ptr);
+                return;
+            }
+            if (!nextNextBlockHeaderPtr->compare_exchange_strong(originalNextNextBlockHeader, nextNextBlockHeader))
+            {
+                if (!blockHeaderPtr->compare_exchange_strong(blockHeader, originalBlockHeader))
+                {
+                    std::cout << "GeneralPurposeAllocator: Critical failure! Memory was corrupted" << std::endl;
+                }
+                FreeMemory(ptr);
+                return;
+            }
+
 
 #ifdef DEBUG
-            if (nextNextBlockHeader != blockHeader->Next())
+            if (nextNextBlockHeaderPtr != blockHeader.Next(blockHeaderPtr))
             {
                 std::cout << "GeneralPurposeAllocator: BlockHeader and BlockHeader->Next() don't match pointers after combining" << std::endl;
             }
@@ -219,15 +332,34 @@ void GeneralPurposeAllocator::MergeFreeBlocks(AllocatorBlockHeader *blockHeader,
 
             s_Statistics.blocksCombined++;
             break;
+
         case Both:
-            nextNextBlockHeader = blockHeader->Next()->Next();
-            resultSize = (uintptr_t)nextNextBlockHeader - (uintptr_t)blockHeader->Previous()->StartWithoutAlignment();
-            previousBlockHeader = blockHeader->Previous();
-            previousBlockHeader->size = resultSize;
-            nextNextBlockHeader->previousSize = resultSize;
+
+            auto originalPreviousBlockHeader = previousBlockHeader;
+
+            resultSize = (uintptr_t)nextNextBlockHeaderPtr - (uintptr_t)previousBlockHeader.StartWithoutAlignment(previousBlockHeaderPtr);
+            previousBlockHeader.size = resultSize;
+            nextNextBlockHeader.previousSize = resultSize;
+
+
+            if(!previousBlockHeaderPtr->compare_exchange_strong(originalPreviousBlockHeader, previousBlockHeader))
+            {
+                FreeMemory(ptr);
+                return;
+            }
+
+            if(!nextNextBlockHeaderPtr->compare_exchange_strong(originalNextNextBlockHeader, nextNextBlockHeader))
+            {
+                if (!previousBlockHeaderPtr->compare_exchange_strong(previousBlockHeader, originalPreviousBlockHeader))
+                {
+                    std::cout << "GeneralPurposeAllocator: Critical failure! Memory was corrupted" << std::endl;
+                }
+                FreeMemory(ptr);
+                return;
+            }
 
 #ifdef DEBUG
-            if (nextNextBlockHeader != previousBlockHeader->Next())
+            if (nextNextBlockHeaderPtr != previousBlockHeader.Next(previousBlockHeaderPtr))
             {
                 std::cout << "GeneralPurposeAllocator: BlockHeader and BlockHeader->Next() don't match pointers after combining" << std::endl;
             }
@@ -237,10 +369,18 @@ void GeneralPurposeAllocator::MergeFreeBlocks(AllocatorBlockHeader *blockHeader,
             s_Statistics.freeBlocks--;
             break;
     }
+
+}
+
+void GeneralPurposeAllocator::MergeFreeBlocks(AllocatorBlockHeader *blockHeader, int blocks) const
+{
+
 }
 
 void GeneralPurposeAllocator::Initialize()
 {
+    if (m_Memory)
+        return;
     m_Memory = (Node*)bee_malloc(sizeof(Node));
     *m_Memory = Node((unsigned char*)bee_malloc(STANDART_MEMORY_SIZE));
     if (!m_Memory->ptr)
@@ -256,15 +396,24 @@ void GeneralPurposeAllocator::Initialize()
 #endif
 }
 
-void GeneralPurposeAllocator::InitializeMemory(unsigned char *memory, unsigned long long size)
+void GeneralPurposeAllocator::InitializeMemory(unsigned char *memory, size_t size)
 {
-    AllocatorBlockHeader* blockHeader = (AllocatorBlockHeader*)memory;
-    blockHeader->size = size - BLOCK_HEADER_SIZE * 2;
-    blockHeader->isFree = true;
-    blockHeader->previousSize = 0;
-    blockHeader->Next()->size = 0;
-    blockHeader->Next()->isFree = false;
-    blockHeader->Next()->previousSize = blockHeader->size;
+    std::atomic<AllocatorBlockHeader>* blockHeaderPtr = (std::atomic<AllocatorBlockHeader>*)memory;
+    AllocatorBlockHeader blockHeader = blockHeaderPtr->load();
+    blockHeader.size = size - BLOCK_HEADER_SIZE * 2 - alignof(std::max_align_t);
+    blockHeader.isFree = true;
+    blockHeader.previousSize = 0;
+
+    size = blockHeader.size;
+    std::atomic<AllocatorBlockHeader>* nextBlockHeaderPtr = (std::atomic<AllocatorBlockHeader>*)align(alignof(std::max_align_t),blockHeader.Next(blockHeaderPtr), size);
+    blockHeader.size = size;
+    AllocatorBlockHeader nextBlockHeader = nextBlockHeaderPtr->load();
+    nextBlockHeader.size = 0;
+    nextBlockHeader.isFree = false;
+    nextBlockHeader.previousSize = blockHeader.size;
+
+    blockHeaderPtr->store(blockHeader);
+    nextBlockHeaderPtr->store(nextBlockHeader);
 
     s_Statistics.totalMemoryPages++;
     s_Statistics.freeBlocks++;
@@ -281,18 +430,22 @@ void* GeneralPurposeAllocator::FindBlockHeader(void *pVoid)
     if (!currentMemory)
     {
         std::cout<<"Unable to free memory: memory was allocated with different allocator"<<std::endl;
-        return nullptr;
+        throw std::exception();
     }
 
-    AllocatorBlockHeader* currentBlock = reinterpret_cast<AllocatorBlockHeader*>(currentMemory->ptr);
-    while (reinterpret_cast<unsigned char*>(currentBlock->StartWithoutAlignment()) + currentBlock->size < reinterpret_cast<unsigned char*>(pVoid))
+    std::atomic<AllocatorBlockHeader>* currentBlockPtr = reinterpret_cast<std::atomic<AllocatorBlockHeader>*>(currentMemory->ptr);
+    AllocatorBlockHeader currentBlock = currentBlockPtr->load();
+    while (reinterpret_cast<unsigned char*>(currentBlock.StartWithoutAlignment(currentBlockPtr)) + currentBlock.size < reinterpret_cast<unsigned char*>(pVoid))
     {
-        currentBlock = currentBlock->Next();
+        currentBlockPtr = currentBlock.Next(currentBlockPtr);
+        currentBlock = currentBlockPtr->load();
     }
 
-    return currentBlock;
+    return currentBlockPtr;
 }
-#ifdef DEBUG
+
+
+#if 0
 void GeneralPurposeAllocator::TestAllocate()
 {
     // Тест 1: Выделение памяти и проверка корректности выделенной памяти, memory alignment и BlockHeader
@@ -450,7 +603,7 @@ void GeneralPurposeAllocator::TestALlocateAndFree()
         std::cout << "Test 2: Last BlockHeader is corrupted." << std::endl;
     }
 }
-
+#endif
 GeneralPurposeAllocator::GeneralPurposeAllocator()
 {
 #ifdef DEBUG
@@ -496,14 +649,16 @@ void GeneralPurposeAllocator::CheckForUnfreedMemory()
     Node* ptr = m_Memory;
     while (ptr)
     {
-        AllocatorBlockHeader* blockHeader = reinterpret_cast<AllocatorBlockHeader*>(ptr->ptr);
-        while(blockHeader->size)
+        std::atomic<AllocatorBlockHeader>* blockHeaderPtr = reinterpret_cast<std::atomic<AllocatorBlockHeader>*>(ptr->ptr);
+        AllocatorBlockHeader blockHeader = blockHeaderPtr->load();
+        while(blockHeader.size)
         {
-            if(!blockHeader->isFree)
+            if(!blockHeader.isFree)
             {
-                std::cout << "Memory leak detected. Block size: " << blockHeader->size << std::endl;
+                std::cout << "Memory leak detected. Block size: " << blockHeader.size << std::endl;
             }
-            blockHeader = blockHeader->Next();
+            blockHeaderPtr = blockHeader.Next(blockHeaderPtr);
+            blockHeader = blockHeaderPtr->load();
         }
         ptr = ptr->next;
     }
@@ -515,9 +670,7 @@ void GeneralPurposeAllocator::PrintStatistics()
     std::cout<< "Total memory allocated: " << s_Statistics.allocatedMemory << std::endl;
 }
 
-#endif
-
-AllocatorBlockHeader *AllocatorBlockHeader::Next()
+std::atomic<AllocatorBlockHeader>* AllocatorBlockHeader::Next(std::atomic<AllocatorBlockHeader>* ptr)
 {
-    return (AllocatorBlockHeader*)((unsigned char*)this + sizeof(AllocatorBlockHeader) + size);
+    return (std::atomic<AllocatorBlockHeader>*)(((uintptr_t)ptr) + sizeof(std::atomic<AllocatorBlockHeader>) + size);
 }

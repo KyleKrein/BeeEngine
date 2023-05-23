@@ -3,19 +3,21 @@
 //
 
 #pragma once
-#include "corecrt.h"
+
+#include <cstdlib>
+#include <atomic>
 
 struct AllocatorStatistics
 {
-    size_t allocatedMemory;
-    size_t totalFreedMemory;
-    size_t totalAllocatedMemory;
-    size_t totalAllocatedBlocks;
-    size_t totalFreedBlocks;
-    size_t allocatedBlocks;
-    size_t freeBlocks;
-    size_t totalMemoryPages;
-    size_t blocksCombined;
+    std::atomic<size_t> allocatedMemory;
+    std::atomic<size_t> totalFreedMemory;
+    std::atomic<size_t> totalAllocatedMemory;
+    std::atomic<size_t> totalAllocatedBlocks;
+    std::atomic<size_t> totalFreedBlocks;
+    std::atomic<size_t> allocatedBlocks;
+    std::atomic<size_t> freeBlocks;
+    std::atomic<size_t> totalMemoryPages;
+    std::atomic<size_t> blocksCombined;
     AllocatorStatistics()
             : allocatedMemory(0), totalFreedMemory(0), totalAllocatedBlocks(0), totalFreedBlocks(0), allocatedBlocks(0), freeBlocks(0), totalMemoryPages(0), blocksCombined(0), totalAllocatedMemory(0) {}
 
@@ -23,19 +25,19 @@ struct AllocatorStatistics
 
 struct AllocatorBlockHeader
 {
-    unsigned int size;
-    bool isFree;
-    unsigned int previousSize;
+    uint32_t size;
+    uint64_t isFree;
+    uint32_t previousSize;
     AllocatorBlockHeader(unsigned int size, bool isFree, unsigned int previousSize)
             :size(size), isFree(isFree), previousSize(previousSize) {}
-    inline AllocatorBlockHeader* Next();
-    inline AllocatorBlockHeader* Previous();
+    inline std::atomic<AllocatorBlockHeader>* Next(std::atomic<AllocatorBlockHeader>* ptr);
+    inline std::atomic<AllocatorBlockHeader>* Previous(std::atomic<AllocatorBlockHeader>* ptr);
 private:
     inline void align(int alignment, unsigned int sizeOfObject, void*& pVoid, size_t& sizeOfBlock);
 public:
-    inline void* Start(unsigned int alignment);
+    inline void* Start(std::atomic<AllocatorBlockHeader>* ptr, unsigned int alignment);
 
-    inline void* StartWithoutAlignment();
+    inline void* StartWithoutAlignment(std::atomic<AllocatorBlockHeader>* ptr);
 };
 
 
@@ -69,7 +71,7 @@ private:
     static AllocatorStatistics s_Statistics;
     //static void(*LogCallbackFunc)(const char* message);
 
-    void InitializeMemory(unsigned char *memory, unsigned long long size);
+    void InitializeMemory(unsigned char *memory, size_t size);
 
     void* FindBlockHeader(void *pVoid);
 
@@ -77,7 +79,7 @@ private:
 
     static void TestALlocateAndFree();
 
-    static thread_local GeneralPurposeAllocator s_Instance;
+    static GeneralPurposeAllocator s_Instance;
 
     void CheckForUnfreedMemory();
 
