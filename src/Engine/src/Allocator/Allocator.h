@@ -5,7 +5,6 @@
 #pragma once
 
 
-#include <iostream>
 #include "cstddef"
 
 
@@ -35,7 +34,6 @@
 #if USE_CUSTOM_ALLOCATOR
 inline void* operator new(std::size_t size, std::align_val_t alignment)
 {
-    std::cout << "Aligned memory allocator was used" << std::endl;
     void* ptr = bee_allocate_aligned_memory(size, (size_t)alignment);
     if(!ptr)
     {

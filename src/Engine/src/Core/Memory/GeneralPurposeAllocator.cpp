@@ -4,22 +4,16 @@
 
 
 
+#include "AllocatorBlockHeader.h"
 #include "GeneralPurposeAllocator.h"
-#include <cstddef>
 #include "MallocAndFree.h"
 
-
-#ifdef WINDOWS
 #define BEE_STANDART_MEMORY_SIZE  104857600
-#else
-#define STANDART_MEMORY_SIZE 104857600
-#endif
 
 namespace BeeEngine
 {
     namespace Internal
     {
-        AllocatorStatistics GeneralPurposeAllocator::s_Statistics;
 
 #if 1
 
@@ -47,11 +41,6 @@ namespace BeeEngine
             }
 
             InitializeMemory(m_Memory->ptr, BEE_STANDART_MEMORY_SIZE);
-
-#if 0
-            TestAllocate();
-    TestALlocateAndFree();
-#endif
         }
 
         void GeneralPurposeAllocator::InitializeMemory(unsigned char *memory, size_t size)
@@ -73,8 +62,8 @@ namespace BeeEngine
             blockHeaderPtr->store(blockHeader);
             nextBlockHeaderPtr->store(nextBlockHeader);
 
-            s_Statistics.totalMemoryPages++;
-            s_Statistics.freeBlocks++;
+            AllocatorStatistics::GetStatistics().totalMemoryPages++;
+            AllocatorStatistics::GetStatistics().freeBlocks++;
         }
 
         void* GeneralPurposeAllocator::FindBlockHeader(void *pVoid)
@@ -234,9 +223,9 @@ namespace BeeEngine
                 }
             }
 
-            s_Statistics.allocatedBlocks++;
-            s_Statistics.totalAllocatedBlocks++;
-            s_Statistics.allocatedMemory += blockHeader.size;
+            AllocatorStatistics::GetStatistics().allocatedBlocks++;
+            AllocatorStatistics::GetStatistics().totalAllocatedBlocks++;
+            AllocatorStatistics::GetStatistics().allocatedMemory += blockHeader.size;
 
             return blockHeader.Start(blockHeaderPtr, alignment);
         }
@@ -273,10 +262,10 @@ namespace BeeEngine
                 blocks |= CombineBlocks::Next;
             }
 
-            s_Statistics.allocatedBlocks--;
-            s_Statistics.totalFreedBlocks++;
-            s_Statistics.allocatedMemory -= blockHeader.size;
-            s_Statistics.totalFreedMemory += blockHeader.size;
+            AllocatorStatistics::GetStatistics().allocatedBlocks--;
+            AllocatorStatistics::GetStatistics().totalFreedBlocks++;
+            AllocatorStatistics::GetStatistics().allocatedMemory -= blockHeader.size;
+            AllocatorStatistics::GetStatistics().totalFreedMemory += blockHeader.size;
 
             if (blocks == 0)
             {
@@ -285,7 +274,7 @@ namespace BeeEngine
                     FreeMemory(ptr);
                     return;
                 }
-                s_Statistics.freeBlocks++;
+                AllocatorStatistics::GetStatistics().freeBlocks++;
                 return;
             }
             unsigned int resultSize;
@@ -320,7 +309,7 @@ namespace BeeEngine
                 }
 #endif
 
-                s_Statistics.blocksCombined++;
+                AllocatorStatistics::GetStatistics().blocksCombined++;
                 return;
             }
 
@@ -359,7 +348,7 @@ namespace BeeEngine
                     }
 #endif
 
-                    s_Statistics.blocksCombined++;
+                    AllocatorStatistics::GetStatistics().blocksCombined++;
                     break;
 
                 case Both:
@@ -394,8 +383,8 @@ namespace BeeEngine
                     }
 #endif
 
-                    s_Statistics.blocksCombined+=2;
-                    s_Statistics.freeBlocks--;
+                    AllocatorStatistics::GetStatistics().blocksCombined+=2;
+                    AllocatorStatistics::GetStatistics().freeBlocks--;
                     break;
             }
 
@@ -464,7 +453,7 @@ namespace BeeEngine
         void GeneralPurposeAllocator::PrintStatistics()
         {
             std::cout << "Memory usage statistics:" << std::endl;
-            std::cout<< "Total memory allocated: " << s_Statistics.allocatedMemory << std::endl;
+            std::cout<< "Total memory allocated: " << AllocatorStatistics::GetStatistics().allocatedMemory << std::endl;
         }
 
 #endif
