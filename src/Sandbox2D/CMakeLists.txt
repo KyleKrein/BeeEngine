@@ -14,3 +14,6 @@ target_include_directories(Sandbox2D
         PRIVATE ${CMAKE_SOURCE_DIR}/Engine/include/
         )]]
 target_link_libraries(Sandbox2D BeeEngine)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -latomic")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -latomic")

@@ -20,3 +20,6 @@
 [submodule "src/tests/vendor/gtest"]
 	path = src/tests/vendor/gtest
 	url = https://github.com/google/googletest
+[submodule "src/Engine/vendor/gsl"]
+	path = src/Engine/vendor/gsl
+	url = https://github.com/microsoft/GSL.git

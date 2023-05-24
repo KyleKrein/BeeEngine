@@ -16,9 +16,9 @@
 #include "Core/Memory/GeneralPurposeAllocator.h"
 #include "Debug/Instrumentor.h"
 
-#define bee_allocate_memory(size) GeneralPurposeAllocator::Allocate(size, 16)
-#define bee_allocate_aligned_memory(size, alignment) GeneralPurposeAllocator::Allocate(size, alignment)
-#define bee_free_memory(ptr) GeneralPurposeAllocator::Free(ptr)
+#define bee_allocate_memory(size) BeeEngine::Internal::GeneralPurposeAllocator::Allocate(size, 16)
+#define bee_allocate_aligned_memory(size, alignment) BeeEngine::Internal::GeneralPurposeAllocator::Allocate(size, alignment)
+#define bee_free_memory(ptr) BeeEngine::Internal::GeneralPurposeAllocator::Free(ptr)
 #else
 #define bee_allocate_memory(size) malloc(size)
 #define bee_allocate_aligned_memory(size, alignment) malloc(size)

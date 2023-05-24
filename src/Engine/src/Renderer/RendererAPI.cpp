@@ -16,7 +16,7 @@ namespace BeeEngine
             case RenderAPI::OpenGL:
                 return CreateRef<OpenGLRendererAPI>();
             default:
-                BeeCoreAssert(false, "Renderer API not supported!");
+                BeeCoreFatalError("Renderer API not supported!");
                 return nullptr;
         }
     }

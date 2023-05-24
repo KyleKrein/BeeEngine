@@ -33,6 +33,7 @@ namespace BeeEngine{
     };
 }
 //Engine log
+#define BeeCoreFatalError(...)  ::BeeEngine::Log::GetCoreLogger()->critical(__VA_ARGS__); throw std::runtime_error(__VA_ARGS__)
 #define BeeCoreError(...)  ::BeeEngine::Log::GetCoreLogger()->error(__VA_ARGS__)
 #define BeeCoreWarn(...)   ::BeeEngine::Log::GetCoreLogger()->warn(__VA_ARGS__)
 #define BeeCoreInfo(...)   ::BeeEngine::Log::GetCoreLogger()->info(__VA_ARGS__)

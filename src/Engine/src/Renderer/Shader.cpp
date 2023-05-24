@@ -18,7 +18,7 @@ namespace BeeEngine
             case RenderAPI::OpenGL:
                 return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
             default:
-                BeeCoreError("Unknown RenderAPI");
+                BeeCoreFatalError("Unknown RenderAPI");
                 return nullptr;
         }
     }
@@ -31,7 +31,7 @@ namespace BeeEngine
             case RenderAPI::OpenGL:
                 return CreateRef<OpenGLShader>(name, filepath);
             default:
-                BeeCoreError("Unknown RenderAPI");
+                BeeCoreFatalError("Unknown RenderAPI");
                 return nullptr;
         }
     }
