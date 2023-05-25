@@ -9,7 +9,7 @@
 #include "Debug/OpenGLDebug.h"
 
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
 
     OpenGLFrameBuffer::OpenGLFrameBuffer(const FrameBufferPreferences &preferences)

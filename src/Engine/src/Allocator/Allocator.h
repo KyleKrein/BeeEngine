@@ -12,7 +12,7 @@
 
 #if USE_CUSTOM_ALLOCATOR
 #ifndef BEE_TEST_MODE
-#include "Core/Memory/GeneralPurposeAllocator.h"
+#include "../../vendor/BeeAlloc/include/GeneralPurposeAllocator.h"
 #include "Debug/Instrumentor.h"
 
 #define bee_allocate_memory(size) BeeEngine::Internal::GeneralPurposeAllocator::Allocate(size, 16)

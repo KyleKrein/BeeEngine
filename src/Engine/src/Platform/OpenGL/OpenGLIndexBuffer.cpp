@@ -9,7 +9,7 @@
 #include "Debug/Instrumentor.h"
 
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
 
     OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t data[], uint32_t size)

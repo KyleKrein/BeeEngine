@@ -10,7 +10,7 @@
 #include "Debug/OpenGLDebug.h"
 #include "Debug/Instrumentor.h"
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     void OpenGLMessageCallback(
             unsigned source,

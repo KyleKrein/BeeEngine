@@ -10,7 +10,7 @@
 #include "Debug/OpenGLDebug.h"
 
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
 
     OpenGLTexture2D::OpenGLTexture2D(const String &path)

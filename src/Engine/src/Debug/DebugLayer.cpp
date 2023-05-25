@@ -4,8 +4,8 @@
 
 #include "DebugLayer.h"
 #include "Instrumentor.h"
-#include "Core/Memory/GeneralPurposeAllocator.h"
-#include "Core/Memory/AllocatorBlockHeader.h"
+#include "../../vendor/BeeAlloc/include/GeneralPurposeAllocator.h"
+#include "../../vendor/BeeAlloc/include/AllocatorBlockHeader.h"
 
 
 namespace BeeEngine

@@ -8,7 +8,7 @@
 #include "Debug/Instrumentor.h"
 
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
 
     OpenGLVertexArray::OpenGLVertexArray(Ref<GraphicsBuffer> vertexBuffer, Ref<GraphicsBuffer> indexBuffer)

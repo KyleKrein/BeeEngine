@@ -6,7 +6,7 @@
 
 #include "Renderer/Shader.h"
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     class OpenGLShader: public Shader
     {

@@ -7,7 +7,7 @@
 #include "Renderer/Texture.h"
 #include "glad/glad.h"
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     class OpenGLTexture2D: public Texture2D
     {

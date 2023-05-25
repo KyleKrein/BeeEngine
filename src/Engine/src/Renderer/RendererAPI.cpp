@@ -14,7 +14,7 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<OpenGLRendererAPI>();
+                return CreateRef<Internal::OpenGLRendererAPI>();
             default:
                 BeeCoreFatalError("Renderer API not supported!");
                 return nullptr;

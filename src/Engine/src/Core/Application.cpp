@@ -11,6 +11,7 @@ namespace BeeEngine{
     Application* Application::s_Instance = nullptr;
     void Application::Run()
     {
+        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");

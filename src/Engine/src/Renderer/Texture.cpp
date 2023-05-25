@@ -17,7 +17,7 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<OpenGLTexture2D>(path);
+                return CreateRef<Internal::OpenGLTexture2D>(path);
             default:
                 BeeCoreError("Unknown RenderAPI");
                 throw std::exception();
@@ -30,7 +30,7 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<OpenGLTexture2D>(width, height);
+                return CreateRef<Internal::OpenGLTexture2D>(width, height);
             default:
                 BeeCoreError("Unknown RenderAPI");
                 throw std::exception();

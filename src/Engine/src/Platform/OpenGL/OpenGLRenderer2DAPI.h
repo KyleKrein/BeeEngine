@@ -10,7 +10,7 @@
 #include "Renderer/VertexArray.h"
 #include "Renderer/Renderer2D.h"
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     struct RectVertex
     {

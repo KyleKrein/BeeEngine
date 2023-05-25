@@ -6,7 +6,7 @@
 
 #include "Renderer/GraphicsBuffer.h"
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     class OpenGLVertexBuffer: public GraphicsBuffer
     {

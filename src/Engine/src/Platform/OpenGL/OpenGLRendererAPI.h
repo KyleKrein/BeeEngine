@@ -5,7 +5,7 @@
 #pragma once
 #include "Renderer/RendererAPI.h"
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     class OpenGLRendererAPI: public RendererAPI
     {

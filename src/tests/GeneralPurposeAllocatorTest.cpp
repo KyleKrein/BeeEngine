@@ -3,7 +3,7 @@
 //
 #include "BeeEngine.h"
 #include "gtest/gtest.h"
-#include "Core/Memory/GeneralPurposeAllocator.h"
+#include "../Engine/vendor/BeeAlloc/include/GeneralPurposeAllocator.h"
 #include "thread"
 
 

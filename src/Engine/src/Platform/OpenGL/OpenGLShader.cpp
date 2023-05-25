@@ -13,7 +13,7 @@
 #include "Debug/Instrumentor.h"
 
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
 
     OpenGLShader::OpenGLShader(const Ref<String> &name, const String &vertexSrc, const String &fragmentSrc)

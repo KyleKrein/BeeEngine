@@ -9,7 +9,7 @@
 #include "glad/glad.h"
 #include "Core/Logging/Log.h"
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     class OpenGLVertexArray: public VertexArray
     {

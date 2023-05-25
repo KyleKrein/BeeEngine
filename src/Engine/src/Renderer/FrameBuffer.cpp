@@ -16,7 +16,7 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<OpenGLFrameBuffer>(preferences);
+                return CreateRef<Internal::OpenGLFrameBuffer>(preferences);
             default:
                 BeeCoreError("Unknown RenderAPI");
                 return nullptr;

@@ -23,3 +23,6 @@
 [submodule "src/Engine/vendor/gsl"]
 	path = src/Engine/vendor/gsl
 	url = https://github.com/microsoft/GSL.git
+[submodule "src/Engine/vendor/BeeAlloc"]
+	path = src/Engine/vendor/BeeAlloc
+	url = https://github.com/KyleKrein/BeeAlloc.git

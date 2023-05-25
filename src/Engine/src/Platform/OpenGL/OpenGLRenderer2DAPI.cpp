@@ -9,7 +9,7 @@
 #include "ext/matrix_transform.hpp"
 
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     glm::vec2 OpenGLRenderer2DAPI::s_textureCoords[4] = {
             {0.0f, 0.0f},

@@ -9,7 +9,7 @@
 #include "Debug/Instrumentor.h"
 
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     void OpenGLVertexBuffer::Bind() const
     {

@@ -18,7 +18,7 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<OpenGLIndexBuffer>(data, size);
+                return CreateRef<Internal::OpenGLIndexBuffer>(data, size);
             default:
                 return nullptr;
         }
@@ -30,7 +30,7 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<OpenGLVertexBuffer>(size);
+                return CreateRef<Internal::OpenGLVertexBuffer>(size);
             default:
                 return nullptr;
         }
