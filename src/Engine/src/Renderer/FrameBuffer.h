@@ -30,15 +30,15 @@ namespace BeeEngine
         virtual void Unbind() = 0;
         virtual void Resize(uint32_t width, uint32_t height) = 0;
         virtual void Invalidate() = 0;
-        inline uint32_t GetColorAttachmentRendererID() const
+        [[nodiscard]] inline uint32_t GetColorAttachmentRendererID() const
         {
             return m_ColorAttachment;
         }
-        inline uint32_t GetDepthAttachmentRendererID() const
+        [[nodiscard]] inline uint32_t GetDepthAttachmentRendererID() const
         {
             return m_DepthAttachment;
         }
-        inline uint32_t GetRendererID() const
+        [[nodiscard]] inline uint32_t GetRendererID() const
         {
             return m_RendererID;
         }

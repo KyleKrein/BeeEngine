@@ -46,6 +46,7 @@ namespace BeeEngine::Internal
 
     void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
     {
+        Expects(width > 0 && height > 0 && width < 100000 && height < 100000);
         BEE_PROFILE_FUNCTION();
         m_Preferences.Width = width;
         m_Preferences.Height = height;
@@ -71,7 +72,8 @@ namespace BeeEngine::Internal
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
         glGenTextures(1, &m_ColorAttachment);
         glBindTexture(GL_TEXTURE_2D, m_ColorAttachment);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, m_Preferences.Width, m_Preferences.Height,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, gsl::narrow_cast<int>(m_Preferences.Width)
+                , gsl::narrow_cast<int>(m_Preferences.Height),
                      0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -81,7 +83,8 @@ namespace BeeEngine::Internal
 
         glGenTextures(1, &m_DepthAttachment);
         glBindTexture(GL_TEXTURE_2D, m_DepthAttachment);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Preferences.Width, m_Preferences.Height,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, gsl::narrow_cast<int>(m_Preferences.Width),
+                     gsl::narrow_cast<int>(m_Preferences.Height),
                      0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
@@ -89,5 +92,7 @@ namespace BeeEngine::Internal
         BeeCoreAssert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer creation failed!");
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         OPENGL_CHECK_ERRORS
+
+        Ensures(m_RendererID != 0 && m_ColorAttachment != 0 && m_DepthAttachment != 0);
     }
 }

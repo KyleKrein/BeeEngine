@@ -14,40 +14,40 @@ namespace BeeEngine
     class OrthographicCameraController
     {
     public:
-        explicit OrthographicCameraController(bool rotation = false): OrthographicCameraController(Application::GetInstance()->GetWidth()
+        explicit OrthographicCameraController(bool rotation = false) noexcept: OrthographicCameraController(Application::GetInstance()->GetWidth()
                                                                                           , Application::GetInstance()->GetWidth(), rotation) {};
-        OrthographicCameraController(uint32_t width, uint32_t  height, bool rotation = false);
+        OrthographicCameraController(uint32_t width, uint32_t  height, bool rotation = false) noexcept;
 
-        void OnUpdate();
-        void OnEvent(EventDispatcher& dispatcher);
+        void OnUpdate() noexcept;
+        void OnEvent(EventDispatcher& dispatcher) noexcept;
 
-        void SetZoomLevel(float zoomLevel) { m_ZoomLevel = zoomLevel; }
-        float GetZoomLevel() const { return m_ZoomLevel; }
+        inline void SetZoomLevel(float zoomLevel) noexcept { m_ZoomLevel = zoomLevel; }
+        [[nodiscard]] inline float GetZoomLevel() const noexcept { return m_ZoomLevel; }
 
-        void SetAspectRatio(float aspectRatio) { m_AspectRatio = aspectRatio; }
-        float GetAspectRatio() const { return m_AspectRatio; }
+        inline void SetAspectRatio(float aspectRatio) noexcept { m_AspectRatio = aspectRatio; }
+        [[nodiscard]] inline float GetAspectRatio() const noexcept { return m_AspectRatio; }
 
-        void SetCameraPosition(const glm::vec3& position) { m_CameraPosition = position; }
-        const glm::vec3& GetCameraPosition() const { return m_CameraPosition; }
+        inline void SetCameraPosition(const glm::vec3& position) noexcept { m_CameraPosition = position; }
+        [[nodiscard]]inline const glm::vec3& GetCameraPosition() const noexcept { return m_CameraPosition; }
 
-        void SetCameraRotation(float rotation) { m_CameraRotation = rotation; }
-        float GetCameraRotation() const { return m_CameraRotation; }
-        OrthographicCamera& GetCamera() { return m_Camera; }
+        inline void SetCameraRotation(float rotation) noexcept { m_CameraRotation = rotation; }
+        [[nodiscard]] inline float GetCameraRotation() const noexcept { return m_CameraRotation; }
+        inline OrthographicCamera& GetCamera() noexcept { return m_Camera; }
 
-        float GetZoomStep() const { return m_ZoomStep; }
-        void SetZoomStep(float zoomStep) { m_ZoomStep = zoomStep; }
+        [[nodiscard]] inline float GetZoomStep() const noexcept { return m_ZoomStep; }
+        inline void SetZoomStep(float zoomStep) noexcept { m_ZoomStep = zoomStep; }
 
-        bool IsEnabled() const { return m_IsEnabled; }
+        [[nodiscard]] inline bool IsEnabled() const noexcept { return m_IsEnabled; }
 
-        float GetMovementSpeed() const { return m_MovementSpeed; }
-        void SetMovementSpeed(float movementSpeed) { m_MovementSpeed = movementSpeed; }
+        [[nodiscard]] inline float GetMovementSpeed() const noexcept { return m_MovementSpeed; }
+        inline void SetMovementSpeed(float movementSpeed) noexcept { m_MovementSpeed = movementSpeed; }
 
-        float GetRotationSpeed() const { return m_RotationSpeed; }
-        void SetRotationSpeed(float rotationSpeed) { m_RotationSpeed = rotationSpeed; }
+        [[nodiscard]] inline float GetRotationSpeed() const noexcept { return m_RotationSpeed; }
+        inline void SetRotationSpeed(float rotationSpeed) noexcept { m_RotationSpeed = rotationSpeed; }
 
-        float GetRotation() const { return m_Rotation; }
-        void SetRotation(float rotation) { m_Rotation = rotation; }
-        operator OrthographicCamera& () { return m_Camera; }
+        [[nodiscard]] inline float GetRotation() const noexcept { return m_Rotation; }
+        inline void SetRotation(float rotation) noexcept { m_Rotation = rotation; }
+        inline operator OrthographicCamera& () noexcept { return m_Camera; }
     private:
 
         float m_ZoomLevel = 1.0f;
@@ -61,7 +61,7 @@ namespace BeeEngine
         float m_RotationSpeed = 90;
         float m_Rotation = 0.0f;
 
-        bool OnWindowResize(WindowResizeEvent* event);
-        bool OnMouseScrolled(MouseScrolledEvent* event);
+        inline bool OnWindowResize(WindowResizeEvent* event) noexcept;
+        inline bool OnMouseScrolled(MouseScrolledEvent* event) noexcept;
     };
 }

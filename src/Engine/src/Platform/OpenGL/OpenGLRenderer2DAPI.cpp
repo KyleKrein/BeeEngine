@@ -11,12 +11,6 @@
 
 namespace BeeEngine::Internal
 {
-    glm::vec2 OpenGLRenderer2DAPI::s_textureCoords[4] = {
-            {0.0f, 0.0f},
-            {1.0f, 0.0f},
-            {1.0f, 1.0f},
-            {0.0f, 1.0f}
-    };
 
     void OpenGLRenderer2DAPI::Init()
     {
@@ -62,14 +56,14 @@ namespace BeeEngine::Internal
 
         m_Data.TextureShader = Shader::Create(ShaderName, VertexShader, FragmentShader);
 
-        int samplers[m_Data.MaxTextureSlots];
-        for (int i = 0; i < m_Data.MaxTextureSlots; i++)
+        int samplers[BeeEngine::Internal::Renderer2DData::MaxTextureSlots];
+        for (int i = 0; i < BeeEngine::Internal::Renderer2DData::MaxTextureSlots; i++)
             samplers[i] = i;
 
         m_Data.TextureShader->Bind();
-        m_Data.TextureShader->SetIntArray("u_Textures", samplers, m_Data.MaxTextureSlots);
+        m_Data.TextureShader->SetIntArray("u_Textures", {samplers, BeeEngine::Internal::Renderer2DData::MaxTextureSlots});
 
-        m_Data.RectVertexBuffer = GraphicsBuffer::CreateVertexBuffer(m_Data.MaxVertices * sizeof(RectVertex));
+        m_Data.RectVertexBuffer = GraphicsBuffer::CreateVertexBuffer(BeeEngine::Internal::Renderer2DData::MaxVertices * sizeof(RectVertex));
         m_Data.RectVertexBuffer->SetLayout({
             {ShaderDataType::Float3, "a_Position"},
             {ShaderDataType::Float4, "a_Color"},
@@ -78,9 +72,9 @@ namespace BeeEngine::Internal
             {ShaderDataType::Float, "a_TilingFactor"}
         });
 
-        uint32_t* rectangleIndices = new uint32_t[m_Data.MaxIndices];
+        uint32_t* rectangleIndices = new uint32_t[BeeEngine::Internal::Renderer2DData::MaxIndices];
         uint32_t offset = 0;
-        for (int i = 0; i < m_Data.MaxIndices; i += 6)
+        for (int i = 0; i < BeeEngine::Internal::Renderer2DData::MaxIndices; i += 6)
         {
             rectangleIndices[i + 0] = offset + 0;
             rectangleIndices[i + 1] = offset + 1;
@@ -93,22 +87,17 @@ namespace BeeEngine::Internal
             offset += 4;
         }
 
-        Ref<GraphicsBuffer> indexBuffer = GraphicsBuffer::CreateIndexBuffer(rectangleIndices, m_Data.MaxIndices * sizeof(uint32_t));
+        Ref<GraphicsBuffer> indexBuffer = GraphicsBuffer::CreateIndexBuffer({rectangleIndices, BeeEngine::Internal::Renderer2DData::MaxIndices});
         m_Data.VertexArray = VertexArray::Create(m_Data.RectVertexBuffer, indexBuffer);
         delete[] rectangleIndices;
         m_Data.BlankTexture = Texture2D::Create(1, 1);
         uint32_t blankTexturePixel = 0xffffffff;
-        m_Data.BlankTexture->SetData(&blankTexturePixel, sizeof(uint32_t));
+        m_Data.BlankTexture->SetData({(std::byte*)&blankTexturePixel, sizeof(uint32_t)});
         //memset(m_Data.TextureSlots.data(), 0, m_Data.MaxTextureSlots * sizeof(Ref<Texture2D>));
-        for(int i = 1; i < m_Data.MaxTextureSlots; i++)
+        for(int i = 1; i < BeeEngine::Internal::Renderer2DData::MaxTextureSlots; i++)
             m_Data.TextureSlots[i] = nullptr;
         m_Data.TextureSlots[0] = m_Data.BlankTexture;
         //m_Data.TextureSlots.push_back(m_Data.BlankTexture);
-
-        m_Data.RectVertexPositions[0] = { -0.5f, -0.5f, 0.0f , 1.0f };
-        m_Data.RectVertexPositions[1] = {  0.5f, -0.5f, 0.0f , 1.0f };
-        m_Data.RectVertexPositions[2] = {  0.5f,  0.5f, 0.0f , 1.0f };
-        m_Data.RectVertexPositions[3] = { -0.5f,  0.5f, 0.0f , 1.0f };
     }
 
     void OpenGLRenderer2DAPI::BeginScene()
@@ -119,7 +108,7 @@ namespace BeeEngine::Internal
 
         m_Data.TextureSlotIndex = 1;
         //memset(m_Data.TextureSlots.data() + 1, 0, (m_Data.MaxTextureSlots - 1)  * sizeof(Ref<Texture2D>));
-        for(int i = 1; i < m_Data.MaxTextureSlots; i++)
+        for(int i = 1; i < BeeEngine::Internal::Renderer2DData::MaxTextureSlots; i++)
             m_Data.TextureSlots[i] = nullptr;
     }
 
@@ -135,7 +124,7 @@ namespace BeeEngine::Internal
         if (m_Data.RectIndexCount)
         {
             uint32_t dataSize = (uint32_t)((uint8_t*)m_Data.CurrentVertex - (uint8_t*)m_Data.RectVerticesBuffer);
-            m_Data.RectVertexBuffer->SetData(m_Data.RectVerticesBuffer, dataSize);
+            m_Data.RectVertexBuffer->SetData({(std::byte*)m_Data.RectVerticesBuffer, dataSize});
 
             // Bind textures
             for (uint32_t i = 0; i < m_Data.TextureSlotIndex; i++)
@@ -162,7 +151,7 @@ namespace BeeEngine::Internal
 
         for (int i = 0; i < RectVertexCount; i++)
         {
-            m_Data.CurrentVertex->Position = transform * m_Data.RectVertexPositions[i];
+            m_Data.CurrentVertex->Position = transform * BeeEngine::Internal::Renderer2DData::RectVertexPositions[i];
             m_Data.CurrentVertex->Color = color;
             m_Data.CurrentVertex->TextureCoords = s_textureCoords[i];
             m_Data.CurrentVertex->TextureIndex = blankTextureIndex;
@@ -176,7 +165,7 @@ namespace BeeEngine::Internal
     void OpenGLRenderer2DAPI::FlushAndReset()
     {
         BEE_PROFILE_FUNCTION();
-        if(m_Data.RectIndexCount >= m_Data.MaxIndices)
+        if(m_Data.RectIndexCount >= BeeEngine::Internal::Renderer2DData::MaxIndices)
         {
             EndScene();
             BeginScene();
@@ -193,7 +182,7 @@ namespace BeeEngine::Internal
         float textureIndex = 0.0f;
         for (uint32_t i = 1; i < m_Data.TextureSlotIndex; i++)
         {
-            if (*m_Data.TextureSlots[i].get() == *texture.get())
+            if (*m_Data.TextureSlots[i].get() == *texture.get()) // TODO: Check for the bug
             {
                 textureIndex = (float)i;
                 break;
@@ -202,7 +191,7 @@ namespace BeeEngine::Internal
 
         if (textureIndex == 0.0f)
         {
-            if (m_Data.TextureSlotIndex >= m_Data.MaxTextureSlots)
+            if (m_Data.TextureSlotIndex >= BeeEngine::Internal::Renderer2DData::MaxTextureSlots)
                 FlushAndReset();
             textureIndex = (float)m_Data.TextureSlotIndex;
             m_Data.TextureSlots[m_Data.TextureSlotIndex] = texture;
@@ -215,7 +204,7 @@ namespace BeeEngine::Internal
 
         for (int i = 0; i < RectVertexCount; i++)
         {
-            m_Data.CurrentVertex->Position = transform * m_Data.RectVertexPositions[i];
+            m_Data.CurrentVertex->Position = transform * BeeEngine::Internal::Renderer2DData::RectVertexPositions[i];
             m_Data.CurrentVertex->Color = color;
             m_Data.CurrentVertex->TextureCoords = s_textureCoords[i];
             m_Data.CurrentVertex->TextureIndex = textureIndex;

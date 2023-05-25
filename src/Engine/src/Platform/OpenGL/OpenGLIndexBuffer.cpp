@@ -12,15 +12,15 @@
 namespace BeeEngine::Internal
 {
 
-    OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t data[], uint32_t size)
+    OpenGLIndexBuffer::OpenGLIndexBuffer(gsl::span<std::byte> data)
     {
         BEE_PROFILE_FUNCTION();
         glGenBuffers(1, &m_RendererID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.size(), nullptr, GL_DYNAMIC_DRAW);
         OPENGL_CHECK_ERRORS
-        m_Size = size;
-        OpenGLIndexBuffer::SetData(data, size);
+        m_Size = data.size();
+        OpenGLIndexBuffer::SetData(data);
     }
 
     OpenGLIndexBuffer::~OpenGLIndexBuffer()
@@ -44,11 +44,11 @@ namespace BeeEngine::Internal
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLIndexBuffer::SetData(const void *data, uint32_t size)
+    void OpenGLIndexBuffer::SetData(gsl::span<std::byte> data)
     {
         BEE_PROFILE_FUNCTION();
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
-        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, size, data);
+        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, gsl::narrow_cast<GLsizeiptr>(data.size()), data.data());
         OPENGL_CHECK_ERRORS
     }
 }

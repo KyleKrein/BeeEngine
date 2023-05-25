@@ -26,6 +26,7 @@ namespace BeeEngine
                                float rotation, const Color4 &color, float textureMultiplier)
     {
         BEE_PROFILE_FUNCTION();
+        Expects(texture);
         m_API->DrawImage(x, y, z, width, height, texture, rotation, color, textureMultiplier);
     }
 

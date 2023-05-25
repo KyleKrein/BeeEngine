@@ -15,16 +15,16 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
+            Expects(preferences.Width > 0 && preferences.Height > 0 && preferences.Width < 100000 && preferences.Height < 100000);
             case RenderAPI::OpenGL:
                 return CreateRef<Internal::OpenGLFrameBuffer>(preferences);
             default:
-                BeeCoreError("Unknown RenderAPI");
-                return nullptr;
+                BeeCoreFatalError("Unknown RenderAPI");
         }
     }
 
     FrameBuffer::FrameBuffer(const FrameBufferPreferences &preferences)
-            : m_Preferences(preferences)
+            : m_Preferences(preferences), m_ColorAttachment(0), m_DepthAttachment(0), m_RendererID(0)
     {
 
     }

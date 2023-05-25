@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "Core/TypeDefines.h"
 #include "Renderer/Renderer2DAPI.h"
 #include "Renderer/Shader.h"
@@ -39,10 +41,16 @@ namespace BeeEngine::Internal
 
         std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
         int TextureSlotIndex = 1; //0 = blank texture
-        glm::vec4 RectVertexPositions[4];
+        constexpr static glm::vec4 RectVertexPositions[4]
+                {
+                        {-0.5f, -0.5f, 0.0f, 1.0f},
+                        {0.5f, -0.5f, 0.0f, 1.0f},
+                        {0.5f, 0.5f, 0.0f, 1.0f},
+                        {-0.5f, 0.5f, 0.0f, 1.0f}
+                };
 
-        Renderer2DData(Ref<Renderer2D::Statistics> statistics)
-        : Stats(statistics), RectVerticesBuffer(), TextureSlots() //TODO: get from GPU
+        explicit Renderer2DData(Ref<Renderer2D::Statistics> statistics)
+        : Stats(std::move(statistics)), RectVerticesBuffer(), TextureSlots() //TODO: get from GPU
         {
             //TextureSlots.reserve(MaxTextureSlots);
         }
@@ -71,7 +79,13 @@ namespace BeeEngine::Internal
         virtual void SetCameraTransform(const glm::mat4& transform) override;
 
         private:
-        static glm::vec2 s_textureCoords[4];
+        constexpr static glm::vec2 s_textureCoords[4]
+        {
+                {0.0f, 0.0f},
+                {1.0f, 0.0f},
+                {1.0f, 1.0f},
+                {0.0f, 1.0f}
+        };
         Renderer2DData m_Data;
         static const int RectVertexCount = 4;
 

@@ -17,7 +17,7 @@ namespace BeeEngine::Internal
         void Bind() const override;
         void Unbind() const override;
 
-        void SetData(const void* data, uint32_t size) override;
+        void SetData(gsl::span<std::byte> data) override;
 
         uint32_t GetSize() const override { return m_Size; }
 

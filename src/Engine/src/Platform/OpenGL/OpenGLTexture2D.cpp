@@ -63,6 +63,7 @@ namespace BeeEngine::Internal
     OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
     {
         BEE_PROFILE_FUNCTION();
+        Expects(width > 0 && height > 0);
         m_Width = width;
         m_Height = height;
 
@@ -86,13 +87,17 @@ namespace BeeEngine::Internal
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLTexture2D::SetData(void *data, uint32_t size)
+    void OpenGLTexture2D::SetData(gsl::span<std::byte> data)
     {
         BEE_PROFILE_FUNCTION();
         uint32_t bpp = m_InternalFormat == GL_RGBA8 ? 4 : 3;
-        BeeCoreAssert(size == m_Width * m_Height * bpp, "Data must be entire texture!");
+        BeeCoreAssert(data.size() == m_Width * m_Height * bpp, "Data must be entire texture!");
         glBindTexture(GL_TEXTURE_2D, m_RendererID);
-        glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0,
+                     gsl::narrow_cast<GLint>(m_InternalFormat),
+                     gsl::narrow_cast<GLint>(m_Width),
+                     gsl::narrow_cast<GLint>(m_Height),
+                             0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
         OPENGL_CHECK_ERRORS
     }
 

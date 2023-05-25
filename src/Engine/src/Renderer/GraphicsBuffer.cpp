@@ -12,15 +12,17 @@
 namespace BeeEngine
 {
 
-    Ref<GraphicsBuffer> GraphicsBuffer::CreateIndexBuffer(uint32_t data[], uint32_t size)
+    Ref<GraphicsBuffer> GraphicsBuffer::CreateIndexBuffer(gsl::span<uint32_t> data)
     {
         BEE_PROFILE_FUNCTION();
+        Expects(!data.empty());
+        gsl::span<std::byte> byteData = {reinterpret_cast<std::byte*>(data.data()), data.size_bytes()};
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<Internal::OpenGLIndexBuffer>(data, size);
+                return CreateRef<Internal::OpenGLIndexBuffer>(byteData);
             default:
-                return nullptr;
+                BeeCoreFatalError("Unknown RenderAPI!");
         }
     }
 
@@ -32,12 +34,10 @@ namespace BeeEngine
             case RenderAPI::OpenGL:
                 return CreateRef<Internal::OpenGLVertexBuffer>(size);
             default:
-                return nullptr;
+                BeeCoreFatalError("Unknown RenderAPI!");
         }
     }
 
     GraphicsBuffer::GraphicsBuffer()
-    {
-
-    }
+    = default;
 }

@@ -16,19 +16,19 @@ namespace BeeEngine
     public:
         static bool KeyPressed(Key key);
         static bool MouseKeyPressed(MouseButton button);
-        inline static const float GetMouseX()
+        [[nodiscard]] inline static float GetMouseX()
         {
             return s_MouseX;
         }
-        inline static const float GetMouseY()
+        [[nodiscard]] inline static float GetMouseY()
         {
             return s_MouseY;
         }
-        inline static const float GetMouseWheelX()
+        [[nodiscard]] inline static float GetMouseWheelX()
         {
             return s_MouseWheelX;
         }
-        inline static const float GetMouseWheelY()
+        [[nodiscard]] inline static float GetMouseWheelY()
         {
             return s_MouseWheelY;
         }

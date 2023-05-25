@@ -5,6 +5,7 @@
 #pragma once
 #include "TypeDefines.h"
 #include "vec4.hpp"
+#include "gsl/gsl"
 
 namespace BeeEngine
 {
@@ -13,7 +14,10 @@ namespace BeeEngine
         Color4() : m_R(0.0f), m_G(0.0f), m_B(0.0f), m_A(1.0f) {}
         static Color4 FromRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255)
         {
-            return {r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+            return {gsl::narrow_cast<float>(r) / 255.0f,
+                    gsl::narrow_cast<float>(g) / 255.0f,
+                    gsl::narrow_cast<float>(b) / 255.0f,
+                    gsl::narrow_cast<float>(a) / 255.0f};
         }
         static Color4 FromNormalized(float r, float g, float b, float a = 1.0f)
         {
@@ -25,10 +29,10 @@ namespace BeeEngine
         Color4& operator=(Color4&& other) noexcept = default;
         Color4& operator=(const Color4& other) = default;
 
-        inline const float R() const { return m_R; }
-        inline const float G() const { return m_G; }
-        inline const float B() const { return m_B; }
-        inline const float A() const { return m_A; }
+        [[nodiscard]] inline float R() const { return m_R; }
+        [[nodiscard]] inline float G() const { return m_G; }
+        [[nodiscard]] inline float B() const { return m_B; }
+        [[nodiscard]] inline float A() const { return m_A; }
 
         inline explicit operator glm::vec4() const
         {

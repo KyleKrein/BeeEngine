@@ -7,16 +7,16 @@
 
 namespace BeeEngine{
     WindowHandler* WindowHandler::s_Instance = nullptr;
-    WindowHandler* WindowHandler::Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue)
+    gsl::not_null<WindowHandler*> WindowHandler::Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue)
     {
         BEE_PROFILE_FUNCTION();
+        Expects(properties.Width > 0 && properties.Height > 0 && properties.Title != nullptr);
         switch (api)
         {
             case WindowHandlerAPI::GLFW:
                 return new GLFWWindowHandler(properties, eventQueue);
             default:
-                BeeCoreError("Invalid Window API");
-                return nullptr;
+                BeeCoreFatalError("Invalid Window API");
         }
     }
 }

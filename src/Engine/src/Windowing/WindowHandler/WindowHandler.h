@@ -16,7 +16,7 @@ namespace BeeEngine
     {
     public:
         virtual ~WindowHandler() = default;
-        static WindowHandler* Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue);
+        static gsl::not_null<WindowHandler*> Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue);
         uint16_t GetWidth() const
         {
             return m_Width;
@@ -27,7 +27,7 @@ namespace BeeEngine
         }
         virtual void SetWidth(uint16_t width) = 0;
         virtual void SetHeight(uint16_t height) = 0;
-        static WindowHandler* GetInstance()
+        static gsl::not_null<WindowHandler*> GetInstance()
         {
             return s_Instance;
         }

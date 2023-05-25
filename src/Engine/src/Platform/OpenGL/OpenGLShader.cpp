@@ -7,6 +7,7 @@
 #include "glad/glad.h"
 #include "Core/Logging/Log.h"
 #include <fstream>
+#include <gsl/span>
 #include "streambuf"
 #include "gtc/type_ptr.hpp"
 #include "Debug/OpenGLDebug.h"
@@ -74,12 +75,12 @@ namespace BeeEngine::Internal
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLShader::SetIntArray(std::string_view name, int *values, uint32_t count)
+    void OpenGLShader::SetIntArray(std::string_view name, gsl::span<int> values)
     {
         BEE_PROFILE_FUNCTION();
         int location = glGetUniformLocation(m_RendererID, name.data());
         BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name, m_Name);
-        glUniform1iv(location, count, values);
+        glUniform1iv(location, gsl::narrow_cast<GLsizei>(values.size()), values.data());
         OPENGL_CHECK_ERRORS
     }
 
@@ -164,7 +165,7 @@ namespace BeeEngine::Internal
             shaderIDs.push_back(shader);
         }
 
-        BeeCoreAssert(shaderIDs.size() > 0, "No shaders were compiled!");
+        BeeCoreAssert(!shaderIDs.empty(), "No shaders were compiled!");
 
         m_RendererID = program;
 

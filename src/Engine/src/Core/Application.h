@@ -2,6 +2,8 @@
 //#include "Windowing/Window.h"
 
 
+#include <utility>
+
 #include "Core/Events/Event.h"
 #include "Core/Events/EventQueue.h"
 #include "Core/Events/EventImplementations.h"
@@ -34,11 +36,11 @@ namespace BeeEngine{
             return s_Instance;
         }
 
-        bool IsMinimized() const
+        [[nodiscard]] bool IsMinimized() const
         {
             return m_IsMinimized;
         }
-        uint16_t GetWidth() const
+        [[nodiscard]] uint16_t GetWidth() const
         {
             return m_Window->GetWidth();
         }
@@ -46,7 +48,7 @@ namespace BeeEngine{
         {
             m_Window->SetWidth(width);
         }
-        uint16_t GetHeight() const
+        [[nodiscard]] uint16_t GetHeight() const
         {
             return m_Window->GetHeight();
         }
@@ -57,11 +59,11 @@ namespace BeeEngine{
 
         void AddShader(const Ref<Shader>& shader) const;
         void AddShader(std::string_view name, const Ref<Shader>& shader) const;
-        Ref<Shader> LoadShader(std::string_view filepath) const;
-        Ref<Shader> LoadShader(std::string_view name, std::string_view filepath) const;
+        [[nodiscard]] Ref<Shader> LoadShader(std::string_view filepath) const;
+        [[nodiscard]] Ref<Shader> LoadShader(std::string_view name, std::string_view filepath) const;
 
-        Ref<Shader> GetShader(std::string_view name) const;
-        bool ShaderExists(std::string_view name) const;
+        [[nodiscard]] Ref<Shader> GetShader(std::string_view name) const;
+        [[nodiscard]] bool ShaderExists(std::string_view name) const;
 
 
         void Run();
@@ -71,11 +73,11 @@ namespace BeeEngine{
 
         inline void PushLayer(Ref<Layer> layer)
         {
-            m_Layers.PushLayer(layer);
+            m_Layers.PushLayer(std::move(layer));
         }
         inline void PushOverlay(Ref<Layer> overlay)
         {
-            m_Layers.PushOverlay(overlay);
+            m_Layers.PushOverlay(std::move(overlay));
         }
     private:
         void Dispatch(EventDispatcher &dispatcher);

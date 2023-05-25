@@ -67,6 +67,7 @@ namespace BeeEngine{
     Application::~Application()
     {
         s_Instance = nullptr;
+        delete m_Window;
     }
 
     void Application::Dispatch(EventDispatcher &dispatcher)

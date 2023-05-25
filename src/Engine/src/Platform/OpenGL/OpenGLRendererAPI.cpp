@@ -45,10 +45,10 @@ namespace BeeEngine::Internal
 #endif
 #endif
 
-        String vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-        String renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
-        String version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-        String shadingLanguageVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+        std::string_view vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+        std::string_view renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+        std::string_view version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        std::string_view shadingLanguageVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
 
         BeeCoreTrace("OpenGL Initialized: \n\tVendor: {0}\n\tRenderer: {1}\n\tVersion: {2}\n\tShading language version: {3}", vendor, renderer, version, shadingLanguageVersion);
 
@@ -65,18 +65,22 @@ namespace BeeEngine::Internal
     void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
     {
         BEE_PROFILE_FUNCTION();
-        glViewport(x, y, width, height);
+        Expects(width > 0 && height > 0 && width < 100000 && height < 100000);
+        glViewport(gsl::narrow_cast<int>(x),
+                gsl::narrow_cast<int>(y),
+                gsl::narrow_cast<int>(width),
+                gsl::narrow_cast<int>(height));
         OPENGL_CHECK_ERRORS
     }
 
     void OpenGLRendererAPI::SetClearColor(const Color4& color)
     {
         BEE_PROFILE_FUNCTION();
-        float r = color.R();
-        float g = color.G();
-        float b = color.B();
-        float a = color.A();
-        glClearColor(*((GLfloat*)(&r)), *((GLfloat*)(&g)), *((GLfloat*)(&b)), *((GLfloat*)(&a)));
+        GLfloat r = color.R();
+        GLfloat g = color.G();
+        GLfloat b = color.B();
+        GLfloat a = color.A();
+        glClearColor(r, g, b, a);
         OPENGL_CHECK_ERRORS
     }
 
@@ -90,14 +94,14 @@ namespace BeeEngine::Internal
     void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray> &vertexArray, uint32_t indexCount)
     {
         BEE_PROFILE_FUNCTION();
-        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, gsl::narrow_cast<GLint>(indexCount), GL_UNSIGNED_INT, nullptr);
         OPENGL_CHECK_ERRORS
     }
 
     Color4 OpenGLRendererAPI::ReadPixel(uint32_t x, uint32_t y)
     {
         GLubyte pixel[4];
-        glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+        glReadPixels(gsl::narrow_cast<GLint>(x), gsl::narrow_cast<GLint>(y), 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
         return Color4::FromRGBA(pixel[0], pixel[1], pixel[2], pixel[3]);
     }
 }

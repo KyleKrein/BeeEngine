@@ -1,5 +1,6 @@
 #pragma once
 
+#include <gsl/gsl>
 #include <utility>
 #include <vector>
 #include "Core/Logging/Log.h"
@@ -72,7 +73,7 @@ namespace BeeEngine
     class EventDispatcher
     {
     public:
-        explicit EventDispatcher(Event* event)
+        explicit EventDispatcher(gsl::not_null<Event*> event)
         : m_event(event)
         {
 

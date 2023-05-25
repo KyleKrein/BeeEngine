@@ -3,6 +3,8 @@
 //
 
 #pragma once
+
+#include <gsl/gsl>
 #include "TypeDefines.h"
 #include "algorithm"
 #include "Debug/Instrumentor.h"

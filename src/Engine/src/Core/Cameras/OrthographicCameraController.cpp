@@ -8,7 +8,7 @@
 namespace BeeEngine
 {
 
-    OrthographicCameraController::OrthographicCameraController(uint32_t width, uint32_t height, bool rotation)
+    OrthographicCameraController::OrthographicCameraController(uint32_t width, uint32_t height, bool rotation) noexcept
         : m_AspectRatio((float)width / (float)height),
         m_Camera(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel), m_CameraRotation(rotation),
         m_CameraPosition(0.0f, 0.0f, 0.0f),
@@ -17,7 +17,7 @@ namespace BeeEngine
 
     }
 
-    void OrthographicCameraController::OnUpdate()
+    void OrthographicCameraController::OnUpdate() noexcept
     {
         BEE_PROFILE_FUNCTION();
         if (!m_IsEnabled)
@@ -53,14 +53,14 @@ namespace BeeEngine
         
         m_Camera.SetPosition(m_CameraPosition);
     }
-    bool OrthographicCameraController::OnWindowResize(BeeEngine::WindowResizeEvent* event)
+    bool OrthographicCameraController::OnWindowResize(BeeEngine::WindowResizeEvent* event) noexcept
     {
         m_AspectRatio = (float)event->GetWidth() / (float)event->GetHeight();
         m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
         Renderer::SetViewport(0, 0, event->GetWidth(), event->GetHeight());
         return false;
     }
-    void OrthographicCameraController::OnEvent(EventDispatcher& dispatcher)
+    void OrthographicCameraController::OnEvent(EventDispatcher& dispatcher) noexcept
     {
 
         DISPATCH_EVENT(dispatcher, WindowResizeEvent, EventType::WindowResize, OnWindowResize);
@@ -71,7 +71,7 @@ namespace BeeEngine
         DISPATCH_EVENT(dispatcher, MouseScrolledEvent, EventType::MouseScrolled, OnMouseScrolled);
     }
 
-    bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent *event)
+    bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent *event) noexcept
     {
         m_ZoomLevel -= event->GetYOffset() * m_ZoomStep;
         m_ZoomLevel = std::max(m_ZoomLevel, 0.1f);

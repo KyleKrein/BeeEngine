@@ -46,6 +46,7 @@ namespace BeeEngine
         static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
         {
             BEE_PROFILE_FUNCTION();
+            Expects(width > 0 && height > 0);
             s_RendererAPI->SetViewport(x, y, width, height);
         }
         static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)

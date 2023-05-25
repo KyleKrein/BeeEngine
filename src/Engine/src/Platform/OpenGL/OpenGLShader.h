@@ -19,7 +19,7 @@ namespace BeeEngine::Internal
         virtual void Unbind() const override;
 
         virtual void SetInt(std::string_view name, int value) override;
-        virtual void SetIntArray(std::string_view name, int *values, uint32_t count) override;
+        virtual void SetIntArray(std::string_view name, gsl::span<int> values) override;
         virtual void SetFloat(std::string_view name, float value) override;
         virtual void SetFloat2(std::string_view name, const glm::vec2 &value) override;
         virtual void SetFloat3(std::string_view name, const glm::vec3 &value) override;
@@ -31,7 +31,7 @@ namespace BeeEngine::Internal
     private:
         void Compile(const std::unordered_map<ShaderType, Ref<String>> &shaders);
         std::unordered_map<ShaderType, Ref<String>> Preprocess(const String &shaderSource);
-        uint32_t m_RendererID;
+        uint32_t m_RendererID{};
         String m_Name;
     };
 }

@@ -12,6 +12,6 @@ namespace BeeEngine
     {
 
     public:
-        virtual const glm::mat4 & GetViewProjectionMatrix() const = 0;
+        [[nodiscard]] virtual const glm::mat4 & GetViewProjectionMatrix() const = 0;
     };
 }

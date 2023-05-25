@@ -4,6 +4,7 @@
 
 #pragma once
 #include "Core/TypeDefines.h"
+#include "gsl/gsl"
 
 namespace BeeEngine
 {
@@ -12,9 +13,9 @@ namespace BeeEngine
     public:
         virtual ~Texture() = default;
 
-        uint32_t GetWidth() const { return m_Width; }
-        uint32_t GetHeight() const { return m_Height; }
-        uint32_t GetRendererID() const { return m_RendererID; }
+        [[nodiscard]] uint32_t GetWidth() const { return m_Width; }
+        [[nodiscard]] uint32_t GetHeight() const { return m_Height; }
+        [[nodiscard]] uint32_t GetRendererID() const { return m_RendererID; }
 
         virtual void Bind(uint32_t slot = 0) const = 0;
 
@@ -36,7 +37,7 @@ namespace BeeEngine
     public:
         virtual ~Texture2D() = default;
 
-        virtual void SetData(void* data, uint32_t size) = 0;
+        virtual void SetData(gsl::span<std::byte> data) = 0;
 
         static Ref<Texture2D> Create(std::string_view path);
         static Ref<Texture2D> Create(uint32_t width, uint32_t height);

@@ -3,6 +3,8 @@
 //
 
 #pragma once
+
+#include <gsl/span>
 #include "Core/TypeDefines.h"
 #include "BufferLayout.h"
 
@@ -18,7 +20,7 @@ namespace BeeEngine
         virtual void Bind() const = 0;
         virtual void Unbind() const = 0;
 
-        virtual void SetData(const void* data, uint32_t size) = 0;
+        virtual void SetData(gsl::span<std::byte> data) = 0;
 
         void SetLayout(const BufferLayout& layout)
         {
@@ -33,7 +35,7 @@ namespace BeeEngine
         virtual uint32_t GetSize() const = 0;
 
         static Ref<GraphicsBuffer> CreateVertexBuffer(uint32_t size);
-        static Ref<GraphicsBuffer> CreateIndexBuffer(uint32_t data[], uint32_t size);
+        static Ref<GraphicsBuffer> CreateIndexBuffer(gsl::span<uint32_t> data);
 protected:
         BufferLayout m_Layout;
     };
