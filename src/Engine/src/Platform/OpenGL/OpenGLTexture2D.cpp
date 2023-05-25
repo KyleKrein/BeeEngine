@@ -13,7 +13,7 @@
 namespace BeeEngine::Internal
 {
 
-    OpenGLTexture2D::OpenGLTexture2D(const String &path)
+    OpenGLTexture2D::OpenGLTexture2D(std::string_view path)
     {
         BEE_PROFILE_FUNCTION();
         String filepath = ResourceManager::ProcessFilePath(path);

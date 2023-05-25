@@ -38,7 +38,7 @@ namespace BeeEngine
 
         virtual void SetData(void* data, uint32_t size) = 0;
 
-        static Ref<Texture2D> Create(const String& path);
+        static Ref<Texture2D> Create(std::string_view path);
         static Ref<Texture2D> Create(uint32_t width, uint32_t height);
     };
 }

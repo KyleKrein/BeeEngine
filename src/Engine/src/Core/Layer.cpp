@@ -3,6 +3,7 @@
 //
 #include "Layer.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
+#include "Renderer/ShaderLibrary.h"
 
 namespace BeeEngine
 {
@@ -27,5 +28,35 @@ namespace BeeEngine
         s_Controller->Initialize(WindowHandler::GetInstance()->GetWidth(),
                                  WindowHandler::GetInstance()->GetHeight(),
                                  WindowHandler::GetInstance()->GetWindow());
+    }
+
+    void Layer::AddShader(const Ref<Shader> &shader) const
+    {
+        ShaderLibrary::GetInstance().Add(shader);
+    }
+
+    void Layer::AddShader(std::string_view name, const Ref<Shader> &shader) const
+    {
+        ShaderLibrary::GetInstance().Add(name, shader);
+    }
+
+    Ref<Shader> Layer::LoadShader(std::string_view filepath) const
+    {
+        ShaderLibrary::GetInstance().Load(filepath);
+    }
+
+    Ref<Shader> Layer::LoadShader(std::string_view name, std::string_view filepath) const
+    {
+        ShaderLibrary::GetInstance().Load(name, filepath);
+    }
+
+    Ref<Shader> Layer::GetShader(std::string_view name) const
+    {
+        return ShaderLibrary::GetInstance().Get(name);
+    }
+
+    bool Layer::ShaderExists(std::string_view name) const
+    {
+        return ShaderLibrary::GetInstance().Exists(name);
     }
 }

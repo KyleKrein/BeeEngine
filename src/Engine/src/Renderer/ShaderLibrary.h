@@ -13,12 +13,18 @@ namespace BeeEngine
     {
     public:
         void Add(const Ref<Shader>& shader);
-        void Add(Ref<String> name, const Ref<Shader>& shader);
-        Ref<Shader> Load(const String& filepath);
-        Ref<Shader> Load(Ref<String> name, const String& filepath);
+        void Add(std::string_view name, const Ref<Shader>& shader);
+        Ref<Shader> Load(std::string_view filepath);
+        Ref<Shader> Load(std::string_view name, std::string_view filepath);
 
-        Ref<Shader> Get(const String& name);
-        bool Exists(const String& name) const;
+        Ref<Shader> Get(std::string_view name) const;
+        bool Exists(std::string_view name) const;
+
+        static ShaderLibrary& GetInstance()
+        {
+            static ShaderLibrary instance;
+            return instance;
+        }
 
     private:
         std::unordered_map<String, Ref<Shader>> m_Shaders;

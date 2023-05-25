@@ -12,21 +12,21 @@ namespace BeeEngine
     class ResourceManager
     {
     public:
-        inline static String ProcessFilePath(const String &filepath)
+        inline static String ProcessFilePath(std::string_view filepath)
         {
             BEE_PROFILE_FUNCTION();
-            String result = filepath;
+            String result = String(filepath);
             std::replace(result.begin(), result.end(), '\\', '/');
             return result;
         }
-        inline static Ref<String> GetNameFromFilePath(const String &filepath)
+        inline static String GetNameFromFilePath(std::string_view filepath)
         {
             BEE_PROFILE_FUNCTION();
             String result = ResourceManager::ProcessFilePath(filepath);
             int lastDot = result.find_last_of('.');
             int lastSlash = result.find_last_of('/') + 1;
             int count = lastDot == -1? result.size() - lastSlash: lastDot - lastSlash;
-            return CreateRef<String>(result.substr(lastSlash, count));
+            return String(result.substr(lastSlash, count));
         }
     };
 }

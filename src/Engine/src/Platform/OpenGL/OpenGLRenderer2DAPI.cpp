@@ -23,7 +23,7 @@ namespace BeeEngine::Internal
         BEE_PROFILE_FUNCTION();
         m_Data = Renderer2DData(Renderer2D::GetStatistics());
 
-        static const Ref<String> ShaderName = CreateRef<String>("StandartBeeEngine2DShader");
+        static const String ShaderName = String("StandartBeeEngine2DShader");
         static const String VertexShader = "#version 330 core\n"
                                            "\t\t\t\n"
                                            "layout(location = 0) in vec3 a_Position;\n"

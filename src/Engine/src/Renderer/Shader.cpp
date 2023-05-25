@@ -10,7 +10,7 @@
 namespace BeeEngine
 {
 
-    Ref<Shader> Shader::Create(Ref<String> name, const String &vertexSrc, const String &fragmentSrc)
+    Ref<Shader> Shader::Create(std::string_view name, std::string_view vertexSrc, std::string_view fragmentSrc)
     {
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
@@ -23,7 +23,7 @@ namespace BeeEngine
         }
     }
 
-    Ref<Shader> Shader::Create(Ref<String> name, const String &filepath)
+    Ref<Shader> Shader::Create(std::string_view name, std::string_view filepath)
     {
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())

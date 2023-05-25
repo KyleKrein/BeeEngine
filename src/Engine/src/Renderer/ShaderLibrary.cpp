@@ -17,18 +17,18 @@ namespace BeeEngine
         Add(name, shader);
     }
 
-    void ShaderLibrary::Add(Ref<String> name, const Ref<Shader>& shader)
+    void ShaderLibrary::Add(std::string_view name, const Ref<Shader>& shader)
     {
         BEE_PROFILE_FUNCTION();
-        if (Exists(*name))
+        if (Exists(name))
         {
             BeeCoreWarn("Shader already exists");
             return;
         }
-        m_Shaders[*name] = shader;
+        m_Shaders[String(name)] = shader;
     }
 
-    Ref<Shader> ShaderLibrary::Load(const String& filepath)
+    Ref<Shader> ShaderLibrary::Load(std::string_view filepath)
     {
         BEE_PROFILE_FUNCTION();
         auto shader = Shader::Create(ResourceManager::GetNameFromFilePath(filepath),filepath);
@@ -36,7 +36,7 @@ namespace BeeEngine
         return shader;
     }
 
-    Ref<Shader> ShaderLibrary::Load(Ref<String> name, const String& filepath)
+    Ref<Shader> ShaderLibrary::Load(std::string_view name, std::string_view filepath)
     {
         BEE_PROFILE_FUNCTION();
         auto shader = Shader::Create(name,filepath);
@@ -44,20 +44,15 @@ namespace BeeEngine
         return shader;
     }
 
-    Ref<Shader> ShaderLibrary::Get(const String& name)
+    Ref<Shader> ShaderLibrary::Get(std::string_view name) const
     {
         BEE_PROFILE_FUNCTION();
-        if (!Exists(name))
-        {
-            BeeCoreWarn("Shader not found");
-            return nullptr;
-        }
-        return m_Shaders[name];
+        return m_Shaders.at(String(name));
     }
 
-    bool ShaderLibrary::Exists(const String& name) const
+    bool ShaderLibrary::Exists(std::string_view name) const
     {
         BEE_PROFILE_FUNCTION();
-        return m_Shaders.find(name) != m_Shaders.end();
+        return m_Shaders.find(String(name)) != m_Shaders.end();
     }
 }

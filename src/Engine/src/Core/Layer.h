@@ -5,6 +5,7 @@
 #include "Platform/ImGui/ImGuiController.h"
 #include "Renderer/Renderer.h"
 #include "Allocator/Allocator.h"
+#include "Renderer/Shader.h"
 
 
 namespace BeeEngine
@@ -18,6 +19,14 @@ namespace BeeEngine
         virtual void OnUpdate() {}
         virtual void OnGUIRendering() {}
         virtual void OnEvent(EventDispatcher& e) {}
+    protected:
+        void AddShader(const Ref<Shader>& shader) const;
+        void AddShader(std::string_view name, const Ref<Shader>& shader) const;
+        Ref<Shader> LoadShader(std::string_view filepath) const;
+        Ref<Shader> LoadShader(std::string_view name, std::string_view filepath) const;
+
+        Ref<Shader> GetShader(std::string_view name) const;
+        bool ShaderExists(std::string_view name) const;
     };
 
     class ImGuiLayer: public Layer

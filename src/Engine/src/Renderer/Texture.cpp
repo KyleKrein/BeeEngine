@@ -11,7 +11,7 @@
 namespace BeeEngine
 {
 
-    Ref<Texture2D> Texture2D::Create(const String &path)
+    Ref<Texture2D> Texture2D::Create(std::string_view path)
     {
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())

@@ -5,14 +5,14 @@
 #pragma once
 
 
-#include "cstddef"
 
 
-#define USE_CUSTOM_ALLOCATOR 1
+
+#define USE_CUSTOM_ALLOCATOR 0
 
 #if USE_CUSTOM_ALLOCATOR
 #ifndef BEE_TEST_MODE
-#include "../../vendor/BeeAlloc/include/GeneralPurposeAllocator.h"
+#include "GeneralPurposeAllocator.h"
 #include "Debug/Instrumentor.h"
 
 #define bee_allocate_memory(size) BeeEngine::Internal::GeneralPurposeAllocator::Allocate(size, 16)
@@ -42,7 +42,7 @@ inline void* operator new(std::size_t size, std::align_val_t alignment)
 
     return ptr;
 }
-#endif
+
 
 inline void* operator new(std::size_t size)
 {
@@ -181,6 +181,7 @@ inline void operator delete[] (void* ptr, std::align_val_t alignment) noexcept
     }
     bee_free_memory(ptr);
 }
+#endif
 #endif
 
 namespace BeeEngine

@@ -7,6 +7,7 @@
 #include "Core/Events/EventImplementations.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Core/Logging/Log.h"
+#include "Renderer/Shader.h"
 
 namespace BeeEngine{
     enum class OSPlatform
@@ -53,6 +54,14 @@ namespace BeeEngine{
         {
             m_Window->SetHeight(height);
         }
+
+        void AddShader(const Ref<Shader>& shader) const;
+        void AddShader(std::string_view name, const Ref<Shader>& shader) const;
+        Ref<Shader> LoadShader(std::string_view filepath) const;
+        Ref<Shader> LoadShader(std::string_view name, std::string_view filepath) const;
+
+        Ref<Shader> GetShader(std::string_view name) const;
+        bool ShaderExists(std::string_view name) const;
 
 
         void Run();

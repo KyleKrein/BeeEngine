@@ -16,7 +16,7 @@
 namespace BeeEngine::Internal
 {
 
-    OpenGLShader::OpenGLShader(const Ref<String> &name, const String &vertexSrc, const String &fragmentSrc)
+    OpenGLShader::OpenGLShader(std::string_view name, std::string_view vertexSrc, std::string_view fragmentSrc)
     : m_Name(name)
     {
         BEE_PROFILE_FUNCTION();
@@ -26,11 +26,11 @@ namespace BeeEngine::Internal
         Compile(shaders);
     }
 
-    OpenGLShader::OpenGLShader(const Ref<String> &name, const String &filepath)
+    OpenGLShader::OpenGLShader(std::string_view name, std::string_view filepath)
     : m_Name(name)
     {
         BEE_PROFILE_FUNCTION();
-        std::ifstream text(filepath);
+        std::ifstream text((String(filepath)));
         String shaderSource;
 
         text.seekg(0, std::ios::end);
@@ -65,65 +65,65 @@ namespace BeeEngine::Internal
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLShader::SetInt(const String &name, int value)
+    void OpenGLShader::SetInt(std::string_view name, int value)
     {
         BEE_PROFILE_FUNCTION();
-        int location = glGetUniformLocation(m_RendererID, name.c_str());
-        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
+        int location = glGetUniformLocation(m_RendererID, name.data());
+        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name, m_Name);
         glUniform1i(location, value);
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLShader::SetIntArray(const String &name, int *values, uint32_t count)
+    void OpenGLShader::SetIntArray(std::string_view name, int *values, uint32_t count)
     {
         BEE_PROFILE_FUNCTION();
-        int location = glGetUniformLocation(m_RendererID, name.c_str());
-        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
+        int location = glGetUniformLocation(m_RendererID, name.data());
+        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name, m_Name);
         glUniform1iv(location, count, values);
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLShader::SetFloat(const String &name, float value)
+    void OpenGLShader::SetFloat(std::string_view name, float value)
     {
         BEE_PROFILE_FUNCTION();
-        int location = glGetUniformLocation(m_RendererID, name.c_str());
-        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
+        int location = glGetUniformLocation(m_RendererID, name.data());
+        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name, m_Name);
         glUniform1f(location, value);
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLShader::SetFloat2(const String &name, const glm::vec2 &value)
+    void OpenGLShader::SetFloat2(std::string_view name, const glm::vec2 &value)
     {
         BEE_PROFILE_FUNCTION();
-        int location = glGetUniformLocation(m_RendererID, name.c_str());
-        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
+        int location = glGetUniformLocation(m_RendererID, name.data());
+        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name, m_Name);
         glUniform2f(location, value.x, value.y);
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLShader::SetFloat3(const String &name, const glm::vec3 &value)
+    void OpenGLShader::SetFloat3(std::string_view name, const glm::vec3 &value)
     {
         BEE_PROFILE_FUNCTION();
-        int location = glGetUniformLocation(m_RendererID, name.c_str());
-        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
+        int location = glGetUniformLocation(m_RendererID, name.data());
+        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name, m_Name);
         glUniform3f(location, value.x, value.y, value.z);
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLShader::SetFloat4(const String &name, const glm::vec4 &value)
+    void OpenGLShader::SetFloat4(std::string_view name, const glm::vec4 &value)
     {
         BEE_PROFILE_FUNCTION();
-        int location = glGetUniformLocation(m_RendererID, name.c_str());
-        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
+        int location = glGetUniformLocation(m_RendererID, name.data());
+        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name, m_Name);
         glUniform4f(location, value.x, value.y, value.z, value.w);
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLShader::SetMat4(const String &name, const glm::mat4 &value)
+    void OpenGLShader::SetMat4(std::string_view name, const glm::mat4 &value)
     {
         BEE_PROFILE_FUNCTION();
-        int location = glGetUniformLocation(m_RendererID, name.c_str());
-        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name.c_str(), m_Name->c_str());
+        int location = glGetUniformLocation(m_RendererID, name.data());
+        BeeCoreAssert(location != -1, "Could not find uniform {0} in shader {1}", name, m_Name);
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
         OPENGL_CHECK_ERRORS
     }
