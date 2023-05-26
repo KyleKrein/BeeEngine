@@ -14,6 +14,8 @@ namespace BeeEngine{
         ~LayerStack();
         void PushLayer(Ref<Layer> layer);
         void PushOverlay(Ref<Layer> overlay);
+        void PushLayer(Layer&& layer);
+        void PushOverlay(Layer&& overlay);
         void PopLayer(Ref<Layer> layer);
         void PopOverlay(Ref<Layer> overlay);
         void SetGuiLayer(ImGuiLayer* guiLayer);

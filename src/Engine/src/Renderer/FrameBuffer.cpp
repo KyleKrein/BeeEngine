@@ -10,17 +10,22 @@
 namespace BeeEngine
 {
 
-    Ref<FrameBuffer> FrameBuffer::Create(const FrameBufferPreferences &preferences)
+    Scope<FrameBuffer> FrameBuffer::Create(const FrameBufferPreferences &preferences)
     {
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
             Expects(preferences.Width > 0 && preferences.Height > 0 && preferences.Width < 100000 && preferences.Height < 100000);
             case RenderAPI::OpenGL:
-                return CreateRef<Internal::OpenGLFrameBuffer>(preferences);
+                return CreateScope<Internal::OpenGLFrameBuffer>(preferences);
             default:
                 BeeCoreFatalError("Unknown RenderAPI");
         }
+    }
+
+    Scope<FrameBuffer> FrameBuffer::Create(FrameBufferPreferences &&preferences)
+    {
+        return FrameBuffer::Create(preferences);
     }
 
     FrameBuffer::FrameBuffer(const FrameBufferPreferences &preferences)
@@ -28,4 +33,6 @@ namespace BeeEngine
     {
 
     }
+
+
 }

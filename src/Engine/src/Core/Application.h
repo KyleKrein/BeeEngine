@@ -79,6 +79,14 @@ namespace BeeEngine{
         {
             m_Layers.PushOverlay(std::move(overlay));
         }
+        inline void PushLayer(Layer&& layer)
+        {
+            m_Layers.PushLayer(std::move(layer));
+        }
+        inline void PushOverlay(Layer&& overlay)
+        {
+            m_Layers.PushOverlay(std::move(overlay));
+        }
     private:
         void Dispatch(EventDispatcher &dispatcher);
         static bool OnWindowClose(WindowCloseEvent& event);

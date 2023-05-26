@@ -7,7 +7,7 @@
 
 
 
-
+#include "Core/TypeDefines.h"
 #define USE_CUSTOM_ALLOCATOR 0
 
 #if USE_CUSTOM_ALLOCATOR

@@ -42,7 +42,8 @@ namespace BeeEngine
         {
             return m_RendererID;
         }
-        static Ref<FrameBuffer> Create(const FrameBufferPreferences& preferences);
+        static Scope<FrameBuffer> Create(const FrameBufferPreferences& preferences);
+        static Scope<FrameBuffer> Create(FrameBufferPreferences&& preferences);
 
     protected:
         uint32_t m_RendererID;

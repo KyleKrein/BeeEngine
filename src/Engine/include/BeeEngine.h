@@ -18,4 +18,6 @@
 #include "Core/Color4.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Renderer2D.h"
+#include "Renderer/Texture.h"
+#include "Renderer/FrameBuffer.h"
 //#include "Windowing/Window.h"

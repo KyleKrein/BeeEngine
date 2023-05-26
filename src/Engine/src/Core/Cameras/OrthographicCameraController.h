@@ -48,6 +48,17 @@ namespace BeeEngine
         [[nodiscard]] inline float GetRotation() const noexcept { return m_Rotation; }
         inline void SetRotation(float rotation) noexcept { m_Rotation = rotation; }
         inline operator OrthographicCamera& () noexcept { return m_Camera; }
+
+        inline void Disable() noexcept
+        {
+            m_IsEnabled = false;
+        }
+
+        inline void Enable() noexcept
+        {
+            m_IsEnabled = true;
+        }
+
     private:
 
         float m_ZoomLevel = 1.0f;

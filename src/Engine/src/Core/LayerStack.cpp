@@ -39,6 +39,22 @@ namespace BeeEngine{
         overlay->OnAttach();
     }
 
+    void LayerStack::PushLayer(Layer&& layer)
+    {
+        BEE_PROFILE_FUNCTION();
+        auto layerPtr = CreateRef<Layer>(layer);
+        m_layers.insert(m_layers.begin(), layerPtr);
+        layerPtr->OnAttach();
+    }
+
+    void LayerStack::PushOverlay(Layer&& overlay)
+    {
+        BEE_PROFILE_FUNCTION();
+        auto layerPtr = CreateRef<Layer>(overlay);
+        m_layers.push_back(layerPtr);
+        layerPtr->OnAttach();
+    }
+
     void LayerStack::PopLayer(Ref<Layer> layer)
     {
         BEE_PROFILE_FUNCTION();
