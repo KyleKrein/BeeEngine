@@ -8,6 +8,7 @@
 #include "stb_image.h"
 #include "Core/Logging/Log.h"
 #include "Debug/OpenGLDebug.h"
+#include "Debug/DebugUtils.h"
 
 
 namespace BeeEngine::Internal
@@ -63,7 +64,7 @@ namespace BeeEngine::Internal
     OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
     {
         BEE_PROFILE_FUNCTION();
-        Expects(width > 0 && height > 0);
+        BeeExpects(width > 0 && height > 0);
         m_Width = width;
         m_Height = height;
 

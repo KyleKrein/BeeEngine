@@ -10,7 +10,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnAttach() noexcept
     {
-
+        Renderer::SetClearColor(Color4::Black);
     }
 
     void EditorLayer::OnDetach() noexcept
@@ -20,6 +20,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnUpdate() noexcept
     {
+        Renderer::Clear();
         m_ViewPort.OnUpdate();
     }
 

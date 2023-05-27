@@ -44,10 +44,10 @@ namespace BeeEngine::Editor
         ImGui::Begin("Viewport");
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
         auto size = ImGui::GetContentRegionAvail();
+        size.x = size.x ? size.x : 1;
+        size.y = size.y ? size.y : 1;
         if(gsl::narrow_cast<float>(m_Width) != size.x || gsl::narrow_cast<float>(m_Height) != size.y)
         {
-            m_Width = size.x;
-            m_Height = size.y;
             m_FrameBuffer->Resize(m_Width, m_Height);
             auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height);
             EventDispatcher dispatcher(event.get());

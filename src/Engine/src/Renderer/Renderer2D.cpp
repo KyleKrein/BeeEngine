@@ -4,6 +4,7 @@
 
 #include "Renderer2D.h"
 #include "Renderer.h"
+#include "Debug/DebugUtils.h"
 
 namespace BeeEngine
 {
@@ -26,7 +27,7 @@ namespace BeeEngine
                                float rotation, const Color4 &color, float textureMultiplier)
     {
         BEE_PROFILE_FUNCTION();
-        Expects(texture);
+        BeeExpects(texture != nullptr && texture->GetRendererID() != 0);
         m_API->DrawImage(x, y, z, width, height, texture, rotation, color, textureMultiplier);
     }
 

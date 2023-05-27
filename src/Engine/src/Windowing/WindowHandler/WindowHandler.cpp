@@ -3,6 +3,7 @@
 //
 #include "GlfwWindowHandler.h"
 #include "WindowHandler.h"
+#include "Debug/DebugUtils.h"
 
 
 namespace BeeEngine{
@@ -10,7 +11,7 @@ namespace BeeEngine{
     gsl::not_null<WindowHandler*> WindowHandler::Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue)
     {
         BEE_PROFILE_FUNCTION();
-        Expects(properties.Width > 0 && properties.Height > 0 && properties.Title != nullptr);
+        BeeExpects(properties.Width > 0 && properties.Height > 0 && properties.Title != nullptr);
         switch (api)
         {
             case WindowHandlerAPI::GLFW:

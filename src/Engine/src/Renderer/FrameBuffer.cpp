@@ -13,9 +13,9 @@ namespace BeeEngine
     Scope<FrameBuffer> FrameBuffer::Create(const FrameBufferPreferences &preferences)
     {
         BEE_PROFILE_FUNCTION();
+        BeeExpects(preferences.Width > 0 && preferences.Height > 0 && preferences.Width < 100000 && preferences.Height < 100000);
         switch (Renderer::GetAPI())
         {
-            Expects(preferences.Width > 0 && preferences.Height > 0 && preferences.Width < 100000 && preferences.Height < 100000);
             case RenderAPI::OpenGL:
                 return CreateScope<Internal::OpenGLFrameBuffer>(preferences);
             default:

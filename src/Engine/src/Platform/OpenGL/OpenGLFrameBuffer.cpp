@@ -7,6 +7,7 @@
 #include "glad/glad.h"
 #include "Core/Application.h"
 #include "Debug/OpenGLDebug.h"
+#include "Debug/DebugUtils.h"
 
 
 namespace BeeEngine::Internal
@@ -46,8 +47,8 @@ namespace BeeEngine::Internal
 
     void OpenGLFrameBuffer::Resize(uint32_t width, uint32_t height)
     {
-        Expects(width > 0 && height > 0 && width < 100000 && height < 100000);
         BEE_PROFILE_FUNCTION();
+        BeeExpects(width > 0 && height > 0 && width < 100000 && height < 100000);
         m_Preferences.Width = width;
         m_Preferences.Height = height;
         Invalidate();
@@ -56,11 +57,7 @@ namespace BeeEngine::Internal
     void OpenGLFrameBuffer::Invalidate()
     {
         BEE_PROFILE_FUNCTION();
-        if (m_Preferences.Width == 0 || m_Preferences.Height == 0)
-        {
-            BeeCoreWarn("Invalid width {0} or height {1} specified for FrameBuffer", m_Preferences.Width, m_Preferences.Height);
-            return;
-        }
+        BeeExpects(m_Preferences.Width > 0 && m_Preferences.Height > 0 && m_Preferences.Width < 100000 && m_Preferences.Height < 100000);
         if(m_RendererID)
         {
             glDeleteFramebuffers(1, &m_RendererID);
@@ -93,6 +90,6 @@ namespace BeeEngine::Internal
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         OPENGL_CHECK_ERRORS
 
-        Ensures(m_RendererID != 0 && m_ColorAttachment != 0 && m_DepthAttachment != 0);
+        BeeEnsures(m_RendererID != 0 && m_ColorAttachment != 0 && m_DepthAttachment != 0);
     }
 }

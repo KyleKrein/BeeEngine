@@ -15,7 +15,7 @@ namespace BeeEngine
     Ref<GraphicsBuffer> GraphicsBuffer::CreateIndexBuffer(gsl::span<uint32_t> data)
     {
         BEE_PROFILE_FUNCTION();
-        Expects(!data.empty());
+        BeeExpects(!data.empty());
         gsl::span<std::byte> byteData = {reinterpret_cast<std::byte*>(data.data()), data.size_bytes()};
         switch (Renderer::GetAPI())
         {

@@ -32,6 +32,7 @@ namespace BeeEngine{
         static std::shared_ptr<spdlog::logger> s_ClientLogger;
     };
 }
+
 //Engine log
 #define BeeCoreFatalError(...)  ::BeeEngine::Log::GetCoreLogger()->critical(__VA_ARGS__); throw std::runtime_error(__VA_ARGS__)
 #define BeeCoreError(...)  ::BeeEngine::Log::GetCoreLogger()->error(__VA_ARGS__)
@@ -39,6 +40,7 @@ namespace BeeEngine{
 #define BeeCoreInfo(...)   ::BeeEngine::Log::GetCoreLogger()->info(__VA_ARGS__)
 #define BeeCoreTrace(...)  ::BeeEngine::Log::GetCoreLogger()->trace(__VA_ARGS__)
 #define BeeCoreAssert(x, ...) if(!(x)) {::BeeEngine::Log::GetCoreLogger()->error(__VA_ARGS__); debug_break();}
+
 
 
 

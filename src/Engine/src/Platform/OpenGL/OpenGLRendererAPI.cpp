@@ -9,6 +9,7 @@
 #include "Core/Logging/Log.h"
 #include "Debug/OpenGLDebug.h"
 #include "Debug/Instrumentor.h"
+#include "Debug/DebugUtils.h"
 
 namespace BeeEngine::Internal
 {
@@ -65,7 +66,7 @@ namespace BeeEngine::Internal
     void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
     {
         BEE_PROFILE_FUNCTION();
-        Expects(width > 0 && height > 0 && width < 100000 && height < 100000);
+        BeeExpects(width > 0 && height > 0 && width < 100000 && height < 100000);
         glViewport(gsl::narrow_cast<int>(x),
                 gsl::narrow_cast<int>(y),
                 gsl::narrow_cast<int>(width),

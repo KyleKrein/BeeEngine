@@ -7,6 +7,7 @@
 #include "Core/Logging/Log.h"
 #include "Debug/OpenGLDebug.h"
 #include "Debug/Instrumentor.h"
+#include "Debug/DebugUtils.h"
 
 
 namespace BeeEngine::Internal
@@ -27,7 +28,7 @@ namespace BeeEngine::Internal
 
     void OpenGLVertexBuffer::SetData(gsl::span<std::byte> data)
     {
-        Expects(!data.empty() && data.size() <= m_Size);
+        BeeExpects(!data.empty() && data.size() <= m_Size);
         BEE_PROFILE_FUNCTION();
         glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
         glBufferSubData(GL_ARRAY_BUFFER, 0, gsl::narrow_cast<GLsizeiptr>(data.size()), data.data());
@@ -45,7 +46,7 @@ namespace BeeEngine::Internal
     : m_Size(size), m_RendererID(0)
     {
         BEE_PROFILE_FUNCTION();
-        Expects(size > 0);
+        BeeExpects(size > 0);
         glGenBuffers(1, &m_RendererID);
         glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);

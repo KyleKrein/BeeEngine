@@ -89,7 +89,7 @@ namespace BeeEngine{
         {
             {
                 BEE_PROFILE_SCOPE("Layers::Update");
-                for (auto layer: m_layers)
+                for (auto& layer: m_layers)
                 {
                     layer->OnUpdate();
                 }
@@ -97,7 +97,7 @@ namespace BeeEngine{
             {
                 BEE_PROFILE_SCOPE("Layers::GUIRendering");
                 m_guiLayer->OnBegin();
-                for (auto layer: m_layers)
+                for (auto& layer: m_layers)
                 {
                     layer->OnGUIRendering();
                 }
