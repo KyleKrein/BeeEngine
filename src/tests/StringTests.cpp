@@ -15,6 +15,6 @@ TEST(ResourceManagerTest, ProcessFilePathTest)
 TEST(ResourceManagerTest, GetNameFromFilePathTest)
 {
     BeeEngine::String filepath = "C:\\Users\\alexl\\Desktop\\BeeEngine\\src\\tests\\StringTests.cpp";
-    BeeEngine::Ref<BeeEngine::String> result = BeeEngine::ResourceManager::GetNameFromFilePath(filepath);
-    ASSERT_EQ(*result, "StringTests");
+    BeeEngine::String result = BeeEngine::ResourceManager::GetNameFromFilePath(filepath);
+    ASSERT_EQ(result, "StringTests");
 }
