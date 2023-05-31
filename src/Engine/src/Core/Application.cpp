@@ -25,7 +25,7 @@ namespace BeeEngine{
         }
     }
 
-    Application::Application(WindowProperties& properties)
+    Application::Application(const WindowProperties& properties)
     : m_IsMinimized(false), m_Layers(LayerStack()), m_EventQueue(EventQueue(m_Layers))
     {
         BEE_PROFILE_FUNCTION();

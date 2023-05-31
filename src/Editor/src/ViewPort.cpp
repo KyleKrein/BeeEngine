@@ -48,6 +48,8 @@ namespace BeeEngine::Editor
         size.y = size.y ? size.y : 1;
         if(gsl::narrow_cast<float>(m_Width) != size.x || gsl::narrow_cast<float>(m_Height) != size.y)
         {
+            m_Width = gsl::narrow_cast<uint32_t>(size.x);
+            m_Height = gsl::narrow_cast<uint32_t>(size.y);
             m_FrameBuffer->Resize(m_Width, m_Height);
             auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height);
             EventDispatcher dispatcher(event.get());

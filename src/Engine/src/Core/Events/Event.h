@@ -78,11 +78,11 @@ namespace BeeEngine
         {
 
         }
-        inline EventCategory GetCategory() const
+        [[nodiscard]] inline EventCategory GetCategory() const
         {
             return m_event->Category;
         }
-        inline EventType GetType() const
+        [[nodiscard]] inline EventType GetType() const
         {
             return m_event->GetType();
         }
@@ -126,7 +126,7 @@ namespace BeeEngine
             }
             return true;
         }*/
-        inline bool IsHandled() const
+        [[nodiscard]] inline bool IsHandled() const
         {
             return m_event->IsHandled();
         }

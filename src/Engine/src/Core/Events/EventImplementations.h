@@ -11,7 +11,7 @@ namespace BeeEngine
     struct WindowCloseEvent: public Event
     {
     public:
-        WindowCloseEvent()
+        WindowCloseEvent() noexcept
         {
             Category = EventCategory::App;
             m_Type = EventType::WindowClose;
@@ -20,7 +20,7 @@ namespace BeeEngine
     struct KeyPressedEvent: public Event
     {
     public:
-        KeyPressedEvent(Key key)
+        explicit KeyPressedEvent(Key key) noexcept
         {
             Category = (EventCategory)(EventCategory::Keyboard & EventCategory::Input);
             m_Key = key;
@@ -37,13 +37,13 @@ namespace BeeEngine
     struct CharTypedEvent: public Event
     {
     public:
-        CharTypedEvent(char character)
+        explicit CharTypedEvent(char character) noexcept
         {
             Category = (EventCategory)(EventCategory::Keyboard & EventCategory::Input);
             m_Character = character;
             m_Type = EventType::KeyTyped;
         }
-        char GetCharacter()
+        [[nodiscard]] char GetCharacter() const
         {
             return m_Character;
         }
@@ -54,7 +54,7 @@ namespace BeeEngine
     struct MouseButtonPressedEvent: public Event
     {
     public:
-        MouseButtonPressedEvent(MouseButton button)
+        explicit MouseButtonPressedEvent(MouseButton button) noexcept
         {
             Category = (EventCategory)(EventCategory::Mouse & EventCategory::Input);
             m_Button = button;
@@ -71,18 +71,18 @@ namespace BeeEngine
     struct MouseMovedEvent: public Event
     {
     public:
-        MouseMovedEvent(float x, float y)
+        MouseMovedEvent(float x, float y) noexcept
         {
             Category = (EventCategory)(EventCategory::Mouse & EventCategory::Input);
             m_X = x;
             m_Y = y;
             m_Type = EventType::MouseMoved;
         }
-        float GetX()
+        [[nodiscard]] float GetX() const
         {
             return m_X;
         }
-        float GetY()
+        [[nodiscard]] float GetY() const
         {
             return m_Y;
         }
@@ -93,18 +93,18 @@ namespace BeeEngine
     struct MouseScrolledEvent: public Event
     {
     public:
-        MouseScrolledEvent(float xOffset, float yOffset)
+        MouseScrolledEvent(float xOffset, float yOffset) noexcept
         {
             Category = (EventCategory)(EventCategory::Mouse & EventCategory::Input);
             m_XOffset = xOffset;
             m_YOffset = yOffset;
             m_Type = EventType::MouseScrolled;
         }
-        float GetXOffset()
+        [[nodiscard]] float GetXOffset() const
         {
             return m_XOffset;
         }
-        float GetYOffset()
+        [[nodiscard]] float GetYOffset() const
         {
             return m_YOffset;
         }
@@ -115,17 +115,17 @@ namespace BeeEngine
     struct WindowResizeEvent: public Event
     {
     public:
-        WindowResizeEvent(uint16_t width, uint16_t height)
+        WindowResizeEvent(uint16_t width, uint16_t height) noexcept
         : m_Width(width), m_Height(height)
         {
             Category = EventCategory::App;
             m_Type = EventType::WindowResize;
         }
-        uint16_t GetWidth()
+        [[nodiscard]] uint16_t GetWidth() const
         {
             return m_Width;
         }
-        uint16_t GetHeight()
+        [[nodiscard]] uint16_t GetHeight() const
         {
             return m_Height;
         }

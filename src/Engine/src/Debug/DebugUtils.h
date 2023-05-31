@@ -8,17 +8,17 @@
 
 constexpr inline void BeeExpects(bool x, std::source_location location = std::source_location::current())
 {
-    if(!x)
-    {
-        ::BeeEngine::Log::GetCoreLogger()->error("Expected result is incorrect at {0}: {1}", location.file_name(), location.line());
-        debug_break();
-    }
+    if (x) [[likely]]
+        return;
+    [[unlikely]]
+    ::BeeEngine::Log::GetCoreLogger()->error("Expected result is incorrect at {0}: {1}", location.file_name(), location.line());
+    debug_break();
 }
 constexpr inline void BeeEnsures(bool x, std::source_location location = std::source_location::current())
 {
-    if(!x)
-    {
-        ::BeeEngine::Log::GetCoreLogger()->error("Expectations failed at {0}: {1}", location.file_name(), location.line());
-        debug_break();
-    }
+    if (x) [[likely]]
+        return;
+    [[unlikely]]
+    ::BeeEngine::Log::GetCoreLogger()->error("Expectations failed at {0}: {1}", location.file_name(), location.line());
+    debug_break();
 }

@@ -23,13 +23,22 @@ namespace BeeEngine::Internal
     OpenGLFrameBuffer::~OpenGLFrameBuffer()
     {
         BEE_PROFILE_FUNCTION();
-        glDeleteFramebuffers(1, &m_RendererID);
-        glDeleteTextures(1, &m_ColorAttachment);
-        glDeleteTextures(1, &m_DepthAttachment);
+        if(glIsFramebuffer(m_RendererID) == GL_TRUE)
+        {
+            glDeleteFramebuffers(1, &m_RendererID);
+        }
+        if(glIsTexture(m_ColorAttachment) == GL_TRUE)
+        {
+            glDeleteTextures(1, &m_ColorAttachment);
+        }
+        if(glIsTexture(m_DepthAttachment) == GL_TRUE)
+        {
+            glDeleteTextures(1, &m_DepthAttachment);
+        }
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLFrameBuffer::Bind()
+    void OpenGLFrameBuffer::Bind() const
     {
         BEE_PROFILE_FUNCTION();
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
@@ -37,7 +46,7 @@ namespace BeeEngine::Internal
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLFrameBuffer::Unbind()
+    void OpenGLFrameBuffer::Unbind() const
     {
         BEE_PROFILE_FUNCTION();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -26,8 +26,8 @@ namespace BeeEngine
     public:
         explicit FrameBuffer(const FrameBufferPreferences& preferences);
         virtual ~FrameBuffer() = default;
-        virtual void Bind() = 0;
-        virtual void Unbind() = 0;
+        virtual void Bind() const = 0;
+        virtual void Unbind() const = 0;
         virtual void Resize(uint32_t width, uint32_t height) = 0;
         virtual void Invalidate() = 0;
         [[nodiscard]] inline uint32_t GetColorAttachmentRendererID() const

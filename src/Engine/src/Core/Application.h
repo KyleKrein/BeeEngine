@@ -25,7 +25,7 @@ namespace BeeEngine{
     {
         friend EventQueue;
     public:
-        explicit Application(WindowProperties& properties);
+        explicit Application(const WindowProperties& properties);
         virtual ~Application();
         static OSPlatform GetOsPlatform()
         {

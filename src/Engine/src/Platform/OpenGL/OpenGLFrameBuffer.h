@@ -15,8 +15,8 @@ namespace BeeEngine
         public:
             explicit OpenGLFrameBuffer(const FrameBufferPreferences& preferences);
             ~OpenGLFrameBuffer() override;
-            void Bind() override;
-            void Unbind() override;
+            void Bind() const override;
+            void Unbind() const override;
             void Resize(uint32_t width, uint32_t height) override;
             void Invalidate() override;
         };

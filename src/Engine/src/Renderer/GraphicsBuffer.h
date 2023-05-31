@@ -27,12 +27,12 @@ namespace BeeEngine
             m_Layout = layout;
         };
 
-        inline const BufferLayout& GetLayout() const
+        [[nodiscard]] inline const BufferLayout& GetLayout() const
         {
             return m_Layout;
         };
 
-        virtual uint32_t GetSize() const = 0;
+        [[nodiscard]] virtual uint32_t GetSize() const = 0;
 
         static Ref<GraphicsBuffer> CreateVertexBuffer(uint32_t size);
         static Ref<GraphicsBuffer> CreateIndexBuffer(gsl::span<uint32_t> data);

@@ -22,7 +22,7 @@ namespace BeeEngine
     class Renderer
     {
     public:
-        static const RenderAPI GetAPI()
+        static RenderAPI GetAPI()
         {
             return s_Api;
         }

@@ -11,15 +11,15 @@ namespace BeeEngine
 {
     struct Color4
     {
-        constexpr Color4() : m_R(0.0f), m_G(0.0f), m_B(0.0f), m_A(1.0f) {}
-        constexpr static Color4 FromRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255)
+        constexpr Color4() noexcept : m_R(0.0f), m_G(0.0f), m_B(0.0f), m_A(1.0f) {}
+        constexpr static Color4 FromRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) noexcept
         {
             return {gsl::narrow_cast<float>(r) / 255.0f,
                     gsl::narrow_cast<float>(g) / 255.0f,
                     gsl::narrow_cast<float>(b) / 255.0f,
                     gsl::narrow_cast<float>(a) / 255.0f};
         }
-        constexpr static Color4 FromNormalized(float r, float g, float b, float a = 1.0f)
+        constexpr static Color4 FromNormalized(float r, float g, float b, float a = 1.0f) noexcept
         {
             return {r, g, b, a};
         }

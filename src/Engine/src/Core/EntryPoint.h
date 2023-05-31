@@ -19,8 +19,14 @@ namespace BeeEngine{
     static void InitEngine()
     {
         BEE_PROFILE_FUNCTION();
-        //GeneralPurposeAllocator::Initialize(nullptr);
+        static bool initialized = false;
+        if(initialized)
+        {
+            BeeCoreError("Engine was already initialized");
+        }
         Log::Init();
+
+        initialized = true;
     }
 }
 
