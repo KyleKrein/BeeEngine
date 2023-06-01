@@ -35,7 +35,7 @@ namespace BeeEngine::Internal
         {
             glDeleteTextures(1, &m_DepthAttachment);
         }
-        OPENGL_CHECK_ERRORS
+        //OPENGL_CHECK_ERRORS todo: this generates infinite errors 1282
     }
 
     void OpenGLFrameBuffer::Bind() const
@@ -50,7 +50,7 @@ namespace BeeEngine::Internal
     {
         BEE_PROFILE_FUNCTION();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, Application::GetInstance()->GetWidth(), Application::GetInstance()->GetHeight());
+        glViewport(0, 0, Application::GetInstance().GetWidth(), Application::GetInstance().GetHeight());
         OPENGL_CHECK_ERRORS
     }
 

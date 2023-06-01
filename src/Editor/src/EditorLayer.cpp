@@ -21,12 +21,16 @@ namespace BeeEngine::Editor
     void EditorLayer::OnUpdate() noexcept
     {
         Renderer::Clear();
-        m_ViewPort.OnUpdate();
+        m_ViewPort.Update();
+        m_FpsCounter.Update();
     }
 
     void EditorLayer::OnGUIRendering() noexcept
     {
+        m_DockSpace.Start();
         m_ViewPort.Render();
+        m_FpsCounter.Render();
+        m_DockSpace.End();
     }
 
     void EditorLayer::OnEvent(EventDispatcher &event) noexcept

@@ -31,9 +31,11 @@ namespace BeeEngine
 
         void MakeContextNonCurrent() override;
 
-        bool IsRunning() const override;
+        [[nodiscard]] bool IsRunning() const override;
 
         void UpdateTime() override;
+
+        void Close() override;
 
         ~GLFWWindowHandler() override;
     private:
@@ -48,7 +50,8 @@ namespace BeeEngine
         static void WindowCloseCallback(GLFWwindow* window);
     private:
         GLFWwindow* m_Window;
-        bool m_IsRunning;
+        mutable bool m_IsRunning;
+        mutable bool m_IsClosing;
     };
 }
 

@@ -6,6 +6,7 @@
 
 
 #include "BeeEngine.h"
+#include "Gui/ImGui/FpsCounter.h"
 
 class TestLayer: public BeeEngine::Layer
 {
@@ -19,4 +20,6 @@ public:
     void OnEvent(BeeEngine::EventDispatcher& e) override;
     private:
     BeeEngine::OrthographicCameraController m_CameraController;
+    BeeEngine::Internal::FpsCounter m_FpsCounter {};
+    BeeEngine::Ref<BeeEngine::Texture2D> m_ForestTexture;
 };

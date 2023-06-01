@@ -14,8 +14,8 @@ namespace BeeEngine
     class OrthographicCameraController
     {
     public:
-        explicit OrthographicCameraController(bool rotation = false) noexcept: OrthographicCameraController(Application::GetInstance()->GetWidth()
-                                                                                          , Application::GetInstance()->GetWidth(), rotation) {};
+        explicit OrthographicCameraController(bool rotation = false) noexcept: OrthographicCameraController(Application::GetInstance().GetWidth()
+                                                                                          , Application::GetInstance().GetWidth(), rotation) {};
         OrthographicCameraController(uint32_t width, uint32_t  height, bool rotation = false) noexcept;
 
         void OnUpdate() noexcept;

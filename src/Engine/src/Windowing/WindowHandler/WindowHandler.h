@@ -45,8 +45,10 @@ namespace BeeEngine
         virtual void SwapBuffers() = 0;
         virtual void MakeContextCurrent() = 0;
         virtual void MakeContextNonCurrent() = 0;
-        virtual bool IsRunning() const = 0;
+        [[nodiscard]] virtual bool IsRunning() const = 0;
         virtual void UpdateTime() = 0;
+        virtual void Close() = 0;
+
     protected:
         static WindowHandler* s_Instance;
         WindowHandler() = delete;

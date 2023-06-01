@@ -110,5 +110,10 @@ namespace BeeEngine{
     {
         return ShaderLibrary::GetInstance().Exists(name);
     }
+
+    void Application::Close()
+    {
+        m_Window->Close();
+    }
 }
 

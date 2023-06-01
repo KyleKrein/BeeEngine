@@ -85,7 +85,7 @@ namespace BeeEngine{
     void LayerStack::Update()
     {
         BEE_PROFILE_FUNCTION();
-        if (!Application::GetInstance()->IsMinimized())
+        if (!Application::GetInstance().IsMinimized())
         {
             {
                 BEE_PROFILE_SCOPE("Layers::Update");

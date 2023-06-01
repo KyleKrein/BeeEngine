@@ -31,9 +31,9 @@ namespace BeeEngine{
         {
             return s_OSPlatform;
         }
-        static const Application* const GetInstance()
+        static Application& GetInstance()
         {
-            return s_Instance;
+            return *s_Instance;
         }
 
         [[nodiscard]] bool IsMinimized() const
@@ -67,6 +67,9 @@ namespace BeeEngine{
 
 
         void Run();
+
+        void Close();
+
     protected:
         virtual void Update() {};
         virtual void OnEvent(EventDispatcher& dispatcher) {};

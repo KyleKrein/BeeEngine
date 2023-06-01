@@ -11,7 +11,7 @@ namespace BeeEngine
 {
 
     GLFWWindowHandler::GLFWWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
-            : WindowHandler(eventQueue)
+            : WindowHandler(eventQueue), m_Window(nullptr), m_IsRunning(false), m_IsClosing(false)
     {
         BEE_PROFILE_FUNCTION();
         s_Instance = this;
@@ -152,6 +152,12 @@ namespace BeeEngine
 
     bool GLFWWindowHandler::IsRunning() const
     {
+        if(m_IsClosing) [[unlikely]]
+        {
+            m_IsRunning = false;
+            m_IsClosing = false;
+            return true;
+        }
         return m_IsRunning;
     }
 
@@ -195,7 +201,7 @@ namespace BeeEngine
     {
         auto event = CreateScope<WindowCloseEvent>();
         ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
-        ((GLFWWindowHandler*)s_Instance)->m_IsRunning = false;
+        ((GLFWWindowHandler*)s_Instance)->m_IsClosing = true;
     }
 
     Key GLFWWindowHandler::ConvertKeyCode(int key)
@@ -451,7 +457,12 @@ namespace BeeEngine
     void GLFWWindowHandler::UpdateTime()
     {
         BEE_PROFILE_FUNCTION();
-        UpdateDeltaTime(glfwGetTime());
+        UpdateDeltaTime(gsl::narrow_cast<float>(glfwGetTime()));
+    }
+
+    void GLFWWindowHandler::Close()
+    {
+        WindowCloseCallback(m_Window);
     }
 }
 

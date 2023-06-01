@@ -6,6 +6,8 @@
 
 #include "BeeEngine.h"
 #include "ViewPort.h"
+#include "DockSpace.h"
+#include "Gui/ImGui/FpsCounter.h"
 
 namespace BeeEngine::Editor
 {
@@ -21,6 +23,8 @@ namespace BeeEngine::Editor
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
         void DrawToScene();
+        DockSpace m_DockSpace {};
         ViewPort m_ViewPort {100, 100, [this]() { DrawToScene(); }};
+        BeeEngine::Internal::FpsCounter m_FpsCounter {};
     };
 }

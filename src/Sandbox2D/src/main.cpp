@@ -21,6 +21,6 @@ private:
 
 gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication()
 {
-    constexpr static WindowProperties properties = {1280, 720, "Pochemu", VSync::On};
+    constexpr static WindowProperties properties = {1280, 720, "Pochemu", VSync::Off};
     return new Game(properties);
 }
