@@ -4,15 +4,10 @@
 
 #include "TestLayer.h"
 TestLayer::TestLayer()
-{
-
-
-}
+= default;
 
 TestLayer::~TestLayer()
-{
-
-}
+= default;
 
 void TestLayer::OnAttach()
 {

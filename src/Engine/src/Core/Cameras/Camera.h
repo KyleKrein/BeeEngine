@@ -1,17 +1,23 @@
 //
-// Created by alexl on 14.05.2023.
+// Created by alexl on 03.06.2023.
 //
 
 #pragma once
-
-#include "detail/type_mat4x4.hpp"
-
+#include "glm.hpp"
 namespace BeeEngine
 {
     class Camera
     {
-
     public:
-        [[nodiscard]] virtual const glm::mat4 & GetViewProjectionMatrix() const = 0;
+        Camera() = default;
+        explicit Camera(const glm::mat4 &projection) noexcept
+        : m_ProjectionMatrix(projection)
+        {}
+
+        virtual ~Camera() = default;
+        [[nodiscard]] inline const glm::mat4& GetProjectionMatrix() const {return m_ProjectionMatrix;}
+
+    protected:
+        glm::mat4 m_ProjectionMatrix {1.0f};
     };
 }

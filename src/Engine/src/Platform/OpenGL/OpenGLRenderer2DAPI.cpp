@@ -136,18 +136,13 @@ namespace BeeEngine::Internal
         }
     }
 
-    void OpenGLRenderer2DAPI::DrawRectangle(float x, float y, float z, float width, float height, const Color4 &color,
-                                            float rotation)
+    void OpenGLRenderer2DAPI::DrawRectangle(const glm::mat4& transform, const Color4 &color)
     {
         BEE_PROFILE_FUNCTION();
         static const float blankTextureIndex = 0.0f;
         static const float TilingFactor = 1.0f;
 
         FlushAndReset();
-
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)) *
-                              glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0, 0, 1)) *
-                              glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
 
         for (int i = 0; i < RectVertexCount; i++)
         {
@@ -173,8 +168,7 @@ namespace BeeEngine::Internal
     }
 
     void
-    OpenGLRenderer2DAPI::DrawImage(float x, float y, float z, float width, float height, const Ref<Texture2D> &texture,
-                                   float rotation, const Color4 &color, float textureMultiplier)
+    OpenGLRenderer2DAPI::DrawImage(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color, float textureMultiplier)
     {
         BEE_PROFILE_FUNCTION();
         FlushAndReset();
@@ -197,10 +191,6 @@ namespace BeeEngine::Internal
             m_Data.TextureSlots[m_Data.TextureSlotIndex] = texture;
             m_Data.TextureSlotIndex++;
         }
-
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)) *
-                              glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0, 0, 1)) *
-                              glm::scale(glm::mat4(1.0f), glm::vec3(width, height, 1.0f));
 
         for (int i = 0; i < RectVertexCount; i++)
         {

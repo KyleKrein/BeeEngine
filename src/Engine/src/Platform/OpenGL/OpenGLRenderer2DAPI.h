@@ -68,8 +68,8 @@ namespace BeeEngine::Internal
     {
     public:
         virtual void Init() override;
-        virtual void DrawRectangle(float x, float y, float z, float width, float height, const Color4 &color, float rotation) override;
-        virtual void DrawImage(float x, float y, float z, float width, float height, const Ref<Texture2D>& texture, float rotation, const Color4& color, float textureMultiplier) override;
+        virtual void DrawRectangle(const glm::mat4& transform, const Color4 &color) override;
+        virtual void DrawImage(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color, float textureMultiplier) override;
         virtual ~OpenGLRenderer2DAPI() override = default;
 
         virtual void BeginScene() override;

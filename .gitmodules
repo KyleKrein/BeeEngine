@@ -26,3 +26,6 @@
 [submodule "src/Engine/vendor/BeeAlloc"]
 	path = src/Engine/vendor/BeeAlloc
 	url = https://github.com/KyleKrein/BeeAlloc.git
+[submodule "src/Engine/vendor/entt"]
+	path = src/Engine/vendor/entt
+	url = https://github.com/skypjack/entt.git

@@ -20,3 +20,5 @@ target_link_libraries(BeeEngine_Tests
         gtest
         BeeEngine
         )
+
+file(COPY AssetsForTests DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})

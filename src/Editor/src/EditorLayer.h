@@ -5,9 +5,11 @@
 #pragma once
 
 #include "BeeEngine.h"
-#include "ViewPort.h"
-#include "DockSpace.h"
+#include "Panels/ViewPort.h"
+#include "Panels/DockSpace.h"
 #include "Gui/ImGui/FpsCounter.h"
+#include "Panels/SceneHierarchyPanel.h"
+#include "Panels/InspectorPanel.h"
 
 namespace BeeEngine::Editor
 {
@@ -22,9 +24,10 @@ namespace BeeEngine::Editor
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
-        void DrawToScene();
         DockSpace m_DockSpace {};
-        ViewPort m_ViewPort {100, 100, [this]() { DrawToScene(); }};
+        ViewPort m_ViewPort {100, 100};
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
+        SceneHierarchyPanel m_SceneHierarchyPanel {};
+        InspectorPanel m_InspectorPanel {};
     };
 }

@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "Camera.h"
+#include "ICamera.h"
 
 namespace BeeEngine
 {
-    class OrthographicCamera: public Camera
+    class OrthographicCamera: public ICamera
     {
 public:
         OrthographicCamera(float left, float right, float bottom, float top);

@@ -1,7 +1,7 @@
 #pragma once
 #include "Allocator.h"
 #include "Core/Time.h"
-#include "Core/Cameras/Camera.h"
+#include "Core/Cameras/ICamera.h"
 #include "Core/Cameras/OrthographicCamera.h"
 #include "Core/Cameras/OrthographicCameraController.h"
 #include "Core/EntryPoint.h"
@@ -19,5 +19,6 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/Renderer2D.h"
 #include "Renderer/Texture.h"
+#include "Scene/Scene.h"
 #include "Renderer/FrameBuffer.h"
 //#include "Windowing/Window.h"

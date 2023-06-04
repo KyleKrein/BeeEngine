@@ -5,6 +5,7 @@
 #include "Renderer2D.h"
 #include "Renderer.h"
 #include "Debug/DebugUtils.h"
+#include "ext/matrix_transform.hpp"
 
 namespace BeeEngine
 {
@@ -20,7 +21,9 @@ namespace BeeEngine
     void Renderer2D::DrawRectangle(float x, float y, float z, float width, float height, const Color4 &color, float rotation)
     {
         BEE_PROFILE_FUNCTION();
-        m_API->DrawRectangle(x, y, z, width, height, color, rotation);
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), {x, y, z}) * glm::rotate(glm::mat4(1.0f), rotation, {0, 0, 1}) *
+                              glm::scale(glm::mat4(1.0f), {width, height, 1.0f});
+        m_API->DrawRectangle(transform, color);
     }
 
     void Renderer2D::DrawImage(float x, float y, float z, float width, float height, const Ref<Texture2D> &texture,
@@ -28,7 +31,9 @@ namespace BeeEngine
     {
         BEE_PROFILE_FUNCTION();
         BeeExpects(texture != nullptr && texture->GetRendererID() != 0);
-        m_API->DrawImage(x, y, z, width, height, texture, rotation, color, textureMultiplier);
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), {x, y, z}) * glm::rotate(glm::mat4(1.0f), rotation, {0, 0, 1}) *
+                              glm::scale(glm::mat4(1.0f), {width, height, 1.0f});
+        DrawImage(transform, texture, color, textureMultiplier);
     }
 
     void Renderer2D::ResetStatistics()
@@ -38,7 +43,7 @@ namespace BeeEngine
         m_Statistics->SpriteCount = 0;
     }
 
-    void Renderer2D::BeginScene(const Camera &camera)
+    void Renderer2D::BeginScene(const ICamera &camera)
     {
         BEE_PROFILE_FUNCTION();
         m_API->SetCameraTransform(camera.GetViewProjectionMatrix());
@@ -92,5 +97,17 @@ namespace BeeEngine
     void Renderer2D::Shutdown()
     {
         delete m_API;
+    }
+
+    void Renderer2D::DrawImage(const glm::mat4& transform, const Ref<Texture2D> &texture, const Color4 &color,
+                               float textureMultiplier)
+    {
+        m_API->DrawImage(transform, texture, color, textureMultiplier);
+    }
+
+    void Renderer2D::BeginScene(const Camera &camera, const glm::mat4 &transform)
+    {
+        m_API->SetCameraTransform(camera.GetProjectionMatrix() * glm::inverse(transform));
+        m_API->BeginScene();
     }
 }

@@ -4,11 +4,12 @@
 
 #pragma once
 #include "Core/TypeDefines.h"
-#include "Core/Cameras/Camera.h"
+#include "Core/Cameras/ICamera.h"
 #include "glm/glm.hpp"
 #include "Renderer/RectangleProperties.h"
 #include "Texture.h"
 #include "Renderer2DAPI.h"
+#include "Core/Cameras/Camera.h"
 
 namespace BeeEngine
 {
@@ -16,14 +17,17 @@ namespace BeeEngine
     {
 
     public:
-        static void BeginScene(const Camera& camera);
+        static void BeginScene(const ICamera& camera);
+        static void BeginScene(const Camera& camera, const glm::mat4& transform);
         static void EndScene();
         static void Init(Renderer2DAPI* api);
         static void DrawRectangle(const RectangleProperties& properties);
         static void DrawRectangle(const glm::vec2& position, const glm::vec2& size, const Color4& color);
+        static void DrawRectangle(const glm::mat4& transform, const Color4& color);
         static void DrawRectangle(float x, float y, float z, float width, float height, const Color4& color);
         static void DrawRectangle(float x, float y, float z, float width, float height, const Color4& color, float rotation);
 
+        static void DrawImage(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color, float textureMultiplier);
         static void DrawImage(float x, float y, float width, float height, const Ref<Texture2D>& texture);
         static void DrawImage(float x, float y, float z, float width, float height, const Ref<Texture2D>& texture);
         static void DrawImage(float x, float y, float z, float width, float height, const Ref<Texture2D>& texture, float rotation);

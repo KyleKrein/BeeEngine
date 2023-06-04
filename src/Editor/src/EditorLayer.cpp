@@ -3,6 +3,8 @@
 //
 
 #include "EditorLayer.h"
+#include "Scene/Entity.h"
+#include "Scene/Components.h"
 
 
 namespace BeeEngine::Editor
@@ -11,6 +13,13 @@ namespace BeeEngine::Editor
     void EditorLayer::OnAttach() noexcept
     {
         Renderer::SetClearColor(Color4::Black);
+        auto forestTexture = Texture2D::Create("Assets/Textures/forest.png");
+
+        auto test = m_ViewPort.GetScene()->CreateEntity("Test");
+        test.AddComponent<Texture2DComponent>(forestTexture);
+
+        m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
+        m_InspectorPanel.SetContext(m_ViewPort.GetScene());
     }
 
     void EditorLayer::OnDetach() noexcept
@@ -29,6 +38,8 @@ namespace BeeEngine::Editor
     {
         m_DockSpace.Start();
         m_ViewPort.Render();
+        m_SceneHierarchyPanel.OnGUIRender();
+        m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
         m_FpsCounter.Render();
         m_DockSpace.End();
     }
@@ -36,10 +47,5 @@ namespace BeeEngine::Editor
     void EditorLayer::OnEvent(EventDispatcher &event) noexcept
     {
         m_ViewPort.OnEvent(event);
-    }
-    constexpr RectangleProperties rectangle(0, 0, 0, 1, 1, 0, Color4::Green);
-    void EditorLayer::DrawToScene()
-    {
-        Renderer2D::DrawRectangle(rectangle);
     }
 }

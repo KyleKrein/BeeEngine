@@ -30,10 +30,10 @@ namespace BeeEngine
         constexpr Color4& operator=(const Color4& other) = default;
         constexpr ~Color4() noexcept = default;
 
-        [[nodiscard]] inline float R() const { return m_R; }
-        [[nodiscard]] inline float G() const { return m_G; }
-        [[nodiscard]] inline float B() const { return m_B; }
-        [[nodiscard]] inline float A() const { return m_A; }
+        [[nodiscard]] inline constexpr float R() const { return m_R; }
+        [[nodiscard]] inline constexpr float G() const { return m_G; }
+        [[nodiscard]] inline constexpr float B() const { return m_B; }
+        [[nodiscard]] inline constexpr float A() const { return m_A; }
 
         constexpr inline explicit operator glm::vec4() const
         {
