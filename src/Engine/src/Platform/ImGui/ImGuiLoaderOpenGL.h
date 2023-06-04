@@ -58,6 +58,9 @@ namespace BeeEngine
                 style.WindowRounding = 0.0f;
                 style.Colors[ImGuiCol_WindowBg].w = 1.0f;
             }
+
+            SetDefaultTheme();
+
             const char* glsl_version = "#version 150"; //change later
             // Setup Platform/Renderer backends
             ImGui_ImplGlfw_InitForOpenGL(m_window, true);

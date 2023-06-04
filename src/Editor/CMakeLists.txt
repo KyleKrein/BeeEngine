@@ -10,3 +10,5 @@ target_include_directories(Sandbox2D
         PUBLIC src
         )
 target_link_libraries(${PROJECT_NAME} BeeEngine)
+
+file(COPY ../Engine/Assets DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
