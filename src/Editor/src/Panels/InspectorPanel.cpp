@@ -59,7 +59,11 @@ namespace BeeEngine::Editor
 
             char buffer[256];
             memset(buffer, 0, sizeof(buffer));
+#ifdef WINDOWS
             strcpy_s(buffer, sizeof(buffer), tag.c_str());
+#else
+            strcpy(buffer, tag.c_str());
+#endif
 
             ImGui::Text("Tag");
             if(ImGui::InputText("##", buffer, sizeof(buffer)))

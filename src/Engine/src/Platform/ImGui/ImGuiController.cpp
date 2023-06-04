@@ -3,7 +3,7 @@
 //
 #include "ImGuiController.h"
 #include "imgui.h"
-#include "../Assets/OpenSans/OpenSans.h"
+#include "../../../Assets/EmbeddedResources.h"
 namespace BeeEngine
 {
 
