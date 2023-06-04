@@ -20,6 +20,7 @@ namespace BeeEngine
         friend class Entity;
         friend class BeeEngine::Editor::SceneHierarchyPanel;
         friend class BeeEngine::Editor::InspectorPanel;
+        friend class SceneSerializer;
     public:
         void OnUpdate();
         void OnViewPortResize(uint32_t width, uint32_t height);

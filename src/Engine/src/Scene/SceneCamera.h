@@ -42,6 +42,8 @@ namespace BeeEngine
         void SetPerspectiveFarClip(float farClip) noexcept;
 
 
+        void SetAspectRatio(float d);
+
     private:
         void RecalculateProjectionMatrix();
         CameraType m_Type = CameraType::Orthographic;

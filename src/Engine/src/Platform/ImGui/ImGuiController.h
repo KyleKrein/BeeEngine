@@ -11,6 +11,7 @@ namespace BeeEngine
         virtual void Update() = 0;
         virtual void Render() = 0;
         virtual ~ImGuiController() = default;
+        void SetDarkThemeColors();
     protected:
         void SetDefaultTheme();
     };

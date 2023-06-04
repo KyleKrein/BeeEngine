@@ -9,4 +9,5 @@
 #define EmbedResource(name, path) extern "C" { INCBIN(name, PathToAsset(path)); }
 
 
-EmbedResource(OpenSans, "OpenSans/OpenSans-VariableFont.ttf");
+EmbedResource(OpenSansRegular, "OpenSans/static/OpenSans-Regular.ttf");
+EmbedResource(OpenSansBold, "OpenSans/static/OpenSans-Bold.ttf");

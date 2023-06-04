@@ -6,6 +6,7 @@
 #include "TypeDefines.h"
 #include "vec4.hpp"
 #include "gsl/gsl"
+#include "imgui.h"
 
 namespace BeeEngine
 {
@@ -39,6 +40,14 @@ namespace BeeEngine
         {
             return {m_R, m_G, m_B, m_A};
         }
+        constexpr inline operator ImVec4() const
+        {
+            return {m_R, m_G, m_B, m_A};
+        }
+        constexpr inline operator const ImVec4() const
+        {
+            return {m_R, m_G, m_B, m_A};
+        }
         constexpr bool operator == (const Color4& other) const
         {
             return m_R == other.m_R && m_G == other.m_G && m_B == other.m_B && m_A == other.m_A;
@@ -52,6 +61,14 @@ namespace BeeEngine
         {
             float R, G, B, A;
             constexpr operator Color4() const
+            {
+                return {R, G, B, A};
+            }
+            constexpr operator ImVec4() const
+            {
+                return {R, G, B, A};
+            }
+            constexpr operator const ImVec4() const
             {
                 return {R, G, B, A};
             }

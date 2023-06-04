@@ -107,4 +107,10 @@ namespace BeeEngine
         m_PerspectiveFar = farClip;
         RecalculateProjectionMatrix();
     }
+
+    void SceneCamera::SetAspectRatio(float d)
+    {
+        m_AspectRatio = d;
+        RecalculateProjectionMatrix();
+    }
 }

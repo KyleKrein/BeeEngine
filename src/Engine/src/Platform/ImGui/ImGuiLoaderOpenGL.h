@@ -60,7 +60,7 @@ namespace BeeEngine
             }
 
             SetDefaultTheme();
-
+            SetDarkThemeColors();
             const char* glsl_version = "#version 150"; //change later
             // Setup Platform/Renderer backends
             ImGui_ImplGlfw_InitForOpenGL(m_window, true);
