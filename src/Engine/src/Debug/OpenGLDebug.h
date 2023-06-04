@@ -9,6 +9,9 @@
 
 #ifdef __cpp_lib_source_location
 #include "source_location"
+#else
+#include "source_location.h"
+#endif
 inline void OpenGLCheckErrors(std::string_view title, std::source_location location = std::source_location::current())
 {
     int error = 1;
@@ -28,7 +31,7 @@ inline void OpenGLCheckErrors(std::string_view title, std::source_location locat
     #define OPENGL_CHECK_ERRORS
 #endif
 
-#else
+#if 0
 inline void OpenGLCheckErrors(std::string_view title, std::string_view file, std::string_view line)
 {
     int error = 1;
