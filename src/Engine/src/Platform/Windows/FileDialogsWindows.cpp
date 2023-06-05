@@ -13,9 +13,10 @@ namespace BeeEngine
 {
     std::optional<std::string> FileDialogsWindows::OpenFile(const char *filter)
     {
-        OPENFILENAMEA ofn;      // common dialog box structure
-        CHAR szFile[260] = { 0 };      // if using TCHAR macros
-        // Initialize OPENFILENAME
+        filter = GetFilter(filter);
+        OPENFILENAMEA ofn;
+        CHAR szFile[260] = { 0 };
+
         ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
         ofn.lStructSize = sizeof(OPENFILENAMEA);
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
@@ -50,6 +51,11 @@ namespace BeeEngine
             return ofn.lpstrFile;
         }
         return std::nullopt;
+    }
+
+    const char *FileDialogsWindows::GetFilter(const char *filter)
+    {
+        return filter;
     }
 }
 #endif

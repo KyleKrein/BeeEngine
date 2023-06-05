@@ -8,8 +8,11 @@
 
 std::optional<std::string> BeeEngine::FileDialogs::OpenFile(const char* filter)
 {
+    filter = GetFilter(filter);
     // Create the File Open Dialog class.
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
+
+    [openDlg setAllowedFileTypes:[NSArray arrayWithObject:@filter]];
 
 // Enable the selection of files in the dialog.
     [openDlg setCanChooseFiles:YES];
@@ -29,13 +32,21 @@ std::optional<std::string> BeeEngine::FileDialogs::OpenFile(const char* filter)
 
 std::optional<std::string> BeeEngine::FileDialogs::SaveFile(const char* filter)
 {
+    filter = GetFilter(filter);
     NSSavePanel *saveDlg = [NSSavePanel savePanel];
-    //[saveDlg setAllowedFileTypes:[NSArray arrayWithObject:@""]];
+    [saveDlg setAllowedFileTypes:[NSArray arrayWithObject:@filter]];
     if ([saveDlg runModal] == NSModalResponseOK) {
         NSString *nsurl = [[saveDlg URL] path];
         // nsurl.path contains the NSString I want to return as std::string
         return std::string([nsurl UTF8String]);
     }
     return std::nullopt;
+}
+
+const char *FileDialogsWindows::GetFilter(const char *filter)
+{
+    std::string firstString = {filter};
+    std::string secondString = {firstString.c_str() + firstString.size() + 1 + 1};
+    return filter;
 }
 #endif
