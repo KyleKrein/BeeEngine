@@ -18,6 +18,16 @@ namespace BeeEngine::Editor
         void Update() noexcept override;
         void Render() noexcept override;
         Ref<Scene>& GetScene() noexcept { return m_Scene; }
+
+        [[nodiscard]] uint32_t GetHeight() const
+        {
+            return m_Height;
+        }
+        [[nodiscard]] uint32_t GetWidth() const
+        {
+            return m_Width;
+        }
+
     private:
         uint32_t m_Width;
         uint32_t m_Height;

@@ -88,4 +88,9 @@ namespace BeeEngine::Editor
             }
         }
     }
+
+    void SceneHierarchyPanel::ClearSelection()
+    {
+        m_SelectedEntity = Entity::Null;
+    }
 }

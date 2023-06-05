@@ -12,7 +12,7 @@ std::optional<std::string> BeeEngine::FileDialogs::OpenFile(const char* filter)
     // Create the File Open Dialog class.
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
 
-    [openDlg setAllowedFileTypes:[NSArray arrayWithObject:@filter]];
+    //[openDlg setAllowedFileTypes:[NSArray arrayWithObject:@filter]];
 
 // Enable the selection of files in the dialog.
     [openDlg setCanChooseFiles:YES];
@@ -34,7 +34,7 @@ std::optional<std::string> BeeEngine::FileDialogs::SaveFile(const char* filter)
 {
     filter = GetFilter(filter);
     NSSavePanel *saveDlg = [NSSavePanel savePanel];
-    [saveDlg setAllowedFileTypes:[NSArray arrayWithObject:@filter]];
+    //[saveDlg setAllowedFileTypes:[NSArray arrayWithObject:[NSString stringWithUTF8String:filter]]];
     if ([saveDlg runModal] == NSModalResponseOK) {
         NSString *nsurl = [[saveDlg URL] path];
         // nsurl.path contains the NSString I want to return as std::string
@@ -43,7 +43,7 @@ std::optional<std::string> BeeEngine::FileDialogs::SaveFile(const char* filter)
     return std::nullopt;
 }
 
-const char *FileDialogsWindows::GetFilter(const char *filter)
+const char *BeeEngine::FileDialogs::GetFilter(const char *filter)
 {
     std::string firstString = {filter};
     std::string secondString = {firstString.c_str() + firstString.size() + 1 + 1};

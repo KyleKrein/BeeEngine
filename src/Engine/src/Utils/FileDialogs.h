@@ -9,7 +9,7 @@
 
 namespace BeeEngine
 {
-    class FileDialogsWindows
+    class FileDialogs
     {
     public:
         static std::optional<std::string> OpenFile(const char* filter);

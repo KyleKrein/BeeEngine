@@ -20,6 +20,8 @@ namespace BeeEngine::Editor
 
         [[nodiscard]] Entity GetSelectedEntity() const noexcept { return m_SelectedEntity; }
 
+        void ClearSelection();
+
     private:
         void DrawEntityNode(Entity entity) noexcept;
 

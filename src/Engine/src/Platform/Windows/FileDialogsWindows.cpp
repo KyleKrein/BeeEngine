@@ -11,7 +11,7 @@
 #include "GLFW/glfw3native.h"
 namespace BeeEngine
 {
-    std::optional<std::string> FileDialogsWindows::OpenFile(const char *filter)
+    std::optional<std::string> FileDialogs::OpenFile(const char *filter)
     {
         filter = GetFilter(filter);
         OPENFILENAMEA ofn;
@@ -32,7 +32,7 @@ namespace BeeEngine
         }
         return std::nullopt;
     }
-    std::optional<std::string> FileDialogsWindows::SaveFile(const char *filter)
+    std::optional<std::string> FileDialogs::SaveFile(const char *filter)
     {
         OPENFILENAMEA ofn;      // common dialog box structure
         CHAR szFile[260] = { 0 };      // if using TCHAR macros
@@ -53,7 +53,7 @@ namespace BeeEngine
         return std::nullopt;
     }
 
-    const char *FileDialogsWindows::GetFilter(const char *filter)
+    const char *FileDialogs::GetFilter(const char *filter)
     {
         return filter;
     }
