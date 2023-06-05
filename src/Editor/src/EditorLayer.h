@@ -10,6 +10,8 @@
 #include "Gui/ImGui/FpsCounter.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/InspectorPanel.h"
+#include "Panels/MenuBar.h"
+#include "Scene/SceneSerializer.h"
 
 namespace BeeEngine::Editor
 {
@@ -25,9 +27,14 @@ namespace BeeEngine::Editor
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
         DockSpace m_DockSpace {};
+        MenuBar m_MenuBar {};
         ViewPort m_ViewPort {100, 100};
+        SceneSerializer m_SceneSerializer {m_ViewPort.GetScene()};
+        std::string m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
         SceneHierarchyPanel m_SceneHierarchyPanel {};
         InspectorPanel m_InspectorPanel {};
+
+        void SetUpMenuBar();
     };
 }

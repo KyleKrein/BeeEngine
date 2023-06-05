@@ -27,6 +27,8 @@ namespace BeeEngine
 
         Entity CreateEntity(std::string_view name = "Entity");
         void DestroyEntity(Entity entity);
+
+        void Clear();
     private:
         entt::registry m_Registry;
 

@@ -113,4 +113,9 @@ namespace BeeEngine
         m_AspectRatio = d;
         RecalculateProjectionMatrix();
     }
+
+    float SceneCamera::GetAspectRatio()
+    {
+        return m_AspectRatio;
+    }
 }

@@ -152,15 +152,16 @@ namespace BeeEngine
                 {
                     auto& camera = deserializedEntity.AddComponent<CameraComponent>();
                     auto& cameraProps = camera.Camera;
-                    cameraProps.SetProjectionType((SceneCamera::CameraType)cameraComponent["ProjectionType"].as<int>());
-                    cameraProps.SetPerspectiveVerticalFOV(cameraComponent["PerspectiveVerticalFOV"].as<float>());
-                    cameraProps.SetPerspectiveNearClip(cameraComponent["PerspectiveNearClip"].as<float>());
-                    cameraProps.SetPerspectiveFarClip(cameraComponent["PerspectiveFarClip"].as<float>());
+                    auto cameraInComponent = cameraComponent["Camera"];
+                    cameraProps.SetProjectionType((SceneCamera::CameraType)(cameraInComponent["ProjectionType"].as<int>()));
+                    cameraProps.SetPerspectiveVerticalFOV(cameraInComponent["PerspectiveVerticalFOV"].as<float>());
+                    cameraProps.SetPerspectiveNearClip(cameraInComponent["PerspectiveNearClip"].as<float>());
+                    cameraProps.SetPerspectiveFarClip(cameraInComponent["PerspectiveFarClip"].as<float>());
 
-                    cameraProps.SetOrthographicSize(cameraComponent["OrthographicSize"].as<float>());
-                    cameraProps.SetOrthographicNearClip(cameraComponent["OrthographicNearClip"].as<float>());
-                    cameraProps.SetOrthographicFarClip(cameraComponent["OrthographicFarClip"].as<float>());
-                    cameraProps.SetAspectRatio(cameraComponent["AspectRatio"].as<float>());
+                    cameraProps.SetOrthographicSize(cameraInComponent["OrthographicSize"].as<float>());
+                    cameraProps.SetOrthographicNearClip(cameraInComponent["OrthographicNearClip"].as<float>());
+                    cameraProps.SetOrthographicFarClip(cameraInComponent["OrthographicFarClip"].as<float>());
+                    cameraProps.SetAspectRatio(cameraInComponent["AspectRatio"].as<float>());
 
                     camera.Primary = cameraComponent["Primary"].as<bool>();
                     camera.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
@@ -225,12 +226,13 @@ namespace BeeEngine
 
             out << YAML::BeginMap;//Camera
             out << YAML::Key << "ProjectionType" << YAML::Value << (int)camera.Camera.GetProjectionType();
-            out << YAML::Key << "PerspectiveFOV" << YAML::Value << camera.Camera.GetPerspectiveVerticalFOV();
-            out << YAML::Key << "PerspectiveNear" << YAML::Value << camera.Camera.GetPerspectiveNearClip();
-            out << YAML::Key << "PerspectiveFar" << YAML::Value << camera.Camera.GetPerspectiveFarClip();
+            out << YAML::Key << "PerspectiveVerticalFOV" << YAML::Value << camera.Camera.GetPerspectiveVerticalFOV();
+            out << YAML::Key << "PerspectiveNearClip" << YAML::Value << camera.Camera.GetPerspectiveNearClip();
+            out << YAML::Key << "PerspectiveFarClip" << YAML::Value << camera.Camera.GetPerspectiveFarClip();
             out << YAML::Key << "OrthographicSize" << YAML::Value << camera.Camera.GetOrthographicSize();
-            out << YAML::Key << "OrthographicNear" << YAML::Value << camera.Camera.GetOrthographicNearClip();
-            out << YAML::Key << "OrthographicFar" << YAML::Value << camera.Camera.GetOrthographicFarClip();
+            out << YAML::Key << "OrthographicNearClip" << YAML::Value << camera.Camera.GetOrthographicNearClip();
+            out << YAML::Key << "OrthographicFarClip" << YAML::Value << camera.Camera.GetOrthographicFarClip();
+            out << YAML::Key << "AspectRatio" << YAML::Value << camera.Camera.GetAspectRatio();
             out << YAML::EndMap;//Camera
 
             out << YAML::Key << "Primary" << YAML::Value << camera.Primary;

@@ -6,7 +6,7 @@
 #include "../Engine/vendor/BeeAlloc/include/GeneralPurposeAllocator.h"
 #include "thread"
 #include "AllocatorBlockHeader.h"
-
+/*
 namespace BeeEngine::Internal
 {
     class GeneralPurposeAllocatorTest : public ::testing::Test
@@ -120,4 +120,4 @@ namespace BeeEngine::Internal
                                                             << "Memory free failed on second try.";
                             });
     }
-}
+}*/

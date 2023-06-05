@@ -44,6 +44,8 @@ namespace BeeEngine
 
         void SetAspectRatio(float d);
 
+        float GetAspectRatio();
+
     private:
         void RecalculateProjectionMatrix();
         CameraType m_Type = CameraType::Orthographic;

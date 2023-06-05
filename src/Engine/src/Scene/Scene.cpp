@@ -91,4 +91,9 @@ namespace BeeEngine
     {
         m_Registry.destroy(entity);
     }
+
+    void Scene::Clear()
+    {
+        m_Registry.clear();
+    }
 }

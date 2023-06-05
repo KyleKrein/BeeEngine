@@ -54,21 +54,6 @@ namespace BeeEngine::Editor
             ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
         }
-
-        if (ImGui::BeginMenuBar())
-        {
-            if (ImGui::BeginMenu("File"))
-            {
-                // Disabling fullscreen would allow the window to be moved to the front of other windows,
-                // which we can't undo at the moment without finer window depth/z control.
-                //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
-
-                if (ImGui::MenuItem("Exit")) BeeEngine::Application::GetInstance().Close();
-                ImGui::EndMenu();
-            }
-
-            ImGui::EndMenuBar();
-        }
     }
 
     void DockSpace::End() noexcept
