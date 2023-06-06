@@ -6,7 +6,7 @@
 #include "Entity.h"
 #include "Components.h"
 #include "Renderer/Renderer2D.h"
-#include "Debug/DebugUtils.h"
+#include "Utils/Expects.h"
 
 namespace BeeEngine
 {
@@ -18,41 +18,6 @@ namespace BeeEngine
         auto& tag = entity.AddComponent<TagComponent>();
         tag.Tag = name;
         return entity;
-    }
-
-    void Scene::OnUpdate()
-    {
-        UpdateScripts();
-
-
-        SceneCamera* mainCamera = nullptr;
-        glm::mat4 cameraTransform;
-
-        auto camerasGroup = m_Registry.group<CameraComponent>(entt::get<TransformComponent>);
-        for (auto entity:camerasGroup)
-        {
-            auto [transform, camera] = camerasGroup.get<TransformComponent, CameraComponent>(entity);
-            if(camera.Primary)
-            {
-                mainCamera = &camera.Camera;
-                cameraTransform = transform.GetTransform();
-                break;
-            }
-        }
-
-        if(mainCamera)
-        {
-            Renderer2D::BeginScene(*mainCamera, cameraTransform);
-
-            auto group = m_Registry.group<TransformComponent>(entt::get<Texture2DComponent>);
-            for( auto entity : group )
-            {
-                auto [transform, texture] = group.get<TransformComponent, Texture2DComponent>(entity);
-                Renderer2D::DrawImage(transform.GetTransform(), texture, Color4::White, 1.0f);
-            }
-
-            Renderer2D::EndScene();
-        }
     }
 
     void Scene::OnViewPortResize(uint32_t width, uint32_t height)
@@ -95,5 +60,63 @@ namespace BeeEngine
     void Scene::Clear()
     {
         m_Registry.clear();
+    }
+
+    void Scene::UpdateRuntime()
+    {
+        UpdateScripts();
+
+        SceneCamera* mainCamera = nullptr;
+        glm::mat4 cameraTransform;
+
+        auto camerasGroup = m_Registry.group<CameraComponent>(entt::get<TransformComponent>);
+        for (auto entity:camerasGroup)
+        {
+            auto [transform, camera] = camerasGroup.get<TransformComponent, CameraComponent>(entity);
+            if(camera.Primary)
+            {
+                mainCamera = &camera.Camera;
+                cameraTransform = transform.GetTransform();
+                break;
+            }
+        }
+
+        if(mainCamera)
+        {
+            Renderer2D::BeginScene(*mainCamera, cameraTransform);
+
+            auto group = m_Registry.group<TransformComponent>(entt::get<Texture2DComponent>);
+            for( auto entity : group )
+            {
+                auto [transform, texture] = group.get<TransformComponent, Texture2DComponent>(entity);
+                Renderer2D::DrawImage(transform.GetTransform(), texture, Color4::White, 1.0f);
+            }
+
+            Renderer2D::EndScene();
+        }
+    }
+
+    void Scene::UpdateEditor(EditorCamera& camera)
+    {
+        Renderer2D::BeginScene(camera);
+
+        auto group = m_Registry.group<TransformComponent>(entt::get<Texture2DComponent>);
+        for( auto entity : group )
+        {
+            auto [transform, texture] = group.get<TransformComponent, Texture2DComponent>(entity);
+            Renderer2D::DrawImage(transform.GetTransform(), texture, Color4::White, 1.0f);
+        }
+
+        Renderer2D::EndScene();
+    }
+
+    void Scene::StartRuntime()
+    {
+        m_IsRuntime = true;
+    }
+
+    void Scene::StopRuntime()
+    {
+        m_IsRuntime = false;
     }
 }

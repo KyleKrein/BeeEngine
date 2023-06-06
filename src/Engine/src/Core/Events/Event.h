@@ -135,8 +135,8 @@ namespace BeeEngine
     };
 
 #define DISPATCH_EVENT(dispatcher, Event, Type, Func) \
-dispatcher.Dispatch<Event, Type>([=](Event* event) -> bool\
+dispatcher.Dispatch<Event, Type>([this](Event* event) -> bool\
         {\
-            return Func(event);\
+            return Func((Event*)event);\
         })
 }

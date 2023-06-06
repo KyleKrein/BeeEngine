@@ -10,13 +10,21 @@
 
 namespace BeeEngine::Editor
 {
-    class ViewPort final: public Internal::IImGuiElement
+    enum class GuizmoOperation
+    {
+        None = -1,
+        Translate = ImGuizmo::OPERATION::TRANSLATE,
+        Rotate = ImGuizmo::OPERATION::ROTATE,
+        Scale = ImGuizmo::OPERATION::SCALE
+    };
+    class ViewPort final
     {
     public:
-        ViewPort(uint32_t width, uint32_t height) noexcept;
-        void OnEvent(EventDispatcher& event) noexcept override;
-        void Update() noexcept override;
-        void Render() noexcept override;
+        ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity) noexcept;
+        void OnEvent(EventDispatcher& event) noexcept;
+        void UpdateRuntime() noexcept;
+        void UpdateEditor(EditorCamera& camera) noexcept;
+        void Render(EditorCamera& camera) noexcept;
         Ref<Scene>& GetScene() noexcept { return m_Scene; }
 
         [[nodiscard]] uint32_t GetHeight() const
@@ -35,5 +43,12 @@ namespace BeeEngine::Editor
         bool m_IsFocused;
         bool m_IsHovered;
         Ref<Scene> m_Scene;
+        Entity& m_SelectedEntity;
+        GuizmoOperation m_GuizmoOperation = GuizmoOperation::None;
+        bool m_GuizmoSnap = false;
+
+
+        bool OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept;
+        void RenderImGuizmo(EditorCamera& camera);
     };
 }

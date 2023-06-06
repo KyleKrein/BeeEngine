@@ -4,7 +4,7 @@
 
 #include "Renderer2D.h"
 #include "Renderer.h"
-#include "Debug/DebugUtils.h"
+#include "Utils/Expects.h"
 #include "ext/matrix_transform.hpp"
 
 namespace BeeEngine
@@ -108,6 +108,12 @@ namespace BeeEngine
     void Renderer2D::BeginScene(const Camera &camera, const glm::mat4 &transform)
     {
         m_API->SetCameraTransform(camera.GetProjectionMatrix() * glm::inverse(transform));
+        m_API->BeginScene();
+    }
+
+    void Renderer2D::BeginScene(const EditorCamera &camera)
+    {
+        m_API->SetCameraTransform(camera.GetViewProjection());
         m_API->BeginScene();
     }
 }

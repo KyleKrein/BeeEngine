@@ -32,3 +32,6 @@
 [submodule "src/Engine/vendor/yaml-cpp"]
 	path = src/Engine/vendor/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "src/Engine/vendor/ImGuizmo"]
+	path = src/Engine/vendor/ImGuizmo
+	url = https://github.com/KyleKrein/ImGuizmo-for-BeeEngine.git

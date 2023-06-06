@@ -26,14 +26,16 @@ namespace BeeEngine::Editor
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
+        EditorCamera m_EditorCamera = {};
         DockSpace m_DockSpace {};
         MenuBar m_MenuBar {};
-        ViewPort m_ViewPort {100, 100};
+        SceneHierarchyPanel m_SceneHierarchyPanel {};
+        ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         SceneSerializer m_SceneSerializer {m_ViewPort.GetScene()};
         std::string m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
-        SceneHierarchyPanel m_SceneHierarchyPanel {};
         InspectorPanel m_InspectorPanel {};
+        bool m_IsRuntime = false;
 
         void SetUpMenuBar();
     };

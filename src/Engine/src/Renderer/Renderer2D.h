@@ -10,6 +10,7 @@
 #include "Texture.h"
 #include "Renderer2DAPI.h"
 #include "Core/Cameras/Camera.h"
+#include "EditorCamera.h"
 
 namespace BeeEngine
 {
@@ -18,6 +19,7 @@ namespace BeeEngine
 
     public:
         static void BeginScene(const ICamera& camera);
+        static void BeginScene(const EditorCamera& camera);
         static void BeginScene(const Camera& camera, const glm::mat4& transform);
         static void EndScene();
         static void Init(Renderer2DAPI* api);

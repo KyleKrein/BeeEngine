@@ -6,6 +6,7 @@
 
 #include "entt/entt.hpp"
 #include "EntityID.h"
+#include "Renderer/EditorCamera.h"
 
 namespace BeeEngine
 {
@@ -22,15 +23,23 @@ namespace BeeEngine
         friend class BeeEngine::Editor::InspectorPanel;
         friend class SceneSerializer;
     public:
-        void OnUpdate();
+        void UpdateRuntime();
+        void UpdateEditor(EditorCamera& camera);
         void OnViewPortResize(uint32_t width, uint32_t height);
 
         Entity CreateEntity(std::string_view name = "Entity");
         void DestroyEntity(Entity entity);
 
+        void StartRuntime();
+        void StopRuntime();
+
         void Clear();
     private:
         entt::registry m_Registry;
+
+        bool m_IsRuntime = false;
+        //void ResetScene();
+
 
         void UpdateScripts();
     };

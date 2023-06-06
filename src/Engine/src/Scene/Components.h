@@ -10,6 +10,8 @@
 #include "SceneCamera.h"
 #include "ScriptableEntity.h"
 #include "ext/matrix_transform.hpp"
+#include "gtx/quaternion.hpp"
+#include "Core/Math/Math.h"
 
 namespace BeeEngine
 {
@@ -38,10 +40,16 @@ namespace BeeEngine
 
         [[nodiscard]] glm::mat4 GetTransform() const
         {
-            glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), Rotation.x, glm::vec3(1.0f, 0.0f, 0.0f))
-                                 * glm::rotate(glm::mat4(1.0f), Rotation.y, glm::vec3(0.0f, 1.0f, 0.0f))
-                                 * glm::rotate(glm::mat4(1.0f), Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+            glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
             return glm::translate(glm::mat4(1.0f), Translation) * rotation * glm::scale(glm::mat4(1.0f), Scale);
+        }
+
+        void SetTransform(glm::mat4 &transform) noexcept
+        {
+            auto [translation, rotation, scale] = Math::DecomposeTransform(transform);
+            Translation = translation;
+            Rotation += rotation - Rotation;
+            Scale = scale;
         }
     };
     struct Texture2DComponent

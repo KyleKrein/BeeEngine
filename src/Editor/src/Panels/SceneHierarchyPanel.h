@@ -19,6 +19,7 @@ namespace BeeEngine::Editor
         void OnGUIRender() noexcept;
 
         [[nodiscard]] Entity GetSelectedEntity() const noexcept { return m_SelectedEntity; }
+        [[nodiscard]] Entity& GetSelectedEntityRef() noexcept { return m_SelectedEntity; }
 
         void ClearSelection();
 

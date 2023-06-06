@@ -20,6 +20,7 @@ namespace BeeEngine::Editor
         auto test = m_ViewPort.GetScene()->CreateEntity("Test");
         test.AddComponent<Texture2DComponent>(forestTexture);
 
+        m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
         m_InspectorPanel.SetContext(m_ViewPort.GetScene());
     }
@@ -32,15 +33,23 @@ namespace BeeEngine::Editor
     void EditorLayer::OnUpdate() noexcept
     {
         Renderer::Clear();
-        m_ViewPort.Update();
+        if(m_IsRuntime)
+        {
+            m_ViewPort.UpdateRuntime();
+        }
+        else
+        {
+            m_ViewPort.UpdateEditor(m_EditorCamera);
+        }
         m_FpsCounter.Update();
+        m_EditorCamera.OnUpdate();
     }
 
     void EditorLayer::OnGUIRendering() noexcept
     {
         m_DockSpace.Start();
         m_MenuBar.Render();
-        m_ViewPort.Render();
+        m_ViewPort.Render(m_EditorCamera);
         m_SceneHierarchyPanel.OnGUIRender();
         m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
         m_FpsCounter.Render();
@@ -49,6 +58,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnEvent(EventDispatcher &event) noexcept
     {
+        m_EditorCamera.OnEvent(event);
         m_ViewPort.OnEvent(event);
     }
 

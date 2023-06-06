@@ -6,6 +6,7 @@
 
 #include <string>
 #include <optional>
+#include "Expects.h"
 
 class TestFileDialogs;
 namespace BeeEngine
@@ -38,5 +39,17 @@ namespace BeeEngine
     public:
         static std::optional<std::string> OpenFile(Filter filter);
         static std::optional<std::string> SaveFile(Filter filter);
+    private:
+        static void CheckFilter(Filter& filter)
+        {
+            BeeExpects(filter.name != nullptr);
+            BeeExpects(filter.filter != nullptr);
+            BeeExpects(filter.name[0] != '\0');
+            BeeExpects(filter.filter[0] != '\0');
+            BeeExpects(filter.filter[0] == '*' && filter.filter[1] == '.');
+            const auto lenFilter = strlen(filter.filter);
+
+            //TODO: finish writing this
+        }
     };
 }
