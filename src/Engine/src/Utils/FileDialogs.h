@@ -7,14 +7,36 @@
 #include <string>
 #include <optional>
 
+class TestFileDialogs;
 namespace BeeEngine
 {
     class FileDialogs
     {
-    public:
-        static std::optional<std::string> OpenFile(const char* filter);
-        static std::optional<std::string> SaveFile(const char* filter);
     private:
-        static const char* GetFilter(const char* filter);
+        static const char* GetFilter(void* filter);
+
+    public:
+        struct Filter
+        {
+            friend const char* FileDialogs::GetFilter(void* filter);
+            friend class ::TestFileDialogs;
+            const char* name;
+            const char* filter;
+//#if defined(WINDOWS)
+            Filter(const char* name, const char* filter)
+                    : name(name), filter(filter)
+            {}
+
+        private:
+            std::string WindowsFilter()
+            {
+                return std::string(name + std::string(" (") + filter + std::string(")") + '\0' + filter + '\0');
+            }
+//#endif
+
+        };
+    public:
+        static std::optional<std::string> OpenFile(Filter filter);
+        static std::optional<std::string> SaveFile(Filter filter);
     };
 }

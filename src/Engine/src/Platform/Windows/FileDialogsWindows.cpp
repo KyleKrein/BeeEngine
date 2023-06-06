@@ -11,9 +11,9 @@
 #include "GLFW/glfw3native.h"
 namespace BeeEngine
 {
-    std::optional<std::string> FileDialogs::OpenFile(const char *filter)
+    std::optional<std::string> FileDialogs::OpenFile(Filter filter)
     {
-        filter = GetFilter(filter);
+        const char* f = GetFilter(&filter);
         OPENFILENAMEA ofn;
         CHAR szFile[260] = { 0 };
 
@@ -22,7 +22,7 @@ namespace BeeEngine
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
-        ofn.lpstrFilter = filter;
+        ofn.lpstrFilter = f;
         ofn.nFilterIndex = 1;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
@@ -32,8 +32,9 @@ namespace BeeEngine
         }
         return std::nullopt;
     }
-    std::optional<std::string> FileDialogs::SaveFile(const char *filter)
+    std::optional<std::string> FileDialogs::SaveFile(Filter filter)
     {
+        const char* f = GetFilter(&filter);
         OPENFILENAMEA ofn;      // common dialog box structure
         CHAR szFile[260] = { 0 };      // if using TCHAR macros
         // Initialize OPENFILENAME
@@ -42,7 +43,7 @@ namespace BeeEngine
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
-        ofn.lpstrFilter = filter;
+        ofn.lpstrFilter = f;
         ofn.nFilterIndex = 1;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
@@ -53,9 +54,9 @@ namespace BeeEngine
         return std::nullopt;
     }
 
-    const char *FileDialogs::GetFilter(const char *filter)
+    const char *FileDialogs::GetFilter(void* filter)
     {
-        return filter;
+        return ((FileDialogs::Filter*)filter)->WindowsFilter().c_str();
     }
 }
 #endif

@@ -61,7 +61,7 @@ namespace BeeEngine::Editor
             m_ScenePath.clear();
         }});
         fileMenu.AddChild({"Open Scene", [this](){
-            auto filepath = BeeEngine::FileDialogs::OpenFile("BeeEngine Scene (*.beescene)\0*.beescene\0");
+            auto filepath = BeeEngine::FileDialogs::OpenFile({"BeeEngine Scene", "*.beescene"});
             if(filepath->empty())
             {
                 BeeCoreError("Unable to open file");
@@ -76,7 +76,7 @@ namespace BeeEngine::Editor
         fileMenu.AddChild({"Save Scene", [this](){
             if(m_ScenePath.empty())
             {
-                auto filepath = BeeEngine::FileDialogs::SaveFile("BeeEngine Scene (*.beescene)\0*.beescene\0");
+                auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
                 if(filepath->empty())
                 {
                     BeeCoreError("Unable to save to file");
@@ -89,7 +89,7 @@ namespace BeeEngine::Editor
             m_SceneSerializer.Serialize(m_ScenePath);
         }});
         fileMenu.AddChild({"Save Scene As...", [this](){
-            auto filepath = BeeEngine::FileDialogs::SaveFile("BeeEngine Scene (*.beescene)\0*.beescene\0");
+            auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
             if(filepath->empty())
             {
                 BeeCoreError("Unable to save to file");

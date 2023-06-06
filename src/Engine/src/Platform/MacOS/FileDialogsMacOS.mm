@@ -8,11 +8,11 @@
 #import "Core/Logging/Log.h"
 #import "Debug/DebugUtils.h"
 
-std::optional<std::string> BeeEngine::FileDialogs::OpenFile(const char* filter)
+std::optional<std::string> BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
 {
     // Create the File Open Dialog class.
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
-    NSString *f = [NSString stringWithUTF8String:GetFilter(filter)];
+    NSString *f = [NSString stringWithUTF8String:GetFilter(&filter)];
     //[openDlg setAllowedFileTypes:[NSArray arrayWithObject:@filter]];
     [openDlg setAllowedFileTypes:[NSArray arrayWithObject:f]];
 // Enable the selection of files in the dialog.
@@ -32,9 +32,9 @@ std::optional<std::string> BeeEngine::FileDialogs::OpenFile(const char* filter)
     return std::nullopt;
 }
 
-std::optional<std::string> BeeEngine::FileDialogs::SaveFile(const char* filter)
+std::optional<std::string> BeeEngine::FileDialogs::SaveFile(Filter filter)
 {
-    NSString *f = [NSString stringWithUTF8String:GetFilter(filter)];
+    NSString *f = [NSString stringWithUTF8String:GetFilter(&filter)];
     NSSavePanel *saveDlg = [NSSavePanel savePanel];
     [saveDlg setAllowedFileTypes:[NSArray arrayWithObject:f]];
     if ([saveDlg runModal] == NSModalResponseOK) {
@@ -45,12 +45,9 @@ std::optional<std::string> BeeEngine::FileDialogs::SaveFile(const char* filter)
     return std::nullopt;
 }
 
-const char *BeeEngine::FileDialogs::GetFilter(const char *filter)
+const char *BeeEngine::FileDialogs::GetFilter(void* filter)
 {
-    auto length = strlen(filter);
-    filter = filter + length + 1;
-    BeeExpects(*filter == '*' && *(filter + 1) == '.');
-
-    return filter + 2;
+    return ((FileDialogs::Filter*)filter)->filter + 2;
 }
+
 #endif
