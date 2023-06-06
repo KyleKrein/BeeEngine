@@ -5,15 +5,16 @@
 #if defined(MACOS)
 #include "Utils/FileDialogs.h"
 #include "Cocoa/Cocoa.h"
+#import "Core/Logging/Log.h"
+#import "Debug/DebugUtils.h"
 
 std::optional<std::string> BeeEngine::FileDialogs::OpenFile(const char* filter)
 {
-    filter = GetFilter(filter);
     // Create the File Open Dialog class.
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
-
+    NSString *f = [NSString stringWithUTF8String:GetFilter(filter)];
     //[openDlg setAllowedFileTypes:[NSArray arrayWithObject:@filter]];
-
+    [openDlg setAllowedFileTypes:[NSArray arrayWithObject:f]];
 // Enable the selection of files in the dialog.
     [openDlg setCanChooseFiles:YES];
 
@@ -33,9 +34,9 @@ std::optional<std::string> BeeEngine::FileDialogs::OpenFile(const char* filter)
 
 std::optional<std::string> BeeEngine::FileDialogs::SaveFile(const char* filter)
 {
-    filter = GetFilter(filter);
+    NSString *f = [NSString stringWithUTF8String:GetFilter(filter)];
     NSSavePanel *saveDlg = [NSSavePanel savePanel];
-    //[saveDlg setAllowedFileTypes:[NSArray arrayWithObject:[NSString stringWithUTF8String:filter]]];
+    [saveDlg setAllowedFileTypes:[NSArray arrayWithObject:f]];
     if ([saveDlg runModal] == NSModalResponseOK) {
         NSString *nsurl = [[saveDlg URL] path];
         // nsurl.path contains the NSString I want to return as std::string
@@ -46,8 +47,10 @@ std::optional<std::string> BeeEngine::FileDialogs::SaveFile(const char* filter)
 
 const char *BeeEngine::FileDialogs::GetFilter(const char *filter)
 {
-    std::string firstString = {filter};
-    std::string secondString = {firstString.c_str() + firstString.size() + 1 + 1};
-    return filter;
+    auto length = strlen(filter);
+    filter = filter + length + 1;
+    BeeExpects(*filter == '*' && *(filter + 1) == '.');
+
+    return filter + 2;
 }
 #endif
