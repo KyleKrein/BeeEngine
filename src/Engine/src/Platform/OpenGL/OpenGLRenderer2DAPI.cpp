@@ -18,7 +18,7 @@ namespace BeeEngine::Internal
         m_Data = Renderer2DData(Renderer2D::GetStatistics());
 
         static const String ShaderName = String("StandartBeeEngine2DShader");
-        static const String VertexShader = "#version 330 core\n"
+        static const String VertexShader = "#version 450 core\n"
                                            "\t\t\t\n"
                                            "layout(location = 0) in vec3 a_Position;\n"
                                            "layout(location = 1) in vec4 a_Color;\n"
@@ -30,7 +30,7 @@ namespace BeeEngine::Internal
                                            "\n"
                                            "out vec2 v_TexCoord;\n"
                                            "out vec4 v_Color;\n"
-                                           "out float v_TextureIndex;\n"
+                                           "out flat float v_TextureIndex;\n"
                                            "out float v_TilingFactor;\n"
                                            "void main()\n"
                                            "{\n"
@@ -40,12 +40,12 @@ namespace BeeEngine::Internal
                                            "\tv_TilingFactor = a_TilingFactor;\n"
                                            "\tgl_Position =  u_ViewProjection * vec4(a_Position, 1.0);\t\n"
                                            "}";
-        static const String FragmentShader = "#version 330 core\n"
+        static const String FragmentShader = "#version 450 core\n"
                                              "\t\t\t\n"
                                              "layout(location = 0) out vec4 color;\n"
                                              "in vec2 v_TexCoord;\n"
                                              "in vec4 v_Color;\n"
-                                             "in float v_TextureIndex;\n"
+                                             "in flat float v_TextureIndex;\n"
                                              "in float v_TilingFactor;\n"
                                              "\n"
                                              "uniform sampler2D u_Textures[16];\n"

@@ -16,12 +16,15 @@ namespace BeeEngine
         const char* f = GetFilter(&filter);
         OPENFILENAMEA ofn;
         CHAR szFile[260] = { 0 };
+        CHAR currentDir[256] = { 0 };
 
         ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
         ofn.lStructSize = sizeof(OPENFILENAMEA);
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
+        if (GetCurrentDirectoryA(256, currentDir))
+            ofn.lpstrInitialDir = currentDir;
         ofn.lpstrFilter = f;
         ofn.nFilterIndex = 1;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
@@ -37,15 +40,18 @@ namespace BeeEngine
         const char* f = GetFilter(&filter);
         OPENFILENAMEA ofn;      // common dialog box structure
         CHAR szFile[260] = { 0 };      // if using TCHAR macros
+        CHAR currentDir[256] = { 0 };
         // Initialize OPENFILENAME
         ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
         ofn.lStructSize = sizeof(OPENFILENAMEA);
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
+        if (GetCurrentDirectoryA(256, currentDir))
+            ofn.lpstrInitialDir = currentDir;
         ofn.lpstrFilter = f;
         ofn.nFilterIndex = 1;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 
         if (GetSaveFileNameA(&ofn) == TRUE)
         {
