@@ -25,7 +25,8 @@ std::optional<std::string> BeeEngine::FileDialogs::OpenFile(const char* filter)
     if ([openDlg runModal] == NSModalResponseOK) {
             NSURL *nsurl = [[openDlg URLs] objectAtIndex:0];
             // nsurl.path contains the NSString I want to return as std::string
-            return std::string([[[nsurl absoluteURL] path] UTF8String]);
+            NSString *path = [[nsurl absoluteURL] path];
+            return std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
     }
     return std::nullopt;
 }
@@ -38,7 +39,7 @@ std::optional<std::string> BeeEngine::FileDialogs::SaveFile(const char* filter)
     if ([saveDlg runModal] == NSModalResponseOK) {
         NSString *nsurl = [[saveDlg URL] path];
         // nsurl.path contains the NSString I want to return as std::string
-        return std::string([nsurl UTF8String]);
+        return std::string([nsurl UTF8String], [nsurl lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
     }
     return std::nullopt;
 }
