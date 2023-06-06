@@ -62,7 +62,7 @@ namespace BeeEngine::Editor
         }});
         fileMenu.AddChild({"Open Scene", [this](){
             auto filepath = BeeEngine::FileDialogs::OpenFile({"BeeEngine Scene", "*.beescene"});
-            if(filepath->empty())
+            if(!filepath.has_value())
             {
                 BeeCoreError("Unable to open file");
                 return;
