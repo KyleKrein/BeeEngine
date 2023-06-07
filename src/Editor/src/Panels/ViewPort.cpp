@@ -15,12 +15,19 @@ namespace BeeEngine::Editor
     ViewPort::ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity) noexcept
     : m_Width(width),
     m_Height(height),
-    m_FrameBuffer(FrameBuffer::Create({width, height})),
+    m_FrameBuffer(nullptr),
     m_IsFocused(false),
     m_IsHovered(false),
       m_Scene(std::move(CreateRef<Scene>())),
         m_SelectedEntity(selectedEntity)
-    {}
+    {
+        FrameBufferPreferences preferences;
+        preferences.Width = m_Width;
+        preferences.Height = m_Height;
+        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth24Stencil8};
+
+        m_FrameBuffer = FrameBuffer::Create(preferences);
+    }
 
     void ViewPort::OnEvent(EventDispatcher &event) noexcept
     {
@@ -108,7 +115,7 @@ namespace BeeEngine::Editor
             m_Scene->OnViewPortResize(m_Width, m_Height);
             camera.SetViewportSize(m_Width, m_Height);
         }
-        ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererID(), {size.x, size.y}, ImVec2{0, 1}, ImVec2{1, 0});
+        ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererID(0), {size.x, size.y}, ImVec2{0, 1}, ImVec2{1, 0});
         OnMouseButtonPressed(nullptr);
         if (m_SelectedEntity != Entity::Null && m_GuizmoOperation != GuizmoOperation::None)
         {

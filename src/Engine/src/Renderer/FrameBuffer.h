@@ -7,12 +7,50 @@
 
 namespace BeeEngine
 {
+    enum class FrameBufferTextureFormat
+    {
+        None = 0,
+        //color
+        RGBA8,
+        RGBA16F,
+        RGBA32F,
+
+        //depth/stencil
+        Depth24Stencil8,
+        Depth32FStencil8,
+
+        //defaults
+        Depth = Depth24Stencil8
+    };
+
+    struct FrameBufferTextureSpecification
+    {
+        FrameBufferTextureSpecification() = default;
+
+        FrameBufferTextureSpecification(FrameBufferTextureFormat format)
+                : TextureFormat(format)
+        {}
+
+        FrameBufferTextureFormat TextureFormat = FrameBufferTextureFormat::None;
+    };
+
+    struct FrameBufferAttachmentSpecification
+    {
+        FrameBufferAttachmentSpecification() = default;
+        FrameBufferAttachmentSpecification(std::initializer_list<FrameBufferTextureSpecification> attachments)
+                : Attachments(attachments)
+        {}
+
+        std::vector<FrameBufferTextureSpecification> Attachments;
+    };
+
     struct FrameBufferPreferences
     {
         uint32_t Width;
         uint32_t Height;
         uint32_t Samples = 1;
         bool SwapChainTarget = false;
+        FrameBufferAttachmentSpecification Attachments;
 
         FrameBufferPreferences()
                 : Width(1200), Height(720), Samples(1), SwapChainTarget(false)
@@ -24,30 +62,19 @@ namespace BeeEngine
     class FrameBuffer
     {
     public:
-        explicit FrameBuffer(const FrameBufferPreferences& preferences);
+        FrameBuffer() = default;
         virtual ~FrameBuffer() = default;
         virtual void Bind() const = 0;
         virtual void Unbind() const = 0;
         virtual void Resize(uint32_t width, uint32_t height) = 0;
         virtual void Invalidate() = 0;
-        [[nodiscard]] inline uint32_t GetColorAttachmentRendererID() const
-        {
-            return m_ColorAttachment;
-        }
-        [[nodiscard]] inline uint32_t GetDepthAttachmentRendererID() const
-        {
-            return m_DepthAttachment;
-        }
-        [[nodiscard]] inline uint32_t GetRendererID() const
-        {
-            return m_RendererID;
-        }
+        [[nodiscard]] virtual uint32_t GetColorAttachmentRendererID(uint32_t index) const = 0;
+        [[nodiscard]] virtual uint32_t GetDepthAttachmentRendererID() const = 0;
+        [[nodiscard]] virtual uint32_t GetRendererID() const = 0;
         static Scope<FrameBuffer> Create(const FrameBufferPreferences& preferences);
         static Scope<FrameBuffer> Create(FrameBufferPreferences&& preferences);
 
     protected:
-        uint32_t m_RendererID;
-        uint32_t m_ColorAttachment, m_DepthAttachment;
-        FrameBufferPreferences m_Preferences;
+        bool IsDepthFormat(FrameBufferTextureFormat format) const;
     };
 }

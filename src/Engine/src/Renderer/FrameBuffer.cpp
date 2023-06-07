@@ -28,10 +28,16 @@ namespace BeeEngine
         return FrameBuffer::Create(preferences);
     }
 
-    FrameBuffer::FrameBuffer(const FrameBufferPreferences &preferences)
-            : m_Preferences(preferences), m_ColorAttachment(0), m_DepthAttachment(0), m_RendererID(0)
+    bool FrameBuffer::IsDepthFormat(FrameBufferTextureFormat format) const
     {
-
+        switch (format)
+        {
+            case FrameBufferTextureFormat::Depth24Stencil8:
+            case FrameBufferTextureFormat::Depth32FStencil8:
+                return true;
+            default:
+                return false;
+        }
     }
 
 
