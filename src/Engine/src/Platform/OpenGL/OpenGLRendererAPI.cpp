@@ -10,6 +10,7 @@
 #include "Debug/OpenGLDebug.h"
 #include "Debug/Instrumentor.h"
 #include "Utils/Expects.h"
+#include "Renderer/ShaderLibrary.h"
 
 namespace BeeEngine::Internal
 {
@@ -59,7 +60,7 @@ namespace BeeEngine::Internal
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_LINE_SMOOTH);
         OPENGL_CHECK_ERRORS
-
+        ShaderLibrary::GetInstance().LoadStandartShaders();
         Renderer2D::Init(new OpenGLRenderer2DAPI());
     }
 

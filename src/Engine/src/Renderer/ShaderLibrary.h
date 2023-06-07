@@ -25,6 +25,7 @@ namespace BeeEngine
             static ShaderLibrary instance;
             return instance;
         }
+        void LoadStandartShaders();
 
     private:
         std::unordered_map<String, Ref<Shader>> m_Shaders;

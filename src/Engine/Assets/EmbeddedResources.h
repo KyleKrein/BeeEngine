@@ -11,7 +11,9 @@ enum class EmbeddedResource
     OpenSansRegular,
     OpenSansBold,
     DirectoryTexture,
-    FileTexture
+    FileTexture,
+    Standart2DShaderVertex,
+    Standart2DShaderFragment
 };
 
 namespace BeeEngine::Internal

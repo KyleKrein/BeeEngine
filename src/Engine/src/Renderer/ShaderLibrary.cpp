@@ -6,6 +6,7 @@
 #include "ShaderLibrary.h"
 #include "Core/Logging/Log.h"
 #include "Core/ResourceManager.h"
+#include "../../Assets/EmbeddedResources.h"
 
 
 namespace BeeEngine
@@ -54,5 +55,15 @@ namespace BeeEngine
     {
         BEE_PROFILE_FUNCTION();
         return m_Shaders.find(String(name)) != m_Shaders.end();
+    }
+
+    void ShaderLibrary::LoadStandartShaders()
+    {
+        auto vertex2dshader = Internal::GetEmbeddedResource(EmbeddedResource::Standart2DShaderVertex);
+        auto fragment2dshader = Internal::GetEmbeddedResource(EmbeddedResource::Standart2DShaderFragment);
+
+        auto shader2d = Shader::Create("Standart2DShader", std::string_view((char*)vertex2dshader.data(), vertex2dshader.size()), std::string_view((char*)fragment2dshader.data(), fragment2dshader.size()));
+
+        Add(shader2d);
     }
 }

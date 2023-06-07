@@ -7,6 +7,7 @@
 #include "Renderer/Renderer.h"
 #include "glm.hpp"
 #include "ext/matrix_transform.hpp"
+#include "Renderer/ShaderLibrary.h"
 
 
 namespace BeeEngine::Internal
@@ -17,44 +18,8 @@ namespace BeeEngine::Internal
         BEE_PROFILE_FUNCTION();
         m_Data = Renderer2DData(Renderer2D::GetStatistics());
 
-        static const String ShaderName = String("StandartBeeEngine2DShader");
-        static const String VertexShader = "#version 450 core\n"
-                                           "\t\t\t\n"
-                                           "layout(location = 0) in vec3 a_Position;\n"
-                                           "layout(location = 1) in vec4 a_Color;\n"
-                                           "layout(location = 2) in vec2 a_TexCoord;\n"
-                                           "layout(location = 3) in float a_TextureIndex;\n"
-                                           "layout(location = 4) in float a_TilingFactor;\n"
-                                           "\n"
-                                           "uniform mat4 u_ViewProjection;\n"
-                                           "\n"
-                                           "out vec2 v_TexCoord;\n"
-                                           "out vec4 v_Color;\n"
-                                           "out flat float v_TextureIndex;\n"
-                                           "out float v_TilingFactor;\n"
-                                           "void main()\n"
-                                           "{\n"
-                                           "    v_Color = a_Color;\n"
-                                           "\tv_TexCoord = a_TexCoord;\n"
-                                           "\tv_TextureIndex = a_TextureIndex;\n"
-                                           "\tv_TilingFactor = a_TilingFactor;\n"
-                                           "\tgl_Position =  u_ViewProjection * vec4(a_Position, 1.0);\t\n"
-                                           "}";
-        static const String FragmentShader = "#version 450 core\n"
-                                             "\t\t\t\n"
-                                             "layout(location = 0) out vec4 color;\n"
-                                             "in vec2 v_TexCoord;\n"
-                                             "in vec4 v_Color;\n"
-                                             "in flat float v_TextureIndex;\n"
-                                             "in float v_TilingFactor;\n"
-                                             "\n"
-                                             "uniform sampler2D u_Textures[16];\n"
-                                             "void main()\n"
-                                             "{\n"
-                                             "\tcolor = texture(u_Textures[int(v_TextureIndex)], v_TexCoord * v_TilingFactor) * v_Color;\n"
-                                             "}";
-
-        m_Data.TextureShader = Shader::Create(ShaderName, VertexShader, FragmentShader);
+        static const String ShaderName = String("Standart2DShader");
+        m_Data.TextureShader = ShaderLibrary::GetInstance().Get(ShaderName);
 
         int samplers[BeeEngine::Internal::Renderer2DData::MaxTextureSlots];
         for (int i = 0; i < BeeEngine::Internal::Renderer2DData::MaxTextureSlots; i++)
