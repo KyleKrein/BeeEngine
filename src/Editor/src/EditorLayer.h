@@ -12,6 +12,7 @@
 #include "Panels/InspectorPanel.h"
 #include "Panels/MenuBar.h"
 #include "Scene/SceneSerializer.h"
+#include "Panels/AssetPanel.h"
 
 namespace BeeEngine::Editor
 {
@@ -29,6 +30,7 @@ namespace BeeEngine::Editor
         EditorCamera m_EditorCamera = {};
         DockSpace m_DockSpace {};
         MenuBar m_MenuBar {};
+        AssetPanel m_AssetPanel {std::filesystem::current_path()};
         SceneHierarchyPanel m_SceneHierarchyPanel {};
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         SceneSerializer m_SceneSerializer {m_ViewPort.GetScene()};

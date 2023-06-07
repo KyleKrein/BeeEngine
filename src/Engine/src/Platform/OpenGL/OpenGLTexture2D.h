@@ -14,6 +14,7 @@ namespace BeeEngine::Internal
     public:
         OpenGLTexture2D(std::string_view path);
         OpenGLTexture2D(uint32_t width, uint32_t height);
+        OpenGLTexture2D(gsl::span<std::byte> data);
         virtual ~OpenGLTexture2D() override;
 
         virtual void SetData(gsl::span<std::byte> data) override;

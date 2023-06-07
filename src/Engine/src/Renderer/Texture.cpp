@@ -36,4 +36,17 @@ namespace BeeEngine
                 throw std::exception();
         }
     }
+
+    Ref<Texture2D> Texture2D::CreateFromMemory(gsl::span<std::byte> data)
+    {
+        BEE_PROFILE_FUNCTION();
+        switch (Renderer::GetAPI())
+        {
+            case RenderAPI::OpenGL:
+                return CreateRef<Internal::OpenGLTexture2D>(data);
+            default:
+                BeeCoreError("Unknown RenderAPI");
+                throw std::exception();
+        }
+    }
 }

@@ -3,11 +3,18 @@
 //
 
 #pragma once
-#include "incbin.h"
 
-#define PathToAsset(path) ASSETS_PATH "/" path
-#define EmbedResource(name, path) extern "C" { INCBIN(name, PathToAsset(path)); }
+#include "gsl/gsl"
 
+enum class EmbeddedResource
+{
+    OpenSansRegular,
+    OpenSansBold,
+    DirectoryTexture,
+    FileTexture
+};
 
-EmbedResource(OpenSansRegular, "OpenSans/static/OpenSans-Regular.ttf");
-EmbedResource(OpenSansBold, "OpenSans/static/OpenSans-Bold.ttf");
+namespace BeeEngine::Internal
+{
+    gsl::span<std::byte> GetEmbeddedResource(EmbeddedResource resource) noexcept;
+}

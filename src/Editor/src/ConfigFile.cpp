@@ -4,7 +4,6 @@
 
 #include "ConfigFile.h"
 
-
 namespace BeeEngine::Editor
 {
 

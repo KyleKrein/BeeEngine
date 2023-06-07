@@ -52,6 +52,7 @@ namespace BeeEngine::Editor
         m_ViewPort.Render(m_EditorCamera);
         m_SceneHierarchyPanel.OnGUIRender();
         m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
+        m_AssetPanel.OnGUIRender();
         m_FpsCounter.Render();
         m_DockSpace.End();
     }
