@@ -5,7 +5,7 @@
 #include "VertexArray.h"
 #include "Renderer.h"
 #include "Platform/OpenGL/OpenGLVertexArray.h"
-#include "Utils/Expects.h"
+#include "Core/CodeSafety/Expects.h"
 
 
 namespace BeeEngine

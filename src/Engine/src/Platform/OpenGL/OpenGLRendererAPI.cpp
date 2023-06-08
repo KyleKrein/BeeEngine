@@ -9,7 +9,7 @@
 #include "Core/Logging/Log.h"
 #include "Debug/OpenGLDebug.h"
 #include "Debug/Instrumentor.h"
-#include "Utils/Expects.h"
+#include "Core/CodeSafety/Expects.h"
 #include "Renderer/ShaderLibrary.h"
 
 namespace BeeEngine::Internal
@@ -58,9 +58,7 @@ namespace BeeEngine::Internal
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_LINE_SMOOTH);
         OPENGL_CHECK_ERRORS
-        ShaderLibrary::GetInstance().LoadStandartShaders();
         Renderer2D::Init(new OpenGLRenderer2DAPI());
     }
 
@@ -97,6 +95,7 @@ namespace BeeEngine::Internal
     {
         BEE_PROFILE_FUNCTION();
         glDrawElements(GL_TRIANGLES, gsl::narrow_cast<GLint>(indexCount), GL_UNSIGNED_INT, nullptr);
+        glBindTexture(GL_TEXTURE_2D, 0);
         OPENGL_CHECK_ERRORS
     }
 

@@ -36,6 +36,9 @@ namespace BeeEngine
         static void DrawImage(float x, float y, float z, float width, float height, const Ref<Texture2D>& texture, float rotation, const Color4& color);
         static void DrawImage(float x, float y, float z, float width, float height, const Ref<Texture2D>& texture, float rotation, const Color4& color, float textureMultiplier);
 
+        static void DrawRectangleWithID(const glm::mat4& transform, const Color4 &color, int entityID);
+        static void DrawImageWithID(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color, float textureMultiplier, int entityID);
+
         static void ResetStatistics();
 
 

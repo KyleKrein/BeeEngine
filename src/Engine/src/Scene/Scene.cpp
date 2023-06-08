@@ -6,7 +6,7 @@
 #include "Entity.h"
 #include "Components.h"
 #include "Renderer/Renderer2D.h"
-#include "Utils/Expects.h"
+#include "Core/CodeSafety/Expects.h"
 
 namespace BeeEngine
 {
@@ -85,11 +85,14 @@ namespace BeeEngine
         {
             Renderer2D::BeginScene(*mainCamera, cameraTransform);
 
-            auto group = m_Registry.group<TransformComponent>(entt::get<Texture2DComponent>);
+            auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
             for( auto entity : group )
             {
-                auto [transform, texture] = group.get<TransformComponent, Texture2DComponent>(entity);
-                Renderer2D::DrawImage(transform.GetTransform(), texture, Color4::White, 1.0f);
+                auto [transform, spriteComponent] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+                if(spriteComponent.Texture)
+                    Renderer2D::DrawImage(transform.GetTransform(), spriteComponent.Texture, spriteComponent.Color, spriteComponent.TilingFactor);
+                else
+                    Renderer2D::DrawRectangle(transform.GetTransform(), spriteComponent.Color);
             }
 
             Renderer2D::EndScene();
@@ -100,11 +103,14 @@ namespace BeeEngine
     {
         Renderer2D::BeginScene(camera);
 
-        auto group = m_Registry.group<TransformComponent>(entt::get<Texture2DComponent>);
+        auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         for( auto entity : group )
         {
-            auto [transform, texture] = group.get<TransformComponent, Texture2DComponent>(entity);
-            Renderer2D::DrawImage(transform.GetTransform(), texture, Color4::White, 1.0f);
+            auto [transform, spriteComponent] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+            if(spriteComponent.Texture)
+                Renderer2D::DrawImageWithID(transform.GetTransform(), spriteComponent.Texture, spriteComponent.Color, spriteComponent.TilingFactor, gsl::narrow<int>(entity));
+            else
+                Renderer2D::DrawRectangleWithID(transform.GetTransform(), spriteComponent.Color, gsl::narrow<int>(entity));
         }
 
         Renderer2D::EndScene();

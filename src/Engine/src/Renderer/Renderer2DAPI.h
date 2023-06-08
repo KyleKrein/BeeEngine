@@ -17,6 +17,9 @@ namespace BeeEngine
         virtual void DrawRectangle(const glm::mat4& transform, const Color4 &color) = 0;
         virtual void DrawImage(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color = Color4::White, float textureMultiplier = 1) = 0;
 
+        virtual void DrawRectangleWithID(const glm::mat4& transform, const Color4 &color, int entityID) = 0;
+        virtual void DrawImageWithID(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color, float textureMultiplier, int entityID) = 0;
+
         virtual void SetCameraTransform(const glm::mat4& transform) = 0;
         virtual void BeginScene() = 0;
         virtual void EndScene() = 0;

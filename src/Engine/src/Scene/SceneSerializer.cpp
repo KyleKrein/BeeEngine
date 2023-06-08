@@ -166,6 +166,13 @@ namespace BeeEngine
                     camera.Primary = cameraComponent["Primary"].as<bool>();
                     camera.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
                 }
+
+                auto spriteRendererComponent = entity["SpriteRendererComponent"];
+                if(spriteRendererComponent)
+                {
+                    auto& spriteRenderer = deserializedEntity.AddComponent<SpriteRendererComponent>();
+                    spriteRenderer.Color = spriteRendererComponent["Color"].as<Color4>();
+                }
             }
         }
     }
@@ -237,6 +244,15 @@ namespace BeeEngine
 
             out << YAML::Key << "Primary" << YAML::Value << camera.Primary;
             out << YAML::Key << "FixedAspectRatio" << YAML::Value << camera.FixedAspectRatio;
+            out << YAML::EndMap;
+        }
+
+        if(entity.HasComponent<SpriteRendererComponent>())
+        {
+            out << YAML::Key << "SpriteRendererComponent";
+            out << YAML::BeginMap;
+            auto& spriteRenderer = entity.GetComponent<SpriteRendererComponent>();
+            out << YAML::Key << "Color" << YAML::Value << spriteRenderer.Color;
             out << YAML::EndMap;
         }
 

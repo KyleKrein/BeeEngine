@@ -12,47 +12,104 @@
 namespace BeeEngine::Editor
 {
 
-    ViewPort::ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity) noexcept
+    ViewPort::ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity, const Color4& clearColor) noexcept
     : m_Width(width),
     m_Height(height),
     m_FrameBuffer(nullptr),
     m_IsFocused(false),
     m_IsHovered(false),
       m_Scene(std::move(CreateRef<Scene>())),
-        m_SelectedEntity(selectedEntity)
+        m_SelectedEntity(selectedEntity),
+        m_ClearColor(clearColor)
     {
         FrameBufferPreferences preferences;
         preferences.Width = m_Width;
         preferences.Height = m_Height;
-        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth24Stencil8};
+        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24Stencil8};
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
     }
 
     void ViewPort::OnEvent(EventDispatcher &event) noexcept
     {
+        if(!m_IsFocused && !m_IsHovered)
+            return;
+
         if(event.GetCategory() & EventCategory::App)
         {
             return;
         }
         DISPATCH_EVENT(event,MouseButtonPressedEvent ,EventType::MouseButtonPressed, OnMouseButtonPressed);
+        DISPATCH_EVENT(event,KeyPressedEvent,EventType::KeyPressed, OnKeyButtonPressed);
         //m_CameraController.OnEvent(event);
     }
 
     void ViewPort::UpdateRuntime() noexcept
     {
+        Renderer::Clear();
         m_FrameBuffer->Bind();
         //m_CameraController.OnUpdate();
-        Renderer::Clear();
+
+        /*const Color4 currentClearColor = Renderer::GetClearColor();
+        const bool changeClearColor = currentClearColor != m_ClearColor;
+        if(changeClearColor)
+        {
+            Renderer::SetClearColor(m_ClearColor);
+        }
+
+*/
+
         m_Scene->UpdateRuntime();
+
+        /*if(changeClearColor)
+        {
+            Renderer::SetClearColor(currentClearColor);
+        }*/
+
         m_FrameBuffer->Unbind();
     }
     void ViewPort::UpdateEditor(EditorCamera& camera) noexcept
     {
+
         m_FrameBuffer->Bind();
-        //m_CameraController.OnUpdate();
         Renderer::Clear();
+        //m_CameraController.OnUpdate();
+        /*const Color4 currentClearColor = Renderer::GetClearColor();
+        const bool changeClearColor = currentClearColor != m_ClearColor;
+        if(changeClearColor)
+        {
+            Renderer::SetClearColor(m_ClearColor);
+        }*/
+        m_FrameBuffer->ClearColorAttachment(1, -1);
+
         m_Scene->UpdateEditor(camera);
+
+        auto [mx, my] = ImGui::GetMousePos();
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        const glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+
+        if(Renderer::GetAPI() == RenderAPI::OpenGL)
+        {
+            my = viewportSize.y - my;
+        }
+
+        int mouseX = static_cast<int>(mx);
+        int mouseY = static_cast<int>(my);
+
+        if(mouseX >= 0 && mouseY >= 0
+        && gsl::narrow_cast<float>(mouseX) < viewportSize.x
+        && gsl::narrow_cast<float>(mouseY) < viewportSize.y)
+        {
+            int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
+            m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
+        }
+
+        /*if(changeClearColor)
+        {
+            Renderer::SetClearColor(currentClearColor);
+        }*/
+
         m_FrameBuffer->Unbind();
     }
 
@@ -62,12 +119,7 @@ namespace BeeEngine::Editor
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::SetDrawlist();
 
-        const auto windowPos = ImGui::GetWindowPos();
-        const float windowWidth = ImGui::GetWindowWidth();
-        const float windowHeight = ImGui::GetWindowHeight();
-        ImGuizmo::SetRect(windowPos.x, windowPos.y,
-                          gsl::narrow_cast<float>(windowWidth),
-                          gsl::narrow_cast<float>(windowHeight));
+        ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
 
 
@@ -101,6 +153,16 @@ namespace BeeEngine::Editor
         m_FrameBuffer->Bind();
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
         ImGui::Begin("Viewport");
+
+        auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+        auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+        auto viewportOffset = ImGui::GetWindowPos();
+        m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+        m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+
+        m_IsFocused = ImGui::IsWindowFocused();
+        m_IsHovered = ImGui::IsWindowHovered();
+
         auto size = ImGui::GetContentRegionAvail();
         size.x = size.x > 0 ? size.x : 1;
         size.y = size.y > 0 ? size.y : 1;
@@ -109,56 +171,44 @@ namespace BeeEngine::Editor
             m_Width = gsl::narrow_cast<uint32_t>(size.x);
             m_Height = gsl::narrow_cast<uint32_t>(size.y);
             m_FrameBuffer->Resize(m_Width, m_Height);
-            auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height);
-            EventDispatcher dispatcher(event.get());
-            //m_CameraController.OnEvent(dispatcher);
             m_Scene->OnViewPortResize(m_Width, m_Height);
             camera.SetViewportSize(m_Width, m_Height);
         }
         ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererID(0), {size.x, size.y}, ImVec2{0, 1}, ImVec2{1, 0});
-        OnMouseButtonPressed(nullptr);
+
         if (m_SelectedEntity != Entity::Null && m_GuizmoOperation != GuizmoOperation::None)
         {
             RenderImGuizmo(camera);
         }
-        m_IsFocused = ImGui::IsWindowFocused();
-        m_IsHovered = ImGui::IsWindowHovered();
 
-
-
-
-        if(!m_IsFocused && !m_IsHovered)
-        {
-            //m_CameraController.Disable();
-        }
-        else
-        {
-            //m_CameraController.Enable();
-        }
         ImGui::End();
         ImGui::PopStyleVar();
         m_FrameBuffer->Unbind();
     }
 
-    bool ViewPort::OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept
+    bool ViewPort::OnKeyButtonPressed(KeyPressedEvent* event) noexcept
     {
         bool shift = Input::KeyPressed(Key::LeftShift) || Input::KeyPressed(Key::RightShift);
         bool control = Input::KeyPressed(Key::LeftControl) || Input::KeyPressed(Key::RightControl);
         if(Input::KeyPressed(Key::T) && shift)
         {
-            m_GuizmoOperation = GuizmoOperation::Translate;
+            if (!ImGuizmo::IsUsing())
+                m_GuizmoOperation = GuizmoOperation::Translate;
         }
         else if(Input::KeyPressed(Key::R) && shift)
         {
-            m_GuizmoOperation = GuizmoOperation::Rotate;
+            if (!ImGuizmo::IsUsing())
+                m_GuizmoOperation = GuizmoOperation::Rotate;
         }
         else if(Input::KeyPressed(Key::E) && shift)
         {
-            m_GuizmoOperation = GuizmoOperation::Scale;
+            if (!ImGuizmo::IsUsing())
+                m_GuizmoOperation = GuizmoOperation::Scale;
         }
         else if(Input::KeyPressed(Key::Q) && shift)
         {
-            m_GuizmoOperation = GuizmoOperation::None;
+            if (!ImGuizmo::IsUsing())
+                m_GuizmoOperation = GuizmoOperation::None;
         }
         if (control)
         {
@@ -166,6 +216,18 @@ namespace BeeEngine::Editor
         } else
         {
             m_GuizmoSnap = false;
+        }
+        return false;
+    }
+
+    bool ViewPort::OnMouseButtonPressed(MouseButtonPressedEvent *event) noexcept
+    {
+        if(event->GetButton() == MouseButton::Left)
+        {
+            if(m_IsHovered && !ImGuizmo::IsOver() && !Input::KeyPressed(Key::LeftAlt))
+            {
+                m_SelectedEntity = m_HoveredEntity;
+            }
         }
         return false;
     }

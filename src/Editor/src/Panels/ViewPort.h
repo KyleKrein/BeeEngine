@@ -7,6 +7,7 @@
 #include "BeeEngine.h"
 #include "Gui/ImGui/IImGuiElement.h"
 #include "Scene/SceneCamera.h"
+#include "Scene/Entity.h"
 
 namespace BeeEngine::Editor
 {
@@ -20,7 +21,7 @@ namespace BeeEngine::Editor
     class ViewPort final
     {
     public:
-        ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity) noexcept;
+        ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity, const Color4& clearColor = Color4::CornflowerBlue) noexcept;
         void OnEvent(EventDispatcher& event) noexcept;
         void UpdateRuntime() noexcept;
         void UpdateEditor(EditorCamera& camera) noexcept;
@@ -44,11 +45,19 @@ namespace BeeEngine::Editor
         bool m_IsHovered;
         Ref<Scene> m_Scene;
         Entity& m_SelectedEntity;
-        GuizmoOperation m_GuizmoOperation = GuizmoOperation::None;
+        GuizmoOperation m_GuizmoOperation = GuizmoOperation::Translate;
         bool m_GuizmoSnap = false;
+        glm::vec2 m_ViewportBounds[2]
+                {
+                        glm::vec2(0.0f),
+                        glm::vec2(0.0f)
+                };
+        Color4 m_ClearColor = Color4::CornflowerBlue;
+        Entity m_HoveredEntity = Entity::Null;
 
 
         bool OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept;
+        bool OnKeyButtonPressed(KeyPressedEvent* event) noexcept;
         void RenderImGuizmo(EditorCamera& camera);
     };
 }

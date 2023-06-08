@@ -21,6 +21,9 @@ namespace BeeEngine::Internal
         glm::vec2 TextureCoords;
         float TextureIndex;
         float TilingFactor;
+
+        //Editor only
+        int EntityID;
     };
 
     struct Renderer2DData
@@ -70,6 +73,8 @@ namespace BeeEngine::Internal
         virtual void Init() override;
         virtual void DrawRectangle(const glm::mat4& transform, const Color4 &color) override;
         virtual void DrawImage(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color, float textureMultiplier) override;
+        virtual void DrawRectangleWithID(const glm::mat4& transform, const Color4 &color, int entityID) override;
+        virtual void DrawImageWithID(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color, float textureMultiplier, int entityID) override;
         virtual ~OpenGLRenderer2DAPI() override = default;
 
         virtual void BeginScene() override;

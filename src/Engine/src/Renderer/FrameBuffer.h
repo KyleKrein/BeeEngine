@@ -12,12 +12,10 @@ namespace BeeEngine
         None = 0,
         //color
         RGBA8,
-        RGBA16F,
-        RGBA32F,
+        RedInteger,
 
         //depth/stencil
         Depth24Stencil8,
-        Depth32FStencil8,
 
         //defaults
         Depth = Depth24Stencil8
@@ -71,6 +69,8 @@ namespace BeeEngine
         [[nodiscard]] virtual uint32_t GetColorAttachmentRendererID(uint32_t index) const = 0;
         [[nodiscard]] virtual uint32_t GetDepthAttachmentRendererID() const = 0;
         [[nodiscard]] virtual uint32_t GetRendererID() const = 0;
+        virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const = 0;
+        virtual void ClearColorAttachment(uint32_t attachmentIndex, int value) = 0;
         static Scope<FrameBuffer> Create(const FrameBufferPreferences& preferences);
         static Scope<FrameBuffer> Create(FrameBufferPreferences&& preferences);
 

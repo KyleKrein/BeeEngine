@@ -7,7 +7,7 @@
 #include "Core/Logging/Log.h"
 #include "Debug/OpenGLDebug.h"
 #include "Debug/Instrumentor.h"
-#include "Utils/Expects.h"
+#include "Core/CodeSafety/Expects.h"
 
 
 namespace BeeEngine::Internal

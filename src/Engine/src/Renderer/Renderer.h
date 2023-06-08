@@ -7,7 +7,7 @@
 #include "RendererAPI.h"
 #include "Core/Color4.h"
 #include "Debug/Instrumentor.h"
-#include "Utils/Expects.h"
+#include "Core/CodeSafety/Expects.h"
 
 namespace BeeEngine
 {
@@ -37,7 +37,12 @@ namespace BeeEngine
         static void SetClearColor(const Color4& color)
         {
             BEE_PROFILE_FUNCTION();
+            s_ClearColor = color;
             s_RendererAPI->SetClearColor(color);
+        }
+        static const Color4& GetClearColor()
+        {
+            return s_ClearColor;
         }
         static void Clear()
         {
@@ -65,5 +70,6 @@ namespace BeeEngine
     private:
         static RenderAPI s_Api;
         static Ref<RendererAPI> s_RendererAPI;
+        static Color4 s_ClearColor;
     };
 }

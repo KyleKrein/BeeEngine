@@ -17,25 +17,15 @@ namespace BeeEngine::Internal
     {
         BEE_PROFILE_FUNCTION();
         m_Data = Renderer2DData(Renderer2D::GetStatistics());
-
-        static const String ShaderName = String("Standart2DShader");
-        m_Data.TextureShader = ShaderLibrary::GetInstance().Get(ShaderName);
-
-        int samplers[BeeEngine::Internal::Renderer2DData::MaxTextureSlots];
-        for (int i = 0; i < BeeEngine::Internal::Renderer2DData::MaxTextureSlots; i++)
-            samplers[i] = i;
-
-        m_Data.TextureShader->Bind();
-        m_Data.TextureShader->SetIntArray("u_Textures", {samplers, BeeEngine::Internal::Renderer2DData::MaxTextureSlots});
-
         m_Data.RectVertexBuffer = GraphicsBuffer::CreateVertexBuffer(BeeEngine::Internal::Renderer2DData::MaxVertices * sizeof(RectVertex));
         m_Data.RectVertexBuffer->SetLayout({
-            {ShaderDataType::Float3, "a_Position"},
-            {ShaderDataType::Float4, "a_Color"},
-            {ShaderDataType::Float2, "a_TexCoord"},
-            {ShaderDataType::Float, "a_TextureIndex"},
-            {ShaderDataType::Float, "a_TilingFactor"}
-        });
+                                                   {ShaderDataType::Float3, "a_Position"},
+                                                   {ShaderDataType::Float4, "a_Color"},
+                                                   {ShaderDataType::Float2, "a_TexCoord"},
+                                                   {ShaderDataType::Float, "a_TextureIndex"},
+                                                   {ShaderDataType::Float, "a_TilingFactor"},
+                                                   {ShaderDataType::Int, "a_EntityID"}
+                                           });
 
         uint32_t* rectangleIndices = new uint32_t[BeeEngine::Internal::Renderer2DData::MaxIndices];
         uint32_t offset = 0;
@@ -55,14 +45,21 @@ namespace BeeEngine::Internal
         Ref<GraphicsBuffer> indexBuffer = GraphicsBuffer::CreateIndexBuffer({rectangleIndices, BeeEngine::Internal::Renderer2DData::MaxIndices});
         m_Data.VertexArray = VertexArray::Create(m_Data.RectVertexBuffer, indexBuffer);
         delete[] rectangleIndices;
+
         m_Data.BlankTexture = Texture2D::Create(1, 1);
         uint32_t blankTexturePixel = 0xffffffff;
         m_Data.BlankTexture->SetData({(std::byte*)&blankTexturePixel, sizeof(uint32_t)});
-        //memset(m_Data.TextureSlots.data(), 0, m_Data.MaxTextureSlots * sizeof(Ref<Texture2D>));
-        for(int i = 1; i < BeeEngine::Internal::Renderer2DData::MaxTextureSlots; i++)
-            m_Data.TextureSlots[i] = nullptr;
+
+        int samplers[BeeEngine::Internal::Renderer2DData::MaxTextureSlots];
+        for (int i = 0; i < BeeEngine::Internal::Renderer2DData::MaxTextureSlots; i++)
+            samplers[i] = i;
+
+        ShaderLibrary::GetInstance().LoadStandartShaders();
+        m_Data.TextureShader = ShaderLibrary::GetInstance().Get("Standart2DShader");
+        m_Data.TextureShader->Bind();
+        m_Data.TextureShader->SetIntArray("u_Textures", {samplers, BeeEngine::Internal::Renderer2DData::MaxTextureSlots});
+
         m_Data.TextureSlots[0] = m_Data.BlankTexture;
-        //m_Data.TextureSlots.push_back(m_Data.BlankTexture);
     }
 
     void OpenGLRenderer2DAPI::BeginScene()
@@ -103,6 +100,33 @@ namespace BeeEngine::Internal
 
     void OpenGLRenderer2DAPI::DrawRectangle(const glm::mat4& transform, const Color4 &color)
     {
+        DrawRectangleWithID(transform, color, -1);
+    }
+
+    void OpenGLRenderer2DAPI::FlushAndReset()
+    {
+        BEE_PROFILE_FUNCTION();
+        if(m_Data.RectIndexCount >= BeeEngine::Internal::Renderer2DData::MaxIndices)
+        {
+            EndScene();
+            BeginScene();
+        }
+    }
+
+    void OpenGLRenderer2DAPI::DrawImage(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color, float textureMultiplier)
+    {
+        DrawImageWithID(transform, texture, color, textureMultiplier, -1);
+    }
+
+    void OpenGLRenderer2DAPI::SetCameraTransform(const glm::mat4 &transform)
+    {
+        BEE_PROFILE_FUNCTION();
+        m_Data.TextureShader->Bind();
+        m_Data.TextureShader->SetMat4("u_ViewProjection", transform);
+    }
+
+    void OpenGLRenderer2DAPI::DrawRectangleWithID(const glm::mat4 &transform, const Color4 &color, int entityID)
+    {
         BEE_PROFILE_FUNCTION();
         static const float blankTextureIndex = 0.0f;
         static const float TilingFactor = 1.0f;
@@ -116,24 +140,15 @@ namespace BeeEngine::Internal
             m_Data.CurrentVertex->TextureCoords = s_textureCoords[i];
             m_Data.CurrentVertex->TextureIndex = blankTextureIndex;
             m_Data.CurrentVertex->TilingFactor = TilingFactor;
+            m_Data.CurrentVertex->EntityID = entityID;
             m_Data.CurrentVertex++;
         }
 
         m_Data.RectIndexCount += 6;
     }
 
-    void OpenGLRenderer2DAPI::FlushAndReset()
-    {
-        BEE_PROFILE_FUNCTION();
-        if(m_Data.RectIndexCount >= BeeEngine::Internal::Renderer2DData::MaxIndices)
-        {
-            EndScene();
-            BeginScene();
-        }
-    }
-
-    void
-    OpenGLRenderer2DAPI::DrawImage(const glm::mat4& transform, const Ref<Texture2D>& texture, const Color4& color, float textureMultiplier)
+    void OpenGLRenderer2DAPI::DrawImageWithID(const glm::mat4 &transform, const Ref<Texture2D> &texture, const Color4 &color,
+                                         float textureMultiplier, int entityID)
     {
         BEE_PROFILE_FUNCTION();
         FlushAndReset();
@@ -164,6 +179,7 @@ namespace BeeEngine::Internal
             m_Data.CurrentVertex->TextureCoords = s_textureCoords[i];
             m_Data.CurrentVertex->TextureIndex = textureIndex;
             m_Data.CurrentVertex->TilingFactor = textureMultiplier;
+            m_Data.CurrentVertex->EntityID = entityID;
             m_Data.CurrentVertex++;
         }
 
@@ -171,12 +187,5 @@ namespace BeeEngine::Internal
 
         m_Data.Stats->QuadCount++;
         m_Data.Stats->SpriteCount++;
-    }
-
-    void OpenGLRenderer2DAPI::SetCameraTransform(const glm::mat4 &transform)
-    {
-        BEE_PROFILE_FUNCTION();
-        m_Data.TextureShader->Bind();
-        m_Data.TextureShader->SetMat4("u_ViewProjection", transform);
     }
 }

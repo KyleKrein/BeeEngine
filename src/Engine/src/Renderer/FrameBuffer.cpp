@@ -33,7 +33,6 @@ namespace BeeEngine
         switch (format)
         {
             case FrameBufferTextureFormat::Depth24Stencil8:
-            case FrameBufferTextureFormat::Depth32FStencil8:
                 return true;
             default:
                 return false;

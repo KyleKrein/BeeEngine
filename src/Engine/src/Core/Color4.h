@@ -36,6 +36,8 @@ namespace BeeEngine
         [[nodiscard]] inline constexpr float B() const { return m_B; }
         [[nodiscard]] inline constexpr float A() const { return m_A; }
 
+        [[nodiscard]] inline constexpr float* ValuePtr() const { return (float*)&m_R; }
+
         constexpr inline explicit operator glm::vec4() const
         {
             return {m_R, m_G, m_B, m_A};

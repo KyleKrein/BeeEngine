@@ -63,6 +63,7 @@ namespace BeeEngine::Editor
         if(ImGui::BeginPopup("AddComponent"))
         {
             AddComponentPopup<CameraComponent>("Camera", entity);
+            AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
             ImGui::EndPopup();
         }
 
@@ -150,6 +151,11 @@ namespace BeeEngine::Editor
                 }
             }
         });
+
+        DrawComponentUI<SpriteRendererComponent>("Sprite", entity, [this](SpriteRendererComponent& sprite)
+        {
+            ImGui::ColorEdit4("Color", sprite.Color.ValuePtr());
+        });
     }
 
     void InspectorPanel::DrawVec3ComponentUI(std::string_view label, glm::vec3 &values, float resetValue,
@@ -230,7 +236,7 @@ namespace BeeEngine::Editor
     {
         if(ImGui::MenuItem(label.data()))
         {
-            entity.AddComponent<CameraComponent>();
+            entity.AddComponent<T>();
             ImGui::CloseCurrentPopup();
         }
     }

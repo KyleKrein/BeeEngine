@@ -10,7 +10,7 @@
 
 namespace BeeEngine
 {
-    enum ShaderDataType
+    enum class ShaderDataType
     {
         NoneData = 0,
         Float, Float2, Float3, Float4,

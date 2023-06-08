@@ -12,6 +12,7 @@
 #include "ext/matrix_transform.hpp"
 #include "gtx/quaternion.hpp"
 #include "Core/Math/Math.h"
+#include "Core/Color4.h"
 
 namespace BeeEngine
 {
@@ -52,18 +53,6 @@ namespace BeeEngine
             Scale = scale;
         }
     };
-    struct Texture2DComponent
-    {
-        Ref<Texture2D> Texture;
-
-        Texture2DComponent() = default;
-        Texture2DComponent(const Texture2DComponent&) = default;
-        explicit Texture2DComponent(const Ref<Texture2D>& texture): Texture(texture) {}
-        explicit Texture2DComponent(Ref<Texture2D>&& texture): Texture(std::move(texture)) {}
-
-        operator Ref<Texture2D>&() { return Texture; }
-        operator const Ref<Texture2D>&() const { return Texture; }
-    };
 
     struct CameraComponent
     {
@@ -77,6 +66,22 @@ namespace BeeEngine
 
         operator class Camera&() { return Camera; }
         operator const class Camera&() const { return Camera; }
+    };
+
+    struct SpriteRendererComponent
+    {
+        Color4 Color = Color4::White;
+        Ref<Texture2D> Texture = nullptr;
+        float TilingFactor = 1.0f;
+
+        SpriteRendererComponent() = default;
+        SpriteRendererComponent(const SpriteRendererComponent&) = default;
+        explicit SpriteRendererComponent(const Color4& color): Color(color) {}
+        explicit SpriteRendererComponent(const Ref<Texture2D>& texture): Texture(texture) {}
+        explicit SpriteRendererComponent(Ref<Texture2D>&& texture): Texture(std::move(texture)) {}
+
+        operator Ref<Texture2D>&() { return Texture; }
+        operator const Ref<Texture2D>&() const { return Texture; }
     };
 
     struct NativeScriptComponent

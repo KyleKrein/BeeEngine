@@ -4,7 +4,7 @@
 
 #include "Renderer2D.h"
 #include "Renderer.h"
-#include "Utils/Expects.h"
+#include "Core/CodeSafety/Expects.h"
 #include "ext/matrix_transform.hpp"
 
 namespace BeeEngine
@@ -116,4 +116,21 @@ namespace BeeEngine
         m_API->SetCameraTransform(camera.GetViewProjection());
         m_API->BeginScene();
     }
+
+    void Renderer2D::DrawRectangle(const glm::mat4 &transform, const Color4 &color)
+    {
+        m_API->DrawRectangle(transform, color);
+    }
+
+    void Renderer2D::DrawRectangleWithID(const glm::mat4 &transform, const Color4 &color, int entityID)
+    {
+        m_API->DrawRectangleWithID(transform, color, entityID);
+    }
+
+    void Renderer2D::DrawImageWithID(const glm::mat4 &transform, const Ref<Texture2D> &texture, const Color4 &color,
+                                     float textureMultiplier, int entityID)
+    {
+        m_API->DrawImageWithID(transform, texture, color, textureMultiplier, entityID);
+    }
+
 }

@@ -18,6 +18,7 @@ namespace BeeEngine
             : m_ID(id), m_Scene(scene)
         {}
 
+
         template<typename T, typename... Args>
         T& AddComponent(Args&&... args)
         {

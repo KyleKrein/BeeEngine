@@ -7,7 +7,7 @@
 #include "glad/glad.h"
 #include "Core/Application.h"
 #include "Debug/OpenGLDebug.h"
-#include "Utils/Expects.h"
+#include "Core/CodeSafety/Expects.h"
 
 
 namespace BeeEngine::Internal
@@ -15,6 +15,30 @@ namespace BeeEngine::Internal
     static GLenum TextureTarget(bool multisampled)
     {
         return multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
+    }
+    static GLenum TextureFormatToGL(FrameBufferTextureFormat format)
+    {
+        switch (format)
+        {
+            case FrameBufferTextureFormat::RGBA8:
+                return GL_RGBA8;
+            case FrameBufferTextureFormat::RedInteger:
+                return GL_RED_INTEGER;
+            default:
+                BeeCoreFatalError("Unknown TextureFormat");
+        }
+    }
+    static GLenum TextureDataTypeToGL(FrameBufferTextureFormat format)
+    {
+        switch (format)
+        {
+            case FrameBufferTextureFormat::RGBA8:
+                return GL_UNSIGNED_BYTE;
+            case FrameBufferTextureFormat::RedInteger:
+                return GL_INT;
+            default:
+            BeeCoreFatalError("Unknown TextureFormat");
+        }
     }
     static void CreateTextures(bool multisampled, GLuint* outID, GLuint count)
     {
@@ -24,16 +48,16 @@ namespace BeeEngine::Internal
     {
         glBindTexture(TextureTarget(multisampled), id);
     }
-    static void AttachColorTexture(uint32_t id, int samples, GLenum format, uint32_t width, uint32_t height, int index)
+    static void AttachColorTexture(uint32_t id, int samples, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index)
     {
         bool multisampled = samples > 1;
         if (multisampled)
         {
-            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, GL_FALSE);
         }
         else
         {
-            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //todo: this is not needed
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); //todo: this is not needed
@@ -132,7 +156,7 @@ namespace BeeEngine::Internal
             m_DepthAttachment = 0;
             OPENGL_CHECK_ERRORS
         }
-        glGenFramebuffers(1, &m_RendererID);
+        glCreateFramebuffers(1, &m_RendererID);
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
 
         const bool multisample = m_Preferences.Samples > 1;
@@ -148,10 +172,13 @@ namespace BeeEngine::Internal
                 switch (m_ColorAttachmentSpecification[i].TextureFormat)
                 {
                     case FrameBufferTextureFormat::RGBA8:
-                        AttachColorTexture(m_ColorAttachments[i], m_Preferences.Samples, GL_RGBA8, m_Preferences.Width, m_Preferences.Height, i);
+                        AttachColorTexture(m_ColorAttachments[i], m_Preferences.Samples, GL_RGBA8, GL_RGBA, m_Preferences.Width, m_Preferences.Height, i);
+                        break;
+                    case FrameBufferTextureFormat::RedInteger:
+                        AttachColorTexture(m_ColorAttachments[i], m_Preferences.Samples, GL_R32I, GL_RED_INTEGER, m_Preferences.Width, m_Preferences.Height, i);
                         break;
                     default:
-                        BeeExpects(false);
+                        BeeCoreError("Unknown texture format");
                 }
             }
         }
@@ -186,5 +213,24 @@ namespace BeeEngine::Internal
         OPENGL_CHECK_ERRORS
 
         //BeeEnsures(m_RendererID != 0 && m_ColorAttachment != 0 && m_DepthAttachment != 0);
+    }
+
+    int OpenGLFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) const
+    {
+        BEE_PROFILE_FUNCTION();
+        BeeExpects(attachmentIndex < m_ColorAttachments.size());
+        glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
+        int pixelData;
+        glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
+        return pixelData;
+    }
+
+    void OpenGLFrameBuffer::ClearColorAttachment(uint32_t attachmentIndex, int value)
+    {
+        BeeExpects(attachmentIndex < m_ColorAttachments.size());
+
+        const auto &spec = m_ColorAttachmentSpecification[attachmentIndex];
+
+        glClearTexImage(m_ColorAttachments[attachmentIndex], 0, TextureFormatToGL(spec.TextureFormat), TextureDataTypeToGL(spec.TextureFormat), &value);
     }
 }

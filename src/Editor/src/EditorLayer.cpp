@@ -14,11 +14,11 @@ namespace BeeEngine::Editor
     void EditorLayer::OnAttach() noexcept
     {
         SetUpMenuBar();
-        Renderer::SetClearColor(Color4::Black);
-        auto forestTexture = Texture2D::Create("Assets/Textures/forest.png");
+        //Renderer::SetClearColor(Color4::Black);
+        //auto forestTexture = Texture2D::Create("Assets/Textures/forest.png");
 
-        auto test = m_ViewPort.GetScene()->CreateEntity("Test");
-        test.AddComponent<Texture2DComponent>(forestTexture);
+        //auto test = m_ViewPort.GetScene()->CreateEntity("Test");
+        //test.AddComponent<Texture2DComponent>(forestTexture);
 
         m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());

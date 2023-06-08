@@ -3,7 +3,7 @@
 //
 #include "GlfwWindowHandler.h"
 #include "WindowHandler.h"
-#include "Utils/Expects.h"
+#include "Core/CodeSafety/Expects.h"
 
 
 namespace BeeEngine{

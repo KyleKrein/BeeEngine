@@ -8,7 +8,7 @@
 #include "stb_image.h"
 #include "Core/Logging/Log.h"
 #include "Debug/OpenGLDebug.h"
-#include "Utils/Expects.h"
+#include "Core/CodeSafety/Expects.h"
 
 
 namespace BeeEngine::Internal
@@ -85,7 +85,7 @@ namespace BeeEngine::Internal
     {
         BEE_PROFILE_FUNCTION();
         glDeleteTextures(1, &m_RendererID);
-        OPENGL_CHECK_ERRORS
+        //OPENGL_CHECK_ERRORS //todo fix spamming error 1282
     }
 
     void OpenGLTexture2D::SetData(gsl::span<std::byte> data)
