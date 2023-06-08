@@ -13,7 +13,7 @@ void TestLayer::OnAttach()
 {
     BeeEngine::Renderer::SetClearColor(BeeEngine::Color4::CornflowerBlue);
     m_CameraController = BeeEngine::OrthographicCameraController();
-    m_ForestTexture = BeeEngine::Texture2D::Create("Assets/Textures/forest.png");
+    //m_ForestTexture = BeeEngine::Texture2D::Create("Assets/Textures/forest.png");
 }
 
 void TestLayer::OnDetach()
@@ -32,7 +32,7 @@ void TestLayer::OnUpdate()
     {
         for (int j = 0; j < 30*5; ++j)
         {
-            BeeEngine::Renderer2D::DrawImage(j, i, 0.0f, 1,1, m_ForestTexture);
+            //BeeEngine::Renderer2D::DrawImage(j, i, 0.0f, 1,1, m_ForestTexture);
         }
     }
 

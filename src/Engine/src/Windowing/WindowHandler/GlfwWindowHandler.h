@@ -11,6 +11,8 @@ namespace BeeEngine
     {
     public:
         GLFWWindowHandler(const WindowProperties& properties, EventQueue& eventQueue);
+        GLFWWindowHandler(const GLFWWindowHandler&) = delete;
+        GLFWWindowHandler& operator=(const GLFWWindowHandler&) = delete;
         virtual void SetWidth(uint16_t width) override;
         virtual void SetHeight(uint16_t height) override;
         virtual uint64_t GetWindow() override;
@@ -52,6 +54,10 @@ namespace BeeEngine
         GLFWwindow* m_Window;
         mutable bool m_IsRunning;
         mutable bool m_IsClosing;
+
+        void InitializeOpenGL(const WindowProperties &properties);
+
+        void InitializeVulkan(const WindowProperties &properties);
     };
 }
 

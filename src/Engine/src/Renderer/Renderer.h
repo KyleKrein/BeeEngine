@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "RenderAPI.h"
 #include "Core/Logging/Log.h"
 #include "RendererAPI.h"
 #include "Core/Color4.h"
@@ -11,14 +12,6 @@
 
 namespace BeeEngine
 {
-    enum RenderAPI
-    {
-        NotAvailable = 0,
-        OpenGL = 1,
-        Metal = 2,
-        DirectX = 3,
-        Vulkan = 4
-    };
     class Renderer
     {
     public:

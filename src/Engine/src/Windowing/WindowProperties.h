@@ -5,6 +5,7 @@
 #pragma once
 #include "Core/TypeDefines.h"
 #include "VSync.h"
+#include "Renderer/RenderAPI.h"
 
 namespace BeeEngine{
     struct WindowProperties
@@ -13,5 +14,6 @@ namespace BeeEngine{
         uint16_t Height;
         const char *Title;
         VSync Vsync;
+        RenderAPI PreferredRenderAPI = RenderAPI::OpenGL;
     };
 }

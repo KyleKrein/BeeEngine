@@ -16,6 +16,8 @@ namespace BeeEngine
     {
     public:
         virtual ~WindowHandler() = default;
+        WindowHandler(const WindowHandler&) = delete;
+        WindowHandler& operator=(const WindowHandler&) = delete;
         static gsl::not_null<WindowHandler*> Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue);
         uint16_t GetWidth() const
         {

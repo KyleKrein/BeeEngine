@@ -37,25 +37,16 @@ namespace BeeEngine{
         Application::s_OSPlatform = OSPlatform::Windows;
 #elif LINUX
         Application::s_OSPlatform = OSPlatform::Linux;
+#elif ANDROID
+        Application::s_OSPlatform = OSPlatform::Android;
+#elif IOS
+        Application::s_OSPlatform = OSPlatform::IOS;
 #endif
-
+        auto appProperties = properties;
+        CheckRendererAPIForCompatibility(appProperties);
 
         m_Window = WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue);
-
-        switch (Application::GetOsPlatform())
-        {
-            case OSPlatform::Windows:
-                Renderer::SetAPI(RenderAPI::OpenGL);
-                break;
-            case OSPlatform::Mac:
-                Renderer::SetAPI(RenderAPI::OpenGL);
-                break;
-            case OSPlatform::Linux:
-                Renderer::SetAPI(RenderAPI::OpenGL);
-                break;
-            default:
-                BeeCoreAssert(false, "Unknown OS Platform");
-        }
+        Renderer::SetAPI(appProperties.PreferredRenderAPI);
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
@@ -114,6 +105,23 @@ namespace BeeEngine{
     void Application::Close()
     {
         m_Window->Close();
+    }
+
+    void Application::CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept
+    {
+        switch (properties.PreferredRenderAPI)
+        {
+            case RenderAPI::OpenGL:
+            case RenderAPI::Vulkan:
+                return;
+            case RenderAPI::DirectX:
+            case RenderAPI::Metal:
+            default:
+                BeeCoreWarn("Unable to use {} as render API. Using OpenGL instead", properties.PreferredRenderAPI);
+                properties.PreferredRenderAPI = RenderAPI::OpenGL;
+                return;
+        }
+
     }
 }
 

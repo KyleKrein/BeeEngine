@@ -10,17 +10,10 @@
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Core/Logging/Log.h"
 #include "Renderer/Shader.h"
+#include "OsPlatform.h"
+
 
 namespace BeeEngine{
-    enum class OSPlatform
-    {
-        None = 0,
-        Windows = 1,
-        Linux = 2,
-        Mac = 3,
-        iOS = 4,
-        Android = 5
-    };
     class Application
     {
         friend EventQueue;
@@ -93,6 +86,7 @@ namespace BeeEngine{
     private:
         void Dispatch(EventDispatcher &dispatcher);
         static bool OnWindowClose(WindowCloseEvent& event);
+        void CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept;
     private:
         static OSPlatform s_OSPlatform;
         static Application* s_Instance;
@@ -101,5 +95,7 @@ namespace BeeEngine{
         WindowHandler* m_Window;
         LayerStack m_Layers;
         EventQueue m_EventQueue;
+
+
     };
 }
