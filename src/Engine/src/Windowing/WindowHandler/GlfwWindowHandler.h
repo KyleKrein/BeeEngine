@@ -39,6 +39,15 @@ namespace BeeEngine
 
         void Close() override;
 
+        GraphicsDevice& GetGraphicsDevice() override
+        {
+            return *m_GraphicsDevice;
+        }
+        Instance& GetAPIInstance() override
+        {
+            return *m_Instance;
+        }
+
         ~GLFWWindowHandler() override;
     private:
         static Key ConvertKeyCode(int key);
@@ -54,6 +63,9 @@ namespace BeeEngine
         GLFWwindow* m_Window;
         mutable bool m_IsRunning;
         mutable bool m_IsClosing;
+
+        Ref<Instance> m_Instance;
+        Ref<GraphicsDevice> m_GraphicsDevice;
 
         void InitializeOpenGL(const WindowProperties &properties);
 

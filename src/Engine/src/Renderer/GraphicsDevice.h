@@ -4,13 +4,6 @@
 
 #pragma once
 
-#include "Windowing/WindowHandler/WindowHandler.h"
-#include "Surface.h"
-#include "CommandPool.h"
-#include "DeviceID.h"
-#include "GraphicsQueue.h"
-#include "SwapChain.h"
-
 namespace BeeEngine
 {
     class GraphicsDevice
@@ -22,13 +15,11 @@ namespace BeeEngine
         GraphicsDevice(const GraphicsDevice&) = delete;
         GraphicsDevice& operator=(const GraphicsDevice&) = delete;
 
-        [[nodiscard]] virtual Ref<Surface> GetSurface() const = 0;
+        /*[[nodiscard]] virtual Ref<Surface> GetSurface() const = 0;
         [[nodiscard]] virtual Ref<CommandPool> GetCommandPool() const = 0;
         [[nodiscard]] virtual DeviceID GetDeviceID() const = 0;
         [[nodiscard]] virtual Ref<GraphicsQueue> GetGraphicsQueue() const = 0;
         [[nodiscard]] virtual Ref<GraphicsQueue> GetPresentQueue() const = 0;
-        [[nodiscard]] virtual Ref<SwapChain> GetSwapChain() const = 0;
-
-        static Ref<GraphicsDevice> Create(const WindowHandler& windowHandler);
+        [[nodiscard]] virtual Ref<SwapChain> GetSwapChain() const = 0;*/
     };
 }

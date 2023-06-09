@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Renderer/GraphicsDevice.h"
 #include "Core/TypeDefines.h"
 #include "Windowing/WindowProperties.h"
 #include "Core/Events/EventQueue.h"
 #include "Core/Time.h"
+#include "Renderer/Instance.h"
 
 namespace BeeEngine
 {
@@ -50,6 +52,9 @@ namespace BeeEngine
         [[nodiscard]] virtual bool IsRunning() const = 0;
         virtual void UpdateTime() = 0;
         virtual void Close() = 0;
+
+        virtual GraphicsDevice& GetGraphicsDevice() = 0;
+        virtual Instance& GetAPIInstance() = 0;
 
     protected:
         static WindowHandler* s_Instance;

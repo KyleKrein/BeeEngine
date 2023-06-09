@@ -8,6 +8,15 @@ namespace BeeEngine
 {
     class Surface
     {
+    public:
+        Surface() = default;
+        virtual ~Surface() = default;
+
+        Surface(const Surface&) = delete;
+        Surface& operator=(const Surface&) = delete;
+
+        //virtual void Submit() = 0;
+        //virtual void Present() = 0;
 
     };
 }

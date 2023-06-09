@@ -6,23 +6,34 @@
 
 #include "Renderer/GraphicsDevice.h"
 #include "vulkan/vulkan.hpp"
+#include "VulkanInstance.h"
+#include "Renderer/QueueFamilyIndices.h"
+#include "VulkanGraphicsQueue.h"
 
 namespace BeeEngine::Internal
 {
     class VulkanGraphicsDevice: public GraphicsDevice
     {
     public:
-        VulkanGraphicsDevice(WindowHandler& window);
+        VulkanGraphicsDevice(VulkanInstance& instance);
         ~VulkanGraphicsDevice() override;
 
-        [[nodiscard]] Ref<Surface> GetSurface() const override;
-        [[nodiscard]] Ref<CommandPool> GetCommandPool() const override;
-        [[nodiscard]] DeviceID GetDeviceID() const override;
-        [[nodiscard]] Ref<GraphicsQueue> GetGraphicsQueue() const override;
-        [[nodiscard]] Ref<GraphicsQueue> GetPresentQueue() const override;
-        [[nodiscard]] Ref<SwapChain> GetSwapChain() const override;
-
     private:
-        VkDevice m_Device;
+        vk::PhysicalDevice m_PhysicalDevice;
+        vk::Device m_Device;
+        Ref<VulkanGraphicsQueue> m_GraphicsQueue;
+        Ref<VulkanGraphicsQueue> m_PresentQueue;
+        Ref<VulkanSurface> m_Surface;
+
+        void LogDeviceProperties(vk::PhysicalDevice &device) const;
+
+        bool IsSuitableDevice(const vk::PhysicalDevice &device) const;
+
+        bool CheckDeviceExtensionSupport(const vk::PhysicalDevice &device,
+                                         const std::vector<const char *> &extensions) const;
+
+        QueueFamilyIndices FindQueueFamilies();
+        void CreatePhysicalDevice(const VulkanInstance &instance);
+        void CreateLogicalDevice();
     };
 }

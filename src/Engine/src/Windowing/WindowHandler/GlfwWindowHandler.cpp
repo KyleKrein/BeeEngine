@@ -2,11 +2,12 @@
 // Created by Александр Лебедев on 23.01.2023.
 //
 
-#define GLFW_INCLUDE_VULKAN
 #include "GlfwWindowHandler.h"
 #include "Core/Logging/Log.h"
 #include "Core/Application.h"
-#include "vulkan/vulkan.h"
+#include "vulkan/vulkan.hpp"
+#include "Platform/Vulkan/VulkanInstance.h"
+#include "Platform/Vulkan/VulkanGraphicsDevice.h"
 
 
 namespace BeeEngine
@@ -492,15 +493,8 @@ namespace BeeEngine
         m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
         BeeCoreAssert(m_Window, "Window initialization failed");
 
-        VkInstance instance;
-        VkSurfaceKHR m_Surface;
-
-        if(glfwCreateWindowSurface(instance, m_Window, nullptr, &m_Surface) != VK_SUCCESS)
-        {
-            BeeCoreError("Failed to create window surface!");
-        }
-
-        glfwMakeContextCurrent(m_Window);
+        m_Instance = CreateRef<Internal::VulkanInstance>(properties.Title, WindowHandlerAPI::GLFW);
+        m_GraphicsDevice = CreateRef<Internal::VulkanGraphicsDevice>(*(Internal::VulkanInstance*)m_Instance.get());
     }
 }
 
