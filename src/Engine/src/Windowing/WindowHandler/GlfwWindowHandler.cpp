@@ -40,8 +40,6 @@ namespace BeeEngine
 
         m_IsRunning = true;
 
-        glfwSwapInterval(properties.Vsync);
-
         //SET CALLBACKS
         glfwSetCharCallback(m_Window, CharCallback);
         glfwSetKeyCallback(m_Window, KeyCallback);
@@ -51,7 +49,7 @@ namespace BeeEngine
         glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
         glfwSetWindowCloseCallback(m_Window, WindowCloseCallback);
 
-        glViewport(0, 0, m_Width, m_Height);
+        //glViewport(0, 0, m_Width, m_Height);
     }
 
     void GLFWWindowHandler::SetWidth(uint16_t width)
@@ -482,6 +480,7 @@ namespace BeeEngine
         {
             BeeCoreInfo("GLAD initialized successfully!");
         }
+        glfwSwapInterval(properties.Vsync);
     }
 
     void GLFWWindowHandler::InitializeVulkan(const WindowProperties &properties)

@@ -22,9 +22,9 @@ namespace BeeEngine::Internal
         Ref<VulkanSurface> CreateSurface();
 
     private:
-        vk::Instance m_Instance;
+        vk::Instance m_Instance { nullptr };
         vk::DebugUtilsMessengerEXT m_DebugMessenger { nullptr };
-        vk::DispatchLoaderDynamic m_DynamicLoader{ nullptr };
+        vk::DispatchLoaderDynamic m_DynamicLoader{ vk::DispatchLoaderDynamic(vkGetInstanceProcAddr)};
         WindowHandlerAPI m_WindowApi;
 
         bool ExtensionsSupported(const std::vector<const char *>& extensions) const;

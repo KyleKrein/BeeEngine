@@ -50,8 +50,10 @@ namespace BeeEngine::Internal
             case WindowHandlerAPI::SDL:
             BeeCoreFatalError("SDL is not supported yet!");
         }
-
         m_DynamicLoader = vk::DispatchLoaderDynamic(m_Instance, vkGetInstanceProcAddr);
+#if defined(DEBUG)
+        MakeDebugMessenger();
+#endif
     }
 
     VulkanInstance::~VulkanInstance()
@@ -159,10 +161,6 @@ namespace BeeEngine::Internal
         {
             BeeCoreTrace("\t{0}", extension);
         }
-
-#if defined(DEBUG)
-        MakeDebugMessenger();
-#endif
 
         std::vector<const char*> layers;
 #if defined(BEE_VULKAN_ENABLE_VALIDATION_LAYERS)

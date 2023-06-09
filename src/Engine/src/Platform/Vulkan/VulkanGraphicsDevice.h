@@ -9,6 +9,7 @@
 #include "VulkanInstance.h"
 #include "Renderer/QueueFamilyIndices.h"
 #include "VulkanGraphicsQueue.h"
+#include "VulkanSwapChain.h"
 
 namespace BeeEngine::Internal
 {
@@ -24,6 +25,8 @@ namespace BeeEngine::Internal
         Ref<VulkanGraphicsQueue> m_GraphicsQueue;
         Ref<VulkanGraphicsQueue> m_PresentQueue;
         Ref<VulkanSurface> m_Surface;
+        Ref<VulkanSwapChain> m_SwapChain;
+        QueueFamilyIndices m_QueueFamilyIndices;
 
         void LogDeviceProperties(vk::PhysicalDevice &device) const;
 

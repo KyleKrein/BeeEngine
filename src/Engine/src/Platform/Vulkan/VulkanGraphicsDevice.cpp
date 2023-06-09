@@ -15,6 +15,11 @@ namespace BeeEngine::Internal
         CreatePhysicalDevice(instance);
         CreateLogicalDevice();
         m_GraphicsQueue->Initialize(m_PhysicalDevice, m_Device);
+        if(m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
+        {
+            m_PresentQueue->Initialize(m_PhysicalDevice, m_Device);
+        }
+        m_SwapChain = CreateRef<VulkanSwapChain>(m_PhysicalDevice, m_Device, m_Surface->GetHandle(), WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight() ,m_QueueFamilyIndices);
     }
 
     VulkanGraphicsDevice::~VulkanGraphicsDevice()
@@ -131,22 +136,26 @@ namespace BeeEngine::Internal
 
     void VulkanGraphicsDevice::CreateLogicalDevice()
     {
-        QueueFamilyIndices indices = FindQueueFamilies();
+        m_QueueFamilyIndices = FindQueueFamilies();
 
         float queuePriority[] {1.0f};
-        m_GraphicsQueue = CreateRef<VulkanGraphicsQueue>(indices.GraphicsFamily.value(), queuePriority);
+        m_GraphicsQueue = CreateRef<VulkanGraphicsQueue>(m_QueueFamilyIndices.GraphicsFamily.value(), queuePriority);
 
         uint32_t numberOfQueuesToCreate = 1;
 
-        if(indices.GraphicsFamily.value() != indices.PresentFamily.value())
+        if(m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
         {
-            m_PresentQueue = CreateRef<VulkanGraphicsQueue>(indices.PresentFamily.value(), queuePriority);
+            m_PresentQueue = CreateRef<VulkanGraphicsQueue>(m_QueueFamilyIndices.PresentFamily.value(), queuePriority);
             numberOfQueuesToCreate++;
         }
         else
         {
             m_PresentQueue = m_GraphicsQueue;
         }
+
+        std::vector<const char*> deviceExtensions = {
+                VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        };
 
         vk::PhysicalDeviceFeatures deviceFeatures = {};
 
@@ -166,7 +175,7 @@ namespace BeeEngine::Internal
                 vk::DeviceCreateFlags(),
                 numberOfQueuesToCreate, queueCreateInfos.data(),
                 enabledLayers.size(), enabledLayers.data()
-                , 0, nullptr,
+                , deviceExtensions.size(), deviceExtensions.data(),
                 &deviceFeatures
                 );
 
