@@ -25,6 +25,19 @@ namespace BeeEngine::Internal
     public:
         VulkanSwapChain(vk::PhysicalDevice &physicalDevice, vk::Device& logicalDevice, vk::SurfaceKHR &surface, uint32_t width, uint32_t height, QueueFamilyIndices &queueFamilyIndices);
         ~VulkanSwapChain() override;
+
+        vk::SwapchainKHR& GetHandle()
+        {
+            return m_SwapChain;
+        }
+        vk::Format& GetFormat()
+        {
+            return m_Format;
+        }
+        vk::Extent2D& GetExtent()
+        {
+            return m_Extent;
+        }
     private:
         SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice& physicalDevice, vk::SurfaceKHR& surface);
 

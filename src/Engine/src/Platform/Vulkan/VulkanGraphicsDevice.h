@@ -10,6 +10,7 @@
 #include "Renderer/QueueFamilyIndices.h"
 #include "VulkanGraphicsQueue.h"
 #include "VulkanSwapChain.h"
+#include "VulkanPipeline.h"
 
 namespace BeeEngine::Internal
 {
@@ -19,6 +20,11 @@ namespace BeeEngine::Internal
         VulkanGraphicsDevice(VulkanInstance& instance);
         ~VulkanGraphicsDevice() override;
 
+        vk::Device &GetDevice()
+        {
+            return m_Device;
+        }
+
     private:
         vk::PhysicalDevice m_PhysicalDevice;
         vk::Device m_Device;
@@ -26,6 +32,7 @@ namespace BeeEngine::Internal
         Ref<VulkanGraphicsQueue> m_PresentQueue;
         Ref<VulkanSurface> m_Surface;
         Ref<VulkanSwapChain> m_SwapChain;
+        Ref<VulkanPipeline> m_Pipeline;
         QueueFamilyIndices m_QueueFamilyIndices;
 
         void LogDeviceProperties(vk::PhysicalDevice &device) const;

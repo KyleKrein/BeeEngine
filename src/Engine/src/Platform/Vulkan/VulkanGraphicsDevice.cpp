@@ -20,6 +20,12 @@ namespace BeeEngine::Internal
             m_PresentQueue->Initialize(m_PhysicalDevice, m_Device);
         }
         m_SwapChain = CreateRef<VulkanSwapChain>(m_PhysicalDevice, m_Device, m_Surface->GetHandle(), WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight() ,m_QueueFamilyIndices);
+        GraphicsPipelineInBundle pipelineInBundle {m_SwapChain->GetExtent().width,
+                                                   m_SwapChain->GetExtent().height,
+                                                   m_SwapChain->GetFormat(),
+                                                   CreateRef<VulkanShaderModule>("TestVertex", "shaders/TestVertex.spv"),
+                                                   CreateRef<VulkanShaderModule>("TestFragment", "shaders/TestFragment.spv")};
+        m_Pipeline = CreateRef<VulkanPipeline>(pipelineInBundle);
     }
 
     VulkanGraphicsDevice::~VulkanGraphicsDevice()
