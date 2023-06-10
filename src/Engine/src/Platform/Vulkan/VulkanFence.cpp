@@ -19,7 +19,10 @@ namespace BeeEngine::Internal
     VulkanFence::~VulkanFence()
     {
         if(m_IsInitialized)
+        {
+            m_Device.waitIdle();
             m_Device.destroyFence(m_Fence);
+        }
     }
 
     VulkanFence::VulkanFence(VulkanFence &&other)

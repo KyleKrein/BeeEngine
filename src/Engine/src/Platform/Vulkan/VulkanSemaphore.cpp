@@ -19,7 +19,10 @@ namespace BeeEngine::Internal
     VulkanSemaphore::~VulkanSemaphore()
     {
         if(m_IsInitialized)
+        {
+            m_Device.waitIdle();
             m_Device.destroySemaphore(m_Semaphore);
+        }
     }
 
     VulkanSemaphore::VulkanSemaphore(VulkanSemaphore &&other) noexcept

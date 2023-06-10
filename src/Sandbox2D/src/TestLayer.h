@@ -22,4 +22,7 @@ public:
     BeeEngine::OrthographicCameraController m_CameraController;
     BeeEngine::Internal::FpsCounter m_FpsCounter {};
     BeeEngine::Ref<BeeEngine::Texture2D> m_ForestTexture;
+    double currentTime;
+    double lastTime;
+    double numFrames;
 };

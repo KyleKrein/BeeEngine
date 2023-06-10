@@ -21,9 +21,8 @@ namespace BeeEngine::Internal
     private:
         VulkanGraphicsDevice& m_GraphicsDevice;
         vk::Device m_Device;
-        //Sync
-        VulkanFence m_InFlightFence;
-        VulkanSemaphore m_ImageAvailableSemaphore;
-        VulkanSemaphore m_RenderFinishedSemaphore;
+        std::vector<SwapChainFrame>& m_SwapChainFrames;
+        uint32_t m_CurrentFrame = 0;
+        uint32_t m_MaxFramesInFlight;
     };
 }

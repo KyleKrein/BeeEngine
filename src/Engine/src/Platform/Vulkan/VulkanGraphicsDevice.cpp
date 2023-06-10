@@ -30,6 +30,13 @@ namespace BeeEngine::Internal
         m_CommandPool = CreateRef<VulkanCommandPool>(m_Device, m_QueueFamilyIndices);
         m_CommandPool->CreateCommandBuffers(m_SwapChain->GetFrames());
         //m_MainCommandBuffer = m_CommandPool->CreateCommandBuffer();
+
+        for(auto& frame : m_SwapChain->GetFrames())
+        {
+            frame.ImageAvailableSemaphore = VulkanSemaphore(m_Device);
+            frame.RenderFinishedSemaphore = VulkanSemaphore(m_Device);
+            frame.InFlightFence = VulkanFence(m_Device);
+        }
     }
 
     VulkanGraphicsDevice::~VulkanGraphicsDevice()

@@ -496,7 +496,7 @@ namespace BeeEngine
     void GLFWWindowHandler::InitializeVulkan(const WindowProperties &properties)
     {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         m_Width = properties.Width;
         m_Height = properties.Height;
         m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);

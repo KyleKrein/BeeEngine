@@ -58,6 +58,11 @@ namespace BeeEngine::Internal
             return *m_Pipeline;
         }
 
+        VulkanCommandPool &GetCommandPool()
+        {
+            return *m_CommandPool;
+        }
+
     private:
 
 
@@ -73,7 +78,6 @@ namespace BeeEngine::Internal
             }
         };
         QueueFamilyIndices m_QueueFamilyIndices;
-
 
         Ref<VulkanSurface> m_Surface;
         DeviceHandle m_DeviceHandle;

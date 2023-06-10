@@ -2,6 +2,7 @@
 // Created by Александр Лебедев on 06.05.2023.
 //
 
+#include <sstream>
 #include "TestLayer.h"
 TestLayer::TestLayer()
 = default;
@@ -35,7 +36,20 @@ void TestLayer::OnUpdate()
             //BeeEngine::Renderer2D::DrawImage(j, i, 0.0f, 1,1, m_ForestTexture);
         }
     }
+    currentTime = glfwGetTime();
+    double delta = currentTime - lastTime;
 
+    if (delta >= 1) {
+        int framerate{ std::max(1, int(numFrames / delta)) };
+        std::stringstream title;
+        title << "Running at " << framerate << " fps.";
+        glfwSetWindowTitle((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), title.str().c_str());
+        lastTime = currentTime;
+        numFrames = -1;
+        framerate = float(1000.0 / framerate);
+    }
+
+    ++numFrames;
     //BeeEngine::Renderer2D::EndScene();
     //m_FpsCounter.Update();
 }
