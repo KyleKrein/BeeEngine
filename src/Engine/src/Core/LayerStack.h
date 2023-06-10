@@ -19,6 +19,7 @@ namespace BeeEngine{
         void PopLayer(Ref<Layer> layer);
         void PopOverlay(Ref<Layer> overlay);
         void SetGuiLayer(ImGuiLayer* guiLayer);
+        void FinishGuiRendering();
 
         void OnEvent(EventDispatcher& dispatcher);
         void Update();

@@ -49,6 +49,14 @@ namespace BeeEngine::Internal
         {
             return *m_Surface;
         }
+        VulkanSwapChain& GetSwapChain()
+        {
+            return *m_SwapChain;
+        }
+        VulkanPipeline& GetPipeline()
+        {
+            return *m_Pipeline;
+        }
 
     private:
 
@@ -78,11 +86,6 @@ namespace BeeEngine::Internal
         Ref<VulkanPipeline> m_Pipeline;
         VulkanCommandBuffer m_MainCommandBuffer;
         Ref<VulkanCommandPool> m_CommandPool;
-
-        //Sync
-        VulkanFence m_InFlightFence;
-        VulkanSemaphore m_ImageAvailableSemaphore;
-        VulkanSemaphore m_RenderFinishedSemaphore;
 
         void LogDeviceProperties(vk::PhysicalDevice &device) const;
 

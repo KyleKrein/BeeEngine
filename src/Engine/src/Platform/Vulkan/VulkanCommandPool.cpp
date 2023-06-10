@@ -39,14 +39,14 @@ namespace BeeEngine::Internal
     {
         for (auto& frame : commandBuffers)
         {
-            frame.CommandBuffer = CreateCommandBuffer();
+            frame.CommandBuffer = CreateCommandBuffer(frame.Framebuffer.GetHandle());
         }
     }
 
-    VulkanCommandBuffer VulkanCommandPool::CreateCommandBuffer()
+    VulkanCommandBuffer VulkanCommandPool::CreateCommandBuffer(vk::Framebuffer& framebuffer)
     {
         auto commandBuffer = m_Device.allocateCommandBuffers(m_AllocateInfo)[0];
         m_CommandBuffers.push_back(commandBuffer);
-        return {commandBuffer};
+        return {commandBuffer, framebuffer};
     }
 }

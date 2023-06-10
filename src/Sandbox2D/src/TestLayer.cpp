@@ -37,12 +37,12 @@ void TestLayer::OnUpdate()
     }
 
     //BeeEngine::Renderer2D::EndScene();
-    m_FpsCounter.Update();
+    //m_FpsCounter.Update();
 }
 
 void TestLayer::OnGUIRendering()
 {
-    m_FpsCounter.Render();
+    //m_FpsCounter.Render();
 }
 static bool ResizeEvent(BeeEngine::WindowResizeEvent& event)
 {

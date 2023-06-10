@@ -14,7 +14,11 @@ namespace BeeEngine
 
     void BeeEngine::ImGuiControllerVulkan::Initialize(uint16_t width, uint16_t height, uint64_t glfwwindow)
     {
+        return;
         window = reinterpret_cast<GLFWwindow *>(glfwwindow);
+
+        Internal::VulkanGraphicsDevice& graphicsDevice = *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
+
         ImVector<const char*> extensions;
         uint32_t extensions_count = 0;
         const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
@@ -73,9 +77,49 @@ namespace BeeEngine
         init_info.MinImageCount = g_MinImageCount;
         init_info.ImageCount = wd->ImageCount;
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-        init_info.Allocator = g_Allocator;
+        init_info.Allocator = nullptr;//g_Allocator;
         init_info.CheckVkResultFn = check_vk_result;
-        ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
+
+        vk::AttachmentDescription attachment = {};
+        attachment.format = graphicsDevice.GetSwapChain().GetFormat();
+        attachment.samples = vk::SampleCountFlagBits::e1;
+        attachment.loadOp = vk::AttachmentLoadOp::eLoad;
+        attachment.storeOp = vk::AttachmentStoreOp::eStore;
+        attachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+        attachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+        attachment.initialLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        attachment.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+
+        vk::AttachmentReference color_attachment = {};
+        color_attachment.attachment = 0;
+        color_attachment.layout = vk::ImageLayout::eColorAttachmentOptimal;
+
+        vk::SubpassDescription subpass = {};
+        subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &color_attachment;
+
+        vk::SubpassDependency dependency = {};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+        dependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+        dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+
+        vk::RenderPassCreateInfo render_pass_info = {};
+        render_pass_info.sType = vk::StructureType::eRenderPassCreateInfo;
+        render_pass_info.attachmentCount = 1;
+        render_pass_info.pAttachments = &attachment;
+        render_pass_info.subpassCount = 1;
+        render_pass_info.pSubpasses = &subpass;
+        render_pass_info.dependencyCount = 1;
+        render_pass_info.pDependencies = &dependency;
+
+        vk::RenderPass renderPass = graphicsDevice.GetDevice().createRenderPass(render_pass_info);
+
+
+        ImGui_ImplVulkan_Init(&init_info, renderPass);
 
         // Load Fonts
         // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -126,6 +170,7 @@ namespace BeeEngine
 
     void ImGuiControllerVulkan::Update()
     {
+        return;
         // Resize swap chain?
         if (g_SwapChainRebuild)
         {
@@ -148,6 +193,7 @@ namespace BeeEngine
 
     void ImGuiControllerVulkan::Render()
     {
+        return;
         auto& io = ImGui::GetIO();
         // Rendering
         ImGui::Render();
@@ -174,6 +220,7 @@ namespace BeeEngine
 
     void ImGuiControllerVulkan::Shutdown()
     {
+        return;
         // Cleanup
         auto err = vkDeviceWaitIdle(g_Device);
         check_vk_result(err);

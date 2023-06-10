@@ -6,12 +6,14 @@
 #include "Core/Logging/Log.h"
 #include "Debug/DebugLayer.h"
 #include "Renderer/ShaderLibrary.h"
+#include "Platform/Vulkan/VulkanRendererAPI.h"
 
 namespace BeeEngine{
     OSPlatform Application::s_OSPlatform = OSPlatform::None;
     Application* Application::s_Instance = nullptr;
     void Application::Run()
     {
+        auto tempVulkanRendererAPI = Internal::VulkanRendererAPI();
         //m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
         while (m_Window->IsRunning())
         {
@@ -21,6 +23,8 @@ namespace BeeEngine{
             m_Window->UpdateTime();
             m_Layers.Update();
             Update();
+            tempVulkanRendererAPI.Render();
+            //m_Layers.FinishGuiRendering();
             m_Window->SwapBuffers();
         }
     }
@@ -51,7 +55,7 @@ namespace BeeEngine{
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
 #ifdef DEBUG
-        m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
+        //m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
 #endif
     }
 

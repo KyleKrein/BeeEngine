@@ -22,7 +22,7 @@ namespace BeeEngine::Internal
             return m_CommandPool;
         }
         void CreateCommandBuffers(std::vector<SwapChainFrame>& commandBuffers);
-        VulkanCommandBuffer CreateCommandBuffer();
+        VulkanCommandBuffer CreateCommandBuffer(vk::Framebuffer& framebuffer);
     private:
         vk::CommandPool m_CommandPool;
         vk::Device m_Device;

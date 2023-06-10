@@ -17,6 +17,10 @@ namespace BeeEngine::Internal
         VulkanFence(VulkanFence&& other);
         VulkanFence& operator=(VulkanFence&& other) noexcept;
         ~VulkanFence();
+        vk::Fence& GetHandle()
+        {
+            return m_Fence;
+        }
     private:
         bool m_IsInitialized = false;
         vk::Fence m_Fence;

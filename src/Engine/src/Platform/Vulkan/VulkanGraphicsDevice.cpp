@@ -29,16 +29,12 @@ namespace BeeEngine::Internal
         VulkanFramebuffer::CreateFramebuffers(m_Device, m_Pipeline->GetRenderPass().GetHandle(), m_SwapChain->GetExtent(), m_SwapChain->GetFrames());
         m_CommandPool = CreateRef<VulkanCommandPool>(m_Device, m_QueueFamilyIndices);
         m_CommandPool->CreateCommandBuffers(m_SwapChain->GetFrames());
-        m_MainCommandBuffer = m_CommandPool->CreateCommandBuffer();
-
-        m_InFlightFence = VulkanFence(m_Device);
-        m_ImageAvailableSemaphore = VulkanSemaphore(m_Device);
-        m_RenderFinishedSemaphore = VulkanSemaphore(m_Device);
+        //m_MainCommandBuffer = m_CommandPool->CreateCommandBuffer();
     }
 
     VulkanGraphicsDevice::~VulkanGraphicsDevice()
     {
-        //m_Device.destroy();
+        m_Device.waitIdle();
     }
 
     void VulkanGraphicsDevice::LogDeviceProperties(vk::PhysicalDevice &device) const

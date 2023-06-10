@@ -110,4 +110,9 @@ namespace BeeEngine{
     {
         m_guiLayer.reset(guiLayer);
     }
+
+    void LayerStack::FinishGuiRendering()
+    {
+        m_guiLayer->OnEnd();
+    }
 }
