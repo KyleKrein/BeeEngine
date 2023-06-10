@@ -47,12 +47,17 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             s_Controller->Render();
         };
+        void OnDetach() override
+        {
+            BEE_PROFILE_FUNCTION();
+            s_Controller->Shutdown();
+        }
         virtual void OnGUIRendering() override
         {
 
         }
         static void Init();
     private:
-        static ImGuiController* s_Controller;
+        static Scope<ImGuiController> s_Controller;
     };
 }

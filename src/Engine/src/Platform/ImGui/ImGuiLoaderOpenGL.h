@@ -117,7 +117,7 @@ namespace BeeEngine
                 glfwMakeContextCurrent(backup_current_context);
             }
         }
-        ~ImGuiControllerOpenGL() override
+        void Shutdown() override
         {
             ImGui_ImplOpenGL3_Shutdown();
             ImGui_ImplGlfw_Shutdown();

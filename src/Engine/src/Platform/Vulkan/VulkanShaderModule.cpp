@@ -46,4 +46,11 @@ namespace BeeEngine::Internal
     {
         m_Device.destroyShaderModule(m_ShaderModule);
     }
+
+    VulkanShaderModule::VulkanShaderModule(vk::Device &device, std::string_view name, std::string_view filepath)
+    : m_Device(device)
+    {
+        std::vector<std::byte> shaderCode = File::ReadBinaryFile(filepath);
+        CreateShaderModule(shaderCode);
+    }
 }

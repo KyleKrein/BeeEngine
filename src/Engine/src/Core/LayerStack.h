@@ -24,6 +24,6 @@ namespace BeeEngine{
         void Update();
     private:
         std::vector<Ref<Layer>> m_layers;
-        ImGuiLayer* m_guiLayer;
+        Scope<ImGuiLayer> m_guiLayer;
     };
 }

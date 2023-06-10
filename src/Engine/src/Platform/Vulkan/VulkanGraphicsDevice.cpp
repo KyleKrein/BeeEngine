@@ -23,14 +23,22 @@ namespace BeeEngine::Internal
         GraphicsPipelineInBundle pipelineInBundle {m_SwapChain->GetExtent().width,
                                                    m_SwapChain->GetExtent().height,
                                                    m_SwapChain->GetFormat(),
-                                                   CreateRef<VulkanShaderModule>("TestVertex", "shaders/TestVertex.spv"),
-                                                   CreateRef<VulkanShaderModule>("TestFragment", "shaders/TestFragment.spv")};
-        m_Pipeline = CreateRef<VulkanPipeline>(pipelineInBundle);
+                                                   CreateRef<VulkanShaderModule>(m_Device, "TestVertex", "shaders/vertex.spv"),
+                                                   CreateRef<VulkanShaderModule>(m_Device, "TestFragment", "shaders/fragment.spv")};
+        m_Pipeline = CreateRef<VulkanPipeline>(m_Device, pipelineInBundle);
+        VulkanFramebuffer::CreateFramebuffers(m_Device, m_Pipeline->GetRenderPass().GetHandle(), m_SwapChain->GetExtent(), m_SwapChain->GetFrames());
+        m_CommandPool = CreateRef<VulkanCommandPool>(m_Device, m_QueueFamilyIndices);
+        m_CommandPool->CreateCommandBuffers(m_SwapChain->GetFrames());
+        m_MainCommandBuffer = m_CommandPool->CreateCommandBuffer();
+
+        m_InFlightFence = VulkanFence(m_Device);
+        m_ImageAvailableSemaphore = VulkanSemaphore(m_Device);
+        m_RenderFinishedSemaphore = VulkanSemaphore(m_Device);
     }
 
     VulkanGraphicsDevice::~VulkanGraphicsDevice()
     {
-        m_Device.destroy();
+        //m_Device.destroy();
     }
 
     void VulkanGraphicsDevice::LogDeviceProperties(vk::PhysicalDevice &device) const
@@ -189,6 +197,7 @@ namespace BeeEngine::Internal
         {
             m_Device = m_PhysicalDevice.createDevice(deviceInfo);
             BeeCoreInfo("Logical device created successfully");
+            m_DeviceHandle.device = m_Device;
             return;
         }
         catch (vk::SystemError& e)

@@ -9,12 +9,13 @@
 namespace BeeEngine::Internal
 {
 
-    VulkanRenderPass::VulkanRenderPass(vk::Format swapChainImageFormat)
-    : m_Device((*(VulkanGraphicsDevice*)&(WindowHandler::GetInstance()->GetGraphicsDevice())).GetDevice())
+    VulkanRenderPass::VulkanRenderPass(vk::Device& device, vk::Format swapchainImageFormat)
+    : m_Device(device), m_IsInitialized(true)
     {
-        vk::AttachmentDescription colorAttachment;
+        //Define a general attachment, with its load/store operations
+        vk::AttachmentDescription colorAttachment = {};
         colorAttachment.flags = vk::AttachmentDescriptionFlags();
-        colorAttachment.format = swapChainImageFormat;
+        colorAttachment.format = swapchainImageFormat;
         colorAttachment.samples = vk::SampleCountFlagBits::e1;
         colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
         colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
@@ -23,26 +24,29 @@ namespace BeeEngine::Internal
         colorAttachment.initialLayout = vk::ImageLayout::eUndefined;
         colorAttachment.finalLayout = vk::ImageLayout::ePresentSrcKHR;
 
-        vk::AttachmentReference colorAttachmentRef;
+        //Declare that attachment to be color buffer 0 of the framebuffer
+        vk::AttachmentReference colorAttachmentRef = {};
         colorAttachmentRef.attachment = 0;
         colorAttachmentRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
 
-        vk::SubpassDescription subpass;
+        //Renderpasses are broken down into subpasses, there's always at least one.
+        vk::SubpassDescription subpass = {};
         subpass.flags = vk::SubpassDescriptionFlags();
         subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-        subpass.inputAttachmentCount = 0;
+        subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &colorAttachmentRef;
 
-        vk::RenderPassCreateInfo renderPassInfo;
-        renderPassInfo.flags = vk::RenderPassCreateFlags();
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &colorAttachment;
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
+        //Now create the renderpass
+        vk::RenderPassCreateInfo renderpassInfo = {};
+        renderpassInfo.flags = vk::RenderPassCreateFlags();
+        renderpassInfo.attachmentCount = 1;
+        renderpassInfo.pAttachments = &colorAttachment;
+        renderpassInfo.subpassCount = 1;
+        renderpassInfo.pSubpasses = &subpass;
 
         try
         {
-            m_RenderPass = m_Device.createRenderPass(renderPassInfo);
+            m_RenderPass = m_Device.createRenderPass(renderpassInfo);
         }
         catch (vk::SystemError& e)
         {
@@ -52,6 +56,24 @@ namespace BeeEngine::Internal
 
     VulkanRenderPass::~VulkanRenderPass()
     {
-        m_Device.destroyRenderPass(m_RenderPass);
+        if(m_IsInitialized)
+            m_Device.destroyRenderPass(m_RenderPass);
+    }
+
+    VulkanRenderPass::VulkanRenderPass(VulkanRenderPass &&other)
+    {
+        m_Device = other.m_Device;
+        m_RenderPass = other.m_RenderPass;
+        m_IsInitialized = other.m_IsInitialized;
+        other.m_IsInitialized = false;
+    }
+
+    VulkanRenderPass &VulkanRenderPass::operator=(VulkanRenderPass &&other)
+    {
+        m_Device = other.m_Device;
+        m_RenderPass = other.m_RenderPass;
+        m_IsInitialized = other.m_IsInitialized;
+        other.m_IsInitialized = false;
+        return *this;
     }
 }

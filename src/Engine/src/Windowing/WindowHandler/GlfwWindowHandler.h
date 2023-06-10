@@ -60,12 +60,22 @@ namespace BeeEngine
         static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
         static void WindowCloseCallback(GLFWwindow* window);
     private:
+        struct glfwFinalizer
+        {
+            GLFWwindow *window;
+            ~glfwFinalizer()
+            {
+                glfwDestroyWindow(window);
+                glfwTerminate();
+            }
+        };
+        glfwFinalizer m_Finalizer;
         GLFWwindow* m_Window;
         mutable bool m_IsRunning;
         mutable bool m_IsClosing;
 
-        Ref<Instance> m_Instance;
-        Ref<GraphicsDevice> m_GraphicsDevice;
+        Scope<Instance> m_Instance;
+        Scope<GraphicsDevice> m_GraphicsDevice;
 
         void InitializeOpenGL(const WindowProperties &properties);
 

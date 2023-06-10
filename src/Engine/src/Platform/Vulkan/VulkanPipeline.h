@@ -17,12 +17,25 @@ namespace BeeEngine::Internal
         vk::Format SwapChainImageFormat;
         Ref<VulkanShaderModule> VertexShader;
         Ref<VulkanShaderModule> FragmentShader;
+        vk::Device Device;
     };
     class VulkanPipeline
     {
     public:
-        VulkanPipeline(const GraphicsPipelineInBundle& specification);
+        VulkanPipeline(vk::Device& device, const GraphicsPipelineInBundle& specification);
         ~VulkanPipeline();
+        vk::Pipeline& GetHandle()
+        {
+            return m_Pipeline;
+        }
+        vk::PipelineLayout& GetLayout()
+        {
+            return m_PipelineLayout;
+        }
+        VulkanRenderPass& GetRenderPass()
+        {
+            return m_RenderPass;
+        }
 
 
 

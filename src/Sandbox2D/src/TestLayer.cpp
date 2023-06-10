@@ -11,8 +11,8 @@ TestLayer::~TestLayer()
 
 void TestLayer::OnAttach()
 {
-    BeeEngine::Renderer::SetClearColor(BeeEngine::Color4::CornflowerBlue);
-    m_CameraController = BeeEngine::OrthographicCameraController();
+    //BeeEngine::Renderer::SetClearColor(BeeEngine::Color4::CornflowerBlue);
+    //m_CameraController = BeeEngine::OrthographicCameraController();
     //m_ForestTexture = BeeEngine::Texture2D::Create("Assets/Textures/forest.png");
 }
 
@@ -23,9 +23,9 @@ void TestLayer::OnDetach()
 
 void TestLayer::OnUpdate()
 {
-    m_CameraController.OnUpdate();
-    BeeEngine::Renderer::Clear();
-    BeeEngine::Renderer2D::BeginScene(m_CameraController);
+    //m_CameraController.OnUpdate();
+    //BeeEngine::Renderer::Clear();
+    //BeeEngine::Renderer2D::BeginScene(m_CameraController);
 
     //BeeEngine::Renderer2D::DrawRectangle(0,0,0.1,1,1, BeeEngine::Color4::Red);
     for (int i = 0; i < 24*5; ++i)
@@ -36,7 +36,7 @@ void TestLayer::OnUpdate()
         }
     }
 
-    BeeEngine::Renderer2D::EndScene();
+    //BeeEngine::Renderer2D::EndScene();
     m_FpsCounter.Update();
 }
 
@@ -52,7 +52,7 @@ static bool ResizeEvent(BeeEngine::WindowResizeEvent& event)
 void TestLayer::OnEvent(BeeEngine::EventDispatcher &e)
 {
     e.Dispatch<BeeEngine::WindowResizeEvent&, BeeEngine::EventType::WindowResize>(ResizeEvent);
-    m_CameraController.OnEvent(e);
+    //m_CameraController.OnEvent(e);
 }
 
 

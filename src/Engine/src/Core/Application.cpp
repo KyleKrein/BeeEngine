@@ -12,7 +12,7 @@ namespace BeeEngine{
     Application* Application::s_Instance = nullptr;
     void Application::Run()
     {
-        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
+        //m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
@@ -45,7 +45,7 @@ namespace BeeEngine{
         auto appProperties = properties;
         CheckRendererAPIForCompatibility(appProperties);
 
-        m_Window = WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue);
+        m_Window.reset(WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue));
         Renderer::SetAPI(appProperties.PreferredRenderAPI);
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
@@ -58,7 +58,6 @@ namespace BeeEngine{
     Application::~Application()
     {
         s_Instance = nullptr;
-        delete m_Window;
     }
 
     void Application::Dispatch(EventDispatcher &dispatcher)

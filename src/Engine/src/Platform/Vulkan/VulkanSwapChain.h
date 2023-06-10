@@ -6,6 +6,8 @@
 #include "vulkan/vulkan.hpp"
 #include "Renderer/QueueFamilyIndices.h"
 #include "Renderer/SwapChain.h"
+#include "VulkanFramebuffer.h"
+#include "VulkanCommandBuffer.h"
 
 namespace BeeEngine::Internal
 {
@@ -19,12 +21,16 @@ namespace BeeEngine::Internal
     {
         vk::Image Image;
         vk::ImageView ImageView;
+        VulkanFramebuffer Framebuffer;
+        VulkanCommandBuffer CommandBuffer;
     };
     class VulkanSwapChain: public SwapChain
     {
     public:
         VulkanSwapChain(vk::PhysicalDevice &physicalDevice, vk::Device& logicalDevice, vk::SurfaceKHR &surface, uint32_t width, uint32_t height, QueueFamilyIndices &queueFamilyIndices);
         ~VulkanSwapChain() override;
+        VulkanSwapChain(const VulkanSwapChain& other) = delete;
+        VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;
 
         vk::SwapchainKHR& GetHandle()
         {
@@ -32,11 +38,23 @@ namespace BeeEngine::Internal
         }
         vk::Format& GetFormat()
         {
-            return m_Format;
+            return m_SurfaceFormat.format;
         }
         vk::Extent2D& GetExtent()
         {
             return m_Extent;
+        }
+        vk::SurfaceFormatKHR& GetSurfaceFormat()
+        {
+            return m_SurfaceFormat;
+        }
+        vk::PresentModeKHR& GetPresentMode()
+        {
+            return m_PresentMode;
+        }
+        std::vector<SwapChainFrame>& GetFrames()
+        {
+            return m_Frames;
         }
     private:
         SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice& physicalDevice, vk::SurfaceKHR& surface);
@@ -50,9 +68,9 @@ namespace BeeEngine::Internal
 
         vk::SwapchainKHR m_SwapChain;
         std::vector<SwapChainFrame> m_Frames;
-        vk::Format m_Format;
+        //vk::Format m_Format;
 
-        vk::Device& m_LogicalDevice;
+        vk::Device m_LogicalDevice;
 
         void ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes);
 

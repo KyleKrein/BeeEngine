@@ -127,7 +127,7 @@ namespace BeeEngine::Internal
     {
         for(auto& format : formats)
         {
-            if(format.format == vk::Format::eA8B8G8R8UnormPack32
+            if(format.format == vk::Format::eB8G8R8A8Unorm
             && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
             {
                 m_SurfaceFormat = format;
@@ -170,6 +170,7 @@ namespace BeeEngine::Internal
         {
             m_LogicalDevice.destroyImageView(frame.ImageView);
         }
+        m_Frames.clear();
         m_LogicalDevice.destroySwapchainKHR(m_SwapChain);
     }
 }

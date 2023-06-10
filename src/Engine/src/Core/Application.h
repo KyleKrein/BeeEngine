@@ -92,10 +92,8 @@ namespace BeeEngine{
         static Application* s_Instance;
 
         bool m_IsMinimized;
-        WindowHandler* m_Window;
+        Scope<WindowHandler> m_Window;
         LayerStack m_Layers;
         EventQueue m_EventQueue;
-
-
     };
 }

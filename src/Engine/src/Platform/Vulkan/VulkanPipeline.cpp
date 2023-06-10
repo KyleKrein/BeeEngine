@@ -10,8 +10,8 @@
 namespace BeeEngine::Internal
 {
 
-    VulkanPipeline::VulkanPipeline(const GraphicsPipelineInBundle &specification)
-    : m_Device((*(VulkanGraphicsDevice*)&(WindowHandler::GetInstance()->GetGraphicsDevice())).GetDevice())
+    VulkanPipeline::VulkanPipeline(vk::Device& device,const GraphicsPipelineInBundle &specification)
+    : m_Device(device)
     {
         vk::GraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.flags = vk::PipelineCreateFlags();
@@ -26,17 +26,17 @@ namespace BeeEngine::Internal
         pipelineInfo.pVertexInputState = &vertexInputInfo;
 
         //Input assembly
-        vk::PipelineInputAssemblyStateCreateInfo inputAssembly{};
-        inputAssembly.flags = vk::PipelineInputAssemblyStateCreateFlags();
-        inputAssembly.topology = vk::PrimitiveTopology::eTriangleList;
-        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = {};
+        inputAssemblyInfo.flags = vk::PipelineInputAssemblyStateCreateFlags();
+        inputAssemblyInfo.topology = vk::PrimitiveTopology::eTriangleList;
+        pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
 
-        vk::PipelineShaderStageCreateInfo vertexShaderStageInfo{};
-        vertexShaderStageInfo.flags = vk::PipelineShaderStageCreateFlags();
-        vertexShaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex;
-        vertexShaderStageInfo.module = specification.VertexShader->GetHandle();
-        vertexShaderStageInfo.pName = "main";
-        shaderStages.push_back(vertexShaderStageInfo);
+        vk::PipelineShaderStageCreateInfo vertexShaderInfo = {};
+        vertexShaderInfo.flags = vk::PipelineShaderStageCreateFlags();
+        vertexShaderInfo.stage = vk::ShaderStageFlagBits::eVertex;
+        vertexShaderInfo.module = specification.VertexShader->GetHandle();
+        vertexShaderInfo.pName = "main";
+        shaderStages.push_back(vertexShaderInfo);
 
         //Viewport and scissors
         vk::Viewport viewport{};
@@ -60,23 +60,23 @@ namespace BeeEngine::Internal
         pipelineInfo.pViewportState = &viewportState;
 
         //Rasterizer
-        vk::PipelineRasterizationStateCreateInfo rasterizer{};
+        vk::PipelineRasterizationStateCreateInfo rasterizer = {};
         rasterizer.flags = vk::PipelineRasterizationStateCreateFlags();
-        rasterizer.depthClampEnable = VK_FALSE;
-        rasterizer.rasterizerDiscardEnable = VK_FALSE;
+        rasterizer.depthClampEnable = VK_FALSE; //discard out of bounds fragments, don't clamp them
+        rasterizer.rasterizerDiscardEnable = VK_FALSE; //This flag would disable fragment output
         rasterizer.polygonMode = vk::PolygonMode::eFill;
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = vk::CullModeFlagBits::eBack;
         rasterizer.frontFace = vk::FrontFace::eClockwise;
-        rasterizer.depthBiasEnable = VK_FALSE;
+        rasterizer.depthBiasEnable = VK_FALSE; //Depth bias can be useful in shadow maps.
         pipelineInfo.pRasterizationState = &rasterizer;
 
         //Fragment input
         vk::PipelineShaderStageCreateInfo fragmentShaderStageInfo{};
-        vertexShaderStageInfo.flags = vk::PipelineShaderStageCreateFlags();
-        vertexShaderStageInfo.stage = vk::ShaderStageFlagBits::eFragment;
-        vertexShaderStageInfo.module = specification.FragmentShader->GetHandle();
-        vertexShaderStageInfo.pName = "main";
+        fragmentShaderStageInfo.flags = vk::PipelineShaderStageCreateFlags();
+        fragmentShaderStageInfo.stage = vk::ShaderStageFlagBits::eFragment;
+        fragmentShaderStageInfo.module = specification.FragmentShader->GetHandle();
+        fragmentShaderStageInfo.pName = "main";
         shaderStages.push_back(fragmentShaderStageInfo);
 
         pipelineInfo.stageCount = shaderStages.size();
@@ -111,7 +111,7 @@ namespace BeeEngine::Internal
         pipelineInfo.layout = m_PipelineLayout;
 
         //RenderPass
-        m_RenderPass = VulkanRenderPass(specification.SwapChainImageFormat);
+        m_RenderPass = std::move(VulkanRenderPass(m_Device,specification.SwapChainImageFormat));
         pipelineInfo.renderPass = m_RenderPass.GetHandle();
 
         //Extra stuff

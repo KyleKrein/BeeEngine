@@ -14,6 +14,7 @@ namespace BeeEngine::Internal
     public:
         VulkanShaderModule(std::string_view name, gsl::span<std::byte> shaderCode);
         VulkanShaderModule(std::string_view name, std::string_view filepath);
+        VulkanShaderModule(vk::Device& device, std::string_view name, std::string_view filepath);
         ~VulkanShaderModule();
 
         vk::ShaderModule& GetHandle()

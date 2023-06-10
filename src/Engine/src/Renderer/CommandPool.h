@@ -8,6 +8,7 @@ namespace BeeEngine
 {
     class CommandPool
     {
-
+        public:
+        virtual ~CommandPool() = default;
     };
 }

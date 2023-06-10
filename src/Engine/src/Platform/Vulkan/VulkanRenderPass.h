@@ -11,13 +11,18 @@ namespace BeeEngine::Internal
     {
     public:
         VulkanRenderPass() = default;
-        VulkanRenderPass(vk::Format swapChainImageFormat);
+        VulkanRenderPass(vk::Device& device, vk::Format swapChainImageFormat);
         ~VulkanRenderPass();
+        VulkanRenderPass(const VulkanRenderPass& other) = delete;
+        VulkanRenderPass& operator=(const VulkanRenderPass& other ) = delete;
+        VulkanRenderPass(VulkanRenderPass&& other);
+        VulkanRenderPass& operator=(VulkanRenderPass&& other);
         vk::RenderPass& GetHandle()
         {
             return m_RenderPass;
         }
     private:
+        bool m_IsInitialized = false;
         vk::RenderPass m_RenderPass;
         vk::Device m_Device;
     };

@@ -4,10 +4,11 @@
 #include "Layer.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Renderer/ShaderLibrary.h"
+#include "Platform/ImGui/ImGuiControllerVulkan.h"
 
 namespace BeeEngine
 {
-    ImGuiController* ImGuiLayer::s_Controller = nullptr;
+    Scope<ImGuiController> ImGuiLayer::s_Controller = nullptr;
 
     void ImGuiLayer::Init()
     {
@@ -19,7 +20,10 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case OpenGL:
-                s_Controller = new ImGuiControllerOpenGL();
+                s_Controller.reset(new ImGuiControllerOpenGL());
+                break;
+            case Vulkan:
+                s_Controller.reset(new ImGuiControllerVulkan());
                 break;
             default:
                 BeeCoreAssert(false, "Renderer API not supported!");

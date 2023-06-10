@@ -11,6 +11,10 @@
 #include "VulkanGraphicsQueue.h"
 #include "VulkanSwapChain.h"
 #include "VulkanPipeline.h"
+#include "VulkanCommandPool.h"
+#include "VulkanCommandBuffer.h"
+#include "VulkanFence.h"
+#include "VulkanSemaphore.h"
 
 namespace BeeEngine::Internal
 {
@@ -25,15 +29,60 @@ namespace BeeEngine::Internal
             return m_Device;
         }
 
+        vk::PhysicalDevice& GetPhysicalDevice()
+        {
+            return m_PhysicalDevice;
+        }
+        QueueFamilyIndices& GetQueueFamilyIndices()
+        {
+            return m_QueueFamilyIndices;
+        }
+        VulkanGraphicsQueue& GetGraphicsQueue()
+        {
+            return *m_GraphicsQueue;
+        }
+        VulkanGraphicsQueue& GetPresentQueue()
+        {
+            return *m_PresentQueue;
+        }
+        VulkanSurface& GetSurface()
+        {
+            return *m_Surface;
+        }
+
     private:
-        vk::PhysicalDevice m_PhysicalDevice;
+
+
+        //
+
+
+        struct DeviceHandle
+        {
+            vk::Device device;
+            ~DeviceHandle()
+            {
+                    device.destroy();
+            }
+        };
+        QueueFamilyIndices m_QueueFamilyIndices;
+
+
+        Ref<VulkanSurface> m_Surface;
+        DeviceHandle m_DeviceHandle;
+        Ref<VulkanSwapChain> m_SwapChain;
         vk::Device m_Device;
+        vk::PhysicalDevice m_PhysicalDevice;
         Ref<VulkanGraphicsQueue> m_GraphicsQueue;
         Ref<VulkanGraphicsQueue> m_PresentQueue;
-        Ref<VulkanSurface> m_Surface;
-        Ref<VulkanSwapChain> m_SwapChain;
+
         Ref<VulkanPipeline> m_Pipeline;
-        QueueFamilyIndices m_QueueFamilyIndices;
+        VulkanCommandBuffer m_MainCommandBuffer;
+        Ref<VulkanCommandPool> m_CommandPool;
+
+        //Sync
+        VulkanFence m_InFlightFence;
+        VulkanSemaphore m_ImageAvailableSemaphore;
+        VulkanSemaphore m_RenderFinishedSemaphore;
 
         void LogDeviceProperties(vk::PhysicalDevice &device) const;
 

@@ -37,7 +37,7 @@ namespace BeeEngine
                 BeeCoreError("Unknown RenderAPI");
                 break;
         }
-
+        m_Finalizer.window = m_Window;
         m_IsRunning = true;
 
         //SET CALLBACKS
@@ -82,8 +82,7 @@ namespace BeeEngine
 
     GLFWWindowHandler::~GLFWWindowHandler()
     {
-        glfwDestroyWindow(m_Window);
-        glfwTerminate();
+
     }
 
     void GLFWWindowHandler::SetVSync(VSync mode)
@@ -115,7 +114,18 @@ namespace BeeEngine
 
     void GLFWWindowHandler::SwapBuffers()
     {
-        glfwSwapBuffers(m_Window);
+        switch (Renderer::GetAPI())
+        {
+            case RenderAPI::OpenGL:
+                glfwSwapBuffers(m_Window);
+                break;
+            case RenderAPI::Vulkan:
+
+                break;
+            default:
+                BeeCoreError("Unknown RenderAPI");
+                break;
+        }
     }
 
     void GLFWWindowHandler::MakeContextCurrent()
@@ -492,8 +502,8 @@ namespace BeeEngine
         m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
         BeeCoreAssert(m_Window, "Window initialization failed");
 
-        m_Instance = CreateRef<Internal::VulkanInstance>(properties.Title, WindowHandlerAPI::GLFW);
-        m_GraphicsDevice = CreateRef<Internal::VulkanGraphicsDevice>(*(Internal::VulkanInstance*)m_Instance.get());
+        m_Instance = CreateScope<Internal::VulkanInstance>(properties.Title, WindowHandlerAPI::GLFW);
+        m_GraphicsDevice = CreateScope<Internal::VulkanGraphicsDevice>(*(Internal::VulkanInstance*)m_Instance.get());
     }
 }
 
