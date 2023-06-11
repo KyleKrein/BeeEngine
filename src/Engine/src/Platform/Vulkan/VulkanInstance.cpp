@@ -4,6 +4,7 @@
 
 #include "VulkanInstance.h"
 #include "Core/Logging/Log.h"
+#include "Core/Application.h"
 
 
 namespace BeeEngine::Internal
@@ -151,7 +152,10 @@ namespace BeeEngine::Internal
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
+        if(Application::GetOsPlatform() == OSPlatform::Mac)
+        {
+            extensions.push_back("VK_KHR_portability_enumeration");
+        }
 #if defined(DEBUG)
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
@@ -196,6 +200,17 @@ namespace BeeEngine::Internal
                                           layers.data(),
                                           extensions.size(),
                                           extensions.data());
+
+        createInfo.flags = vk::InstanceCreateFlags();
+        if(Application::GetOsPlatform() == OSPlatform::Mac)
+        {
+            createInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
+        }
+        createInfo.pApplicationInfo = &appInfo;
+        createInfo.enabledLayerCount = layers.size();
+        createInfo.ppEnabledLayerNames = layers.data();
+        createInfo.enabledExtensionCount = extensions.size();
+        createInfo.ppEnabledExtensionNames = extensions.data();
         try
         {
             m_Instance = vk::createInstance(createInfo, nullptr);
