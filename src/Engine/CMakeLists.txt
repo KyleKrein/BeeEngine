@@ -44,6 +44,31 @@ add_subdirectory(vendor/ImGuizmo)
 
 find_package(Vulkan REQUIRED)
 
+
+if(IOS)
+    # Covers iOS implementation
+
+elseif(APPLE)
+    # Covers macOS implementation
+
+elseif(ANDROID)
+    # Covers Android implementation
+
+elseif(WIN32)
+    # Covers Windows implementation
+
+elseif (UNIX AND NOT APPLE)
+    # Covers Linux implementation
+
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(shadercName shaderc_sharedd)
+else ()
+    set(shadercName shaderc_shared)
+endif ()
+find_library(shaderc NAMES ${shadercName} PATHS vendor/Vulkan/Libs/Windows REQUIRED)
+
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
         PUBLIC vendor/glfw/include
@@ -91,6 +116,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC yaml-cpp
         PUBLIC ImGuizmo
         PUBLIC Vulkan::Vulkan
+        PUBLIC ${shaderc}
         )
 
 # Создаем определение DEBUG только для debug configuration

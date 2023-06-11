@@ -165,17 +165,17 @@ namespace BeeEngine::Internal
 
     std::vector<char> VulkanPipeline::readFile(const std::string &filepath)
     {
-        std::ifstream file{filepath, std::ios::ate | std::ios::binary};
+        std::ifstream file(filepath);
 
         if (!file.is_open()) {
             throw std::runtime_error("failed to open file: " + filepath);
         }
 
-        size_t fileSize = static_cast<size_t>(file.tellg());
+        size_t fileSize = File::Size(filepath);
         std::vector<char> buffer(fileSize);
 
-        file.seekg(0);
         file.read(buffer.data(), fileSize);
+        std::erase(buffer, '\0');
 
         file.close();
         return buffer;
@@ -336,14 +336,13 @@ namespace BeeEngine::Internal
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
         options.SetOptimizationLevel(shaderc_optimization_level_performance);
-        options.SetSourceLanguage(shaderc_source_language_glsl);
-        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
-        shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(file.data(), file.size(), shaderType == ShaderType::Vertex ? shaderc_vertex_shader: shaderc_fragment_shader, newFilepath.data(), options);
+        shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(file.data(), file.size(), shaderType == ShaderType::Vertex ? shaderc_glsl_vertex_shader: shaderc_glsl_fragment_shader, newFilepath.data(), options);
         if (module.GetCompilationStatus() != shaderc_compilation_status_success)
         {
             BeeError("Failed to compile shader: {}", module.GetErrorMessage());
             return std::vector<char>();
         }
+        BeeTrace("Compilation errors: {}", module.GetErrorMessage());
         std::vector<char> result(module.cbegin(), module.cend());
         File::WriteBinaryFile(newFilepath, {(std::byte*)result.data(), result.size()});
         return result;

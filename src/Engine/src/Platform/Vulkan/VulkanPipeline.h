@@ -40,6 +40,7 @@ namespace BeeEngine::Internal
     {
     public:
         //VulkanPipeline(vk::Device& device, const GraphicsPipelineInBundle& specification);
+
         VulkanPipeline(
                 vk::Device& device,
                 const std::string& vertFilepath,
