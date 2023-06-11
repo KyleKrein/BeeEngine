@@ -18,5 +18,6 @@ namespace BeeEngine
         static void WriteFile(std::string_view path, std::string_view content);
         static void WriteBinaryFile(std::string_view path, gsl::span<std::byte> content);
         static size_t Size(std::string_view path);
+        static bool Exists(std::string_view path);
     };
 }

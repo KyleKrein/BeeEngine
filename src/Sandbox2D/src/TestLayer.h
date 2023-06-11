@@ -7,6 +7,7 @@
 
 #include "BeeEngine.h"
 #include "Gui/ImGui/FpsCounter.h"
+#include "Platform/Vulkan/VulkanPipeline.h"
 
 class TestLayer: public BeeEngine::Layer
 {
@@ -25,4 +26,6 @@ public:
     double currentTime;
     double lastTime;
     double numFrames;
+
+    BeeEngine::Internal::VulkanPipeline m_Pipeline;
 };

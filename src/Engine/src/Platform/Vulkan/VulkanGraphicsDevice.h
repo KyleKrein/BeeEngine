@@ -63,9 +63,34 @@ namespace BeeEngine::Internal
             return *m_CommandPool;
         }
 
+        // Buffer Helper Functions
+        void CreateBuffer(
+                vk::DeviceSize size,
+                vk::BufferUsageFlags usage,
+                vk::MemoryPropertyFlags properties,
+                vk::Buffer &buffer,
+                vk::DeviceMemory &bufferMemory);
+
+        vk::CommandBuffer BeginSingleTimeCommands();
+
+        void EndSingleTimeCommands(vk::CommandBuffer commandBuffer);
+
+        void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
+
+        void CopyBufferToImage(
+                vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height, uint32_t layerCount);
+
+        void CreateImageWithInfo(
+                const vk::ImageCreateInfo &imageInfo,
+                vk::MemoryPropertyFlags properties,
+                vk::Image &image,
+                vk::DeviceMemory &imageMemory);
+
+        vk::PhysicalDeviceProperties properties;
+
     private:
 
-
+        uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
         //
 
 

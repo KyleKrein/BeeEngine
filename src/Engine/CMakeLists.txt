@@ -44,7 +44,6 @@ add_subdirectory(vendor/ImGuizmo)
 
 find_package(Vulkan REQUIRED)
 
-
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
         PUBLIC vendor/glfw/include

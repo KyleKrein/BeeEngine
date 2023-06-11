@@ -4,14 +4,19 @@
 
 #include <sstream>
 #include "TestLayer.h"
+#include "Platform/Vulkan/VulkanGraphicsDevice.h"
 TestLayer::TestLayer()
-= default;
+: m_Pipeline((*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice()).GetDevice(),
+             "Shaders/test.vert","Shaders/test.frag", BeeEngine::Internal::VulkanPipeline::DefaultPipelineConfigInfo(1280, 720))
+{
+
+}
 
 TestLayer::~TestLayer()
 = default;
 
 void TestLayer::OnAttach()
-{
+{;
     //BeeEngine::Renderer::SetClearColor(BeeEngine::Color4::CornflowerBlue);
     //m_CameraController = BeeEngine::OrthographicCameraController();
     //m_ForestTexture = BeeEngine::Texture2D::Create("Assets/Textures/forest.png");

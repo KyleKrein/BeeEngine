@@ -35,7 +35,7 @@ namespace BeeEngine::Internal
 
         auto commandBuffer = m_GraphicsDevice.GetSwapChain().GetFrames()[m_CurrentFrame].CommandBuffer;
         commandBuffer.GetHandle().reset();
-        commandBuffer.RecordDrawCommands(m_GraphicsDevice.GetPipeline().GetRenderPass(), m_GraphicsDevice.GetSwapChain().GetExtent(), m_GraphicsDevice.GetPipeline().GetHandle());
+        //commandBuffer.RecordDrawCommands(m_GraphicsDevice.GetPipeline().GetRenderPass(), m_GraphicsDevice.GetSwapChain().GetExtent(), m_GraphicsDevice.GetPipeline().GetHandle());
         vk::SubmitInfo submitInfo;
         vk::Semaphore waitSemaphores[] = {m_SwapChainFrames[m_CurrentFrame].ImageAvailableSemaphore.GetHandle()};
         vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};

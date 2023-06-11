@@ -221,7 +221,7 @@ namespace BeeEngine::Internal
     void VulkanSwapChain::CreateFramebuffers()
     {
         auto& graphicsPipeline = (*(VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice()).GetPipeline();
-        VulkanFramebuffer::CreateFramebuffers(m_LogicalDevice, graphicsPipeline.GetRenderPass().GetHandle(), m_Extent, m_Frames);
+        //VulkanFramebuffer::CreateFramebuffers(m_LogicalDevice, graphicsPipeline.GetRenderPass().GetHandle(), m_Extent, m_Frames);
     }
 
     void VulkanSwapChain::CreateCommandBuffers()

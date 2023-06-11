@@ -13,7 +13,7 @@ namespace BeeEngine{
     Application* Application::s_Instance = nullptr;
     void Application::Run()
     {
-        auto tempVulkanRendererAPI = Internal::VulkanRendererAPI();
+        //auto tempVulkanRendererAPI = Internal::VulkanRendererAPI();
         //m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
         while (m_Window->IsRunning())
         {
@@ -23,7 +23,7 @@ namespace BeeEngine{
             m_Window->UpdateTime();
             m_Layers.Update();
             Update();
-            tempVulkanRendererAPI.Render();
+            //tempVulkanRendererAPI.Render();
             //m_Layers.FinishGuiRendering();
             m_Window->SwapBuffers();
         }

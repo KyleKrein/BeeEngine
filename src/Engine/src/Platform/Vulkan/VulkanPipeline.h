@@ -3,14 +3,16 @@
 //
 
 #pragma once
-#include "vulkan/vulkan.hpp"
-#include "VulkanRenderPass.h"
-#include "VulkanShaderModule.h"
+
+//#include "VulkanRenderPass.h"
+//#include "VulkanShaderModule.h"
 #include "Core/TypeDefines.h"
+#include "Renderer/Shader.h"
+#include "vulkan/vulkan.hpp"
 
 namespace BeeEngine::Internal
 {
-    struct GraphicsPipelineInBundle
+    /*struct GraphicsPipelineInBundle
     {
         uint32_t ViewportWidth;
         uint32_t ViewportHeight;
@@ -18,16 +20,37 @@ namespace BeeEngine::Internal
         Ref<VulkanShaderModule> VertexShader;
         Ref<VulkanShaderModule> FragmentShader;
         vk::Device Device;
+    };*/
+    struct PipelineConfigInfo {
+        vk::Viewport viewport;
+        vk::Rect2D scissor;
+        vk::PipelineViewportStateCreateInfo viewportInfo;
+        vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
+        vk::PipelineRasterizationStateCreateInfo rasterizationInfo;
+        vk::PipelineMultisampleStateCreateInfo multisampleInfo;
+        vk::PipelineColorBlendAttachmentState colorBlendAttachment;
+        vk::PipelineColorBlendStateCreateInfo colorBlendInfo;
+        vk::PipelineDepthStencilStateCreateInfo depthStencilInfo;
+        vk::PipelineLayout pipelineLayout = nullptr;
+        vk::RenderPass renderPass = nullptr;
+        uint32_t subpass = 0;
     };
+    class VulkanGraphicsDevice;
     class VulkanPipeline
     {
     public:
-        VulkanPipeline(vk::Device& device, const GraphicsPipelineInBundle& specification);
+        //VulkanPipeline(vk::Device& device, const GraphicsPipelineInBundle& specification);
+        VulkanPipeline(
+                vk::Device& device,
+                const std::string& vertFilepath,
+                const std::string& fragFilepath,
+                const PipelineConfigInfo& configInfo);
         ~VulkanPipeline();
         vk::Pipeline& GetHandle()
         {
             return m_Pipeline;
         }
+        /*
         vk::PipelineLayout& GetLayout()
         {
             return m_PipelineLayout;
@@ -36,14 +59,30 @@ namespace BeeEngine::Internal
         {
             return m_RenderPass;
         }
+        */
+        static PipelineConfigInfo DefaultPipelineConfigInfo(uint32_t width, uint32_t height);
 
 
 
     private:
+        static std::vector<char> readFile(const std::string& filepath);
+
+    private:
         vk::Pipeline m_Pipeline;
+        //VulkanGraphicsDevice* m_GraphicsDevice;
         vk::Device& m_Device;
-        vk::PipelineLayout m_PipelineLayout;
-        VulkanRenderPass m_RenderPass;
+        //vk::PipelineLayout m_PipelineLayout;
+        //VulkanRenderPass m_RenderPass;
+
+        vk::ShaderModule m_VertexShaderModule;
+        vk::ShaderModule m_FragmentShaderModule;
         void CreateLayout();
+        void CreateGraphicsPipeline(
+                const std::string& vertFilepath,
+                const std::string& fragFilepath,
+                const PipelineConfigInfo& configInfo);
+
+        void CreateShaderModule(const std::vector<char>& code, vk::ShaderModule& shaderModule);
+        std::vector<char> CompileShaderToSPRIV(const std::vector<char>& file, std::string_view newFilepath, ShaderType shaderType);
     };
 }

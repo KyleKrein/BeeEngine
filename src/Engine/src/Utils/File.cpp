@@ -69,4 +69,9 @@ namespace BeeEngine
     {
         return std::filesystem::file_size(path);
     }
+
+    bool File::Exists(std::string_view path)
+    {
+        return std::filesystem::exists(path);
+    }
 }
