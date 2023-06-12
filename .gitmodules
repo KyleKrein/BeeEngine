@@ -35,3 +35,6 @@
 [submodule "src/Engine/vendor/ImGuizmo"]
 	path = src/Engine/vendor/ImGuizmo
 	url = https://github.com/KyleKrein/ImGuizmo-for-BeeEngine.git
+[submodule "src/Engine/vendor/glslang"]
+	path = src/Engine/vendor/glslang
+	url = https://github.com/KhronosGroup/glslang.git

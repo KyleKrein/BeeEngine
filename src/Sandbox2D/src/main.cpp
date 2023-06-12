@@ -15,8 +15,6 @@ public:
     {
 
     }
-private:
-    TestLayer m_TestLayer;
 };
 
 gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication()

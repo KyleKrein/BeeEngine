@@ -2,12 +2,10 @@
 // Created by alexl on 09.06.2023.
 //
 
-#include "shaderc/shaderc.hpp"
 #include "Core/Logging/Log.h"
 #include "VulkanPipeline.h"
 #include "Utils/File.h"
 #include <fstream>
-#include "VulkanShader.h"
 
 namespace BeeEngine::Internal
 {
@@ -184,14 +182,14 @@ namespace BeeEngine::Internal
     void VulkanPipeline::CreateGraphicsPipeline(const std::string &vertFilepath, const std::string &fragFilepath,
                                                 const PipelineConfigInfo &configInfo)
     {
-        auto vertCode = readFile(vertFilepath);
-        auto fragCode = readFile(fragFilepath);
+        auto vertexCode = readFile(vertFilepath);
+        auto fragmentCode = readFile(fragFilepath);
 
-        vertCode = CompileShaderToSPRIV(vertCode, vertFilepath.substr(0, vertFilepath.find_last_of("/\\") + 1) + "vert.spv", ShaderType::Vertex);
-        fragCode = CompileShaderToSPRIV(fragCode, fragFilepath.substr(0, fragFilepath.find_last_of("/\\") + 1) + "frag.spv", ShaderType::Fragment);
+        auto vertCompiled = CompileShaderToSPRIV(vertexCode, vertFilepath.substr(0, vertFilepath.find_last_of("/\\") + 1) + "vert.spv", ShaderStage::Vertex);
+        auto fragCompiled = CompileShaderToSPRIV(fragmentCode, fragFilepath.substr(0, fragFilepath.find_last_of("/\\") + 1) + "frag.spv", ShaderStage::Fragment);
 
-        CreateShaderModule(vertCode, m_VertexShaderModule);
-        CreateShaderModule(fragCode, m_FragmentShaderModule);
+        CreateShaderModule(vertCompiled, m_VertexShaderModule);
+        CreateShaderModule(fragCompiled, m_FragmentShaderModule);
 
         vk::PipelineShaderStageCreateInfo shaderStages[2];
         shaderStages[0].sType = vk::StructureType::ePipelineShaderStageCreateInfo;
@@ -239,12 +237,12 @@ namespace BeeEngine::Internal
         m_Device.createGraphicsPipelines(VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline);
     }
 
-    void VulkanPipeline::CreateShaderModule(const std::vector<char> &code, vk::ShaderModule &shaderModule)
+    void VulkanPipeline::CreateShaderModule(const std::vector<uint32_t> &code, vk::ShaderModule &shaderModule)
     {
         vk::ShaderModuleCreateInfo createInfo{};
         createInfo.sType = vk::StructureType::eShaderModuleCreateInfo;
-        createInfo.codeSize = code.size();
-        createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+        createInfo.codeSize = code.size() * sizeof(uint32_t);
+        createInfo.pCode = code.data();
 
         m_Device.createShaderModule(&createInfo, nullptr, &shaderModule);
     }
@@ -325,26 +323,22 @@ namespace BeeEngine::Internal
 
         return configInfo;
     }
-    std::vector<char> VulkanPipeline::CompileShaderToSPRIV(const std::vector<char>& file, std::string_view newFilepath, ShaderType shaderType)
+    std::vector<uint32_t> VulkanPipeline::CompileShaderToSPRIV(const std::vector<char>& file, std::string_view newFilepath, ShaderStage shaderType)
     {
         if(File::Exists(newFilepath))
         {
             auto result = File::ReadBinaryFile(newFilepath);
-            gsl::span<char> span((char*)result.data(), result.size());
+            gsl::span<uint32_t> span((uint32_t *)result.data(), result.size() / sizeof(uint32_t));
+            BeeCoreTrace("Loaded SPIRV from cache");
             return {span.begin(), span.end()};
         }
-        shaderc::Compiler compiler;
-        shaderc::CompileOptions options;
-        options.SetOptimizationLevel(shaderc_optimization_level_performance);
-        shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(file.data(), file.size(), shaderType == ShaderType::Vertex ? shaderc_glsl_vertex_shader: shaderc_glsl_fragment_shader, newFilepath.data(), options);
-        if (module.GetCompilationStatus() != shaderc_compilation_status_success)
+        std::vector<uint32_t> result;
+        if (!ShaderConverter::GLSLtoSPV(shaderType, file.data(), result))
         {
-            BeeError("Failed to compile shader: {}", module.GetErrorMessage());
-            return std::vector<char>();
+            return result;
         }
-        BeeTrace("Compilation errors: {}", module.GetErrorMessage());
-        std::vector<char> result(module.cbegin(), module.cend());
-        File::WriteBinaryFile(newFilepath, {(std::byte*)result.data(), result.size()});
+        BeeCoreTrace("Compiled shader to SPIRV");
+        File::WriteBinaryFile(newFilepath, {(std::byte*)result.data(), result.size() * sizeof(uint32_t)});
         return result;
     }
 }

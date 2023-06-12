@@ -9,6 +9,7 @@
 #include "Core/TypeDefines.h"
 #include "Renderer/Shader.h"
 #include "vulkan/vulkan.hpp"
+#include "Utils/ShaderConverter.h"
 
 namespace BeeEngine::Internal
 {
@@ -83,7 +84,7 @@ namespace BeeEngine::Internal
                 const std::string& fragFilepath,
                 const PipelineConfigInfo& configInfo);
 
-        void CreateShaderModule(const std::vector<char>& code, vk::ShaderModule& shaderModule);
-        std::vector<char> CompileShaderToSPRIV(const std::vector<char>& file, std::string_view newFilepath, ShaderType shaderType);
+        void CreateShaderModule(const std::vector<uint32_t>& code, vk::ShaderModule& shaderModule);
+        std::vector<uint32_t> CompileShaderToSPRIV(const std::vector<char>& file, std::string_view newFilepath, ShaderStage shaderType);
     };
 }
