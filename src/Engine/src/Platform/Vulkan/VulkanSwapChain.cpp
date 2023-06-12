@@ -12,11 +12,16 @@
 namespace BeeEngine::Internal
 {
 
-    VulkanSwapChain::VulkanSwapChain(vk::PhysicalDevice &physicalDevice, vk::Device& logicalDevice, vk::SurfaceKHR &surface, uint32_t width, uint32_t height, QueueFamilyIndices &queueFamilyIndices)
-    : m_PhysicalDevice(physicalDevice),m_LogicalDevice(logicalDevice), m_Surface(surface), m_QueueFamilyIndices(queueFamilyIndices)
+    VulkanSwapChain::VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height)
+    : m_GraphicsDevice(graphicsDevice), m_Extent(vk::Extent2D(width, height))
     {
-        Create(width, height);
+        CreateSwapChain();
         CreateImageViews();
+        CreateRenderPass();
+        CreateDepthResources();
+        CreateFramebuffers();
+        //CreateCommandBuffers();
+        CreateSyncObjects();
     }
 
     SwapChainSupportDetails VulkanSwapChain::QuerySwapChainSupport(vk::PhysicalDevice &physicalDevice, vk::SurfaceKHR &surface)
@@ -119,12 +124,98 @@ namespace BeeEngine::Internal
 
     void VulkanSwapChain::Destroy()
     {
-        for(auto& frame : m_Frames)
-        {
-            m_LogicalDevice.destroyImageView(frame.ImageView);
+        for (auto imageView : m_SwapChainImageViews) {
+            m_GraphicsDevice.GetDevice().destroyImageView(imageView, nullptr);
         }
-        m_Frames.clear();
-        m_LogicalDevice.destroySwapchainKHR(m_SwapChain);
+        m_SwapChainImageViews.clear();
+
+        if (m_SwapChain != nullptr) {
+            vkDestroySwapchainKHR(m_GraphicsDevice.GetDevice(), m_SwapChain, nullptr);
+            m_SwapChain = nullptr;
+        }
+
+        for (int i = 0; i < m_DepthImages.size(); i++) {
+            vkDestroyImageView(m_GraphicsDevice.GetDevice(), m_DepthImageViews[i], nullptr);
+            vkDestroyImage(m_GraphicsDevice.GetDevice(), m_DepthImages[i], nullptr);
+            vkFreeMemory(m_GraphicsDevice.GetDevice(), m_DepthImageMemorys[i], nullptr);
+        }
+
+        for (auto framebuffer : m_SwapChainFramebuffers) {
+            vkDestroyFramebuffer(m_GraphicsDevice.GetDevice(), framebuffer, nullptr);
+        }
+
+        vkDestroyRenderPass(m_GraphicsDevice.GetDevice(), m_RenderPass, nullptr);
+
+        // cleanup synchronization objects
+        for (size_t i = 0; i < m_MaxFrames; i++) {
+            vkDestroySemaphore(m_GraphicsDevice.GetDevice(), m_RenderFinishedSemaphores[i], nullptr);
+            vkDestroySemaphore(m_GraphicsDevice.GetDevice(), m_ImageAvailableSemaphores[i], nullptr);
+            vkDestroyFence(m_GraphicsDevice.GetDevice(), m_InFlightFences[i], nullptr);
+        }
+    }
+
+    VkResult VulkanSwapChain::AcquireNextImage(uint32_t *imageIndex) {
+        vkWaitForFences(
+                m_GraphicsDevice.GetDevice(),
+                1,
+                &m_InFlightFences[m_CurrentFrame],
+                VK_TRUE,
+                std::numeric_limits<uint64_t>::max());
+
+        VkResult result = vkAcquireNextImageKHR(
+                m_GraphicsDevice.GetDevice(),
+                m_SwapChain,
+                std::numeric_limits<uint64_t>::max(),
+                m_ImageAvailableSemaphores[m_CurrentFrame],  // must be a not signaled semaphore
+                VK_NULL_HANDLE,
+                imageIndex);
+
+        return result;
+    }
+
+    VkResult VulkanSwapChain::SubmitCommandBuffers(
+            const VkCommandBuffer *buffers, uint32_t *imageIndex) {
+        if (m_ImagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
+            vkWaitForFences(m_GraphicsDevice.GetDevice(), 1, &m_ImagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
+        }
+        m_ImagesInFlight[*imageIndex] = m_InFlightFences[m_CurrentFrame];
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        VkSemaphore waitSemaphores[] = {m_ImageAvailableSemaphores[m_CurrentFrame]};
+        VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = buffers;
+
+        VkSemaphore signalSemaphores[] = {m_RenderFinishedSemaphores[m_CurrentFrame]};
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        vkResetFences(m_GraphicsDevice.GetDevice(), 1, &m_InFlightFences[m_CurrentFrame]);
+        vkQueueSubmit(m_GraphicsDevice.GetGraphicsQueue().GetQueue(), 1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
+
+        VkPresentInfoKHR presentInfo = {};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+
+        VkSwapchainKHR swapChains[] = {m_SwapChain};
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+
+        presentInfo.pImageIndices = imageIndex;
+
+        auto result = vkQueuePresentKHR(m_GraphicsDevice.GetPresentQueue().GetQueue(), &presentInfo);
+
+        m_CurrentFrame = (m_CurrentFrame + 1) % m_MaxFrames;
+
+        return result;
     }
 
     void VulkanSwapChain::Create(uint32_t width, uint32_t height)
@@ -229,5 +320,25 @@ namespace BeeEngine::Internal
         auto& commandPool = (*(VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice()).GetCommandPool();
 
         commandPool.CreateCommandBuffers(m_Frames);
+    }
+
+    void VulkanSwapChain::CreateSwapChain()
+    {
+
+    }
+
+    void VulkanSwapChain::CreateDepthResources()
+    {
+
+    }
+
+    void VulkanSwapChain::CreateRenderPass()
+    {
+
+    }
+
+    void VulkanSwapChain::CreateSyncObjects()
+    {
+
     }
 }
