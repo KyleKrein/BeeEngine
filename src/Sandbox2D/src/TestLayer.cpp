@@ -6,25 +6,26 @@
 #include "TestLayer.h"
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 TestLayer::TestLayer()
-: m_Pipeline((*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice()).GetDevice(),
-             "Shaders/test.vert","Shaders/test.frag", BeeEngine::Internal::VulkanPipeline::DefaultPipelineConfigInfo(1280, 720))
 {
-
 }
 
 TestLayer::~TestLayer()
 = default;
 
 void TestLayer::OnAttach()
-{;
+{
     //BeeEngine::Renderer::SetClearColor(BeeEngine::Color4::CornflowerBlue);
     //m_CameraController = BeeEngine::OrthographicCameraController();
     //m_ForestTexture = BeeEngine::Texture2D::Create("Assets/Textures/forest.png");
+    CreatePipelineLayout();
+    CreatePipeline();
+    CreateCommandBuffers();
 }
 
 void TestLayer::OnDetach()
 {
-
+    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
+    vkDestroyPipelineLayout(device.GetDevice(), m_PipelineLayout, nullptr);
 }
 
 void TestLayer::OnUpdate()
@@ -72,6 +73,40 @@ void TestLayer::OnEvent(BeeEngine::EventDispatcher &e)
 {
     e.Dispatch<BeeEngine::WindowResizeEvent&, BeeEngine::EventType::WindowResize>(ResizeEvent);
     //m_CameraController.OnEvent(e);
+}
+
+void TestLayer::CreatePipelineLayout()
+{
+    VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+    pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutCreateInfo.setLayoutCount = 0;
+    pipelineLayoutCreateInfo.pSetLayouts = nullptr;
+    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
+    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+    if (vkCreatePipelineLayout((*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice()).GetDevice(), &pipelineLayoutCreateInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS)
+    {
+        BeeError("Failed to create pipeline layout");
+    }
+}
+
+void TestLayer::CreatePipeline()
+{
+    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
+    auto pipelineConfig = BeeEngine::Internal::VulkanPipeline::DefaultPipelineConfigInfo(device.GetSwapChain().GetExtent().width, device.GetSwapChain().GetExtent().height);
+    pipelineConfig.renderPass = device.GetSwapChain().GetRenderPass();
+    pipelineConfig.pipelineLayout = m_PipelineLayout;
+    m_Pipeline = BeeEngine::CreateScope<BeeEngine::Internal::VulkanPipeline>((*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice()).GetDevice(),
+                                                                             "Shaders/test.vert","Shaders/test.frag", pipelineConfig);
+}
+
+void TestLayer::CreateCommandBuffers()
+{
+
+}
+
+void TestLayer::DrawFrame()
+{
+
 }
 
 

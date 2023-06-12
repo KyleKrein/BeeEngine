@@ -19,7 +19,8 @@ namespace BeeEngine::Internal
         {
             m_PresentQueue->Initialize(m_PhysicalDevice, m_Device);
         }
-        m_SwapChain = CreateRef<VulkanSwapChain>(m_PhysicalDevice, m_Device, m_Surface->GetHandle(), WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight() ,m_QueueFamilyIndices);
+        CreateSwapChainSupportDetails();
+        m_SwapChain = CreateRef<VulkanSwapChain>(*this, WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight());
         /*
         GraphicsPipelineInBundle pipelineInBundle {m_SwapChain->GetExtent().width,
                                                    m_SwapChain->GetExtent().height,
@@ -212,32 +213,32 @@ namespace BeeEngine::Internal
         }
     }
 
-    void VulkanGraphicsDevice::CreateBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage,
-                                            vk::MemoryPropertyFlags properties, vk::Buffer &buffer,
-                                            vk::DeviceMemory &bufferMemory)
+    void VulkanGraphicsDevice::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                                            VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                                            VkDeviceMemory &bufferMemory)
     {
-        vk::BufferCreateInfo bufferInfo{};
-        bufferInfo.sType = vk::StructureType::eBufferCreateInfo;
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = size;
         bufferInfo.usage = usage;
-        bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        m_Device.createBuffer(&bufferInfo, nullptr, &buffer);
+        vkCreateBuffer(m_Device, &bufferInfo, nullptr, &buffer);
 
         vk::MemoryRequirements memRequirements;
         m_Device.getBufferMemoryRequirements(buffer, &memRequirements);
 
-        vk::MemoryAllocateInfo allocInfo{};
-        allocInfo.sType = vk::StructureType::eMemoryAllocateInfo;
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
 
-        m_Device.allocateMemory(&allocInfo, nullptr, &bufferMemory);
+        vkAllocateMemory(m_Device, &allocInfo, nullptr, &bufferMemory);
 
         m_Device.bindBufferMemory(buffer, bufferMemory, 0);
     }
 
-    vk::CommandBuffer VulkanGraphicsDevice::BeginSingleTimeCommands()
+    VkCommandBuffer VulkanGraphicsDevice::BeginSingleTimeCommands()
     {
         vk::CommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = vk::StructureType::eCommandBufferAllocateInfo;
@@ -256,35 +257,35 @@ namespace BeeEngine::Internal
         return commandBuffer;
     }
 
-    void VulkanGraphicsDevice::EndSingleTimeCommands(vk::CommandBuffer commandBuffer)
+    void VulkanGraphicsDevice::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
     {
-        commandBuffer.end();
+        vkEndCommandBuffer(commandBuffer);
 
-        vk::SubmitInfo submitInfo{};
-        submitInfo.sType = vk::StructureType::eSubmitInfo;
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        m_GraphicsQueue->GetQueue().submit(1, &submitInfo, VK_NULL_HANDLE);
-        m_GraphicsQueue->GetQueue().waitIdle();
+        vkQueueSubmit(m_GraphicsQueue->GetQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(m_GraphicsQueue->GetQueue());
 
-        m_Device.freeCommandBuffers(m_CommandPool->GetHandle(), 1, &commandBuffer);
+        vkFreeCommandBuffers(m_Device, m_CommandPool->GetHandle(), 1, &commandBuffer);
     }
 
-    void VulkanGraphicsDevice::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
+    void VulkanGraphicsDevice::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
-        vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
+        VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 
-        vk::BufferCopy copyRegion{};
+        VkBufferCopy copyRegion{};
         copyRegion.srcOffset = 0;  // Optional
         copyRegion.dstOffset = 0;  // Optional
         copyRegion.size = size;
-        commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
         EndSingleTimeCommands(commandBuffer);
     }
 
-    void VulkanGraphicsDevice::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height,
+    void VulkanGraphicsDevice::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height,
                                                  uint32_t layerCount)
     {
         vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
@@ -312,28 +313,28 @@ namespace BeeEngine::Internal
     }
 
     void
-    VulkanGraphicsDevice::CreateImageWithInfo(const vk::ImageCreateInfo &imageInfo, vk::MemoryPropertyFlags properties,
-                                              vk::Image &image, vk::DeviceMemory &imageMemory)
+    VulkanGraphicsDevice::CreateImageWithInfo(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties,
+                                              VkImage &image, VkDeviceMemory &imageMemory)
     {
-        m_Device.createImage(&imageInfo, nullptr, &image);
+        vkCreateImage(m_Device, &imageInfo, nullptr, &image);
 
-        vk::MemoryRequirements memRequirements;
-        m_Device.getImageMemoryRequirements(image, &memRequirements);
+        VkMemoryRequirements memRequirements;
+        vkGetImageMemoryRequirements(m_Device, image, &memRequirements);
 
-        vk::MemoryAllocateInfo allocInfo{};
-        allocInfo.sType = vk::StructureType::eMemoryAllocateInfo;
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
 
-        m_Device.allocateMemory(&allocInfo, nullptr, &imageMemory);
+        vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory);
 
         m_Device.bindImageMemory(image, imageMemory, 0);
     }
 
-    uint32_t VulkanGraphicsDevice::FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties)
+    uint32_t VulkanGraphicsDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
     {
-        vk::PhysicalDeviceMemoryProperties memProperties;
-        m_PhysicalDevice.getMemoryProperties(&memProperties);
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
         for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
             if ((typeFilter & (1 << i)) &&
                 (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
@@ -342,5 +343,48 @@ namespace BeeEngine::Internal
         }
 
         throw std::runtime_error("failed to find suitable memory type!");
+    }
+
+    void VulkanGraphicsDevice::CreateSwapChainSupportDetails()
+    {
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, m_Surface->GetHandle(), &m_SwapChainSupportDetails.capabilities);
+
+        uint32_t formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface->GetHandle(), &formatCount, nullptr);
+
+        if (formatCount != 0) {
+            m_SwapChainSupportDetails.formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface->GetHandle(), &formatCount, m_SwapChainSupportDetails.formats.data());
+        }
+
+        uint32_t presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface->GetHandle(), &presentModeCount, nullptr);
+
+        if (presentModeCount != 0) {
+            m_SwapChainSupportDetails.presentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(
+                    m_PhysicalDevice,
+                    m_Surface->GetHandle(),
+                    &presentModeCount,
+                    m_SwapChainSupportDetails.presentModes.data());
+        }
+    }
+
+    VkFormat VulkanGraphicsDevice::FindSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling,
+                                                       VkFormatFeatureFlags features)
+    {
+        for (VkFormat format : candidates) {
+            VkFormatProperties props;
+            vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &props);
+
+            if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+                return format;
+            } else if (tiling == VK_IMAGE_TILING_OPTIMAL &&
+                       (props.optimalTilingFeatures & features) == features) {
+                return format;
+            }
+        }
+
+        throw std::runtime_error("failed to find supported format!");
     }
 }

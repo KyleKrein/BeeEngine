@@ -214,13 +214,20 @@ namespace BeeEngine::Internal
         vertexInputInfo.pVertexAttributeDescriptions = nullptr;
         vertexInputInfo.pVertexBindingDescriptions = nullptr;
 
+        vk::PipelineViewportStateCreateInfo viewportInfo{};
+        viewportInfo.sType = vk::StructureType::ePipelineViewportStateCreateInfo;
+        viewportInfo.viewportCount = 1;
+        viewportInfo.pViewports = &configInfo.viewport;
+        viewportInfo.scissorCount = 1;
+        viewportInfo.pScissors = &configInfo.scissor;
+
         vk::GraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = vk::StructureType::eGraphicsPipelineCreateInfo;
         pipelineInfo.stageCount = 2;
         pipelineInfo.pStages = shaderStages;
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;
-        pipelineInfo.pViewportState = &configInfo.viewportInfo;
+        pipelineInfo.pViewportState = &viewportInfo;
         pipelineInfo.pRasterizationState = &configInfo.rasterizationInfo;
         pipelineInfo.pMultisampleState = &configInfo.multisampleInfo;
         pipelineInfo.pColorBlendState = &configInfo.colorBlendInfo;
@@ -263,12 +270,6 @@ namespace BeeEngine::Internal
 
         configInfo.scissor.offset = vk::Offset2D{0, 0};
         configInfo.scissor.extent = vk::Extent2D{width, height};
-
-        configInfo.viewportInfo.sType = vk::StructureType::ePipelineViewportStateCreateInfo;
-        configInfo.viewportInfo.viewportCount = 1;
-        configInfo.viewportInfo.pViewports = &configInfo.viewport;
-        configInfo.viewportInfo.scissorCount = 1;
-        configInfo.viewportInfo.pScissors = &configInfo.scissor;
 
         configInfo.rasterizationInfo.sType = vk::StructureType::ePipelineRasterizationStateCreateInfo;
         configInfo.rasterizationInfo.depthClampEnable = VK_FALSE;

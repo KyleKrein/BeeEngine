@@ -39,7 +39,7 @@ namespace BeeEngine::Internal
     {
         for (auto& frame : commandBuffers)
         {
-            frame.CommandBuffer = CreateCommandBuffer(frame.Framebuffer.GetHandle());
+            //frame.CommandBuffer = CreateCommandBuffer(frame.Framebuffer.GetHandle());
         }
     }
 

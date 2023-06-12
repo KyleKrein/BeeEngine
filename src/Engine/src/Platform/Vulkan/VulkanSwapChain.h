@@ -12,9 +12,9 @@ namespace BeeEngine::Internal
     class VulkanGraphicsDevice;
     struct SwapChainSupportDetails
     {
-        vk::SurfaceCapabilitiesKHR capabilities;
-        std::vector<vk::SurfaceFormatKHR> formats;
-        std::vector<vk::PresentModeKHR> presentModes;
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
     };
     struct SwapChainFrame
     {
@@ -38,37 +38,36 @@ namespace BeeEngine::Internal
         VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;
         void Recreate();
 
-        vk::SwapchainKHR& GetHandle()
+        VkSwapchainKHR& GetHandle()
         {
             return m_SwapChain;
         }
-        vk::Format& GetFormat()
+        VkFormat& GetFormat()
         {
             return m_SurfaceFormat.format;
         }
-        vk::Extent2D& GetExtent()
+        VkExtent2D& GetExtent()
         {
             return m_Extent;
         }
-        vk::SurfaceFormatKHR& GetSurfaceFormat()
+        VkSurfaceFormatKHR& GetSurfaceFormat()
         {
             return m_SurfaceFormat;
         }
-        vk::PresentModeKHR& GetPresentMode()
+        VkPresentModeKHR& GetPresentMode()
         {
             return m_PresentMode;
         }
-        std::vector<SwapChainFrame>& GetFrames()
-        {
-            return m_Frames;
-        }
+
+        vk::RenderPass GetRenderPass();
+
     private:
         SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice& physicalDevice, vk::SurfaceKHR& surface);
 
-        void ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& formats);
-        void ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes);
+        void ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
+        void ChoosePresentMode(const std::vector<VkPresentModeKHR>& presentModes);
 
-        void ChooseExtent(uint32_t width, uint32_t height, vk::SurfaceCapabilitiesKHR &capabilities);
+        void ChooseExtent(VkSurfaceCapabilitiesKHR &capabilities);
 
         void CreateCommandBuffers();
         void CreateSwapChain();
@@ -83,11 +82,11 @@ namespace BeeEngine::Internal
         VkResult SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
     private:
-        vk::SurfaceFormatKHR m_SurfaceFormat;
-        vk::PresentModeKHR m_PresentMode;
-        vk::Extent2D m_Extent;
+        VkSurfaceFormatKHR m_SurfaceFormat;
+        VkPresentModeKHR m_PresentMode;
+        VkExtent2D m_Extent;
 
-        vk::RenderPass m_RenderPass;
+        VkRenderPass m_RenderPass;
         VkSwapchainKHR m_SwapChain;
         //std::vector<SwapChainFrame> m_Frames;
         uint32_t m_MaxFrames;
@@ -96,16 +95,20 @@ namespace BeeEngine::Internal
         SwapChainSupportDetails m_SwapChainSupportDetails;
         VulkanGraphicsDevice& m_GraphicsDevice;
 
-        std::vector<vk::Semaphore> m_ImageAvailableSemaphores;
-        std::vector<vk::Semaphore> m_RenderFinishedSemaphores;
+        std::vector<VkSemaphore> m_ImageAvailableSemaphores;
+        std::vector<VkSemaphore> m_RenderFinishedSemaphores;
         std::vector<VkFence> m_InFlightFences;
         std::vector<VkFence> m_ImagesInFlight;
 
-        std::vector<vk::Image> m_DepthImages;
-        std::vector<vk::DeviceMemory> m_DepthImageMemorys;
-        std::vector<vk::ImageView> m_DepthImageViews;
-        std::vector<vk::Image> m_SwapChainImages;
-        std::vector<vk::ImageView> m_SwapChainImageViews;
-        std::vector<vk::Framebuffer> m_SwapChainFramebuffers;
+        std::vector<VkImage> m_DepthImages;
+        std::vector<VkDeviceMemory> m_DepthImageMemorys;
+        std::vector<VkImageView> m_DepthImageViews;
+        std::vector<VkImage> m_SwapChainImages;
+        std::vector<VkImageView> m_SwapChainImageViews;
+        std::vector<VkFramebuffer> m_SwapChainFramebuffers;
+
+        VkFormat FindDepthFormat();
+
+        size_t ImageCount();
     };
 }

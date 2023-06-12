@@ -58,6 +58,11 @@ namespace BeeEngine::Internal
             return *m_Pipeline;
         }
 
+        const SwapChainSupportDetails& GetSwapChainSupportDetails()
+        {
+            return m_SwapChainSupportDetails;
+        }
+
         VulkanCommandPool &GetCommandPool()
         {
             return *m_CommandPool;
@@ -65,32 +70,34 @@ namespace BeeEngine::Internal
 
         // Buffer Helper Functions
         void CreateBuffer(
-                vk::DeviceSize size,
-                vk::BufferUsageFlags usage,
-                vk::MemoryPropertyFlags properties,
-                vk::Buffer &buffer,
-                vk::DeviceMemory &bufferMemory);
+                VkDeviceSize size,
+                VkBufferUsageFlags usage,
+                VkMemoryPropertyFlags properties,
+                VkBuffer &buffer,
+                VkDeviceMemory &bufferMemory);
 
-        vk::CommandBuffer BeginSingleTimeCommands();
+        VkCommandBuffer BeginSingleTimeCommands();
 
-        void EndSingleTimeCommands(vk::CommandBuffer commandBuffer);
+        void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
 
-        void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
+        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, vk::DeviceSize size);
 
         void CopyBufferToImage(
-                vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height, uint32_t layerCount);
+                VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
 
         void CreateImageWithInfo(
-                const vk::ImageCreateInfo &imageInfo,
-                vk::MemoryPropertyFlags properties,
-                vk::Image &image,
-                vk::DeviceMemory &imageMemory);
+                const VkImageCreateInfo &imageInfo,
+                VkMemoryPropertyFlags properties,
+                VkImage &image,
+                VkDeviceMemory &imageMemory);
+        VkFormat FindSupportedFormat(
+                const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
         vk::PhysicalDeviceProperties properties;
 
     private:
 
-        uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
+        uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         //
 
 
@@ -103,6 +110,9 @@ namespace BeeEngine::Internal
             }
         };
         QueueFamilyIndices m_QueueFamilyIndices;
+        SwapChainSupportDetails m_SwapChainSupportDetails;
+
+        void CreateSwapChainSupportDetails();
 
         Ref<VulkanSurface> m_Surface;
         DeviceHandle m_DeviceHandle;

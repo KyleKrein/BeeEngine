@@ -58,7 +58,7 @@ namespace BeeEngine::Internal
             framebufferInfo.layers = 1;
             try
             {
-                frame.Framebuffer = {device, device.createFramebuffer(framebufferInfo)};
+                //frame.Framebuffer = {device, device.createFramebuffer(framebufferInfo)};
             }
             catch (vk::SystemError& e)
             {

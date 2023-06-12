@@ -80,35 +80,35 @@ namespace BeeEngine
         init_info.Allocator = nullptr;//g_Allocator;
         init_info.CheckVkResultFn = check_vk_result;
 
-        vk::AttachmentDescription attachment = {};
+        VkAttachmentDescription attachment = {};
         attachment.format = graphicsDevice.GetSwapChain().GetFormat();
-        attachment.samples = vk::SampleCountFlagBits::e1;
-        attachment.loadOp = vk::AttachmentLoadOp::eLoad;
-        attachment.storeOp = vk::AttachmentStoreOp::eStore;
-        attachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-        attachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-        attachment.initialLayout = vk::ImageLayout::eColorAttachmentOptimal;
-        attachment.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+        attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.initialLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
+        attachment.finalLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
 
-        vk::AttachmentReference color_attachment = {};
+        VkAttachmentReference color_attachment = {};
         color_attachment.attachment = 0;
-        color_attachment.layout = vk::ImageLayout::eColorAttachmentOptimal;
+        color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        vk::SubpassDescription subpass = {};
-        subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &color_attachment;
 
-        vk::SubpassDependency dependency = {};
+        VkSubpassDependency dependency = {};
         dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         dependency.dstSubpass = 0;
-        dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        dependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-        dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-        vk::RenderPassCreateInfo render_pass_info = {};
-        render_pass_info.sType = vk::StructureType::eRenderPassCreateInfo;
+        VkRenderPassCreateInfo render_pass_info = {};
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         render_pass_info.attachmentCount = 1;
         render_pass_info.pAttachments = &attachment;
         render_pass_info.subpassCount = 1;

@@ -6,7 +6,6 @@
 #include "Core/Logging/Log.h"
 #include "Debug/DebugLayer.h"
 #include "Renderer/ShaderLibrary.h"
-#include "Platform/Vulkan/VulkanRendererAPI.h"
 
 namespace BeeEngine{
     OSPlatform Application::s_OSPlatform = OSPlatform::None;

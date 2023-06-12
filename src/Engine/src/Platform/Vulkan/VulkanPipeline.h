@@ -25,7 +25,6 @@ namespace BeeEngine::Internal
     struct PipelineConfigInfo {
         vk::Viewport viewport;
         vk::Rect2D scissor;
-        vk::PipelineViewportStateCreateInfo viewportInfo;
         vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
         vk::PipelineRasterizationStateCreateInfo rasterizationInfo;
         vk::PipelineMultisampleStateCreateInfo multisampleInfo;

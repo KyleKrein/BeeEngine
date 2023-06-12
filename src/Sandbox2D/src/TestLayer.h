@@ -19,6 +19,9 @@ public:
     void OnUpdate() override;
     void OnGUIRendering() override;
     void OnEvent(BeeEngine::EventDispatcher& e) override;
+
+    TestLayer(const TestLayer& other) = delete;
+    TestLayer& operator=(const TestLayer& other) = delete;
     private:
     BeeEngine::OrthographicCameraController m_CameraController;
     BeeEngine::Internal::FpsCounter m_FpsCounter {};
@@ -27,5 +30,11 @@ public:
     double lastTime;
     double numFrames;
 
-    BeeEngine::Internal::VulkanPipeline m_Pipeline;
+    BeeEngine::Scope<BeeEngine::Internal::VulkanPipeline> m_Pipeline;
+    VkPipelineLayout m_PipelineLayout;
+    std::vector<VkCommandBuffer> m_CommandBuffers;
+    void CreatePipelineLayout();
+    void CreatePipeline();
+    void CreateCommandBuffers();
+    void DrawFrame();
 };

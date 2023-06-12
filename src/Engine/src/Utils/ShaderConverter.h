@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/TypeDefines.h"
 #include <vector>
 #include "glslang/Include/ResourceLimits.h"
 
