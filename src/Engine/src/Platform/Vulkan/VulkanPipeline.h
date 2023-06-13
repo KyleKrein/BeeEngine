@@ -64,6 +64,8 @@ namespace BeeEngine::Internal
         static PipelineConfigInfo DefaultPipelineConfigInfo(uint32_t width, uint32_t height);
 
 
+        void Bind(VkCommandBuffer commandBuffer);
+
 
     private:
         static std::vector<char> readFile(const std::string& filepath);

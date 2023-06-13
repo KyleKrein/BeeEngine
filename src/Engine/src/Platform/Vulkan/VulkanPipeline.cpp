@@ -185,8 +185,8 @@ namespace BeeEngine::Internal
         auto vertexCode = readFile(vertFilepath);
         auto fragmentCode = readFile(fragFilepath);
 
-        auto vertCompiled = CompileShaderToSPRIV(vertexCode, vertFilepath.substr(0, vertFilepath.find_last_of("/\\") + 1) + "vert.spv", ShaderStage::Vertex);
-        auto fragCompiled = CompileShaderToSPRIV(fragmentCode, fragFilepath.substr(0, fragFilepath.find_last_of("/\\") + 1) + "frag.spv", ShaderStage::Fragment);
+        auto vertCompiled = CompileShaderToSPRIV(vertexCode, vertFilepath + ".spv", ShaderStage::Vertex);
+        auto fragCompiled = CompileShaderToSPRIV(fragmentCode, fragFilepath + ".spv", ShaderStage::Fragment);
 
         CreateShaderModule(vertCompiled, m_VertexShaderModule);
         CreateShaderModule(fragCompiled, m_FragmentShaderModule);
@@ -341,5 +341,10 @@ namespace BeeEngine::Internal
         BeeCoreTrace("Compiled shader to SPIRV");
         File::WriteBinaryFile(newFilepath, {(std::byte*)result.data(), result.size() * sizeof(uint32_t)});
         return result;
+    }
+
+    void VulkanPipeline::Bind(VkCommandBuffer commandBuffer)
+    {
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
     }
 }

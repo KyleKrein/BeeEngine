@@ -16,3 +16,4 @@ target_include_directories(Sandbox2D
 target_link_libraries(Sandbox2D BeeEngine)
 
 file(COPY Assets DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
+file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})

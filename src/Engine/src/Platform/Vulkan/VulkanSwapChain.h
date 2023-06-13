@@ -60,6 +60,14 @@ namespace BeeEngine::Internal
         }
 
         vk::RenderPass GetRenderPass();
+        size_t ImageCount();
+        vk::Framebuffer GetFrameBuffer(size_t index)
+        {
+            return m_SwapChainFramebuffers[index];
+        }
+
+        VkResult AcquireNextImage(uint32_t *imageIndex);
+        VkResult SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
     private:
         SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice& physicalDevice, vk::SurfaceKHR& surface);
@@ -77,9 +85,6 @@ namespace BeeEngine::Internal
         void CreateFramebuffers();
         void CreateSyncObjects();
         void Destroy();
-
-        VkResult AcquireNextImage(uint32_t *imageIndex);
-        VkResult SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
     private:
         VkSurfaceFormatKHR m_SurfaceFormat;
@@ -108,7 +113,5 @@ namespace BeeEngine::Internal
         std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 
         VkFormat FindDepthFormat();
-
-        size_t ImageCount();
     };
 }

@@ -30,7 +30,7 @@ namespace BeeEngine::Internal
         */
          //m_Pipeline = CreateRef<VulkanPipeline>(m_Device, pipelineInBundle);
         //VulkanFramebuffer::CreateFramebuffers(m_Device, m_Pipeline->GetRenderPass().GetHandle(), m_SwapChain->GetExtent(), m_SwapChain->GetFrames());
-        //m_CommandPool = CreateRef<VulkanCommandPool>(m_Device, m_QueueFamilyIndices);
+        m_CommandPool = CreateRef<VulkanCommandPool>(m_Device, m_QueueFamilyIndices);
         //m_CommandPool->CreateCommandBuffers(m_SwapChain->GetFrames());
         //m_MainCommandBuffer = m_CommandPool->CreateCommandBuffer();
         /*

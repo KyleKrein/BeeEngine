@@ -233,6 +233,8 @@ namespace BeeEngine::Internal
     void VulkanSwapChain::CreateSwapChain()
     {
         SwapChainSupportDetails swapChainSupport = m_GraphicsDevice.GetSwapChainSupportDetails();
+        
+        m_MaxFrames = swapChainSupport.capabilities.maxImageCount;
 
         ChooseSurfaceFormat(swapChainSupport.formats);
         ChoosePresentMode(swapChainSupport.presentModes);

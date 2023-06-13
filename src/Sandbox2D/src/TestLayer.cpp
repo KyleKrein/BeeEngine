@@ -56,6 +56,8 @@ void TestLayer::OnUpdate()
     }
 
     ++numFrames;
+
+    DrawFrame();
     //BeeEngine::Renderer2D::EndScene();
     //m_FpsCounter.Update();
 }
@@ -96,17 +98,70 @@ void TestLayer::CreatePipeline()
     pipelineConfig.renderPass = device.GetSwapChain().GetRenderPass();
     pipelineConfig.pipelineLayout = m_PipelineLayout;
     m_Pipeline = BeeEngine::CreateScope<BeeEngine::Internal::VulkanPipeline>((*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice()).GetDevice(),
-                                                                             "Shaders/test.vert","Shaders/test.frag", pipelineConfig);
+                                                                             "Shaders/VulkanTestShader.vert","Shaders/VulkanTestShader.frag", pipelineConfig);
 }
 
 void TestLayer::CreateCommandBuffers()
 {
+    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
+    m_CommandBuffers.resize(device.GetSwapChain().ImageCount());
 
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = device.GetCommandPool().GetHandle();
+    allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
+
+    if(vkAllocateCommandBuffers(device.GetDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
+    {
+        BeeError("Failed to allocate command buffers");
+    }
+
+    for(int i = 0; i < m_CommandBuffers.size(); ++i)
+    {
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+        if(vkBeginCommandBuffer(m_CommandBuffers[i], &beginInfo) != VK_SUCCESS)
+        {
+            BeeError("Failed to begin recording command buffer");
+        }
+
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = device.GetSwapChain().GetRenderPass();
+        renderPassInfo.framebuffer = device.GetSwapChain().GetFrameBuffer(i);
+
+        renderPassInfo.renderArea.offset = {0,0};
+        renderPassInfo.renderArea.extent = device.GetSwapChain().GetExtent();
+
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
+        clearValues[1].depthStencil = {1.0f, 0};
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        m_Pipeline->Bind(m_CommandBuffers[i]);
+        vkCmdDraw(m_CommandBuffers[i], 3, 1, 0, 0);
+
+        vkCmdEndRenderPass(m_CommandBuffers[i]);
+
+        if(vkEndCommandBuffer(m_CommandBuffers[i]) != VK_SUCCESS)
+        {
+            BeeError("Failed to record command buffer");
+        }
+    }
 }
 
 void TestLayer::DrawFrame()
 {
+    uint32_t imageIndex;
+    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
+    auto result = device.GetSwapChain().AcquireNextImage(&imageIndex);
 
+    result = device.GetSwapChain().SubmitCommandBuffers(&m_CommandBuffers[imageIndex], &imageIndex);
 }
 
 
