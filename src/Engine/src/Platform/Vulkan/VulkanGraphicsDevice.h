@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "vk_mem_alloc.h"
 #include "Renderer/GraphicsDevice.h"
 #include "vulkan/vulkan.hpp"
 #include "VulkanInstance.h"
@@ -104,9 +105,11 @@ namespace BeeEngine::Internal
         struct DeviceHandle
         {
             vk::Device device;
+            VmaAllocator allocator;
             ~DeviceHandle()
             {
-                    device.destroy();
+                vmaDestroyAllocator(allocator);
+                device.destroy();
             }
         };
         QueueFamilyIndices m_QueueFamilyIndices;
@@ -136,5 +139,6 @@ namespace BeeEngine::Internal
         QueueFamilyIndices FindQueueFamilies();
         void CreatePhysicalDevice(const VulkanInstance &instance);
         void CreateLogicalDevice();
+        void InitializeVulkanMemoryAllocator(VulkanInstance &instance);
     };
 }

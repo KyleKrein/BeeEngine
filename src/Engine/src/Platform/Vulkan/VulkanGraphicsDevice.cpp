@@ -1,7 +1,6 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
 #include "VulkanGraphicsDevice.h"
 #include "Renderer/QueueFamilyIndices.h"
 #include <set>
@@ -14,6 +13,7 @@ namespace BeeEngine::Internal
         m_Surface = instance.CreateSurface();
         CreatePhysicalDevice(instance);
         CreateLogicalDevice();
+        InitializeVulkanMemoryAllocator(instance);
         m_GraphicsQueue->Initialize(m_PhysicalDevice, m_Device);
         if(m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
         {
@@ -325,7 +325,6 @@ namespace BeeEngine::Internal
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
         vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory);
 
         m_Device.bindImageMemory(image, imageMemory, 0);
@@ -386,5 +385,20 @@ namespace BeeEngine::Internal
         }
 
         throw std::runtime_error("failed to find supported format!");
+    }
+
+    void VulkanGraphicsDevice::InitializeVulkanMemoryAllocator(VulkanInstance &instance)
+    {
+        VmaVulkanFunctions vulkanFunctions = {};
+        vulkanFunctions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+        vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
+
+        VmaAllocatorCreateInfo allocatorCreateInfo = {};
+        allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+        allocatorCreateInfo.physicalDevice = m_PhysicalDevice;
+        allocatorCreateInfo.device = m_Device;
+        allocatorCreateInfo.instance = instance.GetHandle();
+        allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
+        vmaCreateAllocator(&allocatorCreateInfo, &m_DeviceHandle.allocator);
     }
 }
