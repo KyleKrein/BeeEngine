@@ -8,6 +8,7 @@
 #include "BeeEngine.h"
 #include "Gui/ImGui/FpsCounter.h"
 #include "Platform/Vulkan/VulkanPipeline.h"
+#include "Platform/Vulkan/VulkanModel.h"
 
 class TestLayer: public BeeEngine::Layer
 {
@@ -31,10 +32,12 @@ public:
     double numFrames;
 
     BeeEngine::Scope<BeeEngine::Internal::VulkanPipeline> m_Pipeline;
+    BeeEngine::Scope<BeeEngine::Internal::VulkanModel> m_Model;
     VkPipelineLayout m_PipelineLayout;
     std::vector<VkCommandBuffer> m_CommandBuffers;
     void CreatePipelineLayout();
     void CreatePipeline();
     void CreateCommandBuffers();
     void DrawFrame();
+    void LoadModels();
 };

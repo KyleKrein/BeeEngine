@@ -17,6 +17,7 @@ void TestLayer::OnAttach()
     //BeeEngine::Renderer::SetClearColor(BeeEngine::Color4::CornflowerBlue);
     //m_CameraController = BeeEngine::OrthographicCameraController();
     //m_ForestTexture = BeeEngine::Texture2D::Create("Assets/Textures/forest.png");
+    LoadModels();
     CreatePipelineLayout();
     CreatePipeline();
     CreateCommandBuffers();
@@ -144,7 +145,8 @@ void TestLayer::CreateCommandBuffers()
 
         vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
         m_Pipeline->Bind(m_CommandBuffers[i]);
-        vkCmdDraw(m_CommandBuffers[i], 3, 1, 0, 0);
+        m_Model->Bind(m_CommandBuffers[i]);
+        m_Model->Draw(m_CommandBuffers[i]);
 
         vkCmdEndRenderPass(m_CommandBuffers[i]);
 
@@ -162,6 +164,19 @@ void TestLayer::DrawFrame()
     auto result = device.GetSwapChain().AcquireNextImage(&imageIndex);
 
     result = device.GetSwapChain().SubmitCommandBuffers(&m_CommandBuffers[imageIndex], &imageIndex);
+}
+
+void TestLayer::LoadModels()
+{
+    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
+
+    std::vector<BeeEngine::Internal::VulkanModel::Vertex> vertices = {
+            {{0.0f, -0.5f}},
+            {{0.5f, 0.5f}},
+            {{-0.5f, 0.5f}}
+    };
+
+    m_Model = BeeEngine::CreateScope<BeeEngine::Internal::VulkanModel>(device, vertices);
 }
 
 

@@ -6,6 +6,7 @@
 #include "VulkanPipeline.h"
 #include "Utils/File.h"
 #include <fstream>
+#include "VulkanModel.h"
 
 namespace BeeEngine::Internal
 {
@@ -207,12 +208,14 @@ namespace BeeEngine::Internal
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
+        auto bindingDescription = VulkanModel::Vertex::GetBindingDescriptions();
+        auto attributeDescriptions = VulkanModel::Vertex::GetAttributeDescriptions();
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = vk::StructureType::ePipelineVertexInputStateCreateInfo;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-        vertexInputInfo.pVertexBindingDescriptions = nullptr;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescription.size());
+        vertexInputInfo.pVertexAttributeDescriptions = reinterpret_cast<const vk::VertexInputAttributeDescription *>(attributeDescriptions.data());
+        vertexInputInfo.pVertexBindingDescriptions = reinterpret_cast<const vk::VertexInputBindingDescription *>(bindingDescription.data());
 
         vk::PipelineViewportStateCreateInfo viewportInfo{};
         viewportInfo.sType = vk::StructureType::ePipelineViewportStateCreateInfo;

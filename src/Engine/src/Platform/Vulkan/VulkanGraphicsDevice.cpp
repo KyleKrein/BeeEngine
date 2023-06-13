@@ -223,6 +223,13 @@ namespace BeeEngine::Internal
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
+        VmaAllocationCreateInfo allocationInfo{};
+        allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        allocationInfo.requiredFlags = properties;
+
+        VmaAllocation allocation;
+        //vmaCreateBuffer(m_DeviceHandle.allocator, &bufferInfo, &allocationInfo, &buffer, &allocation, nullptr);
+
         vkCreateBuffer(m_Device, &bufferInfo, nullptr, &buffer);
 
         vk::MemoryRequirements memRequirements;
@@ -232,6 +239,12 @@ namespace BeeEngine::Internal
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+        VmaAllocationCreateInfo allocCreateInfo{};
+        allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        allocCreateInfo.requiredFlags = properties;
+
+        //vmaAllocateMemory(m_DeviceHandle.allocator, &memRequirements, &allocCreateInfo, &allocation, &bufferMemory, nullptr);
 
         vkAllocateMemory(m_Device, &allocInfo, nullptr, &bufferMemory);
 

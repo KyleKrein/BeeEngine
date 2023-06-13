@@ -4,8 +4,6 @@
 
 #pragma once
 
-//#include "VulkanRenderPass.h"
-//#include "VulkanShaderModule.h"
 #include "Core/TypeDefines.h"
 #include "Renderer/Shader.h"
 #include "vulkan/vulkan.hpp"
