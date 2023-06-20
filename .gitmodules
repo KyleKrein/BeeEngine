@@ -38,3 +38,6 @@
 [submodule "src/Engine/vendor/glslang"]
 	path = src/Engine/vendor/glslang
 	url = https://github.com/KhronosGroup/glslang.git
+[submodule "src/Engine/vendor/cppfront2"]
+	path = src/Engine/vendor/cppfront2
+	url = https://github.com/hsutter/cppfront.git
