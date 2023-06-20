@@ -1,7 +1,0 @@
-
-
-    TestFunc: (a: i32, b: i32) -> i32 =
-    {
-        std::cout << "TestFunc called" << std::endl;
-        return a + b;
-    }

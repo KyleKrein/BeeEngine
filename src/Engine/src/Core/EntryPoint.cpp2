@@ -3,7 +3,6 @@
 //
 #include "EntryPoint.h"
 #include "Debug/Instrumentor.h"
-#include "../TestCpp2.h2"
 
 //AllocatorInitializer AllocatorInitializer::instance = AllocatorInitializer();
 
@@ -11,7 +10,6 @@ int main(int argc, char** argv)
 {
     BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
     BeeEngine::InitEngine();
-    BeeCoreTrace("Check cpp2: {0}", TestFunc(1, 2));
     BeeEngine::Application* application = BeeEngine::CreateApplication();
     BEE_DEBUG_END_PROFILING_SESSION();
     application->Run();
