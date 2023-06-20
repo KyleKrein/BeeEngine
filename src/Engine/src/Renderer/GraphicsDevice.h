@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Core/TypeDefines.h"
 
 namespace BeeEngine
 {
@@ -14,6 +15,8 @@ namespace BeeEngine
 
         GraphicsDevice(const GraphicsDevice&) = delete;
         GraphicsDevice& operator=(const GraphicsDevice&) = delete;
+
+        virtual void WindowResized(uint32_t width, uint32_t height) = 0;
 
         /*[[nodiscard]] virtual Ref<Surface> GetSurface() const = 0;
         [[nodiscard]] virtual Ref<CommandPool> GetCommandPool() const = 0;

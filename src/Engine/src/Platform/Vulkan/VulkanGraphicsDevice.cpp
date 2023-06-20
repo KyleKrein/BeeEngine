@@ -414,4 +414,9 @@ namespace BeeEngine::Internal
         allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
         vmaCreateAllocator(&allocatorCreateInfo, &m_DeviceHandle.allocator);
     }
+
+    void VulkanGraphicsDevice::WindowResized(uint32_t width, uint32_t height)
+    {
+        m_SwapChain = CreateRef<VulkanSwapChain>(*this, width, height);
+    }
 }

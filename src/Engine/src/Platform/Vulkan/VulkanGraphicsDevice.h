@@ -25,6 +25,8 @@ namespace BeeEngine::Internal
         VulkanGraphicsDevice(VulkanInstance& instance);
         ~VulkanGraphicsDevice() override;
 
+        void WindowResized(uint32_t width, uint32_t height) override;
+
         vk::Device &GetDevice()
         {
             return m_Device;

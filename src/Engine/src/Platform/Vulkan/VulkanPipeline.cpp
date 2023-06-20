@@ -150,6 +150,7 @@ namespace BeeEngine::Internal
     {
         //m_Device.destroyPipeline(m_Pipeline);
         //m_Device.destroyPipelineLayout(m_PipelineLayout);
+        vkDeviceWaitIdle(m_Device);
         m_Device.destroyShaderModule(m_VertexShaderModule);
         m_Device.destroyShaderModule(m_FragmentShaderModule);
         m_Device.destroyPipeline(m_Pipeline);

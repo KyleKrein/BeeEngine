@@ -117,44 +117,6 @@ void TestLayer::CreateCommandBuffers()
     {
         BeeError("Failed to allocate command buffers");
     }
-
-    for(int i = 0; i < m_CommandBuffers.size(); ++i)
-    {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if(vkBeginCommandBuffer(m_CommandBuffers[i], &beginInfo) != VK_SUCCESS)
-        {
-            BeeError("Failed to begin recording command buffer");
-        }
-
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = device.GetSwapChain().GetRenderPass();
-        renderPassInfo.framebuffer = device.GetSwapChain().GetFrameBuffer(i);
-
-        renderPassInfo.renderArea.offset = {0,0};
-        renderPassInfo.renderArea.extent = device.GetSwapChain().GetExtent();
-
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
-        clearValues[1].depthStencil = {1.0f, 0};
-
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-        m_Pipeline->Bind(m_CommandBuffers[i]);
-        m_Model->Bind(m_CommandBuffers[i]);
-        m_Model->Draw(m_CommandBuffers[i]);
-
-        vkCmdEndRenderPass(m_CommandBuffers[i]);
-
-        if(vkEndCommandBuffer(m_CommandBuffers[i]) != VK_SUCCESS)
-        {
-            BeeError("Failed to record command buffer");
-        }
-    }
 }
 
 void TestLayer::DrawFrame()
@@ -162,8 +124,34 @@ void TestLayer::DrawFrame()
     uint32_t imageIndex;
     auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
     auto result = device.GetSwapChain().AcquireNextImage(&imageIndex);
-
+    if(result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        BeeInfo("Recreating swap chain");
+        int width = 0, height = 0;
+        while (width == 0 || height == 0)
+        {
+            glfwGetFramebufferSize((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), &width, &height);
+            glfwWaitEvents();
+        }
+        device.WindowResized(width, height);
+        CreatePipeline();
+        return;
+    }
+    RecordCommandBuffers(imageIndex);
     result = device.GetSwapChain().SubmitCommandBuffers(&m_CommandBuffers[imageIndex], &imageIndex);
+    if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+    {
+        BeeInfo("Recreating swap chain");
+        int width = 0, height = 0;
+        while (width == 0 || height == 0)
+        {
+            glfwGetFramebufferSize((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), &width, &height);
+            glfwWaitEvents();
+        }
+        device.WindowResized(width, height);
+        CreatePipeline();
+        return;
+    }
 }
 
 void TestLayer::LoadModels()
@@ -171,12 +159,53 @@ void TestLayer::LoadModels()
     auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
 
     std::vector<BeeEngine::Internal::VulkanModel::Vertex> vertices = {
-            {{0.0f, -0.5f}},
-            {{0.5f, 0.5f}},
-            {{-0.5f, 0.5f}}
+            {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+            {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
     };
 
     m_Model = BeeEngine::CreateScope<BeeEngine::Internal::VulkanModel>(device, vertices);
+}
+
+void TestLayer::RecordCommandBuffers(uint32_t imageIndex)
+{
+    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+    if(vkBeginCommandBuffer(m_CommandBuffers[imageIndex], &beginInfo) != VK_SUCCESS)
+    {
+        BeeError("Failed to begin recording command buffer");
+    }
+
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = device.GetSwapChain().GetRenderPass();
+    renderPassInfo.framebuffer = device.GetSwapChain().GetFrameBuffer(imageIndex);
+
+    renderPassInfo.renderArea.offset = {0,0};
+    renderPassInfo.renderArea.extent = device.GetSwapChain().GetExtent();
+
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
+    clearValues[1].depthStencil = {1.0f, 0};
+
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
+
+    vkQueueWaitIdle(device.GetGraphicsQueue().GetQueue());
+    vkCmdBeginRenderPass(m_CommandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    m_Pipeline->Bind(m_CommandBuffers[imageIndex]);
+    m_Model->Bind(m_CommandBuffers[imageIndex]);
+    m_Model->Draw(m_CommandBuffers[imageIndex]);
+
+    vkCmdEndRenderPass(m_CommandBuffers[imageIndex]);
+
+    if(vkEndCommandBuffer(m_CommandBuffers[imageIndex]) != VK_SUCCESS)
+    {
+        BeeError("Failed to record command buffer");
+    }
 }
 
 

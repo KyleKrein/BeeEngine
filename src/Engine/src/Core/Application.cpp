@@ -65,6 +65,7 @@ namespace BeeEngine{
 
     void Application::Dispatch(EventDispatcher &dispatcher)
     {
+        DISPATCH_EVENT(dispatcher, WindowResizeEvent, EventType::WindowResize, OnWindowResize);
         //dispatcher.Dispatch<WindowCloseEvent>(OnWindowClose);
         //dispatcher.Dispatch<WindowCloseEvent>(reinterpret_cast<bool (*)(WindowCloseEvent&)>(OnWindowClose));
     }
@@ -86,12 +87,12 @@ namespace BeeEngine{
 
     Ref<Shader> Application::LoadShader(std::string_view filepath) const
     {
-        ShaderLibrary::GetInstance().Load(filepath);
+        return ShaderLibrary::GetInstance().Load(filepath);
     }
 
     Ref<Shader> Application::LoadShader(std::string_view name, std::string_view filepath) const
     {
-        ShaderLibrary::GetInstance().Load(name, filepath);
+        return ShaderLibrary::GetInstance().Load(name, filepath);
     }
 
     Ref<Shader> Application::GetShader(std::string_view name) const
@@ -124,6 +125,17 @@ namespace BeeEngine{
                 return;
         }
 
+    }
+
+    bool Application::OnWindowResize(WindowResizeEvent *event)
+    {
+        if(event->GetWidth() == 0 || event->GetHeight() == 0)
+        {
+            m_IsMinimized = true;
+            return false;
+        }
+        m_IsMinimized = false;
+        return false;
     }
 }
 

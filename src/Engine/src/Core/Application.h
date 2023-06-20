@@ -87,6 +87,7 @@ namespace BeeEngine{
         void Dispatch(EventDispatcher &dispatcher);
         static bool OnWindowClose(WindowCloseEvent& event);
         void CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept;
+        bool OnWindowResize(WindowResizeEvent* event);
     private:
         static OSPlatform s_OSPlatform;
         static Application* s_Instance;

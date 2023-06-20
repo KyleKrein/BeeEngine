@@ -57,6 +57,7 @@ namespace BeeEngine
         static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
         static void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
         static void FrameBufferSizeCallback(GLFWwindow* window, int width, int height);
+        static void WindowSizeCallback(GLFWwindow* window, int width, int height);
         static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
         static void WindowCloseCallback(GLFWwindow* window);
     private:

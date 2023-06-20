@@ -36,7 +36,7 @@ namespace BeeEngine::Internal
         ~VulkanSwapChain() override;
         VulkanSwapChain(const VulkanSwapChain& other) = delete;
         VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;
-        void Recreate();
+        void Recreate(uint32_t width, uint32_t height);
 
         VkSwapchainKHR& GetHandle()
         {
@@ -68,6 +68,8 @@ namespace BeeEngine::Internal
 
         VkResult AcquireNextImage(uint32_t *imageIndex);
         VkResult SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
+
+        bool ResizeInProgress();
 
     private:
         SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice& physicalDevice, vk::SurfaceKHR& surface);
@@ -111,6 +113,8 @@ namespace BeeEngine::Internal
         std::vector<VkImage> m_SwapChainImages;
         std::vector<VkImageView> m_SwapChainImageViews;
         std::vector<VkFramebuffer> m_SwapChainFramebuffers;
+
+        bool m_ResizeInProgress = false;
 
         VkFormat FindDepthFormat();
     };

@@ -46,12 +46,12 @@ namespace BeeEngine
 
     Ref<Shader> Layer::LoadShader(std::string_view filepath) const
     {
-        ShaderLibrary::GetInstance().Load(filepath);
+        return ShaderLibrary::GetInstance().Load(filepath);
     }
 
     Ref<Shader> Layer::LoadShader(std::string_view name, std::string_view filepath) const
     {
-        ShaderLibrary::GetInstance().Load(name, filepath);
+        return ShaderLibrary::GetInstance().Load(name, filepath);
     }
 
     Ref<Shader> Layer::GetShader(std::string_view name) const

@@ -9,7 +9,7 @@ struct EntityID
     constexpr EntityID()
     : ID(entt::null)
     {}
-    constexpr explicit EntityID(entt::entity id) : ID(id) {}
+    constexpr EntityID(entt::entity id) : ID(id) {}
     entt::entity ID;
     operator entt::entity() const { return ID; }
     operator entt::entity&() { return ID; }

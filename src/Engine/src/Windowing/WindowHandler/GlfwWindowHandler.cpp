@@ -41,11 +41,12 @@ namespace BeeEngine
         m_IsRunning = true;
 
         //SET CALLBACKS
+        glfwSetWindowSizeCallback(m_Window,WindowSizeCallback);
         glfwSetCharCallback(m_Window, CharCallback);
         glfwSetKeyCallback(m_Window, KeyCallback);
         glfwSetScrollCallback(m_Window, ScrollCallback);
         glfwSetCursorPosCallback(m_Window, CursorPosCallback);
-        glfwSetFramebufferSizeCallback(m_Window, FrameBufferSizeCallback);
+        //glfwSetFramebufferSizeCallback(m_Window, FrameBufferSizeCallback);
         glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
         glfwSetWindowCloseCallback(m_Window, WindowCloseCallback);
 
@@ -184,6 +185,15 @@ namespace BeeEngine
     void GLFWWindowHandler::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
     {
         auto event = CreateScope<MouseButtonPressedEvent>((MouseButton)button);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
+    }
+
+    void GLFWWindowHandler::WindowSizeCallback(GLFWwindow *window, int width, int height)
+    {
+        //((GLFWWindowHandler*)s_Instance)->GetGraphicsDevice().WindowResized(width, height);
+        ((GLFWWindowHandler*)s_Instance)->m_Width = width;
+        ((GLFWWindowHandler*)s_Instance)->m_Height = height;
+        auto event = CreateScope<WindowResizeEvent>(width, height);
         ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
     }
 

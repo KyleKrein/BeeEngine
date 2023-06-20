@@ -28,7 +28,7 @@ namespace BeeEngine::Internal
     {
         for(auto& format : formats)
         {
-            if(format.format == VK_FORMAT_B8G8R8A8_UNORM
+            if(format.format == VK_FORMAT_B8G8R8A8_SRGB
             && format.colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR)
             {
                 m_SurfaceFormat = format;
@@ -94,26 +94,9 @@ namespace BeeEngine::Internal
         Destroy();
     }
 
-    void VulkanSwapChain::Recreate()
-    {
-        /*int width = 0, height = 0;
-        glfwGetFramebufferSize((GLFWwindow*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
-        while (width == 0 || height == 0)
-        {
-            glfwGetFramebufferSize((GLFWwindow*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
-            glfwWaitEvents();
-        }
-        m_LogicalDevice.waitIdle();
-        Destroy();
-        Create(width, height);
-        CreateImageViews();
-        CreateFramebuffers();
-        CreateCommandBuffers();
-        CreateSyncronizationObjects();*/
-    }
-
     void VulkanSwapChain::Destroy()
     {
+        vkDeviceWaitIdle(m_GraphicsDevice.GetDevice());
         for (auto imageView : m_SwapChainImageViews) {
             m_GraphicsDevice.GetDevice().destroyImageView(imageView, nullptr);
         }
@@ -471,5 +454,28 @@ namespace BeeEngine::Internal
     vk::RenderPass VulkanSwapChain::GetRenderPass()
     {
         return m_RenderPass;
+    }
+
+    void VulkanSwapChain::Recreate(uint32_t width, uint32_t height)
+    {
+        m_ResizeInProgress = true;
+        if(width == 0 || height == 0)
+            return;
+        vkDeviceWaitIdle(m_GraphicsDevice.GetDevice());
+        Destroy();
+        m_Extent = {width, height};
+        CreateSwapChain();
+        CreateImageViews();
+        CreateRenderPass();
+        CreateDepthResources();
+        CreateFramebuffers();
+        //CreateCommandBuffers();
+        CreateSyncObjects();
+        m_ResizeInProgress = false;
+    }
+
+    bool VulkanSwapChain::ResizeInProgress()
+    {
+        return m_ResizeInProgress;
     }
 }

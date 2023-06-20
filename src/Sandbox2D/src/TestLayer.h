@@ -37,6 +37,7 @@ public:
     std::vector<VkCommandBuffer> m_CommandBuffers;
     void CreatePipelineLayout();
     void CreatePipeline();
+    void RecordCommandBuffers(uint32_t imageIndex);
     void CreateCommandBuffers();
     void DrawFrame();
     void LoadModels();

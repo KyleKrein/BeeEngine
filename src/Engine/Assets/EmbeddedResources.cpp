@@ -6,7 +6,7 @@
 
 #include "incbin.h"
 
-#define EmbedResource(name, path) extern "C" {INCBIN(name, ASSETS_PATH "" path); }
+#define EmbedResource(name, path) extern "C" {INCBIN(name, ASSETS_PATH path); }
 
 EmbedResource(OpenSansRegular, "OpenSans/static/OpenSans-Regular.ttf");
 EmbedResource(OpenSansBold, "OpenSans/static/OpenSans-Bold.ttf");
