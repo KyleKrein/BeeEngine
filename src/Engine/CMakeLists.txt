@@ -31,6 +31,8 @@ add_library(BeeEngine STATIC ${SOURCE_FILES} ${SOURCE_FILES_CPP2})
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
+set(CPPFRONT_FLAGS -a)
+
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/glad)
 add_subdirectory(vendor/spdlog)
