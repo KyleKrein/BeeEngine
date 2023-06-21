@@ -37,18 +37,38 @@ namespace Bee
         }
         constexpr T* operator->() const
         {
+            if consteval
+            {
+                static_assert(m_Ptr != nullptr, "Pointer cannot be null");
+            }
+            BeeExpects(m_Ptr != nullptr);
             return m_Ptr;
         }
         constexpr T& operator*() const
         {
+            if consteval
+            {
+                static_assert(m_Ptr != nullptr, "Pointer cannot be null");
+            }
+            BeeExpects(m_Ptr != nullptr);
             return *m_Ptr;
         }
         constexpr operator T*() const
         {
+            if consteval
+            {
+                static_assert(m_Ptr != nullptr, "Pointer cannot be null");
+            }
+            BeeExpects(m_Ptr != nullptr);
             return m_Ptr;
         }
         constexpr operator T&() const
         {
+            if consteval
+            {
+                static_assert(m_Ptr != nullptr, "Pointer cannot be null");
+            }
+            BeeExpects(m_Ptr != nullptr);
             return *m_Ptr;
         }
         operator bool() const = delete;
