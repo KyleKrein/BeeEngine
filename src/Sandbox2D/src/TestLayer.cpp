@@ -20,7 +20,6 @@ void TestLayer::OnAttach()
     LoadModels();
     CreatePipelineLayout();
     CreatePipeline();
-    CreateCommandBuffers();
 }
 
 void TestLayer::OnDetach()
@@ -58,7 +57,15 @@ void TestLayer::OnUpdate()
 
     ++numFrames;
 
-    DrawFrame();
+    if(auto commandBuffer = m_RendererAPI.BeginFrame())
+    {
+        m_RendererAPI.BeginSwapchainRenderPass(commandBuffer);
+        m_Pipeline->Bind(commandBuffer);
+        m_Model->Bind(commandBuffer);
+        m_Model->Draw(commandBuffer);
+        m_RendererAPI.EndSwapchainRenderPass(commandBuffer);
+        m_RendererAPI.EndFrame();
+    }
     //BeeEngine::Renderer2D::EndScene();
     //m_FpsCounter.Update();
 }
@@ -74,7 +81,7 @@ static bool ResizeEvent(BeeEngine::WindowResizeEvent& event)
 }
 void TestLayer::OnEvent(BeeEngine::EventDispatcher &e)
 {
-    e.Dispatch<BeeEngine::WindowResizeEvent&, BeeEngine::EventType::WindowResize>(ResizeEvent);
+    //e.Dispatch<BeeEngine::WindowResizeEvent&, BeeEngine::EventType::WindowResize>(ResizeEvent);
     //m_CameraController.OnEvent(e);
 }
 
@@ -97,46 +104,10 @@ void TestLayer::CreatePipeline()
     auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
     BeeEngine::Internal::PipelineConfigInfo pipelineConfig{};
     BeeEngine::Internal::VulkanPipeline::DefaultPipelineConfigInfo(pipelineConfig);
-    pipelineConfig.renderPass = device.GetSwapChain().GetRenderPass();
+    pipelineConfig.renderPass = m_RendererAPI.GetSwapchainRenderPass();
     pipelineConfig.pipelineLayout = m_PipelineLayout;
     m_Pipeline = BeeEngine::CreateScope<BeeEngine::Internal::VulkanPipeline>((*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice()).GetDevice(),
                                                                              "Shaders/VulkanTestShader.vert","Shaders/VulkanTestShader.frag", pipelineConfig);
-}
-
-void TestLayer::CreateCommandBuffers()
-{
-    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
-    m_CommandBuffers.resize(device.GetSwapChain().ImageCount());
-
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = device.GetCommandPool().GetHandle();
-    allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
-
-    if(vkAllocateCommandBuffers(device.GetDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
-    {
-        BeeError("Failed to allocate command buffers");
-    }
-}
-
-void TestLayer::DrawFrame()
-{
-    uint32_t imageIndex;
-    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
-    auto result = device.GetSwapChain().AcquireNextImage(&imageIndex);
-    if(result == VK_ERROR_OUT_OF_DATE_KHR)
-    {
-        RecreateSwapchain();
-        return;
-    }
-    RecordCommandBuffers(imageIndex);
-    result = device.GetSwapChain().SubmitCommandBuffers(&m_CommandBuffers[imageIndex], &imageIndex);
-    if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
-    {
-        RecreateSwapchain();
-        return;
-    }
 }
 
 void TestLayer::LoadModels()
@@ -151,87 +122,3 @@ void TestLayer::LoadModels()
 
     m_Model = BeeEngine::CreateScope<BeeEngine::Internal::VulkanModel>(device, vertices);
 }
-
-void TestLayer::RecordCommandBuffers(uint32_t imageIndex)
-{
-    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
-
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-    if(vkBeginCommandBuffer(m_CommandBuffers[imageIndex], &beginInfo) != VK_SUCCESS)
-    {
-        BeeError("Failed to begin recording command buffer");
-    }
-
-    VkRenderPassBeginInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = device.GetSwapChain().GetRenderPass();
-    renderPassInfo.framebuffer = device.GetSwapChain().GetFrameBuffer(imageIndex);
-
-    renderPassInfo.renderArea.offset = {0,0};
-    renderPassInfo.renderArea.extent = device.GetSwapChain().GetExtent();
-
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
-    clearValues[1].depthStencil = {1.0f, 0};
-
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    renderPassInfo.pClearValues = clearValues.data();
-
-    vkQueueWaitIdle(device.GetGraphicsQueue().GetQueue());
-    vkCmdBeginRenderPass(m_CommandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = (float)device.GetSwapChain().GetExtent().width;
-    viewport.height = (float)device.GetSwapChain().GetExtent().height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    VkRect2D scissor{};
-    scissor.offset = {0,0};
-    scissor.extent = device.GetSwapChain().GetExtent();
-    vkCmdSetViewport(m_CommandBuffers[imageIndex], 0, 1, &viewport);
-    vkCmdSetScissor(m_CommandBuffers[imageIndex], 0, 1, &scissor);
-
-    m_Pipeline->Bind(m_CommandBuffers[imageIndex]);
-    m_Model->Bind(m_CommandBuffers[imageIndex]);
-    m_Model->Draw(m_CommandBuffers[imageIndex]);
-
-    vkCmdEndRenderPass(m_CommandBuffers[imageIndex]);
-
-    if(vkEndCommandBuffer(m_CommandBuffers[imageIndex]) != VK_SUCCESS)
-    {
-        BeeError("Failed to record command buffer");
-    }
-}
-
-void TestLayer::RecreateSwapchain()
-{
-    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
-    BeeInfo("Recreating swap chain");
-    int width = 0, height = 0;
-    while (width == 0 || height == 0)
-    {
-        glfwGetFramebufferSize((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), &width, &height);
-        glfwWaitEvents();
-    }
-
-    device.WindowResized(width, height);
-    if(device.GetSwapChain().ImageCount() != m_CommandBuffers.size())
-    {
-        FreeCommandBuffers();
-        CreateCommandBuffers();
-    }
-    //TODO: Check if the renderpass is compatible with the new swapchain
-    CreatePipeline();
-}
-
-void TestLayer::FreeCommandBuffers()
-{
-    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
-    vkFreeCommandBuffers(device.GetDevice(), device.GetCommandPool().GetHandle(), static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
-    m_CommandBuffers.clear();
-}
-
-
