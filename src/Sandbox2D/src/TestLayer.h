@@ -41,4 +41,6 @@ public:
     void CreateCommandBuffers();
     void DrawFrame();
     void LoadModels();
+    void RecreateSwapchain();
+    void FreeCommandBuffers();
 };

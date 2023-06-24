@@ -94,7 +94,7 @@ namespace BeeEngine::Internal
         VkExtent2D m_Extent;
 
         VkRenderPass m_RenderPass;
-        VkSwapchainKHR m_SwapChain;
+        VkSwapchainKHR m_SwapChain {VK_NULL_HANDLE};
         //std::vector<SwapChainFrame> m_Frames;
         uint32_t m_MaxFrames;
         uint32_t m_CurrentFrame = 0;

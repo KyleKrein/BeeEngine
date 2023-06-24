@@ -102,9 +102,9 @@ namespace BeeEngine::Internal
         }
         m_SwapChainImageViews.clear();
 
-        if (m_SwapChain != nullptr) {
+        if (m_SwapChain != VK_NULL_HANDLE) {
             vkDestroySwapchainKHR(m_GraphicsDevice.GetDevice(), m_SwapChain, nullptr);
-            m_SwapChain = nullptr;
+            //m_SwapChain = nullptr;
         }
 
         for (int i = 0; i < m_DepthImages.size(); i++) {
@@ -259,7 +259,7 @@ namespace BeeEngine::Internal
         createInfo.presentMode = m_PresentMode;
         createInfo.clipped = VK_TRUE;
 
-        createInfo.oldSwapchain = VK_NULL_HANDLE;
+        createInfo.oldSwapchain = m_SwapChain;
 
         if (vkCreateSwapchainKHR(m_GraphicsDevice.GetDevice(), &createInfo, nullptr, &m_SwapChain) != VK_SUCCESS) {
             throw std::runtime_error("failed to create swap chain!");

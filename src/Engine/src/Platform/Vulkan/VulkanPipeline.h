@@ -21,14 +21,19 @@ namespace BeeEngine::Internal
         vk::Device Device;
     };*/
     struct PipelineConfigInfo {
-        vk::Viewport viewport;
-        vk::Rect2D scissor;
+        PipelineConfigInfo() = default;
+        PipelineConfigInfo(const PipelineConfigInfo&) = delete;
+        PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
+
+        vk::PipelineViewportStateCreateInfo viewportInfo;
         vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
         vk::PipelineRasterizationStateCreateInfo rasterizationInfo;
         vk::PipelineMultisampleStateCreateInfo multisampleInfo;
         vk::PipelineColorBlendAttachmentState colorBlendAttachment;
         vk::PipelineColorBlendStateCreateInfo colorBlendInfo;
         vk::PipelineDepthStencilStateCreateInfo depthStencilInfo;
+        std::vector<vk::DynamicState> dynamicStateEnables;
+        vk::PipelineDynamicStateCreateInfo dynamicStateInfo;
         vk::PipelineLayout pipelineLayout = nullptr;
         vk::RenderPass renderPass = nullptr;
         uint32_t subpass = 0;
@@ -59,7 +64,7 @@ namespace BeeEngine::Internal
             return m_RenderPass;
         }
         */
-        static PipelineConfigInfo DefaultPipelineConfigInfo(uint32_t width, uint32_t height);
+        static void DefaultPipelineConfigInfo(PipelineConfigInfo& inOutConfigInfo);
 
 
         void Bind(VkCommandBuffer commandBuffer);

@@ -95,7 +95,8 @@ void TestLayer::CreatePipelineLayout()
 void TestLayer::CreatePipeline()
 {
     auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
-    auto pipelineConfig = BeeEngine::Internal::VulkanPipeline::DefaultPipelineConfigInfo(device.GetSwapChain().GetExtent().width, device.GetSwapChain().GetExtent().height);
+    BeeEngine::Internal::PipelineConfigInfo pipelineConfig{};
+    BeeEngine::Internal::VulkanPipeline::DefaultPipelineConfigInfo(pipelineConfig);
     pipelineConfig.renderPass = device.GetSwapChain().GetRenderPass();
     pipelineConfig.pipelineLayout = m_PipelineLayout;
     m_Pipeline = BeeEngine::CreateScope<BeeEngine::Internal::VulkanPipeline>((*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice()).GetDevice(),
@@ -126,30 +127,14 @@ void TestLayer::DrawFrame()
     auto result = device.GetSwapChain().AcquireNextImage(&imageIndex);
     if(result == VK_ERROR_OUT_OF_DATE_KHR)
     {
-        BeeInfo("Recreating swap chain");
-        int width = 0, height = 0;
-        while (width == 0 || height == 0)
-        {
-            glfwGetFramebufferSize((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), &width, &height);
-            glfwWaitEvents();
-        }
-        device.WindowResized(width, height);
-        CreatePipeline();
+        RecreateSwapchain();
         return;
     }
     RecordCommandBuffers(imageIndex);
     result = device.GetSwapChain().SubmitCommandBuffers(&m_CommandBuffers[imageIndex], &imageIndex);
     if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
-        BeeInfo("Recreating swap chain");
-        int width = 0, height = 0;
-        while (width == 0 || height == 0)
-        {
-            glfwGetFramebufferSize((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), &width, &height);
-            glfwWaitEvents();
-        }
-        device.WindowResized(width, height);
-        CreatePipeline();
+        RecreateSwapchain();
         return;
     }
 }
@@ -196,6 +181,19 @@ void TestLayer::RecordCommandBuffers(uint32_t imageIndex)
 
     vkQueueWaitIdle(device.GetGraphicsQueue().GetQueue());
     vkCmdBeginRenderPass(m_CommandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)device.GetSwapChain().GetExtent().width;
+    viewport.height = (float)device.GetSwapChain().GetExtent().height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    VkRect2D scissor{};
+    scissor.offset = {0,0};
+    scissor.extent = device.GetSwapChain().GetExtent();
+    vkCmdSetViewport(m_CommandBuffers[imageIndex], 0, 1, &viewport);
+    vkCmdSetScissor(m_CommandBuffers[imageIndex], 0, 1, &scissor);
+
     m_Pipeline->Bind(m_CommandBuffers[imageIndex]);
     m_Model->Bind(m_CommandBuffers[imageIndex]);
     m_Model->Draw(m_CommandBuffers[imageIndex]);
@@ -206,6 +204,33 @@ void TestLayer::RecordCommandBuffers(uint32_t imageIndex)
     {
         BeeError("Failed to record command buffer");
     }
+}
+
+void TestLayer::RecreateSwapchain()
+{
+    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
+    BeeInfo("Recreating swap chain");
+    int width = 0, height = 0;
+    while (width == 0 || height == 0)
+    {
+        glfwGetFramebufferSize((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), &width, &height);
+        glfwWaitEvents();
+    }
+    device.WindowResized(width, height);
+    if(device.GetSwapChain().ImageCount() != m_CommandBuffers.size())
+    {
+        FreeCommandBuffers();
+        CreateCommandBuffers();
+    }
+    //TODO: Check if the renderpass is compatible with the new swapchain
+    CreatePipeline();
+}
+
+void TestLayer::FreeCommandBuffers()
+{
+    auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
+    vkFreeCommandBuffers(device.GetDevice(), device.GetCommandPool().GetHandle(), static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
+    m_CommandBuffers.clear();
 }
 
 
