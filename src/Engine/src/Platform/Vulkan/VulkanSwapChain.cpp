@@ -12,8 +12,8 @@
 namespace BeeEngine::Internal
 {
 
-    VulkanSwapChain::VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height)
-    : m_GraphicsDevice(graphicsDevice), m_Extent(vk::Extent2D(width, height))
+    VulkanSwapChain::VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height, Scope<VulkanSwapChain> oldSwapChain)
+    : m_GraphicsDevice(graphicsDevice), m_Extent(vk::Extent2D(width, height)), m_SwapChain(oldSwapChain != nullptr ? oldSwapChain->GetHandle() : VK_NULL_HANDLE)
     {
         CreateSwapChain();
         CreateImageViews();
@@ -454,24 +454,6 @@ namespace BeeEngine::Internal
     vk::RenderPass VulkanSwapChain::GetRenderPass()
     {
         return m_RenderPass;
-    }
-
-    void VulkanSwapChain::Recreate(uint32_t width, uint32_t height)
-    {
-        m_ResizeInProgress = true;
-        if(width == 0 || height == 0)
-            return;
-        vkDeviceWaitIdle(m_GraphicsDevice.GetDevice());
-        Destroy();
-        m_Extent = {width, height};
-        CreateSwapChain();
-        CreateImageViews();
-        CreateRenderPass();
-        CreateDepthResources();
-        CreateFramebuffers();
-        //CreateCommandBuffers();
-        CreateSyncObjects();
-        m_ResizeInProgress = false;
     }
 
     bool VulkanSwapChain::ResizeInProgress()

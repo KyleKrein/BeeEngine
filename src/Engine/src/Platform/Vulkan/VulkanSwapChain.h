@@ -32,11 +32,10 @@ namespace BeeEngine::Internal
     class VulkanSwapChain: public SwapChain
     {
     public:
-        VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height);
+        VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height, Scope<VulkanSwapChain> oldSwapChain);
         ~VulkanSwapChain() override;
         VulkanSwapChain(const VulkanSwapChain& other) = delete;
         VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;
-        void Recreate(uint32_t width, uint32_t height);
 
         VkSwapchainKHR& GetHandle()
         {
@@ -94,7 +93,7 @@ namespace BeeEngine::Internal
         VkExtent2D m_Extent;
 
         VkRenderPass m_RenderPass;
-        VkSwapchainKHR m_SwapChain {VK_NULL_HANDLE};
+        VkSwapchainKHR m_SwapChain;
         //std::vector<SwapChainFrame> m_Frames;
         uint32_t m_MaxFrames;
         uint32_t m_CurrentFrame = 0;

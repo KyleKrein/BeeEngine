@@ -216,6 +216,7 @@ void TestLayer::RecreateSwapchain()
         glfwGetFramebufferSize((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), &width, &height);
         glfwWaitEvents();
     }
+
     device.WindowResized(width, height);
     if(device.GetSwapChain().ImageCount() != m_CommandBuffers.size())
     {

@@ -121,7 +121,7 @@ namespace BeeEngine::Internal
 
         Ref<VulkanSurface> m_Surface;
         DeviceHandle m_DeviceHandle;
-        Ref<VulkanSwapChain> m_SwapChain;
+        Scope<VulkanSwapChain> m_SwapChain;
         vk::Device m_Device;
         vk::PhysicalDevice m_PhysicalDevice;
         Ref<VulkanGraphicsQueue> m_GraphicsQueue;
