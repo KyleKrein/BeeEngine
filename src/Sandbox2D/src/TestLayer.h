@@ -28,15 +28,12 @@ public:
     BeeEngine::OrthographicCameraController m_CameraController;
     BeeEngine::Internal::FpsCounter m_FpsCounter {};
     BeeEngine::Ref<BeeEngine::Texture2D> m_ForestTexture;
-    double currentTime;
-    double lastTime;
-    double numFrames;
 
     BeeEngine::Scope<BeeEngine::Internal::VulkanPipeline> m_Pipeline;
     BeeEngine::Scope<BeeEngine::Internal::VulkanModel> m_Model;
     VkPipelineLayout m_PipelineLayout;
 
-    BeeEngine::Internal::VulkanRendererAPI m_RendererAPI;
+    BeeEngine::Internal::VulkanRendererAPI& m_RendererAPI;
     void CreatePipelineLayout();
     void CreatePipeline();
     void LoadModels();

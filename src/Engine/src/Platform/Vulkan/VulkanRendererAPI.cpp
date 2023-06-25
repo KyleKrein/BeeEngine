@@ -14,7 +14,7 @@ namespace BeeEngine::Internal
 
     VulkanRendererAPI::~VulkanRendererAPI()
     {
-        FreeCommandBuffers();
+        //FreeCommandBuffers();
     }
 
     void VulkanRendererAPI::CreateCommandBuffers()

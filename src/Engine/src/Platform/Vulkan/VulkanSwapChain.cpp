@@ -28,7 +28,7 @@ namespace BeeEngine::Internal
     {
         for(auto& format : formats)
         {
-            if(format.format == VK_FORMAT_B8G8R8A8_SRGB
+            if(format.format == VK_FORMAT_B8G8R8A8_UNORM// VK_FORMAT_B8G8R8A8_SRGB might be more correct, but it produces many errors
             && format.colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR)
             {
                 m_SurfaceFormat = format;

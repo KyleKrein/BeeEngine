@@ -68,6 +68,6 @@ namespace BeeEngine
 // Your real engine/app may not use them.
         void SetupVulkanWindow(ImGui_ImplVulkanH_Window* wd, VkSurfaceKHR surface, int width, int height);
 
-        void FrameRender(ImGui_ImplVulkanH_Window* wd, ImDrawData* draw_data);
+        void FrameRender(VkCommandBuffer commandBuffer, ImDrawData *draw_data);
     };
 }

@@ -6,6 +6,7 @@
 #include "Core/Logging/Log.h"
 #include "Debug/DebugLayer.h"
 #include "Renderer/ShaderLibrary.h"
+#include "Platform/Vulkan/VulkanRendererAPI.h"
 
 namespace BeeEngine{
     OSPlatform Application::s_OSPlatform = OSPlatform::None;
@@ -20,11 +21,15 @@ namespace BeeEngine{
             m_Window->ProcessEvents();
             m_EventQueue.Dispatch();
             m_Window->UpdateTime();
+            auto cmd = Internal::VulkanRendererAPI::GetInstance().BeginFrame();
+            Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
             m_Layers.Update();
             Update();
             //tempVulkanRendererAPI.Render();
             //m_Layers.FinishGuiRendering();
             m_Window->SwapBuffers();
+            Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
+            Internal::VulkanRendererAPI::GetInstance().EndFrame();
         }
     }
 

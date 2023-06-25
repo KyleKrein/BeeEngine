@@ -5,6 +5,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
+#include "Platform/Vulkan/VulkanRendererAPI.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "ImGuiControllerVulkan.h"
@@ -14,32 +15,43 @@ namespace BeeEngine
 
     void BeeEngine::ImGuiControllerVulkan::Initialize(uint16_t width, uint16_t height, uint64_t glfwwindow)
     {
-        return;
+        //return;
         window = reinterpret_cast<GLFWwindow *>(glfwwindow);
 
         Internal::VulkanGraphicsDevice& graphicsDevice = *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
 
-        ImVector<const char*> extensions;
-        uint32_t extensions_count = 0;
-        const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
-        for (uint32_t i = 0; i < extensions_count; i++)
-            extensions.push_back(glfw_extensions[i]);
-        SetupVulkan(extensions);
+        //1: create descriptor pool for IMGUI
+        // the size of the pool is very oversize, but it's copied from imgui demo itself.
+        VkDescriptorPoolSize pool_sizes[] =
+                {
+                        { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+                        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+                        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+                        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+                        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+                        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+                };
 
-        // Create Window Surface
-        VkSurfaceKHR surface;
-        VkResult err = glfwCreateWindowSurface(g_Instance, window, g_Allocator, &surface);
-        check_vk_result(err);
+        VkDescriptorPoolCreateInfo pool_info = {};
+        pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        pool_info.maxSets = 1000;
+        pool_info.poolSizeCount = std::size(pool_sizes);
+        pool_info.pPoolSizes = pool_sizes;
 
 
-        // Create Framebuffers
-        glfwGetFramebufferSize(reinterpret_cast<GLFWwindow *>(glfwwindow), &w, &h);
-        wd = &g_MainWindowData;
-        SetupVulkanWindow(wd, surface, w, h);
+        vkCreateDescriptorPool(graphicsDevice.GetDevice(), &pool_info, nullptr, &g_DescriptorPool);
 
-        // Setup Dear ImGui context
-        IMGUI_CHECKVERSION();
+        // 2: initialize imgui library
+
+        //this initializes the core structures of imgui
         ImGui::CreateContext();
+
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -60,131 +72,46 @@ namespace BeeEngine
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
 
-        //SetDefaultTheme();
+        SetDefaultTheme();
         //SetDarkThemeColors();
 
-        // Setup Platform/Renderer backends
-        ImGui_ImplGlfw_InitForVulkan(reinterpret_cast<GLFWwindow *>(glfwwindow), true);
+        //this initializes imgui for SDL
+        ImGui_ImplGlfw_InitForVulkan(window, true);
+
+        //this initializes imgui for Vulkan
         ImGui_ImplVulkan_InitInfo init_info = {};
-        init_info.Instance = g_Instance;
-        init_info.PhysicalDevice = g_PhysicalDevice;
-        init_info.Device = g_Device;
-        init_info.QueueFamily = g_QueueFamily;
-        init_info.Queue = g_Queue;
-        init_info.PipelineCache = g_PipelineCache;
+        init_info.Instance = ((Internal::VulkanInstance*)&WindowHandler::GetInstance()->GetAPIInstance())->GetHandle();
+        init_info.PhysicalDevice = graphicsDevice.GetPhysicalDevice();
+        init_info.Device = graphicsDevice.GetDevice();
+        init_info.Queue = graphicsDevice.GetGraphicsQueue().GetQueue();
         init_info.DescriptorPool = g_DescriptorPool;
-        init_info.Subpass = 0;
-        init_info.MinImageCount = g_MinImageCount;
-        init_info.ImageCount = wd->ImageCount;
+        init_info.MinImageCount = 3;
+        init_info.ImageCount = 3;
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-        init_info.Allocator = nullptr;//g_Allocator;
-        init_info.CheckVkResultFn = check_vk_result;
 
-        VkAttachmentDescription attachment = {};
-        attachment.format = graphicsDevice.GetSwapChain().GetFormat();
-        attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment.initialLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL;
-        attachment.finalLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+        ImGui_ImplVulkan_Init(&init_info, graphicsDevice.GetSwapChain().GetRenderPass());
 
-        VkAttachmentReference color_attachment = {};
-        color_attachment.attachment = 0;
-        color_attachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        auto cmd = graphicsDevice.BeginSingleTimeCommands();
+        ImGui_ImplVulkan_CreateFontsTexture(cmd);
+        graphicsDevice.EndSingleTimeCommands(cmd);
+        //execute a gpu command to upload imgui font textures
+        /*immediate_submit([&](VkCommandBuffer cmd) {
+            ImGui_ImplVulkan_CreateFontsTexture(cmd);
+        });*/
 
-        VkSubpassDescription subpass = {};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &color_attachment;
+        //clear font textures from cpu data
+        ImGui_ImplVulkan_DestroyFontUploadObjects();
 
-        VkSubpassDependency dependency = {};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        /*//add the destroy the imgui created structures
+        _mainDeletionQueue.push_function([=]() {
 
-        VkRenderPassCreateInfo render_pass_info = {};
-        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        render_pass_info.attachmentCount = 1;
-        render_pass_info.pAttachments = &attachment;
-        render_pass_info.subpassCount = 1;
-        render_pass_info.pSubpasses = &subpass;
-        render_pass_info.dependencyCount = 1;
-        render_pass_info.pDependencies = &dependency;
-
-        vk::RenderPass renderPass = graphicsDevice.GetDevice().createRenderPass(render_pass_info);
-
-
-        ImGui_ImplVulkan_Init(&init_info, renderPass);
-
-        // Load Fonts
-        // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-        // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-        // - If the file cannot be loaded, the function will return a nullptr. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-        // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-        // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
-        // - Read 'docs/FONTS.md' for more instructions and details.
-        // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-        //io.Fonts->AddFontDefault();
-        //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
-        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-        //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
-        //IM_ASSERT(font != nullptr);
-
-        // Upload Fonts
-        {
-            // Use any command queue
-            VkCommandPool command_pool = wd->Frames[wd->FrameIndex].CommandPool;
-            VkCommandBuffer command_buffer = wd->Frames[wd->FrameIndex].CommandBuffer;
-
-            auto err = vkResetCommandPool(g_Device, command_pool, 0);
-            check_vk_result(err);
-            VkCommandBufferBeginInfo begin_info = {};
-            begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-            err = vkBeginCommandBuffer(command_buffer, &begin_info);
-            check_vk_result(err);
-
-            ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
-
-            VkSubmitInfo end_info = {};
-            end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-            end_info.commandBufferCount = 1;
-            end_info.pCommandBuffers = &command_buffer;
-            err = vkEndCommandBuffer(command_buffer);
-            check_vk_result(err);
-            err = vkQueueSubmit(g_Queue, 1, &end_info, VK_NULL_HANDLE);
-            check_vk_result(err);
-
-            err = vkDeviceWaitIdle(g_Device);
-            check_vk_result(err);
-            ImGui_ImplVulkan_DestroyFontUploadObjects();
-        }
+            vkDestroyDescriptorPool(_device, imguiPool, nullptr);
+            ImGui_ImplVulkan_Shutdown();
+        });*/
     }
 
     void ImGuiControllerVulkan::Update()
     {
-        return;
-        // Resize swap chain?
-        if (g_SwapChainRebuild)
-        {
-            int width, height;
-            glfwGetFramebufferSize(window, &width, &height);
-            if (width > 0 && height > 0)
-            {
-                ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
-                ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, &g_MainWindowData, g_QueueFamily, g_Allocator, width, height, g_MinImageCount);
-                g_MainWindowData.FrameIndex = 0;
-                g_SwapChainRebuild = false;
-            }
-        }
-
         // Start the Dear ImGui frame
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -193,18 +120,11 @@ namespace BeeEngine
 
     void ImGuiControllerVulkan::Render()
     {
-        return;
+        //return;
         auto& io = ImGui::GetIO();
         // Rendering
         ImGui::Render();
-        ImDrawData* main_draw_data = ImGui::GetDrawData();
-        const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-        wd->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-        wd->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-        wd->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-        wd->ClearValue.color.float32[3] = clear_color.w;
-        if (!main_is_minimized)
-            FrameRender(wd, main_draw_data);
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Internal::VulkanRendererAPI::GetInstance().GetCurrentCommandBuffer());
 
         // Update and Render additional Platform Windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -212,17 +132,16 @@ namespace BeeEngine
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
         }
-
-        // Present Main Platform Window
-        if (!main_is_minimized)
-            FramePresent(wd);
     }
 
     void ImGuiControllerVulkan::Shutdown()
     {
-        return;
+        //return;
         // Cleanup
-        auto err = vkDeviceWaitIdle(g_Device);
+        Internal::VulkanGraphicsDevice& graphicsDevice = *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
+        vkDestroyDescriptorPool(graphicsDevice.GetDevice(), g_DescriptorPool, nullptr);
+        ImGui_ImplVulkan_Shutdown();
+        /*auto err = vkDeviceWaitIdle(g_Device);
         check_vk_result(err);
         ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
@@ -230,7 +149,7 @@ namespace BeeEngine
 
         ImGui_ImplVulkanH_DestroyWindow(g_Instance, g_Device, &g_MainWindowData, g_Allocator);
         vkDestroyDescriptorPool(g_Device, g_DescriptorPool, g_Allocator);
-    }
+    */}
 
     bool ImGuiControllerVulkan::IsExtensionAvailable(const ImVector<VkExtensionProperties> &properties,
                                                      const char *extension)
@@ -333,70 +252,8 @@ namespace BeeEngine
         ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, wd, g_QueueFamily, g_Allocator, width, height, g_MinImageCount);
     }
 
-    void ImGuiControllerVulkan::FrameRender(ImGui_ImplVulkanH_Window *wd, ImDrawData *draw_data)
+    void ImGuiControllerVulkan::FrameRender(VkCommandBuffer commandBuffer, ImDrawData *draw_data)
     {
-        VkResult err;
-
-        VkSemaphore image_acquired_semaphore  = wd->FrameSemaphores[wd->SemaphoreIndex].ImageAcquiredSemaphore;
-        VkSemaphore render_complete_semaphore = wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
-        err = vkAcquireNextImageKHR(g_Device, wd->Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &wd->FrameIndex);
-        if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
-        {
-            g_SwapChainRebuild = true;
-            return;
-        }
-        check_vk_result(err);
-
-        ImGui_ImplVulkanH_Frame* fd = &wd->Frames[wd->FrameIndex];
-        {
-            err = vkWaitForFences(g_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX);    // wait indefinitely instead of periodically checking
-            check_vk_result(err);
-
-            err = vkResetFences(g_Device, 1, &fd->Fence);
-            check_vk_result(err);
-        }
-        {
-            err = vkResetCommandPool(g_Device, fd->CommandPool, 0);
-            check_vk_result(err);
-            VkCommandBufferBeginInfo info = {};
-            info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-            err = vkBeginCommandBuffer(fd->CommandBuffer, &info);
-            check_vk_result(err);
-        }
-        {
-            VkRenderPassBeginInfo info = {};
-            info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            info.renderPass = wd->RenderPass;
-            info.framebuffer = fd->Framebuffer;
-            info.renderArea.extent.width = wd->Width;
-            info.renderArea.extent.height = wd->Height;
-            info.clearValueCount = 1;
-            info.pClearValues = &wd->ClearValue;
-            vkCmdBeginRenderPass(fd->CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
-        }
-
-        // Record dear imgui primitives into command buffer
-        ImGui_ImplVulkan_RenderDrawData(draw_data, fd->CommandBuffer);
-
-        // Submit command buffer
-        vkCmdEndRenderPass(fd->CommandBuffer);
-        {
-            VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-            VkSubmitInfo info = {};
-            info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-            info.waitSemaphoreCount = 1;
-            info.pWaitSemaphores = &image_acquired_semaphore;
-            info.pWaitDstStageMask = &wait_stage;
-            info.commandBufferCount = 1;
-            info.pCommandBuffers = &fd->CommandBuffer;
-            info.signalSemaphoreCount = 1;
-            info.pSignalSemaphores = &render_complete_semaphore;
-
-            err = vkEndCommandBuffer(fd->CommandBuffer);
-            check_vk_result(err);
-            err = vkQueueSubmit(g_Queue, 1, &info, fd->Fence);
-            check_vk_result(err);
-        }
+        ImGui_ImplVulkan_RenderDrawData(draw_data, commandBuffer);
     }
 }

@@ -35,6 +35,12 @@ namespace BeeEngine::Internal
             return m_GraphicsDevice.GetSwapChain().GetRenderPass();
         }
 
+        static VulkanRendererAPI& GetInstance()
+        {
+            static VulkanRendererAPI instance;
+            return instance;
+        }
+
         VulkanRendererAPI(const VulkanRendererAPI& other) = delete;
         VulkanRendererAPI& operator=(const VulkanRendererAPI& other) = delete;
     private:

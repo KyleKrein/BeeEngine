@@ -6,6 +6,7 @@
 #include "TestLayer.h"
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 TestLayer::TestLayer()
+: m_RendererAPI(BeeEngine::Internal::VulkanRendererAPI::GetInstance())
 {
 }
 
@@ -42,37 +43,26 @@ void TestLayer::OnUpdate()
             //BeeEngine::Renderer2D::DrawImage(j, i, 0.0f, 1,1, m_ForestTexture);
         }
     }
-    currentTime = glfwGetTime();
-    double delta = currentTime - lastTime;
+    m_FpsCounter.Update();
+    //return;
 
-    if (delta >= 1) {
-        int framerate{ std::max(1, int(numFrames / delta)) };
-        std::stringstream title;
-        title << "Running at " << framerate << " fps.";
-        glfwSetWindowTitle((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), title.str().c_str());
-        lastTime = currentTime;
-        numFrames = -1;
-        framerate = float(1000.0 / framerate);
-    }
-
-    ++numFrames;
-
-    if(auto commandBuffer = m_RendererAPI.BeginFrame())
+    if(m_RendererAPI.IsFrameStarted())
     {
-        m_RendererAPI.BeginSwapchainRenderPass(commandBuffer);
+        auto commandBuffer = m_RendererAPI.GetCurrentCommandBuffer();
+        //m_RendererAPI.BeginSwapchainRenderPass(commandBuffer);
         m_Pipeline->Bind(commandBuffer);
         m_Model->Bind(commandBuffer);
         m_Model->Draw(commandBuffer);
-        m_RendererAPI.EndSwapchainRenderPass(commandBuffer);
-        m_RendererAPI.EndFrame();
+        //m_RendererAPI.EndSwapchainRenderPass(commandBuffer);
     }
     //BeeEngine::Renderer2D::EndScene();
-    //m_FpsCounter.Update();
+
 }
 
 void TestLayer::OnGUIRendering()
 {
-    //m_FpsCounter.Render();
+    m_FpsCounter.Render();
+    //ImGui::ShowDemoWindow();
 }
 static bool ResizeEvent(BeeEngine::WindowResizeEvent& event)
 {
