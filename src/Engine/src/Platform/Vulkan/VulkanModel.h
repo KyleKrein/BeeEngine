@@ -14,9 +14,15 @@ namespace BeeEngine::Internal
     public:
         struct Vertex
         {
-            glm::vec3 Position;
-            glm::vec3 Normal;
-            glm::vec3 Color;
+            glm::vec3 Position {
+                    0.0f, 0.0f, 0.0f
+            };
+            glm::vec3 Normal {
+                    0.0f, 0.0f, 0.0f
+            };
+            glm::vec3 Color {
+                    0.0f, 0.0f, 0.0f
+            };
 
             static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
             static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();

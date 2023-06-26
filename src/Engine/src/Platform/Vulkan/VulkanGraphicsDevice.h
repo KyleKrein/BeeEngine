@@ -92,10 +92,12 @@ namespace BeeEngine::Internal
                 VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
 
         void CreateImageWithInfo(
-                const VkImageCreateInfo &imageInfo,
-                VkMemoryPropertyFlags properties,
-                VkImage &image,
-                VkDeviceMemory &imageMemory);
+                 in<VkImageCreateInfo> imageInfo,
+                 in<VkImageViewCreateInfo> imageViewInfo,
+                 in<VkMemoryPropertyFlags> memoryProperties,
+                 in<VmaMemoryUsage> memoryUsage,
+                 out<VulkanImage> image,
+                 out<VkImageView> imageView) const;
         VkFormat FindSupportedFormat(
                 const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 

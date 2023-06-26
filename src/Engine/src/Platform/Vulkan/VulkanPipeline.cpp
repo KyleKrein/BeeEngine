@@ -238,7 +238,11 @@ namespace BeeEngine::Internal
         pipelineInfo.basePipelineIndex = -1;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-        m_Device.createGraphicsPipelines(VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline);
+        auto result = m_Device.createGraphicsPipelines(VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline);
+        if (result != vk::Result::eSuccess)
+        {
+            BeeCoreError("Failed to create graphics pipeline: {0}", vk::to_string(result));
+        }
     }
 
     void VulkanPipeline::CreateShaderModule(const std::vector<uint32_t> &code, vk::ShaderModule &shaderModule)
@@ -250,74 +254,74 @@ namespace BeeEngine::Internal
 
         m_Device.createShaderModule(&createInfo, nullptr, &shaderModule);
     }
-    void VulkanPipeline::DefaultPipelineConfigInfo(PipelineConfigInfo& inOutConfigInfo)
+    void VulkanPipeline::DefaultPipelineConfigInfo(out<PipelineConfigInfo> configInfo)
     {
-        inOutConfigInfo.inputAssemblyInfo.sType = vk::StructureType::ePipelineInputAssemblyStateCreateInfo;
-        inOutConfigInfo.inputAssemblyInfo.topology = vk::PrimitiveTopology::eTriangleList;
-        inOutConfigInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
+        configInfo.inputAssemblyInfo.sType = vk::StructureType::ePipelineInputAssemblyStateCreateInfo;
+        configInfo.inputAssemblyInfo.topology = vk::PrimitiveTopology::eTriangleList;
+        configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
-        inOutConfigInfo.viewportInfo.sType = vk::StructureType::ePipelineViewportStateCreateInfo;
-        inOutConfigInfo.viewportInfo.viewportCount = 1;
-        inOutConfigInfo.viewportInfo.pViewports= nullptr;
-        inOutConfigInfo.viewportInfo.scissorCount= 1;
-        inOutConfigInfo.viewportInfo.pScissors = nullptr;
+        configInfo.viewportInfo.sType = vk::StructureType::ePipelineViewportStateCreateInfo;
+        configInfo.viewportInfo.viewportCount = 1;
+        configInfo.viewportInfo.pViewports= nullptr;
+        configInfo.viewportInfo.scissorCount= 1;
+        configInfo.viewportInfo.pScissors = nullptr;
 
-        inOutConfigInfo.rasterizationInfo.sType = vk::StructureType::ePipelineRasterizationStateCreateInfo;
-        inOutConfigInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
-        inOutConfigInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
-        inOutConfigInfo.rasterizationInfo.polygonMode = vk::PolygonMode::eFill;
-        inOutConfigInfo.rasterizationInfo.lineWidth = 1.0f;
-        inOutConfigInfo.rasterizationInfo.cullMode = vk::CullModeFlagBits::eNone;
-        inOutConfigInfo.rasterizationInfo.frontFace = vk::FrontFace::eClockwise;
-        inOutConfigInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
-        inOutConfigInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
-        inOutConfigInfo.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional
-        inOutConfigInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;     // Optional
+        configInfo.rasterizationInfo.sType = vk::StructureType::ePipelineRasterizationStateCreateInfo;
+        configInfo.rasterizationInfo.depthClampEnable = VK_FALSE;
+        configInfo.rasterizationInfo.rasterizerDiscardEnable = VK_FALSE;
+        configInfo.rasterizationInfo.polygonMode = vk::PolygonMode::eFill;
+        configInfo.rasterizationInfo.lineWidth = 1.0f;
+        configInfo.rasterizationInfo.cullMode = vk::CullModeFlagBits::eNone;
+        configInfo.rasterizationInfo.frontFace = vk::FrontFace::eClockwise;
+        configInfo.rasterizationInfo.depthBiasEnable = VK_FALSE;
+        configInfo.rasterizationInfo.depthBiasConstantFactor = 0.0f;  // Optional
+        configInfo.rasterizationInfo.depthBiasClamp = 0.0f;           // Optional
+        configInfo.rasterizationInfo.depthBiasSlopeFactor = 0.0f;     // Optional
 
-        inOutConfigInfo.multisampleInfo.sType = vk::StructureType::ePipelineMultisampleStateCreateInfo;
-        inOutConfigInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
-        inOutConfigInfo.multisampleInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-        inOutConfigInfo.multisampleInfo.minSampleShading = 1.0f;           // Optional
-        inOutConfigInfo.multisampleInfo.pSampleMask = nullptr;             // Optional
-        inOutConfigInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
-        inOutConfigInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
+        configInfo.multisampleInfo.sType = vk::StructureType::ePipelineMultisampleStateCreateInfo;
+        configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
+        configInfo.multisampleInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
+        configInfo.multisampleInfo.minSampleShading = 1.0f;           // Optional
+        configInfo.multisampleInfo.pSampleMask = nullptr;             // Optional
+        configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE;  // Optional
+        configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE;       // Optional
 
-        inOutConfigInfo.colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+        configInfo.colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
                                                          vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-        inOutConfigInfo.colorBlendAttachment.blendEnable = VK_FALSE;
-        inOutConfigInfo.colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eOne;   // Optional
-        inOutConfigInfo.colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eZero;  // Optional
-        inOutConfigInfo.colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;              // Optional
-        inOutConfigInfo.colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;   // Optional
-        inOutConfigInfo.colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;  // Optional
-        inOutConfigInfo.colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;              // Optional
+        configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
+        configInfo.colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eOne;   // Optional
+        configInfo.colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eZero;  // Optional
+        configInfo.colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;              // Optional
+        configInfo.colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;   // Optional
+        configInfo.colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero;  // Optional
+        configInfo.colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;              // Optional
 
-        inOutConfigInfo.colorBlendInfo.sType = vk::StructureType::ePipelineColorBlendStateCreateInfo;
-        inOutConfigInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
-        inOutConfigInfo.colorBlendInfo.logicOp = vk::LogicOp::eCopy;  // Optional
-        inOutConfigInfo.colorBlendInfo.attachmentCount = 1;
-        inOutConfigInfo.colorBlendInfo.pAttachments = &inOutConfigInfo.colorBlendAttachment;
-        inOutConfigInfo.colorBlendInfo.blendConstants[0] = 0.0f;  // Optional
-        inOutConfigInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
-        inOutConfigInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
-        inOutConfigInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
+        configInfo.colorBlendInfo.sType = vk::StructureType::ePipelineColorBlendStateCreateInfo;
+        configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
+        configInfo.colorBlendInfo.logicOp = vk::LogicOp::eCopy;  // Optional
+        configInfo.colorBlendInfo.attachmentCount = 1;
+        configInfo.colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
+        configInfo.colorBlendInfo.blendConstants[0] = 0.0f;  // Optional
+        configInfo.colorBlendInfo.blendConstants[1] = 0.0f;  // Optional
+        configInfo.colorBlendInfo.blendConstants[2] = 0.0f;  // Optional
+        configInfo.colorBlendInfo.blendConstants[3] = 0.0f;  // Optional
 
-        inOutConfigInfo.depthStencilInfo.sType = vk::StructureType::ePipelineDepthStencilStateCreateInfo;
-        inOutConfigInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
-        inOutConfigInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
-        inOutConfigInfo.depthStencilInfo.depthCompareOp = vk::CompareOp::eLess;
-        inOutConfigInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
-        inOutConfigInfo.depthStencilInfo.minDepthBounds = 0.0f;  // Optional
-        inOutConfigInfo.depthStencilInfo.maxDepthBounds = 1.0f;  // Optional
-        inOutConfigInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
-        inOutConfigInfo.depthStencilInfo.front = vk::StencilOpState{};  // Optional
-        inOutConfigInfo.depthStencilInfo.back = vk::StencilOpState{};   // Optional
+        configInfo.depthStencilInfo.sType = vk::StructureType::ePipelineDepthStencilStateCreateInfo;
+        configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
+        configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
+        configInfo.depthStencilInfo.depthCompareOp = vk::CompareOp::eLessOrEqual;
+        configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+        configInfo.depthStencilInfo.minDepthBounds = 0.0f;  // Optional
+        configInfo.depthStencilInfo.maxDepthBounds = 1.0f;  // Optional
+        configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
+        //configInfo.depthStencilInfo.front = vk::StencilOpState{};  // Optional
+        //configInfo.depthStencilInfo.back = vk::StencilOpState{};   // Optional
 
-        inOutConfigInfo.dynamicStateEnables = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
-        inOutConfigInfo.dynamicStateInfo.sType = vk::StructureType::ePipelineDynamicStateCreateInfo;
-        inOutConfigInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(inOutConfigInfo.dynamicStateEnables.size());
-        inOutConfigInfo.dynamicStateInfo.pDynamicStates = inOutConfigInfo.dynamicStateEnables.data();
-        inOutConfigInfo.dynamicStateInfo.flags = vk::PipelineDynamicStateCreateFlags();
+        configInfo.dynamicStateEnables = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
+        configInfo.dynamicStateInfo.sType = vk::StructureType::ePipelineDynamicStateCreateInfo;
+        configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
+        configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
+        configInfo.dynamicStateInfo.flags = vk::PipelineDynamicStateCreateFlags();
     }
     std::vector<uint32_t> VulkanPipeline::CompileShaderToSPRIV(const std::vector<char>& file, std::string_view newFilepath, ShaderStage shaderType)
     {

@@ -6,6 +6,7 @@
 #include "vulkan/vulkan.hpp"
 #include "Renderer/QueueFamilyIndices.h"
 #include "Renderer/SwapChain.h"
+#include "VulkanImage.h"
 
 namespace BeeEngine::Internal
 {
@@ -106,8 +107,7 @@ namespace BeeEngine::Internal
         std::vector<VkFence> m_InFlightFences;
         std::vector<VkFence> m_ImagesInFlight;
 
-        std::vector<VkImage> m_DepthImages;
-        std::vector<VkDeviceMemory> m_DepthImageMemorys;
+        std::vector<VulkanImage> m_DepthImages;
         std::vector<VkImageView> m_DepthImageViews;
         std::vector<VkImage> m_SwapChainImages;
         std::vector<VkImageView> m_SwapChainImageViews;

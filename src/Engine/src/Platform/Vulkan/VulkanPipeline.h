@@ -25,15 +25,15 @@ namespace BeeEngine::Internal
         PipelineConfigInfo(const PipelineConfigInfo&) = delete;
         PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
 
-        vk::PipelineViewportStateCreateInfo viewportInfo;
-        vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo;
-        vk::PipelineRasterizationStateCreateInfo rasterizationInfo;
-        vk::PipelineMultisampleStateCreateInfo multisampleInfo;
-        vk::PipelineColorBlendAttachmentState colorBlendAttachment;
-        vk::PipelineColorBlendStateCreateInfo colorBlendInfo;
-        vk::PipelineDepthStencilStateCreateInfo depthStencilInfo;
-        std::vector<vk::DynamicState> dynamicStateEnables;
-        vk::PipelineDynamicStateCreateInfo dynamicStateInfo;
+        vk::PipelineViewportStateCreateInfo viewportInfo {};
+        vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo {};
+        vk::PipelineRasterizationStateCreateInfo rasterizationInfo {};
+        vk::PipelineMultisampleStateCreateInfo multisampleInfo {};
+        vk::PipelineColorBlendAttachmentState colorBlendAttachment {};
+        vk::PipelineColorBlendStateCreateInfo colorBlendInfo {};
+        vk::PipelineDepthStencilStateCreateInfo depthStencilInfo {};
+        std::vector<vk::DynamicState> dynamicStateEnables {};
+        vk::PipelineDynamicStateCreateInfo dynamicStateInfo {};
         vk::PipelineLayout pipelineLayout = nullptr;
         vk::RenderPass renderPass = nullptr;
         uint32_t subpass = 0;
@@ -64,7 +64,7 @@ namespace BeeEngine::Internal
             return m_RenderPass;
         }
         */
-        static void DefaultPipelineConfigInfo(PipelineConfigInfo& inOutConfigInfo);
+        static void DefaultPipelineConfigInfo(out<PipelineConfigInfo> configInfo);
 
 
         void Bind(VkCommandBuffer commandBuffer);

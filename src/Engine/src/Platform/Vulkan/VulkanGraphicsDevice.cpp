@@ -351,10 +351,37 @@ namespace BeeEngine::Internal
     }
 
     void
-    VulkanGraphicsDevice::CreateImageWithInfo(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties,
-                                              VkImage &image, VkDeviceMemory &imageMemory)
+    VulkanGraphicsDevice::CreateImageWithInfo(in<VkImageCreateInfo> imageInfo,
+                                              in<VkImageViewCreateInfo> imageViewInfo,
+                                              in<VkMemoryPropertyFlags> memoryProperties,
+                                              in<VmaMemoryUsage> memoryUsage,
+                                              out<VulkanImage> image,
+                                              out<VkImageView> imageView) const
     {
-        vkCreateImage(m_Device, &imageInfo, nullptr, &image);
+        VmaAllocationCreateInfo allocInfo = {};
+        allocInfo.usage = memoryUsage;
+        allocInfo.requiredFlags = memoryProperties;
+
+        //allocate and create the image
+        vmaCreateImage(m_DeviceHandle.allocator, &imageInfo, &allocInfo, &image.Image, &image.Memory, nullptr);
+        auto copiedImageViewInfo = imageViewInfo;
+        copiedImageViewInfo.image = image.Image;
+        auto result = vkCreateImageView(m_Device, &copiedImageViewInfo, nullptr, &imageView);
+
+        if(result != VK_SUCCESS)
+        {
+            BeeCoreError("Failed to create image view!");
+        }
+        auto device = m_Device;
+        auto allocator = m_DeviceHandle.allocator;
+        //add to deletion queues
+        DeletionQueue::Main().PushFunction([=]() {
+            vkDestroyImageView(device, imageView, nullptr);
+            vmaDestroyImage(allocator, image.Image, image.Memory);
+        });
+
+
+        /*vkCreateImage(m_Device, &imageInfo, nullptr, &image);
 
         VkMemoryRequirements memRequirements;
         vkGetImageMemoryRequirements(m_Device, image, &memRequirements);
@@ -365,7 +392,7 @@ namespace BeeEngine::Internal
         allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
         vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory);
 
-        m_Device.bindImageMemory(image, imageMemory, 0);
+        m_Device.bindImageMemory(image, imageMemory, 0);*/
     }
 
     uint32_t VulkanGraphicsDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)

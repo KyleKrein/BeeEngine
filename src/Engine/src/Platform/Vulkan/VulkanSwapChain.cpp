@@ -107,12 +107,6 @@ namespace BeeEngine::Internal
             //m_SwapChain = nullptr;
         }
 
-        for (int i = 0; i < m_DepthImages.size(); i++) {
-            vkDestroyImageView(m_GraphicsDevice.GetDevice(), m_DepthImageViews[i], nullptr);
-            vkDestroyImage(m_GraphicsDevice.GetDevice(), m_DepthImages[i], nullptr);
-            vkFreeMemory(m_GraphicsDevice.GetDevice(), m_DepthImageMemorys[i], nullptr);
-        }
-
         for (auto framebuffer : m_SwapChainFramebuffers) {
             vkDestroyFramebuffer(m_GraphicsDevice.GetDevice(), framebuffer, nullptr);
         }
@@ -279,7 +273,6 @@ namespace BeeEngine::Internal
         VkExtent2D swapChainExtent = m_Extent;
         size_t size = ImageCount();
         m_DepthImages.resize(size);
-        m_DepthImageMemorys.resize(size);
         m_DepthImageViews.resize(size);
 
         size = m_DepthImages.size();
@@ -301,15 +294,8 @@ namespace BeeEngine::Internal
             imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
             imageInfo.flags = 0;
 
-            m_GraphicsDevice.CreateImageWithInfo(
-                    imageInfo,
-                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                    m_DepthImages[i],
-                    m_DepthImageMemorys[i]);
-
             VkImageViewCreateInfo viewInfo{};
             viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            viewInfo.image = m_DepthImages[i];
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = depthFormat;
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -318,28 +304,18 @@ namespace BeeEngine::Internal
             viewInfo.subresourceRange.baseArrayLayer = 0;
             viewInfo.subresourceRange.layerCount = 1;
 
-            if (vkCreateImageView(m_GraphicsDevice.GetDevice(), &viewInfo, nullptr, &m_DepthImageViews[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create texture image view!");
-            }
+            m_GraphicsDevice.CreateImageWithInfo(
+                    imageInfo,
+                    viewInfo,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                    VMA_MEMORY_USAGE_GPU_ONLY,
+                    m_DepthImages[i],
+                    m_DepthImageViews[i]);
         }
     }
 
     void VulkanSwapChain::CreateRenderPass()
     {
-        VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = FindDepthFormat();
-        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference depthAttachmentRef{};
-        depthAttachmentRef.attachment = 1;
-        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
         VkAttachmentDescription colorAttachment = {};
         colorAttachment.format = m_SurfaceFormat.format;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -353,6 +329,21 @@ namespace BeeEngine::Internal
         VkAttachmentReference colorAttachmentRef = {};
         colorAttachmentRef.attachment = 0;
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.flags = 0;
+        depthAttachment.format = FindDepthFormat();
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentReference depthAttachmentRef{};
+        depthAttachmentRef.attachment = 1;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkSubpassDescription subpass = {};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -371,15 +362,24 @@ namespace BeeEngine::Internal
         dependency.dstAccessMask =
                 VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
+        VkSubpassDependency depthDependency = {};
+        depthDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        depthDependency.dstSubpass = 0;
+        depthDependency.srcStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        depthDependency.srcAccessMask = 0;
+        depthDependency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        depthDependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
         std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+        std::array<VkSubpassDependency, 2> dependencies = {dependency, depthDependency};
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
+        renderPassInfo.dependencyCount = dependencies.size();
+        renderPassInfo.pDependencies = dependencies.data();
 
         if (vkCreateRenderPass(m_GraphicsDevice.GetDevice(), &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS) {
             throw std::runtime_error("failed to create render pass!");
@@ -441,7 +441,7 @@ namespace BeeEngine::Internal
     VkFormat VulkanSwapChain::FindDepthFormat()
     {
         return m_GraphicsDevice.FindSupportedFormat(
-                {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+                {VK_FORMAT_D32_SFLOAT/*, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT*/},
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
     }

@@ -29,6 +29,8 @@ public:
     BeeEngine::Internal::FpsCounter m_FpsCounter {};
     BeeEngine::Ref<BeeEngine::Texture2D> m_ForestTexture;
 
+    BeeEngine::Scope<BeeEngine::Internal::VulkanModel> m_MonkeyModel;
+
     BeeEngine::Scope<BeeEngine::Internal::VulkanPipeline> m_Pipeline;
     BeeEngine::Scope<BeeEngine::Internal::VulkanModel> m_Model;
     VkPipelineLayout m_PipelineLayout;
@@ -37,4 +39,5 @@ public:
     void CreatePipelineLayout();
     void CreatePipeline();
     void LoadModels();
+    uint32_t frame = 0;
 };

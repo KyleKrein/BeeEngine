@@ -1,0 +1,18 @@
+//
+// Created by Александр Лебедев on 26.06.2023.
+//
+
+#pragma once
+#include "Core/TypeDefines.h"
+#include "Platform/Vulkan/VulkanModel.h"
+
+namespace BeeEngine::Internal
+{
+    class ModelLoader
+    {
+    public:
+        [[nodiscard("Returns if loading was successful")]] static bool LoadObj(std::string_view path, out<std::vector<VulkanModel::Vertex>> vertices);
+    };
+}
+
+

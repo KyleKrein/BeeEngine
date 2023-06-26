@@ -38,3 +38,6 @@
 [submodule "src/Engine/vendor/glslang"]
 	path = src/Engine/vendor/glslang
 	url = https://github.com/KhronosGroup/glslang.git
+[submodule "src/Engine/vendor/tinyobjloader"]
+	path = src/Engine/vendor/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git
