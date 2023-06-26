@@ -1,4 +1,5 @@
 #include "VulkanModel.h"
+#include "vk_mem_alloc.h"
 
 namespace BeeEngine::Internal
 {
@@ -9,9 +10,9 @@ namespace BeeEngine::Internal
     }
     VulkanModel::~VulkanModel()
     {
-        vkDeviceWaitIdle(m_GraphicsDevice.GetDevice());
-        vkDestroyBuffer(m_GraphicsDevice.GetDevice(), m_VertexBuffer, nullptr);
-        vkFreeMemory(m_GraphicsDevice.GetDevice(), m_VertexBufferMemory, nullptr);
+        //vkDeviceWaitIdle(m_GraphicsDevice.GetDevice());
+        //vkDestroyBuffer(m_GraphicsDevice.GetDevice(), m_VertexBuffer, nullptr);
+        //vkFreeMemory(m_GraphicsDevice.GetDevice(), m_VertexBufferMemory, nullptr);
     }
 
     void VulkanModel::Draw(VkCommandBuffer commandBuffer)
@@ -21,7 +22,7 @@ namespace BeeEngine::Internal
 
     void VulkanModel::Bind(VkCommandBuffer commandBuffer)
     {
-        VkBuffer buffers [] = {m_VertexBuffer};
+        VkBuffer buffers [] = {m_VertexBuffer.Buffer};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
     }
@@ -31,19 +32,16 @@ namespace BeeEngine::Internal
 
     }
 
-    void VulkanModel::CreateVertexBuffers(const std::vector<Vertex> &vertices)
+    void VulkanModel::CreateVertexBuffers(in<std::vector<Vertex>> vertices)
     {
         m_VertexCount = vertices.size();
         BeeExpects(m_VertexCount >= 3);
 
         VkDeviceSize bufferSize = sizeof(vertices[0]) * m_VertexCount;
         m_GraphicsDevice.CreateBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                                      m_VertexBuffer, m_VertexBufferMemory);
-        void* data;
-        vkMapMemory(m_GraphicsDevice.GetDevice(), m_VertexBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, vertices.data(), (size_t) bufferSize);
-        vkUnmapMemory(m_GraphicsDevice.GetDevice(), m_VertexBufferMemory);
+                                      VMA_MEMORY_USAGE_AUTO,
+                                      m_VertexBuffer);
+        m_GraphicsDevice.CopyToBuffer({(byte*)vertices.data(), bufferSize}, m_VertexBuffer);
     }
 
     std::vector<VkVertexInputBindingDescription> VulkanModel::Vertex::GetBindingDescriptions()
@@ -57,7 +55,7 @@ namespace BeeEngine::Internal
 
     std::vector<VkVertexInputAttributeDescription> VulkanModel::Vertex::GetAttributeDescriptions()
     {
-        std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions(3);
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
@@ -66,7 +64,12 @@ namespace BeeEngine::Internal
         attributeDescriptions[1].binding = 0;
         attributeDescriptions[1].location = 1;
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, Color);
+        attributeDescriptions[1].offset = offsetof(Vertex, Normal);
+
+        attributeDescriptions[2].binding = 0;
+        attributeDescriptions[2].location = 2;
+        attributeDescriptions[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[2].offset = offsetof(Vertex, Color);
         return attributeDescriptions;
     }
 }

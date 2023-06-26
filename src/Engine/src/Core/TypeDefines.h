@@ -56,6 +56,8 @@ namespace BeeEngine
                     T const,
                     T const&
             >;
+
+    using byte = std::byte;
     //-----------------------------------------------------------------------
     //
     //  in<T>       For "in" parameter
@@ -73,8 +75,8 @@ namespace BeeEngine
 
     template<typename T>
             requires (!std::is_void_v<T>)
-    using inOut = T&;
-
+    using out = T&;
+/*
 //-----------------------------------------------------------------------
 //
 //  Initialization: These are closely related...
@@ -217,7 +219,7 @@ namespace BeeEngine
             }
         }
     };
-
+*/
     template<typename T>
     using List = std::vector<T>;
 }

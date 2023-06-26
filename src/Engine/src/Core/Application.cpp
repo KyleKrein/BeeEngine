@@ -7,6 +7,7 @@
 #include "Debug/DebugLayer.h"
 #include "Renderer/ShaderLibrary.h"
 #include "Platform/Vulkan/VulkanRendererAPI.h"
+#include "DeletionQueue.h"
 
 namespace BeeEngine{
     OSPlatform Application::s_OSPlatform = OSPlatform::None;
@@ -25,11 +26,10 @@ namespace BeeEngine{
             Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
             m_Layers.Update();
             Update();
-            //tempVulkanRendererAPI.Render();
-            //m_Layers.FinishGuiRendering();
             m_Window->SwapBuffers();
             Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
             Internal::VulkanRendererAPI::GetInstance().EndFrame();
+            //DeletionQueue::Frame().Flush();
         }
     }
 
@@ -59,7 +59,7 @@ namespace BeeEngine{
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
 #ifdef DEBUG
-        //m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
+        m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
 #endif
     }
 

@@ -45,10 +45,10 @@ namespace BeeEngine::Internal
         //VulkanPipeline(vk::Device& device, const GraphicsPipelineInBundle& specification);
 
         VulkanPipeline(
-                vk::Device& device,
-                const std::string& vertFilepath,
-                const std::string& fragFilepath,
-                const PipelineConfigInfo& configInfo);
+                in<vk::Device> device,
+                in<std::string> vertFilepath,
+                in<std::string> fragFilepath,
+                in<PipelineConfigInfo> configInfo);
         ~VulkanPipeline();
         vk::Pipeline& GetHandle()
         {
@@ -76,7 +76,7 @@ namespace BeeEngine::Internal
     private:
         vk::Pipeline m_Pipeline;
         //VulkanGraphicsDevice* m_GraphicsDevice;
-        vk::Device& m_Device;
+        in<vk::Device> m_Device;
         //vk::PipelineLayout m_PipelineLayout;
         //VulkanRenderPass m_RenderPass;
 

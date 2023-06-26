@@ -102,12 +102,12 @@ namespace BeeEngine
         //clear font textures from cpu data
         ImGui_ImplVulkan_DestroyFontUploadObjects();
 
-        /*//add the destroy the imgui created structures
-        _mainDeletionQueue.push_function([=]() {
+        //add the destroy the imgui created structures
+        DeletionQueue::Main().PushFunction([=]() {
 
-            vkDestroyDescriptorPool(_device, imguiPool, nullptr);
+            vkDestroyDescriptorPool(Internal::VulkanGraphicsDevice::GetInstance().GetDevice(), g_DescriptorPool, nullptr);
             ImGui_ImplVulkan_Shutdown();
-        });*/
+        });
     }
 
     void ImGuiControllerVulkan::Update()
@@ -138,9 +138,9 @@ namespace BeeEngine
     {
         //return;
         // Cleanup
-        Internal::VulkanGraphicsDevice& graphicsDevice = *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
-        vkDestroyDescriptorPool(graphicsDevice.GetDevice(), g_DescriptorPool, nullptr);
-        ImGui_ImplVulkan_Shutdown();
+        //Internal::VulkanGraphicsDevice& graphicsDevice = *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
+        //vkDestroyDescriptorPool(graphicsDevice.GetDevice(), g_DescriptorPool, nullptr);
+        //ImGui_ImplVulkan_Shutdown();
         /*auto err = vkDeviceWaitIdle(g_Device);
         check_vk_result(err);
         ImGui_ImplVulkan_Shutdown();

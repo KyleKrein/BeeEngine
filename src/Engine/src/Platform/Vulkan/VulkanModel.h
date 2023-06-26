@@ -14,7 +14,8 @@ namespace BeeEngine::Internal
     public:
         struct Vertex
         {
-            glm::vec2 Position;
+            glm::vec3 Position;
+            glm::vec3 Normal;
             glm::vec3 Color;
 
             static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
@@ -29,17 +30,16 @@ namespace BeeEngine::Internal
         void Draw(VkCommandBuffer commandBuffer);
         void Unbind();
 
-        uint32_t GetVertexCount() const
+        [[nodiscard]] uint32_t GetVertexCount() const
         {
             return m_VertexCount;
         }
 
     private:
-        void CreateVertexBuffers(const std::vector<Vertex>& vertices);
+        void CreateVertexBuffers(in<std::vector<Vertex>> vertices);
 
         VulkanGraphicsDevice& m_GraphicsDevice;
-        VkBuffer m_VertexBuffer;
-        VkDeviceMemory m_VertexBufferMemory;
+        VulkanBuffer m_VertexBuffer;
         uint32_t m_VertexCount;
     };
 }

@@ -156,8 +156,8 @@ namespace BeeEngine::Internal
         m_Device.destroyPipeline(m_Pipeline);
     }
 
-    VulkanPipeline::VulkanPipeline(vk::Device& device, const std::string &vertFilepath,
-                                   const std::string &fragFilepath, const PipelineConfigInfo &configInfo)
+    VulkanPipeline::VulkanPipeline(in<vk::Device> device, in<std::string> vertFilepath,
+                                   in<std::string> fragFilepath, in<PipelineConfigInfo> configInfo)
     : m_Device(device)
     {
         CreateGraphicsPipeline(vertFilepath, fragFilepath, configInfo);

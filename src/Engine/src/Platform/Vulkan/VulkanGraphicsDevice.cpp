@@ -4,12 +4,20 @@
 #include "VulkanGraphicsDevice.h"
 #include "Renderer/QueueFamilyIndices.h"
 #include <set>
+#include "Core/Application.h"
+#include "Core/DeletionQueue.h"
 
 
 namespace BeeEngine::Internal
 {
+    VulkanGraphicsDevice* VulkanGraphicsDevice::s_Instance = nullptr;
     VulkanGraphicsDevice::VulkanGraphicsDevice(VulkanInstance &instance)
     {
+        if(s_Instance != nullptr)
+        {
+            BeeCoreFatalError("Can't create two graphics devices at once");
+        }
+        s_Instance = this;
         m_Surface = instance.CreateSurface();
         CreatePhysicalDevice(instance);
         CreateLogicalDevice();
@@ -46,6 +54,7 @@ namespace BeeEngine::Internal
     VulkanGraphicsDevice::~VulkanGraphicsDevice()
     {
         m_Device.waitIdle();
+        //DeletionQueue::Main().Flush();
     }
 
     void VulkanGraphicsDevice::LogDeviceProperties(vk::PhysicalDevice &device) const
@@ -106,8 +115,9 @@ namespace BeeEngine::Internal
         {
             if(queueFamily.queueFlags & vk::QueueFlagBits::eGraphics)
             {
-                BeeCoreInfo("Queue family {} supports graphics operations", queueFamily.queueCount);
+                BeeCoreInfo("Queue family {} supports graphics operations", i);
                 indices.GraphicsFamily = i;
+                break;
             }
             i++;
         }
@@ -178,6 +188,11 @@ namespace BeeEngine::Internal
                 VK_KHR_SWAPCHAIN_EXTENSION_NAME
         };
 
+        if(BeeEngine::Application::GetOsPlatform() == OSPlatform::Mac)
+        {
+            deviceExtensions.push_back("VK_KHR_portability_subset");
+        }
+
         vk::PhysicalDeviceFeatures deviceFeatures = {};
 
         std::vector<const char*> enabledLayers;
@@ -213,42 +228,52 @@ namespace BeeEngine::Internal
         }
     }
 
-    void VulkanGraphicsDevice::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
-                                            VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                                            VkDeviceMemory &bufferMemory)
+    void VulkanGraphicsDevice::CreateBuffer(VkDeviceSize size,
+                                            VkBufferUsageFlags usage,
+                                            VmaMemoryUsage memoryUsage,
+                                            out<VulkanBuffer> buffer) const
     {
-        VkBufferCreateInfo bufferInfo{};
+        //allocate vertex buffer
+        VkBufferCreateInfo bufferInfo = {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        //this is the total size, in bytes, of the buffer we are allocating
         bufferInfo.size = size;
+        //this buffer is going to be used as a Vertex Buffer
         bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        //bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        VmaAllocationCreateInfo allocationInfo{};
-        allocationInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-        allocationInfo.requiredFlags = properties;
 
-        VmaAllocation allocation;
-        //vmaCreateBuffer(m_DeviceHandle.allocator, &bufferInfo, &allocationInfo, &buffer, &allocation, nullptr);
+        //let the VMA library know that this data should be writeable by CPU, but also readable by GPU
+        VmaAllocationCreateInfo vmaallocInfo = {};
+        vmaallocInfo.usage = memoryUsage;
+        if(memoryUsage == VMA_MEMORY_USAGE_AUTO)
+        {
+            vmaallocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+        }
+        //allocate the buffer
+        auto result = vmaCreateBuffer(m_DeviceHandle.allocator, &bufferInfo, &vmaallocInfo,
+                                      &buffer.Buffer,
+                                      &buffer.Memory,
+                                      nullptr);
+        if(result != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to allocate buffer!");
+        }
 
-        vkCreateBuffer(m_Device, &bufferInfo, nullptr, &buffer);
+        //add the destruction of mesh buffer to the deletion queue
+        DeletionQueue::Main().PushFunction([buffer]() {
+            vmaDestroyBuffer(GetVulkanAllocator(), buffer.Buffer, buffer.Memory);
+        });
+    }
 
-        vk::MemoryRequirements memRequirements;
-        m_Device.getBufferMemoryRequirements(buffer, &memRequirements);
+    void VulkanGraphicsDevice::CopyToBuffer(gsl::span<byte> data, out<VulkanBuffer> buffer) const
+    {
+        void* mappedData;
+        vmaMapMemory(m_DeviceHandle.allocator, buffer.Memory, &mappedData);
 
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+        memcpy(mappedData, data.data(), data.size());
 
-        VmaAllocationCreateInfo allocCreateInfo{};
-        allocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-        allocCreateInfo.requiredFlags = properties;
-
-        //vmaAllocateMemory(m_DeviceHandle.allocator, &memRequirements, &allocCreateInfo, &allocation, &bufferMemory, nullptr);
-
-        vkAllocateMemory(m_Device, &allocInfo, nullptr, &bufferMemory);
-
-        m_Device.bindBufferMemory(buffer, bufferMemory, 0);
+        vmaUnmapMemory(m_DeviceHandle.allocator, buffer.Memory);
     }
 
     VkCommandBuffer VulkanGraphicsDevice::BeginSingleTimeCommands()
@@ -419,4 +444,50 @@ namespace BeeEngine::Internal
     {
         m_SwapChain = CreateScope<VulkanSwapChain>(*this, width, height, std::move(m_SwapChain));
     }
+
+    VulkanGraphicsDevice &VulkanGraphicsDevice::GetInstance()
+    {
+        return *s_Instance;
+    }
+
+    /*void VulkanGraphicsDevice::UploadMesh(Mesh& mesh) const
+    {
+        //allocate vertex buffer
+        VkBufferCreateInfo bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        //this is the total size, in bytes, of the buffer we are allocating
+        bufferInfo.size = mesh.Vertices.size() * sizeof(Vertex);
+        //this buffer is going to be used as a Vertex Buffer
+        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+
+
+        //let the VMA library know that this data should be writeable by CPU, but also readable by GPU
+        VmaAllocationCreateInfo vmaallocInfo = {};
+        vmaallocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+
+        //allocate the buffer
+        auto result = vmaCreateBuffer(m_DeviceHandle.allocator, &bufferInfo, &vmaallocInfo,
+                                 &mesh.VertexBuffer.Buffer,
+                                 &mesh.VertexBuffer.Memory,
+                                 nullptr);
+        if(result != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to allocate vertex buffer!");
+        }
+
+        //add the destruction of mesh buffer to the deletion queue
+        DeletionQueue::Main().PushFunction([=]() {
+
+            vmaDestroyBuffer(GetVulkanAllocator(), mesh.VertexBuffer.Buffer, mesh.VertexBuffer.Memory);
+        });
+
+        //copy vertex data
+        void* data;
+        vmaMapMemory(m_DeviceHandle.allocator, mesh.VertexBuffer.Memory, &data);
+
+        memcpy(data, mesh.Vertices.data(), mesh.Vertices.size() * sizeof(Vertex));
+
+        vmaUnmapMemory(m_DeviceHandle.allocator, mesh.VertexBuffer.Memory);
+
+    }*/
 }

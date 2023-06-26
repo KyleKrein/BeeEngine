@@ -16,6 +16,7 @@
 #include "VulkanCommandBuffer.h"
 #include "VulkanFence.h"
 #include "VulkanSemaphore.h"
+#include "VulkanBuffer.h"
 
 namespace BeeEngine::Internal
 {
@@ -56,10 +57,10 @@ namespace BeeEngine::Internal
         {
             return *m_SwapChain;
         }
-        VulkanPipeline& GetPipeline()
+        /*VulkanPipeline& GetPipeline()
         {
             return *m_Pipeline;
-        }
+        }*/
 
         const SwapChainSupportDetails& GetSwapChainSupportDetails()
         {
@@ -75,9 +76,11 @@ namespace BeeEngine::Internal
         void CreateBuffer(
                 VkDeviceSize size,
                 VkBufferUsageFlags usage,
-                VkMemoryPropertyFlags properties,
-                VkBuffer &buffer,
-                VkDeviceMemory &bufferMemory);
+                VmaMemoryUsage memoryUsage,
+                out<VulkanBuffer> buffer) const;
+
+        void CopyToBuffer(gsl::span<byte> data, out<VulkanBuffer> buffer) const;
+
 
         VkCommandBuffer BeginSingleTimeCommands();
 
@@ -98,7 +101,10 @@ namespace BeeEngine::Internal
 
         vk::PhysicalDeviceProperties properties;
 
+        static VulkanGraphicsDevice &GetInstance();
+
     private:
+        static VulkanGraphicsDevice* s_Instance;
 
         uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         //
@@ -112,6 +118,7 @@ namespace BeeEngine::Internal
             {
                 vmaDestroyAllocator(allocator);
                 device.destroy();
+                VulkanGraphicsDevice::s_Instance = nullptr;
             }
         };
         QueueFamilyIndices m_QueueFamilyIndices;
@@ -127,9 +134,19 @@ namespace BeeEngine::Internal
         Ref<VulkanGraphicsQueue> m_GraphicsQueue;
         Ref<VulkanGraphicsQueue> m_PresentQueue;
 
-        Ref<VulkanPipeline> m_Pipeline;
+        //Ref<VulkanPipeline> m_Pipeline;
         VulkanCommandBuffer m_MainCommandBuffer;
         Ref<VulkanCommandPool> m_CommandPool;
+
+        struct DeletionQueueFlusher
+        {
+            ~DeletionQueueFlusher()
+            {
+                DeletionQueue::Main().Flush();
+            }
+        };
+
+        DeletionQueueFlusher m_Deleter;
 
         void LogDeviceProperties(vk::PhysicalDevice &device) const;
 
@@ -142,5 +159,13 @@ namespace BeeEngine::Internal
         void CreatePhysicalDevice(const VulkanInstance &instance);
         void CreateLogicalDevice();
         void InitializeVulkanMemoryAllocator(VulkanInstance &instance);
+
+
+        friend VmaAllocator GetVulkanAllocator();
     };
+
+    inline VmaAllocator GetVulkanAllocator()
+    {
+        return VulkanGraphicsDevice::s_Instance->m_DeviceHandle.allocator;
+    }
 }
