@@ -4,23 +4,20 @@
 
 #pragma once
 
-#include "BufferLayout.h"
+#include "glm.hpp"
 
 namespace BeeEngine
 {
-    class Vertex
+    struct Vertex
     {
-    public:
-        void SetLayout(const BufferLayout& layout)
-        {
-            m_Layout = layout;
+        glm::vec3 Position {
+                0.0f, 0.0f, 0.0f
         };
-
-        [[nodiscard]] inline const BufferLayout& GetLayout() const
-        {
-            return m_Layout;
+        glm::vec3 Normal {
+                0.0f, 0.0f, 0.0f
         };
-    private:
-        BufferLayout m_Layout;
+        glm::vec3 Color {
+                0.0f, 0.0f, 0.0f
+        };
     };
 }

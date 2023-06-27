@@ -209,8 +209,8 @@ namespace BeeEngine::Internal
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
-        auto bindingDescription = VulkanModel::Vertex::GetBindingDescriptions();
-        auto attributeDescriptions = VulkanModel::Vertex::GetAttributeDescriptions();
+        auto& bindingDescription = configInfo.bindingDescriptions;
+        auto& attributeDescriptions = configInfo.attributeDescriptions;
         vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = vk::StructureType::ePipelineVertexInputStateCreateInfo;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());

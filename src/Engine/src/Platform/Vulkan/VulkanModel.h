@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VulkanGraphicsDevice.h"
+#include "Renderer/Mesh.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -9,25 +10,10 @@
 #include <vector>
 namespace BeeEngine::Internal
 {
-    class VulkanModel
+    class VulkanModel: public Mesh
     {
     public:
-        struct Vertex
-        {
-            glm::vec3 Position {
-                    0.0f, 0.0f, 0.0f
-            };
-            glm::vec3 Normal {
-                    0.0f, 0.0f, 0.0f
-            };
-            glm::vec3 Color {
-                    0.0f, 0.0f, 0.0f
-            };
-
-            static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
-            static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
-        };
-        VulkanModel(VulkanGraphicsDevice& graphicsDevice, const std::vector<Vertex>& vertices);
+        VulkanModel(VulkanGraphicsDevice& graphicsDevice, gsl::span<byte> vertices, uint32_t numberOfVertices, BufferLayout layout);
         ~VulkanModel();
         VulkanModel(const VulkanModel& other) = delete;
         VulkanModel& operator=(const VulkanModel& other ) = delete;
@@ -41,11 +27,37 @@ namespace BeeEngine::Internal
             return m_VertexCount;
         }
 
+        [[nodiscard]] uint32_t GetVertexSize() const
+        {
+            return m_VertexSize;
+        }
+
+        [[nodiscard]] const BufferLayout& GetLayout() const
+        {
+            return m_Layout;
+        }
+
+        [[nodiscard]] const std::vector<VkVertexInputBindingDescription>& GetBindingDescriptions() const
+        {
+            return m_BindingDescriptions;
+        }
+
+        [[nodiscard]] const std::vector<VkVertexInputAttributeDescription>& GetAttributeDescriptions() const
+        {
+            return m_AttributeDescriptions;
+        }
+
     private:
-        void CreateVertexBuffers(in<std::vector<Vertex>> vertices);
+        void CreateVertexBuffers(gsl::span<byte> vertices);
+        VkFormat ConvertShaderTypeToVulkan(ShaderDataType type);
+        void InitLayout();
 
         VulkanGraphicsDevice& m_GraphicsDevice;
         VulkanBuffer m_VertexBuffer;
         uint32_t m_VertexCount;
+        uint32_t m_VertexSize;
+        BufferLayout m_Layout;
+        std::vector<VkVertexInputBindingDescription> m_BindingDescriptions;
+        std::vector<VkVertexInputAttributeDescription> m_AttributeDescriptions;
     };
 }

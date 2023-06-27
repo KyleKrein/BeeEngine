@@ -13,6 +13,8 @@
 #include "gtx/quaternion.hpp"
 #include "Core/Math/Math.h"
 #include "Core/Color4.h"
+#include "Renderer/Mesh.h"
+#include "Renderer/Material.h"
 
 namespace BeeEngine
 {
@@ -82,6 +84,22 @@ namespace BeeEngine
 
         operator Ref<Texture2D>&() { return Texture; }
         operator const Ref<Texture2D>&() const { return Texture; }
+    };
+
+    struct MeshComponent
+    {
+        Ref<Mesh> Mesh = nullptr;
+        Ref<Material> Material = nullptr;
+
+        MeshComponent() = default;
+        MeshComponent(const MeshComponent&) = default;
+        MeshComponent(const Ref<BeeEngine::Mesh>& mesh): Mesh(mesh) {}
+        MeshComponent(Ref<BeeEngine::Mesh>&& mesh): Mesh(std::move(mesh)) {}
+        MeshComponent(const Ref<BeeEngine::Material>& material): Material(material) {}
+        MeshComponent(Ref<BeeEngine::Material>&& material): Material(std::move(material)) {}
+
+        operator Ref<BeeEngine::Mesh>&() { return Mesh; }
+        operator const Ref<BeeEngine::Mesh>&() const { return Mesh; }
     };
 
     struct NativeScriptComponent

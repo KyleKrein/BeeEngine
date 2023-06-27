@@ -11,7 +11,7 @@
 
 namespace BeeEngine
 {
-    enum ShaderType
+    enum class ShaderType
     {
         Vertex = 0,
         Fragment = 1

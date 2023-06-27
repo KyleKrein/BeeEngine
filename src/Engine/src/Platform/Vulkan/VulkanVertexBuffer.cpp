@@ -1,35 +1,22 @@
-#include "VulkanModel.h"
-#include "vk_mem_alloc.h"
+//
+// Created by Александр Лебедев on 27.06.2023.
+//
+
+#include "VulkanVertexBuffer.h"
 
 namespace BeeEngine::Internal
 {
-    VulkanModel::VulkanModel(VulkanGraphicsDevice& graphicsDevice, gsl::span<byte> vertices, uint32_t numberOfVertices, BufferLayout layout)
-    : m_GraphicsDevice(graphicsDevice), m_VertexCount(numberOfVertices), m_Layout(std::move(layout))
+
+    VulkanVertexBuffer::VulkanVertexBuffer(uint32_t numberOfVertices, in<BufferLayout> layout)
     {
+        m_Layout = layout;
+        m_Size = numberOfVertices * layout.GetStride();
         InitLayout();
-        CreateVertexBuffers(vertices);
-    }
-    VulkanModel::~VulkanModel()
-    {
-        //vkDeviceWaitIdle(m_GraphicsDevice.GetDevice());
-        //vkDestroyBuffer(m_GraphicsDevice.GetDevice(), m_VertexBuffer, nullptr);
-        //vkFreeMemory(m_GraphicsDevice.GetDevice(), m_VertexBufferMemory, nullptr);
     }
 
-    void VulkanModel::Draw(VkCommandBuffer commandBuffer)
+    void VulkanVertexBuffer::InitLayout()
     {
-        vkCmdDraw(commandBuffer, m_VertexCount, 1, 0, 0);
-    }
-
-    void VulkanModel::Bind(VkCommandBuffer commandBuffer)
-    {
-        VkBuffer buffers [] = {m_VertexBuffer.Buffer};
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
-    }
-
-    void VulkanModel::InitLayout()
-    {
+        m_BindingDescriptions.clear();
         m_BindingDescriptions.resize(1);
         m_BindingDescriptions[0].binding = 0;
         m_BindingDescriptions[0].stride = m_Layout.GetStride();
@@ -43,11 +30,10 @@ namespace BeeEngine::Internal
             m_AttributeDescriptions[i].location = i;
             m_AttributeDescriptions[i].format = ConvertShaderTypeToVulkan(m_Layout.GetElements()[i].GetType());
             m_AttributeDescriptions[i].offset = m_Layout.GetElements()[i].GetOffset();
-            m_VertexSize += m_Layout.GetElements()[i].GetSize();
         }
     }
 
-    VkFormat VulkanModel::ConvertShaderTypeToVulkan(ShaderDataType type)
+    VkFormat VulkanVertexBuffer::ConvertShaderTypeToVulkan(ShaderDataType type)
     {
         for (const auto& element : m_Layout)
         {
@@ -78,21 +64,5 @@ namespace BeeEngine::Internal
                     BeeCoreError("Unknown ShaderDataType!");
             }
         }
-    }
-
-    void VulkanModel::Unbind()
-    {
-
-    }
-
-    void VulkanModel::CreateVertexBuffers(gsl::span<byte> vertices)
-    {
-        BeeExpects(m_VertexCount >= 3);
-
-        VkDeviceSize bufferSize = m_VertexSize * m_VertexCount;
-        m_GraphicsDevice.CreateBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                      VMA_MEMORY_USAGE_AUTO,
-                                      m_VertexBuffer);
-        m_GraphicsDevice.CopyToBuffer({(byte*)vertices.data(), bufferSize}, m_VertexBuffer);
     }
 }

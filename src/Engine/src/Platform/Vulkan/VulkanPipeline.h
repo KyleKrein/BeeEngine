@@ -37,6 +37,9 @@ namespace BeeEngine::Internal
         vk::PipelineLayout pipelineLayout = nullptr;
         vk::RenderPass renderPass = nullptr;
         uint32_t subpass = 0;
+
+        std::vector<VkVertexInputBindingDescription> bindingDescriptions {};
+        std::vector<VkVertexInputAttributeDescription> attributeDescriptions {};
     };
     class VulkanGraphicsDevice;
     class VulkanPipeline

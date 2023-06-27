@@ -4,14 +4,14 @@
 
 #pragma once
 #include "Core/TypeDefines.h"
-#include "Platform/Vulkan/VulkanModel.h"
+#include "Renderer/Vertex.h"
 
 namespace BeeEngine::Internal
 {
     class ModelLoader
     {
     public:
-        [[nodiscard("Returns if loading was successful")]] static bool LoadObj(std::string_view path, out<std::vector<VulkanModel::Vertex>> vertices);
+        [[nodiscard("Returns if loading was successful")]] static bool LoadObj(std::string_view path, out<std::vector<BeeEngine::Vertex>> vertices);
     };
 }
 

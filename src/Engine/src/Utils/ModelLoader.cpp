@@ -8,7 +8,7 @@
 namespace BeeEngine::Internal
 {
 
-    bool ModelLoader::LoadObj(std::string_view path, out<std::vector<VulkanModel::Vertex>> vertices)
+    bool ModelLoader::LoadObj(std::string_view path, out<std::vector<BeeEngine::Vertex>> vertices)
     {
         //attrib will contain the vertex arrays of the file
         tinyobj::attrib_t attrib;
@@ -58,7 +58,7 @@ namespace BeeEngine::Internal
                     tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
 
                     //copy it into our vertex
-                    VulkanModel::Vertex new_vert {};
+                    BeeEngine::Vertex new_vert {};
                     new_vert.Position.x = vx;
                     new_vert.Position.y = vy;
                     new_vert.Position.z = vz;
