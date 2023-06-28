@@ -76,7 +76,9 @@ namespace BeeEngine::Internal
             m_Extent = capabilities.currentExtent;
         } else {
             int width, height;
+#if defined(DESKTOP_PLATFORM)
             glfwGetFramebufferSize((GLFWwindow*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
+#endif
             VkExtent2D actualExtent = VkExtent2D {(uint32_t)width, (uint32_t)height};
             actualExtent.width = std::max(
                     capabilities.minImageExtent.width,

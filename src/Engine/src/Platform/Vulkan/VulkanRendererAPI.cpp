@@ -39,8 +39,10 @@ namespace BeeEngine::Internal
         int width = 0, height = 0;
         while (width == 0 || height == 0)
         {
+#if defined(DESKTOP_PLATFORM)
             glfwGetWindowSize((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), &width, &height);
             glfwWaitEvents();
+#endif
         }
 
         m_GraphicsDevice.WindowResized(width, height);

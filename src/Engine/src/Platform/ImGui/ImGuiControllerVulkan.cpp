@@ -3,10 +3,12 @@
 //
 #define VK_VERSION_
 #define GLFW_INCLUDE_VULKAN
+#if defined(DESKTOP_PLATFORM)
 #include "GLFW/glfw3.h"
+#include "backends/imgui_impl_glfw.h"
+#endif
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 #include "Platform/Vulkan/VulkanRendererAPI.h"
-#include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "ImGuiControllerVulkan.h"
 
@@ -76,7 +78,9 @@ namespace BeeEngine
         //SetDarkThemeColors();
 
         //this initializes imgui for SDL
+#if defined(DESKTOP_PLATFORM)
         ImGui_ImplGlfw_InitForVulkan(window, true);
+#endif
 
         //this initializes imgui for Vulkan
         ImGui_ImplVulkan_InitInfo init_info = {};
@@ -114,7 +118,9 @@ namespace BeeEngine
     {
         // Start the Dear ImGui frame
         ImGui_ImplVulkan_NewFrame();
+#if defined(DESKTOP_PLATFORM)
         ImGui_ImplGlfw_NewFrame();
+#endif
         ImGui::NewFrame();
     }
 

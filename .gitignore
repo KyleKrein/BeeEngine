@@ -47,5 +47,6 @@ bin
 bin/Debug
 bin/Release
 .idea
+.vscode
 
 [Bb][Uu][Ii][Ll][Dd]/

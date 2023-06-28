@@ -14,8 +14,13 @@ namespace BeeEngine
 {
 
     GLFWWindowHandler::GLFWWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
-            : WindowHandler(eventQueue), m_Window(nullptr), m_IsRunning(false), m_IsClosing(false)
+            : WindowHandler(eventQueue),
+#if defined(DESKTOP_PLATFORM)
+            m_Window(nullptr),
+#endif
+            m_IsRunning(false), m_IsClosing(false)
     {
+#if defined(DESKTOP_PLATFORM)
         BEE_PROFILE_FUNCTION();
         s_Instance = this;
         m_Title = properties.Title;
@@ -51,8 +56,9 @@ namespace BeeEngine
         glfwSetWindowCloseCallback(m_Window, WindowCloseCallback);
 
         //glViewport(0, 0, m_Width, m_Height);
+#endif
     }
-
+#if defined(DESKTOP_PLATFORM)
     void GLFWWindowHandler::SetWidth(uint16_t width)
     {
         BEE_PROFILE_FUNCTION();
@@ -515,5 +521,6 @@ namespace BeeEngine
         m_Instance = CreateScope<Internal::VulkanInstance>(properties.Title, WindowHandlerAPI::GLFW);
         m_GraphicsDevice = CreateScope<Internal::VulkanGraphicsDevice>(*(Internal::VulkanInstance*)m_Instance.get());
     }
+#endif
 }
 

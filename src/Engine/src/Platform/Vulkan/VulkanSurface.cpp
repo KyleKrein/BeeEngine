@@ -17,13 +17,17 @@ namespace BeeEngine::Internal
         }
 
         m_WindowApi = windowApi;
+#if defined(DESKTOP_PLATFORM)
         auto glfwWindow = (GLFWwindow*)WindowHandler::GetInstance()->GetWindow();
+#endif
         VkSurfaceKHR cSurface;
+#if defined(DESKTOP_PLATFORM)
         auto result = glfwCreateWindowSurface(instance, glfwWindow, nullptr, &cSurface);
         if(result != VK_SUCCESS)
         {
             BeeCoreFatalError("Failed to create Vulkan surface!");
         }
+#endif
         m_Surface = vk::SurfaceKHR(cSurface);
     }
 

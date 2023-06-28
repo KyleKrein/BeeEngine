@@ -3,35 +3,72 @@ project(BeeEngine)
 #set(CMAKE_CXX_STANDARD 17)
 
 
-set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cpp src/Core/Application.cpp src/Core/Application.h src/Core/EntryPoint.h src/Windowing/WindowHandler/WindowHandler.cpp src/Windowing/WindowHandler/WindowHandler.h src/Windowing/WindowProperties.h src/Windowing/WindowHandler/GlfwWindowHandler.cpp src/Windowing/WindowHandler/GlfwWindowHandler.h src/Core/Logging/Log.h src/Core/Logging/Log.cpp src/Core/Events/Event.h src/Core/Events/EventQueue.cpp src/Core/Events/EventQueue.h src/Core/Layer.h src/Core/LayerStack.cpp src/Core/LayerStack.h src/Core/Input.cpp src/Core/Input.h src/KeyCodes.h src/Core/Events/EventImplementations.h src/Windowing/VSync.h src/Renderer/Renderer.cpp src/Renderer/Renderer.h src/Renderer/RendererAPI.h src/Platform/ImGui/ImGuiLoaderOpenGL.h src/Platform/ImGui/ImGuiController.h src/Core/Layer.cpp src/Platform/OpenGL/OpenGLRendererAPI.cpp src/Platform/OpenGL/OpenGLRendererAPI.h src/Renderer/RendererAPI.cpp src/Renderer/GraphicsBuffer.cpp src/Renderer/GraphicsBuffer.h src/Platform/OpenGL/OpenGLVertexBuffer.cpp src/Platform/OpenGL/OpenGLVertexBuffer.h src/Platform/OpenGL/OpenGLIndexBuffer.cpp src/Platform/OpenGL/OpenGLIndexBuffer.h src/Platform/OpenGL/OpenGLVertexArray.cpp src/Platform/OpenGL/OpenGLVertexArray.h src/Renderer/VertexArray.cpp src/Renderer/VertexArray.h src/Renderer/Shader.cpp src/Renderer/Shader.h src/Platform/OpenGL/OpenGLShader.cpp src/Platform/OpenGL/OpenGLShader.h src/Core/Color4.cpp src/Core/Color4.h src/Renderer/BufferLayout.cpp src/Renderer/BufferLayout.h src/Renderer/ShaderLibrary.cpp src/Renderer/ShaderLibrary.h src/Renderer/Texture.cpp src/Renderer/Texture.h src/Platform/OpenGL/OpenGLTexture2D.cpp src/Platform/OpenGL/OpenGLTexture2D.h src/Platform/OpenGL/OpenGLTexture2D.h src/Platform/OpenGL/OpenGLTexture2D.h src/Core/Events/Event.cpp src/Allocator/Allocator.h src/Debug/MemoryProfiler.cpp src/Debug/MemoryProfiler.h src/Debug/DebugLayer.cpp src/Debug/DebugLayer.h src/Core/SharedPointer.cpp src/Core/SharedPointer.h src/Renderer/FrameBuffer.cpp src/Renderer/FrameBuffer.h src/Platform/OpenGL/OpenGLFrameBuffer.cpp src/Platform/OpenGL/OpenGLFrameBuffer.h src/Core/ResourceManager.cpp src/Core/ResourceManager.h src/Renderer/Renderer2D.cpp src/Renderer/Renderer2D.h src/Core/Cameras/ICamera.cpp src/Core/Cameras/ICamera.h src/Renderer/RectangleProperties.h src/Renderer/Renderer2DAPI.cpp src/Renderer/Renderer2DAPI.h src/Platform/OpenGL/OpenGLRenderer2DAPI.cpp src/Platform/OpenGL/OpenGLRenderer2DAPI.h src/Core/Cameras/OrthographicCamera.cpp src/Core/Cameras/OrthographicCamera.h src/Core/Cameras/OrthographicCameraController.cpp src/Core/Cameras/OrthographicCameraController.h src/Core/Time.cpp src/Core/Time.h src/Debug/OpenGLDebug.h src/Debug/Timer.h src/Debug/Instrumentor.h src/Core/CodeSafety/Expects.h src/Gui/ImGui/FpsCounter.cpp src/Gui/ImGui/FpsCounter.h src/Scene/Scene.cpp src/Scene/Scene.h src/Scene/EntityID.h src/Scene/Components.h src/Scene/Entity.cpp src/Scene/Entity.h src/Core/Cameras/Camera.cpp src/Core/Cameras/Camera.h src/Scene/SceneCamera.cpp src/Scene/SceneCamera.h src/Scene/ScriptableEntity.cpp src/Scene/ScriptableEntity.h src/Platform/ImGui/ImGuiController.cpp vendor/Incbin/incbin.h Assets/EmbeddedResources.h src/Gui/ImGuiFonts.h src/Scene/SceneSerializer.cpp src/Scene/SceneSerializer.h src/source_location.h src/Property.h src/Utils/FileDialogs.h src/Core/Math/Math.h src/Core/Math/Math.cpp src/Renderer/EditorCamera.cpp src/Renderer/EditorCamera.h Assets/EmbeddedResources.cpp src/Core/CodeSafety/DebugLog.cpp src/Core/CodeSafety/DebugLog.h src/Core/OsPlatform.h src/Renderer/RenderAPI.h src/Renderer/GraphicsDevice.cpp src/Renderer/GraphicsDevice.h src/Renderer/Surface.cpp src/Renderer/Surface.h src/Renderer/CommandPool.cpp src/Renderer/CommandPool.h src/Renderer/DeviceID.cpp src/Renderer/DeviceID.h src/Renderer/GraphicsQueue.cpp src/Renderer/GraphicsQueue.h src/Renderer/SwapChain.cpp src/Renderer/SwapChain.h src/Platform/Vulkan/VulkanGraphicsDevice.cpp src/Platform/Vulkan/VulkanGraphicsDevice.h src/Platform/Vulkan/VulkanCommandPool.cpp src/Platform/Vulkan/VulkanCommandPool.h src/Platform/Vulkan/VulkanGraphicsQueue.cpp src/Platform/Vulkan/VulkanGraphicsQueue.h src/Platform/Vulkan/VulkanSurface.cpp src/Platform/Vulkan/VulkanSurface.h src/Platform/Vulkan/VulkanSwapChain.cpp src/Platform/Vulkan/VulkanSwapChain.h src/Renderer/Instance.cpp src/Renderer/Instance.h src/Platform/Vulkan/VulkanInstance.cpp src/Platform/Vulkan/VulkanInstance.h src/Renderer/QueueFamilyIndices.cpp src/Renderer/QueueFamilyIndices.h src/Platform/Vulkan/VulkanShader.cpp src/Platform/Vulkan/VulkanShader.h src/Utils/File.cpp src/Utils/File.h src/Platform/Vulkan/VulkanShaderModule.cpp src/Platform/Vulkan/VulkanShaderModule.h src/Platform/Vulkan/VulkanPipeline.cpp src/Platform/Vulkan/VulkanPipeline.h src/Platform/Vulkan/VulkanRenderPass.cpp src/Platform/Vulkan/VulkanRenderPass.h src/Platform/Vulkan/VulkanFramebuffer.cpp src/Platform/Vulkan/VulkanFramebuffer.h src/Platform/Vulkan/VulkanCommandBuffer.cpp src/Platform/Vulkan/VulkanCommandBuffer.h src/Platform/Vulkan/VulkanSemaphore.cpp src/Platform/Vulkan/VulkanSemaphore.h src/Platform/Vulkan/VulkanFence.cpp src/Platform/Vulkan/VulkanFence.h src/Platform/ImGui/ImGuiControllerVulkan.h src/Platform/ImGui/ImGuiControllerVulkan.cpp src/Utils/ShaderConverter.h src/Utils/ShaderConverter.cpp src/Platform/Vulkan/VulkanModel.h src/Platform/Vulkan/VulkanModel.cpp vendor/VulkanMemoryAllocator/vk_mem_alloc.h vendor/VulkanMemoryAllocator/vk_mem_alloc.cpp src/Core/CodeSafety/NotNull.h src/Core/CodeSafety/BoundsChecking.h src/Platform/Vulkan/VulkanRendererAPI.cpp src/Platform/Vulkan/VulkanRendererAPI.h src/Platform/Vulkan/VulkanBuffer.h src/Renderer/Vertex.h src/Core/DeletionQueue.cpp src/Core/DeletionQueue.h src/Utils/ModelLoader.cpp src/Utils/ModelLoader.h src/Platform/Vulkan/VulkanImage.h src/Platform/Vulkan/Utils.h src/Platform/Vulkan/Utils.cpp src/Renderer/AssetManager.cpp src/Renderer/AssetManager.h src/Renderer/Mesh.h src/Platform/Vulkan/VulkanVertexBuffer.cpp src/Platform/Vulkan/VulkanVertexBuffer.h src/Renderer/Mesh.cpp src/Renderer/Material.cpp src/Renderer/Material.h src/Platform/Vulkan/VulkanMaterial.cpp src/Platform/Vulkan/VulkanMaterial.h src/Platform/Vulkan/VulkanRenderer2DAPI.cpp src/Platform/Vulkan/VulkanRenderer2DAPI.h)
+set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cpp src/Core/Application.cpp src/Core/Application.h src/Core/EntryPoint.h src/Windowing/WindowHandler/WindowHandler.cpp src/Windowing/WindowHandler/WindowHandler.h src/Windowing/WindowProperties.h src/Core/Logging/Log.h src/Core/Logging/Log.cpp src/Core/Events/Event.h src/Core/Events/EventQueue.cpp src/Core/Events/EventQueue.h src/Core/Layer.h src/Core/LayerStack.cpp src/Core/LayerStack.h src/Core/Input.cpp src/Core/Input.h src/KeyCodes.h src/Core/Events/EventImplementations.h src/Windowing/VSync.h src/Renderer/Renderer.cpp src/Renderer/Renderer.h src/Renderer/RendererAPI.h src/Platform/ImGui/ImGuiLoaderOpenGL.h src/Platform/ImGui/ImGuiController.h src/Core/Layer.cpp src/Platform/OpenGL/OpenGLRendererAPI.cpp src/Platform/OpenGL/OpenGLRendererAPI.h src/Renderer/RendererAPI.cpp src/Renderer/GraphicsBuffer.cpp src/Renderer/GraphicsBuffer.h src/Platform/OpenGL/OpenGLVertexBuffer.cpp src/Platform/OpenGL/OpenGLVertexBuffer.h src/Platform/OpenGL/OpenGLIndexBuffer.cpp src/Platform/OpenGL/OpenGLIndexBuffer.h src/Platform/OpenGL/OpenGLVertexArray.cpp src/Platform/OpenGL/OpenGLVertexArray.h src/Renderer/VertexArray.cpp src/Renderer/VertexArray.h src/Renderer/Shader.cpp src/Renderer/Shader.h src/Platform/OpenGL/OpenGLShader.cpp src/Platform/OpenGL/OpenGLShader.h src/Core/Color4.cpp src/Core/Color4.h src/Renderer/BufferLayout.cpp src/Renderer/BufferLayout.h src/Renderer/ShaderLibrary.cpp src/Renderer/ShaderLibrary.h src/Renderer/Texture.cpp src/Renderer/Texture.h src/Platform/OpenGL/OpenGLTexture2D.cpp src/Platform/OpenGL/OpenGLTexture2D.h src/Platform/OpenGL/OpenGLTexture2D.h src/Platform/OpenGL/OpenGLTexture2D.h src/Core/Events/Event.cpp src/Allocator/Allocator.h src/Debug/MemoryProfiler.cpp src/Debug/MemoryProfiler.h src/Debug/DebugLayer.cpp src/Debug/DebugLayer.h src/Core/SharedPointer.cpp src/Core/SharedPointer.h src/Renderer/FrameBuffer.cpp src/Renderer/FrameBuffer.h src/Platform/OpenGL/OpenGLFrameBuffer.cpp src/Platform/OpenGL/OpenGLFrameBuffer.h src/Core/ResourceManager.cpp src/Core/ResourceManager.h src/Renderer/Renderer2D.cpp src/Renderer/Renderer2D.h src/Core/Cameras/ICamera.cpp src/Core/Cameras/ICamera.h src/Renderer/RectangleProperties.h src/Renderer/Renderer2DAPI.cpp src/Renderer/Renderer2DAPI.h src/Platform/OpenGL/OpenGLRenderer2DAPI.cpp src/Platform/OpenGL/OpenGLRenderer2DAPI.h src/Core/Cameras/OrthographicCamera.cpp src/Core/Cameras/OrthographicCamera.h src/Core/Cameras/OrthographicCameraController.cpp src/Core/Cameras/OrthographicCameraController.h src/Core/Time.cpp src/Core/Time.h src/Debug/OpenGLDebug.h src/Debug/Timer.h src/Debug/Instrumentor.h src/Core/CodeSafety/Expects.h src/Gui/ImGui/FpsCounter.cpp src/Gui/ImGui/FpsCounter.h src/Scene/Scene.cpp src/Scene/Scene.h src/Scene/EntityID.h src/Scene/Components.h src/Scene/Entity.cpp src/Scene/Entity.h src/Core/Cameras/Camera.cpp src/Core/Cameras/Camera.h src/Scene/SceneCamera.cpp src/Scene/SceneCamera.h src/Scene/ScriptableEntity.cpp src/Scene/ScriptableEntity.h src/Platform/ImGui/ImGuiController.cpp vendor/Incbin/incbin.h Assets/EmbeddedResources.h src/Gui/ImGuiFonts.h src/Scene/SceneSerializer.cpp src/Scene/SceneSerializer.h src/source_location.h src/Property.h src/Utils/FileDialogs.h src/Core/Math/Math.h src/Core/Math/Math.cpp src/Renderer/EditorCamera.cpp src/Renderer/EditorCamera.h Assets/EmbeddedResources.cpp src/Core/CodeSafety/DebugLog.cpp src/Core/CodeSafety/DebugLog.h src/Core/OsPlatform.h src/Renderer/RenderAPI.h src/Renderer/GraphicsDevice.cpp src/Renderer/GraphicsDevice.h src/Renderer/Surface.cpp src/Renderer/Surface.h src/Renderer/CommandPool.cpp src/Renderer/CommandPool.h src/Renderer/DeviceID.cpp src/Renderer/DeviceID.h src/Renderer/GraphicsQueue.cpp src/Renderer/GraphicsQueue.h src/Renderer/SwapChain.cpp src/Renderer/SwapChain.h src/Platform/Vulkan/VulkanGraphicsDevice.cpp src/Platform/Vulkan/VulkanGraphicsDevice.h src/Platform/Vulkan/VulkanCommandPool.cpp src/Platform/Vulkan/VulkanCommandPool.h src/Platform/Vulkan/VulkanGraphicsQueue.cpp src/Platform/Vulkan/VulkanGraphicsQueue.h src/Platform/Vulkan/VulkanSurface.cpp src/Platform/Vulkan/VulkanSurface.h src/Platform/Vulkan/VulkanSwapChain.cpp src/Platform/Vulkan/VulkanSwapChain.h src/Renderer/Instance.cpp src/Renderer/Instance.h src/Platform/Vulkan/VulkanInstance.cpp src/Platform/Vulkan/VulkanInstance.h src/Renderer/QueueFamilyIndices.cpp src/Renderer/QueueFamilyIndices.h src/Platform/Vulkan/VulkanShader.cpp src/Platform/Vulkan/VulkanShader.h src/Utils/File.cpp src/Utils/File.h src/Platform/Vulkan/VulkanShaderModule.cpp src/Platform/Vulkan/VulkanShaderModule.h src/Platform/Vulkan/VulkanPipeline.cpp src/Platform/Vulkan/VulkanPipeline.h src/Platform/Vulkan/VulkanRenderPass.cpp src/Platform/Vulkan/VulkanRenderPass.h src/Platform/Vulkan/VulkanFramebuffer.cpp src/Platform/Vulkan/VulkanFramebuffer.h src/Platform/Vulkan/VulkanCommandBuffer.cpp src/Platform/Vulkan/VulkanCommandBuffer.h src/Platform/Vulkan/VulkanSemaphore.cpp src/Platform/Vulkan/VulkanSemaphore.h src/Platform/Vulkan/VulkanFence.cpp src/Platform/Vulkan/VulkanFence.h src/Platform/ImGui/ImGuiControllerVulkan.h src/Platform/ImGui/ImGuiControllerVulkan.cpp src/Utils/ShaderConverter.h src/Utils/ShaderConverter.cpp src/Platform/Vulkan/VulkanModel.h src/Platform/Vulkan/VulkanModel.cpp vendor/VulkanMemoryAllocator/vk_mem_alloc.h vendor/VulkanMemoryAllocator/vk_mem_alloc.cpp src/Core/CodeSafety/NotNull.h src/Core/CodeSafety/BoundsChecking.h src/Platform/Vulkan/VulkanRendererAPI.cpp src/Platform/Vulkan/VulkanRendererAPI.h src/Platform/Vulkan/VulkanBuffer.h src/Renderer/Vertex.h src/Core/DeletionQueue.cpp src/Core/DeletionQueue.h src/Utils/ModelLoader.cpp src/Utils/ModelLoader.h src/Platform/Vulkan/VulkanImage.h src/Platform/Vulkan/Utils.h src/Platform/Vulkan/Utils.cpp src/Renderer/AssetManager.cpp src/Renderer/AssetManager.h src/Renderer/Mesh.h src/Platform/Vulkan/VulkanVertexBuffer.cpp src/Platform/Vulkan/VulkanVertexBuffer.h src/Renderer/Mesh.cpp src/Renderer/Material.cpp src/Renderer/Material.h src/Platform/Vulkan/VulkanMaterial.cpp src/Platform/Vulkan/VulkanMaterial.h src/Platform/Vulkan/VulkanRenderer2DAPI.cpp src/Platform/Vulkan/VulkanRenderer2DAPI.h src/Windowing/WindowHandler/GlfwWindowHandler.h src/Windowing/WindowHandler/GlfwWindowHandler.cpp)
+
+function(DesktopPlatformsOnly)
+    add_compile_definitions(DESKTOP_PLATFORM)
+endfunction(DesktopPlatformsOnly)
+
+function(MobilePlatformsOnly)
+    add_compile_definitions(MOBILE_PLATFORM)
+endfunction(MobilePlatformsOnly)
 
 if(IOS)
     # Covers iOS implementation
     add_compile_definitions(IOS)
+    MobilePlatformsOnly()
     #list(APPEND SOURCE_FILES "ios/MyClass.mm")
 elseif(APPLE)
     # Covers macOS implementation
     add_compile_definitions(MACOS)
     list(APPEND SOURCE_FILES "src/Platform/MacOS/FileDialogsMacOS.mm")
+    DesktopPlatformsOnly()
 elseif(ANDROID)
     # Covers Android implementation
     add_compile_definitions(ANDROID)
+    MobilePlatformsOnly()
     #list(APPEND SOURCE_FILES "android/MyClass.cpp")
 elseif(WIN32)
     # Covers Windows implementation
     add_compile_definitions(WINDOWS)
     list(APPEND SOURCE_FILES "src/Platform/Windows/FileDialogsWindows.cpp")
+    DesktopPlatformsOnly()
 elseif (UNIX AND NOT APPLE)
     # Covers Linux implementation
     add_compile_definitions(LINUX)
     list(APPEND SOURCE_FILES "src/Platform/Linux/FileDialogsLinux.cpp")
+    DesktopPlatformsOnly()
 endif()
+
 
 add_library(BeeEngine STATIC ${SOURCE_FILES})
 
+if(IOS)
+    # Covers iOS implementation
+elseif(APPLE)
+    # Covers macOS implementation
+    add_subdirectory(vendor/glfw)
+    target_include_directories( ${PROJECT_NAME} PRIVATE vendor/glfw/include)
+    target_link_directories( ${PROJECT_NAME} PRIVATE vendor/glfw/include)
+    target_link_libraries( ${PROJECT_NAME} PUBLIC glfw)
+elseif(ANDROID)
+    # Covers Android implementation
+elseif(WIN32)
+    # Covers Windows implementation
+    add_subdirectory(vendor/glfw)
+    target_include_directories( ${PROJECT_NAME} PRIVATE vendor/glfw/include)
+    target_link_directories( ${PROJECT_NAME} PRIVATE vendor/glfw/include)
+    target_link_libraries( ${PROJECT_NAME} PUBLIC glfw)
+elseif (UNIX AND NOT APPLE)
+    # Covers Linux implementation
+    add_subdirectory(vendor/glfw)
+    target_include_directories( ${PROJECT_NAME} PRIVATE vendor/glfw/include)
+    target_link_directories( ${PROJECT_NAME} PRIVATE vendor/glfw/include)
+    target_link_libraries( ${PROJECT_NAME} PUBLIC glfw)
+endif()
+
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
-add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/glad)
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glm)
@@ -43,12 +80,12 @@ add_subdirectory(vendor/yaml-cpp)
 add_subdirectory(vendor/ImGuizmo)
 add_subdirectory(vendor/glslang)
 add_subdirectory(vendor/tinyobjloader)
+add_subdirectory(vendor/sdl)
 
 find_package(Vulkan REQUIRED)
 
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
-        PUBLIC vendor/glfw/include
         PUBLIC src
         PUBLIC vendor/glad/include
         PUBLIC vendor/spdlog/include
@@ -65,10 +102,10 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/glslang
         PUBLIC vendor/VulkanMemoryAllocator
         PUBLIC vendor/tinyobjloader
+        PUBLIC vendor/sdl/include
         )
 target_link_directories( ${PROJECT_NAME}
         PRIVATE src
-        PRIVATE vendor/glfw/include
         PRIVATE vendor/glad/include
         PRIVATE include
         PRIVATE vendor/spdlog/include
@@ -87,7 +124,6 @@ target_link_directories( ${PROJECT_NAME}
         )
 
 target_link_libraries( ${PROJECT_NAME}
-        PUBLIC glfw
         PUBLIC glad
         PUBLIC spdlog
         PUBLIC glm
@@ -101,6 +137,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC glslang
         PUBLIC SPIRV
         PUBLIC tinyobjloader
+        PUBLIC SDL3::SDL3
         )
 
 # Создаем определение DEBUG только для debug configuration
