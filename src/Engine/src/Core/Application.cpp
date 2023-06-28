@@ -53,7 +53,7 @@ namespace BeeEngine{
         auto appProperties = properties;
         CheckRendererAPIForCompatibility(appProperties);
 
-        m_Window.reset(WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue));
+        m_Window.reset(WindowHandler::Create(WindowHandlerAPI::SDL, properties, m_EventQueue));
         Renderer::SetAPI(appProperties.PreferredRenderAPI);
 
         m_Layers.SetGuiLayer(new ImGuiLayer());

@@ -7,6 +7,7 @@
 #include "shaderc/shaderc.hpp"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "VulkanGraphicsDevice.h"
+#include "SDL_vulkan.h"
 
 
 namespace BeeEngine::Internal
@@ -77,7 +78,16 @@ namespace BeeEngine::Internal
         } else {
             int width, height;
 #if defined(DESKTOP_PLATFORM)
-            glfwGetFramebufferSize((GLFWwindow*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
+            if(WindowHandler::GetAPI() == WindowHandlerAPI::SDL)
+            {
+#endif
+                SDL_GetWindowSize((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
+#if defined(DESKTOP_PLATFORM)
+            }
+            else
+            {
+                glfwGetFramebufferSize((GLFWwindow*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
+            }
 #endif
             VkExtent2D actualExtent = VkExtent2D {(uint32_t)width, (uint32_t)height};
             actualExtent.width = std::max(

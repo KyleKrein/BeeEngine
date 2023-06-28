@@ -6,13 +6,16 @@
 
 #include "ImGuiController.h"
 #include "backends/imgui_impl_vulkan.h"
+#include "backends/imgui_impl_sdl3.h"
 
 
 namespace BeeEngine
 {
     class ImGuiControllerVulkan: public ImGuiController
     {
-        GLFWwindow* window;
+        GLFWwindow* m_GlfwWindow;
+        SDL_Window* m_SdlWindow;
+        WindowHandlerAPI windowHandlerAPI;
         int w, h;
         ImGui_ImplVulkanH_Window* wd;
     public:

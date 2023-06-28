@@ -18,7 +18,19 @@ namespace BeeEngine
     void BeeEngine::ImGuiControllerVulkan::Initialize(uint16_t width, uint16_t height, uint64_t glfwwindow)
     {
         //return;
-        window = reinterpret_cast<GLFWwindow *>(glfwwindow);
+#if defined(DESKTOP_PLATFORM)
+        windowHandlerAPI = WindowHandler::GetAPI();
+        if(windowHandlerAPI == WindowHandlerAPI::GLFW)
+        {
+            m_GlfwWindow = reinterpret_cast<GLFWwindow *>(glfwwindow);
+        }
+        else
+        {
+#endif
+            m_SdlWindow = reinterpret_cast<SDL_Window *>(glfwwindow);
+#if defined(DESKTOP_PLATFORM)
+        }
+#endif
 
         Internal::VulkanGraphicsDevice& graphicsDevice = *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
 
@@ -79,7 +91,16 @@ namespace BeeEngine
 
         //this initializes imgui for SDL
 #if defined(DESKTOP_PLATFORM)
-        ImGui_ImplGlfw_InitForVulkan(window, true);
+        if(windowHandlerAPI == WindowHandlerAPI::GLFW)
+        {
+            ImGui_ImplGlfw_InitForVulkan(m_GlfwWindow, true);
+        }
+        else
+        {
+#endif
+            ImGui_ImplSDL3_InitForVulkan(m_SdlWindow);
+#if defined(DESKTOP_PLATFORM)
+        }
 #endif
 
         //this initializes imgui for Vulkan
@@ -119,7 +140,16 @@ namespace BeeEngine
         // Start the Dear ImGui frame
         ImGui_ImplVulkan_NewFrame();
 #if defined(DESKTOP_PLATFORM)
-        ImGui_ImplGlfw_NewFrame();
+        if(windowHandlerAPI == WindowHandlerAPI::GLFW)
+        {
+            ImGui_ImplGlfw_NewFrame();
+        }
+        else
+        {
+#endif
+            ImGui_ImplSDL3_NewFrame();
+#if defined(DESKTOP_PLATFORM)
+        }
 #endif
         ImGui::NewFrame();
     }

@@ -20,11 +20,29 @@ namespace BeeEngine
     struct KeyPressedEvent: public Event
     {
     public:
-        explicit KeyPressedEvent(Key key) noexcept
+        explicit KeyPressedEvent(Key key, int repeat = 0) noexcept
         {
             Category = (EventCategory)(EventCategory::Keyboard & EventCategory::Input);
             m_Key = key;
+            m_Repeat = repeat;
             m_Type = EventType::KeyPressed;
+        }
+        Key GetKey()
+        {
+            return m_Key;
+        }
+    private:
+        Key m_Key;
+        int m_Repeat;
+    };
+    struct KeyReleasedEvent: public Event
+    {
+    public:
+        explicit KeyReleasedEvent(Key key) noexcept
+        {
+            Category = (EventCategory)(EventCategory::Keyboard & EventCategory::Input);
+            m_Key = key;
+            m_Type = EventType::KeyReleased;
         }
         Key GetKey()
         {
@@ -131,5 +149,22 @@ namespace BeeEngine
         }
     private:
         uint16_t m_Width, m_Height;
+    };
+
+    struct WindowFocusedEvent: public Event
+    {
+    public:
+        WindowFocusedEvent(bool isFocused) noexcept
+        : m_IsFocused(isFocused)
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::WindowFocus;
+        }
+        bool IsFocused() const
+        {
+            return m_IsFocused;
+        }
+    private:
+        bool m_IsFocused;
     };
 }

@@ -29,10 +29,11 @@ namespace BeeEngine
         AppUpdate = 7,
         AppRender = 8,
         KeyPressed = 9,
-        KeyTyped = 10,
-        MouseButtonPressed = 11,
-        MouseMoved = 12,
-        MouseScrolled = 13
+        KeyReleased = 10,
+        KeyTyped = 11,
+        MouseButtonPressed = 12,
+        MouseMoved = 13,
+        MouseScrolled = 14
     };
     class Event
     {

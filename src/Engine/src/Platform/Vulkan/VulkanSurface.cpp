@@ -3,6 +3,7 @@
 //
 
 #include "VulkanSurface.h"
+#include "SDL_vulkan.h"
 
 
 namespace BeeEngine::Internal
@@ -11,21 +12,29 @@ namespace BeeEngine::Internal
     VulkanSurface::VulkanSurface(WindowHandlerAPI windowApi, vk::Instance &instance)
     : m_Instance(instance)
     {
-        if(windowApi == WindowHandlerAPI::SDL)
-        {
-            BeeCoreFatalError("SDL WindowHandlerAPI not implemented yet!");
-        }
-
         m_WindowApi = windowApi;
-#if defined(DESKTOP_PLATFORM)
-        auto glfwWindow = (GLFWwindow*)WindowHandler::GetInstance()->GetWindow();
-#endif
         VkSurfaceKHR cSurface;
 #if defined(DESKTOP_PLATFORM)
-        auto result = glfwCreateWindowSurface(instance, glfwWindow, nullptr, &cSurface);
-        if(result != VK_SUCCESS)
+        if(windowApi == WindowHandlerAPI::GLFW)
         {
-            BeeCoreFatalError("Failed to create Vulkan surface!");
+
+            auto glfwWindow = (GLFWwindow*)WindowHandler::GetInstance()->GetWindow();
+            auto result = glfwCreateWindowSurface(instance, glfwWindow, nullptr, &cSurface);
+            if(result != VK_SUCCESS)
+            {
+                BeeCoreFatalError("Failed to create Vulkan surface!");
+            }
+        }
+        else
+        {
+#endif
+            auto sdlWindow = (SDL_Window*)WindowHandler::GetInstance()->GetWindow();
+            auto result = SDL_Vulkan_CreateSurface(sdlWindow, instance, &cSurface);
+            if(result != SDL_TRUE)
+            {
+                BeeCoreFatalError("Failed to create Vulkan surface!");
+            }
+#if defined(DESKTOP_PLATFORM)
         }
 #endif
         m_Surface = vk::SurfaceKHR(cSurface);

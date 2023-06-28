@@ -33,5 +33,7 @@ namespace BeeEngine::Internal
         void MakeDebugMessenger();
 
         void ManageGLFW(vk::ApplicationInfo& appInfo);
+
+        void ManageSDL(vk::ApplicationInfo &info);
     };
 }

@@ -7,7 +7,7 @@
 #include "WindowHandler.h"
 #include "KeyCodes.h"
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
     class GLFWWindowHandler: public WindowHandler
     {

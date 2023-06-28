@@ -35,6 +35,10 @@ namespace BeeEngine
         {
             return s_Instance;
         }
+        static WindowHandlerAPI GetAPI()
+        {
+            return s_API;
+        }
         virtual uint64_t GetWindow() = 0;
         VSync GetVSync() const
         {
@@ -58,6 +62,7 @@ namespace BeeEngine
 
     protected:
         static WindowHandler* s_Instance;
+        static WindowHandlerAPI s_API;
         WindowHandler() = delete;
         WindowHandler(EventQueue& eventQueue): m_Events(eventQueue), m_Width(0), m_Height(0) {};
 

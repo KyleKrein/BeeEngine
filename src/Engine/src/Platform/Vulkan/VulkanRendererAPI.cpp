@@ -3,6 +3,7 @@
 //
 
 #include "VulkanRendererAPI.h"
+#include "SDL_vulkan.h"
 
 namespace BeeEngine::Internal
 {
@@ -40,8 +41,18 @@ namespace BeeEngine::Internal
         while (width == 0 || height == 0)
         {
 #if defined(DESKTOP_PLATFORM)
-            glfwGetWindowSize((GLFWwindow*)BeeEngine::WindowHandler::GetInstance()->GetWindow(), &width, &height);
-            glfwWaitEvents();
+            if(WindowHandler::GetAPI() == WindowHandlerAPI::SDL)
+            {
+#endif
+                SDL_GetWindowSize((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
+                WindowHandler::GetInstance()->ProcessEvents();
+#if defined(DESKTOP_PLATFORM)
+            }
+            else
+            {
+                glfwGetWindowSize((GLFWwindow*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
+                glfwWaitEvents();
+            }
 #endif
         }
 

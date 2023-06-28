@@ -10,7 +10,7 @@
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
 
     GLFWWindowHandler::GLFWWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
