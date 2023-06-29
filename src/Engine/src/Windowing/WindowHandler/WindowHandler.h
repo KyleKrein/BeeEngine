@@ -70,6 +70,10 @@ namespace BeeEngine
         {
             Time::Update(currentTime);
         }
+        void SetDeltaTime(double deltaTime, double totalTime)
+        {
+            Time::Set(deltaTime, totalTime);
+        }
         uint16_t m_Width;
         uint16_t m_Height;
         const char *m_Title;

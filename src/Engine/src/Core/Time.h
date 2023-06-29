@@ -9,14 +9,15 @@ namespace BeeEngine
     class Time
     {
     public:
-        inline static float TotalTime() { return m_TotalTime; }
-        inline static float DeltaTime() { return m_DeltaTime; }
+        inline static double TotalTime() { return m_TotalTime; }
+        inline static double DeltaTime() { return m_DeltaTime; }
 
         friend class WindowHandler;
     private:
 
         static void Update(float currentTime);
-        static float m_TotalTime;
-        static float m_DeltaTime;
+        static void Set(double deltaTime, double totalTime);
+        static double m_TotalTime;
+        static double m_DeltaTime;
     };
 }

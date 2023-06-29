@@ -3,7 +3,7 @@
 //
 
 #include "VulkanSurface.h"
-#include "SDL_vulkan.h"
+#include "SDL3/SDL_vulkan.h"
 
 
 namespace BeeEngine::Internal

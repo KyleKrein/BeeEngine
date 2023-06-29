@@ -63,11 +63,11 @@ void TestLayer::OnUpdate()
     //return;
     frame++;
     if(m_RendererAPI.IsFrameStarted())
-    {
+    /*{
         auto commandBuffer = m_RendererAPI.GetCurrentCommandBuffer();
         DrawMeshComponents(commandBuffer, m_MeshComponents);
     }
-    return;
+    return;*/
     {
         auto commandBuffer = m_RendererAPI.GetCurrentCommandBuffer();
         //m_RendererAPI.BeginSwapchainRenderPass(commandBuffer);

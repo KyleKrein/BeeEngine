@@ -15,7 +15,7 @@ namespace BeeEngine::Internal
         void Render() override;
         void OnEvent(EventDispatcher& event) override;
     private:
-        float m_LastTime = Time::TotalTime();
+        double m_LastTime = Time::TotalTime();
         float m_Fps = 0;
         float m_CurrentFps = 0;
     };

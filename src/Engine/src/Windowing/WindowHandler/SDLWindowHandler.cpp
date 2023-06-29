@@ -22,12 +22,24 @@ namespace BeeEngine::Internal
             BeeCoreFatalError("Failed to initialize SDL3!");
         }
 
-        auto windowFlags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE;
+        int windowFlags = SDL_WINDOW_RESIZABLE;
+
+        switch (properties.PreferredRenderAPI)
+        {
+            case Vulkan:
+                windowFlags |= SDL_WINDOW_VULKAN;
+                break;
+            case OpenGL:
+            case Metal:
+            case DirectX:
+            default:
+            BeeCoreFatalError("Invalid Renderer API chosen for SDL");
+        }
 
         if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
         {
-            m_Width = properties.Width/2;
-            m_Height = properties.Height/2;
+            m_Width = properties.Width;
+            m_Height = properties.Height;
             windowFlags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
         }
         else
@@ -73,7 +85,7 @@ namespace BeeEngine::Internal
     {
         if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
         {
-            m_Width = width/2;
+            m_Width = width;
         }
         else
         {
@@ -86,7 +98,7 @@ namespace BeeEngine::Internal
     {
         if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
         {
-            m_Height = height/2;
+            m_Height = height;
         }
         else
         {
@@ -135,8 +147,8 @@ namespace BeeEngine::Internal
                 {
                     if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
                     {
-                        m_Width = sdlEvent.window.data1*2;
-                        m_Height = sdlEvent.window.data2*2;
+                        m_Width = sdlEvent.window.data1;
+                        m_Height = sdlEvent.window.data2;
                     }
                     else
                     {
@@ -193,14 +205,9 @@ namespace BeeEngine::Internal
                     break;
                 }
                 case SDL_EVENT_KEY_DOWN:
-                {
-                    auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.keysym.scancode), sdlEvent.key.repeat);
-                    m_Events.AddEvent(std::move(event));
-                    break;
-                }
                 case SDL_EVENT_KEY_UP:
                 {
-                    auto event = CreateScope<KeyReleasedEvent>(ConvertKeyCode(sdlEvent.key.keysym.scancode));
+                    auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.keysym.scancode), sdlEvent.key.repeat);
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
@@ -216,7 +223,6 @@ namespace BeeEngine::Internal
                         auto event = CreateScope<CharTypedEvent>(sdlEvent.text.text[i]);
                         m_Events.AddEvent(std::move(event));
                     }
-                    //SDL_free(sdlEvent.text.text);
                     break;
                 }
                 case SDL_EVENT_KEYMAP_CHANGED:
@@ -225,19 +231,21 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_MOUSE_MOTION:
                 {
+                    auto event = CreateScope<MouseMovedEvent>(sdlEvent.motion.x, sdlEvent.motion.y);
+                    m_Events.AddEvent(std::move(event));
                     break;
                 }
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                {
-                    auto event = CreateScope<MouseButtonPressedEvent>(ConvertMouseButton(sdlEvent.button.button));
-                    break;
-                }
                 case SDL_EVENT_MOUSE_BUTTON_UP:
                 {
+                    auto event = CreateScope<MouseButtonPressedEvent>(ConvertMouseButton(sdlEvent.button.button));
+                    m_Events.AddEvent(std::move(event));
                     break;
                 }
                 case SDL_EVENT_MOUSE_WHEEL:
                 {
+                    auto event = CreateScope<MouseScrolledEvent>(sdlEvent.wheel.x, sdlEvent.wheel.y);
+                    m_Events.AddEvent(std::move(event));
                     break;
                 }
                 case SDL_EVENT_JOYSTICK_AXIS_MOTION:
@@ -380,7 +388,13 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::UpdateTime()
     {
-        UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetTicks()));
+        static uint64_t lastTime = 0;
+        static uint64_t currentTime = SDL_GetPerformanceCounter();
+        lastTime = currentTime;
+        currentTime = SDL_GetPerformanceCounter();
+        auto deltatime = gsl::narrow_cast<double>((currentTime - lastTime) / SDL_GetPerformanceFrequency());
+        SetDeltaTime(deltatime, currentTime/SDL_GetPerformanceFrequency());
+        //UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetPerformanceCounter()));
     }
 
     void SDLWindowHandler::Close()

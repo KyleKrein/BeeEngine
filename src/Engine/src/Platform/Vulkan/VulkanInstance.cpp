@@ -5,8 +5,8 @@
 #include "VulkanInstance.h"
 #include "Core/Logging/Log.h"
 #include "Core/Application.h"
-#include "SDL.h"
-#include "SDL_vulkan.h"
+#include "SDL3/SDL.h"
+#include "SDL3/SDL_vulkan.h"
 
 
 namespace BeeEngine::Internal
