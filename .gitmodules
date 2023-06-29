@@ -35,12 +35,12 @@
 [submodule "src/Engine/vendor/ImGuizmo"]
 	path = src/Engine/vendor/ImGuizmo
 	url = https://github.com/KyleKrein/ImGuizmo-for-BeeEngine.git
-[submodule "src/Engine/vendor/glslang"]
-	path = src/Engine/vendor/glslang
-	url = https://github.com/KhronosGroup/glslang.git
 [submodule "src/Engine/vendor/tinyobjloader"]
 	path = src/Engine/vendor/tinyobjloader
 	url = https://github.com/tinyobjloader/tinyobjloader.git
 [submodule "src/Engine/vendor/sdl"]
 	path = src/Engine/vendor/sdl
 	url = https://github.com/libsdl-org/SDL.git
+[submodule "src/Engine/vendor/glslang"]
+	path = src/Engine/vendor/glslang
+	url = https://github.com/KhronosGroup/glslang.git
