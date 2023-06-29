@@ -12,14 +12,14 @@ namespace BeeEngine::Internal
 {
 
     SDLWindowHandler::SDLWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
-    : WindowHandler(eventQueue)
+    : WindowHandler(eventQueue), m_Finalizer()
     {
         s_Instance = this;
         m_vsync = properties.Vsync;
         auto result = SDL_Init(SDL_INIT_VIDEO);
         if(result != 0)
         {
-            BeeCoreFatalError("Failed to initialize SDL3!");
+            BeeCoreFatalError(BeeFormat("Failed to initialize SDL3! {}", SDL_GetError()));
         }
 
         int windowFlags = SDL_WINDOW_RESIZABLE;
@@ -54,7 +54,10 @@ namespace BeeEngine::Internal
         {
             BeeCoreFatalError("Failed to create SDL3 window!");
         }
-
+        int width, height;
+        SDL_GetWindowSizeInPixels(m_Window, &width, &height);
+        m_Width = width;
+        m_Height = height;
         switch (properties.PreferredRenderAPI)
         {
             case Vulkan:
@@ -91,7 +94,8 @@ namespace BeeEngine::Internal
         {
             m_Width = width;
         }
-        m_GraphicsDevice->WindowResized(m_Width, m_Height);
+        SDL_SetWindowSize(m_Window, m_Width, m_Height);
+        //m_GraphicsDevice->WindowResized(m_Width, m_Height);
     }
 
     void SDLWindowHandler::SetHeight(uint16_t height)
@@ -104,7 +108,7 @@ namespace BeeEngine::Internal
         {
             m_Height = height;
         }
-        m_GraphicsDevice->WindowResized(m_Width, m_Height);
+        SDL_SetWindowSize(m_Window, m_Width, m_Height);
     }
 
     void SDLWindowHandler::SetVSync(VSync mode)
@@ -112,7 +116,7 @@ namespace BeeEngine::Internal
         if(mode == m_vsync)
             return;
         m_vsync = mode;
-        m_GraphicsDevice->WindowResized(m_Width, m_Height);
+        m_GraphicsDevice->RequestSwapChainRebuild();
     }
 
     void SDLWindowHandler::HideCursor()
@@ -155,6 +159,7 @@ namespace BeeEngine::Internal
                         m_Width = sdlEvent.window.data1;
                         m_Height = sdlEvent.window.data2;
                     }
+                    m_GraphicsDevice->RequestSwapChainRebuild();
                     auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height);
                     m_Events.AddEvent(std::move(event));
                     break;

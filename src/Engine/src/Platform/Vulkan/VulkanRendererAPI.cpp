@@ -39,13 +39,15 @@ namespace BeeEngine::Internal
     {
         BeeCoreInfo("Recreating swap chain");
         int width = 0, height = 0;
-        while (width == 0 || height == 0)
+        /*
+        //SDL_GetWindowSizeInPixels((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
+        if (width == 0 || height == 0)
         {
 #if defined(DESKTOP_PLATFORM)
             if(WindowHandler::GetAPI() == WindowHandlerAPI::SDL)
             {
 #endif
-                SDL_GetWindowSize((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
+                SDL_GetWindowSizeInPixels((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
                 SDL_PumpEvents();
                 //WindowHandler::GetInstance()->ProcessEvents();
 #if defined(DESKTOP_PLATFORM)
@@ -57,7 +59,7 @@ namespace BeeEngine::Internal
             }
 #endif
         }
-
+*/
         m_GraphicsDevice.WindowResized(width, height);
         if(m_GraphicsDevice.GetSwapChain().ImageCount() != m_CommandBuffers.size())
         {
@@ -77,14 +79,23 @@ namespace BeeEngine::Internal
 
     VkCommandBuffer VulkanRendererAPI::BeginFrame()
     {
+        BeginFrame:
         BeeCoreAssert(!m_IsFrameStarted, "Can't call BeginFrame while already in frame");
-        auto result = m_GraphicsDevice.GetSwapChain().AcquireNextImage(&m_CurrentImageIndex);
-        if(result == VK_ERROR_OUT_OF_DATE_KHR)
+
+        if(m_GraphicsDevice.SwapChainRequiresRebuild())
         {
+            auto oldSwapChainptr = &m_GraphicsDevice.GetSwapChain();
             RecreateSwapchain();
-            return nullptr;
+            BeeEnsures(oldSwapChainptr != &m_GraphicsDevice.GetSwapChain());
         }
-        if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+
+        auto result = m_GraphicsDevice.GetSwapChain().AcquireNextImage(&m_CurrentImageIndex);
+        if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+        {
+            m_GraphicsDevice.RequestSwapChainRebuild();
+            goto BeginFrame;
+        }
+        if(result != VK_SUCCESS)
         {
             BeeCoreError("Failed to acquire swap chain image");
         }
@@ -111,7 +122,7 @@ namespace BeeEngine::Internal
         auto result = m_GraphicsDevice.GetSwapChain().SubmitCommandBuffers(&commandBuffer, &m_CurrentImageIndex);
         if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
         {
-            RecreateSwapchain();
+            m_GraphicsDevice.RequestSwapChainRebuild();
         }
         else if(result != VK_SUCCESS)
         {

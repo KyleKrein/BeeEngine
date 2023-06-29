@@ -17,13 +17,13 @@ namespace BeeEngine
             static DeletionQueue queue;
             return queue;
         }
-/*
+
         static DeletionQueue& Frame()
         {
             static DeletionQueue queue;
             return queue;
         }
-*/
+
         void PushFunction(std::function<void()>&& function)
         {
             m_DeletionQueue.push_back(std::move(function));

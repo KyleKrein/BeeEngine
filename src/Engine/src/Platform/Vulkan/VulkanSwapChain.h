@@ -33,7 +33,7 @@ namespace BeeEngine::Internal
     class VulkanSwapChain: public SwapChain
     {
     public:
-        VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height, Scope<VulkanSwapChain> oldSwapChain);
+        VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
         ~VulkanSwapChain() override;
         VulkanSwapChain(const VulkanSwapChain& other) = delete;
         VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;

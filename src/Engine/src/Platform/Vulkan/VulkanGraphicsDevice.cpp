@@ -28,7 +28,7 @@ namespace BeeEngine::Internal
             m_PresentQueue->Initialize(m_PhysicalDevice, m_Device);
         }
         CreateSwapChainSupportDetails();
-        m_SwapChain = CreateScope<VulkanSwapChain>(*this, WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight(), nullptr);
+        m_SwapChain = CreateScope<VulkanSwapChain>(*this, WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight());
         /*
         GraphicsPipelineInBundle pipelineInBundle {m_SwapChain->GetExtent().width,
                                                    m_SwapChain->GetExtent().height,
@@ -469,7 +469,12 @@ namespace BeeEngine::Internal
 
     void VulkanGraphicsDevice::WindowResized(uint32_t width, uint32_t height)
     {
-        m_SwapChain = CreateScope<VulkanSwapChain>(*this, width, height, std::move(m_SwapChain));
+        auto oldSwapChain = m_SwapChain->GetHandle();
+        CreateSwapChainSupportDetails();
+        m_SwapChain = CreateScope<VulkanSwapChain>(*this, width, height, oldSwapChain);
+        m_SwapChainRebuildRequested = false;
+        BeeEnsures(m_SwapChain->GetHandle() != VK_NULL_HANDLE);
+        BeeEnsures(m_SwapChain->GetHandle() != oldSwapChain);
     }
 
     VulkanGraphicsDevice &VulkanGraphicsDevice::GetInstance()

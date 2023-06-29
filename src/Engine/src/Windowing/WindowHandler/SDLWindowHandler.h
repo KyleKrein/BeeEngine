@@ -61,7 +61,7 @@ namespace BeeEngine::Internal
                 SDL_Quit();
             }
         };
-        sdlFinalizer m_Finalizer;
+        sdlFinalizer m_Finalizer{};
         SDL_Window* m_Window;
         Scope<Instance> m_Instance;
         Scope<GraphicsDevice> m_GraphicsDevice;

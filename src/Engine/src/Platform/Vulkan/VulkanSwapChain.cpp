@@ -13,8 +13,8 @@
 namespace BeeEngine::Internal
 {
 
-    VulkanSwapChain::VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height, Scope<VulkanSwapChain> oldSwapChain)
-    : m_GraphicsDevice(graphicsDevice), m_Extent(vk::Extent2D(width, height)), m_SwapChain(oldSwapChain != nullptr ? oldSwapChain->GetHandle() : VK_NULL_HANDLE)
+    VulkanSwapChain::VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height, VkSwapchainKHR oldSwapChain)
+    : m_GraphicsDevice(graphicsDevice), m_Extent(vk::Extent2D(width, height)), m_SwapChain(oldSwapChain)
     {
         CreateSwapChain();
         CreateImageViews();
@@ -108,15 +108,27 @@ namespace BeeEngine::Internal
 
     void VulkanSwapChain::Destroy()
     {
+        BeeCoreTrace("Destroying SwapChain");
         vkDeviceWaitIdle(m_GraphicsDevice.GetDevice());
         for (auto imageView : m_SwapChainImageViews) {
             m_GraphicsDevice.GetDevice().destroyImageView(imageView, nullptr);
         }
         m_SwapChainImageViews.clear();
 
-        if (m_SwapChain != VK_NULL_HANDLE) {
+        if (m_SwapChain != VK_NULL_HANDLE)
+        {
             vkDestroySwapchainKHR(m_GraphicsDevice.GetDevice(), m_SwapChain, nullptr);
             //m_SwapChain = nullptr;
+        }
+
+        for(auto& depthImage : m_DepthImages)
+        {
+            //vmaDestroyImage(GetVulkanAllocator(), depthImage.Image, depthImage.Memory);
+        }
+
+        for(auto depthImageView : m_DepthImageViews)
+        {
+            m_GraphicsDevice.GetDevice().destroyImageView(depthImageView, nullptr);
         }
 
         for (auto framebuffer : m_SwapChainFramebuffers) {

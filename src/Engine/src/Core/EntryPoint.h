@@ -30,5 +30,7 @@ namespace BeeEngine{
     }
 }
 
-extern int main(int argc, char** argv);
+#ifdef __cplusplus
+extern "C" int main(int argc, char* argv[]);
+#endif
 

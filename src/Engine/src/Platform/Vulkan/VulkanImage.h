@@ -12,5 +12,7 @@ namespace BeeEngine::Internal
     {
         VkImage Image;
         VmaAllocation Memory;
+
+        void Destroy();
     };
 }

@@ -29,7 +29,7 @@ namespace BeeEngine{
             m_Window->SwapBuffers();
             Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
             Internal::VulkanRendererAPI::GetInstance().EndFrame();
-            //DeletionQueue::Frame().Flush();
+            DeletionQueue::Frame().Flush();
         }
     }
 
@@ -48,7 +48,7 @@ namespace BeeEngine{
 #elif ANDROID
         Application::s_OSPlatform = OSPlatform::Android;
 #elif IOS
-        Application::s_OSPlatform = OSPlatform::IOS;
+        Application::s_OSPlatform = OSPlatform::iOS;
 #endif
         auto appProperties = properties;
         CheckRendererAPIForCompatibility(appProperties);
@@ -134,6 +134,7 @@ namespace BeeEngine{
 
     bool Application::OnWindowResize(WindowResizeEvent *event)
     {
+        //m_Window->GetGraphicsDevice().WindowResized(event->GetWidth(), event->GetHeight());
         if(event->GetWidth() == 0 || event->GetHeight() == 0)
         {
             m_IsMinimized = true;

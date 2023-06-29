@@ -65,7 +65,10 @@ namespace BeeEngine{
 
     protected:
         virtual void Update() {};
-        virtual void OnEvent(EventDispatcher& dispatcher) {};
+        virtual void OnEvent(EventDispatcher& dispatcher)
+        {
+            DISPATCH_EVENT(dispatcher, WindowResizeEvent, EventType::WindowResize, OnWindowResize);
+        };
 
         inline void PushLayer(Ref<Layer> layer)
         {

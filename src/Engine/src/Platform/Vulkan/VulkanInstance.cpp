@@ -264,6 +264,9 @@ namespace BeeEngine::Internal
             layers.clear();
         }
 #endif
+#if defined(IOS)
+        layers.push_back("MoltenVK");
+#endif
         if(!ExtensionsSupported(extensions))
         {
             BeeCoreError("Required extensions are not supported!");

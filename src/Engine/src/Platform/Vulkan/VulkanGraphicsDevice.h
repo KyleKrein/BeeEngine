@@ -72,6 +72,16 @@ namespace BeeEngine::Internal
             return *m_CommandPool;
         }
 
+        void RequestSwapChainRebuild() override
+        {
+            BeeCoreInfo("Swap chain rebuild requested");
+            m_SwapChainRebuildRequested = true;
+        }
+        bool SwapChainRequiresRebuild() override
+        {
+            return m_SwapChainRebuildRequested;
+        }
+
         // Buffer Helper Functions
         void CreateBuffer(
                 VkDeviceSize size,
@@ -149,6 +159,8 @@ namespace BeeEngine::Internal
         };
 
         DeletionQueueFlusher m_Deleter;
+
+        bool m_SwapChainRebuildRequested = false;
 
         void LogDeviceProperties(vk::PhysicalDevice &device) const;
 

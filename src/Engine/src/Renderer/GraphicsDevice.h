@@ -18,6 +18,9 @@ namespace BeeEngine
 
         virtual void WindowResized(uint32_t width, uint32_t height) = 0;
 
+        virtual void RequestSwapChainRebuild() = 0;
+        virtual bool SwapChainRequiresRebuild() = 0;
+
         /*[[nodiscard]] virtual Ref<Surface> GetSurface() const = 0;
         [[nodiscard]] virtual Ref<CommandPool> GetCommandPool() const = 0;
         [[nodiscard]] virtual DeviceID GetDeviceID() const = 0;

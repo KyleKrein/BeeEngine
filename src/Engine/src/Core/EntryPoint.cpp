@@ -3,10 +3,12 @@
 //
 #include "EntryPoint.h"
 #include "Debug/Instrumentor.h"
+#include "SDL_main.h"
 
 //AllocatorInitializer AllocatorInitializer::instance = AllocatorInitializer();
 
-int main(int argc, char** argv)
+
+int main(int argc, char *argv[])
 {
     BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
     BeeEngine::InitEngine();
