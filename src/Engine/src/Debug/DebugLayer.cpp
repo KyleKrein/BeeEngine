@@ -68,10 +68,10 @@ namespace BeeEngine
             ImGui::Begin("Allocator statistics");
             const BeeEngine::Internal::AllocatorStatistics& stats = BeeEngine::Internal::AllocatorStatistics::GetStatistics();
             ImGui::Text("Allocated memory: %.10f MB", toMB(stats.allocatedMemory));
-            ImGui::Text("Allocated blocks: %d", stats.allocatedBlocks.load());
-            ImGui::Text("Free blocks: %d", stats.freeBlocks.load());
-            ImGui::Text("Free blocks combined: %d", stats.blocksCombined.load());
-            ImGui::Text("Memory pages: %d", stats.totalMemoryPages.load());
+            ImGui::Text("Allocated blocks: %lu", stats.allocatedBlocks.load());
+            ImGui::Text("Free blocks: %lu", stats.freeBlocks.load());
+            ImGui::Text("Free blocks combined: %lu", stats.blocksCombined.load());
+            ImGui::Text("Memory pages: %lu", stats.totalMemoryPages.load());
             ImGui::End();
         }
 

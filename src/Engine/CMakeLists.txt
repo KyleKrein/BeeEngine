@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
-project(BeeEngine)
+project(
+        BeeEngine
+        VERSION 0.1
+        DESCRIPTION "A game engine written in C++"
+        LANGUAGES CXX C OBJCXX
+)
 #set(CMAKE_CXX_STANDARD 17)
 
 
@@ -42,6 +47,16 @@ endif()
 
 
 add_library(BeeEngine STATIC ${SOURCE_FILES})
+
+if(XCODE)
+    set_target_properties(BeeEngine PROPERTIES
+            XCODE_GENERATE_SCHEME ON
+            XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE "Metal")
+endif()
+
+#set(CMAKE_WARN_DEPRECATED FALSE)
+
+#set_property(TARGET BeeEngine PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 if(IOS)
     # Covers iOS implementation
