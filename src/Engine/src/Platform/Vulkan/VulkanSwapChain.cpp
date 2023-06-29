@@ -128,7 +128,7 @@ namespace BeeEngine::Internal
 
         for(auto depthImageView : m_DepthImageViews)
         {
-            m_GraphicsDevice.GetDevice().destroyImageView(depthImageView, nullptr);
+            //m_GraphicsDevice.GetDevice().destroyImageView(depthImageView, nullptr);
         }
 
         for (auto framebuffer : m_SwapChainFramebuffers) {
