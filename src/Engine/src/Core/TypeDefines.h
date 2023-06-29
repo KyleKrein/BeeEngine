@@ -4,6 +4,7 @@
 #include "SharedPointer.h"
 #include "Core/CodeSafety/Expects.h"
 #include <vector>
+#include <optional>
 
 #define USE_CUSTOM_CONTAINERS 0
 

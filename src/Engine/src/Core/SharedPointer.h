@@ -2,6 +2,7 @@
 // Created by alexl on 14.05.2023.
 //
 
+#if 0
 #pragma once
 #include <cstddef>
 #include <utility>
@@ -101,3 +102,4 @@ namespace BeeEngine
         return SharedPointer<T>(new T(std::forward<Args>(args)...));
     }
 }
+#endif

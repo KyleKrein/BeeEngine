@@ -3,7 +3,6 @@
 //
 
 #pragma once
-
 #include <string>
 #include <optional>
 
@@ -22,7 +21,7 @@ namespace BeeEngine
             friend class ::TestFileDialogs;
             const char* name;
             const char* filter;
-//#if defined(WINDOWS)
+#if defined(WINDOWS)
             Filter(const char* name, const char* filter)
                     : name(name), filter(filter)
             {}
@@ -32,12 +31,12 @@ namespace BeeEngine
             {
                 return std::string(name + std::string(" (") + filter + std::string(")") + '\0' + filter + '\0');
             }
-//#endif
+#endif
 
         };
     public:
-        static std::optional<std::string> OpenFile(Filter filter);
-        static std::optional<std::string> SaveFile(Filter filter);
+        static std::string OpenFile(Filter filter);
+        static std::string SaveFile(Filter filter);
     private:
         /*static void CheckFilter(Filter& filter)
         {

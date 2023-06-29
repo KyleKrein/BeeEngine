@@ -38,7 +38,7 @@ namespace BeeEngine
         void Initialize(uint16_t width, uint16_t height, uint64_t window) override
         {
             BEE_PROFILE_FUNCTION();
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             m_window = (GLFWwindow*)window;
 #endif
             // Setup Dear ImGui context
@@ -68,7 +68,7 @@ namespace BeeEngine
             SetDarkThemeColors();
             const char* glsl_version = "#version 150"; //change later
             // Setup Platform/Renderer backends
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 #endif
             ImGui_ImplOpenGL3_Init(glsl_version);
@@ -95,7 +95,7 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             ImGui_ImplGlfw_NewFrame();
 #endif
             ImGui::NewFrame();
@@ -130,13 +130,13 @@ namespace BeeEngine
         void Shutdown() override
         {
             ImGui_ImplOpenGL3_Shutdown();
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             ImGui_ImplGlfw_Shutdown();
 #endif
             ImGui::DestroyContext();
         }
     private:
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         GLFWwindow* m_window;
 #endif
     };
