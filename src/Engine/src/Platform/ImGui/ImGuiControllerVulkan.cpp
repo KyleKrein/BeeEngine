@@ -3,7 +3,7 @@
 //
 #define VK_VERSION_
 #define GLFW_INCLUDE_VULKAN
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
 #include "GLFW/glfw3.h"
 #include "backends/imgui_impl_glfw.h"
 #endif
@@ -18,7 +18,7 @@ namespace BeeEngine
     void BeeEngine::ImGuiControllerVulkan::Initialize(uint16_t width, uint16_t height, uint64_t glfwwindow)
     {
         //return;
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         windowHandlerAPI = WindowHandler::GetAPI();
         if(windowHandlerAPI == WindowHandlerAPI::GLFW)
         {
@@ -28,7 +28,7 @@ namespace BeeEngine
         {
 #endif
             m_SdlWindow = reinterpret_cast<SDL_Window *>(glfwwindow);
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         }
 #endif
 
@@ -90,7 +90,7 @@ namespace BeeEngine
         //SetDarkThemeColors();
 
         //this initializes imgui for SDL
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         if(windowHandlerAPI == WindowHandlerAPI::GLFW)
         {
             ImGui_ImplGlfw_InitForVulkan(m_GlfwWindow, true);
@@ -99,7 +99,7 @@ namespace BeeEngine
         {
 #endif
             ImGui_ImplSDL3_InitForVulkan(m_SdlWindow);
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         }
 #endif
 
@@ -139,7 +139,7 @@ namespace BeeEngine
     {
         // Start the Dear ImGui frame
         ImGui_ImplVulkan_NewFrame();
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         if(windowHandlerAPI == WindowHandlerAPI::GLFW)
         {
             ImGui_ImplGlfw_NewFrame();
@@ -148,7 +148,7 @@ namespace BeeEngine
         {
 #endif
             ImGui_ImplSDL3_NewFrame();
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         }
 #endif
         ImGui::NewFrame();

@@ -43,14 +43,14 @@ namespace BeeEngine::Internal
         //SDL_GetWindowSizeInPixels((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
         if (width == 0 || height == 0)
         {
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             if(WindowHandler::GetAPI() == WindowHandlerAPI::SDL)
             {
 #endif
                 SDL_GetWindowSizeInPixels((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
                 SDL_PumpEvents();
                 //WindowHandler::GetInstance()->ProcessEvents();
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             }
             else
             {

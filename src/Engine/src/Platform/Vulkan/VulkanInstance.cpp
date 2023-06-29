@@ -154,7 +154,7 @@ namespace BeeEngine::Internal
 
     void VulkanInstance::ManageGLFW(vk::ApplicationInfo& appInfo)
     {
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);

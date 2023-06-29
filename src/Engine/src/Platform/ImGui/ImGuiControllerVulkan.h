@@ -13,9 +13,13 @@ namespace BeeEngine
 {
     class ImGuiControllerVulkan: public ImGuiController
     {
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         GLFWwindow* m_GlfwWindow;
+#endif
         SDL_Window* m_SdlWindow;
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         WindowHandlerAPI windowHandlerAPI;
+#endif
         int w, h;
         ImGui_ImplVulkanH_Window* wd;
     public:

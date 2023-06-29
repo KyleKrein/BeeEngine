@@ -5,7 +5,6 @@
 #if defined(MACOS)
 #include "Utils/FileDialogs.h"
 #include "Cocoa/Cocoa.h"
-#import "Core/Logging/Log.h"
 
 std::optional<std::string> BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
 {

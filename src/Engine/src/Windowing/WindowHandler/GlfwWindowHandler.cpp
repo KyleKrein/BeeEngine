@@ -15,12 +15,12 @@ namespace BeeEngine::Internal
 
     GLFWWindowHandler::GLFWWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
             : WindowHandler(eventQueue),
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             m_Window(nullptr),
 #endif
             m_IsRunning(false), m_IsClosing(false)
     {
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         BEE_PROFILE_FUNCTION();
         s_Instance = this;
         m_Title = properties.Title;
@@ -58,7 +58,7 @@ namespace BeeEngine::Internal
         //glViewport(0, 0, m_Width, m_Height);
 #endif
     }
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
     void GLFWWindowHandler::SetWidth(uint16_t width)
     {
         BEE_PROFILE_FUNCTION();

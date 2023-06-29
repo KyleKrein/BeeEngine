@@ -77,12 +77,12 @@ namespace BeeEngine::Internal
             m_Extent = capabilities.currentExtent;
         } else {
             int width, height;
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             if(WindowHandler::GetAPI() == WindowHandlerAPI::SDL)
             {
 #endif
                 SDL_GetWindowSize((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             }
             else
             {

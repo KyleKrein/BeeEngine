@@ -78,6 +78,7 @@ namespace BeeEngine::Internal
                     BeeCoreError("Unknown ShaderDataType!");
             }
         }
+        return VK_FORMAT_UNDEFINED;
     }
 
     void VulkanModel::Unbind()

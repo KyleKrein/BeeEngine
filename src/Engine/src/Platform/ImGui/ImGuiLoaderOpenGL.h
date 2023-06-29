@@ -15,7 +15,7 @@
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 #endif
 
@@ -119,7 +119,7 @@ namespace BeeEngine
             //  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
                 GLFWwindow* backup_current_context = glfwGetCurrentContext();
                 ImGui::UpdatePlatformWindows();
                 ImGui::RenderPlatformWindowsDefault();

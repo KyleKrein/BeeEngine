@@ -1,7 +1,7 @@
 #pragma once
 
 #include "glad/glad.h"
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
 #include "GLFW/glfw3.h"
 #endif
 #include "WindowHandler.h"
@@ -53,7 +53,7 @@ namespace BeeEngine::Internal
         ~GLFWWindowHandler() override;
     private:
         static Key ConvertKeyCode(int key);
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         //Callbacks
         static void CharCallback(GLFWwindow* window, unsigned int codepoint);
         static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -65,7 +65,7 @@ namespace BeeEngine::Internal
         static void WindowCloseCallback(GLFWwindow* window);
 #endif
     private:
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         struct glfwFinalizer
         {
             GLFWwindow *window;

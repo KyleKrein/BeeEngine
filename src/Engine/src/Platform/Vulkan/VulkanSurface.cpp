@@ -14,7 +14,7 @@ namespace BeeEngine::Internal
     {
         m_WindowApi = windowApi;
         VkSurfaceKHR cSurface;
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         if(windowApi == WindowHandlerAPI::GLFW)
         {
 
@@ -34,7 +34,7 @@ namespace BeeEngine::Internal
             {
                 BeeCoreFatalError("Failed to create Vulkan surface!");
             }
-#if defined(DESKTOP_PLATFORM)
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         }
 #endif
         m_Surface = vk::SurfaceKHR(cSurface);
