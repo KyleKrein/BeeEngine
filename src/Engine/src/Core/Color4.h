@@ -8,6 +8,10 @@
 #include "gsl/gsl"
 #include "imgui.h"
 
+#if defined(BEE_COMPILE_WEBGPU)
+#include <webgpu/webgpu.h>
+#endif
+
 namespace BeeEngine
 {
     struct Color4
@@ -42,6 +46,13 @@ namespace BeeEngine
         {
             return {m_R, m_G, m_B, m_A};
         }
+
+#if defined(BEE_COMPILE_WEBGPU)
+        constexpr inline operator WGPUColor() const
+        {
+            return {m_R, m_G, m_B, m_A};
+        }
+#endif
         constexpr inline operator ImVec4() const
         {
             return {m_R, m_G, m_B, m_A};

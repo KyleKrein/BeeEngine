@@ -10,5 +10,6 @@ enum RenderAPI
     OpenGL = 1,
     Metal = 2,
     DirectX = 3,
-    Vulkan = 4
+    Vulkan = 4,
+    WebGPU = 5
 };

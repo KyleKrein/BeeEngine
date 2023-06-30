@@ -8,6 +8,7 @@
 #include "Core/TypeDefines.h"
 #include "VertexArray.h"
 #include "Core/Color4.h"
+#include "CommandBuffer.h"
 
 namespace BeeEngine
 {
@@ -16,6 +17,15 @@ namespace BeeEngine
         virtual ~RendererAPI() = default;
 
         virtual void Init() = 0;
+
+        virtual CommandBuffer BeginFrame() = 0;
+        virtual void EndFrame() = 0;
+
+        virtual void StartMainRenderPass(CommandBuffer commandBuffer) = 0;
+        virtual void EndMainRenderPass(CommandBuffer commandBuffer) = 0;
+
+        [[nodiscard]] virtual CommandBuffer GetCurrentCommandBuffer() const = 0;
+
         virtual void SetClearColor(const Color4& color) = 0;
         virtual void Clear() = 0;
 

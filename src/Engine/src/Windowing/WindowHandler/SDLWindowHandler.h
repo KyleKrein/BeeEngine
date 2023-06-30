@@ -50,6 +50,7 @@ namespace BeeEngine::Internal
         static Key ConvertKeyCode(SDL_Scancode key);
         static MouseButton ConvertMouseButton(uint8_t button);
         void InitializeVulkan();
+        void InitializeWebGPU();
 
 
         struct sdlFinalizer

@@ -6,7 +6,8 @@
 #include "Core/Logging/Log.h"
 #include "Debug/DebugLayer.h"
 #include "Renderer/ShaderLibrary.h"
-#include "Platform/Vulkan/VulkanRendererAPI.h"
+//#include "Platform/Vulkan/VulkanRendererAPI.h"
+#include "Renderer/Renderer.h"
 #include "DeletionQueue.h"
 
 namespace BeeEngine{
@@ -22,13 +23,13 @@ namespace BeeEngine{
             m_Window->ProcessEvents();
             m_EventQueue.Dispatch();
             m_Window->UpdateTime();
-            auto cmd = Internal::VulkanRendererAPI::GetInstance().BeginFrame();
-            Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
-            m_Layers.Update();
+            auto cmd = Renderer::BeginFrame();//Internal::VulkanRendererAPI::GetInstance().BeginFrame();
+            Renderer::StartMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
+            //m_Layers.Update();
             Update();
             m_Window->SwapBuffers();
-            Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
-            Internal::VulkanRendererAPI::GetInstance().EndFrame();
+            Renderer::EndMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
+            Renderer::EndFrame();//Internal::VulkanRendererAPI::GetInstance().EndFrame();
             DeletionQueue::Frame().Flush();
         }
     }
@@ -56,10 +57,10 @@ namespace BeeEngine{
         m_Window.reset(WindowHandler::Create(WindowHandlerAPI::SDL, properties, m_EventQueue));
         Renderer::SetAPI(appProperties.PreferredRenderAPI);
 
-        m_Layers.SetGuiLayer(new ImGuiLayer());
+        //m_Layers.SetGuiLayer(new ImGuiLayer());
 
 #ifdef DEBUG
-        m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
+        //m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
 #endif
     }
 
@@ -119,6 +120,8 @@ namespace BeeEngine{
     {
         switch (properties.PreferredRenderAPI)
         {
+            case RenderAPI::WebGPU:
+                return;
             case RenderAPI::OpenGL:
             case RenderAPI::Vulkan:
                 return;

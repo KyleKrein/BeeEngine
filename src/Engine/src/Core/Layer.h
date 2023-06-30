@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Core/Events/Event.h"
-#include "Platform/ImGui/ImGuiLoaderOpenGL.h"
 #include "Platform/ImGui/ImGuiController.h"
-#include "Renderer/Renderer.h"
-#include "Allocator/Allocator.h"
 #include "Renderer/Shader.h"
+#include "Debug/Instrumentor.h"
 
 
 namespace BeeEngine

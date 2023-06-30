@@ -9,6 +9,8 @@
 #include "Core/Color4.h"
 #include "Debug/Instrumentor.h"
 #include "Core/CodeSafety/Expects.h"
+#include "CommandBuffer.h"
+#include "Windowing/WindowHandler/WindowHandler.h"
 
 namespace BeeEngine
 {
@@ -24,8 +26,8 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             BeeCoreAssert(s_Api == RenderAPI::NotAvailable, "Can't change Renderer API after initialization!");
             s_Api = api;
-            //s_RendererAPI = RendererAPI::Create();
-            //s_RendererAPI->Init();
+            s_RendererAPI = RendererAPI::Create();
+            s_RendererAPI->Init();
         }
         static void SetClearColor(const Color4& color)
         {
@@ -60,9 +62,47 @@ namespace BeeEngine
             return s_RendererAPI->ReadPixel(x, y);
         }
 
+        static CommandBuffer BeginFrame()
+        {
+            BEE_PROFILE_FUNCTION();
+            BeeExpects(!s_FrameStarted);
+            s_FrameStarted = true;
+            return s_RendererAPI->BeginFrame();
+        }
+
+        static void EndFrame()
+        {
+            BEE_PROFILE_FUNCTION();
+            BeeExpects(s_FrameStarted);
+            s_RendererAPI->EndFrame();
+            s_FrameStarted = false;
+        }
+
+        static void StartMainRenderPass(in<CommandBuffer> commandBuffer)
+        {
+            BEE_PROFILE_FUNCTION();
+            BeeExpects(s_FrameStarted);
+            s_RendererAPI->StartMainRenderPass(commandBuffer);
+        }
+
+        static void EndMainRenderPass(in<CommandBuffer> commandBuffer)
+        {
+            BEE_PROFILE_FUNCTION();
+            BeeExpects(s_FrameStarted);
+            s_RendererAPI->EndMainRenderPass(commandBuffer);
+        }
+
+        /*static void SubmitCommandBuffers(CommandBuffer* commandBuffers, uint32_t numberOfBuffers)
+        {
+            BEE_PROFILE_FUNCTION();
+            static GraphicsDevice& graphicsDevice = WindowHandler::GetInstance()->GetGraphicsDevice();
+            graphicsDevice.SubmitCommandBuffers(commandBuffers, numberOfBuffers);
+        }*/
+
     private:
         static RenderAPI s_Api;
         static Ref<RendererAPI> s_RendererAPI;
         static Color4 s_ClearColor;
+        static bool s_FrameStarted;
     };
 }

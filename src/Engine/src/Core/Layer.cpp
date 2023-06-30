@@ -5,6 +5,7 @@
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Renderer/ShaderLibrary.h"
 #include "Platform/ImGui/ImGuiControllerVulkan.h"
+#include "Renderer/Renderer.h"
 
 namespace BeeEngine
 {
@@ -20,7 +21,7 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case OpenGL:
-                s_Controller.reset(new ImGuiControllerOpenGL());
+                //s_Controller.reset(new ImGuiControllerOpenGL());
                 break;
             case Vulkan:
                 s_Controller.reset(new ImGuiControllerVulkan());

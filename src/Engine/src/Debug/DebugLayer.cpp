@@ -6,6 +6,7 @@
 #include "Instrumentor.h"
 #include "../../vendor/BeeAlloc/include/GeneralPurposeAllocator.h"
 #include "../../vendor/BeeAlloc/include/AllocatorBlockHeader.h"
+#include <imgui.h>
 
 
 namespace BeeEngine

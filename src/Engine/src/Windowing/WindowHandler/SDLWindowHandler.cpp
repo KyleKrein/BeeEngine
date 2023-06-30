@@ -7,6 +7,8 @@
 #include "Platform/Vulkan/VulkanInstance.h"
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 #include "backends/imgui_impl_sdl3.h"
+#include "Platform/WebGPU/WebGPUInstance.h"
+#include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 
 namespace BeeEngine::Internal
 {
@@ -28,6 +30,12 @@ namespace BeeEngine::Internal
         {
             case Vulkan:
                 windowFlags |= SDL_WINDOW_VULKAN;
+                break;
+            case WebGPU:
+                if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
+                {
+                    windowFlags |= SDL_WINDOW_METAL;
+                }
                 break;
             case OpenGL:
             case Metal:
@@ -63,6 +71,9 @@ namespace BeeEngine::Internal
             case Vulkan:
                 InitializeVulkan();
                 break;
+            case WebGPU:
+                InitializeWebGPU();
+                break;
             case OpenGL:
             case Metal:
             case DirectX:
@@ -77,6 +88,15 @@ namespace BeeEngine::Internal
     {
         m_Instance = CreateScope<VulkanInstance>(m_Title, WindowHandlerAPI::SDL);
         m_GraphicsDevice = CreateScope<VulkanGraphicsDevice>(*(VulkanInstance*)m_Instance.get());
+    }
+
+
+    void SDLWindowHandler::InitializeWebGPU()
+    {
+#if defined(BEE_COMPILE_WEBGPU)
+        m_Instance = CreateScope<WebGPUInstance>();
+        m_GraphicsDevice = CreateScope<WebGPUGraphicsDevice>(*(WebGPUInstance*)m_Instance.get());
+#endif
     }
 
     SDLWindowHandler::~SDLWindowHandler()
@@ -139,7 +159,7 @@ namespace BeeEngine::Internal
         SDL_Event sdlEvent;
         while (SDL_PollEvent(&sdlEvent))
         {
-            ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
+            //ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
             switch (sdlEvent.type)
             {
                 case SDL_EVENT_QUIT:
@@ -1165,8 +1185,7 @@ namespace BeeEngine::Internal
 
     MouseButton SDLWindowHandler::ConvertMouseButton(uint8_t button)
     {
-        switch (button)
-        {
+        switch (button) {
             case SDL_BUTTON_LEFT:
                 return MouseButton::Left;
             case SDL_BUTTON_MIDDLE:
