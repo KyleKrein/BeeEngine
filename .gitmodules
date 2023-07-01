@@ -44,3 +44,6 @@
 [submodule "src/Engine/vendor/glslang"]
 	path = src/Engine/vendor/glslang
 	url = https://github.com/KhronosGroup/glslang.git
+[submodule "src/Engine/vendor/magic_enum"]
+	path = src/Engine/vendor/magic_enum
+	url = https://github.com/Neargye/magic_enum.git

@@ -105,6 +105,7 @@ add_subdirectory(vendor/ImGuizmo)
 add_subdirectory(vendor/glslang)
 add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/sdl)
+add_subdirectory(vendor/magic_enum)
 
 if(IOS)
     # Covers iOS implementation
@@ -142,6 +143,7 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/VulkanMemoryAllocator
         PUBLIC vendor/tinyobjloader
         PUBLIC vendor/sdl/include
+        PRIVATE vendor/magic_enum/include
         )
 target_link_directories( ${PROJECT_NAME}
         PRIVATE src
@@ -177,6 +179,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC glslang
         PUBLIC tinyobjloader
         PUBLIC SDL3::SDL3
+        PUBLIC magic_enum
         )
 
 # Создаем определение DEBUG только для debug configuration

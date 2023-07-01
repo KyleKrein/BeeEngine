@@ -6,6 +6,7 @@
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_syswm.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
+#include "Core/TypeDefines.h"
 
 namespace BeeEngine::Internal
 {
@@ -34,7 +35,7 @@ namespace BeeEngine::Internal
 
         BeeCoreInfo("Adapter features:");
         for (auto f : features) {
-            BeeCoreInfo(" - {}",f);
+            BeeCoreInfo(" - {}", ToString(f));
         }
 
         WGPUDeviceDescriptor deviceDescriptor = {};
@@ -49,15 +50,15 @@ namespace BeeEngine::Internal
 
         auto onDeviceError = [](WGPUErrorType type, char const* message, void* pUserData)
         {
-            BeeCoreError("Uncaptured device error: type {0}, message: {1}", type, message? message : "null");
+            BeeCoreError("Uncaptured device error: type {0}, message: {1}", ToString(type), message? message : "null");
         };
         auto onDeviceLost = [](WGPUDeviceLostReason reason, char const* message, void* pUserData)
         {
-            BeeCoreError("Device lost: reason {0}, message: {1}", reason, message? message : "null");
+            BeeCoreError("Device lost: reason {0}, message: {1}", ToString(reason), message? message : "null");
         };
         auto onDeviceLogging = [](WGPULoggingType type, char const* message, void* pUserData)
         {
-            BeeCoreInfo("Device logging: type {0}, message: {1}", type, message? message : "null");
+            BeeCoreInfo("Device logging: type {0}, message: {1}", ToString(type), message? message : "null");
         };
         wgpuDeviceSetUncapturedErrorCallback(m_Device, onDeviceError, nullptr /* pUserData */);
         wgpuDeviceSetLoggingCallback(m_Device, onDeviceLogging, nullptr /* pUserData */);
@@ -66,7 +67,7 @@ namespace BeeEngine::Internal
         m_Queue = wgpuDeviceGetQueue(m_Device);
 
         auto onQueueWorkDone = [](WGPUQueueWorkDoneStatus status, void* /* pUserData */) {
-            BeeCoreTrace("Queued work finished with status: {}", status);
+            BeeCoreTrace("Queued work finished with status: {}", ToString(status));
         };
         wgpuQueueOnSubmittedWorkDone(m_Queue, 0, onQueueWorkDone, nullptr /* pUserData */);//signal value ???
 

@@ -5,6 +5,8 @@
 #include "Core/CodeSafety/Expects.h"
 #include <vector>
 #include <optional>
+#include <cxxabi.h>
+#include <magic_enum.hpp>
 
 #define USE_CUSTOM_CONTAINERS 0
 
@@ -223,4 +225,153 @@ namespace BeeEngine
 */
     template<typename T>
     using List = std::vector<T>;
+    template<typename T>
+    constexpr String ToString(const T& obj);
+    template<typename T>
+    requires std::is_enum_v<T>
+    constexpr String EnumToString(T obj);
+
+    template<typename T>
+    constexpr String TypeName(const T& obj)
+    {
+        int status;
+        char * demangled = abi::__cxa_demangle(typeid(obj).name(),0,0,&status);
+        String result = String(demangled);
+        free(demangled);
+        return result;
+    }
+
+    template<typename T>
+    constexpr String ToString(const T& obj)
+    {
+        if constexpr(std::is_enum_v<T>)
+            return EnumToString(obj);
+        return TypeName(obj);
+    }
+    template<typename T>
+    requires std::is_enum_v<T>
+    constexpr String EnumToString(T obj)
+    {
+        //String name = String(magic_enum::enum_type_name<T>()) + "::" + String(magic_enum::enum_name(obj));
+        auto name = magic_enum::enum_name(obj);
+        if(name.empty())
+            return String{magic_enum::enum_type_name<T>()} + "::" + String{std::to_string(static_cast<std::underlying_type_t<T>>(obj))};
+        else
+            return String{magic_enum::enum_name(obj)};
+    }
+
+
+    template<>
+    constexpr String ToString<String>(const String& obj)
+    {
+        return obj;
+    }
+    template<>
+    constexpr String ToString<std::string_view>(const std::string_view& obj)
+    {
+        return String{obj};
+    }
+    /*
+    template<>
+    constexpr String ToString<char*>(const char*& obj)
+    {
+        return String{(const char*)&obj};
+    }
+    */
+    template<>
+    constexpr String ToString<int>(const int& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<unsigned int>(const unsigned int&obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<long>(const long& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<unsigned long>(const unsigned long& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<long long>(const long long& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<unsigned long long>(const unsigned long long& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<float>(const float& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<double>(const double& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<long double>(const long double& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<bool>(const bool& obj)
+    {
+        return obj ? "true" : "false";
+    }
+    template<>
+    constexpr String ToString<char>(const char& obj)
+    {
+        return String{obj};
+    }
+    template<>
+    constexpr String ToString<unsigned char>(const unsigned char& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<signed char>(const signed char& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<wchar_t>(const wchar_t& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<char8_t>(const char8_t& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<char16_t>(const char16_t& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<char32_t>(const char32_t& obj)
+    {
+        return std::to_string(obj);
+    }
+    template<>
+    constexpr String ToString<std::nullptr_t>(const std::nullptr_t& obj)
+    {
+        return "nullptr";
+    }
+    template<>
+    constexpr String ToString<std::byte>(const std::byte& obj)
+    {
+        return std::to_string(static_cast<int>(obj));
+    }
+
 }

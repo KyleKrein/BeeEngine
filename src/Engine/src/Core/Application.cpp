@@ -128,7 +128,7 @@ namespace BeeEngine{
             case RenderAPI::DirectX:
             case RenderAPI::Metal:
             default:
-                BeeCoreWarn("Unable to use {} as render API. Using OpenGL instead", properties.PreferredRenderAPI);
+                BeeCoreWarn("Unable to use {} as render API. Using OpenGL instead", ToString(properties.PreferredRenderAPI));
                 properties.PreferredRenderAPI = RenderAPI::OpenGL;
                 return;
         }
