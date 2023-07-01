@@ -185,6 +185,7 @@ namespace BeeEngine
             BeeCoreError("Failed to convert SPIR-V to WGSL: {}", e.what());
             return false;
         }
+        BeeCoreTrace("WGSL compiled successfully");
         return true;
         #endif
     }

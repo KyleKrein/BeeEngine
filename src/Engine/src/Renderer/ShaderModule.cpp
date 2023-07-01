@@ -19,11 +19,11 @@ namespace BeeEngine
             std::filesystem::create_directory(s_CachePath);
         }
         std::vector<uint32_t> spirv;
-        if(path.contains(".vert") || path.contains(".frag") || path.contains(".comp"))
+        if(path.ends_with(".vert") || path.ends_with(".frag") || path.ends_with(".comp"))
         {
             spirv = CompileGLSLToSpirV(path, type, loadFromCache);
         }
-        else if(path.contains(".spv"))
+        else if(path.ends_with(".spv"))
         {
             spirv = LoadSpirVFromCache(path);
         }
@@ -56,7 +56,19 @@ namespace BeeEngine
     std::vector<uint32_t> ShaderModule::CompileGLSLToSpirV(const String &path, ShaderType type, bool loadFromCache)
     {
         auto name = ResourceManager::GetNameFromFilePath(path);
-        auto newFilepath = s_CachePath + name + ".spv";
+        constexpr auto GetExtension = [](ShaderType type)
+        {
+            switch (type)
+            {
+                case ShaderType::Vertex:
+                    return ".vert";
+                case ShaderType::Fragment:
+                    return ".frag";
+                case ShaderType::Compute:
+                    return ".comp";
+            }
+        };
+        auto newFilepath = s_CachePath + name + GetExtension(type) + ".spv";
         if(loadFromCache)
         {
             auto result = LoadSpirVFromCache(newFilepath);
