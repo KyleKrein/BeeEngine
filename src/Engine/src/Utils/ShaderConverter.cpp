@@ -2,6 +2,10 @@
 #include "glslang/Public/ShaderLang.h"
 #include "Core/Logging/Log.h"
 #include "SPIRV/GlslangToSpv.h"
+#if defined(BEE_COMPILE_WEBGPU)
+#include "src/tint/writer/wgsl/generator_impl.h"
+#include <tint/tint.h>
+#endif
 
 namespace BeeEngine
 {
@@ -161,5 +165,27 @@ namespace BeeEngine
     void ShaderConverter::Finalize()
     {
         glslang::FinalizeProcess();
+    }
+
+    bool ShaderConverter::SPVtoWGSL(const std::vector<uint32_t> &spirv, std::string &wgsl)
+    {
+        #if !defined(BEE_COMPILE_WEBGPU)
+        BeeCoreError("WGSL is only supported on WebGPU");
+        return false;
+        #else
+        try
+        {
+            auto program = tint::reader::spirv::Parse(spirv);
+            tint::writer::wgsl::GeneratorImpl generator(&program);
+            generator.Generate();
+            wgsl = generator.result();
+        }
+        catch (const std::exception &e)
+        {
+            BeeCoreError("Failed to convert SPIR-V to WGSL: {}", e.what());
+            return false;
+        }
+        return true;
+        #endif
     }
 }

@@ -15,9 +15,7 @@ if (EMSCRIPTEN)
 	target_compile_definitions(webgpu INTERFACE WEBGPU_BACKEND_EMSCRIPTEN)
 
 else (EMSCRIPTEN)
-
 	include(cmake/FetchDawn.cmake)
-
 	target_link_libraries(webgpu INTERFACE webgpu_dawn)
 	target_include_directories(webgpu INTERFACE
 		"${CMAKE_CURRENT_SOURCE_DIR}/include"

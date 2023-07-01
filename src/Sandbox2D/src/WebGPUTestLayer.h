@@ -5,6 +5,7 @@
 #pragma once
 #include "BeeEngine.h"
 #include "Gui/ImGui/FpsCounter.h"
+#include "Renderer/Pipeline.h"
 
 class WebGPUTestLayer: public BeeEngine::Layer
 {
@@ -24,4 +25,7 @@ public:
 
     private:
     BeeEngine::Internal::FpsCounter m_FpsCounter;
+    BeeEngine::Ref<BeeEngine::Pipeline> m_Pipeline;
+    BeeEngine::Ref<BeeEngine::ShaderModule> m_VertexShader;
+    BeeEngine::Ref<BeeEngine::ShaderModule> m_FragmentShader;
 };
