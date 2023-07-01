@@ -4,35 +4,24 @@
 
 #pragma once
 #include "BeeEngine.h"
+#include "Gui/ImGui/FpsCounter.h"
 
 class WebGPUTestLayer: public BeeEngine::Layer
 {
 public:
-    WebGPUTestLayer()
-    {
+    WebGPUTestLayer() = default;
 
-    }
+    ~WebGPUTestLayer() override = default;
 
-    ~WebGPUTestLayer() override
-    {
+    void OnAttach() override;
 
-    }
+    void OnDetach() override;
 
-    void OnAttach() override
-    {
-        Layer::OnAttach();
-    }
+    void OnUpdate() override;
 
-    void OnDetach() override
-    {
-        Layer::OnDetach();
-    }
-
-    void OnUpdate() override
-    {
-        Layer::OnUpdate();
-    }
-
-    void OnGUIRendering() override {}
+    void OnGUIRendering() override;
     void OnEvent(BeeEngine::EventDispatcher& e) override {}
+
+    private:
+    BeeEngine::Internal::FpsCounter m_FpsCounter;
 };

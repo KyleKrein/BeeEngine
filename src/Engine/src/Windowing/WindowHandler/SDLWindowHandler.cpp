@@ -159,7 +159,7 @@ namespace BeeEngine::Internal
         SDL_Event sdlEvent;
         while (SDL_PollEvent(&sdlEvent))
         {
-            //ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
+            ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
             switch (sdlEvent.type)
             {
                 case SDL_EVENT_QUIT:
@@ -169,7 +169,7 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_RESIZED:
                 {
-                    if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
+                    /*if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
                     {
                         m_Width = sdlEvent.window.data1;
                         m_Height = sdlEvent.window.data2;
@@ -178,7 +178,11 @@ namespace BeeEngine::Internal
                     {
                         m_Width = sdlEvent.window.data1;
                         m_Height = sdlEvent.window.data2;
-                    }
+                    }*/
+                    int width, height;
+                    SDL_GetWindowSizeInPixels(m_Window, &width, &height);
+                    m_Width = width;
+                    m_Height = height;
                     m_GraphicsDevice->RequestSwapChainRebuild();
                     auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height);
                     m_Events.AddEvent(std::move(event));

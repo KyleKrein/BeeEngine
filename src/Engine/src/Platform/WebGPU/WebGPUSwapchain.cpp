@@ -16,9 +16,12 @@ namespace BeeEngine::Internal
 
         swapChainDesc.width = WindowHandler::GetInstance()->GetWidth();
         swapChainDesc.height = WindowHandler::GetInstance()->GetHeight();
+        BeeCoreTrace("Creating swapchain with size: {}x{}", swapChainDesc.width, swapChainDesc.height);
+        m_Width = swapChainDesc.width;
+        m_Height = swapChainDesc.height;
 
-        WGPUTextureFormat swapChainFormat = WGPUTextureFormat::WGPUTextureFormat_BGRA8Unorm;//wgpuSurfaceGetPreferredFormat(device.GetSurface(), device.GetAdapter());
-        swapChainDesc.format = swapChainFormat;
+        m_Format = WGPUTextureFormat::WGPUTextureFormat_BGRA8Unorm;//wgpuSurfaceGetPreferredFormat(device.GetSurface(), device.GetAdapter());
+        swapChainDesc.format = m_Format;
 
         swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
         if(WindowHandler::GetInstance()->GetVSync() == VSync::On)
@@ -27,10 +30,38 @@ namespace BeeEngine::Internal
             swapChainDesc.presentMode = WGPUPresentMode_Mailbox;
 
         m_SwapChain = wgpuDeviceCreateSwapChain(device.GetDevice(), device.GetSurface(), &swapChainDesc);
+        m_DepthFormat = WGPUTextureFormat_Depth24Plus; //TODO: make it not hardcoded
+        WGPUTextureDescriptor depthTextureDesc;
+        depthTextureDesc.nextInChain = nullptr;
+        depthTextureDesc.label = "Depth Texture";
+        depthTextureDesc.dimension = WGPUTextureDimension_2D;
+        depthTextureDesc.format = m_DepthFormat;
+        depthTextureDesc.mipLevelCount = 1;
+        depthTextureDesc.sampleCount = 1;
+        depthTextureDesc.size = {m_Width, m_Height, 1};
+        depthTextureDesc.usage = WGPUTextureUsage_RenderAttachment;
+        depthTextureDesc.viewFormatCount = 1;
+        depthTextureDesc.viewFormats = &m_DepthFormat;
+        m_DepthTexture = wgpuDeviceCreateTexture(device.GetDevice(), &depthTextureDesc);
+
+        // Create the view of the depth texture manipulated by the rasterizer
+        WGPUTextureViewDescriptor depthTextureViewDesc;
+        depthTextureViewDesc.nextInChain = nullptr;
+        depthTextureViewDesc.label = "Depth Texture View";
+        depthTextureViewDesc.aspect = WGPUTextureAspect_DepthOnly;
+        depthTextureViewDesc.baseArrayLayer = 0;
+        depthTextureViewDesc.arrayLayerCount = 1;
+        depthTextureViewDesc.baseMipLevel = 0;
+        depthTextureViewDesc.mipLevelCount = 1;
+        depthTextureViewDesc.dimension = WGPUTextureViewDimension_2D;
+        depthTextureViewDesc.format = m_DepthFormat;
+        m_DepthTextureView = wgpuTextureCreateView(m_DepthTexture, &depthTextureViewDesc);
     }
 
     WebGPUSwapChain::~WebGPUSwapChain()
     {
+        wgpuTextureViewRelease(m_DepthTextureView);
+        wgpuTextureRelease(m_DepthTexture);
         wgpuSwapChainRelease(m_SwapChain);
     }
 }

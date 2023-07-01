@@ -66,7 +66,18 @@ namespace BeeEngine::Internal
         renderPassDesc.colorAttachmentCount = 1;
         renderPassDesc.colorAttachments = &renderPassColorAttachment;
 
-        renderPassDesc.depthStencilAttachment = nullptr;
+        WGPURenderPassDepthStencilAttachment renderPassDepthStencilAttachment = {};
+        renderPassDepthStencilAttachment.view = m_GraphicsDevice.GetSwapChain().GetDepthTextureView();
+        renderPassDepthStencilAttachment.depthLoadOp = WGPULoadOp_Clear;
+        renderPassDepthStencilAttachment.depthStoreOp = WGPUStoreOp_Store;
+        renderPassDepthStencilAttachment.depthClearValue = 1.0f;
+        renderPassDepthStencilAttachment.stencilLoadOp = WGPULoadOp_Undefined;
+        renderPassDepthStencilAttachment.stencilStoreOp = WGPUStoreOp_Undefined;
+        renderPassDepthStencilAttachment.stencilClearValue = 0;
+        renderPassDepthStencilAttachment.stencilReadOnly = true;
+        renderPassDepthStencilAttachment.depthReadOnly = false;
+
+        renderPassDesc.depthStencilAttachment = &renderPassDepthStencilAttachment;
 
         renderPassDesc.timestampWriteCount = 0;
         renderPassDesc.timestampWrites = nullptr;

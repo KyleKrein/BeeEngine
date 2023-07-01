@@ -55,7 +55,7 @@ namespace BeeEngine::Internal
                 BeeCoreError("ImGuiControllerWebGPU::Initialize: Platform {} is not supported", ToString(Application::GetOsPlatform()));
                 break;
         }
-        ImGui_ImplWGPU_Init(m_Device.GetDevice(), 2, WGPUTextureFormat_BGRA8Unorm, WGPUTextureFormat_R32Float);
+        ImGui_ImplWGPU_Init(m_Device.GetDevice(), 2, m_Device.GetSwapChain().GetFormat(), m_Device.GetSwapChain().GetDepthFormat());
         ImGui_ImplWGPU_CreateDeviceObjects();
     }
 
@@ -82,6 +82,8 @@ namespace BeeEngine::Internal
     void ImGuiControllerWebGPU::Shutdown()
     {
         ImGui_ImplWGPU_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
+        //ImGui::DestroyContext();
     }
 
     ImGuiControllerWebGPU::~ImGuiControllerWebGPU()
