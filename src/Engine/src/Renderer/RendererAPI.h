@@ -9,6 +9,7 @@
 #include "VertexArray.h"
 #include "Core/Color4.h"
 #include "CommandBuffer.h"
+#include "RenderPass.h"
 
 namespace BeeEngine
 {
@@ -23,6 +24,8 @@ namespace BeeEngine
 
         virtual void StartMainRenderPass(CommandBuffer commandBuffer) = 0;
         virtual void EndMainRenderPass(CommandBuffer commandBuffer) = 0;
+
+        [[nodiscard]] virtual RenderPass GetMainRenderPass() const = 0;
 
         [[nodiscard]] virtual CommandBuffer GetCurrentCommandBuffer() const = 0;
 

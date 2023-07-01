@@ -104,4 +104,9 @@ namespace BeeEngine::Internal
     {
         return BeeEngine::Color4();
     }
+
+    RenderPass WebGPURendererAPI::GetMainRenderPass() const
+    {
+        return {m_RenderPassEncoder};
+    }
 }

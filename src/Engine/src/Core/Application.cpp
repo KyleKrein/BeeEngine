@@ -25,7 +25,7 @@ namespace BeeEngine{
             m_Window->UpdateTime();
             auto cmd = Renderer::BeginFrame();//Internal::VulkanRendererAPI::GetInstance().BeginFrame();
             Renderer::StartMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
-            //m_Layers.Update();
+            m_Layers.Update();
             Update();
             m_Window->SwapBuffers();
             Renderer::EndMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
@@ -57,10 +57,10 @@ namespace BeeEngine{
         m_Window.reset(WindowHandler::Create(WindowHandlerAPI::SDL, properties, m_EventQueue));
         Renderer::SetAPI(appProperties.PreferredRenderAPI);
 
-        //m_Layers.SetGuiLayer(new ImGuiLayer());
+        m_Layers.SetGuiLayer(new ImGuiLayer());
 
 #ifdef DEBUG
-        //m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
+        m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
 #endif
     }
 
