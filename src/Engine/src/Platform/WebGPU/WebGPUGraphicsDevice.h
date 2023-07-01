@@ -68,5 +68,7 @@ namespace BeeEngine::Internal
         Scope<WebGPUSwapChain> m_SwapChain;
 
         bool m_SwapChainRequiresRebuild = false;
+
+        void LogAdapterInfo() const noexcept;
     };
 }

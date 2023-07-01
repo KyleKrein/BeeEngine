@@ -46,21 +46,16 @@ namespace BeeEngine::Internal
 
         if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
         {
-            m_Width = properties.Width;
-            m_Height = properties.Height;
             windowFlags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
         }
-        else
-        {
-            m_Width = properties.Width;
-            m_Height = properties.Height;
-        }
+        m_Width = properties.Width;
+        m_Height = properties.Height;
         m_Title = properties.Title;
 
         m_Window = SDL_CreateWindow(properties.Title, gsl::narrow_cast<int>(m_Width), gsl::narrow_cast<int>(m_Height), windowFlags);
         if(m_Window == nullptr)
         {
-            BeeCoreFatalError("Failed to create SDL3 window!");
+            BeeCoreError("Failed to create SDL3 window! {}", SDL_GetError());
         }
         int width, height;
         SDL_GetWindowSizeInPixels(m_Window, &width, &height);

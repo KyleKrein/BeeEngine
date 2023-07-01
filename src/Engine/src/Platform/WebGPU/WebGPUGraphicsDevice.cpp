@@ -19,6 +19,7 @@ namespace BeeEngine::Internal
         WGPURequestAdapterOptions adapterOpts = {};
         adapterOpts.nextInChain = nullptr;
         adapterOpts.compatibleSurface = m_Surface;
+        adapterOpts.powerPreference = WGPUPowerPreference::WGPUPowerPreference_HighPerformance;
         m_Adapter = RequestAdapter(instance.GetHandle(), &adapterOpts);
 
         std::vector<WGPUFeatureName> features;
@@ -37,6 +38,9 @@ namespace BeeEngine::Internal
         for (auto f : features) {
             BeeCoreInfo(" - {}", ToString(f));
         }
+#if defined(DEBUG)
+        LogAdapterInfo();
+#endif
 
         WGPUDeviceDescriptor deviceDescriptor = {};
         deviceDescriptor.nextInChain = nullptr;
@@ -284,5 +288,18 @@ namespace BeeEngine::Internal
         encoderDesc.label = "Command encoder";
         WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_Device, &encoderDesc);
         return {encoder};
+    }
+
+    void WebGPUGraphicsDevice::LogAdapterInfo() const noexcept
+    {
+        WGPUAdapterProperties properties {};
+        wgpuAdapterGetProperties(m_Adapter, &properties);
+        BeeCoreInfo("WebGPU adapter info:");
+        BeeCoreInfo("  Name: {}", properties.name);
+        BeeCoreInfo("  Vendor: {}", properties.vendorID);
+        BeeCoreInfo("  DeviceID: {}", properties.deviceID);
+        BeeCoreInfo("  BackendType: {}", ToString(properties.backendType));
+        BeeCoreInfo("  AdapterType: {}", ToString(properties.adapterType));
+        BeeCoreInfo("  DriverDescription: {}", properties.driverDescription);
     }
 }

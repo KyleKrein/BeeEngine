@@ -5,6 +5,7 @@
 #include "WebGPUSwapchain.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "WebGPUGraphicsDevice.h"
+#include "Core/Application.h"
 
 namespace BeeEngine::Internal
 {
@@ -26,6 +27,8 @@ namespace BeeEngine::Internal
         swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
         if(WindowHandler::GetInstance()->GetVSync() == VSync::On)
             swapChainDesc.presentMode = WGPUPresentMode_Fifo;
+        else if(Application::GetOsPlatform() == OSPlatform::Mac)
+            swapChainDesc.presentMode = WGPUPresentMode_Immediate;
         else
             swapChainDesc.presentMode = WGPUPresentMode_Mailbox;
 
