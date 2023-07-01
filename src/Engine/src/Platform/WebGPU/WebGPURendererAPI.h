@@ -22,6 +22,8 @@ namespace BeeEngine::Internal
         void StartMainRenderPass(CommandBuffer commandBuffer) override;
         void EndMainRenderPass(CommandBuffer commandBuffer) override;
 
+        [[nodiscard]] RenderPass GetMainRenderPass() const override;
+
         void SetClearColor(const Color4& color) override;
         void Clear() override;
 

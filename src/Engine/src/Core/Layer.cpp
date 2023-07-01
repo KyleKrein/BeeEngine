@@ -6,6 +6,7 @@
 #include "Renderer/ShaderLibrary.h"
 #include "Platform/ImGui/ImGuiControllerVulkan.h"
 #include "Renderer/Renderer.h"
+#include "Platform/ImGui/ImGuiControllerWebGPU.h"
 
 namespace BeeEngine
 {
@@ -25,6 +26,9 @@ namespace BeeEngine
                 break;
             case Vulkan:
                 s_Controller.reset(new ImGuiControllerVulkan());
+                break;
+            case WebGPU:
+                s_Controller.reset(new Internal::ImGuiControllerWebGPU());
                 break;
             default:
                 BeeCoreAssert(false, "Renderer API not supported!");

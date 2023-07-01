@@ -22,6 +22,7 @@ else (EMSCRIPTEN)
 	target_include_directories(webgpu INTERFACE
 		"${CMAKE_CURRENT_SOURCE_DIR}/include"
 		"${CMAKE_BINARY_DIR}/_deps/dawn-src/include"
+		"${CMAKE_BINARY_DIR}/_deps/dawn-build/gen/include"
 	)
 
 	# This is used to advertise the flavor of WebGPU that this zip provides

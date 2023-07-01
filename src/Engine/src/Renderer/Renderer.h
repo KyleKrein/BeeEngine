@@ -11,6 +11,7 @@
 #include "Core/CodeSafety/Expects.h"
 #include "CommandBuffer.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
+#include "RenderPass.h"
 
 namespace BeeEngine
 {
@@ -99,6 +100,11 @@ namespace BeeEngine
             static GraphicsDevice& graphicsDevice = WindowHandler::GetInstance()->GetGraphicsDevice();
             graphicsDevice.SubmitCommandBuffers(commandBuffers, numberOfBuffers);
         }*/
+
+        static RenderPass GetMainRenderPass()
+        {
+            return s_RendererAPI->GetMainRenderPass();
+        }
 
     private:
         static RenderAPI s_Api;
