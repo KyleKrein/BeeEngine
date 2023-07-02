@@ -223,10 +223,31 @@ namespace BeeEngine
         }
     };
 */
+
     template<typename T>
     using List = std::vector<T>;
     template<typename T>
     constexpr String ToString(const T& obj);
+
+    template<class T>
+    concept ConceptToStringAble = requires (T value)
+    {
+        value.ToString() -> std::string;
+    };
+
+    template<typename T>
+    bool IsToStringAble()
+    {
+        return std::is_same_v<std::string, decltype(std::declval<T>().ToString())>;
+    }
+
+    template<typename T>
+    requires ConceptToStringAble<T>
+    constexpr std::string ToString(const T& obj)
+    {
+        return obj.ToString();
+    }
+
     template<typename T>
     requires std::is_enum_v<T>
     constexpr String EnumToString(T obj);

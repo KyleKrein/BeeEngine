@@ -3,10 +3,15 @@
 //
 
 #pragma once
-#include "TypeDefines.h"
-#include "vec4.hpp"
-#include "gsl/gsl"
-#include "imgui.h"
+#if __has_include(<vec4.hpp>)
+#include <vec4.hpp>
+#endif
+#if __has_include(<gsl/gsl>)
+#include <gsl/gsl>
+#endif
+#if __has_include(<imgui.h>)
+#include <imgui.h>
+#endif
 
 #if defined(BEE_COMPILE_WEBGPU)
 #include <webgpu/webgpu.h>
@@ -19,10 +24,16 @@ namespace BeeEngine
         constexpr Color4() noexcept : m_R(0.0f), m_G(0.0f), m_B(0.0f), m_A(1.0f) {}
         constexpr static Color4 FromRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) noexcept
         {
+#if __has_include(<gsl/gsl>)
             return {gsl::narrow_cast<float>(r) / 255.0f,
                     gsl::narrow_cast<float>(g) / 255.0f,
                     gsl::narrow_cast<float>(b) / 255.0f,
                     gsl::narrow_cast<float>(a) / 255.0f};
+#endif
+            return {static_cast<float>(r) / 255.0f,
+                    static_cast<float>(g) / 255.0f,
+                    static_cast<float>(b) / 255.0f,
+                    static_cast<float>(a) / 255.0f};
         }
         constexpr static Color4 FromNormalized(float r, float g, float b, float a = 1.0f) noexcept
         {
@@ -42,10 +53,12 @@ namespace BeeEngine
 
         [[nodiscard]] inline constexpr float* ValuePtr() const { return (float*)&m_R; }
 
+#if __has_include(<vec4.hpp>)
         constexpr inline explicit operator glm::vec4() const
         {
             return {m_R, m_G, m_B, m_A};
         }
+#endif
 
 #if defined(BEE_COMPILE_WEBGPU)
         constexpr inline operator WGPUColor() const
@@ -53,6 +66,7 @@ namespace BeeEngine
             return {m_R, m_G, m_B, m_A};
         }
 #endif
+#if __has_include(<imgui.h>)
         constexpr inline operator ImVec4() const
         {
             return {m_R, m_G, m_B, m_A};
@@ -61,6 +75,7 @@ namespace BeeEngine
         {
             return {m_R, m_G, m_B, m_A};
         }
+#endif
         constexpr bool operator == (const Color4& other) const
         {
             return m_R == other.m_R && m_G == other.m_G && m_B == other.m_B && m_A == other.m_A;
@@ -77,6 +92,7 @@ namespace BeeEngine
             {
                 return {R, G, B, A};
             }
+#if __has_include(<imgui.h>)
             constexpr operator ImVec4() const
             {
                 return {R, G, B, A};
@@ -85,6 +101,7 @@ namespace BeeEngine
             {
                 return {R, G, B, A};
             }
+#endif
         };
 
         static constexpr Color4Init const White = {1.0f, 1.0f, 1.0f, 1.0f};
