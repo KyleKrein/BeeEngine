@@ -27,6 +27,22 @@ namespace BeeEngine
         [[nodiscard]] static std::vector<uint32_t> CompileGLSLToSpirV(const String& path, ShaderType type, bool loadFromCache);
         [[nodiscard]] static std::vector<uint32_t> LoadSpirVFromCache(const String& path);
         [[nodiscard]] static std::vector<char> ReadGLSLShader(const String& path);
+        [[nodiscard]] static std::string CompileSpirVToWGSL(in<std::vector<uint32_t>> spirvCode, in<std::string> newPath);
+        [[nodiscard]] static std::string LoadWGSLFromCache(const String& path);
+        [[nodiscard]] static std::string LoadWGSL(const String& path, ShaderType type, bool loadFromCache);
+        static bool LoadSpirV(const String& path, ShaderType type, bool loadFromCache, out<std::vector<uint32_t>> spirv);
+        static constexpr auto GetExtension(ShaderType type)
+        {
+            switch (type)
+            {
+                case ShaderType::Vertex:
+                    return ".vert";
+                case ShaderType::Fragment:
+                    return ".frag";
+                case ShaderType::Compute:
+                    return ".comp";
+            }
+        }
         static String s_CachePath;
     };
 }

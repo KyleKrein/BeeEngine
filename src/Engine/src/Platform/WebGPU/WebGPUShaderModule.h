@@ -13,7 +13,7 @@ namespace BeeEngine::Internal
     {
     public:
         ~WebGPUShaderModule() override;
-        WebGPUShaderModule(in<std::vector<uint32_t>> spirv, ShaderType type);
+        WebGPUShaderModule(in<std::string> wgsl, ShaderType type);
         [[nodiscard]] ShaderType GetType() const override
         {
             return m_Type;

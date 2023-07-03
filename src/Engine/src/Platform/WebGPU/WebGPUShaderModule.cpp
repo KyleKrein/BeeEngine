@@ -4,17 +4,13 @@
 
 #include "WebGPUShaderModule.h"
 #include "WebGPUGraphicsDevice.h"
-#include "Utils/ShaderConverter.h"
 
 
 namespace BeeEngine::Internal
 {
-    WebGPUShaderModule::WebGPUShaderModule(in<std::vector<uint32_t>> spirvCode, ShaderType type)
+    WebGPUShaderModule::WebGPUShaderModule(in<std::string> wgsl, ShaderType type)
     : m_Type(type)
     {
-        std::string wgsl;
-        bool result = ShaderConverter::SPVtoWGSL(spirvCode, wgsl);
-        BeeEnsures(result);
         WGPUShaderModuleWGSLDescriptor wgslDesc{};
         wgslDesc.source = wgsl.c_str();
         wgslDesc.chain.sType = WGPUSType_ShaderModuleWGSLDescriptor;

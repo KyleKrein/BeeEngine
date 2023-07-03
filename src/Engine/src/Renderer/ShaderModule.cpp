@@ -14,38 +14,27 @@ namespace BeeEngine
     String ShaderModule::s_CachePath = "Cache/";
     Ref<ShaderModule> BeeEngine::ShaderModule::Create(const String &path, ShaderType type, bool loadFromCache)
     {
-        if(std::filesystem::directory_entry(s_CachePath).exists())
+        if(!std::filesystem::directory_entry(s_CachePath).exists())
         {
             std::filesystem::create_directory(s_CachePath);
         }
+#if defined(BEE_COMPILE_WEBGPU)
+        if(Renderer::GetAPI() == WebGPU)
+        {
+            std::string wgsl = LoadWGSL(path, type, loadFromCache);
+            return CreateRef<Internal::WebGPUShaderModule>(wgsl, type);
+        }
+#endif
         std::vector<uint32_t> spirv;
-        if(path.ends_with(".vert") || path.ends_with(".frag") || path.ends_with(".comp"))
-        {
-            spirv = CompileGLSLToSpirV(path, type, loadFromCache);
-        }
-        else if(path.ends_with(".spv"))
-        {
-            spirv = LoadSpirVFromCache(path);
-        }
-        else
-        {
-            BeeCoreError("Unknown shader type");
-            return nullptr;
-        }
-        if(spirv.empty())
-        {
-            BeeCoreError("Unable to create shader module");
-            return nullptr;
-        }
+        LoadSpirV(path, type, loadFromCache, spirv);
+
         switch (Renderer::GetAPI())
         {
-            case WebGPU:
-                return CreateRef<Internal::WebGPUShaderModule>(spirv, type);
-                break;
             case Vulkan:
             case OpenGL:
             case Metal:
             case DirectX:
+            case WebGPU:
             case NotAvailable:
             default:
                 BeeCoreError("Unknown renderer API");
@@ -56,18 +45,6 @@ namespace BeeEngine
     std::vector<uint32_t> ShaderModule::CompileGLSLToSpirV(const String &path, ShaderType type, bool loadFromCache)
     {
         auto name = ResourceManager::GetNameFromFilePath(path);
-        constexpr auto GetExtension = [](ShaderType type)
-        {
-            switch (type)
-            {
-                case ShaderType::Vertex:
-                    return ".vert";
-                case ShaderType::Fragment:
-                    return ".frag";
-                case ShaderType::Compute:
-                    return ".comp";
-            }
-        };
         auto newFilepath = s_CachePath + name + GetExtension(type) + ".spv";
         if(loadFromCache)
         {
@@ -121,17 +98,96 @@ namespace BeeEngine
 
     std::vector<uint32_t> ShaderModule::LoadSpirVFromCache(const String &path)
     {
-        if(File::Exists(path))
+        auto result = File::ReadBinaryFile(path);
+        gsl::span<uint32_t> span((uint32_t *)result.data(), result.size() / sizeof(uint32_t));
+        BeeCoreTrace("Loaded SPIRV from cache");
+        return {span.begin(), span.end()};
+    }
+
+    std::string ShaderModule::CompileSpirVToWGSL(in<std::vector<uint32_t>> spirvCode, in<std::string> newPath)
+    {
+#if defined(BEE_COMPILE_WEBGPU)
+        std::string wgsl;
+        bool result = ShaderConverter::SPVtoWGSL(spirvCode, wgsl);
+        BeeEnsures(result);
+        File::WriteFile(newPath, wgsl);
+        return wgsl;
+#endif
+    }
+    std::string ShaderModule::LoadWGSLFromCache(const String& path)
+    {
+#if defined(BEE_COMPILE_WEBGPU)
+        auto wgsl = ReadGLSLShader(path);
+        BeeCoreTrace("Loaded WGSL from cache");
+        return std::string(wgsl.data(), wgsl.size());
+#endif
+    }
+
+    std::string ShaderModule::LoadWGSL(const String& path, ShaderType type, bool loadFromCache)
+    {
+        static std::filesystem::path wgslCachePath = s_CachePath + "WGSL/";
+        if(!std::filesystem::directory_entry(wgslCachePath).exists())
         {
-            auto result = File::ReadBinaryFile(path);
-            gsl::span<uint32_t> span((uint32_t *)result.data(), result.size() / sizeof(uint32_t));
-            BeeCoreTrace("Loaded SPIRV from cache");
-            return {span.begin(), span.end()};
+            std::filesystem::create_directory(wgslCachePath);
+        }
+        auto name = ResourceManager::GetNameFromFilePath(path);
+        auto newFilepath = wgslCachePath.string() + name + GetExtension(type) + ".wgsl";
+        if(path.ends_with(".vert") || path.ends_with(".frag") || path.ends_with(".comp"))
+        {
+            if(loadFromCache)
+            {
+                if(File::Exists(newFilepath))
+                    return LoadWGSLFromCache(newFilepath);
+            }
+            auto spirv = CompileGLSLToSpirV(path, type, loadFromCache);
+            return CompileSpirVToWGSL(spirv, newFilepath);
+        }
+        else if(path.ends_with(".spv"))
+        {
+            if(loadFromCache)
+            {
+                if(File::Exists(newFilepath))
+                    return LoadWGSLFromCache(newFilepath);
+            }
+            auto spirv = LoadSpirVFromCache(path);
+            if(spirv.empty())
+            {
+                BeeCoreError("Unable to create shader module");
+                return std::string();
+            }
+            return CompileSpirVToWGSL(spirv, newFilepath);
         }
         else
         {
-            BeeCoreTrace("Unable to load SPIRV from cache: File not found");
-            return {};
+            BeeCoreError("Unknown shader type");
+            return std::string();
         }
+    }
+    bool ShaderModule::LoadSpirV(const String& path, ShaderType type, bool loadFromCache, out<std::vector<uint32_t>> spirv)
+    {
+        //auto name = ResourceManager::GetNameFromFilePath(path);
+        //auto newFilepath = s_CachePath + name + GetExtension(type) + ".spv";
+        if(path.ends_with(".vert") || path.ends_with(".frag") || path.ends_with(".comp"))
+        {
+            spirv = CompileGLSLToSpirV(path, type, loadFromCache);
+        }
+        else if(path.ends_with(".spv"))
+        {
+            if(loadFromCache && File::Exists(path))
+            {
+                spirv = LoadSpirVFromCache(path);
+            }
+        }
+        else
+        {
+            BeeCoreError("Unknown shader type");
+            return false;
+        }
+        if(spirv.empty())
+        {
+            BeeCoreError("Unable to create shader module");
+            return false;
+        }
+        return true;
     }
 }
