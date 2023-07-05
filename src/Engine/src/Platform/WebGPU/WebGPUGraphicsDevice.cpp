@@ -19,6 +19,7 @@ namespace BeeEngine::Internal
         WGPURequestAdapterOptions adapterOpts = {};
         adapterOpts.nextInChain = nullptr;
         adapterOpts.compatibleSurface = m_Surface;
+        adapterOpts.compatibilityMode = false; //don't need to be compatible with WebGL
         adapterOpts.powerPreference = WGPUPowerPreference::WGPUPowerPreference_HighPerformance;
         m_Adapter = RequestAdapter(instance.GetHandle(), &adapterOpts);
 

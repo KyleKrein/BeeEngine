@@ -12,7 +12,7 @@ namespace BeeEngine::Internal
     : m_Type(type)
     {
         WGPUShaderModuleWGSLDescriptor wgslDesc{};
-        wgslDesc.source = wgsl.c_str();
+        wgslDesc.code = wgsl.c_str();
         wgslDesc.chain.sType = WGPUSType_ShaderModuleWGSLDescriptor;
         wgslDesc.chain.next = nullptr;
 

@@ -176,7 +176,7 @@ namespace BeeEngine
             auto program = tint::reader::spirv::Parse(spirv);
             tint::writer::wgsl::GeneratorImpl generator(&program);
             generator.Generate();
-            wgsl = generator.result();
+            wgsl = generator.Result();
         }
         catch (const std::exception &e)
         {

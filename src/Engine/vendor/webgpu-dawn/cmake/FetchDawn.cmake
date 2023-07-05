@@ -7,16 +7,16 @@ include(FetchContent)
 
 FetchContent_Declare(
 	dawn
-	#GIT_REPOSITORY https://dawn.googlesource.com/dawn
-	#GIT_TAG        chromium/5715
-	#GIT_SHALLOW ON
+	GIT_REPOSITORY https://dawn.googlesource.com/dawn
+	GIT_TAG        chromium/5873
+	GIT_SHALLOW ON
 
 	# Manual download mode, even shallower than GIT_SHALLOW ON
-	DOWNLOAD_COMMAND
+	#[[DOWNLOAD_COMMAND
 		cd ${FETCHCONTENT_BASE_DIR}/dawn-src &&
 		git init &&
 		git pull --depth=1 https://dawn.googlesource.com/dawn chromium/5715 &&
-		git reset --hard FETCH_HEAD
+		git reset --hard FETCH_HEAD]]
 )
 
 FetchContent_GetProperties(dawn)

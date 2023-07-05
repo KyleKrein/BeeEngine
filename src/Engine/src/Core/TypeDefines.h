@@ -7,6 +7,9 @@
 #include <optional>
 #include <cxxabi.h>
 #include <magic_enum.hpp>
+#if defined(BEE_COMPILE_WEBGPU)
+#include <webgpu/webgpu.h>
+#endif
 
 #define USE_CUSTOM_CONTAINERS 0
 
@@ -280,6 +283,90 @@ namespace BeeEngine
         else
             return String{magic_enum::enum_name(obj)};
     }
+#if defined(BEE_COMPILE_WEBGPU)
+    template<>
+    constexpr String EnumToString<WGPUFeatureName>(WGPUFeatureName obj)
+    {
+        switch (obj)
+        {
+            case WGPUFeatureName_Undefined:
+                return "Undefined";
+                break;
+            case WGPUFeatureName_DepthClipControl:
+                return "DepthClipControl";
+                break;
+            case WGPUFeatureName_Depth32FloatStencil8:
+                return "Depth32FloatStencil8";
+                break;
+            case WGPUFeatureName_TimestampQuery:
+                return "TimestampQuery";
+                break;
+            case WGPUFeatureName_PipelineStatisticsQuery:
+                return "PipelineStatisticsQuery";
+                break;
+            case WGPUFeatureName_TextureCompressionBC:
+                return "TextureCompressionBC";
+                break;
+            case WGPUFeatureName_TextureCompressionETC2:
+                return "TextureCompressionETC2";
+                break;
+            case WGPUFeatureName_TextureCompressionASTC:
+                return "TextureCompressionASTC";
+                break;
+            case WGPUFeatureName_IndirectFirstInstance:
+                return "IndirectFirstInstance";
+                break;
+            case WGPUFeatureName_ShaderF16:
+                return "ShaderF16";
+                break;
+            case WGPUFeatureName_RG11B10UfloatRenderable:
+                return "RG11B10UfloatRenderable";
+                break;
+            case WGPUFeatureName_BGRA8UnormStorage:
+                return "BGRA8UnormStorage";
+                break;
+            case WGPUFeatureName_Float32Filterable:
+                return "Float32Filterable";
+                break;
+            case WGPUFeatureName_DawnShaderFloat16:
+                return "DawnShaderFloat16";
+                break;
+            case WGPUFeatureName_DawnInternalUsages:
+                return "DawnInternalUsages";
+                break;
+            case WGPUFeatureName_DawnMultiPlanarFormats:
+                return "DawnMultiPlanarFormats";
+                break;
+            case WGPUFeatureName_DawnNative:
+                return "DawnNative";
+                break;
+            case WGPUFeatureName_ChromiumExperimentalDp4a:
+                return "ChromiumExperimentalDp4a";
+                break;
+            case WGPUFeatureName_TimestampQueryInsidePasses:
+                return "TimestampQueryInsidePasses";
+                break;
+            case WGPUFeatureName_ImplicitDeviceSynchronization:
+                return "ImplicitDeviceSynchronization";
+                break;
+            case WGPUFeatureName_SurfaceCapabilities:
+                return "SurfaceCapabilities";
+                break;
+            case WGPUFeatureName_TransientAttachments:
+                return "TransientAttachments";
+                break;
+            case WGPUFeatureName_MSAARenderToSingleSampled:
+                return "MSAARenderToSingleSampled";
+                break;
+            case WGPUFeatureName_Force32:
+                return "Force32";
+                break;
+            default:
+                return "Unknown";
+                break;
+        }
+    }
+#endif
 
 
     template<>
