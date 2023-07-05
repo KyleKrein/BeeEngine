@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.25)
 project(Sandbox2D)
 set(SOURCE_FILES src/main.cpp src/TestLayer.cpp src/TestLayer.h src/WebGPUTestLayer.cpp src/WebGPUTestLayer.h)
 #if(APPLE AND NOT IOS)

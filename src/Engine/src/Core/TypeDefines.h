@@ -389,10 +389,49 @@ namespace BeeEngine
     {
         return obj == nullptr ? "nullptr" : std::to_string(reinterpret_cast<std::uintptr_t>(obj));
     }
+    template<typename T>
+    requires std::is_pointer_v<T>
+    constexpr String ToString(T obj)
+    {
+        return obj == nullptr ? "nullptr" : std::to_string(reinterpret_cast<std::uintptr_t>(obj));
+    }
     template<>
     constexpr String ToString<std::byte>(const std::byte& obj)
     {
         return std::to_string(static_cast<int>(obj));
     }
 
+    template<typename T>
+    constexpr String ToString(const std::vector<T>& collection)
+    {
+        String result = "[";
+        for(auto& item : collection)
+        {
+            result += ToString(item) + ", ";
+        }
+        result.replace(result.size() - 2, 2, "]");
+        return result;
+    }
+    template<typename T, size_t numberOfElements>
+    constexpr String ToString(const std::array<T, numberOfElements>& collection)
+    {
+        String result = "[";
+        for(auto& item : collection)
+        {
+            result += ToString(item) + ", ";
+        }
+        result.replace(result.size() - 2, 2, "]");
+        return result;
+    }
+    template<typename Key, typename Value>
+    constexpr String ToString(const std::unordered_map<Key, Value>& collection)
+    {
+        String result = "[";
+        for(auto& item : collection)
+        {
+            result += "[" + ToString(item.first) + " : " + ToString(item.second) + "]" ", ";
+        }
+        result.replace(result.size() - 2, 2, "]");
+        return result;
+    }
 }
