@@ -29,6 +29,8 @@ namespace BeeEngine
             case ShaderDataType::Int3:     return 4 * 3;
             case ShaderDataType::Int4:     return 4 * 4;
             case ShaderDataType::Bool:     return 1;
+            case ShaderDataType::NoneData:
+                break;
         }
         return 0;
     }
@@ -48,12 +50,14 @@ namespace BeeEngine
             case ShaderDataType::Int3:     return 3;
             case ShaderDataType::Int4:     return 4;
             case ShaderDataType::Bool:     return 1;
+            case ShaderDataType::NoneData:
+                break;
         }
         return 0;
     }
 
     BufferLayout::BufferLayout(const std::initializer_list<BufferElement> &elements)
-    : m_Elements(elements), m_Stride(0)
+    : m_Stride(0), m_Elements(elements)
     {
         CalculateOffsetsAndStride();
     }
@@ -61,7 +65,7 @@ namespace BeeEngine
     void BufferLayout::CalculateOffsetsAndStride()
     {
         BEE_PROFILE_FUNCTION();
-        int offset = 0;
+        uint32_t offset = 0;
         for (auto &element : m_Elements)
         {
             element.SetOffset(offset);

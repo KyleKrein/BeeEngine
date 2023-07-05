@@ -64,9 +64,9 @@ namespace BeeEngine
         static WindowHandler* s_Instance;
         static WindowHandlerAPI s_API;
         WindowHandler() = delete;
-        WindowHandler(EventQueue& eventQueue): m_Events(eventQueue), m_Width(0), m_Height(0) {};
+        WindowHandler(EventQueue& eventQueue): m_Width(0), m_Height(0), m_Events(eventQueue) {};
 
-        void UpdateDeltaTime(float currentTime)
+        void UpdateDeltaTime(double currentTime)
         {
             Time::Update(currentTime);
         }

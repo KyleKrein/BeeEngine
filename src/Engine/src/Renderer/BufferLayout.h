@@ -70,7 +70,7 @@ namespace BeeEngine
         BufferLayout() = default;
 
     private:
-        int m_Stride;
+        uint32_t m_Stride;
         std::vector<BufferElement> m_Elements;
 
         void CalculateOffsetsAndStride();

@@ -6,6 +6,8 @@
 #include "WebGPUGraphicsDevice.h"
 #include "Renderer/Renderer.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 namespace BeeEngine::Internal
 {
     WebGPURendererAPI::WebGPURendererAPI()
@@ -121,3 +123,4 @@ namespace BeeEngine::Internal
         return {m_RenderPassEncoder};
     }
 }
+#pragma clang diagnostic pop

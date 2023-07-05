@@ -12,7 +12,6 @@ namespace BeeEngine
     bool ShaderConverter::GLSLtoSPV(const ShaderStage shader_type, const char *pshader,
                                    std::vector<uint32_t> &spirv)
     {
-        Init();
         EShLanguage stage = static_cast<EShLanguage>(shader_type);
         glslang::TShader shader(stage);
         glslang::TProgram program;
@@ -48,7 +47,6 @@ namespace BeeEngine
         }
 
         glslang::GlslangToSpv(*program.getIntermediate(stage), spirv);
-        Finalize();
         return true;
     }
 

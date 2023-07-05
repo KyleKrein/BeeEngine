@@ -1,10 +1,20 @@
 cmake_minimum_required(VERSION 3.24)
-project(BeeEngine_CPP)
+include(cmake/UniversalAppleBuild.cmake)
+project(
+        BeeEngine_CPP
+        DESCRIPTION "BeeEngine"
+)
 set(CMAKE_CXX_STANDARD 23)
-#[[set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}/Libraries)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE}/Runtime)]]
-set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(cmake/StandardProjectSettings.cmake)
+
+# Link project_warnings as "library" to use the warnings
+# specified in CompilerWarnings.cmake.
+add_library(project_warnings INTERFACE)
+include(cmake/CompilerWarnings.cmake)
+set_project_warnings(project_warnings)
+
 include_directories(src/Engine/src/Allocator)
 
 add_subdirectory(src/Sandbox2D)

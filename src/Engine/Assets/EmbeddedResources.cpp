@@ -3,7 +3,7 @@
 //
 
 #include "EmbeddedResources.h"
-
+#define INCBIN_SILENCE_BITCODE_WARNING
 #include "incbin.h"
 
 #define EmbedResource(name, path) extern "C" {INCBIN(name, ASSETS_PATH path); }

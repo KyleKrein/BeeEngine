@@ -10,6 +10,8 @@
 #include "Renderer/Renderer.h"
 #include "DeletionQueue.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 namespace BeeEngine{
     OSPlatform Application::s_OSPlatform = OSPlatform::None;
     Application* Application::s_Instance = nullptr;
@@ -148,3 +150,5 @@ namespace BeeEngine{
     }
 }
 
+
+#pragma clang diagnostic pop

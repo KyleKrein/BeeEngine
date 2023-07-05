@@ -387,7 +387,7 @@ namespace BeeEngine
     template<>
     constexpr String ToString<std::nullptr_t>(const std::nullptr_t& obj)
     {
-        return "nullptr";
+        return obj == nullptr ? "nullptr" : std::to_string(reinterpret_cast<std::uintptr_t>(obj));
     }
     template<>
     constexpr String ToString<std::byte>(const std::byte& obj)

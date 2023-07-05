@@ -15,6 +15,6 @@ namespace BeeEngine::Internal
             : CommandBuffer(encoder)
         {}
         ~WebGPUCommandBuffer() override = default;
-        [[nodiscard]] WGPUCommandEncoder GetHandle() const { return (WGPUCommandEncoder)m_Handle; }
+        [[nodiscard]] WGPUCommandEncoder GetHandle() const { return static_cast<WGPUCommandEncoder>(m_Handle); }
     };
 }

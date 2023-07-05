@@ -46,6 +46,7 @@ _deps
 bin
 bin/Debug
 bin/Release
+build
 .idea
 .vscode
 

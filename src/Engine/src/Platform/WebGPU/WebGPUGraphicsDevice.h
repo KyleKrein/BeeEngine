@@ -8,6 +8,7 @@
 #include "WebGPUInstance.h"
 #include "WebGPUSwapchain.h"
 #include "WebGPUCommandBuffer.h"
+#include "gsl/gsl"
 
 namespace BeeEngine::Internal
 {
@@ -41,6 +42,9 @@ namespace BeeEngine::Internal
         {
             return *m_SwapChain;
         }
+
+        WGPUBuffer CreateBuffer(WGPUBufferUsageFlags usage, uint32_t size);
+        void CopyDataToBuffer(gsl::span<byte> data, WGPUBuffer buffer);
 
         void SubmitCommandBuffers(CommandBuffer* commandBuffers, uint32_t numberOfBuffers);
 

@@ -5,7 +5,8 @@
 #if defined(MACOS)
 #include "Utils/FileDialogs.h"
 #include "Cocoa/Cocoa.h"
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 std::string BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
 {
     // Create the File Open Dialog class.
@@ -53,5 +54,5 @@ const char *BeeEngine::FileDialogs::GetFilter(void* filter)
 {
     return ((FileDialogs::Filter*)filter)->filter + 2;
 }
-
+#pragma clang diagnostic pop
 #endif

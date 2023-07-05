@@ -15,7 +15,7 @@ namespace BeeEngine
         friend class WindowHandler;
     private:
 
-        static void Update(float currentTime);
+        static void Update(double currentTime);
         static void Set(double deltaTime, double totalTime);
         static double m_TotalTime;
         static double m_DeltaTime;

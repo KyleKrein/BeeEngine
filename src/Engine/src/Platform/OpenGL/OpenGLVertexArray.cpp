@@ -11,6 +11,8 @@
 namespace BeeEngine::Internal
 {
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wint-to-void-pointer-cast"
     OpenGLVertexArray::OpenGLVertexArray(Ref<GraphicsBuffer> vertexBuffer, Ref<GraphicsBuffer> indexBuffer)
     : m_RendererID(0), m_VertexBuffer(vertexBuffer), m_IndexBuffer(indexBuffer)
     {
@@ -83,6 +85,7 @@ namespace BeeEngine::Internal
         OPENGL_CHECK_ERRORS
         indexBuffer->Bind();
     }
+#pragma clang diagnostic pop
 
     OpenGLVertexArray::~OpenGLVertexArray()
     {

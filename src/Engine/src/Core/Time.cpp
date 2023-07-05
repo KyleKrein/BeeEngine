@@ -7,10 +7,10 @@
 
 namespace BeeEngine
 {
-    double Time::m_TotalTime = 0.0f;
-    double Time::m_DeltaTime = 1.0f/60.0f;
+    double Time::m_TotalTime = 0.0;
+    double Time::m_DeltaTime = 1.0/60.0;
 
-    void Time::Update(float currentTime)
+    void Time::Update(double currentTime)
     {
         m_DeltaTime = currentTime - m_TotalTime;
         m_TotalTime = currentTime;

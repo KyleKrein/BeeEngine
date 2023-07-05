@@ -100,7 +100,6 @@ namespace BeeEngine::Internal
         fragmentState.targets = &colorTarget;
 
         //multisample state
-        WGPUMultisampleState multisampleState{};
         // Samples per pixel
         renderPipelineDescriptor.multisample.count = 1;
         // Default value for the mask, meaning "all bits on"

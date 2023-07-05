@@ -25,9 +25,9 @@ namespace BeeEngine
         {
             BEE_PROFILE_FUNCTION();
             String result = ResourceManager::ProcessFilePath(filepath);
-            int lastDot = result.find_last_of('.');
-            int lastSlash = result.find_last_of('/') + 1;
-            int count = lastDot == -1? result.size() - lastSlash: lastDot - lastSlash;
+            size_t lastDot = result.find_last_of('.');
+            size_t lastSlash = result.find_last_of('/') + 1;
+            size_t count = lastDot == -1ul? result.size() - lastSlash: lastDot - lastSlash;
             return String(result.substr(lastSlash, count));
         }
     };

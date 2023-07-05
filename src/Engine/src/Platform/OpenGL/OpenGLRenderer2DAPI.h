@@ -53,12 +53,12 @@ namespace BeeEngine::Internal
                 };
 
         explicit Renderer2DData(Ref<Renderer2D::Statistics> statistics)
-        : Stats(std::move(statistics)), RectVerticesBuffer(), TextureSlots() //TODO: get from GPU
+        : RectVerticesBuffer(), TextureSlots(), Stats(std::move(statistics)) //TODO: get from GPU
         {
             //TextureSlots.reserve(MaxTextureSlots);
         }
         Renderer2DData()
-        : Stats(nullptr), RectVerticesBuffer(), TextureSlots()
+        : RectVerticesBuffer(), TextureSlots(), Stats(nullptr)
         {
             //TextureSlots.reserve(MaxTextureSlots);
         }

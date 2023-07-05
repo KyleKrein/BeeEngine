@@ -22,10 +22,9 @@ namespace BeeEngine
         static bool GLSLtoSPV(const ShaderStage shader_type, const char *pshader,
                                   std::vector<uint32_t> &spirv);
         static bool SPVtoWGSL(const std::vector<uint32_t> &spirv, std::string &wgsl);
-
-    private:
-        static void InitResources(TBuiltInResource &Resources);
         static void Init();
         static void Finalize();
+    private:
+        static void InitResources(TBuiltInResource &Resources);
     };
 }

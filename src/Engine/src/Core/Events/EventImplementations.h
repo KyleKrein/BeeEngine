@@ -22,7 +22,7 @@ namespace BeeEngine
     public:
         explicit KeyPressedEvent(Key key, int repeat = 0) noexcept
         {
-            Category = (EventCategory)(EventCategory::Keyboard & EventCategory::Input);
+            Category = static_cast<EventCategory>(EventCategory::Keyboard | EventCategory::Input);
             m_Key = key;
             m_Repeat = repeat;
             m_Type = EventType::KeyPressed;
@@ -40,7 +40,7 @@ namespace BeeEngine
     public:
         explicit KeyReleasedEvent(Key key) noexcept
         {
-            Category = (EventCategory)(EventCategory::Keyboard & EventCategory::Input);
+            Category = static_cast<EventCategory>(EventCategory::Keyboard & EventCategory::Input);
             m_Key = key;
             m_Type = EventType::KeyReleased;
         }
@@ -57,7 +57,7 @@ namespace BeeEngine
     public:
         explicit CharTypedEvent(char character) noexcept
         {
-            Category = (EventCategory)(EventCategory::Keyboard & EventCategory::Input);
+            Category = static_cast<EventCategory>(EventCategory::Keyboard & EventCategory::Input);
             m_Character = character;
             m_Type = EventType::KeyTyped;
         }
@@ -74,7 +74,7 @@ namespace BeeEngine
     public:
         explicit MouseButtonPressedEvent(MouseButton button) noexcept
         {
-            Category = (EventCategory)(EventCategory::Mouse & EventCategory::Input);
+            Category = static_cast<EventCategory>(EventCategory::Mouse & EventCategory::Input);
             m_Button = button;
             m_Type = EventType::MouseButtonPressed;
         }
@@ -91,7 +91,7 @@ namespace BeeEngine
     public:
         MouseMovedEvent(float x, float y) noexcept
         {
-            Category = (EventCategory)(EventCategory::Mouse & EventCategory::Input);
+            Category = static_cast<EventCategory>(EventCategory::Mouse & EventCategory::Input);
             m_X = x;
             m_Y = y;
             m_Type = EventType::MouseMoved;
@@ -113,7 +113,7 @@ namespace BeeEngine
     public:
         MouseScrolledEvent(float xOffset, float yOffset) noexcept
         {
-            Category = (EventCategory)(EventCategory::Mouse & EventCategory::Input);
+            Category = static_cast<EventCategory>(EventCategory::Mouse & EventCategory::Input);
             m_XOffset = xOffset;
             m_YOffset = yOffset;
             m_Type = EventType::MouseScrolled;

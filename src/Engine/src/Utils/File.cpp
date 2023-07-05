@@ -8,6 +8,8 @@
 #include "File.h"
 
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
 namespace BeeEngine
 {
 
@@ -53,7 +55,7 @@ namespace BeeEngine
         std::string content;
         ifs>>content;
         ifs.close();
-        return std::move(content);
+        return content;
     }
 
     void File::WriteFile(std::string_view path, std::string_view content)
@@ -75,3 +77,5 @@ namespace BeeEngine
         return std::filesystem::exists(path);
     }
 }
+
+#pragma clang diagnostic pop

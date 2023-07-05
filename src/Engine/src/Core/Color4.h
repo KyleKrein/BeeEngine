@@ -51,7 +51,7 @@ namespace BeeEngine
         [[nodiscard]] inline constexpr float B() const { return m_B; }
         [[nodiscard]] inline constexpr float A() const { return m_A; }
 
-        [[nodiscard]] inline constexpr float* ValuePtr() const { return (float*)&m_R; }
+        [[nodiscard]] inline constexpr float* ValuePtr() { return static_cast<float *>(&m_R); }
 
 #if __has_include(<vec4.hpp>)
         constexpr inline explicit operator glm::vec4() const
@@ -63,7 +63,7 @@ namespace BeeEngine
 #if defined(BEE_COMPILE_WEBGPU)
         constexpr inline operator WGPUColor() const
         {
-            return {m_R, m_G, m_B, m_A};
+            return {static_cast<double>(m_R), static_cast<double>(m_G), static_cast<double>(m_B), static_cast<double>(m_A)};
         }
 #endif
 #if __has_include(<imgui.h>)

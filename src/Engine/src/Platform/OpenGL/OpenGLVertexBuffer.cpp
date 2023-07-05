@@ -43,7 +43,7 @@ namespace BeeEngine::Internal
     }
 
     OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
-    : m_Size(size), m_RendererID(0)
+    : m_RendererID(0), m_Size(size)
     {
         BEE_PROFILE_FUNCTION();
         BeeExpects(size > 0);

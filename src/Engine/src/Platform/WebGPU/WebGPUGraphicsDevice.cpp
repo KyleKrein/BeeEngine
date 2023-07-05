@@ -302,4 +302,21 @@ namespace BeeEngine::Internal
         BeeCoreInfo("  AdapterType: {}", ToString(properties.adapterType));
         BeeCoreInfo("  DriverDescription: {}", properties.driverDescription);
     }
+
+    WGPUBuffer WebGPUGraphicsDevice::CreateBuffer(WGPUBufferUsageFlags usage, uint32_t size)
+    {
+        WGPUBufferDescriptor bufferDesc = {};
+        bufferDesc.nextInChain = nullptr;
+        bufferDesc.label = "GPU-side data buffer";
+        bufferDesc.usage = usage;
+        bufferDesc.size = size;
+        bufferDesc.mappedAtCreation = false;
+        return wgpuDeviceCreateBuffer(m_Device, &bufferDesc);
+    }
+
+    void WebGPUGraphicsDevice::CopyDataToBuffer(gsl::span<byte> data, WGPUBuffer buffer)
+    {
+        wgpuQueueWriteBuffer(m_Queue, buffer, 0, data.data(), data.size());
+    }
+
 }
