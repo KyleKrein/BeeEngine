@@ -19,7 +19,7 @@ namespace BeeEngine{
     {
     public:
         static void Init();
-        inline static std::shared_ptr<spdlog::logger>& GetCoreLogger()
+        inline constexpr static std::shared_ptr<spdlog::logger>& GetCoreLogger()
         {
             return s_CoreLogger;
         }
@@ -46,10 +46,10 @@ constexpr inline std::string BeeFormat(std::string_view format, Args&&... args)
     return fmt::format(format, std::forward<Args>(args)...);
 }
 
-inline void BeeLogError(std::string_view message, std::source_location location = std::source_location::current())
+consteval void BeeLogError(std::string_view message, std::source_location location = std::source_location::current())
 {
     std::string final = std::string(message) + " at {1}: {2}";
-    ::BeeEngine::Log::GetCoreLogger()->error(message, location.file_name(), location.line());
+    ::BeeEngine::Log::GetCoreLogger()->error(final, location.file_name(), location.line());
 }
 #define BeeCoreFatalError(...)  ::BeeEngine::Log::GetCoreLogger()->critical(__VA_ARGS__); throw std::runtime_error(__VA_ARGS__)
 #define BeeCoreError(...)  ::BeeEngine::Log::GetCoreLogger()->error(__VA_ARGS__)
