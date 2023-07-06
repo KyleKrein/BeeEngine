@@ -3,10 +3,12 @@
 //
 #include "Mesh.h"
 #include "Platform/Vulkan/VulkanModel.h"
+#include "Platform/WebGPU/WebGPUMesh.h"
+
 namespace BeeEngine
 {
-    Ref<Mesh> Mesh::Create(in<std::vector<Vertex>> vertices, BufferLayout layout)
+    Ref<Mesh> Mesh::Create(in<std::vector<Vertex>> vertices)
     {
-        return CreateRef<Internal::VulkanModel>(Internal::VulkanGraphicsDevice::GetInstance(), gsl::span<byte>{(byte*)vertices.data(), vertices.size() * sizeof(Vertex)}, vertices.size(), std::move(layout));
+        return CreateRef<Internal::WebGPUMesh>(vertices/*gsl::span<byte>{(byte*)vertices.data(), vertices.size() * sizeof(Vertex)}*/);
     }
 }

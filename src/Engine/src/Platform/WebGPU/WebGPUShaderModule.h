@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Renderer/ShaderModule.h"
+#include "Renderer/BufferLayout.h"
 #include <webgpu/webgpu.h>
 
 namespace BeeEngine::Internal
@@ -13,7 +14,7 @@ namespace BeeEngine::Internal
     {
     public:
         ~WebGPUShaderModule() override;
-        WebGPUShaderModule(in<std::string> wgsl, ShaderType type);
+        WebGPUShaderModule(in<std::string> wgsl, ShaderType type, in<BufferLayout> layout);
         [[nodiscard]] ShaderType GetType() const override
         {
             return m_Type;
@@ -22,8 +23,16 @@ namespace BeeEngine::Internal
         {
             return m_ShaderModule;
         }
+        [[nodiscard]] WGPUVertexBufferLayout GetVertexBufferLayout() const
+        {
+            return m_VertexBufferLayout;
+        }
     private:
+        void InitResources(in<BufferLayout> layout);
+
         ShaderType m_Type;
         WGPUShaderModule m_ShaderModule;
+        WGPUVertexBufferLayout m_VertexBufferLayout;
+        std::vector<WGPUVertexAttribute> m_VertexAttributes;
     };
 }

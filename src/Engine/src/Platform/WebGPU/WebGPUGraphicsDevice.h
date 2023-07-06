@@ -60,6 +60,11 @@ namespace BeeEngine::Internal
             return m_SwapChainRequiresRebuild;
         }
 
+        void SetDefault(out<WGPULimits> limits) const noexcept
+        {
+            memset(&limits, 0, sizeof(WGPULimits));
+        }
+
     private:
         static WebGPUGraphicsDevice* s_Instance;
         static WGPUAdapter RequestAdapter(WGPUInstance instance, WGPURequestAdapterOptions const * options);

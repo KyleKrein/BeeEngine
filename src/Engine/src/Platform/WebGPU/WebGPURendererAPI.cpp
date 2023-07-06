@@ -23,6 +23,7 @@ namespace BeeEngine::Internal
 
     CommandBuffer WebGPURendererAPI::BeginFrame()
     {
+        wgpuDeviceTick(m_GraphicsDevice.GetDevice());
         Begin:
         if (m_GraphicsDevice.SwapChainRequiresRebuild())
         {

@@ -4,14 +4,14 @@
 
 #include "WebGPUMesh.h"
 #include "WebGPUGraphicsDevice.h"
+#include "Renderer/RenderPass.h"
 
 namespace BeeEngine::Internal
 {
 
-    WebGPUMesh::WebGPUMesh(in<std::vector<Vertex>> vertices, BufferLayout& layout)
-    : m_Layout(layout), m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance())
+    WebGPUMesh::WebGPUMesh(in<std::vector<Vertex>> vertices)
+    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_VertexCount(vertices.size())
     {
-        InitBufferLayout();
         CreateVertexBuffers(vertices);
     }
 
@@ -21,15 +21,15 @@ namespace BeeEngine::Internal
         wgpuBufferRelease(m_Buffer);
     }
 
-    void WebGPUMesh::InitBufferLayout()
-    {
-
-    }
-
     void WebGPUMesh::CreateVertexBuffers(in<std::vector<Vertex>> data)
     {
-        auto size = data.size() * sizeof(Vertex);
-        m_Buffer = m_GraphicsDevice.CreateBuffer(WGPUBufferUsage_Vertex, size);
-        m_GraphicsDevice.CopyDataToBuffer({(byte*)data.data(), size}, m_Buffer);
+        m_Size = data.size() * sizeof(Vertex);
+        m_Buffer = m_GraphicsDevice.CreateBuffer(WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex, m_Size);
+        m_GraphicsDevice.CopyDataToBuffer({(byte*)data.data(), m_Size}, m_Buffer);
+    }
+
+    void WebGPUMesh::Bind(void *commandBuffer)
+    {
+        wgpuRenderPassEncoderSetVertexBuffer((WGPURenderPassEncoder)(((RenderPass*)commandBuffer)->GetHandle()), 0, m_Buffer, 0, m_Size);
     }
 }

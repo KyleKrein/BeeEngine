@@ -8,8 +8,8 @@
 
 namespace BeeEngine
 {
-    BufferElement::BufferElement(ShaderDataType type, const String &name, bool normalized)
-    : m_Name(name), m_Type(type), m_Size(GetSizeOfType(type)), m_Offset(0), m_Normalized(normalized)
+    BufferElement::BufferElement(ShaderDataType type, const String &name, uint32_t location, bool normalized)
+    : m_Name(name), m_Type(type), m_Size(GetSizeOfType(type)), m_Offset(0), m_Location(location), m_Normalized(normalized)
     {
 
     }
@@ -67,6 +67,19 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         uint32_t offset = 0;
         for (auto &element : m_Elements)
+        {
+            element.SetOffset(offset);
+            offset += element.GetSize();
+            m_Stride += element.GetSize();
+        }
+    }
+
+    BufferLayout::BufferLayout(std::vector<BufferElement> &&inElements, std::vector<BufferElement> &&outElements)
+    : m_Stride(0), m_InElements(inElements), m_OutElements(outElements)
+    {
+        BEE_PROFILE_FUNCTION();
+        uint32_t offset = 0;
+        for (auto &element : m_InElements)
         {
             element.SetOffset(offset);
             offset += element.GetSize();

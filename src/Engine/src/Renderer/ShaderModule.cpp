@@ -18,11 +18,12 @@ namespace BeeEngine
         {
             std::filesystem::create_directory(s_CachePath);
         }
+        BufferLayout layout;
 #if defined(BEE_COMPILE_WEBGPU)
         if(Renderer::GetAPI() == WebGPU)
         {
-            std::string wgsl = LoadWGSL(path, type, loadFromCache);
-            return CreateRef<Internal::WebGPUShaderModule>(wgsl, type);
+            std::string wgsl = LoadWGSL(path, type, loadFromCache, layout);
+            return CreateRef<Internal::WebGPUShaderModule>(wgsl, type, layout);
         }
 #endif
         std::vector<uint32_t> spirv;
@@ -123,7 +124,7 @@ namespace BeeEngine
 #endif
     }
 
-    std::string ShaderModule::LoadWGSL(const String& path, ShaderType type, bool loadFromCache)
+    std::string ShaderModule::LoadWGSL(const String& path, ShaderType type, bool loadFromCache, out<BufferLayout> layout)
     {
         static std::filesystem::path wgslCachePath = s_CachePath + "WGSL/";
         if(!std::filesystem::directory_entry(wgslCachePath).exists())
@@ -140,7 +141,9 @@ namespace BeeEngine
                     return LoadWGSLFromCache(newFilepath);
             }
             auto spirv = CompileGLSLToSpirV(path, type, loadFromCache);
-            return CompileSpirVToWGSL(spirv, newFilepath);
+            auto wgsl = CompileSpirVToWGSL(spirv, newFilepath);
+            layout = ShaderConverter::GenerateLayout(wgsl, newFilepath);
+            return wgsl;
         }
         else if(path.ends_with(".spv"))
         {

@@ -164,7 +164,7 @@ void TestLayer::LoadModels()
             {{0.5f, 0.5f , 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
             {{-0.5f, 0.5f , 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}}
     };
-
+#if 0
     m_Model = BeeEngine::CreateRef<BeeEngine::Internal::VulkanModel>(device,
                                                                        gsl::span<BeeEngine::byte>{(BeeEngine::byte*)vertices.data(),
                                                                                                   vertices.size() * sizeof(BeeEngine::Vertex)},
@@ -178,10 +178,11 @@ void TestLayer::LoadModels()
         BeeError("Failed to load model");
     }
     m_MonkeyModel = BeeEngine::CreateRef<BeeEngine::Internal::VulkanModel>(device,
-                                                                             gsl::span<BeeEngine::byte>{(BeeEngine::byte*)monkeyVertices.data(),
+                                                                  gsl::span<BeeEngine::byte>{(BeeEngine::byte*)monkeyVertices.data(),
                                                                                                         monkeyVertices.size() * sizeof(BeeEngine::Vertex)},
                                                                                                         monkeyVertices.size(),
                                                                                                         layout);
+#endif
     m_Meshes["monkey"] = m_MonkeyModel;
     m_Meshes["triangle"] = m_Model;
 }

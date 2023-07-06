@@ -54,7 +54,7 @@ namespace BeeEngine
         [[nodiscard]] inline constexpr float* ValuePtr() { return static_cast<float *>(&m_R); }
 
 #if __has_include(<vec4.hpp>)
-        constexpr inline explicit operator glm::vec4() const
+        constexpr inline operator glm::vec4() const
         {
             return {m_R, m_G, m_B, m_A};
         }

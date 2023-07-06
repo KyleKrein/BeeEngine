@@ -14,13 +14,16 @@ namespace BeeEngine::Internal
         m_ShaderModules[ShaderType::Vertex] = vertexShader;
         m_ShaderModules[ShaderType::Fragment] = fragmentShader;
 
+        // Vertex fetch
+        WGPUVertexBufferLayout pointBufferLayout = ((WebGPUShaderModule*)vertexShader.get())->GetVertexBufferLayout();
+
         WGPURenderPipelineDescriptor renderPipelineDescriptor = {};
         renderPipelineDescriptor.nextInChain = nullptr;
         renderPipelineDescriptor.label = "Render Pipeline";
         //vertex
         renderPipelineDescriptor.vertex.nextInChain = nullptr;
-        renderPipelineDescriptor.vertex.bufferCount = 0;
-        renderPipelineDescriptor.vertex.buffers = nullptr;
+        renderPipelineDescriptor.vertex.bufferCount = 1;
+        renderPipelineDescriptor.vertex.buffers = &pointBufferLayout;
         renderPipelineDescriptor.vertex.module = ((WebGPUShaderModule*)vertexShader.get())->GetHandle();
         renderPipelineDescriptor.vertex.entryPoint = "main";
         renderPipelineDescriptor.vertex.constantCount = 0;

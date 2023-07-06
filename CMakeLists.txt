@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(cmake/StandardProjectSettings.cmake)
-include(cmake/CPMInstaller.cmake)
+include(cmake/PackageInstaller.cmake)
 
 # Link project_warnings as "library" to use the warnings
 # specified in CompilerWarnings.cmake.

@@ -14,8 +14,11 @@ namespace BeeEngine
     public:
         Mesh() = default;
         virtual ~Mesh() = default;
+        [[nodiscard]] virtual uint32_t GetVertexCount() const = 0;
+        virtual void Bind(void* commandBuffer) = 0;
+
         Mesh(const Mesh& other) = delete;
         Mesh& operator=(const Mesh& other ) = delete;
-        static Ref<Mesh> Create(in<std::vector<Vertex>> vertices, BufferLayout layout);
+        static Ref<Mesh> Create(in<std::vector<Vertex>> vertices);
     };
 }

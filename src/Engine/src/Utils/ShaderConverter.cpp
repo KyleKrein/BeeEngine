@@ -2,6 +2,7 @@
 #include "glslang/Public/ShaderLang.h"
 #include "Core/Logging/Log.h"
 #include "SPIRV/GlslangToSpv.h"
+#include <spirv_cross/spirv_cross.hpp>
 #if defined(BEE_COMPILE_WEBGPU)
 #include "src/tint/writer/wgsl/generator_impl.h"
 #include <tint/tint.h>
@@ -186,5 +187,96 @@ namespace BeeEngine
         BeeCoreTrace("WGSL compiled successfully");
         return true;
         #endif
+    }
+
+    static ShaderDataType GetShaderDataType(tint::inspector::ComponentType component, tint::inspector::CompositionType composition)
+    {
+        using namespace tint::inspector;
+        switch (composition)
+        {
+            case CompositionType::kScalar:
+                switch (component)
+                {
+                    case ComponentType::kF32:
+                        return ShaderDataType::Float;
+                    case ComponentType::kU32:
+                        return ShaderDataType::UInt;
+                    case ComponentType::kI32:
+                        return ShaderDataType::Int;
+                    case ComponentType::kF16:
+                        return ShaderDataType::Half;
+                    default:
+                        break;
+                }
+                break;
+            case CompositionType::kVec2:
+                if(component == ComponentType::kF32)
+                    return ShaderDataType::Float2;
+                break;
+            case CompositionType::kVec3:
+                if(component == ComponentType::kF32)
+                    return ShaderDataType::Float3;
+                break;
+            case CompositionType::kVec4:
+                if(component == ComponentType::kF32)
+                    return ShaderDataType::Float4;
+                break;
+        }
+        BeeCoreError("Unknown shader data type");
+        return ShaderDataType::NoneData;
+    }
+
+    BufferLayout ShaderConverter::GenerateLayout(in<std::vector<uint32_t>> spirv)
+    {
+        BeeCoreTrace("Generating buffer layout for spirv shader");
+        BufferLayoutBuilder builder;
+        auto shader = tint::reader::spirv::Parse(spirv);
+        tint::inspector::Inspector inspector(&shader);
+        auto entryPoints = inspector.GetEntryPoints();
+        for(auto& entryPoint : entryPoints)
+        {
+            if(entryPoint.name != "main")//support for only main entry point
+                continue;
+            auto& inputs = entryPoint.input_variables;
+            builder.NumberOfInputs(inputs.size());
+            for(auto& input : inputs)
+            {
+                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.location_attribute);
+            }
+            break; //support for only main entry point
+        }
+        /*auto resourceBindings = inspector.GetResourceBindings("main");
+        for (auto& resource : resourceBindings)
+        {
+
+        }*/
+        return builder.Build();
+    }
+    BufferLayout ShaderConverter::GenerateLayout(in<std::string> wgsl, in<std::string> path)
+    {
+        BeeCoreTrace("Generating buffer layout for wgsl shader");
+        BufferLayoutBuilder builder;
+        tint::Source::File file(path, wgsl);
+        auto shader = tint::reader::wgsl::Parse(&file);
+        tint::inspector::Inspector inspector(&shader);
+        auto entryPoints = inspector.GetEntryPoints();
+        for(auto& entryPoint : entryPoints)
+        {
+            if(entryPoint.name != "main")//support for only main entry point
+                continue;
+            auto& inputs = entryPoint.input_variables;
+            builder.NumberOfInputs(inputs.size());
+            for(auto& input : inputs)
+            {
+                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.location_attribute);
+            }
+            break; //support for only main entry point
+        }
+        /*auto resourceBindings = inspector.GetResourceBindings("main");
+        for (auto& resource : resourceBindings)
+        {
+
+        }*/
+        return builder.Build();
     }
 }

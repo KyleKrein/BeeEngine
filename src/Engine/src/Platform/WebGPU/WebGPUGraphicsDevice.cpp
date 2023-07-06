@@ -7,6 +7,7 @@
 #include "SDL3/SDL_syswm.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Core/TypeDefines.h"
+#include "Renderer/Vertex.h"
 
 namespace BeeEngine::Internal
 {
@@ -42,16 +43,35 @@ namespace BeeEngine::Internal
 #if defined(DEBUG)
         LogAdapterInfo();
 #endif
+        WGPUSupportedLimits supportedLimits;
+
+        wgpuAdapterGetLimits(m_Adapter, &supportedLimits);
+        BeeCoreTrace("adapter.maxVertexAttributes: {}", supportedLimits.limits.maxVertexAttributes);
 
         WGPUDeviceDescriptor deviceDescriptor = {};
         deviceDescriptor.nextInChain = nullptr;
         deviceDescriptor.label = "BeeEngine Device"; // anything works here, that's your call
         deviceDescriptor.requiredFeaturesCount = 0; // we do not require any specific feature
+
+#if 0
+        WGPURequiredLimits requiredLimits{};
+        SetDefault(requiredLimits.limits);
+        requiredLimits.limits.maxVertexAttributes = 1;
+        requiredLimits.limits.maxVertexBuffers = 1;
+        requiredLimits.limits.maxBufferSize = sizeof(Vertex) * 1024;
+        requiredLimits.limits.maxVertexBufferArrayStride = supportedLimits.limits.maxVertexBufferArrayStride;
+        requiredLimits.limits.minStorageBufferOffsetAlignment = supportedLimits.limits.minStorageBufferOffsetAlignment;
+        deviceDescriptor.requiredLimits = &requiredLimits;
+#else
         deviceDescriptor.requiredLimits = nullptr; // we do not require any specific limit
+#endif
         deviceDescriptor.defaultQueue.nextInChain = nullptr;
         deviceDescriptor.defaultQueue.label = "The default queue";
 
         m_Device = RequestDevice(m_Adapter, &deviceDescriptor);
+
+        wgpuDeviceGetLimits(m_Device, &supportedLimits);
+        BeeCoreTrace("device.maxVertexAttributes: {}", supportedLimits.limits.maxVertexAttributes);
 
         auto onDeviceError = [](WGPUErrorType type, char const* message, void* pUserData)
         {

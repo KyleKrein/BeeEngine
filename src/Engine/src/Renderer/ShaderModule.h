@@ -6,6 +6,7 @@
 
 #include "ShaderTypes.h"
 #include "Core/TypeDefines.h"
+#include "Renderer/BufferLayout.h"
 
 namespace BeeEngine
 {
@@ -29,7 +30,7 @@ namespace BeeEngine
         [[nodiscard]] static std::vector<char> ReadGLSLShader(const String& path);
         [[nodiscard]] static std::string CompileSpirVToWGSL(in<std::vector<uint32_t>> spirvCode, in<std::string> newPath);
         [[nodiscard]] static std::string LoadWGSLFromCache(const String& path);
-        [[nodiscard]] static std::string LoadWGSL(const String& path, ShaderType type, bool loadFromCache);
+        [[nodiscard]] static std::string LoadWGSL(const String& path, ShaderType type, bool loadFromCache, out<BufferLayout> layout);
         static bool LoadSpirV(const String& path, ShaderType type, bool loadFromCache, out<std::vector<uint32_t>> spirv);
         static constexpr auto GetExtension(ShaderType type)
         {
