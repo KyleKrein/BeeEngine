@@ -8,8 +8,10 @@
 
 #define EmbedResource(name, path) extern "C" {INCBIN(name, ASSETS_PATH path); }
 
-EmbedResource(OpenSansRegular, "OpenSans/static/OpenSans-Regular.ttf");
-EmbedResource(OpenSansBold, "OpenSans/static/OpenSans-Bold.ttf");
+EmbedResource(OpenSansRegular, "Fonts/OpenSans/static/OpenSans-Regular.ttf");
+EmbedResource(OpenSansBold, "Fonts/OpenSans/static/OpenSans-Bold.ttf");
+EmbedResource(ManropeRegular, "Fonts/Manrope/static/Manrope-Regular.ttf");
+EmbedResource(ManropeBold, "Fonts/Manrope/static/Manrope-Bold.ttf");
 EmbedResource(DirectoryTexture, "Textures/directory.png");
 EmbedResource(FileTexture, "Textures/file.png");
 EmbedResource(Standart2DShaderVertex, "Shaders/Standart2DVertex.glsl");
@@ -24,6 +26,10 @@ namespace BeeEngine::Internal
                 return {(std::byte*)gOpenSansRegularData, gOpenSansRegularSize};
             case EmbeddedResource::OpenSansBold:
                 return {(std::byte*)gOpenSansBoldData, gOpenSansBoldSize};
+            case EmbeddedResource::ManropeRegular:
+                return {(std::byte*)gManropeRegularData, gManropeRegularSize};
+            case EmbeddedResource::ManropeBold:
+                return {(std::byte*)gManropeBoldData, gManropeBoldSize};
             case EmbeddedResource::DirectoryTexture:
                 return {(std::byte*)gDirectoryTextureData, gDirectoryTextureSize};
             case EmbeddedResource::FileTexture:

@@ -8,12 +8,14 @@
 
 enum class EmbeddedResource
 {
-    OpenSansRegular,
-    OpenSansBold,
-    DirectoryTexture,
-    FileTexture,
-    Standart2DShaderVertex,
-    Standart2DShaderFragment
+    OpenSansRegular = 0,
+    OpenSansBold = 1,
+    ManropeRegular = 2,
+    ManropeBold = 3,
+    DirectoryTexture = 100,
+    FileTexture = 101,
+    Standart2DShaderVertex = 200,
+    Standart2DShaderFragment = 201
 };
 
 namespace BeeEngine::Internal
