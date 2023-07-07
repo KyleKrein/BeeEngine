@@ -5,6 +5,7 @@
 #include "RendererAPI.h"
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Renderer.h"
+#include "Platform/WebGPU/WebGPURendererAPI.h"
 
 namespace BeeEngine
 {
@@ -14,7 +15,9 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case RenderAPI::OpenGL:
-                return CreateRef<Internal::OpenGLRendererAPI>();
+                return nullptr;//CreateRef<Internal::OpenGLRendererAPI>();
+            case RenderAPI::WebGPU:
+                return CreateRef<Internal::WebGPURendererAPI>();
             default:
                 BeeCoreFatalError("Renderer API not supported!");
                 return nullptr;

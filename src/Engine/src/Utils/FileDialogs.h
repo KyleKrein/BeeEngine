@@ -3,10 +3,8 @@
 //
 
 #pragma once
-
 #include <string>
 #include <optional>
-#include "Core/CodeSafety/Expects.h"
 
 class TestFileDialogs;
 namespace BeeEngine
@@ -23,7 +21,7 @@ namespace BeeEngine
             friend class ::TestFileDialogs;
             const char* name;
             const char* filter;
-//#if defined(WINDOWS)
+#if defined(WINDOWS)
             Filter(const char* name, const char* filter)
                     : name(name), filter(filter)
             {}
@@ -33,14 +31,14 @@ namespace BeeEngine
             {
                 return std::string(name + std::string(" (") + filter + std::string(")") + '\0' + filter + '\0');
             }
-//#endif
+#endif
 
         };
     public:
-        static std::optional<std::string> OpenFile(Filter filter);
-        static std::optional<std::string> SaveFile(Filter filter);
+        static std::string OpenFile(Filter filter);
+        static std::string SaveFile(Filter filter);
     private:
-        static void CheckFilter(Filter& filter)
+        /*static void CheckFilter(Filter& filter)
         {
             BeeExpects(filter.name != nullptr);
             BeeExpects(filter.filter != nullptr);
@@ -50,6 +48,6 @@ namespace BeeEngine
             const auto lenFilter = strlen(filter.filter);
 
             //TODO: finish writing this
-        }
+        }*/
     };
 }

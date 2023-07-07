@@ -8,8 +8,8 @@
 
 namespace BeeEngine
 {
-    BufferElement::BufferElement(ShaderDataType type, const String &name, bool normalized)
-    : m_Name(name), m_Type(type), m_Size(GetSizeOfType(type)), m_Offset(0), m_Normalized(normalized)
+    BufferElement::BufferElement(ShaderDataType type, const String &name, uint32_t location, bool normalized)
+    : m_Name(name), m_Type(type), m_Size(GetSizeOfType(type)), m_Offset(0), m_Location(location), m_Normalized(normalized)
     {
 
     }
@@ -29,6 +29,8 @@ namespace BeeEngine
             case ShaderDataType::Int3:     return 4 * 3;
             case ShaderDataType::Int4:     return 4 * 4;
             case ShaderDataType::Bool:     return 1;
+            case ShaderDataType::NoneData:
+                break;
         }
         return 0;
     }
@@ -48,12 +50,14 @@ namespace BeeEngine
             case ShaderDataType::Int3:     return 3;
             case ShaderDataType::Int4:     return 4;
             case ShaderDataType::Bool:     return 1;
+            case ShaderDataType::NoneData:
+                break;
         }
         return 0;
     }
 
     BufferLayout::BufferLayout(const std::initializer_list<BufferElement> &elements)
-    : m_Elements(elements), m_Stride(0)
+    : m_Stride(0), m_Elements(elements)
     {
         CalculateOffsetsAndStride();
     }
@@ -61,8 +65,21 @@ namespace BeeEngine
     void BufferLayout::CalculateOffsetsAndStride()
     {
         BEE_PROFILE_FUNCTION();
-        int offset = 0;
+        uint32_t offset = 0;
         for (auto &element : m_Elements)
+        {
+            element.SetOffset(offset);
+            offset += element.GetSize();
+            m_Stride += element.GetSize();
+        }
+    }
+
+    BufferLayout::BufferLayout(std::vector<BufferElement> &&inElements, std::vector<BufferElement> &&outElements)
+    : m_Stride(0), m_InElements(inElements), m_OutElements(outElements)
+    {
+        BEE_PROFILE_FUNCTION();
+        uint32_t offset = 0;
+        for (auto &element : m_InElements)
         {
             element.SetOffset(offset);
             offset += element.GetSize();

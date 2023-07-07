@@ -4,6 +4,7 @@
 
 #include "OrthographicCameraController.h"
 #include "Core/Input.h"
+#include "Renderer/Renderer.h"
 
 namespace BeeEngine
 {

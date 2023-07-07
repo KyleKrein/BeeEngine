@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Renderer/GraphicsDevice.h"
 #include "Core/TypeDefines.h"
 #include "Windowing/WindowProperties.h"
 #include "Core/Events/EventQueue.h"
 #include "Core/Time.h"
+#include "Renderer/Instance.h"
 
 namespace BeeEngine
 {
@@ -16,6 +18,8 @@ namespace BeeEngine
     {
     public:
         virtual ~WindowHandler() = default;
+        WindowHandler(const WindowHandler&) = delete;
+        WindowHandler& operator=(const WindowHandler&) = delete;
         static gsl::not_null<WindowHandler*> Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue);
         uint16_t GetWidth() const
         {
@@ -30,6 +34,10 @@ namespace BeeEngine
         static gsl::not_null<WindowHandler*> GetInstance()
         {
             return s_Instance;
+        }
+        static WindowHandlerAPI GetAPI()
+        {
+            return s_API;
         }
         virtual uint64_t GetWindow() = 0;
         VSync GetVSync() const
@@ -49,14 +57,22 @@ namespace BeeEngine
         virtual void UpdateTime() = 0;
         virtual void Close() = 0;
 
+        virtual GraphicsDevice& GetGraphicsDevice() = 0;
+        virtual Instance& GetAPIInstance() = 0;
+
     protected:
         static WindowHandler* s_Instance;
+        static WindowHandlerAPI s_API;
         WindowHandler() = delete;
-        WindowHandler(EventQueue& eventQueue): m_Events(eventQueue), m_Width(0), m_Height(0) {};
+        WindowHandler(EventQueue& eventQueue): m_Width(0), m_Height(0), m_Events(eventQueue) {};
 
-        void UpdateDeltaTime(float currentTime)
+        void UpdateDeltaTime(double currentTime)
         {
             Time::Update(currentTime);
+        }
+        void SetDeltaTime(double deltaTime, double totalTime)
+        {
+            Time::Set(deltaTime, totalTime);
         }
         uint16_t m_Width;
         uint16_t m_Height;

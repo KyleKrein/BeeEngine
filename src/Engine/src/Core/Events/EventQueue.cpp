@@ -22,7 +22,7 @@ namespace BeeEngine
     void EventQueue::Dispatch()
     {
         BEE_PROFILE_FUNCTION();
-        for (int i = 0; i < m_Events.size(); ++i)
+        for (size_t i = 0; i < m_Events.size(); ++i)
         {
             Event* event = m_Events[i].get();
             EventDispatcher dispatcher(event);

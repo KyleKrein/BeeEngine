@@ -5,14 +5,22 @@
 #include "GlfwWindowHandler.h"
 #include "Core/Logging/Log.h"
 #include "Core/Application.h"
+#include "vulkan/vulkan.hpp"
+#include "Platform/Vulkan/VulkanInstance.h"
+#include "Platform/Vulkan/VulkanGraphicsDevice.h"
 
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
 
     GLFWWindowHandler::GLFWWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
-            : WindowHandler(eventQueue), m_Window(nullptr), m_IsRunning(false), m_IsClosing(false)
+            : WindowHandler(eventQueue),
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
+            m_Window(nullptr),
+#endif
+            m_IsRunning(false), m_IsClosing(false)
     {
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         BEE_PROFILE_FUNCTION();
         s_Instance = this;
         m_Title = properties.Title;
@@ -22,56 +30,35 @@ namespace BeeEngine
                                  BeeCoreError("GLFW failure! Code {0}. Description: {1}", error_code, description);
                              });
         BeeCoreAssert(glfwInit(), "GLFW could not me initialized!");
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-        if (Application::GetOsPlatform() == OSPlatform::Mac)
+        switch (properties.PreferredRenderAPI)
         {
-            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-
-            m_Width = properties.Width / 2;
-            m_Height = properties.Height / 2;
-            m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
-            BeeCoreAssert(m_Window, "Window initialization failed");
-        } else
-        {
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-            m_Width = properties.Width;
-            m_Height = properties.Height;
-
-            m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
-            BeeCoreAssert(m_Window, "Window initialization failed");
-
+            case RenderAPI::OpenGL:
+                InitializeOpenGL(properties);
+                break;
+            case RenderAPI::Vulkan:
+                InitializeVulkan(properties);
+                break;
+            default:
+                BeeCoreError("Unknown RenderAPI");
+                break;
         }
-        glfwMakeContextCurrent(m_Window);
-        //LOAD GLAD
-        if(!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
-        {
-            BeeCoreError("GLAD initialization failed!");
-        } else
-        {
-            BeeCoreInfo("GLAD initialized successfully!");
-        }
-
+        m_Finalizer.window = m_Window;
         m_IsRunning = true;
 
-        glfwSwapInterval(properties.Vsync);
-
         //SET CALLBACKS
+        glfwSetWindowSizeCallback(m_Window,WindowSizeCallback);
         glfwSetCharCallback(m_Window, CharCallback);
         glfwSetKeyCallback(m_Window, KeyCallback);
         glfwSetScrollCallback(m_Window, ScrollCallback);
         glfwSetCursorPosCallback(m_Window, CursorPosCallback);
-        glfwSetFramebufferSizeCallback(m_Window, FrameBufferSizeCallback);
+        //glfwSetFramebufferSizeCallback(m_Window, FrameBufferSizeCallback);
         glfwSetMouseButtonCallback(m_Window, MouseButtonCallback);
         glfwSetWindowCloseCallback(m_Window, WindowCloseCallback);
 
-        glViewport(0, 0, m_Width, m_Height);
+        //glViewport(0, 0, m_Width, m_Height);
+#endif
     }
-
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
     void GLFWWindowHandler::SetWidth(uint16_t width)
     {
         BEE_PROFILE_FUNCTION();
@@ -102,8 +89,7 @@ namespace BeeEngine
 
     GLFWWindowHandler::~GLFWWindowHandler()
     {
-        glfwDestroyWindow(m_Window);
-        glfwTerminate();
+
     }
 
     void GLFWWindowHandler::SetVSync(VSync mode)
@@ -135,7 +121,18 @@ namespace BeeEngine
 
     void GLFWWindowHandler::SwapBuffers()
     {
-        glfwSwapBuffers(m_Window);
+        switch (Renderer::GetAPI())
+        {
+            case RenderAPI::OpenGL:
+                glfwSwapBuffers(m_Window);
+                break;
+            case RenderAPI::Vulkan:
+
+                break;
+            default:
+                BeeCoreError("Unknown RenderAPI");
+                break;
+        }
     }
 
     void GLFWWindowHandler::MakeContextCurrent()
@@ -194,6 +191,15 @@ namespace BeeEngine
     void GLFWWindowHandler::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
     {
         auto event = CreateScope<MouseButtonPressedEvent>((MouseButton)button);
+        ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
+    }
+
+    void GLFWWindowHandler::WindowSizeCallback(GLFWwindow *window, int width, int height)
+    {
+        //((GLFWWindowHandler*)s_Instance)->GetGraphicsDevice().WindowResized(width, height);
+        ((GLFWWindowHandler*)s_Instance)->m_Width = width;
+        ((GLFWWindowHandler*)s_Instance)->m_Height = height;
+        auto event = CreateScope<WindowResizeEvent>(width, height);
         ((GLFWWindowHandler*)s_Instance)->m_Events.AddEvent(std::move(event));
     }
 
@@ -464,5 +470,57 @@ namespace BeeEngine
     {
         WindowCloseCallback(m_Window);
     }
+
+    void GLFWWindowHandler::InitializeOpenGL(const WindowProperties &properties)
+    {
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        if (Application::GetOsPlatform() == OSPlatform::Mac)
+        {
+            glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+
+            m_Width = properties.Width / 2;
+            m_Height = properties.Height / 2;
+            m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
+            BeeCoreAssert(m_Window, "Window initialization failed");
+        } else
+        {
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+            m_Width = properties.Width;
+            m_Height = properties.Height;
+
+            m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
+            BeeCoreAssert(m_Window, "Window initialization failed");
+
+        }
+        glfwMakeContextCurrent(m_Window);
+        //LOAD GLAD
+        if(!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+        {
+            BeeCoreError("GLAD initialization failed!");
+        } else
+        {
+            BeeCoreInfo("GLAD initialized successfully!");
+        }
+        glfwSwapInterval(properties.Vsync);
+    }
+
+    void GLFWWindowHandler::InitializeVulkan(const WindowProperties &properties)
+    {
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        m_Width = properties.Width;
+        m_Height = properties.Height;
+        m_Window = glfwCreateWindow(m_Width, m_Height, m_Title, nullptr, nullptr);
+        BeeCoreAssert(m_Window, "Window initialization failed");
+
+        m_Instance = CreateScope<Internal::VulkanInstance>(properties.Title, WindowHandlerAPI::GLFW);
+        m_GraphicsDevice = CreateScope<Internal::VulkanGraphicsDevice>(*(Internal::VulkanInstance*)m_Instance.get());
+    }
+#endif
 }
 

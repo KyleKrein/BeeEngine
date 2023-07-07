@@ -29,10 +29,11 @@ namespace BeeEngine
         AppUpdate = 7,
         AppRender = 8,
         KeyPressed = 9,
-        KeyTyped = 10,
-        MouseButtonPressed = 11,
-        MouseMoved = 12,
-        MouseScrolled = 13
+        KeyReleased = 10,
+        KeyTyped = 11,
+        MouseButtonPressed = 12,
+        MouseMoved = 13,
+        MouseScrolled = 14
     };
     class Event
     {
@@ -93,7 +94,7 @@ namespace BeeEngine
             BeeCoreAssert(func, "Func is null");
             if(m_event->GetType() != T1)
                 return false;
-            if(func((T)*m_event))
+            if(func(static_cast<T>(*m_event)))
             {
                 m_event->Handle();
             }
@@ -105,7 +106,7 @@ namespace BeeEngine
         {
             if(m_event->GetType() != Type)
                 return false;
-            bool result = func((Event*)m_event);
+            bool result = func(static_cast<Event*>(m_event));
             if(result)
             {
                 m_event->Handle();
@@ -137,6 +138,6 @@ namespace BeeEngine
 #define DISPATCH_EVENT(dispatcher, Event, Type, Func) \
 dispatcher.Dispatch<Event, Type>([this](Event* event) -> bool\
         {\
-            return Func((Event*)event);\
+            return Func(reinterpret_cast<Event*>(event));\
         })
 }

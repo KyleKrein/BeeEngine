@@ -16,19 +16,10 @@ private:
 namespace BeeEngine{
     extern gsl::not_null<Application*> CreateApplication();
 
-    static void InitEngine()
-    {
-        BEE_PROFILE_FUNCTION();
-        static bool initialized = false;
-        if(initialized)
-        {
-            BeeCoreError("Engine was already initialized");
-        }
-        Log::Init();
-
-        initialized = true;
-    }
+    static void InitEngine();
 }
 
-extern int main(int argc, char** argv);
+#ifdef __cplusplus
+extern "C" int main(int argc, char* argv[]);
+#endif
 

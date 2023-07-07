@@ -64,7 +64,7 @@ namespace BeeEngine
         constexpr static EntityInit const Null{};
 
     private:
-        EntityID m_ID { {entt::null} };
+        EntityID m_ID {};
         Scene* m_Scene = nullptr;
     };
 }

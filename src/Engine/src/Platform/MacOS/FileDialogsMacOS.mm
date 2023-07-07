@@ -5,10 +5,9 @@
 #if defined(MACOS)
 #include "Utils/FileDialogs.h"
 #include "Cocoa/Cocoa.h"
-#import "Core/Logging/Log.h"
-#import "Debug/DebugUtils.h"
-
-std::optional<std::string> BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+std::string BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
 {
     // Create the File Open Dialog class.
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
@@ -29,13 +28,13 @@ std::optional<std::string> BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter 
             NSString *path = [[nsurl absoluteURL] path];
             std::string result = std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
             if(result.empty())
-                return std::nullopt;
+                return std::string();
             return result;
     }
-    return std::nullopt;
+    return std::string();
 }
 
-std::optional<std::string> BeeEngine::FileDialogs::SaveFile(Filter filter)
+std::string BeeEngine::FileDialogs::SaveFile(Filter filter)
 {
     NSString *f = [NSString stringWithUTF8String:GetFilter(&filter)];
     NSSavePanel *saveDlg = [NSSavePanel savePanel];
@@ -45,15 +44,15 @@ std::optional<std::string> BeeEngine::FileDialogs::SaveFile(Filter filter)
         // nsurl.path contains the NSString I want to return as std::string
         std::string result = std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
         if(result.empty())
-            return std::nullopt;
+            return std::string();
         return result;
     }
-    return std::nullopt;
+    return std::string();
 }
 
 const char *BeeEngine::FileDialogs::GetFilter(void* filter)
 {
     return ((FileDialogs::Filter*)filter)->filter + 2;
 }
-
+#pragma clang diagnostic pop
 #endif

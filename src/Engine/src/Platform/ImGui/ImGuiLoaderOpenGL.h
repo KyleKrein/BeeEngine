@@ -15,7 +15,9 @@
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
+#endif
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -36,7 +38,9 @@ namespace BeeEngine
         void Initialize(uint16_t width, uint16_t height, uint64_t window) override
         {
             BEE_PROFILE_FUNCTION();
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             m_window = (GLFWwindow*)window;
+#endif
             // Setup Dear ImGui context
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
@@ -64,7 +68,9 @@ namespace BeeEngine
             SetDarkThemeColors();
             const char* glsl_version = "#version 150"; //change later
             // Setup Platform/Renderer backends
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+#endif
             ImGui_ImplOpenGL3_Init(glsl_version);
 
             // Load Fonts
@@ -89,7 +95,9 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             // Start the Dear ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             ImGui_ImplGlfw_NewFrame();
+#endif
             ImGui::NewFrame();
 
             ImGuizmo::BeginFrame();
@@ -111,19 +119,25 @@ namespace BeeEngine
             //  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
                 GLFWwindow* backup_current_context = glfwGetCurrentContext();
                 ImGui::UpdatePlatformWindows();
                 ImGui::RenderPlatformWindowsDefault();
                 glfwMakeContextCurrent(backup_current_context);
+#endif
             }
         }
-        ~ImGuiControllerOpenGL() override
+        void Shutdown() override
         {
             ImGui_ImplOpenGL3_Shutdown();
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
             ImGui_ImplGlfw_Shutdown();
+#endif
             ImGui::DestroyContext();
         }
     private:
+#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
         GLFWwindow* m_window;
+#endif
     };
 }

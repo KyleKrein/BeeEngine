@@ -22,7 +22,6 @@ namespace BeeEngine{
             layer->OnDetach();
         }
         m_guiLayer->OnDetach();
-        delete m_guiLayer;
     }
 
     void LayerStack::PushLayer(Ref<Layer> layer)
@@ -109,6 +108,11 @@ namespace BeeEngine{
 
     void LayerStack::SetGuiLayer(ImGuiLayer* guiLayer)
     {
-        m_guiLayer = guiLayer;
+        m_guiLayer.reset(guiLayer);
+    }
+
+    void LayerStack::FinishGuiRendering()
+    {
+        m_guiLayer->OnEnd();
     }
 }

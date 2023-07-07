@@ -8,14 +8,11 @@
 #include "Core/TypeDefines.h"
 #include "glm/glm.hpp"
 #include "gsl/gsl"
+#include "ShaderTypes.h"
 
 namespace BeeEngine
 {
-    enum ShaderType
-    {
-        Vertex = 0,
-        Fragment = 1
-    };
+
     class Shader
     {
 public:

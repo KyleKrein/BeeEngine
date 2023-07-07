@@ -28,6 +28,14 @@ constexpr inline void BeeEnsures(bool x, std::source_location location = std::so
     ::BeeEngine::Log::GetCoreLogger()->error("Expectations failed at {0}: {1}", location.file_name(), location.line());
     debug_break();
 }
+
+#if defined(BEE_ENABLE_CHECKS)
+    #define BeeExpects(x) BeeExpects(x)
+    #define BeeEnsures(x) BeeEnsures(x)
+#else
+    #define BeeExpects(x)
+    #define BeeEnsures(x)
+#endif
 #if 0
 constexpr inline void BeeExpects(bool x, std::string_view file, std::string_view line)
 {

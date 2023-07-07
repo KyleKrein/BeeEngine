@@ -43,7 +43,11 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+bin
 bin/Debug
 bin/Release
+build
+.idea
+.vscode
 
 [Bb][Uu][Ii][Ll][Dd]/

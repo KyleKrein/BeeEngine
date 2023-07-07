@@ -19,11 +19,12 @@ namespace BeeEngine{
         void PopLayer(Ref<Layer> layer);
         void PopOverlay(Ref<Layer> overlay);
         void SetGuiLayer(ImGuiLayer* guiLayer);
+        void FinishGuiRendering();
 
         void OnEvent(EventDispatcher& dispatcher);
         void Update();
     private:
         std::vector<Ref<Layer>> m_layers;
-        ImGuiLayer* m_guiLayer;
+        Scope<ImGuiLayer> m_guiLayer;
     };
 }

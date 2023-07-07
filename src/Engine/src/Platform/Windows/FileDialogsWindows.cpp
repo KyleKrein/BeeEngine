@@ -6,12 +6,18 @@
 
 #include <windows.h>
 #include <commdlg.h>
+#if defined(BEE_COMPILE_GLFW)
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3native.h"
+#else
+#include "SDL3/SDL.h"
+#include "SDL3/SDL_syswm.h"
+#include "Windowing/WindowHandler/WindowHandler.h"
+#endif
 namespace BeeEngine
 {
-    std::optional<std::string> FileDialogs::OpenFile(Filter filter)
+    std::string FileDialogs::OpenFile(Filter filter)
     {
         const char* f = GetFilter(&filter);
         OPENFILENAMEA ofn;
@@ -20,7 +26,13 @@ namespace BeeEngine
 
         ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
         ofn.lStructSize = sizeof(OPENFILENAMEA);
+#if defined(BEE_COMPILE_GLFW)
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
+#else
+        SDL_SysWMinfo wmInfo;
+        SDL_GetWindowWMInfo((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &wmInfo, SDL_SYSWM_CURRENT_VERSION);
+        ofn.hwndOwner = wmInfo.info.win.window;
+#endif
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
         if (GetCurrentDirectoryA(256, currentDir))
@@ -33,9 +45,9 @@ namespace BeeEngine
         {
             return ofn.lpstrFile;
         }
-        return std::nullopt;
+        return {};
     }
-    std::optional<std::string> FileDialogs::SaveFile(Filter filter)
+    std::string FileDialogs::SaveFile(Filter filter)
     {
         const char* f = GetFilter(&filter);
         OPENFILENAMEA ofn;      // common dialog box structure
@@ -44,7 +56,14 @@ namespace BeeEngine
         // Initialize OPENFILENAME
         ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
         ofn.lStructSize = sizeof(OPENFILENAMEA);
+#if defined(BEE_COMPILE_GLFW)
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
+#else
+        SDL_SysWMinfo wmInfo;
+        SDL_GetWindowWMInfo((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &wmInfo, SDL_SYSWM_CURRENT_VERSION);
+
+        ofn.hwndOwner = wmInfo.info.win.window;
+#endif
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
         if (GetCurrentDirectoryA(256, currentDir))
@@ -57,7 +76,7 @@ namespace BeeEngine
         {
             return ofn.lpstrFile;
         }
-        return std::nullopt;
+        return {};
     }
 
     const char *FileDialogs::GetFilter(void* filter)

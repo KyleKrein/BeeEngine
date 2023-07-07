@@ -1,5 +1,5 @@
-[submodule "vendor/glfw"]
-	path = vendor/glfw
+[submodule "src/Engine/vendor/glfw"]
+	path = src/Engine/vendor/glfw
 	url = https://github.com/glfw/glfw.git
 [submodule "src/Engine/vendor/spdlog"]
 	path = src/Engine/vendor/spdlog
@@ -10,10 +10,6 @@
 [submodule "src/Engine/vendor/glm"]
 	path = src/Engine/vendor/glm
 	url = https://github.com/g-truc/glm
-[submodule "src/Engine/vendor/ImGui"]
-	path = src/Engine/vendor/ImGui
-	url = https://github.com/KyleKrein/imgui-for-BeeEngine.git
-	branch = beeEngine
 [submodule "src/Engine/vendor/stb"]
 	path = src/Engine/vendor/stb
 	url = https://github.com/nothings/stb
@@ -32,6 +28,15 @@
 [submodule "src/Engine/vendor/yaml-cpp"]
 	path = src/Engine/vendor/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
-[submodule "src/Engine/vendor/ImGuizmo"]
-	path = src/Engine/vendor/ImGuizmo
-	url = https://github.com/KyleKrein/ImGuizmo-for-BeeEngine.git
+[submodule "src/Engine/vendor/tinyobjloader"]
+	path = src/Engine/vendor/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git
+[submodule "src/Engine/vendor/sdl"]
+	path = src/Engine/vendor/sdl
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "src/Engine/vendor/glslang"]
+	path = src/Engine/vendor/glslang
+	url = https://github.com/KhronosGroup/glslang.git
+[submodule "src/Engine/vendor/magic_enum"]
+	path = src/Engine/vendor/magic_enum
+	url = https://github.com/Neargye/magic_enum.git

@@ -4,10 +4,13 @@
 #include "Layer.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Renderer/ShaderLibrary.h"
+#include "Platform/ImGui/ImGuiControllerVulkan.h"
+#include "Renderer/Renderer.h"
+#include "Platform/ImGui/ImGuiControllerWebGPU.h"
 
 namespace BeeEngine
 {
-    ImGuiController* ImGuiLayer::s_Controller = nullptr;
+    Scope<ImGuiController> ImGuiLayer::s_Controller = nullptr;
 
     void ImGuiLayer::Init()
     {
@@ -19,7 +22,13 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case OpenGL:
-                s_Controller = new ImGuiControllerOpenGL();
+                //s_Controller.reset(new ImGuiControllerOpenGL());
+                break;
+            case Vulkan:
+                s_Controller.reset(new ImGuiControllerVulkan());
+                break;
+            case WebGPU:
+                s_Controller.reset(new Internal::ImGuiControllerWebGPU());
                 break;
             default:
                 BeeCoreAssert(false, "Renderer API not supported!");
@@ -42,12 +51,12 @@ namespace BeeEngine
 
     Ref<Shader> Layer::LoadShader(std::string_view filepath) const
     {
-        ShaderLibrary::GetInstance().Load(filepath);
+        return ShaderLibrary::GetInstance().Load(filepath);
     }
 
     Ref<Shader> Layer::LoadShader(std::string_view name, std::string_view filepath) const
     {
-        ShaderLibrary::GetInstance().Load(name, filepath);
+        return ShaderLibrary::GetInstance().Load(name, filepath);
     }
 
     Ref<Shader> Layer::GetShader(std::string_view name) const

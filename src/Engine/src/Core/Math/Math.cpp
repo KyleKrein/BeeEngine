@@ -44,7 +44,6 @@ namespace BeeEngine::Math
         localTransform[3] = vec4(0, 0, 0, localTransform[3].w);
 
         vec3 row[3];
-        vec3 pdum3;
 
         //Now get scale and shear.
         for (length_t i = 0; i < 3; ++i)

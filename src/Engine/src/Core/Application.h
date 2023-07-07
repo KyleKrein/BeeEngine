@@ -10,17 +10,10 @@
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Core/Logging/Log.h"
 #include "Renderer/Shader.h"
+#include "OsPlatform.h"
+
 
 namespace BeeEngine{
-    enum class OSPlatform
-    {
-        None = 0,
-        Windows = 1,
-        Linux = 2,
-        Mac = 3,
-        iOS = 4,
-        Android = 5
-    };
     class Application
     {
         friend EventQueue;
@@ -72,7 +65,10 @@ namespace BeeEngine{
 
     protected:
         virtual void Update() {};
-        virtual void OnEvent(EventDispatcher& dispatcher) {};
+        virtual void OnEvent(EventDispatcher& dispatcher)
+        {
+            DISPATCH_EVENT(dispatcher, WindowResizeEvent, EventType::WindowResize, OnWindowResize);
+        };
 
         inline void PushLayer(Ref<Layer> layer)
         {
@@ -93,12 +89,14 @@ namespace BeeEngine{
     private:
         void Dispatch(EventDispatcher &dispatcher);
         static bool OnWindowClose(WindowCloseEvent& event);
+        void CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept;
+        bool OnWindowResize(WindowResizeEvent* event);
     private:
         static OSPlatform s_OSPlatform;
         static Application* s_Instance;
 
         bool m_IsMinimized;
-        WindowHandler* m_Window;
+        Scope<WindowHandler> m_Window;
         LayerStack m_Layers;
         EventQueue m_EventQueue;
     };

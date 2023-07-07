@@ -14,6 +14,8 @@
 
 namespace BeeEngine::Internal
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
     void OpenGLMessageCallback(
             unsigned source,
             unsigned type,
@@ -33,6 +35,7 @@ namespace BeeEngine::Internal
 
         BeeCoreAssert(false, "Unknown severity level!");
     }
+#pragma clang diagnostic pop
 
     void OpenGLRendererAPI::Init()
     {
@@ -91,6 +94,8 @@ namespace BeeEngine::Internal
         OPENGL_CHECK_ERRORS
     }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
     void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray> &vertexArray, uint32_t indexCount)
     {
         BEE_PROFILE_FUNCTION();
@@ -98,6 +103,7 @@ namespace BeeEngine::Internal
         glBindTexture(GL_TEXTURE_2D, 0);
         OPENGL_CHECK_ERRORS
     }
+#pragma clang diagnostic pop
 
     Color4 OpenGLRendererAPI::ReadPixel(uint32_t x, uint32_t y)
     {

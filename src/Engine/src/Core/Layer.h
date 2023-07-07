@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Core/Events/Event.h"
-#include "Platform/ImGui/ImGuiLoaderOpenGL.h"
 #include "Platform/ImGui/ImGuiController.h"
-#include "Renderer/Renderer.h"
-#include "Allocator/Allocator.h"
 #include "Renderer/Shader.h"
+#include "Debug/Instrumentor.h"
 
 
 namespace BeeEngine
@@ -47,12 +45,17 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             s_Controller->Render();
         };
+        void OnDetach() override
+        {
+            BEE_PROFILE_FUNCTION();
+            s_Controller->Shutdown();
+        }
         virtual void OnGUIRendering() override
         {
 
         }
         static void Init();
     private:
-        static ImGuiController* s_Controller;
+        static Scope<ImGuiController> s_Controller;
     };
 }

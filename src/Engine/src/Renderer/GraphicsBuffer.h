@@ -22,21 +22,14 @@ namespace BeeEngine
 
         virtual void SetData(gsl::span<std::byte> data) = 0;
 
-        void SetLayout(const BufferLayout& layout)
-        {
-            m_Layout = layout;
-        };
+        virtual void SetLayout(const BufferLayout& layout) = 0;
 
-        [[nodiscard]] inline const BufferLayout& GetLayout() const
-        {
-            return m_Layout;
-        };
+        [[nodiscard]] virtual inline const BufferLayout& GetLayout() const = 0;
 
         [[nodiscard]] virtual uint32_t GetSize() const = 0;
 
         static Ref<GraphicsBuffer> CreateVertexBuffer(uint32_t size);
+        static Ref<GraphicsBuffer> CreateVertexBuffer(uint32_t numberOfVertices, in<BufferLayout> layout);
         static Ref<GraphicsBuffer> CreateIndexBuffer(gsl::span<uint32_t> data);
-protected:
-        BufferLayout m_Layout;
     };
 }

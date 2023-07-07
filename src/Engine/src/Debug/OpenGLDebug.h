@@ -14,7 +14,7 @@
 #endif
 inline void OpenGLCheckErrors(std::string_view title, std::source_location location = std::source_location::current())
 {
-    int error = 1;
+    GLenum error = 1;
     while ( (error = glGetError())!= GL_NO_ERROR)
     {
         BeeCoreError("OpenGL Error: {0} in {1} {2}: {3}", error, title, std::string(location.file_name()), location.line());

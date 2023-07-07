@@ -18,6 +18,8 @@ namespace BeeEngine::Internal
         void Bind() const override;
         void Unbind() const override;
 
+        void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
+        [[nodiscard]] const BufferLayout& GetLayout() const override { return m_Layout; }
         void SetData(gsl::span<std::byte> data) override;
 
         uint32_t GetSize() const override { return m_Size; }
@@ -25,5 +27,6 @@ namespace BeeEngine::Internal
     private:
         uint32_t m_RendererID;
         uint32_t m_Size;
+        BufferLayout m_Layout;
     };
 }

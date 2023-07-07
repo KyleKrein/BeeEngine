@@ -6,22 +6,33 @@
 #include "Core/Logging/Log.h"
 #include "Debug/DebugLayer.h"
 #include "Renderer/ShaderLibrary.h"
+//#include "Platform/Vulkan/VulkanRendererAPI.h"
+#include "Renderer/Renderer.h"
+#include "DeletionQueue.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 namespace BeeEngine{
     OSPlatform Application::s_OSPlatform = OSPlatform::None;
     Application* Application::s_Instance = nullptr;
     void Application::Run()
     {
-        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
+        //auto tempVulkanRendererAPI = Internal::VulkanRendererAPI();
+        //m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
             m_Window->ProcessEvents();
             m_EventQueue.Dispatch();
             m_Window->UpdateTime();
+            auto cmd = Renderer::BeginFrame();//Internal::VulkanRendererAPI::GetInstance().BeginFrame();
+            Renderer::StartMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
             m_Layers.Update();
             Update();
             m_Window->SwapBuffers();
+            Renderer::EndMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
+            Renderer::EndFrame();//Internal::VulkanRendererAPI::GetInstance().EndFrame();
+            DeletionQueue::Frame().Flush();
         }
     }
 
@@ -37,25 +48,16 @@ namespace BeeEngine{
         Application::s_OSPlatform = OSPlatform::Windows;
 #elif LINUX
         Application::s_OSPlatform = OSPlatform::Linux;
+#elif ANDROID
+        Application::s_OSPlatform = OSPlatform::Android;
+#elif IOS
+        Application::s_OSPlatform = OSPlatform::iOS;
 #endif
+        auto appProperties = properties;
+        CheckRendererAPIForCompatibility(appProperties);
 
-
-        m_Window = WindowHandler::Create(WindowHandlerAPI::GLFW, properties, m_EventQueue);
-
-        switch (Application::GetOsPlatform())
-        {
-            case OSPlatform::Windows:
-                Renderer::SetAPI(RenderAPI::OpenGL);
-                break;
-            case OSPlatform::Mac:
-                Renderer::SetAPI(RenderAPI::OpenGL);
-                break;
-            case OSPlatform::Linux:
-                Renderer::SetAPI(RenderAPI::OpenGL);
-                break;
-            default:
-                BeeCoreAssert(false, "Unknown OS Platform");
-        }
+        m_Window.reset(WindowHandler::Create(WindowHandlerAPI::SDL, properties, m_EventQueue));
+        Renderer::SetAPI(appProperties.PreferredRenderAPI);
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
@@ -67,11 +69,11 @@ namespace BeeEngine{
     Application::~Application()
     {
         s_Instance = nullptr;
-        delete m_Window;
     }
 
     void Application::Dispatch(EventDispatcher &dispatcher)
     {
+        DISPATCH_EVENT(dispatcher, WindowResizeEvent, EventType::WindowResize, OnWindowResize);
         //dispatcher.Dispatch<WindowCloseEvent>(OnWindowClose);
         //dispatcher.Dispatch<WindowCloseEvent>(reinterpret_cast<bool (*)(WindowCloseEvent&)>(OnWindowClose));
     }
@@ -93,12 +95,12 @@ namespace BeeEngine{
 
     Ref<Shader> Application::LoadShader(std::string_view filepath) const
     {
-        ShaderLibrary::GetInstance().Load(filepath);
+        return ShaderLibrary::GetInstance().Load(filepath);
     }
 
     Ref<Shader> Application::LoadShader(std::string_view name, std::string_view filepath) const
     {
-        ShaderLibrary::GetInstance().Load(name, filepath);
+        return ShaderLibrary::GetInstance().Load(name, filepath);
     }
 
     Ref<Shader> Application::GetShader(std::string_view name) const
@@ -115,5 +117,38 @@ namespace BeeEngine{
     {
         m_Window->Close();
     }
+
+    void Application::CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept
+    {
+        switch (properties.PreferredRenderAPI)
+        {
+            case RenderAPI::WebGPU:
+                return;
+            case RenderAPI::OpenGL:
+            case RenderAPI::Vulkan:
+                return;
+            case RenderAPI::DirectX:
+            case RenderAPI::Metal:
+            default:
+                BeeCoreWarn("Unable to use {} as render API. Using OpenGL instead", ToString(properties.PreferredRenderAPI));
+                properties.PreferredRenderAPI = RenderAPI::OpenGL;
+                return;
+        }
+
+    }
+
+    bool Application::OnWindowResize(WindowResizeEvent *event)
+    {
+        //m_Window->GetGraphicsDevice().WindowResized(event->GetWidth(), event->GetHeight());
+        if(event->GetWidth() == 0 || event->GetHeight() == 0)
+        {
+            m_IsMinimized = true;
+            return false;
+        }
+        m_IsMinimized = false;
+        return false;
+    }
 }
 
+
+#pragma clang diagnostic pop

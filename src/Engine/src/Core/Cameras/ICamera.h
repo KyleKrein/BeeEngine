@@ -13,5 +13,6 @@ namespace BeeEngine
 
     public:
         [[nodiscard]] virtual const glm::mat4 & GetViewProjectionMatrix() const = 0;
+        virtual ~ICamera() = default;
     };
 }
