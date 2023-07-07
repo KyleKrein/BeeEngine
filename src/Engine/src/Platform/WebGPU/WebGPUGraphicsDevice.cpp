@@ -171,16 +171,16 @@ namespace BeeEngine::Internal
             auto win_hwnd = wmInfo.info.win.window;
             auto win_hinstance = wmInfo.info.win.hinstance;
             WGPUSurfaceDescriptorFromWindowsHWND sfdHwnd = {
-                    chain: {
-                            next: null,
-                            sType: WGPUSType.SurfaceDescriptorFromWindowsHWND
+                    .chain =  {
+                            .next =  nullptr,
+                            .sType =  WGPUSType_SurfaceDescriptorFromWindowsHWND
                     },
-                    hinstance: win_hinstance,
-                    hwnd: win_hwnd
+                    .hinstance =  win_hinstance,
+                    .hwnd =  win_hwnd
             };
             WGPUSurfaceDescriptor sfd = {
-                    label: null,
-                    nextInChain: cast(const(WGPUChainedStruct)*)&sfdHwnd
+                    .label =  "SDL Window",
+                    .nextInChain =  (WGPUChainedStruct*)&sfdHwnd
             };
             surface = wgpuInstanceCreateSurface(instance, &sfd);
         } else

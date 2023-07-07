@@ -40,11 +40,6 @@ namespace BeeEngine{
 }
 
 //Engine log
-template<typename... Args>
-constexpr inline std::string BeeFormat(std::string_view format, Args&&... args)
-{
-    return fmt::format(format, std::forward<Args>(args)...);
-}
 
 consteval void BeeLogError(std::string_view message, std::source_location location = std::source_location::current())
 {

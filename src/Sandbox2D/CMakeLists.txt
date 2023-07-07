@@ -23,5 +23,10 @@ target_include_directories(Sandbox2D
         PRIVATE ${CMAKE_SOURCE_DIR}/Engine/include/
         )]]
 target_link_libraries(Sandbox2D BeeEngine)
+
+# until I finish developing the webgpu backend, these two lines will be here
+target_include_directories( Sandbox2D PRIVATE ${webgpu_dawn_SOURCE_DIR}/include)
+target_include_directories( Sandbox2D PRIVATE ${CMAKE_BINARY_DIR}/_deps/webgpu_dawn-build/gen/include)
+
 file(COPY Assets DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})

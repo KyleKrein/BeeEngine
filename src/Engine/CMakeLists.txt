@@ -3,7 +3,7 @@ project(
         BeeEngine
         VERSION 0.1
         DESCRIPTION "A game engine written in C++"
-        LANGUAGES CXX C OBJCXX Swift
+        LANGUAGES CXX C
 )
 #set(CMAKE_CXX_STANDARD 23)
 #set(BEE_COMPILE_GLFW OFF)
@@ -22,38 +22,25 @@ endfunction(MobilePlatformsOnly)
 if(IOS)
     # Covers iOS implementation
     add_compile_definitions(IOS)
+    enable_language(Swift OBJCXX)
     MobilePlatformsOnly()
     set(BEE_COMPILE_GLFW OFF)
     set(BEE_COMPILE_WEBGPU OFF)
-    if(BEE_COMPILE_WEBGPU)
-        add_compile_definitions($<$<CONFIG:Debug>:DAWN_DEBUG_BREAK_ON_ERROR=1>)
-    endif()
     #list(APPEND SOURCE_FILES "ios/MyClass.mm")
 elseif(APPLE)
     # Covers macOS implementation
     add_compile_definitions(MACOS)
+    enable_language(Swift OBJCXX)
     list(APPEND SOURCE_FILES "src/Platform/MacOS/FileDialogsMacOS.mm")
     DesktopPlatformsOnly()
     set(BEE_COMPILE_GLFW OFF)
     set(BEE_COMPILE_WEBGPU ON)
-    if(BEE_COMPILE_WEBGPU)
-        add_compile_definitions($<$<CONFIG:Debug>:DAWN_DEBUG_BREAK_ON_ERROR=1>)
-        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(DAWN_ALWAYS_ASSERT ON)
-        endif ()
-    endif()
 elseif(ANDROID)
     # Covers Android implementation
     add_compile_definitions(ANDROID)
     MobilePlatformsOnly()
     set(BEE_COMPILE_GLFW OFF)
     set(BEE_COMPILE_WEBGPU OFF)
-    if(BEE_COMPILE_WEBGPU)
-        add_compile_definitions($<$<CONFIG:Debug>:DAWN_DEBUG_BREAK_ON_ERROR=1>)
-        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(DAWN_ALWAYS_ASSERT ON)
-        endif ()
-    endif()
     #list(APPEND SOURCE_FILES "android/MyClass.cpp")
 elseif(WIN32)
     # Covers Windows implementation
@@ -62,12 +49,6 @@ elseif(WIN32)
     DesktopPlatformsOnly()
     set(BEE_COMPILE_GLFW OFF)
     set(BEE_COMPILE_WEBGPU ON)
-    if(BEE_COMPILE_WEBGPU)
-        add_compile_definitions($<$<CONFIG:Debug>:DAWN_DEBUG_BREAK_ON_ERROR=1>)
-        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(DAWN_ALWAYS_ASSERT ON)
-        endif ()
-    endif()
 elseif (UNIX AND NOT APPLE)
     # Covers Linux implementation
     add_compile_definitions(LINUX)
@@ -75,12 +56,6 @@ elseif (UNIX AND NOT APPLE)
     DesktopPlatformsOnly()
     set(BEE_COMPILE_GLFW OFF)
     set(BEE_COMPILE_WEBGPU ON)
-    if(BEE_COMPILE_WEBGPU)
-        add_compile_definitions($<$<CONFIG:Debug>:DAWN_DEBUG_BREAK_ON_ERROR=1>)
-        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(DAWN_ALWAYS_ASSERT ON)
-        endif ()
-    endif()
 endif()
 
 add_library(BeeEngine ${SOURCE_FILES})
@@ -97,15 +72,7 @@ function(DesktopPlatformsOnlyPostTarget)
 
     if(BEE_COMPILE_WEBGPU)
         message("Compiling WebGPU")
-        set(TINT_BUILD_SPV_READER ON)
-        #target_include_directories( ${PROJECT_NAME} PRIVATE vendor/tint/include)
-        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(DAWN_ALWAYS_ASSERT ON)
-        endif ()
-        add_subdirectory(vendor/webgpu-dawn)
-        target_include_directories( ${PROJECT_NAME} PRIVATE vendor/webgpu-dawn/include)
-        #target_link_directories( ${PROJECT_NAME} PRIVATE vendor/webgpu-dawn/include)
-        target_link_libraries( ${PROJECT_NAME} PUBLIC webgpu)
+        enable_webgpu(BeeEngine)
         target_link_libraries( ${PROJECT_NAME} PUBLIC libtint)
         target_compile_definitions(BeeEngine PUBLIC BEE_COMPILE_WEBGPU)
     endif()
@@ -125,19 +92,11 @@ endfunction(DesktopPlatformsOnlyPostTarget)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
-add_subdirectory(vendor/glad)
-add_subdirectory(vendor/spdlog)
-add_subdirectory(vendor/glm)
-add_subdirectory(vendor/ImGui)
-add_subdirectory(vendor/gsl)
-add_subdirectory(vendor/BeeAlloc)
-add_subdirectory(vendor/entt)
-add_subdirectory(vendor/yaml-cpp)
-add_subdirectory(vendor/ImGuizmo)
 add_subdirectory(vendor/glslang)
-add_subdirectory(vendor/tinyobjloader)
-add_subdirectory(vendor/sdl)
-add_subdirectory(vendor/magic_enum)
+
+if(BEE_COMPILE_WEBGPU)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/InstallWebGPU.cmake)
+endif ()
 
 if(IOS)
     # Covers iOS implementation
@@ -153,9 +112,21 @@ elseif (UNIX AND NOT APPLE)
     # Covers Linux implementation
     DesktopPlatformsOnlyPostTarget()
 endif()
+add_subdirectory(vendor/glad)
+add_subdirectory(vendor/spdlog)
+add_subdirectory(vendor/glm)
+add_subdirectory(vendor/ImGui) # Must be after DesktopPlatformsOnlyPostTarget
+add_subdirectory(vendor/gsl)
+add_subdirectory(vendor/BeeAlloc)
+add_subdirectory(vendor/entt)
+add_subdirectory(vendor/yaml-cpp)
+add_subdirectory(vendor/ImGuizmo)
+add_subdirectory(vendor/tinyobjloader)
+add_subdirectory(vendor/sdl)
+add_subdirectory(vendor/magic_enum)
 
 find_package(Vulkan REQUIRED)
-
+message("ImGui: ${ImGui_INCLUDE_DIR}")
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
         PUBLIC src
@@ -163,7 +134,6 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/spdlog/include
         PUBLIC vendor/debugbreak
         PUBLIC vendor/glm/glm
-        PUBLIC vendor/ImGui
         PUBLIC vendor/stb
         PUBLIC vendor/gsl/include
         PUBLIC vendor/BeeAlloc/include
@@ -176,24 +146,6 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/tinyobjloader
         PUBLIC vendor/sdl/include
         PRIVATE vendor/magic_enum/include
-        )
-target_link_directories( ${PROJECT_NAME}
-        PRIVATE src
-        PRIVATE vendor/glad/include
-        PRIVATE include
-        PRIVATE vendor/spdlog/include
-        PRIVATE vendor/debugbreak
-        PRIVATE vendor/glm/glm
-        PRIVATE vendor/ImGui
-        PRIVATE vendor/stb
-        PRIVATE vendor/gsl/include
-        PRIVATE vendor/BeeAlloc/include
-        PRIVATE vendor/entt/single_include
-        PRIVATE vendor/Incbin
-        PRIVATE vendor/yaml-cpp
-        PRIVATE vendor/ImGuizmo
-        #PRIVATE vendor/glslang
-        PRIVATE vendor/tinyobjloader
         )
 
 target_link_libraries( ${PROJECT_NAME}

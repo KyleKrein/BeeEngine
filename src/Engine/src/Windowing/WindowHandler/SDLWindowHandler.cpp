@@ -21,7 +21,7 @@ namespace BeeEngine::Internal
         auto result = SDL_Init(SDL_INIT_VIDEO);
         if(result != 0)
         {
-            BeeCoreFatalError(BeeFormat("Failed to initialize SDL3! {}", SDL_GetError()));
+            BeeCoreError("Failed to initialize SDL3! {}", SDL_GetError());
         }
 
         int windowFlags = SDL_WINDOW_RESIZABLE;

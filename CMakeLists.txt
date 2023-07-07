@@ -18,10 +18,10 @@ set_project_warnings(project_warnings)
 
 include_directories(src/Engine/src/Allocator)
 
+add_subdirectory(src/Engine)
 add_subdirectory(src/Sandbox2D)
 add_subdirectory(src/tests)
 add_subdirectory(src/Editor)
-add_subdirectory(src/Engine)
 
 #[[target_include_directories( ${PROJECT_NAME}
         PUBLIC Engine/src

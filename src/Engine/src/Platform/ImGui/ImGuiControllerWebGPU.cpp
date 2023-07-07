@@ -47,7 +47,8 @@ namespace BeeEngine::Internal
                 ImGui_ImplSDL3_InitForMetal((SDL_Window*)window);
                 break;
             case OSPlatform::Windows:
-                //need to test
+                ImGui_ImplSDL3_InitForVulkan((SDL_Window*)window);
+                break;
             case OSPlatform::iOS:
             case OSPlatform::Android:
             case OSPlatform::None:
