@@ -11,4 +11,8 @@ namespace BeeEngine
     {
         return CreateRef<Internal::WebGPUMesh>(vertices/*gsl::span<byte>{(byte*)vertices.data(), vertices.size() * sizeof(Vertex)}*/);
     }
+    Ref<Mesh> Mesh::Create(in<std::vector<Vertex>> vertices, in<std::vector<uint32_t>> indices)
+    {
+        return CreateRef<Internal::WebGPUMesh>(vertices, indices);
+    }
 }

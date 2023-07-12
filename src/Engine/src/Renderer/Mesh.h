@@ -16,9 +16,11 @@ namespace BeeEngine
         virtual ~Mesh() = default;
         [[nodiscard]] virtual uint32_t GetVertexCount() const = 0;
         virtual void Bind(void* commandBuffer) = 0;
+        [[nodiscard]] virtual bool IsIndexed() const = 0;
 
         Mesh(const Mesh& other) = delete;
         Mesh& operator=(const Mesh& other ) = delete;
         static Ref<Mesh> Create(in<std::vector<Vertex>> vertices);
+        static Ref<Mesh> Create(in<std::vector<Vertex>> vertices, in<std::vector<uint32_t>> indices);
     };
 }

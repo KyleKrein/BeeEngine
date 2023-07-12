@@ -74,8 +74,8 @@ namespace BeeEngine
         }
     }
 
-    BufferLayout::BufferLayout(std::vector<BufferElement> &&inElements, std::vector<BufferElement> &&outElements)
-    : m_Stride(0), m_InElements(inElements), m_OutElements(outElements)
+    BufferLayout::BufferLayout(std::vector<BufferElement> &&inElements, std::vector<BufferElement> &&instanceElements)
+    : m_Stride(0), m_InstancedStride(0), m_InElements(inElements), m_InstancedElements(instanceElements)
     {
         BEE_PROFILE_FUNCTION();
         uint32_t offset = 0;
@@ -84,6 +84,14 @@ namespace BeeEngine
             element.SetOffset(offset);
             offset += element.GetSize();
             m_Stride += element.GetSize();
+        }
+
+        offset = 0;
+        for (auto &element : m_InstancedElements)
+        {
+            element.SetOffset(offset);
+            offset += element.GetSize();
+            m_InstancedStride += element.GetSize();
         }
     }
 }

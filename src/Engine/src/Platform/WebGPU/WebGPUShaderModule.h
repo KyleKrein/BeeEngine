@@ -23,16 +23,24 @@ namespace BeeEngine::Internal
         {
             return m_ShaderModule;
         }
-        [[nodiscard]] WGPUVertexBufferLayout GetVertexBufferLayout() const
+        [[nodiscard]] WGPUVertexBufferLayout GetPointBufferLayout() const
         {
-            return m_VertexBufferLayout;
+            return m_PointBufferLayout;
         }
+        [[nodiscard]] WGPUVertexBufferLayout GetInstanceBufferLayout() const
+        {
+            return m_InstanceBufferLayout;
+        }
+
+        [[nodiscard]] Scope<InstancedBuffer> CreateInstancedBuffer() override;
     private:
         void InitResources(in<BufferLayout> layout);
 
         ShaderType m_Type;
         WGPUShaderModule m_ShaderModule;
-        WGPUVertexBufferLayout m_VertexBufferLayout;
-        std::vector<WGPUVertexAttribute> m_VertexAttributes;
+        WGPUVertexBufferLayout m_PointBufferLayout;
+        std::vector<WGPUVertexAttribute> m_PointAttributes;
+        WGPUVertexBufferLayout m_InstanceBufferLayout;
+        std::vector<WGPUVertexAttribute> m_InstanceAttributes;
     };
 }

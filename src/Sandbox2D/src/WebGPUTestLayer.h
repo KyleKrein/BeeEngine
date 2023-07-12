@@ -7,6 +7,7 @@
 #include "Gui/ImGui/FpsCounter.h"
 #include "Renderer/Pipeline.h"
 #include "Renderer/Mesh.h"
+#include "Renderer/InstancedBuffer.h"
 
 class WebGPUTestLayer: public BeeEngine::Layer
 {
@@ -30,4 +31,5 @@ public:
     BeeEngine::Ref<BeeEngine::ShaderModule> m_VertexShader;
     BeeEngine::Ref<BeeEngine::ShaderModule> m_FragmentShader;
     BeeEngine::Ref<BeeEngine::Mesh> m_Mesh;
+    BeeEngine::Ref<BeeEngine::InstancedBuffer> m_InstancedBuffer;
 };

@@ -15,15 +15,25 @@ namespace BeeEngine::Internal
         m_ShaderModules[ShaderType::Fragment] = fragmentShader;
 
         // Vertex fetch
-        WGPUVertexBufferLayout pointBufferLayout = ((WebGPUShaderModule*)vertexShader.get())->GetVertexBufferLayout();
+        WGPUVertexBufferLayout pointBufferLayout = ((WebGPUShaderModule *) vertexShader.get())->GetPointBufferLayout();
+        WGPUVertexBufferLayout instanceBufferLayout = ((WebGPUShaderModule *) vertexShader.get())->GetInstanceBufferLayout();
 
         WGPURenderPipelineDescriptor renderPipelineDescriptor = {};
         renderPipelineDescriptor.nextInChain = nullptr;
         renderPipelineDescriptor.label = "Render Pipeline";
         //vertex
         renderPipelineDescriptor.vertex.nextInChain = nullptr;
-        renderPipelineDescriptor.vertex.bufferCount = 1;
-        renderPipelineDescriptor.vertex.buffers = &pointBufferLayout;
+        if(instanceBufferLayout.arrayStride != 0)
+        {
+            std::array<WGPUVertexBufferLayout, 2> layouts = {pointBufferLayout, instanceBufferLayout};
+            renderPipelineDescriptor.vertex.bufferCount = layouts.size();
+            renderPipelineDescriptor.vertex.buffers = layouts.data();
+        }
+        else
+        {
+            renderPipelineDescriptor.vertex.bufferCount = 1;
+            renderPipelineDescriptor.vertex.buffers = &pointBufferLayout;
+        }
         renderPipelineDescriptor.vertex.module = ((WebGPUShaderModule*)vertexShader.get())->GetHandle();
         renderPipelineDescriptor.vertex.entryPoint = "main";
         renderPipelineDescriptor.vertex.constantCount = 0;

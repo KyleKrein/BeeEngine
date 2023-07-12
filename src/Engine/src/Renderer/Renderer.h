@@ -58,6 +58,11 @@ namespace BeeEngine
             vertexArray->Bind();
             s_RendererAPI->DrawIndexed(vertexArray, indexCount);
         }
+        //static void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount)
+        //{
+        //    BEE_PROFILE_FUNCTION();
+        //    s_RendererAPI->DrawInstanced(model, instanceBuffer, instanceCount);
+        //}
         static Color4 ReadPixel(uint32_t x, uint32_t y)
         {
             BEE_PROFILE_FUNCTION();

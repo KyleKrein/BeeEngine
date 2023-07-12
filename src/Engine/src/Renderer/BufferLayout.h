@@ -67,11 +67,13 @@ namespace BeeEngine
     struct BufferLayout
     {
         BufferLayout(const std::initializer_list<BufferElement> &elements);
-        BufferLayout(std::vector<BufferElement>&& inElements, std::vector<BufferElement>&& outElements);
+        BufferLayout(std::vector<BufferElement>&& inElements, std::vector<BufferElement>&& instanceElements);
 
         [[nodiscard]] inline const std::vector<BufferElement> &GetElements() const { return m_Elements; }
         [[nodiscard]] inline const std::vector<BufferElement> &GetInputElements() const { return m_InElements; }
+        [[nodiscard]] inline const std::vector<BufferElement> &GetInstancedElements() const { return m_InstancedElements; }
         [[nodiscard]] inline uint32_t GetStride() const { return m_Stride; }
+        [[nodiscard]] inline uint32_t GetInstancedStride() const { return m_InstancedStride; }
 
         std::vector<BufferElement>::iterator begin() { return m_Elements.begin(); }
         std::vector<BufferElement>::iterator end() { return m_Elements.end(); }
@@ -82,9 +84,10 @@ namespace BeeEngine
 
     private:
         uint32_t m_Stride;
+        uint32_t m_InstancedStride;
         std::vector<BufferElement> m_Elements;
         std::vector<BufferElement> m_InElements;
-        std::vector<BufferElement> m_OutElements;
+        std::vector<BufferElement> m_InstancedElements;
 
         void CalculateOffsetsAndStride();
     };
@@ -94,11 +97,11 @@ namespace BeeEngine
     public:
         void NumberOfInputs(uint32_t count)
         {
-            m_InElements.reserve(count);
+            //m_InElements.reserve(count);
         }
-        void NumberOfOutputs(uint32_t count)
+        void RegisterInstancedLocation(uint32_t location)
         {
-            m_OutElements.reserve(count);
+            m_InstancedLocations.emplace_back(location);
         }
         void AddInput(ShaderDataType type, const String& name, uint32_t location, bool normalized = false)
         {
@@ -110,12 +113,14 @@ namespace BeeEngine
             m_Temp.emplace_back(type, name, normalized);
             return;
 #endif
+            if(IsInstanced(location))
+            {
+                BeeCoreTrace("Registered in instanced element of type {0} with name {1} in location {2}", ToString(type), name, location);
+                m_InstancedElements.emplace_back(type, name, location, normalized);
+                return;
+            }
             BeeCoreTrace("Registered in element of type {0} with name {1} in location {2}", ToString(type), name, location);
             m_InElements.emplace_back(type, name, location, normalized);
-        }
-        void AddOutput(ShaderDataType type, const String& name, uint32_t location, bool normalized = false)
-        {
-            m_OutElements.emplace_back(type, name, location, normalized);
         }
         BufferLayout Build()
         {
@@ -124,8 +129,12 @@ namespace BeeEngine
             {
                 return a.GetLocation() < b.GetLocation();
             });
+            std::sort(m_InstancedElements.begin(), m_InstancedElements.end(), [](const BufferElement& a, const BufferElement& b) -> bool
+            {
+                return a.GetLocation() < b.GetLocation();
+            });
             BeeCoreTrace("Finished building layout");
-            return BufferLayout(std::move(m_InElements), std::move(m_OutElements));
+            return BufferLayout(std::move(m_InElements), std::move(m_InstancedElements));
         }
     private:
         void Flush()
@@ -154,8 +163,23 @@ namespace BeeEngine
                 m_Temp.clear();
             }
         }
+        bool IsInstanced(uint32_t location)
+        {
+            if(m_InstancedLocations.empty())
+                return false;
+            auto size = m_InstancedLocations.size();
+            if(size == 1)
+                return m_InstancedLocations[0] <= location;
+            for (int i = 0; i < size - 1; ++i)
+            {
+                if(location >= m_InstancedLocations[i] && location < m_InstancedLocations[i + 1])
+                    return true;
+            }
+            return false;
+        }
         std::vector<BufferElement> m_Temp;
         std::vector<BufferElement> m_InElements;
-        std::vector<BufferElement> m_OutElements;
+        std::vector<BufferElement> m_InstancedElements;
+        std::vector<uint32_t> m_InstancedLocations;
     };
 }

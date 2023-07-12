@@ -5,6 +5,7 @@
 #include <spirv_cross/spirv_cross.hpp>
 #if defined(BEE_COMPILE_WEBGPU)
 #include "src/tint/writer/wgsl/generator_impl.h"
+#include "Renderer/ShaderTypes.h"
 #include <tint/tint.h>
 #endif
 
@@ -31,7 +32,6 @@ namespace BeeEngine
         if (!shader.parse(&Resources, 100, false, messages)) {
             BeeCoreError(shader.getInfoLog());
             BeeCoreError(shader.getInfoDebugLog());
-            Finalize();
             return false; // something didn't work
         }
 
@@ -226,10 +226,9 @@ namespace BeeEngine
         return ShaderDataType::NoneData;
     }
 
-    BufferLayout ShaderConverter::GenerateLayout(in<std::vector<uint32_t>> spirv)
+    BufferLayout ShaderConverter::GenerateLayout(in<std::vector<uint32_t>> spirv, BufferLayoutBuilder& builder)
     {
         BeeCoreTrace("Generating buffer layout for spirv shader");
-        BufferLayoutBuilder builder;
         auto shader = tint::reader::spirv::Parse(spirv);
         tint::inspector::Inspector inspector(&shader);
         auto entryPoints = inspector.GetEntryPoints();
@@ -252,10 +251,9 @@ namespace BeeEngine
         }*/
         return builder.Build();
     }
-    BufferLayout ShaderConverter::GenerateLayout(in<std::string> wgsl, in<std::string> path)
+    BufferLayout ShaderConverter::GenerateLayout(in<std::string> wgsl, in<std::string> path, BufferLayoutBuilder& builder)
     {
         BeeCoreTrace("Generating buffer layout for wgsl shader");
-        BufferLayoutBuilder builder;
         tint::Source::File file(path, wgsl);
         auto shader = tint::reader::wgsl::Parse(&file);
         tint::inspector::Inspector inspector(&shader);
@@ -270,6 +268,23 @@ namespace BeeEngine
             {
                 builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.location_attribute);
             }
+            const auto& uniforms = inspector.GetUniformBufferResourceBindings(entryPoint.name);
+            BeeCoreTrace("Number of Uniforms: {}", uniforms.size());
+            if(inspector.has_error())
+            {
+                BeeCoreError("Inspector has error: {}", inspector.error());
+            }
+            const auto& resourceBindings = inspector.GetResourceBindings(entryPoint.name);
+            BeeCoreTrace("Number of Resource Bindings: {}", resourceBindings.size());
+            if(inspector.has_error())
+            {
+                BeeCoreError("Inspector has error: {}", inspector.error());
+            }
+            for (const auto& uniform:uniforms)
+            {
+                BeeCoreTrace("Uniform: {}, {}, {}, {}, {}, {}", uniform.bind_group, uniform.binding, ToString(uniform.image_format),
+                             ToString(uniform.resource_type), uniform.size, uniform.size_no_padding);
+            }
             break; //support for only main entry point
         }
         /*auto resourceBindings = inspector.GetResourceBindings("main");
@@ -278,5 +293,82 @@ namespace BeeEngine
 
         }*/
         return builder.Build();
+    }
+    int extractIntegerWords(const std::string& str)
+    {
+        std::stringstream ss;
+
+        /* Storing the whole string into string stream */
+        ss << str;
+
+        /* Running loop till the end of the stream */
+        std::string temp;
+        int found;
+        while (!ss.eof()) {
+
+            /* extracting word by word from stream */
+            ss >> temp;
+
+            /* Checking the given word is integer or not */
+            if (std::stringstream(temp) >> found)
+                return found;
+
+            /* To save from space at the end of string */
+            temp = "";
+        }
+        return -1;
+    }
+
+    bool ShaderConverter::AnalyzeGLSL(const ShaderType &stage, out<BufferLayoutBuilder> layout, out<std::string> glsl)
+    {
+        BeeCoreTrace("Analyzing GLSL shader");
+        size_t pos = 0;
+        size_t endpos = glsl.size()-1;
+        do
+        {
+            pos = glsl.find("instanced", pos + 1);
+            if(pos == std::string::npos)
+            {
+                break;
+            }
+            size_t location = glsl.find('=', pos);
+            if(location == std::string::npos)
+            {
+                BeeCoreError("Failed to find '=' after 'instanced'");
+                return false;
+            }
+            size_t closeBracket = glsl.find(')', location);
+            if(closeBracket == std::string::npos)
+            {
+                BeeCoreError("Failed to find ')' after '='");
+                return false;
+            }
+            std::string locationStr = glsl.substr(location, closeBracket - location);
+            int locationInt = extractIntegerWords(locationStr);
+            if(locationInt == -1)
+            {
+                BeeCoreError("Failed to extract integer from '{}'", locationStr);
+                return false;
+            }
+            BeeCoreTrace("Found instanced attribute at location {}", locationInt);
+            layout.RegisterInstancedLocation(locationInt);
+        } while (pos != endpos);
+
+        size_t index = 0;
+        while (true) {
+            /* Locate the substring to replace. */
+            index = glsl.find("instanced", index);
+            if (index == std::string::npos) break;
+
+            /* Make the replacement. */
+            glsl.replace(index, 9, "");
+
+            /* Advance index forward so the next iteration doesn't pick it up as well. */
+            index += 1;
+        }
+
+
+        BeeCoreTrace("GLSL analyzed successfully");
+        return true;
     }
 }

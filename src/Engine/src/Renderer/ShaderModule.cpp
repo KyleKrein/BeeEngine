@@ -27,7 +27,7 @@ namespace BeeEngine
         }
 #endif
         std::vector<uint32_t> spirv;
-        LoadSpirV(path, type, loadFromCache, spirv);
+        LoadSpirV(path, type, loadFromCache, spirv, layout);
 
         switch (Renderer::GetAPI())
         {
@@ -43,19 +43,8 @@ namespace BeeEngine
         }
     }
 
-    std::vector<uint32_t> ShaderModule::CompileGLSLToSpirV(const String &path, ShaderType type, bool loadFromCache)
+    std::vector<uint32_t> ShaderModule::CompileGLSLToSpirV(const String &path, ShaderType type, std::string& glsl, BufferLayoutBuilder& builder, out<BufferLayout> layout)
     {
-        auto name = ResourceManager::GetNameFromFilePath(path);
-        auto newFilepath = s_CachePath + name + GetExtension(type) + ".spv";
-        if(loadFromCache)
-        {
-            auto result = LoadSpirVFromCache(newFilepath);
-            if(!result.empty())
-            {
-                return result;
-            }
-        }
-        auto file = ReadGLSLShader(path);
         std::vector<uint32_t> result;
         ShaderStage shaderType;
         switch (type)
@@ -70,12 +59,14 @@ namespace BeeEngine
                 shaderType = ShaderStage::Compute;
                 break;
         }
-        if (!ShaderConverter::GLSLtoSPV(shaderType, file.data(), result))
+        if (!ShaderConverter::GLSLtoSPV(shaderType, glsl.data(), result))
         {
             return result;
         }
+        layout = ShaderConverter::GenerateLayout(result, builder);
         BeeCoreTrace("Compiled shader to SPIRV");
-        File::WriteBinaryFile(newFilepath, {(std::byte*)result.data(), result.size() * sizeof(uint32_t)});
+        File::WriteBinaryFile(path + ".spv", {(std::byte*)result.data(), result.size() * sizeof(uint32_t)});
+        //TODO: Cache layout
         return result;
     }
 
@@ -126,26 +117,27 @@ namespace BeeEngine
 
     std::string ShaderModule::LoadWGSL(const String& path, ShaderType type, bool loadFromCache, out<BufferLayout> layout)
     {
-        static std::filesystem::path wgslCachePath = s_CachePath + "WGSL/";
-        if(!std::filesystem::directory_entry(wgslCachePath).exists())
-        {
-            std::filesystem::create_directory(wgslCachePath);
-        }
         auto name = ResourceManager::GetNameFromFilePath(path);
-        auto newFilepath = wgslCachePath.string() + name + GetExtension(type) + ".wgsl";
+        auto newFilepath = s_CachePath + name + GetExtension(type);
         if(path.ends_with(".vert") || path.ends_with(".frag") || path.ends_with(".comp"))
         {
             if(loadFromCache)
             {
-                if(File::Exists(newFilepath))
+                //if(File::Exists(newFilepath))
+                //{
+                    layout = LoadBufferLayoutFromCache(newFilepath + ".layout");
                     return LoadWGSLFromCache(newFilepath);
+                //}
             }
-            auto spirv = CompileGLSLToSpirV(path, type, loadFromCache);
+            BufferLayoutBuilder builder;
+            auto glsl = ReadGLSLShader(path);
+            auto glslString = std::string(glsl.data(), glsl.size());
+            ShaderConverter::AnalyzeGLSL(type, builder, glslString);
+            auto spirv = CompileGLSLToSpirV(path, type, glslString, builder, layout);
             auto wgsl = CompileSpirVToWGSL(spirv, newFilepath);
-            layout = ShaderConverter::GenerateLayout(wgsl, newFilepath);
             return wgsl;
         }
-        else if(path.ends_with(".spv"))
+        /*else if(path.ends_with(".spv"))
         {
             if(loadFromCache)
             {
@@ -159,28 +151,44 @@ namespace BeeEngine
                 return std::string();
             }
             return CompileSpirVToWGSL(spirv, newFilepath);
-        }
+        }*/
         else
         {
             BeeCoreError("Unknown shader type");
             return std::string();
         }
     }
-    bool ShaderModule::LoadSpirV(const String& path, ShaderType type, bool loadFromCache, out<std::vector<uint32_t>> spirv)
+    bool ShaderModule::LoadSpirV(const String& path, ShaderType type, bool loadFromCache, out<std::vector<uint32_t>> spirv, out<BufferLayout> layout)
     {
         //auto name = ResourceManager::GetNameFromFilePath(path);
         //auto newFilepath = s_CachePath + name + GetExtension(type) + ".spv";
         if(path.ends_with(".vert") || path.ends_with(".frag") || path.ends_with(".comp"))
         {
-            spirv = CompileGLSLToSpirV(path, type, loadFromCache);
+            auto name = ResourceManager::GetNameFromFilePath(path);
+            auto newFilepath = s_CachePath + name + GetExtension(type);
+            if(loadFromCache)
+            {
+                spirv = LoadSpirVFromCache(newFilepath + ".spv");
+                layout = LoadBufferLayoutFromCache(newFilepath + ".layout");
+                if(!spirv.empty())
+                {
+                    return true;
+                }
+                return false;
+            }
+            BufferLayoutBuilder builder;
+            auto glsl = ReadGLSLShader(path);
+            std::string glslString(glsl.data(), glsl.size());
+            ShaderConverter::AnalyzeGLSL(type, builder, glslString);
+            spirv = CompileGLSLToSpirV(newFilepath, type, glslString, builder, layout);
         }
-        else if(path.ends_with(".spv"))
+        /*else if(path.ends_with(".spv"))
         {
             if(loadFromCache && File::Exists(path))
             {
                 spirv = LoadSpirVFromCache(path);
             }
-        }
+        }*/
         else
         {
             BeeCoreError("Unknown shader type");
@@ -192,5 +200,10 @@ namespace BeeEngine
             return false;
         }
         return true;
+    }
+
+    BufferLayout ShaderModule::LoadBufferLayoutFromCache(const BeeEngine::String &path)
+    {
+        return BufferLayout(); //TODO: load layout
     }
 }

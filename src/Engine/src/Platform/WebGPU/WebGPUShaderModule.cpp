@@ -4,6 +4,7 @@
 
 #include "WebGPUShaderModule.h"
 #include "WebGPUGraphicsDevice.h"
+#include "WebGPUInstancedBuffer.h"
 
 
 namespace BeeEngine::Internal
@@ -76,19 +77,53 @@ namespace BeeEngine::Internal
     {
         if(m_Type == ShaderType::Vertex)
         {
-            m_VertexBufferLayout.arrayStride = layout.GetStride();
-            m_VertexBufferLayout.stepMode = WGPUVertexStepMode_Vertex;
-            auto inElements = layout.GetInputElements();
+            m_PointBufferLayout.arrayStride = layout.GetStride();
+            m_PointBufferLayout.stepMode = WGPUVertexStepMode_Vertex;
+            auto& inElements = layout.GetInputElements();
             for (auto& element: inElements)
             {
                 WGPUVertexAttribute attribute{};
                 attribute.format = ShaderDataTypeToWGPIU(element.GetType());
                 attribute.offset = element.GetOffset();
                 attribute.shaderLocation = element.GetLocation();
-                m_VertexAttributes.push_back(attribute);
+                m_PointAttributes.push_back(attribute);
             }
-            m_VertexBufferLayout.attributeCount = m_VertexAttributes.size();
-            m_VertexBufferLayout.attributes = m_VertexAttributes.data();
+            m_PointBufferLayout.attributeCount = m_PointAttributes.size();
+            m_PointBufferLayout.attributes = m_PointAttributes.data();
+
+
+            //Instance buffer
+            m_InstanceBufferLayout.arrayStride = layout.GetInstancedStride();
+            if(m_InstanceBufferLayout.arrayStride == 0)
+            {
+                memset(&m_InstanceBufferLayout, 0, sizeof(WGPUVertexBufferLayout));
+                return;
+            }
+            m_InstanceBufferLayout.stepMode = WGPUVertexStepMode_Instance;
+            auto& instancedElements = layout.GetInstancedElements();
+            for (auto& element: instancedElements)
+            {
+                WGPUVertexAttribute attribute{};
+                attribute.format = ShaderDataTypeToWGPIU(element.GetType());
+                attribute.offset = element.GetOffset();
+                attribute.shaderLocation = element.GetLocation();
+                m_InstanceAttributes.push_back(attribute);
+            }
+            m_InstanceBufferLayout.attributeCount = m_InstanceAttributes.size();
+            m_InstanceBufferLayout.attributes = m_InstanceAttributes.data();
         }
+    }
+
+    Scope<InstancedBuffer> WebGPUShaderModule::CreateInstancedBuffer()
+    {
+        static constexpr size_t MAX_INSTANCED_BUFFER_COUNT = 10000;
+        if (m_Type != ShaderType::Vertex)
+        {
+            BeeCoreError("Instanced buffer can be created only for vertex shader");
+            return nullptr;
+        }
+        if(m_InstanceBufferLayout.arrayStride == 0)
+            return nullptr;
+        return CreateScope<WebGPUInstancedBuffer>(m_InstanceBufferLayout, MAX_INSTANCED_BUFFER_COUNT);
     }
 }
