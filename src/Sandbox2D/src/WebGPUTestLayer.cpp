@@ -44,6 +44,7 @@ void WebGPUTestLayer::OnUpdate()
     std::array<glm::mat4, 2> models = {model, model2};
 
     m_InstancedBuffer->SetData(models.data(), sizeof(glm::mat4) * models.size());
+
     auto cmd = BeeEngine::Renderer::GetMainRenderPass();
     m_Pipeline->Bind(&cmd);
     auto renderPass = (WGPURenderPassEncoder)cmd.GetHandle();

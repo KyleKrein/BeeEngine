@@ -15,8 +15,6 @@ private:
 
 namespace BeeEngine{
     extern gsl::not_null<Application*> CreateApplication();
-
-    static void InitEngine();
 }
 
 #ifdef __cplusplus

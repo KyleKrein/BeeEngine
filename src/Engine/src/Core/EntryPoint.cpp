@@ -2,6 +2,7 @@
 // Created by Александр Лебедев on 06.05.2023.
 //
 #include "EntryPoint.h"
+#include "RestartApplication.h"
 #include "Debug/Instrumentor.h"
 #include "SDL_main.h"
 #include "Utils/ShaderConverter.h"
@@ -10,20 +11,51 @@
 
 namespace BeeEngine
 {
-    void InitEngine()
+    static bool g_Initialized = false;
+    static bool g_Restart = false;
+    static void InitEngine()
     {
         BEE_PROFILE_FUNCTION();
-        static bool initialized = false;
-        if(initialized)
-        {
-            BeeCoreError("Engine was already initialized");
-            return;
-        }
-        Log::Init();
+        BeeExpects(!g_Initialized);
 
+        Log::Init();
         ShaderConverter::Init();
 
-        initialized = true;
+        g_Initialized = true;
+    }
+
+    void ShutDownEngine()
+    {
+        BEE_PROFILE_FUNCTION();
+        BeeExpects(g_Initialized);
+
+        BeeEngine::ShaderConverter::Finalize();
+
+        g_Initialized = false;
+    }
+
+    static int Main(int argc, char *argv[])
+    {
+        g_Restart = true;
+        while (g_Restart)
+        {
+            g_Restart = false;
+            BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
+            InitEngine();
+            Application* application = CreateApplication();
+            BEE_DEBUG_END_PROFILING_SESSION();
+            application->Run();
+            BEE_DEBUG_START_PROFILING_SESSION("BeeEngineShutdown", "shutdown.json");
+            delete application;
+            ShutDownEngine();
+            BEE_DEBUG_END_PROFILING_SESSION();
+        }
+        return 0;
+    }
+
+    void Internal::RestartAfterClosing()
+    {
+        g_Restart = true;
     }
 }
 
@@ -31,15 +63,6 @@ namespace BeeEngine
 #pragma clang diagnostic ignored "-Wunused-parameter"
 int main(int argc, char *argv[])
 {
-    BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
-    BeeEngine::InitEngine();
-    BeeEngine::Application* application = BeeEngine::CreateApplication();
-    BEE_DEBUG_END_PROFILING_SESSION();
-    application->Run();
-    BEE_DEBUG_START_PROFILING_SESSION("BeeEngineShutdown", "shutdown.json");
-    delete application;
-    BeeEngine::ShaderConverter::Finalize();
-    BEE_DEBUG_END_PROFILING_SESSION();
-    return 0;
+    return BeeEngine::Main(argc, argv);
 }
 #pragma clang diagnostic pop

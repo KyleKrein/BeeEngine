@@ -76,10 +76,17 @@ namespace BeeEngine::Internal
         auto onDeviceError = [](WGPUErrorType type, char const* message, void* pUserData)
         {
             BeeCoreError("Uncaptured device error: type {0}, message: {1}", ToString(type), message? message : "null");
+#if defined(BEE_ENABLE_ASSERTS)
+            debug_break();
+#endif
         };
         auto onDeviceLost = [](WGPUDeviceLostReason reason, char const* message, void* pUserData)
         {
             BeeCoreError("Device lost: reason {0}, message: {1}", ToString(reason), message? message : "null");
+#if defined(BEE_ENABLE_ASSERTS)
+            if(reason != WGPUDeviceLostReason::WGPUDeviceLostReason_Destroyed)
+                debug_break();
+#endif
         };
         auto onDeviceLogging = [](WGPULoggingType type, char const* message, void* pUserData)
         {
