@@ -123,5 +123,18 @@ namespace BeeEngine::Internal
     {
         return {m_RenderPassEncoder};
     }
+
+    void WebGPURendererAPI::DrawInstanced(Model &model, InstancedBuffer &instancedBuffer, uint32_t instanceCount)
+    {
+        model.Bind();
+        auto cmd = Renderer::GetMainRenderPass();
+        instancedBuffer.Bind(&cmd);
+        auto renderPass = reinterpret_cast<WGPURenderPassEncoder>(cmd.GetHandle());
+        if(model.IsIndexed())
+            wgpuRenderPassEncoderDrawIndexed(renderPass, model.GetVertexCount(), instanceCount, 0, 0, 0);
+        else
+            wgpuRenderPassEncoderDraw(renderPass, model.GetVertexCount(), instanceCount, 0, 0);
+
+    }
 }
 #pragma clang diagnostic pop

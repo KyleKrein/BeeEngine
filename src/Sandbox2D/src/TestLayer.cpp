@@ -28,10 +28,10 @@ void TestLayer::OnAttach()
     CreatePipelineLayout();
     CreatePipeline();
 
-    BeeEngine::MeshComponent monkey;
-    monkey.Mesh = GetMesh("monkey");
-    monkey.Material = GetMaterial("defaultmaterial");
-    m_MeshComponents.push_back(std::move(monkey));
+    //BeeEngine::MeshComponent monkey;
+    //monkey.Mesh = GetMesh("monkey");
+    //monkey.Material = GetMaterial("defaultmaterial");
+    //m_MeshComponents.push_back(std::move(monkey));
 }
 
 void TestLayer::OnDetach()

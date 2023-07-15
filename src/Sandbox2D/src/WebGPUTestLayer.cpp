@@ -9,12 +9,9 @@
 
 void WebGPUTestLayer::OnAttach()
 {
-    m_VertexShader = BeeEngine::ShaderModule::Create("Shaders/WebGPUTestShader.vert", BeeEngine::ShaderType::Vertex,
-                                                     false);
-    m_FragmentShader = BeeEngine::ShaderModule::Create("Shaders/WebGPUTestShader.frag", BeeEngine::ShaderType::Fragment,
-                                                       false);
-    m_InstancedBuffer = m_VertexShader->CreateInstancedBuffer();
-    m_Pipeline = BeeEngine::Pipeline::Create(m_VertexShader, m_FragmentShader);
+    auto& material = m_AssetManager.LoadMaterial("StandardMaterial", "Shaders/WebGPUTestShader.vert", "Shaders/WebGPUTestShader.frag");
+
+    m_InstancedBuffer = &material.GetInstancedBuffer();
 
     glm::vec3 color = {BeeEngine::Color4::Green.R, BeeEngine::Color4::Green.G, BeeEngine::Color4::Green.B};
     std::vector<BeeEngine::Vertex> vertexBuffer =
@@ -24,7 +21,8 @@ void WebGPUTestLayer::OnAttach()
                     {{0.0f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, color}
             };
     std::vector<uint32_t> indexBuffer = {0, 1, 2};
-    m_Mesh = BeeEngine::Mesh::Create(vertexBuffer, indexBuffer);
+    auto& mesh = m_AssetManager.LoadMesh("TriangleMesh", vertexBuffer, indexBuffer);
+    m_Model = &m_AssetManager.LoadModel("Triangle", material, mesh);
 }
 
 void WebGPUTestLayer::OnDetach()
@@ -45,16 +43,7 @@ void WebGPUTestLayer::OnUpdate()
 
     m_InstancedBuffer->SetData(models.data(), sizeof(glm::mat4) * models.size());
 
-    auto cmd = BeeEngine::Renderer::GetMainRenderPass();
-    m_Pipeline->Bind(&cmd);
-    auto renderPass = (WGPURenderPassEncoder)cmd.GetHandle();
-    m_Mesh->Bind(&cmd);
-    m_InstancedBuffer->Bind(&cmd);
-    if(m_Mesh->IsIndexed())
-        wgpuRenderPassEncoderDrawIndexed(renderPass, m_Mesh->GetVertexCount(), models.size(), 0, 0, 0);
-    else
-        wgpuRenderPassEncoderDraw(renderPass, m_Mesh->GetVertexCount(), models.size(), 0, 0);
-    //wgpuRenderPassEncoderDrawIndexed((WGPURenderPassEncoder)cmd.GetHandle(), 3, 1, 0, 0, 0);
+    BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, models.size());
 }
 
 void WebGPUTestLayer::OnGUIRendering()

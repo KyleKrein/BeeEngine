@@ -32,7 +32,9 @@ namespace BeeEngine::Internal
         void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 
         void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount) override;
-        Color4 ReadPixel(uint32_t x, uint32_t y) override;
+        void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, uint32_t instanceCount) override;
+
+        [[nodiscard]] Color4 ReadPixel(uint32_t x, uint32_t y) override;
     private:
         class WebGPUGraphicsDevice& m_GraphicsDevice;
         WGPUTextureView m_NextTexture;

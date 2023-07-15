@@ -3,11 +3,37 @@
 //
 
 #pragma once
+#include <unordered_map>
+#include "Renderer/Material.h"
+#include "Mesh.h"
+#include "Texture.h"
+#include "ShaderModule.h"
+#include "Model.h"
 
 namespace BeeEngine
 {
-    class AssetManager
+    class AssetManager final
     {
+    public:
+        [[nodiscard]] Material& LoadMaterial(const std::string& name, const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader);
+        [[nodiscard]] Mesh& LoadMesh(const std::string& name, const std::filesystem::path& path);
+        [[nodiscard]] Mesh& LoadMesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
+        [[nodiscard]] Texture2D& LoadTexture(const std::string& name, const std::filesystem::path& path);
+        [[nodiscard]] Model& LoadModel(const std::string& name, Material& material, Mesh& mesh);
 
+        [[nodiscard]] Material& GetMaterial(const std::string& name);
+        [[nodiscard]] Mesh& GetMesh(const std::string& name);
+        [[nodiscard]] Texture2D& GetTexture(const std::string& name);
+        [[nodiscard]] Model& GetModel(const std::string& name);
+
+        [[nodiscard]] bool HasMaterial(const std::string& name) const;
+        [[nodiscard]] bool HasMesh(const std::string& name) const;
+        [[nodiscard]] bool HasTexture(const std::string& name) const;
+        [[nodiscard]] bool HasModel(const std::string& name) const;
+    private:
+        std::unordered_map<std::string, Ref<Material>> m_Materials;
+        std::unordered_map<std::string, Ref<Mesh>> m_Meshes;
+        std::unordered_map<std::string, Ref<Model>> m_Models;
+        std::unordered_map<std::string, Ref<Texture2D>> m_Textures;
     };
 }

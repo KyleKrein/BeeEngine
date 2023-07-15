@@ -1,4 +1,4 @@
-#include "TestLayer.h"
+//#include "TestLayer.h"
 #include "WebGPUTestLayer.h"
 //#include "BeeEngine.h"
 
@@ -10,7 +10,8 @@ public:
     {
         BeeEngine::Ref<BeeEngine::Layer> layer;
         if(properties.PreferredRenderAPI == Vulkan)
-            layer = BeeEngine::CreateRef<TestLayer>();
+            //layer = BeeEngine::CreateRef<TestLayer>();
+            return;
         else if(properties.PreferredRenderAPI == WebGPU)
             layer = BeeEngine::CreateRef<WebGPUTestLayer>();
         else

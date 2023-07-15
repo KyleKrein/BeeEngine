@@ -12,6 +12,7 @@
 #include "CommandBuffer.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "RenderPass.h"
+#include "Model.h"
 
 namespace BeeEngine
 {
@@ -57,6 +58,11 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             vertexArray->Bind();
             s_RendererAPI->DrawIndexed(vertexArray, indexCount);
+        }
+        static void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, uint32_t instanceCount)
+        {
+            BEE_PROFILE_FUNCTION();
+            s_RendererAPI->DrawInstanced(model, instancedBuffer, instanceCount);
         }
         //static void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount)
         //{

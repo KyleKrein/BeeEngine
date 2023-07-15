@@ -8,6 +8,7 @@
 #include "Renderer/Pipeline.h"
 #include "Renderer/Mesh.h"
 #include "Renderer/InstancedBuffer.h"
+#include "Renderer/AssetManager.h"
 
 class WebGPUTestLayer: public BeeEngine::Layer
 {
@@ -27,9 +28,7 @@ public:
 
     private:
     BeeEngine::Internal::FpsCounter m_FpsCounter;
-    BeeEngine::Ref<BeeEngine::Pipeline> m_Pipeline;
-    BeeEngine::Ref<BeeEngine::ShaderModule> m_VertexShader;
-    BeeEngine::Ref<BeeEngine::ShaderModule> m_FragmentShader;
-    BeeEngine::Ref<BeeEngine::Mesh> m_Mesh;
-    BeeEngine::Ref<BeeEngine::InstancedBuffer> m_InstancedBuffer;
+    BeeEngine::AssetManager m_AssetManager;
+    BeeEngine::InstancedBuffer* m_InstancedBuffer;
+    BeeEngine::Model* m_Model;
 };

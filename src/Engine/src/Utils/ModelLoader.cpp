@@ -79,4 +79,9 @@ namespace BeeEngine::Internal
 
         return true;
     }
+
+    bool ModelLoader::LoadglTF(std::string_view path, out<std::vector<BeeEngine::Vertex>> vertices, out<std::vector<uint32_t>> indices)
+    {
+        return false;
+    }
 }

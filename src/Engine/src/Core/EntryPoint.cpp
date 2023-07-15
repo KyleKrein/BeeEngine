@@ -33,7 +33,8 @@ namespace BeeEngine
 
         g_Initialized = false;
     }
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
     static int Main(int argc, char *argv[])
     {
         g_Restart = true;
@@ -52,6 +53,7 @@ namespace BeeEngine
         }
         return 0;
     }
+#pragma clang diagnostic pop
 
     void Internal::RestartAfterClosing()
     {
@@ -59,10 +61,7 @@ namespace BeeEngine
     }
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
 int main(int argc, char *argv[])
 {
     return BeeEngine::Main(argc, argv);
 }
-#pragma clang diagnostic pop

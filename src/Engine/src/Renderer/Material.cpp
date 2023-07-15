@@ -3,12 +3,12 @@
 //
 
 #include "Material.h"
-#include "Platform/Vulkan/VulkanMaterial.h"
+#include "Platform/WebGPU/WebGPUMaterial.h"
 
 namespace BeeEngine
 {
-    Ref<Material> Material::Create()
+    Ref<Material> Material::Create(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, bool loadFromCache)
     {
-        return CreateRef<Internal::VulkanMaterial>();
+        return CreateRef<Internal::WebGPUMaterial>(vertexShader, fragmentShader, loadFromCache);
     }
 }

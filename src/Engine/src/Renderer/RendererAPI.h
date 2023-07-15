@@ -10,6 +10,7 @@
 #include "Core/Color4.h"
 #include "CommandBuffer.h"
 #include "RenderPass.h"
+#include "Model.h"
 
 namespace BeeEngine
 {
@@ -35,6 +36,8 @@ namespace BeeEngine
         virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 
         virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount) = 0;
+
+        virtual void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, uint32_t instanceCount) = 0;
 
         //virtual void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount) = 0;
 

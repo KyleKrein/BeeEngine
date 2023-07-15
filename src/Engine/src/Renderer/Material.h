@@ -4,6 +4,8 @@
 
 #pragma once
 #include "Core/TypeDefines.h"
+#include "InstancedBuffer.h"
+#include <filesystem>
 
 namespace BeeEngine
 {
@@ -15,7 +17,9 @@ namespace BeeEngine
         Material(const Material& other) = delete;
         Material& operator=(const Material& other ) = delete;
 
-        static Ref<Material> Create();
+        [[nodiscard]] virtual InstancedBuffer& GetInstancedBuffer() const = 0;
+
+        static Ref<Material> Create(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, bool loadFromCache = true);
     };
 }
 
