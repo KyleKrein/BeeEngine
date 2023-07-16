@@ -7,8 +7,8 @@
 
 namespace BeeEngine
 {
-    Ref<Material> Material::Create(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, bool loadFromCache)
+    Ref<Material> Material::Create(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, BindingSet* bindingSet, bool loadFromCache)
     {
-        return CreateRef<Internal::WebGPUMaterial>(vertexShader, fragmentShader, loadFromCache);
+        return CreateRef<Internal::WebGPUMaterial>(vertexShader, fragmentShader, bindingSet, loadFromCache);
     }
 }

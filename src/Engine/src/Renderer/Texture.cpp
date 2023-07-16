@@ -6,6 +6,7 @@
 #include "Core/Logging/Log.h"
 #include "Renderer.h"
 #include "Platform/OpenGL/OpenGLTexture2D.h"
+#include "Platform/WebGPU/WebGPUTexture2D.h"
 
 
 namespace BeeEngine
@@ -16,8 +17,10 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
+            case RenderAPI::WebGPU:
+                return CreateRef<Internal::WebGPUTexture2D>(path);
             case RenderAPI::OpenGL:
-                return CreateRef<Internal::OpenGLTexture2D>(path);
+                //return CreateRef<Internal::OpenGLTexture2D>(path);
             default:
                 BeeCoreError("Unknown RenderAPI");
                 throw std::exception();
@@ -29,8 +32,10 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
+            case RenderAPI::WebGPU:
+                return CreateRef<Internal::WebGPUTexture2D>(width, height);
             case RenderAPI::OpenGL:
-                return CreateRef<Internal::OpenGLTexture2D>(width, height);
+                //return CreateRef<Internal::OpenGLTexture2D>(width, height);
             default:
                 BeeCoreError("Unknown RenderAPI");
                 throw std::exception();
@@ -42,8 +47,10 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
+            case RenderAPI::WebGPU:
+                return CreateRef<Internal::WebGPUTexture2D>(data);
             case RenderAPI::OpenGL:
-                return CreateRef<Internal::OpenGLTexture2D>(data);
+                //return CreateRef<Internal::OpenGLTexture2D>(data);
             default:
                 BeeCoreError("Unknown RenderAPI");
                 throw std::exception();

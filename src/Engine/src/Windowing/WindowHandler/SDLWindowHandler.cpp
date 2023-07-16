@@ -416,8 +416,8 @@ namespace BeeEngine::Internal
         static uint64_t currentTime = SDL_GetPerformanceCounter();
         lastTime = currentTime;
         currentTime = SDL_GetPerformanceCounter();
-        auto deltatime = gsl::narrow_cast<double>((currentTime - lastTime) / SDL_GetPerformanceFrequency());
-        SetDeltaTime(deltatime, currentTime/SDL_GetPerformanceFrequency());
+        auto deltatime = ((double)(currentTime - lastTime)) / (double)SDL_GetPerformanceFrequency();
+        SetDeltaTime(deltatime, ((double)currentTime)/(double)SDL_GetPerformanceFrequency());
         //UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetPerformanceCounter()));
     }
 

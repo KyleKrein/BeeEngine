@@ -6,6 +6,7 @@
 #include "Core/TypeDefines.h"
 #include "InstancedBuffer.h"
 #include <filesystem>
+#include "Renderer/BindingSet.h"
 
 namespace BeeEngine
 {
@@ -19,7 +20,7 @@ namespace BeeEngine
 
         [[nodiscard]] virtual InstancedBuffer& GetInstancedBuffer() const = 0;
 
-        static Ref<Material> Create(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, bool loadFromCache = true);
+        static Ref<Material> Create(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, BindingSet* bindingSet, bool loadFromCache = true);
     };
 }
 

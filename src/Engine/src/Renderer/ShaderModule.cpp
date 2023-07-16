@@ -65,7 +65,7 @@ namespace BeeEngine
         }
         layout = ShaderConverter::GenerateLayout(result, builder);
         BeeCoreTrace("Compiled shader to SPIRV");
-        File::WriteBinaryFile(path + ".spv", {(std::byte*)result.data(), result.size() * sizeof(uint32_t)});
+        File::WriteBinaryFile(path, {(std::byte*)result.data(), result.size() * sizeof(uint32_t)});
         //TODO: Cache layout
         return result;
     }
@@ -126,15 +126,15 @@ namespace BeeEngine
                 //if(File::Exists(newFilepath))
                 //{
                     layout = LoadBufferLayoutFromCache(newFilepath + ".layout");
-                    return LoadWGSLFromCache(newFilepath);
+                    return LoadWGSLFromCache(newFilepath + ".wgsl");
                 //}
             }
             BufferLayoutBuilder builder;
             auto glsl = ReadGLSLShader(path);
             auto glslString = std::string(glsl.data(), glsl.size());
             ShaderConverter::AnalyzeGLSL(type, builder, glslString);
-            auto spirv = CompileGLSLToSpirV(path, type, glslString, builder, layout);
-            auto wgsl = CompileSpirVToWGSL(spirv, newFilepath);
+            auto spirv = CompileGLSLToSpirV(newFilepath + ".spv", type, glslString, builder, layout);
+            auto wgsl = CompileSpirVToWGSL(spirv, newFilepath + ".wgsl");
             return wgsl;
         }
         /*else if(path.ends_with(".spv"))

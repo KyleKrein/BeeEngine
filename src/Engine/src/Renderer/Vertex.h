@@ -16,8 +16,8 @@ namespace BeeEngine
         glm::vec3 Normal {
                 0.0f, 0.0f, 0.0f
         };
-        glm::vec3 Color {
-                0.0f, 0.0f, 0.0f
+        glm::vec2 TexCoord {
+                0.0f, 0.0f
         };
     };
 }

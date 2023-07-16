@@ -11,7 +11,7 @@ namespace BeeEngine::Internal
     class WebGPUMaterial final: public Material
     {
     public:
-        WebGPUMaterial(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, bool loadFromCache);
+        WebGPUMaterial(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, BindingSet* bindingSet, bool loadFromCache);
         ~WebGPUMaterial() override;
         [[nodiscard]] InstancedBuffer& GetInstancedBuffer() const override;
 

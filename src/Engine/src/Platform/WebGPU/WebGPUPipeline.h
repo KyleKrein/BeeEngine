@@ -14,10 +14,11 @@ namespace BeeEngine::Internal
     {
     public:
         ~WebGPUPipeline() override;
-        WebGPUPipeline(const Ref<ShaderModule>&vertexShader, const Ref<ShaderModule>& fragmentShader);
+        WebGPUPipeline(const Ref<ShaderModule>&vertexShader, const Ref<ShaderModule>& fragmentShader,BindingSet* bindingSet);
         void Bind(void* commandBuffer) override;
     private:
         WGPURenderPipeline m_Pipeline;
+        WGPUPipelineLayout m_PipelineLayout;
         std::unordered_map<ShaderType, Ref<ShaderModule>> m_ShaderModules;
         bool m_IsRender;
     };

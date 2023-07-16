@@ -9,16 +9,21 @@
 
 void WebGPUTestLayer::OnAttach()
 {
-    auto& material = m_AssetManager.LoadMaterial("StandardMaterial", "Shaders/WebGPUTestShader.vert", "Shaders/WebGPUTestShader.frag");
+    m_CameraUniformBuffer = BeeEngine::UniformBuffer::Create(sizeof(glm::mat4));
+    m_BindingSet = BeeEngine::BindingSet::Create({
+        {0, *m_CameraUniformBuffer},
+    });
+    m_CameraController.Enable();
+
+    m_ForestTexture = &m_AssetManager.LoadTexture("ForestTexture", "Assets/Textures/forest.png");
+    auto& material = m_AssetManager.LoadMaterial("StandardMaterial", "Shaders/WebGPUTestShader.vert", "Shaders/WebGPUTestShader.frag", m_BindingSet.get());
 
     m_InstancedBuffer = &material.GetInstancedBuffer();
-
-    glm::vec3 color = {BeeEngine::Color4::Green.R, BeeEngine::Color4::Green.G, BeeEngine::Color4::Green.B};
     std::vector<BeeEngine::Vertex> vertexBuffer =
             {
-                    {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, color},
-                    {{0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, color},
-                    {{0.0f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, color}
+                    {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+                    {{0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+                    {{0.0f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
             };
     std::vector<uint32_t> indexBuffer = {0, 1, 2};
     auto& mesh = m_AssetManager.LoadMesh("TriangleMesh", vertexBuffer, indexBuffer);
@@ -31,18 +36,30 @@ void WebGPUTestLayer::OnDetach()
 }
 static float angle = 0.0f;
 static float angle2 = 0.0f;
+
+struct InstanceBufferData
+{
+    /*alignas(alignof(glm::mat4))*/ glm::mat4 Model {1.0f};
+    /*alignas(alignof(glm::mat4))*/ BeeEngine::Color4 Color {BeeEngine::Color4::White};
+    /*alignas(alignof(glm::mat4))*/ float TilingFactor = 1.0f;
+};
 void WebGPUTestLayer::OnUpdate()
 {
-    glm::mat4 model = glm::mat4(1.0f);
-    //model = glm::rotate(model, angle+=2/10, glm::vec3(0.0f, 0.0f, 1.0f));
+    BeeTrace("Total Time: {}; Delta time: {}", BeeEngine::Time::TotalTime(), BeeEngine::Time::DeltaTime());
+    m_CameraController.OnUpdate();
+    InstanceBufferData first;
 
-    glm::mat4 model2 = glm::mat4(1.0f);
-    model2 = glm::translate(model2, glm::vec3(0.1f, 0.1f, 0.1f));
-    model2 = glm::rotate(model2, angle2+=0.01f, glm::vec3(0.0f, 0.0f, 1.0f));
-    std::array<glm::mat4, 2> models = {model, model2};
+    InstanceBufferData second;
+    second.Model = glm::translate(second.Model, glm::vec3(0.1f, 0.1f, 0.1f));
+    second.Model = glm::rotate(second.Model, angle2+=0.01f, glm::vec3(0.0f, 0.0f, 1.0f));
+    second.Color = BeeEngine::Color4::Green;
+    std::vector<InstanceBufferData> models = {first, second};
 
-    m_InstancedBuffer->SetData(models.data(), sizeof(glm::mat4) * models.size());
+    m_InstancedBuffer->SetData(models.data(), sizeof(InstanceBufferData) * models.size());
+    m_CameraUniformBuffer->SetData((void*)glm::value_ptr(m_CameraController.GetCamera().GetViewProjectionMatrix()), sizeof(glm::mat4));
 
+    auto cmd = BeeEngine::Renderer::GetMainRenderPass();
+    m_BindingSet->Bind(&cmd);
     BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, models.size());
 }
 

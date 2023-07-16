@@ -19,7 +19,7 @@ namespace BeeEngine::Internal
 
         virtual void SetData(gsl::span<std::byte> data) override;
 
-        virtual void Bind(uint32_t slot = 0) const override;
+        virtual void Bind(uint32_t slot = 0) const;
     private:
         GLenum m_InternalFormat;
     };

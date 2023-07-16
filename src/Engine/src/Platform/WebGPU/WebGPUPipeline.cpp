@@ -5,10 +5,11 @@
 #include "WebGPUPipeline.h"
 #include "Renderer/Renderer.h"
 #include "WebGPUGraphicsDevice.h"
+#include "WebGPUBindingSet.h"
 
 namespace BeeEngine::Internal
 {
-    WebGPUPipeline::WebGPUPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader)
+    WebGPUPipeline::WebGPUPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader, BindingSet* bindingSet)
     : m_IsRender(true)
     {
         m_ShaderModules[ShaderType::Vertex] = vertexShader;
@@ -120,13 +121,25 @@ namespace BeeEngine::Internal
         // Default value as well (irrelevant for count = 1 anyways)
         renderPipelineDescriptor.multisample.alphaToCoverageEnabled = false;
 
-        renderPipelineDescriptor.layout = nullptr;
+        //layout
+        std::vector<WGPUBindGroupLayout> bindGroupLayouts;
+        bindGroupLayouts.push_back(((WebGPUBindingSet*)bindingSet)->GetBindGroupLayout());
+
+        WGPUPipelineLayoutDescriptor pipelineLayoutDescriptor{};
+        pipelineLayoutDescriptor.nextInChain = nullptr;
+        pipelineLayoutDescriptor.label = "Pipeline Layout";
+        pipelineLayoutDescriptor.bindGroupLayoutCount = bindGroupLayouts.size();
+        pipelineLayoutDescriptor.bindGroupLayouts = bindGroupLayouts.data();
+        m_PipelineLayout = wgpuDeviceCreatePipelineLayout(WebGPUGraphicsDevice::GetInstance().GetDevice(), &pipelineLayoutDescriptor);
+
+        renderPipelineDescriptor.layout = m_PipelineLayout;
 
         m_Pipeline = wgpuDeviceCreateRenderPipeline(WebGPUGraphicsDevice::GetInstance().GetDevice(), &renderPipelineDescriptor);
     }
 
     WebGPUPipeline::~WebGPUPipeline()
     {
+        wgpuPipelineLayoutRelease(m_PipelineLayout);
         wgpuRenderPipelineRelease(m_Pipeline);
     }
 

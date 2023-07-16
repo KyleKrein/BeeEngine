@@ -9,6 +9,7 @@
 #include "Renderer/Mesh.h"
 #include "Renderer/InstancedBuffer.h"
 #include "Renderer/AssetManager.h"
+#include "Renderer/UniformBuffer.h"
 
 class WebGPUTestLayer: public BeeEngine::Layer
 {
@@ -24,11 +25,17 @@ public:
     void OnUpdate() override;
 
     void OnGUIRendering() override;
-    void OnEvent(BeeEngine::EventDispatcher& e) override {}
+    void OnEvent(BeeEngine::EventDispatcher& e) override {
+        m_CameraController.OnEvent(e);
+    }
 
     private:
     BeeEngine::Internal::FpsCounter m_FpsCounter;
     BeeEngine::AssetManager m_AssetManager;
     BeeEngine::InstancedBuffer* m_InstancedBuffer;
+    BeeEngine::Ref<BeeEngine::UniformBuffer> m_CameraUniformBuffer;
     BeeEngine::Model* m_Model;
+    BeeEngine::Texture2D* m_ForestTexture;
+    BeeEngine::OrthographicCameraController m_CameraController;
+    BeeEngine::Ref<BeeEngine::BindingSet> m_BindingSet;
 };

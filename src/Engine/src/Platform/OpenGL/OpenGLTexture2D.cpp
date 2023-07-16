@@ -4,7 +4,6 @@
 
 #include "OpenGLTexture2D.h"
 #include "Core/ResourceManager.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "Core/Logging/Log.h"
 #include "Debug/OpenGLDebug.h"

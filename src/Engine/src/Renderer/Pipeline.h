@@ -5,6 +5,8 @@
 #pragma once
 #include "Core/TypeDefines.h"
 #include "ShaderModule.h"
+#include "BindingSet.h"
+
 namespace BeeEngine
 {
     class Pipeline
@@ -12,7 +14,7 @@ namespace BeeEngine
     public:
         virtual void Bind(void* commandBuffer) = 0;
         virtual ~Pipeline() = default;
-        [[nodiscard]] static Ref<Pipeline> Create(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader);
+        [[nodiscard]] static Ref<Pipeline> Create(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader, BindingSet* bindingSet = nullptr);
     private:
     };
 }

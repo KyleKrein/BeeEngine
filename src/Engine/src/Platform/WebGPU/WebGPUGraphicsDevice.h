@@ -64,6 +64,36 @@ namespace BeeEngine::Internal
         {
             memset(&limits, 0, sizeof(WGPULimits));
         }
+        void SetDefault(out<WGPUBindGroupEntry> entry) const noexcept
+        {
+            entry.nextInChain = nullptr;
+            entry.binding = 0;
+            entry.buffer = nullptr;
+            entry.offset = 0;
+            entry.size = 0;
+            entry.sampler = nullptr;
+            entry.textureView = nullptr;
+        }
+
+        void SetDefault(out<WGPUBindGroupLayoutEntry> bindingLayout) const noexcept
+        {
+            bindingLayout.buffer.nextInChain = nullptr;
+            bindingLayout.buffer.type = WGPUBufferBindingType_Undefined;
+            bindingLayout.buffer.hasDynamicOffset = false;
+
+            bindingLayout.sampler.nextInChain = nullptr;
+            bindingLayout.sampler.type = WGPUSamplerBindingType_Undefined;
+
+            bindingLayout.storageTexture.nextInChain = nullptr;
+            bindingLayout.storageTexture.access = WGPUStorageTextureAccess_Undefined;
+            bindingLayout.storageTexture.format = WGPUTextureFormat_Undefined;
+            bindingLayout.storageTexture.viewDimension = WGPUTextureViewDimension_Undefined;
+
+            bindingLayout.texture.nextInChain = nullptr;
+            bindingLayout.texture.multisampled = false;
+            bindingLayout.texture.sampleType = WGPUTextureSampleType_Undefined;
+            bindingLayout.texture.viewDimension = WGPUTextureViewDimension_Undefined;
+        }
 
     private:
         static WebGPUGraphicsDevice* s_Instance;

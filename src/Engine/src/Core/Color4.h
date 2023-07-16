@@ -154,7 +154,6 @@ namespace BeeEngine
         static constexpr Color4Init const Fuchsia = {1.0f, 0.0f, 1.0f, 1.0f};
         static constexpr Color4Init const Gainsboro = {0.8627451f, 0.8627451f, 0.8627451f, 1.0f};
         static constexpr Color4Init const GhostWhite = {0.972549f, 0.972549f, 1.0f, 1.0f};
-        static constexpr Color4Init const Gold = {1.0f, 0.84313726f, 0.0f, 1.0f};
         static constexpr Color4Init const Goldenrod = {0.85490197f, 0.64705884f, 0.1254902f, 1.0f};
         static constexpr Color4Init const Gray = {0.5019608f, 0.5019608f, 0.5019608f, 1.0f};
         static constexpr Color4Init const Green = {0.0f, 0.5019608f, 0.0f, 1.0f};
@@ -228,7 +227,6 @@ namespace BeeEngine
         static constexpr Color4Init const SeaGreen = {0.18039216f, 0.54509807f, 0.34117648f, 1.0f};
         static constexpr Color4Init const SeaShell = {1.0f, 0.9607843f, 0.93333334f, 1.0f};
         static constexpr Color4Init const Sienna = {0.627451f, 0.32156864f, 0.1764706f, 1.0f};
-        static constexpr Color4Init const Silver = {0.7529412f, 0.7529412f, 0.7529412f, 1.0f};
         static constexpr Color4Init const SkyBlue = {0.5294118f, 0.80784315f, 0.92156863f, 1.0f};
         static constexpr Color4Init const SlateBlue = {0.41568628f, 0.3529412f, 0.8039216f, 1.0f};
         static constexpr Color4Init const SlateGray = {0.4392157f, 0.5019608f, 0.5647059f, 1.0f};
@@ -244,6 +242,26 @@ namespace BeeEngine
         static constexpr Color4Init const Wheat = {0.9607843f, 0.87058824f, 0.7019608f, 1.0f};
         static constexpr Color4Init const Yellow = {1.0f, 1.0f, 0.0f, 1.0f};
         static constexpr Color4Init const YellowGreen = {0.6039216f, 0.8039216f, 0.19607843f, 1.0f};
+
+        //Non-metals (dielectrics)
+        static constexpr Color4Init const Coal = {0.19f, 0.19f, 0.19f, 1.0f};
+        static constexpr Color4Init const Rubber = {0.21f, 0.21f, 0.21f, 0.21f};
+        static constexpr Color4Init const Mud = {0.33f, 0.24f, 0.19f, 1.0f};
+        static constexpr Color4Init const Wood = {0.53f, 0.36f, 0.24f, 1.0f};
+        static constexpr Color4Init const Vegetation = {0.48f, 0.51f, 0.31f, 1.0f};
+        static constexpr Color4Init const Brick = {0.58f, 0.49f, 0.46f, 1.0f};
+        static constexpr Color4Init const Sand = {0.69f, 0.66f, 0.52f, 1.0f};
+        static constexpr Color4Init const Concrete = {0.75f, 0.75f, 0.73f, 1.0f};
+
+        //Metals (conductors)
+        static constexpr Color4Init const Silver = {0.97f, 0.96f, 0.91f, 1.0f};
+        static constexpr Color4Init const Aluminum = {0.91f, 0.92f, 0.92f, 1.0f};
+        static constexpr Color4Init const Titanium = {0.76f, 0.73f, 0.69f, 1.0f};
+        static constexpr Color4Init const Iron = {0.77f, 0.78f, 0.78f, 1.0f};
+        static constexpr Color4Init const Platinum = {0.83f, 0.81f, 0.78f, 1.0f};
+        static constexpr Color4Init const Gold = {1.0f, 0.86f, 0.57f, 1.0f};
+        static constexpr Color4Init const Brass = {0.98f, 0.90f, 0.59f, 1.0f};
+        static constexpr Color4Init const Copper = {0.97f, 0.74f, 0.62f, 1.0f};
 
     private:
         float m_R;

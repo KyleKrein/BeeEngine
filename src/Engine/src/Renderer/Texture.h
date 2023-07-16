@@ -5,10 +5,11 @@
 #pragma once
 #include "Core/TypeDefines.h"
 #include "gsl/gsl"
+#include "IBindable.h"
 
 namespace BeeEngine
 {
-    class Texture
+    class Texture: public IBindable
     {
     public:
         virtual ~Texture() = default;
@@ -16,8 +17,6 @@ namespace BeeEngine
         [[nodiscard]] uint32_t GetWidth() const { return m_Width; }
         [[nodiscard]] uint32_t GetHeight() const { return m_Height; }
         [[nodiscard]] uint32_t GetRendererID() const { return m_RendererID; }
-
-        virtual void Bind(uint32_t slot = 0) const = 0;
 
         bool operator==(const Texture& other) const
         {

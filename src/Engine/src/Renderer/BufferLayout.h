@@ -172,7 +172,7 @@ namespace BeeEngine
                 return m_InstancedLocations[0] <= location;
             for (int i = 0; i < size - 1; ++i)
             {
-                if(location >= m_InstancedLocations[i] && location < m_InstancedLocations[i + 1])
+                if(location >= m_InstancedLocations[i] && location <= m_InstancedLocations[i + 1])
                     return true;
             }
             return false;

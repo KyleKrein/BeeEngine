@@ -68,7 +68,7 @@ namespace BeeEngine::Internal
                     new_vert.Normal.z = nz;
 
                     //we are setting the vertex color as the vertex normal. This is just for display purposes
-                    new_vert.Color = new_vert.Normal;
+                    //new_vert.Color = new_vert.Normal;
 
 
                     vertices.push_back(new_vert);

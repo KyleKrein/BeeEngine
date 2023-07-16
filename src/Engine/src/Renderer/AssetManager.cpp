@@ -7,12 +7,12 @@
 
 BeeEngine::Material &
 BeeEngine::AssetManager::LoadMaterial(const std::string &name, const std::filesystem::path &vertexShader,
-                                      const std::filesystem::path &fragmentShader)
+                                      const std::filesystem::path &fragmentShader, BindingSet* bindingSet)
 {
     if(HasMaterial(name))
         return GetMaterial(name);
     else
-        return *m_Materials.emplace(name, Material::Create(vertexShader, fragmentShader,
+        return *m_Materials.emplace(name, Material::Create(vertexShader, fragmentShader, bindingSet,
                                                            false //change to true when cache will be implemented
                                                            )).first->second;
 }
