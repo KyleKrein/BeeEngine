@@ -124,14 +124,15 @@ namespace BeeEngine::Internal
         return {m_RenderPassEncoder};
     }
 
-    void WebGPURendererAPI::DrawInstanced(Model &model, InstancedBuffer &instancedBuffer, uint32_t instanceCount)
+    void WebGPURendererAPI::DrawInstanced(Model &model, InstancedBuffer &instancedBuffer, BindingSet& bindingSet, uint32_t instanceCount)
     {
         model.Bind();
         auto cmd = Renderer::GetMainRenderPass();
         instancedBuffer.Bind(&cmd);
+        bindingSet.Bind(&cmd);
         auto renderPass = reinterpret_cast<WGPURenderPassEncoder>(cmd.GetHandle());
         if(model.IsIndexed())
-            wgpuRenderPassEncoderDrawIndexed(renderPass, model.GetVertexCount(), instanceCount, 0, 0, 0);
+            wgpuRenderPassEncoderDrawIndexed(renderPass, model.GetIndexCount(), instanceCount, 0, 0, 0);
         else
             wgpuRenderPassEncoderDraw(renderPass, model.GetVertexCount(), instanceCount, 0, 0);
 

@@ -21,13 +21,14 @@ void WebGPUTestLayer::OnAttach()
     m_InstancedBuffer = &material.GetInstancedBuffer();
     std::vector<BeeEngine::Vertex> vertexBuffer =
             {
-                    {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-                    {{0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
-                    {{0.0f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
+                    {{-0.5f, -0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {0.0f, 0.0f}, },
+                    {{0.5f, -0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {1.0f, 0.0f}, },
+                    {{0.5f, 0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {1.0f, 1.0f}, },
+                    {{-0.5f, 0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {0.0f, 1.0f} }
             };
-    std::vector<uint32_t> indexBuffer = {0, 1, 2};
-    auto& mesh = m_AssetManager.LoadMesh("TriangleMesh", vertexBuffer, indexBuffer);
-    m_Model = &m_AssetManager.LoadModel("Triangle", material, mesh);
+    std::vector<uint32_t> indexBuffer = {0, 1, 2, 2, 3, 0};
+    auto& mesh = m_AssetManager.LoadMesh("RectMesh", vertexBuffer, indexBuffer);
+    m_Model = &m_AssetManager.LoadModel("Rectangle", material, mesh);
 }
 
 void WebGPUTestLayer::OnDetach()
@@ -45,12 +46,11 @@ struct InstanceBufferData
 };
 void WebGPUTestLayer::OnUpdate()
 {
-    BeeTrace("Total Time: {}; Delta time: {}", BeeEngine::Time::TotalTime(), BeeEngine::Time::DeltaTime());
     m_CameraController.OnUpdate();
     InstanceBufferData first;
 
     InstanceBufferData second;
-    second.Model = glm::translate(second.Model, glm::vec3(0.1f, 0.1f, 0.1f));
+    second.Model = glm::translate(second.Model, glm::vec3(0.1f, 0.1f, 0.0f));
     second.Model = glm::rotate(second.Model, angle2+=0.01f, glm::vec3(0.0f, 0.0f, 1.0f));
     second.Color = BeeEngine::Color4::Green;
     std::vector<InstanceBufferData> models = {first, second};
@@ -58,9 +58,7 @@ void WebGPUTestLayer::OnUpdate()
     m_InstancedBuffer->SetData(models.data(), sizeof(InstanceBufferData) * models.size());
     m_CameraUniformBuffer->SetData((void*)glm::value_ptr(m_CameraController.GetCamera().GetViewProjectionMatrix()), sizeof(glm::mat4));
 
-    auto cmd = BeeEngine::Renderer::GetMainRenderPass();
-    m_BindingSet->Bind(&cmd);
-    BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, models.size());
+    BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, *m_BindingSet, models.size());
 }
 
 void WebGPUTestLayer::OnGUIRendering()

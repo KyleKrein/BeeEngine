@@ -23,6 +23,7 @@ namespace BeeEngine
 
         [[nodiscard]] bool IsIndexed() const { return m_Mesh->IsIndexed(); }
         [[nodiscard]] uint32_t GetVertexCount() const {return m_Mesh->GetVertexCount();}
+        [[nodiscard]] uint32_t GetIndexCount() const {return m_Mesh->GetIndexCount();}
 
         [[nodiscard]] static Ref<Model> Load(Mesh& mesh, Material& material);
         Model(Mesh& mesh, Material& material): m_Mesh(&mesh), m_Material(&material) {}

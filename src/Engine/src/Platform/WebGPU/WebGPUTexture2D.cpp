@@ -99,8 +99,8 @@ namespace BeeEngine::Internal
     WebGPUTexture2D::~WebGPUTexture2D()
     {
         wgpuTextureViewRelease(m_TextureView);
-        wgpuTextureRelease(m_Texture);
         wgpuTextureDestroy(m_Texture);
+        wgpuTextureRelease(m_Texture);
     }
 
     void WebGPUTexture2D::Bind(uint32_t slot)

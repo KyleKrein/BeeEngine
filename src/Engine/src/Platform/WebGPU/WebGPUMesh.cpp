@@ -15,7 +15,7 @@ namespace BeeEngine::Internal
         CreateVertexBuffers(vertices);
     }
     WebGPUMesh::WebGPUMesh(in<std::vector<Vertex>> vertices, in<std::vector<uint32_t>> indices)
-    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexSize(indices.size() * sizeof(uint32_t))
+    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexCount(indices.size()), m_IndexSize(indices.size() * sizeof(uint32_t))
     {
         CreateVertexBuffers(vertices);
         CreateIndexBuffers(indices);

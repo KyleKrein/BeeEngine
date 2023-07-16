@@ -15,6 +15,7 @@ namespace BeeEngine
         Mesh() = default;
         virtual ~Mesh() = default;
         [[nodiscard]] virtual uint32_t GetVertexCount() const = 0;
+        [[nodiscard]] virtual uint32_t GetIndexCount() const = 0;
         virtual void Bind(void* commandBuffer) = 0;
         [[nodiscard]] virtual bool IsIndexed() const = 0;
 

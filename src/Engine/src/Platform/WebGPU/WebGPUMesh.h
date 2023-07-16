@@ -24,14 +24,19 @@ namespace BeeEngine::Internal
         {
             return m_VertexCount;
         }
+        [[nodiscard]] uint32_t GetIndexCount() const override
+        {
+            return m_IndexCount;
+        }
         void Bind(void* commandBuffer) override;
     private:
         void CreateVertexBuffers(in<std::vector<Vertex>> data);
         void CreateIndexBuffers(in<std::vector<uint32_t>> data);
 
         WGPUBuffer m_VertexBuffer;
-        WGPUBuffer m_IndexBuffer;
+        WGPUBuffer m_IndexBuffer = nullptr;
         uint32_t m_VertexCount;
+        uint32_t m_IndexCount = 0;
         size_t m_Size;
         size_t m_IndexSize;
 
