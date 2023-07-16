@@ -24,9 +24,9 @@ namespace BeeEngine::Internal
         renderPipelineDescriptor.label = "Render Pipeline";
         //vertex
         renderPipelineDescriptor.vertex.nextInChain = nullptr;
+        std::array<WGPUVertexBufferLayout, 2> layouts = {pointBufferLayout, instanceBufferLayout};
         if(instanceBufferLayout.arrayStride != 0)
         {
-            std::array<WGPUVertexBufferLayout, 2> layouts = {pointBufferLayout, instanceBufferLayout};
             renderPipelineDescriptor.vertex.bufferCount = layouts.size();
             renderPipelineDescriptor.vertex.buffers = layouts.data();
         }

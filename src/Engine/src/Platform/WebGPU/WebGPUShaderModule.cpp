@@ -123,7 +123,11 @@ namespace BeeEngine::Internal
             return nullptr;
         }
         if(m_InstanceBufferLayout.arrayStride == 0)
+        {
+            BeeCoreTrace("Instanced buffer layout is empty");
             return nullptr;
+        }
+        BeeCoreTrace("Creating instanced buffer");
         return CreateScope<WebGPUInstancedBuffer>(m_InstanceBufferLayout, MAX_INSTANCED_BUFFER_COUNT);
     }
 }

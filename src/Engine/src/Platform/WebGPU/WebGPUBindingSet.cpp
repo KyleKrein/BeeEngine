@@ -25,12 +25,24 @@ namespace BeeEngine::Internal
         for (const auto& element : m_Elements)
         {
             auto LayoutEntry = element.Data.GetBindGroupLayoutEntry();
-            LayoutEntry.binding = element.Binding;
-            groupLayoutEntries.push_back(LayoutEntry);
+
+            LayoutEntry[0].binding = element.Binding;
+            groupLayoutEntries.push_back(LayoutEntry[0]);
+            if(LayoutEntry.size() > 1)
+            {
+                LayoutEntry[1].binding = element.Binding + 1;
+                groupLayoutEntries.push_back(LayoutEntry[1]);
+            }
 
             auto entry = element.Data.GetBindGroupEntry();
-            entry.binding = element.Binding;
-            entries.push_back(entry);
+
+            entry[0].binding = element.Binding;
+            entries.push_back(entry[0]);
+            if(entry.size() > 1)
+            {
+                entry[1].binding = element.Binding + 1;
+                entries.push_back(entry[1]);
+            }
         }
         WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = {};
         bindGroupLayoutDesc.nextInChain = nullptr;

@@ -17,8 +17,8 @@ namespace BeeEngine::Internal
         ~WebGPUTexture2D() override;
 
         void Bind(uint32_t slot = 0) override;
-        WGPUBindGroupLayoutEntry GetBindGroupLayoutEntry() const override;
-        WGPUBindGroupEntry GetBindGroupEntry() const override;
+        std::vector<WGPUBindGroupLayoutEntry> GetBindGroupLayoutEntry() const override;
+        std::vector<WGPUBindGroupEntry> GetBindGroupEntry() const override;
         void SetData(gsl::span<std::byte> data) override;
     private:
         void WriteMipMaps(WGPUDevice pDevice, WGPUTexture pTexture, WGPUExtent3D extent3D, uint32_t count,
@@ -26,8 +26,9 @@ namespace BeeEngine::Internal
 
         WGPUTexture m_Texture;
         WGPUTextureView m_TextureView;
+        WGPUSampler m_Sampler;
 
-        void CreateTexture(int width, int height, WGPUDevice &device, WGPUTextureDescriptor &textureDesc);
+        void CreateTextureAndSampler(int width, int height, WGPUDevice &device, WGPUTextureDescriptor &textureDesc);
 
         void CreateTextureView(const WGPUTextureDescriptor &textureDesc);
     };

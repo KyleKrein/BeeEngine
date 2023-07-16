@@ -12,7 +12,7 @@ namespace BeeEngine
         public:
             virtual ~IBindable() = default;
             virtual void Bind(uint32_t slot = 0) = 0;
-            virtual WGPUBindGroupLayoutEntry GetBindGroupLayoutEntry() const = 0;
-            virtual WGPUBindGroupEntry GetBindGroupEntry() const = 0;
+            virtual std::vector<WGPUBindGroupLayoutEntry> GetBindGroupLayoutEntry() const = 0;
+            virtual std::vector<WGPUBindGroupEntry> GetBindGroupEntry() const = 0;
     };
 }

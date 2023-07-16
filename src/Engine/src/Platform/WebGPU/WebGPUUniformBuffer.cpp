@@ -34,21 +34,21 @@ namespace BeeEngine::Internal
 
     }
 
-    WGPUBindGroupLayoutEntry WebGPUUniformBuffer::GetBindGroupLayoutEntry() const
+    std::vector<WGPUBindGroupLayoutEntry> WebGPUUniformBuffer::GetBindGroupLayoutEntry() const
     {
         WGPUBindGroupLayoutEntry entry = {};
         m_GraphicsDevice.SetDefault(entry);
         entry.visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
         entry.buffer.type = WGPUBufferBindingType_Uniform;
-        return entry;
+        return {entry};
     }
 
-    WGPUBindGroupEntry WebGPUUniformBuffer::GetBindGroupEntry() const
+    std::vector<WGPUBindGroupEntry> WebGPUUniformBuffer::GetBindGroupEntry() const
     {
         WGPUBindGroupEntry entry = {};
         m_GraphicsDevice.SetDefault(entry);
         entry.buffer = m_Buffer;
         entry.size = m_Size;
-        return entry;
+        return {entry};
     }
 }

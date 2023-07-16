@@ -12,24 +12,41 @@ namespace BeeEngine::Internal
     WebGPUTexture2D::WebGPUTexture2D(std::string_view path)
     {
         int width, height, channels;
+        stbi_set_flip_vertically_on_load(true);
         unsigned char *data = stbi_load(path.data(), &width, &height, &channels, 0);
         if (!data)
         {
             BeeCoreError("Failed to load image: {0}", path);
             throw std::exception();
         }
+        if(channels == 3)
+        {
+            // Add alpha channel
+            unsigned char *dataWithAlpha = new unsigned char[width * height * 4];
+            for (int i = 0; i < width * height; ++i)
+            {
+                dataWithAlpha[i * 4] = data[i * 3];
+                dataWithAlpha[i * 4 + 1] = data[i * 3 + 1];
+                dataWithAlpha[i * 4 + 2] = data[i * 3 + 2];
+                dataWithAlpha[i * 4 + 3] = 255;
+            }
+            stbi_image_free(data);
+            data = dataWithAlpha;
+        }
         m_Width = width;
         m_Height = height;
         WGPUDevice device;
         WGPUTextureDescriptor textureDesc;
-        CreateTexture(width, height, device, textureDesc);
+        CreateTextureAndSampler(width, height, device, textureDesc);
 
         // Upload data to the GPU texture (to be implemented!)
         WriteMipMaps(device, m_Texture, textureDesc.size, textureDesc.mipLevelCount, data);
 
         CreateTextureView(textureDesc);
-
-        stbi_image_free(data);
+        if(channels == 3)
+            delete[] data;
+        else
+            stbi_image_free(data);
     }
 
     void WebGPUTexture2D::CreateTextureView(const WGPUTextureDescriptor &textureDesc)
@@ -47,7 +64,7 @@ namespace BeeEngine::Internal
         m_TextureView = wgpuTextureCreateView(m_Texture, &textureViewDesc);
     }
 
-    void WebGPUTexture2D::CreateTexture(int width, int height, WGPUDevice &device, WGPUTextureDescriptor &textureDesc)
+    void WebGPUTexture2D::CreateTextureAndSampler(int width, int height, WGPUDevice &device, WGPUTextureDescriptor &textureDesc)
     {
         device= WebGPUGraphicsDevice::GetInstance().GetDevice();
         textureDesc= {};
@@ -62,6 +79,23 @@ namespace BeeEngine::Internal
         textureDesc.viewFormatCount = 0;
         textureDesc.viewFormats = nullptr;
         m_Texture = wgpuDeviceCreateTexture(device, &textureDesc);
+
+
+        // Create a sampler
+        WGPUSamplerDescriptor samplerDesc;
+        samplerDesc.nextInChain = nullptr;
+        samplerDesc.label = "Texture2DSampler";
+        samplerDesc.addressModeU = WGPUAddressMode_ClampToEdge;
+        samplerDesc.addressModeV = WGPUAddressMode_ClampToEdge;
+        samplerDesc.addressModeW = WGPUAddressMode_ClampToEdge;
+        samplerDesc.magFilter = WGPUFilterMode_Linear;
+        samplerDesc.minFilter = WGPUFilterMode_Linear;
+        samplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
+        samplerDesc.lodMinClamp = 0.0f;
+        samplerDesc.lodMaxClamp = 1.0f;
+        samplerDesc.compare = WGPUCompareFunction_Undefined;
+        samplerDesc.maxAnisotropy = 1;
+        m_Sampler = wgpuDeviceCreateSampler(device, &samplerDesc);
     }
 
     WebGPUTexture2D::WebGPUTexture2D(uint32_t width, uint32_t height)
@@ -70,7 +104,7 @@ namespace BeeEngine::Internal
         m_Height = height;
         WGPUDevice device;
         WGPUTextureDescriptor textureDesc;
-        CreateTexture(m_Width, m_Height, device, textureDesc);
+        CreateTextureAndSampler(m_Width, m_Height, device, textureDesc);
         CreateTextureView(textureDesc);
     }
 
@@ -90,7 +124,7 @@ namespace BeeEngine::Internal
         m_Height = height;
         WGPUDevice device;
         WGPUTextureDescriptor textureDesc;
-        CreateTexture(width, height, device, textureDesc);
+        CreateTextureAndSampler(width, height, device, textureDesc);
         WriteMipMaps(device, m_Texture, textureDesc.size, textureDesc.mipLevelCount, data);
         CreateTextureView(textureDesc);
         stbi_image_free(data);
@@ -99,6 +133,7 @@ namespace BeeEngine::Internal
     WebGPUTexture2D::~WebGPUTexture2D()
     {
         wgpuTextureViewRelease(m_TextureView);
+        wgpuSamplerRelease(m_Sampler);
         wgpuTextureDestroy(m_Texture);
         wgpuTextureRelease(m_Texture);
     }
@@ -173,21 +208,30 @@ namespace BeeEngine::Internal
         wgpuQueueRelease(queue);
     }
 
-    WGPUBindGroupLayoutEntry WebGPUTexture2D::GetBindGroupLayoutEntry() const
+    std::vector<WGPUBindGroupLayoutEntry> WebGPUTexture2D::GetBindGroupLayoutEntry() const
     {
-        WGPUBindGroupLayoutEntry entry = {};
-        WebGPUGraphicsDevice::GetInstance().SetDefault(entry);
-        entry.visibility = WGPUShaderStage_Fragment;
-        entry.texture.sampleType = WGPUTextureSampleType_Float;
-        entry.texture.viewDimension = WGPUTextureViewDimension_2D;
-        return entry;
+        WGPUBindGroupLayoutEntry textureEntry = {};
+        WebGPUGraphicsDevice::GetInstance().SetDefault(textureEntry);
+        textureEntry.visibility = WGPUShaderStage_Fragment;
+        textureEntry.texture.sampleType = WGPUTextureSampleType_Float;
+        textureEntry.texture.viewDimension = WGPUTextureViewDimension_2D;
+
+        WGPUBindGroupLayoutEntry samplerEntry = {};
+        WebGPUGraphicsDevice::GetInstance().SetDefault(samplerEntry);
+        samplerEntry.visibility = WGPUShaderStage_Fragment;
+        samplerEntry.sampler.type = WGPUSamplerBindingType_Filtering;
+        return { textureEntry, samplerEntry};
     }
 
-    WGPUBindGroupEntry WebGPUTexture2D::GetBindGroupEntry() const
+    std::vector<WGPUBindGroupEntry> WebGPUTexture2D::GetBindGroupEntry() const
     {
-        WGPUBindGroupEntry entry = {};
-        WebGPUGraphicsDevice::GetInstance().SetDefault(entry);
-        entry.textureView = m_TextureView;
-        return entry;
+        WGPUBindGroupEntry textureEntry = {};
+        WebGPUGraphicsDevice::GetInstance().SetDefault(textureEntry);
+        textureEntry.textureView = m_TextureView;
+
+        WGPUBindGroupEntry samplerEntry = {};
+        WebGPUGraphicsDevice::GetInstance().SetDefault(samplerEntry);
+        samplerEntry.sampler = m_Sampler;
+        return { textureEntry, samplerEntry };
     }
 }
