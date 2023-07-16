@@ -32,7 +32,7 @@ namespace BeeEngine::Internal
         void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 
         void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount) override;
-        void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, BindingSet& bindingSet, uint32_t instanceCount) override;
+        void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, std::vector<BindingSet*>& bindingSets, uint32_t instanceCount) override;
 
         [[nodiscard]] Color4 ReadPixel(uint32_t x, uint32_t y) override;
     private:

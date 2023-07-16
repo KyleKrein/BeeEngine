@@ -13,11 +13,22 @@ void WebGPUTestLayer::OnAttach()
     m_CameraController.Enable();
 
     m_ForestTexture = &m_AssetManager.LoadTexture("ForestTexture", "Assets/Textures/forest.png");
-    m_BindingSet = BeeEngine::BindingSet::Create({
-                                                         {0, *m_CameraUniformBuffer},
-                                                         {1, *m_ForestTexture}
+    m_ForestTextureBindingSet = BeeEngine::BindingSet::Create({
+                                                                    {0, *m_ForestTexture}
+                                                            });
+
+    m_BlankTexture = BeeEngine::Texture2D::Create(1, 1);
+    int data = 0xffffffff;
+    m_BlankTexture->SetData({(BeeEngine::byte *)&data, 4});
+
+    m_BlankTextureBindingSet = BeeEngine::BindingSet::Create({
+                                                                    {0, *m_BlankTexture}
+                                                            });
+
+    m_ModelBindingSet = BeeEngine::BindingSet::Create({
+                                                         {0, *m_CameraUniformBuffer}
                                                  });
-    auto& material = m_AssetManager.LoadMaterial("StandardMaterial", "Shaders/WebGPUTestShader.vert", "Shaders/WebGPUTestShader.frag", m_BindingSet.get());
+    auto& material = m_AssetManager.LoadMaterial("StandardMaterial", "Shaders/WebGPUTestShader.vert", "Shaders/WebGPUTestShader.frag");
 
     m_InstancedBuffer = &material.GetInstancedBuffer();
     std::vector<BeeEngine::Vertex> vertexBuffer =
@@ -59,14 +70,19 @@ void WebGPUTestLayer::OnUpdate()
     m_InstancedBuffer->SetData(models.data(), sizeof(InstanceBufferData) * models.size());
     m_CameraUniformBuffer->SetData((void*)glm::value_ptr(m_CameraController.GetCamera().GetViewProjectionMatrix()), sizeof(glm::mat4));
 
-    BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, *m_BindingSet, models.size());
+    std::vector<BeeEngine::BindingSet*> bindingSets = {m_ModelBindingSet.get(), m_ForestTextureBindingSet.get()};
 
-    //InstanceBufferData third;
-    //third.Model = glm::translate(third.Model, glm::vec3(-0.5f, -0.5f, 0.0f));
-    //third.Color = BeeEngine::Color4::Blue;
+    //BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, bindingSets, models.size());
 
-    //m_InstancedBuffer->SetData(&third, sizeof(InstanceBufferData));
-    //BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, *m_BindingSet, 1);
+
+    InstanceBufferData third;
+    third.Model = glm::translate(third.Model, glm::vec3(-0.5f, -0.5f, 0.0f));
+    third.Color = BeeEngine::Color4::Blue;
+
+    m_InstancedBuffer->SetData(&third, sizeof(InstanceBufferData));
+
+    bindingSets[1] = m_BlankTextureBindingSet.get();
+    BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, bindingSets, 1);
 }
 
 void WebGPUTestLayer::OnGUIRendering()

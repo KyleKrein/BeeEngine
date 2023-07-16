@@ -9,8 +9,8 @@ layout(location = 0) out vec4 outColor;
 /*TODO: convert strings like layout(set = 1, binding = 0) uniform sampler2D u_sampler
 to lines down below automatically. also need to replace all usings of sampler2D with
 sampler2D(u_texture, u_sampler)*/
-layout(binding = 1) uniform texture2D u_texture;
-layout(binding = 2) uniform sampler u_sampler;
+layout(set = 1, binding = 0) uniform texture2D u_texture;
+layout(set = 1, binding = 1) uniform sampler u_sampler;
 
 void main()
 {

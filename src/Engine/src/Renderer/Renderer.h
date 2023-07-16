@@ -59,10 +59,10 @@ namespace BeeEngine
             vertexArray->Bind();
             s_RendererAPI->DrawIndexed(vertexArray, indexCount);
         }
-        static void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, BindingSet& bindingSet, uint32_t instanceCount)
+        static void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
         {
             BEE_PROFILE_FUNCTION();
-            s_RendererAPI->DrawInstanced(model, instancedBuffer, bindingSet, instanceCount);
+            s_RendererAPI->DrawInstanced(model, instancedBuffer, bindingSets, instanceCount);
         }
         //static void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount)
         //{

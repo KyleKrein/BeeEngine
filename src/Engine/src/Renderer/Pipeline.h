@@ -14,7 +14,7 @@ namespace BeeEngine
     public:
         virtual void Bind(void* commandBuffer) = 0;
         virtual ~Pipeline() = default;
-        [[nodiscard]] static Ref<Pipeline> Create(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader, BindingSet* bindingSet = nullptr);
+        [[nodiscard]] static Ref<Pipeline> Create(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader);
     private:
     };
 }

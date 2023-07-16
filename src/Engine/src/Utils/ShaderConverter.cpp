@@ -226,6 +226,36 @@ namespace BeeEngine
         return ShaderDataType::NoneData;
     }
 
+    static ShaderUniformDataType GetShaderUniformDataType(tint::inspector::ResourceBinding::ResourceType resourceType)
+    {
+        switch (resourceType)
+        {
+            case tint::inspector::ResourceBinding::ResourceType::kUniformBuffer:
+                return ShaderUniformDataType::Data;
+            case tint::inspector::ResourceBinding::ResourceType::kStorageBuffer:
+                break;
+            case tint::inspector::ResourceBinding::ResourceType::kReadOnlyStorageBuffer:
+                break;
+            case tint::inspector::ResourceBinding::ResourceType::kSampler:
+                return ShaderUniformDataType::Sampler;
+            case tint::inspector::ResourceBinding::ResourceType::kComparisonSampler:
+                break;
+            case tint::inspector::ResourceBinding::ResourceType::kSampledTexture:
+                return ShaderUniformDataType::SampledTexture;
+            case tint::inspector::ResourceBinding::ResourceType::kMultisampledTexture:
+                break;
+            case tint::inspector::ResourceBinding::ResourceType::kWriteOnlyStorageTexture:
+                break;
+            case tint::inspector::ResourceBinding::ResourceType::kDepthTexture:
+                break;
+            case tint::inspector::ResourceBinding::ResourceType::kDepthMultisampledTexture:
+                break;
+            case tint::inspector::ResourceBinding::ResourceType::kExternalTexture:
+                break;
+        }
+        return ShaderUniformDataType::Unknown;
+    }
+
     BufferLayout ShaderConverter::GenerateLayout(in<std::vector<uint32_t>> spirv, BufferLayoutBuilder& builder)
     {
         BeeCoreTrace("Generating buffer layout for spirv shader");
@@ -241,6 +271,17 @@ namespace BeeEngine
             for(auto& input : inputs)
             {
                 builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.location_attribute);
+            }
+
+            const auto& resourceBindings = inspector.GetResourceBindings(entryPoint.name);
+            BeeCoreTrace("Number of Resource Bindings: {}", resourceBindings.size());
+            if(inspector.has_error())
+            {
+                BeeCoreError("Inspector has error: {}", inspector.error());
+            }
+            for (const auto& uniform:resourceBindings)
+            {
+                builder.AddUniform(GetShaderUniformDataType(uniform.resource_type), uniform.bind_group, uniform.binding, uniform.size);
             }
             break; //support for only main entry point
         }

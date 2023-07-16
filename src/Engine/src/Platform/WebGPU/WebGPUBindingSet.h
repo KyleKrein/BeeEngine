@@ -4,21 +4,19 @@
 
 #pragma once
 #include "Renderer/BindingSet.h"
+#include "WebGPUPipeline.h"
+
 namespace BeeEngine::Internal
 {
     class WebGPUBindingSet final: public BindingSet
     {
     public:
         WebGPUBindingSet(std::initializer_list<BindingSetElement> elements);
-        void Bind(void* cmd) override;
-
-        WGPUBindGroupLayout GetBindGroupLayout() const
-        {
-            return m_BindGroupLayout;
-        }
+        void Bind(void* cmd, uint32_t index) override;
         ~WebGPUBindingSet() override;
     private:
-        WGPUBindGroupLayout m_BindGroupLayout;
-        WGPUBindGroup m_BindGroup;
+        WGPUBindGroup m_BindGroup = nullptr;
+        const WebGPUPipeline* m_Pipeline = nullptr;
+        uint32_t m_Index = 0;
     };
 }

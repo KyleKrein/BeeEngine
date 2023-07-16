@@ -11,7 +11,7 @@ layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec2 outTexCoord;
 layout(location = 2) out float outTilingFactor;
 
-layout(binding = 0) uniform UniformBufferCamera
+layout(set = 0, binding = 0) uniform UniformBufferCamera
 {
     mat4 projView;
 } camera;

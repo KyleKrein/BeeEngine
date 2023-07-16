@@ -16,7 +16,7 @@ namespace BeeEngine
     class AssetManager final
     {
     public:
-        [[nodiscard]] Material& LoadMaterial(const std::string& name, const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, BindingSet* bindingSet = nullptr);
+        [[nodiscard]] Material& LoadMaterial(const std::string& name, const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader);
         [[nodiscard]] Mesh& LoadMesh(const std::string& name, const std::filesystem::path& path);
         [[nodiscard]] Mesh& LoadMesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
         [[nodiscard]] Texture2D& LoadTexture(const std::string& name, const std::filesystem::path& path);

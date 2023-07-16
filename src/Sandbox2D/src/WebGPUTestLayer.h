@@ -36,6 +36,9 @@ public:
     BeeEngine::Ref<BeeEngine::UniformBuffer> m_CameraUniformBuffer;
     BeeEngine::Model* m_Model;
     BeeEngine::Texture2D* m_ForestTexture;
+    BeeEngine::Ref<BeeEngine::Texture2D> m_BlankTexture;
     BeeEngine::OrthographicCameraController m_CameraController;
-    BeeEngine::Ref<BeeEngine::BindingSet> m_BindingSet;
+    BeeEngine::Ref<BeeEngine::BindingSet> m_ModelBindingSet;
+    BeeEngine::Ref<BeeEngine::BindingSet> m_ForestTextureBindingSet;
+    BeeEngine::Ref<BeeEngine::BindingSet> m_BlankTextureBindingSet;
 };

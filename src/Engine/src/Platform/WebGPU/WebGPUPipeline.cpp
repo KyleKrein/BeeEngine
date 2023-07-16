@@ -9,7 +9,8 @@
 
 namespace BeeEngine::Internal
 {
-    WebGPUPipeline::WebGPUPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader, BindingSet* bindingSet)
+    WebGPUPipeline* WebGPUPipeline::s_CurrentPipeline = nullptr;
+    WebGPUPipeline::WebGPUPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader)
     : m_IsRender(true)
     {
         m_ShaderModules[ShaderType::Vertex] = vertexShader;
@@ -123,8 +124,18 @@ namespace BeeEngine::Internal
 
         //layout
         std::vector<WGPUBindGroupLayout> bindGroupLayouts;
-        bindGroupLayouts.push_back(((WebGPUBindingSet*)bindingSet)->GetBindGroupLayout());
-
+        auto& tempLayouts = ((WebGPUShaderModule*)vertexShader.get())->GetBindGroupLayouts();
+        for (auto& layout : tempLayouts)
+        {
+            bindGroupLayouts.push_back(layout.second);
+            m_BindGroupLayouts[layout.first] = layout.second;
+        }
+        tempLayouts = ((WebGPUShaderModule*)fragmentShader.get())->GetBindGroupLayouts();
+        for (auto& layout : tempLayouts)
+        {
+            bindGroupLayouts.push_back(layout.second);
+            m_BindGroupLayouts[layout.first] = layout.second;
+        }
         WGPUPipelineLayoutDescriptor pipelineLayoutDescriptor{};
         pipelineLayoutDescriptor.nextInChain = nullptr;
         pipelineLayoutDescriptor.label = "Pipeline Layout";
@@ -145,6 +156,7 @@ namespace BeeEngine::Internal
 
     void WebGPUPipeline::Bind(void* commandBuffer)
     {
+        s_CurrentPipeline = this;
         if(m_IsRender)
             wgpuRenderPassEncoderSetPipeline((WGPURenderPassEncoder)(((RenderPass*)commandBuffer)->GetHandle()), m_Pipeline);
     }

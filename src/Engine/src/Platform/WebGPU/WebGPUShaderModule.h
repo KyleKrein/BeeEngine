@@ -32,6 +32,11 @@ namespace BeeEngine::Internal
             return m_InstanceBufferLayout;
         }
 
+        std::vector<std::pair<uint32_t,WGPUBindGroupLayout>>& GetBindGroupLayouts()
+        {
+            return m_BindGroupLayouts;
+        }
+
         [[nodiscard]] Scope<InstancedBuffer> CreateInstancedBuffer() override;
     private:
         void InitResources(in<BufferLayout> layout);
@@ -42,5 +47,7 @@ namespace BeeEngine::Internal
         std::vector<WGPUVertexAttribute> m_PointAttributes;
         WGPUVertexBufferLayout m_InstanceBufferLayout;
         std::vector<WGPUVertexAttribute> m_InstanceAttributes;
+        std::vector<std::pair<uint32_t,WGPUBindGroupLayout>> m_BindGroupLayouts;
+        std::vector<WGPUBindGroupLayoutEntry> m_BindGroupLayoutEntries;
     };
 }

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <initializer_list>
+#include <utility>
 #include <vector>
 #include "Core/TypeDefines.h"
 #include <algorithm>
@@ -20,6 +21,13 @@ namespace BeeEngine
         UInt, UInt2, UInt3, UInt4,
         Int, Int2, Int3, Int4,
         Bool
+    };
+    enum class ShaderUniformDataType
+    {
+        Unknown = 0,
+        Data,
+        Sampler,
+        SampledTexture
     };
     class BufferLayoutBuilder;
     struct BufferElement
@@ -62,16 +70,48 @@ namespace BeeEngine
         bool m_Normalized;
     };
 
+    class BufferUniformElement
+    {
+    public:
+        friend class BufferLayoutBuilder;
+        BufferUniformElement() = default;
+
+        BufferUniformElement(ShaderUniformDataType type, uint32_t bindingSet, uint32_t location, uint32_t size)
+        : m_Type(type), m_Size(size), m_BindingSet(bindingSet), m_Location(location)
+        {}
+
+        [[nodiscard]] inline uint32_t GetSize() const
+        { return m_Size; }
+        inline uint32_t GetLocation() const
+        {
+            return m_Location;
+        }
+        inline uint32_t GetBindingSet() const
+        {
+            return m_BindingSet;
+        }
+
+        [[nodiscard]] inline ShaderUniformDataType GetType() const
+        { return m_Type; }
+
+    private:
+        ShaderUniformDataType m_Type;
+        uint32_t m_Size;
+        uint32_t m_BindingSet;
+        uint32_t m_Location;
+    };
+
     class BufferLayoutBuilder;
 
     struct BufferLayout
     {
         BufferLayout(const std::initializer_list<BufferElement> &elements);
-        BufferLayout(std::vector<BufferElement>&& inElements, std::vector<BufferElement>&& instanceElements);
+        BufferLayout(std::vector<BufferElement>&& inElements, std::vector<BufferElement>&& instanceElements, std::vector<BufferUniformElement>&& uniformElements);
 
         [[nodiscard]] inline const std::vector<BufferElement> &GetElements() const { return m_Elements; }
         [[nodiscard]] inline const std::vector<BufferElement> &GetInputElements() const { return m_InElements; }
         [[nodiscard]] inline const std::vector<BufferElement> &GetInstancedElements() const { return m_InstancedElements; }
+        [[nodiscard]] inline const std::vector<BufferUniformElement> &GetUniformElements() const { return m_UniformElements; }
         [[nodiscard]] inline uint32_t GetStride() const { return m_Stride; }
         [[nodiscard]] inline uint32_t GetInstancedStride() const { return m_InstancedStride; }
 
@@ -88,6 +128,7 @@ namespace BeeEngine
         std::vector<BufferElement> m_Elements;
         std::vector<BufferElement> m_InElements;
         std::vector<BufferElement> m_InstancedElements;
+        std::vector<BufferUniformElement> m_UniformElements;
 
         void CalculateOffsetsAndStride();
     };
@@ -122,6 +163,11 @@ namespace BeeEngine
             BeeCoreTrace("Registered in element of type {0} with name {1} in location {2}", ToString(type), name, location);
             m_InElements.emplace_back(type, name, location, normalized);
         }
+        void AddUniform(ShaderUniformDataType type, uint32_t bindingSet, uint32_t location, uint32_t size)
+        {
+            BeeCoreTrace("Registered uniform element of type {0} in binding set {1} and location {2} of size {3}", ToString(type), bindingSet, location, size);
+            m_UniformElements.push_back({type, bindingSet, location, size});
+        }
         BufferLayout Build()
         {
             //Flush();
@@ -133,8 +179,12 @@ namespace BeeEngine
             {
                 return a.GetLocation() < b.GetLocation();
             });
+            std::sort(m_UniformElements.begin(), m_UniformElements.end(), [](const BufferUniformElement& a, const BufferUniformElement& b) -> bool
+            {
+                return a.GetBindingSet() < b.GetBindingSet() || a.GetLocation() < b.GetLocation();
+            });
             BeeCoreTrace("Finished building layout");
-            return BufferLayout(std::move(m_InElements), std::move(m_InstancedElements));
+            return BufferLayout(std::move(m_InElements), std::move(m_InstancedElements), std::move(m_UniformElements));
         }
     private:
         void Flush()
@@ -181,5 +231,6 @@ namespace BeeEngine
         std::vector<BufferElement> m_InElements;
         std::vector<BufferElement> m_InstancedElements;
         std::vector<uint32_t> m_InstancedLocations;
+        std::vector<BufferUniformElement> m_UniformElements;
     };
 }

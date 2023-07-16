@@ -5,6 +5,7 @@
 #include "WebGPUShaderModule.h"
 #include "WebGPUGraphicsDevice.h"
 #include "WebGPUInstancedBuffer.h"
+#include "Core/DeletionQueue.h"
 
 
 namespace BeeEngine::Internal
@@ -32,6 +33,14 @@ namespace BeeEngine::Internal
     }
     WebGPUShaderModule::~WebGPUShaderModule()
     {
+        auto layouts = m_BindGroupLayouts;
+        DeletionQueue::Main().PushFunction([layouts]()
+        {
+            for (auto[_, bindGroupLayout] : layouts)
+            {
+                wgpuBindGroupLayoutRelease(bindGroupLayout);
+            }
+        });
         wgpuShaderModuleRelease(m_ShaderModule);
     }
     constexpr static WGPUVertexFormat ShaderDataTypeToWGPIU(ShaderDataType type)
@@ -112,6 +121,59 @@ namespace BeeEngine::Internal
             m_InstanceBufferLayout.attributeCount = m_InstanceAttributes.size();
             m_InstanceBufferLayout.attributes = m_InstanceAttributes.data();
         }
+        auto& device = WebGPUGraphicsDevice::GetInstance();
+        auto& uniformElements = layout.GetUniformElements();
+        if(uniformElements.empty())
+            return;
+        uint32_t index = uniformElements[0].GetBindingSet();
+        uint32_t currentSet = 0;
+        m_BindGroupLayouts.emplace_back();
+        for(auto& element: uniformElements)
+        {
+            if(element.GetBindingSet() != index)
+            {
+                m_BindGroupLayouts.emplace_back();
+                WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = {};
+                bindGroupLayoutDesc.nextInChain = nullptr;
+                bindGroupLayoutDesc.label = "BindGroupLayout";
+                bindGroupLayoutDesc.entryCount = (uint32_t)m_BindGroupLayoutEntries.size();
+                bindGroupLayoutDesc.entries = m_BindGroupLayoutEntries.data();
+                m_BindGroupLayouts[currentSet] = std::make_pair( index,wgpuDeviceCreateBindGroupLayout(device.GetDevice(), &bindGroupLayoutDesc));
+                m_BindGroupLayoutEntries.clear();
+                index = element.GetBindingSet();
+                currentSet++;
+            }
+            WGPUBindGroupLayoutEntry entry{};
+            device.SetDefault(entry);
+            entry.binding = element.GetLocation();
+            entry.visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
+            switch (element.GetType())
+            {
+                case ShaderUniformDataType::Data:
+                    entry.buffer.type = WGPUBufferBindingType_Uniform;
+                    entry.buffer.hasDynamicOffset = false;
+                    entry.buffer.minBindingSize = element.GetSize();
+                    break;
+                case ShaderUniformDataType::SampledTexture:
+                    entry.texture.sampleType = WGPUTextureSampleType_Float;
+                    entry.texture.viewDimension = WGPUTextureViewDimension_2D;
+                    entry.texture.multisampled = false;
+                    break;
+                case ShaderUniformDataType::Sampler:
+                    entry.sampler.type = WGPUSamplerBindingType_Filtering;
+                    break;
+                case ShaderUniformDataType::Unknown:
+                    BeeCoreError("Unknown ShaderUniformDataType");
+                    break;
+            }
+            m_BindGroupLayoutEntries.push_back(entry);
+        }
+        WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = {};
+        bindGroupLayoutDesc.nextInChain = nullptr;
+        bindGroupLayoutDesc.label = "BindGroupLayout";
+        bindGroupLayoutDesc.entryCount = (uint32_t)m_BindGroupLayoutEntries.size();
+        bindGroupLayoutDesc.entries = m_BindGroupLayoutEntries.data();
+        m_BindGroupLayouts[currentSet] = std::make_pair( index,wgpuDeviceCreateBindGroupLayout(device.GetDevice(), &bindGroupLayoutDesc));
     }
 
     Scope<InstancedBuffer> WebGPUShaderModule::CreateInstancedBuffer()

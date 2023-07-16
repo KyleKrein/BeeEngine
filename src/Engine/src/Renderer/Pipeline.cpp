@@ -9,14 +9,14 @@
 namespace BeeEngine
 {
 
-    Ref<Pipeline> BeeEngine::Pipeline::Create(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader, BindingSet* bindingSet)
+    Ref<Pipeline> BeeEngine::Pipeline::Create(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader)
     {
         BeeExpects(vertexShader->GetType() == ShaderType::Vertex);
         BeeExpects(fragmentShader->GetType() == ShaderType::Fragment);
         switch (Renderer::GetAPI())
         {
             case WebGPU:
-                return CreateRef<Internal::WebGPUPipeline>(vertexShader, fragmentShader, bindingSet);
+                return CreateRef<Internal::WebGPUPipeline>(vertexShader, fragmentShader);
             case Vulkan:
             case OpenGL:
             case Metal:
