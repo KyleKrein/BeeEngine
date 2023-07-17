@@ -2,10 +2,9 @@
 // Created by alexl on 17.07.2023.
 //
 
-#include "WebGPUBufferPool.h"
 #include "WebGPUGraphicsDevice.h"
 #include "Core/DeletionQueue.h"
-
+#include "WebGPUBufferPool.h"
 
 namespace BeeEngine::Internal
 {
@@ -13,7 +12,7 @@ namespace BeeEngine::Internal
     const WebGPUBuffer &WebGPUBufferPool::RequestBuffer(uint32_t size, WebGPUBufferUsage usage)
     {
         //TODO implement actual pool
-        m_Buffers.emplace_back(CreateBuffer(size, usage), size, 0, usage);
+        m_Buffers.push_back({CreateBuffer(size, usage), size, 0, usage});
         return m_Buffers.back();
     }
 

@@ -127,9 +127,12 @@ target_include_directories(${LIB_NAME}
 
 # Find GLFW
 #find_package(glfw3 REQUIRED)
-find_package(Vulkan REQUIRED)
+if(NOT IOS)
+    find_package(Vulkan REQUIRED)
+    target_link_libraries(${LIB_NAME} PRIVATE Vulkan::Vulkan)
+endif()
 
-target_link_libraries(${LIB_NAME} PRIVATE Vulkan::Vulkan PRIVATE SDL3::SDL3)
+target_link_libraries(${LIB_NAME} PRIVATE SDL3::SDL3)
 
 # Enable C++11
 target_compile_features(${LIB_NAME} PUBLIC cxx_std_11)

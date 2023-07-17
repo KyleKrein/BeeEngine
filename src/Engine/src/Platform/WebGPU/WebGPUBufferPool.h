@@ -3,7 +3,8 @@
 //
 
 #pragma once
-#include "Core/TypeDefines.h"
+#include <webgpu/webgpu.h>
+#include <vector>
 namespace BeeEngine::Internal
 {
     enum class WebGPUBufferUsage

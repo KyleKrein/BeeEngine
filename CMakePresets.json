@@ -40,6 +40,34 @@
       "vendor": {
 
       }
+    },
+    {
+      "name": "iOS Simulator Debug",
+      "displayName": "iOS Simulator Debug Config",
+      "description": "iOS Simulator Debug Config",
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build/iosSimulator/Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "STRING",
+          "value": "src/Engine/vendor/ios.toolchain.cmake"
+        },
+        "PLATFORM": {
+          "type": "STRING",
+          "value": "SIMULATORARM64"
+        },
+        "DEPLOYMENT_TARGET": {
+          "type": "STRING",
+          "value": "16.0"
+        }
+      },
+      "environment": {
+
+      },
+      "vendor": {
+
+      }
     }
   ]
 }

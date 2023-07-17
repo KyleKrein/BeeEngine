@@ -22,16 +22,25 @@ endfunction(MobilePlatformsOnly)
 if(IOS)
     # Covers iOS implementation
     add_compile_definitions(IOS)
-    enable_language(Swift OBJCXX)
+    execute_process(COMMAND xcrun --find swiftc
+            OUTPUT_VARIABLE _xcrun_out OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_VARIABLE _xcrun_err RESULT_VARIABLE _xcrun_result)
+    if(_xcrun_result EQUAL 0 AND EXISTS "${_xcrun_out}")
+        set(CMAKE_Swift_COMPILER "${_xcrun_out}")
+    else()
+        _cmake_find_compiler_path(Swift)
+    endif()
+    enable_language(CXX C Swift OBJCXX)
     MobilePlatformsOnly()
     set(BEE_COMPILE_GLFW OFF)
-    set(BEE_COMPILE_WEBGPU OFF)
+    set(BEE_COMPILE_WEBGPU ON)
+
     #list(APPEND SOURCE_FILES "ios/MyClass.mm")
 elseif(APPLE)
     # Covers macOS implementation
     add_compile_definitions(MACOS)
     enable_language(Swift OBJCXX)
-    list(APPEND SOURCE_FILES "src/Platform/MacOS/FileDialogsMacOS.mm")
+    list(APPEND SOURCE_FILES src/Platform/MacOS/FileDialogsMacOS.mm)
     DesktopPlatformsOnly()
     set(BEE_COMPILE_GLFW OFF)
     set(BEE_COMPILE_WEBGPU ON)
@@ -165,8 +174,6 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC tinyobjloader
         PUBLIC SDL3::SDL3
         PUBLIC magic_enum
-        PUBLIC c++
-        PUBLIC unwind
         )
 
 target_compile_definitions(BeeEngine PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_FORCE_LEFT_HANDED)
