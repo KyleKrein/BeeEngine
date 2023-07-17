@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Core/Layer.h"
+#include "Gui/ImGui/RendererStatisticsGUI.h"
 
 namespace BeeEngine
 {
@@ -20,6 +21,8 @@ namespace BeeEngine
             void OnUpdate() override;
             void OnGUIRendering() override;
             void OnEvent(EventDispatcher& e) override;
+        private:
+            Internal::RendererStatisticsGUI m_RendererStatisticsGUI;
         };
     }
 }

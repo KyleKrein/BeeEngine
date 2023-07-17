@@ -13,6 +13,7 @@
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "RenderPass.h"
 #include "Model.h"
+#include "RendererStatistics.h"
 
 namespace BeeEngine
 {
@@ -59,11 +60,14 @@ namespace BeeEngine
             vertexArray->Bind();
             s_RendererAPI->DrawIndexed(vertexArray, indexCount);
         }
-        static void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
+        static void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
         {
             BEE_PROFILE_FUNCTION();
             s_RendererAPI->DrawInstanced(model, instancedBuffer, bindingSets, instanceCount);
         }
+
+        static void SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, gsl::span<byte> instanceData);
+        static void Flush();
         //static void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount)
         //{
         //    BEE_PROFILE_FUNCTION();
@@ -83,13 +87,7 @@ namespace BeeEngine
             return s_RendererAPI->BeginFrame();
         }
 
-        static void EndFrame()
-        {
-            BEE_PROFILE_FUNCTION();
-            BeeExpects(s_FrameStarted);
-            s_RendererAPI->EndFrame();
-            s_FrameStarted = false;
-        }
+        static void EndFrame();
 
         static void StartMainRenderPass(in<CommandBuffer> commandBuffer)
         {
@@ -117,10 +115,16 @@ namespace BeeEngine
             return s_RendererAPI->GetMainRenderPass();
         }
 
+        static const RendererStatistics& GetStatistics()
+        {
+            return s_Statistics;
+        }
+
     private:
         static RenderAPI s_Api;
         static Ref<RendererAPI> s_RendererAPI;
         static Color4 s_ClearColor;
         static bool s_FrameStarted;
+        static RendererStatistics s_Statistics;
     };
 }

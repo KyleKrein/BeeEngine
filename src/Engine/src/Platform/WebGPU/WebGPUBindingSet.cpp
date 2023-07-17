@@ -12,7 +12,7 @@
 
 namespace BeeEngine::Internal
 {
-    void Internal::WebGPUBindingSet::Bind(void* cmd, uint32_t index)
+    void Internal::WebGPUBindingSet::Bind(void* cmd, uint32_t index) const
     {
         if(!m_BindGroup || m_Pipeline != &WebGPUPipeline::GetCurrentPipeline() || m_Index != index)
         {

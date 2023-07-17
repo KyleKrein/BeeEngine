@@ -5,6 +5,7 @@
 #include "WebGPURendererAPI.h"
 #include "WebGPUGraphicsDevice.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/RenderingQueue.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -50,7 +51,7 @@ namespace BeeEngine::Internal
 
     void WebGPURendererAPI::Init()
     {
-
+        RenderingQueue::Initialize();
     }
 
     void WebGPURendererAPI::StartMainRenderPass(BeeEngine::CommandBuffer commandBuffer)
@@ -124,7 +125,7 @@ namespace BeeEngine::Internal
         return {m_RenderPassEncoder};
     }
 
-    void WebGPURendererAPI::DrawInstanced(Model &model, InstancedBuffer &instancedBuffer, std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
+    void WebGPURendererAPI::DrawInstanced(Model &model, InstancedBuffer &instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
     {
         model.Bind();
         auto cmd = Renderer::GetMainRenderPass();

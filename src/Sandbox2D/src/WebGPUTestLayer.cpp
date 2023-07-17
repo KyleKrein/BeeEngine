@@ -30,7 +30,6 @@ void WebGPUTestLayer::OnAttach()
                                                  });
     auto& material = m_AssetManager.LoadMaterial("StandardMaterial", "Shaders/WebGPUTestShader.vert", "Shaders/WebGPUTestShader.frag");
 
-    m_InstancedBuffer = &material.GetInstancedBuffer();
     std::vector<BeeEngine::Vertex> vertexBuffer =
             {
                     {{-0.5f, -0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {0.0f, 0.0f}, },
@@ -41,6 +40,20 @@ void WebGPUTestLayer::OnAttach()
     std::vector<uint32_t> indexBuffer = {2, 1, 0, 0, 3, 2};
     auto& mesh = m_AssetManager.LoadMesh("RectMesh", vertexBuffer, indexBuffer);
     m_Model = &m_AssetManager.LoadModel("Rectangle", material, mesh);
+
+    m_InstanceBuffer.resize(135);
+    for (auto& buffer:m_InstanceBuffer)
+    {
+        buffer.resize(135);
+    }
+
+    for (int i = 0; i < 135; ++i)
+    {
+        for (int j = 0; j < 135; ++j)
+        {
+            m_InstanceBuffer[i][j].Model = glm::translate(glm::mat4(1.0f), glm::vec3(i, j, 0.0f));
+        }
+    }
 }
 
 void WebGPUTestLayer::OnDetach()
@@ -50,39 +63,39 @@ void WebGPUTestLayer::OnDetach()
 static float angle = 0.0f;
 static float angle2 = 0.0f;
 
-struct InstanceBufferData
-{
-    /*alignas(alignof(glm::mat4))*/ glm::mat4 Model {1.0f};
-    /*alignas(alignof(glm::mat4))*/ BeeEngine::Color4 Color {BeeEngine::Color4::White};
-    /*alignas(alignof(glm::mat4))*/ float TilingFactor = 1.0f;
-};
+
 void WebGPUTestLayer::OnUpdate()
 {
     m_CameraController.OnUpdate();
-    InstanceBufferData first;
-
-    InstanceBufferData second;
-    second.Model = glm::translate(second.Model, glm::vec3(0.5f, 0.5f, 0.0f));
-    //second.Model = glm::rotate(second.Model, angle2+=0.01f, glm::vec3(0.0f, 0.0f, 1.0f));
-    second.Color = BeeEngine::Color4::Red;
-    std::vector<InstanceBufferData> models = {first, second};
-
-    m_InstancedBuffer->SetData(models.data(), sizeof(InstanceBufferData) * models.size());
     m_CameraUniformBuffer->SetData((void*)glm::value_ptr(m_CameraController.GetCamera().GetViewProjectionMatrix()), sizeof(glm::mat4));
+
+    //InstanceBufferData first;
+    //InstanceBufferData second;
+    //second.Model = glm::translate(second.Model, glm::vec3(0.5f, 0.5f, 0.0f));
+    //second.Model = glm::rotate(second.Model, angle2+=0.01f, glm::vec3(0.0f, 0.0f, 1.0f));
+    //second.Color = BeeEngine::Color4::Red;
 
     std::vector<BeeEngine::BindingSet*> bindingSets = {m_ModelBindingSet.get(), m_ForestTextureBindingSet.get()};
 
-    //BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, bindingSets, models.size());
+    for (int i = 0; i < 135; ++i)
+    {
+        for (int j = 0; j < 135; ++j)
+        {
+            BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&m_InstanceBuffer[i][j], sizeof(InstanceBufferData)});
+        }
+    }
 
+    //BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&first, sizeof(InstanceBufferData)});
+    //BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&second, sizeof(InstanceBufferData)});
 
-    InstanceBufferData third;
-    third.Model = glm::translate(third.Model, glm::vec3(-0.5f, -0.5f, 0.0f));
-    third.Color = BeeEngine::Color4::Blue;
+    //InstanceBufferData third;
+    //third.Model = glm::translate(third.Model, glm::vec3(-0.5f, -0.5f, 0.0f));
+    //third.Color = BeeEngine::Color4::Blue;
 
-    m_InstancedBuffer->SetData(&third, sizeof(InstanceBufferData));
+    //bindingSets[1] = m_BlankTextureBindingSet.get();
 
-    bindingSets[1] = m_BlankTextureBindingSet.get();
-    BeeEngine::Renderer::DrawInstanced(*m_Model, *m_InstancedBuffer, bindingSets, 1);
+    //BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&third, sizeof(InstanceBufferData)});
+    BeeEngine::Renderer::Flush();
 }
 
 void WebGPUTestLayer::OnGUIRendering()

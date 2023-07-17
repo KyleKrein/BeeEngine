@@ -13,12 +13,10 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 namespace BeeEngine{
-    OSPlatform Application::s_OSPlatform = OSPlatform::None;
     Application* Application::s_Instance = nullptr;
     void Application::Run()
     {
-        //auto tempVulkanRendererAPI = Internal::VulkanRendererAPI();
-        //m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
+        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
@@ -29,7 +27,7 @@ namespace BeeEngine{
             Renderer::StartMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
             m_Layers.Update();
             Update();
-            m_Window->SwapBuffers();
+            //m_Window->SwapBuffers();
             Renderer::EndMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
             Renderer::EndFrame();//Internal::VulkanRendererAPI::GetInstance().EndFrame();
             DeletionQueue::Frame().Flush();
@@ -42,17 +40,6 @@ namespace BeeEngine{
         BEE_PROFILE_FUNCTION();
         BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");
         s_Instance = this;
-#ifdef MACOS
-        Application::s_OSPlatform = OSPlatform::Mac;
-#elif WINDOWS
-        Application::s_OSPlatform = OSPlatform::Windows;
-#elif LINUX
-        Application::s_OSPlatform = OSPlatform::Linux;
-#elif ANDROID
-        Application::s_OSPlatform = OSPlatform::Android;
-#elif IOS
-        Application::s_OSPlatform = OSPlatform::iOS;
-#endif
         auto appProperties = properties;
         CheckRendererAPIForCompatibility(appProperties);
 

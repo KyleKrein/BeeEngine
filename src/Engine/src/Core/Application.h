@@ -20,9 +20,21 @@ namespace BeeEngine{
     public:
         explicit Application(const WindowProperties& properties);
         virtual ~Application();
-        static OSPlatform GetOsPlatform()
+        consteval static OSPlatform GetOsPlatform()
         {
-            return s_OSPlatform;
+#if (defined(MACOS))
+            return OSPlatform::Mac;
+#elif defined(WINDOWS)
+            return OSPlatform::Windows;
+#elif defined(LINUX)
+            return OSPlatform::Linux;
+#elif defined(ANDROID)
+            return OSPlatform::Android;
+#elif defined(IOS)
+            return OSPlatform::iOS;
+#else
+            return OSPlatform::None;
+#endif
         }
         static Application& GetInstance()
         {
@@ -92,7 +104,6 @@ namespace BeeEngine{
         void CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept;
         bool OnWindowResize(WindowResizeEvent* event);
     private:
-        static OSPlatform s_OSPlatform;
         static Application* s_Instance;
 
         bool m_IsMinimized;

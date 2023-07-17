@@ -32,7 +32,7 @@ namespace BeeEngine::Internal
                 windowFlags |= SDL_WINDOW_VULKAN;
                 break;
             case WebGPU:
-                if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
+                if constexpr (Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
                 {
                     windowFlags |= SDL_WINDOW_METAL;
                 }

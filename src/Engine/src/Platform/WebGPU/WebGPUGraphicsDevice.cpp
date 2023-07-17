@@ -8,6 +8,7 @@
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Core/TypeDefines.h"
 #include "Renderer/Vertex.h"
+#include "Core/DeletionQueue.h"
 
 namespace BeeEngine::Internal
 {
@@ -48,10 +49,28 @@ namespace BeeEngine::Internal
         wgpuAdapterGetLimits(m_Adapter, &supportedLimits);
         BeeCoreTrace("adapter.maxVertexAttributes: {}", supportedLimits.limits.maxVertexAttributes);
 
+        WGPUChainedStruct dawnTogglesChained = {};
+        dawnTogglesChained.sType = WGPUSType_DawnTogglesDescriptor;
+        dawnTogglesChained.next = nullptr;
+
+        WGPUDawnTogglesDescriptor dawnToggles = {};
+        std::vector<const char*> enabledToggles;
+
+#if defined(BEE_ENABLE_GRAPHICS_DEBUGGING)
+        enabledToggles.push_back("disable_symbol_renaming");
+        enabledToggles.push_back("dump_shaders");
+#endif
+        dawnToggles.enabledTogglesCount = enabledToggles.size();
+        dawnToggles.enabledToggles = enabledToggles.data();
+        dawnToggles.disabledToggles = nullptr;
+        dawnToggles.disabledTogglesCount = 0;
+        dawnToggles.chain = dawnTogglesChained;
+
         WGPUDeviceDescriptor deviceDescriptor = {};
-        deviceDescriptor.nextInChain = nullptr;
+        deviceDescriptor.nextInChain = &dawnToggles.chain;
         deviceDescriptor.label = "BeeEngine Device"; // anything works here, that's your call
         deviceDescriptor.requiredFeaturesCount = 0; // we do not require any specific feature
+        deviceDescriptor.requiredFeatures = nullptr;
 
 #if 0
         WGPURequiredLimits requiredLimits{};
@@ -103,11 +122,14 @@ namespace BeeEngine::Internal
         };
         wgpuQueueOnSubmittedWorkDone(m_Queue, 0, onQueueWorkDone, nullptr /* pUserData */);//signal value ???
 
+        m_BufferPool = CreateScope<WebGPUBufferPool>();
+
         m_SwapChain = CreateScope<WebGPUSwapChain>(*this);
     }
 
     WebGPUGraphicsDevice::~WebGPUGraphicsDevice()
     {
+        DeletionQueue::Main().Flush();
         m_SwapChain.reset();
         wgpuDeviceRelease(m_Device);
         wgpuAdapterRelease(m_Adapter);

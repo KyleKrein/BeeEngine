@@ -37,7 +37,7 @@ namespace BeeEngine
 
         virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount) = 0;
 
-        virtual void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, std::vector<BindingSet*>& bindingSets, uint32_t instanceCount) = 0;
+        virtual void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount) = 0;
 
         //virtual void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount) = 0;
 

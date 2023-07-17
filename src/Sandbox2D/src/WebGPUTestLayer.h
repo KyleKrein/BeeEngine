@@ -32,7 +32,6 @@ public:
     private:
     BeeEngine::Internal::FpsCounter m_FpsCounter;
     BeeEngine::AssetManager m_AssetManager;
-    BeeEngine::InstancedBuffer* m_InstancedBuffer;
     BeeEngine::Ref<BeeEngine::UniformBuffer> m_CameraUniformBuffer;
     BeeEngine::Model* m_Model;
     BeeEngine::Texture2D* m_ForestTexture;
@@ -41,4 +40,12 @@ public:
     BeeEngine::Ref<BeeEngine::BindingSet> m_ModelBindingSet;
     BeeEngine::Ref<BeeEngine::BindingSet> m_ForestTextureBindingSet;
     BeeEngine::Ref<BeeEngine::BindingSet> m_BlankTextureBindingSet;
+
+    struct InstanceBufferData
+    {
+        /*alignas(alignof(glm::mat4))*/ glm::mat4 Model {1.0f};
+        /*alignas(alignof(glm::mat4))*/ BeeEngine::Color4 Color {BeeEngine::Color4::White};
+        /*alignas(alignof(glm::mat4))*/ float TilingFactor = 1.0f;
+    };
+    std::vector<std::vector<InstanceBufferData>> m_InstanceBuffer;
 };

@@ -12,11 +12,11 @@ namespace BeeEngine::Internal
     {
     public:
         WebGPUBindingSet(std::initializer_list<BindingSetElement> elements);
-        void Bind(void* cmd, uint32_t index) override;
+        void Bind(void* cmd, uint32_t index) const override;
         ~WebGPUBindingSet() override;
     private:
-        WGPUBindGroup m_BindGroup = nullptr;
-        const WebGPUPipeline* m_Pipeline = nullptr;
-        uint32_t m_Index = 0;
+        mutable WGPUBindGroup m_BindGroup = nullptr;
+        mutable const WebGPUPipeline* m_Pipeline = nullptr;
+        mutable uint32_t m_Index = 0;
     };
 }

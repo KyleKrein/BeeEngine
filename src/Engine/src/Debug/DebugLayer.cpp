@@ -74,6 +74,8 @@ namespace BeeEngine
             ImGui::Text("Free blocks combined: %lu", stats.blocksCombined.load());
             ImGui::Text("Memory pages: %lu", stats.totalMemoryPages.load());
             ImGui::End();
+
+            m_RendererStatisticsGUI.Render();
         }
 
         void DebugLayer::OnEvent(EventDispatcher &e)

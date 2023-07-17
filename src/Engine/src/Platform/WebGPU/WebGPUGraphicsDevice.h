@@ -9,6 +9,7 @@
 #include "WebGPUSwapchain.h"
 #include "WebGPUCommandBuffer.h"
 #include "gsl/gsl"
+#include "WebGPUBufferPool.h"
 
 namespace BeeEngine::Internal
 {
@@ -44,6 +45,15 @@ namespace BeeEngine::Internal
         }
 
         WGPUBuffer CreateBuffer(WGPUBufferUsageFlags usage, uint32_t size);
+        [[nodiscard("To avoid gpu memory leaks. Don't forget to call ReleaseBuffer()")]]
+        const WebGPUBuffer& RequestBuffer(uint32_t size, WebGPUBufferUsage usage)
+        {
+            return m_BufferPool->RequestBuffer(size, usage);
+        }
+        void ReleaseBuffer(const WebGPUBuffer& buffer)
+        {
+            m_BufferPool->ReleaseBuffer(buffer);
+        }
         void CopyDataToBuffer(gsl::span<byte> data, WGPUBuffer buffer);
 
         void SubmitCommandBuffers(CommandBuffer* commandBuffers, uint32_t numberOfBuffers);
@@ -104,6 +114,7 @@ namespace BeeEngine::Internal
         WGPUAdapter m_Adapter;
         WGPUSurface m_Surface;
         WGPUDevice m_Device;
+        Scope<WebGPUBufferPool> m_BufferPool;
         Scope<WebGPUSwapChain> m_SwapChain;
 
         bool m_SwapChainRequiresRebuild = false;
