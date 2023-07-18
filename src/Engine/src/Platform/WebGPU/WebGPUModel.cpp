@@ -12,7 +12,7 @@ namespace BeeEngine::Internal
 {
     void WebGPUBindModel(Mesh* mesh, Material* material)
     {
-        auto cmd = Renderer::GetMainRenderPass();
+        auto cmd = Renderer::GetCurrentRenderPass();
         static Material* lastMaterial = nullptr;
         if (lastMaterial != material)
         {
@@ -29,7 +29,7 @@ namespace BeeEngine::Internal
         if (!isErased)
         {
             isErased = true;
-            DeletionQueue::Frame().PushFunction([&]()
+            DeletionQueue::RendererFlush().PushFunction([&]()
             {
                 lastMaterial = nullptr;
                 lastMesh = nullptr;

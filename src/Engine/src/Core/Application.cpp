@@ -5,7 +5,6 @@
 #include "Application.h"
 #include "Core/Logging/Log.h"
 #include "Debug/DebugLayer.h"
-#include "Renderer/ShaderLibrary.h"
 //#include "Platform/Vulkan/VulkanRendererAPI.h"
 #include "Renderer/Renderer.h"
 #include "DeletionQueue.h"
@@ -51,6 +50,7 @@ namespace BeeEngine{
 #ifdef DEBUG
         m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
 #endif
+        m_AssetManager.LoadStandardAssets();
     }
 
     Application::~Application()
@@ -68,36 +68,6 @@ namespace BeeEngine{
     bool Application::OnWindowClose(WindowCloseEvent& event)
     {
         return false;
-    }
-
-    void Application::AddShader(const Ref<Shader> &shader) const
-    {
-        ShaderLibrary::GetInstance().Add(shader);
-    }
-
-    void Application::AddShader(std::string_view name, const Ref<Shader> &shader) const
-    {
-        ShaderLibrary::GetInstance().Add(name, shader);
-    }
-
-    Ref<Shader> Application::LoadShader(std::string_view filepath) const
-    {
-        return ShaderLibrary::GetInstance().Load(filepath);
-    }
-
-    Ref<Shader> Application::LoadShader(std::string_view name, std::string_view filepath) const
-    {
-        return ShaderLibrary::GetInstance().Load(name, filepath);
-    }
-
-    Ref<Shader> Application::GetShader(std::string_view name) const
-    {
-        return ShaderLibrary::GetInstance().Get(name);
-    }
-
-    bool Application::ShaderExists(std::string_view name) const
-    {
-        return ShaderLibrary::GetInstance().Exists(name);
     }
 
     void Application::Close()

@@ -14,10 +14,12 @@ namespace BeeEngine::Internal
 {
     void Internal::WebGPUBindingSet::Bind(void* cmd, uint32_t index) const
     {
-        if(!m_BindGroup || m_Pipeline != &WebGPUPipeline::GetCurrentPipeline() || m_Index != index)
+        auto* currentPipeline= &WebGPUPipeline::GetCurrentPipeline();
+        BeeExpects(currentPipeline != nullptr);
+        if(!m_BindGroup || m_Pipeline != currentPipeline || m_Index != index)
         {
             m_Index = index;
-            m_Pipeline = &WebGPUPipeline::GetCurrentPipeline();
+            m_Pipeline = currentPipeline;
 
             std::vector<WGPUBindGroupEntry> entries;
             entries.reserve(m_Elements.size());

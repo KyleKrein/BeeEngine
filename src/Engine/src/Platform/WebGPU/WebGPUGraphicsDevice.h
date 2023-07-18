@@ -105,6 +105,16 @@ namespace BeeEngine::Internal
             bindingLayout.texture.viewDimension = WGPUTextureViewDimension_Undefined;
         }
 
+        void DestroyTexture(WGPUTexture texture)
+        {
+            wgpuTextureDestroy(texture);
+            wgpuTextureRelease(texture);
+        }
+        void DestroyTextureView(WGPUTextureView textureView)
+        {
+            wgpuTextureViewRelease(textureView);
+        }
+
     private:
         static WebGPUGraphicsDevice* s_Instance;
         static WGPUAdapter RequestAdapter(WGPUInstance instance, WGPURequestAdapterOptions const * options);

@@ -27,6 +27,12 @@ public:
     void OnGUIRendering() override;
     void OnEvent(BeeEngine::EventDispatcher& e) override {
         m_CameraController.OnEvent(e);
+        DISPATCH_EVENT(e,BeeEngine::WindowResizeEvent, BeeEngine::EventType::WindowResize, OnWindowResize);
+    }
+    bool OnWindowResize(BeeEngine::WindowResizeEvent* e) noexcept
+    {
+        m_FrameBuffer->Resize(e->GetWidth(), e->GetHeight());
+        return false;
     }
 
     private:
@@ -48,4 +54,6 @@ public:
         /*alignas(alignof(glm::mat4))*/ float TilingFactor = 1.0f;
     };
     std::vector<std::vector<InstanceBufferData>> m_InstanceBuffer;
+
+    BeeEngine::Ref<BeeEngine::FrameBuffer> m_FrameBuffer;
 };

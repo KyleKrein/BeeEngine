@@ -5,6 +5,7 @@
 #include "FrameBuffer.h"
 #include "Renderer.h"
 #include "Platform/OpenGL/OpenGLFrameBuffer.h"
+#include "Platform/WebGPU/WebGPUFramebuffer.h"
 
 
 namespace BeeEngine
@@ -16,8 +17,10 @@ namespace BeeEngine
         BeeExpects(preferences.Width > 0 && preferences.Height > 0 && preferences.Width < 100000 && preferences.Height < 100000);
         switch (Renderer::GetAPI())
         {
+            case RenderAPI::WebGPU:
+                return CreateScope<Internal::WebGPUFrameBuffer>(preferences);
             case RenderAPI::OpenGL:
-                return CreateScope<Internal::OpenGLFrameBuffer>(preferences);
+                //return CreateScope<Internal::OpenGLFrameBuffer>(preferences);
             default:
                 BeeCoreFatalError("Unknown RenderAPI");
         }
@@ -32,7 +35,7 @@ namespace BeeEngine
     {
         switch (format)
         {
-            case FrameBufferTextureFormat::Depth24Stencil8:
+            case FrameBufferTextureFormat::Depth24:
                 return true;
             default:
                 return false;

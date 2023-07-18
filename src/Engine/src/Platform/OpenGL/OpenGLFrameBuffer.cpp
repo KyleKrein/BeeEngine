@@ -116,7 +116,7 @@ namespace BeeEngine::Internal
         //OPENGL_CHECK_ERRORS todo: this generates infinite errors 1282
     }
 
-    void OpenGLFrameBuffer::Bind() const
+    void OpenGLFrameBuffer::Bind()
     {
         BEE_PROFILE_FUNCTION();
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
@@ -189,7 +189,7 @@ namespace BeeEngine::Internal
             BindTexture(multisample, m_DepthAttachment);
             switch (m_DepthAttachmentSpecification.TextureFormat)
             {
-                case FrameBufferTextureFormat::Depth24Stencil8:
+                case FrameBufferTextureFormat::Depth24:
                     AttachDepthTexture(m_DepthAttachment, m_Preferences.Samples, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, m_Preferences.Width, m_Preferences.Height);
                     break;
                 default:

@@ -24,6 +24,12 @@ namespace BeeEngine
             return queue;
         }
 
+        static DeletionQueue& RendererFlush()
+        {
+            static DeletionQueue queue;
+            return queue;
+        }
+
         void PushFunction(std::function<void()>&& function)
         {
             m_DeletionQueue.push_back(std::move(function));

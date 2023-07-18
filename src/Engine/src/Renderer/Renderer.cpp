@@ -4,6 +4,7 @@
 
 #include "Renderer.h"
 #include "RenderingQueue.h"
+#include "Core/DeletionQueue.h"
 
 namespace BeeEngine
 {
@@ -12,6 +13,9 @@ namespace BeeEngine
     Color4 Renderer::s_ClearColor = Color4::CornflowerBlue;
     RendererStatistics Renderer::s_Statistics {};
     bool Renderer::s_FrameStarted = false;
+
+    bool Renderer::s_NotMainRenderPass = false;
+    RenderPass Renderer::s_CurrentRenderPass = {};
 
     void Renderer::SubmitInstance(Model &model, std::vector<BindingSet *> &bindingSets, gsl::span<byte> instanceData)
     {
@@ -32,5 +36,17 @@ namespace BeeEngine
 
         s_Statistics = Internal::RenderingQueue::GetStatistics();
         Internal::RenderingQueue::ResetStatistics();
+    }
+
+    void Renderer::SetCurrentRenderPass(const RenderPass& pass)
+    {
+        BeeExpects(!s_NotMainRenderPass);
+        s_NotMainRenderPass = true;
+        s_CurrentRenderPass = pass;
+    }
+
+    void Renderer::FinalFlush()
+    {
+        Internal::RenderingQueue::FinishFrame();
     }
 }

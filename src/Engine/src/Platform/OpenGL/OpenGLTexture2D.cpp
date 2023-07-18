@@ -48,7 +48,7 @@ namespace BeeEngine::Internal
 
         m_InternalFormat = internalFormat;
 
-        glGenTextures(1, &m_RendererID);
+        //glGenTextures(1, &m_RendererID);
         glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
@@ -69,7 +69,7 @@ namespace BeeEngine::Internal
 
         m_InternalFormat = GL_RGBA8;
 
-        glGenTextures(1, &m_RendererID);
+        //glGenTextures(1, &m_RendererID);
         glBindTexture(GL_TEXTURE_2D, m_RendererID);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
@@ -83,7 +83,7 @@ namespace BeeEngine::Internal
     OpenGLTexture2D::~OpenGLTexture2D()
     {
         BEE_PROFILE_FUNCTION();
-        glDeleteTextures(1, &m_RendererID);
+        //glDeleteTextures(1, &m_RendererID);
         //OPENGL_CHECK_ERRORS //todo fix spamming error 1282
     }
 
@@ -144,7 +144,7 @@ namespace BeeEngine::Internal
 
         m_InternalFormat = internalFormat;
 
-        glGenTextures(1, &m_RendererID);
+        //glGenTextures(1, &m_RendererID);
         glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, dataFormat, GL_UNSIGNED_BYTE, data);

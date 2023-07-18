@@ -10,7 +10,6 @@
 #include "Debug/OpenGLDebug.h"
 #include "Debug/Instrumentor.h"
 #include "Core/CodeSafety/Expects.h"
-#include "Renderer/ShaderLibrary.h"
 
 namespace BeeEngine::Internal
 {

@@ -5,8 +5,10 @@
 #include "Scene.h"
 #include "Entity.h"
 #include "Components.h"
-#include "Renderer/Renderer2D.h"
+#include "Renderer/Renderer.h"
 #include "Core/CodeSafety/Expects.h"
+#include "Core/Application.h"
+#include <glm/glm.hpp>
 
 namespace BeeEngine
 {
@@ -61,7 +63,12 @@ namespace BeeEngine
     {
         m_Registry.clear();
     }
-
+    struct InstanceBufferData
+    {
+        /*alignas(alignof(glm::mat4))*/ glm::mat4 Model {1.0f};
+        /*alignas(alignof(glm::mat4))*/ BeeEngine::Color4 Color {BeeEngine::Color4::White};
+        /*alignas(alignof(glm::mat4))*/ float TilingFactor = 1.0f;
+    };
     void Scene::UpdateRuntime()
     {
         UpdateScripts();
@@ -83,37 +90,34 @@ namespace BeeEngine
 
         if(mainCamera)
         {
-            Renderer2D::BeginScene(*mainCamera, cameraTransform);
+            auto cameraViewProj = mainCamera->GetProjectionMatrix() * glm::inverse(cameraTransform);
+            m_CameraUniformBuffer->SetData(&cameraViewProj, sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
 
             auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
             for( auto entity : group )
             {
                 auto [transform, spriteComponent] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-                if(spriteComponent.Texture)
-                    Renderer2D::DrawImage(transform.GetTransform(), spriteComponent.Texture, spriteComponent.Color, spriteComponent.TilingFactor);
-                else
-                    Renderer2D::DrawRectangle(transform.GetTransform(), spriteComponent.Color);
+                m_TextureBindingSet = BindingSet::Create({{0, spriteComponent.Texture ? *spriteComponent.Texture : *m_BlankTexture}});
+                InstanceBufferData data {transform.GetTransform(), spriteComponent.Color, spriteComponent.TilingFactor};
+                std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), m_TextureBindingSet.get()};
+                Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(InstanceBufferData)});//Renderer2D::DrawRectangleWithID(transform.GetTransform(), spriteComponent.Color, gsl::narrow<int>(entity));
             }
-
-            Renderer2D::EndScene();
         }
     }
-
     void Scene::UpdateEditor(EditorCamera& camera)
     {
-        Renderer2D::BeginScene(camera);
+        auto cameraViewProj = camera.GetViewProjection();
+        m_CameraUniformBuffer->SetData(&cameraViewProj, sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
 
         auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         for( auto entity : group )
         {
             auto [transform, spriteComponent] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-            if(spriteComponent.Texture)
-                Renderer2D::DrawImageWithID(transform.GetTransform(), spriteComponent.Texture, spriteComponent.Color, spriteComponent.TilingFactor, gsl::narrow<int>(entity));
-            else
-                Renderer2D::DrawRectangleWithID(transform.GetTransform(), spriteComponent.Color, gsl::narrow<int>(entity));
+            m_TextureBindingSet = BindingSet::Create({{0, spriteComponent.Texture ? *spriteComponent.Texture : *m_BlankTexture}});
+            InstanceBufferData data {transform.GetTransform(), spriteComponent.Color, spriteComponent.TilingFactor};
+            std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), m_TextureBindingSet.get()};
+            Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(InstanceBufferData)});//Renderer2D::DrawRectangleWithID(transform.GetTransform(), spriteComponent.Color, gsl::narrow<int>(entity));
         }
-
-        Renderer2D::EndScene();
     }
 
     void Scene::StartRuntime()
@@ -124,5 +128,11 @@ namespace BeeEngine
     void Scene::StopRuntime()
     {
         m_IsRuntime = false;
+    }
+
+    Scene::Scene()
+    : m_CameraUniformBuffer(UniformBuffer::Create(sizeof(glm::mat4))), m_RectModel(&Application::GetInstance().GetAssetManager().GetModel("Rectangle")), m_BlankTexture(&Application::GetInstance().GetAssetManager().GetTexture("Blank"))
+    {
+        m_CameraBindingSet = BindingSet::Create({{0,*m_CameraUniformBuffer}});
     }
 }

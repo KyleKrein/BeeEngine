@@ -16,7 +16,7 @@ namespace BeeEngine
 
         [[nodiscard]] uint32_t GetWidth() const { return m_Width; }
         [[nodiscard]] uint32_t GetHeight() const { return m_Height; }
-        [[nodiscard]] uint32_t GetRendererID() const { return m_RendererID; }
+        [[nodiscard]] uintptr_t GetRendererID() const { return m_RendererID; }
 
         bool operator==(const Texture& other) const
         {
@@ -27,7 +27,7 @@ namespace BeeEngine
             return !(*this == other);
         }
     protected:
-        uint32_t m_RendererID;
+        uintptr_t m_RendererID;
         uint32_t m_Width, m_Height;
     };
 

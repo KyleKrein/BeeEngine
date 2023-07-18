@@ -16,16 +16,16 @@ namespace BeeEngine
         public:
             explicit OpenGLFrameBuffer(const FrameBufferPreferences& preferences);
             ~OpenGLFrameBuffer() override;
-            uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override
+            uintptr_t GetColorAttachmentRendererID(uint32_t index = 0) const override
             {
                 BeeExpects(index < m_ColorAttachments.size());
                 return m_ColorAttachments[index];
             }
-            uint32_t GetDepthAttachmentRendererID() const override { return m_DepthAttachment; }
+            uintptr_t GetDepthAttachmentRendererID() const override { return m_DepthAttachment; }
             virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
             void ClearColorAttachment(uint32_t attachmentIndex, int value) override;
             uint32_t GetRendererID() const override { return m_RendererID; }
-            void Bind() const override;
+            void Bind() override;
             void Unbind() const override;
             void Resize(uint32_t width, uint32_t height) override;
             void Invalidate() override;

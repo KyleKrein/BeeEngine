@@ -7,7 +7,6 @@
 #include "Renderer/Renderer.h"
 #include "glm.hpp"
 #include "ext/matrix_transform.hpp"
-#include "Renderer/ShaderLibrary.h"
 
 
 namespace BeeEngine::Internal
@@ -54,8 +53,8 @@ namespace BeeEngine::Internal
         for (int i = 0; i < BeeEngine::Internal::Renderer2DData::MaxTextureSlots; i++)
             samplers[i] = i;
 
-        ShaderLibrary::GetInstance().LoadStandartShaders();
-        m_Data.TextureShader = ShaderLibrary::GetInstance().Get("Standart2DShader");
+        //ShaderLibrary::GetInstance().LoadStandartShaders();
+        //m_Data.TextureShader = ShaderLibrary::GetInstance().Get("Standart2DShader");
         m_Data.TextureShader->Bind();
         m_Data.TextureShader->SetIntArray("u_Textures", {samplers, BeeEngine::Internal::Renderer2DData::MaxTextureSlots});
 

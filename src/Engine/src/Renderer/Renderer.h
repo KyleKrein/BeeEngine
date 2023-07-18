@@ -65,6 +65,10 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             s_RendererAPI->DrawInstanced(model, instancedBuffer, bindingSets, instanceCount);
         }
+        static void SubmitCommandBuffer(const CommandBuffer& commandBuffer)
+        {
+            s_RendererAPI->SubmitCommandBuffer(commandBuffer);
+        }
 
         static void SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, gsl::span<byte> instanceData);
         static void Flush();
@@ -110,9 +114,9 @@ namespace BeeEngine
             graphicsDevice.SubmitCommandBuffers(commandBuffers, numberOfBuffers);
         }*/
 
-        static RenderPass GetMainRenderPass()
+        static RenderPass GetCurrentRenderPass()
         {
-            return s_RendererAPI->GetMainRenderPass();
+            return s_NotMainRenderPass ? s_CurrentRenderPass : GetMainRenderPass();
         }
 
         static const RendererStatistics& GetStatistics()
@@ -120,11 +124,28 @@ namespace BeeEngine
             return s_Statistics;
         }
 
+        static void SetCurrentRenderPass(const RenderPass& pass);
+        static void ResetCurrentRenderPass()
+        {
+            BeeExpects(s_NotMainRenderPass);
+            s_NotMainRenderPass = false;
+        }
+
+        static void FinalFlush();
+
     private:
+        static RenderPass GetMainRenderPass()
+        {
+            return s_RendererAPI->GetMainRenderPass();
+        }
+
         static RenderAPI s_Api;
         static Ref<RendererAPI> s_RendererAPI;
         static Color4 s_ClearColor;
         static bool s_FrameStarted;
         static RendererStatistics s_Statistics;
+
+        static bool s_NotMainRenderPass;
+        static RenderPass s_CurrentRenderPass;
     };
 }

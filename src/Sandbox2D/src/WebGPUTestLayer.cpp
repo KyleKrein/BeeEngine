@@ -54,6 +54,11 @@ void WebGPUTestLayer::OnAttach()
             m_InstanceBuffer[i][j].Model = glm::translate(glm::mat4(1.0f), glm::vec3(i, j, 0.0f));
         }
     }
+    BeeEngine::FrameBufferPreferences preferences;
+    preferences.Width = 1280 * 2;
+    preferences.Height = 720 * 2;
+    preferences.Attachments = {BeeEngine::FrameBufferTextureFormat::RGBA8, BeeEngine::FrameBufferTextureFormat::Depth};
+    m_FrameBuffer = BeeEngine::FrameBuffer::Create(preferences);
 }
 
 void WebGPUTestLayer::OnDetach()
@@ -77,6 +82,7 @@ void WebGPUTestLayer::OnUpdate()
 
     std::vector<BeeEngine::BindingSet*> bindingSets = {m_ModelBindingSet.get(), m_ForestTextureBindingSet.get()};
 
+    m_FrameBuffer->Bind();
     for (int i = 0; i < 135; ++i)
     {
         for (int j = 0; j < 135; ++j)
@@ -84,7 +90,6 @@ void WebGPUTestLayer::OnUpdate()
             BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&m_InstanceBuffer[i][j], sizeof(InstanceBufferData)});
         }
     }
-
     //BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&first, sizeof(InstanceBufferData)});
     //BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&second, sizeof(InstanceBufferData)});
 
@@ -93,9 +98,9 @@ void WebGPUTestLayer::OnUpdate()
     //third.Color = BeeEngine::Color4::Blue;
 
     //bindingSets[1] = m_BlankTextureBindingSet.get();
-
+    m_FrameBuffer->Unbind();
+    BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&m_InstanceBuffer[0][0], sizeof(InstanceBufferData)});
     //BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&third, sizeof(InstanceBufferData)});
-    BeeEngine::Renderer::Flush();
 }
 
 void WebGPUTestLayer::OnGUIRendering()

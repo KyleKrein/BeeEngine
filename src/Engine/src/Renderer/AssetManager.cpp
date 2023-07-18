@@ -83,7 +83,7 @@ bool BeeEngine::AssetManager::HasMesh(const std::string &name) const
 
 bool BeeEngine::AssetManager::HasTexture(const std::string &name) const
 {
-    if (m_Meshes.find(name) != m_Meshes.end())
+    if (m_Textures.find(name) != m_Textures.end())
         return true;
     else
         return false;
@@ -110,4 +110,32 @@ bool BeeEngine::AssetManager::HasModel(const std::string &name) const
         return true;
     else
         return false;
+}
+
+BeeEngine::Texture2D&  BeeEngine::AssetManager::LoadTexture(const std::string& name, uint32_t width, uint32_t height)
+{
+    m_Textures.emplace(name, Texture2D::Create(width, height));
+    return *m_Textures.at(name);
+}
+
+void BeeEngine::AssetManager::LoadStandardAssets()
+{
+    using namespace BeeEngine;
+    auto& blank= LoadTexture("Blank", 1, 1);
+    uint32_t data = 0xffffffff;
+    blank.SetData({(byte *)&data, 4});
+
+    auto& material = LoadMaterial("StandardMaterial", "Shaders/WebGPUTestShader.vert", "Shaders/WebGPUTestShader.frag");
+
+    std::vector<BeeEngine::Vertex> vertexBuffer =
+            {
+                    {{-0.5f, -0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {0.0f, 0.0f}, },
+                    {{0.5f, -0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {1.0f, 0.0f}, },
+                    {{0.5f, 0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {1.0f, 1.0f}, },
+                    {{-0.5f, 0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {0.0f, 1.0f} }
+            };
+    std::vector<uint32_t> indexBuffer = {2, 1, 0, 0, 3, 2};
+    auto& mesh = LoadMesh("RectMesh", vertexBuffer, indexBuffer);
+    auto& rectModel = LoadModel("Rectangle", material, mesh);
+
 }

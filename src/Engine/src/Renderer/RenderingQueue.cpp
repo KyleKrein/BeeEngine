@@ -50,7 +50,31 @@ namespace BeeEngine::Internal
 
     void RenderingQueue::FlushImpl()
     {
-
+        for (auto& [instance, data] : m_SubmittedInstances)
+        {
+            if(data.InstanceCount == 0)
+                continue;
+            //size_t startingIndex = m_CurrentInstanceBufferIndex;
+            while(data.Offset > m_InstanceBuffers[m_CurrentInstanceBufferIndex]->GetSize() || m_InstanceBuffers[m_CurrentInstanceBufferIndex]->IsSubmitted())
+            {
+                m_CurrentInstanceBufferIndex++;
+                if (m_CurrentInstanceBufferIndex >= m_InstanceBuffers.size())
+                {
+                    auto newSize = std::max(data.Offset, MIN_SIZE);
+                    m_InstanceBuffers.push_back(InstancedBuffer::Create(newSize));
+                    m_Statistics.AllocatedGPUMemory += newSize;
+                    m_Statistics.AllocatedGPUBuffers++;
+                }
+            }
+            m_InstanceBuffers[m_CurrentInstanceBufferIndex]->SetData(data.Data.data(), data.Offset);
+            Renderer::DrawInstanced(*instance.Model, *m_InstanceBuffers[m_CurrentInstanceBufferIndex], instance.BindingSets, data.InstanceCount);
+            m_Statistics.DrawCallCount++;
+            m_InstanceBuffers[m_CurrentInstanceBufferIndex]->Submit();
+            data.Reset();
+            //m_CurrentInstanceBufferIndex++;
+            m_CurrentInstanceBufferIndex = 0;
+        }
+        DeletionQueue::RendererFlush().Flush();
     }
 
     void RenderingQueue::FinishFrameImpl()
@@ -58,28 +82,7 @@ namespace BeeEngine::Internal
         //size_t takenSize = 0;
         //while (true)
         //{
-            for (auto& [instance, data] : m_SubmittedInstances)
-            {
-                //size_t startingIndex = m_CurrentInstanceBufferIndex;
-                while(data.Offset > m_InstanceBuffers[m_CurrentInstanceBufferIndex]->GetSize() || m_InstanceBuffers[m_CurrentInstanceBufferIndex]->IsSubmitted())
-                {
-                    m_CurrentInstanceBufferIndex++;
-                    if (m_CurrentInstanceBufferIndex >= m_InstanceBuffers.size())
-                    {
-                        auto newSize = std::max(data.Offset, MIN_SIZE);
-                        m_InstanceBuffers.push_back(InstancedBuffer::Create(newSize));
-                        m_Statistics.AllocatedGPUMemory += newSize;
-                        m_Statistics.AllocatedGPUBuffers++;
-                    }
-                }
-                m_InstanceBuffers[m_CurrentInstanceBufferIndex]->SetData(data.Data.data(), data.Offset);
-                Renderer::DrawInstanced(*instance.Model, *m_InstanceBuffers[m_CurrentInstanceBufferIndex], instance.BindingSets, data.InstanceCount);
-                m_Statistics.DrawCallCount++;
-                m_InstanceBuffers[m_CurrentInstanceBufferIndex]->Submit();
-                data.Reset();
-                //m_CurrentInstanceBufferIndex++;
-                m_CurrentInstanceBufferIndex = 0;
-            }
+        FlushImpl();
         //}
         DeletionQueue::Frame().PushFunction([this]()
         {

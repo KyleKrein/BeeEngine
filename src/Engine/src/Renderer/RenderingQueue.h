@@ -71,6 +71,10 @@ namespace BeeEngine::Internal
         }
         static void Flush()
         {
+            GetInstance().FlushImpl();
+        }
+        static void FinishFrame()
+        {
             GetInstance().FinishFrameImpl();
         }
         static const RendererStatistics& GetStatistics()

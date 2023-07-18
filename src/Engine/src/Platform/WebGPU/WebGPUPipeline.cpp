@@ -6,6 +6,7 @@
 #include "Renderer/Renderer.h"
 #include "WebGPUGraphicsDevice.h"
 #include "WebGPUBindingSet.h"
+#include "Core/DeletionQueue.h"
 
 namespace BeeEngine::Internal
 {
@@ -157,6 +158,9 @@ namespace BeeEngine::Internal
     void WebGPUPipeline::Bind(void* commandBuffer)
     {
         s_CurrentPipeline = this;
+        DeletionQueue::RendererFlush().PushFunction([]() {
+            s_CurrentPipeline = nullptr;
+        });
         if(m_IsRender)
             wgpuRenderPassEncoderSetPipeline((WGPURenderPassEncoder)(((RenderPass*)commandBuffer)->GetHandle()), m_Pipeline);
     }

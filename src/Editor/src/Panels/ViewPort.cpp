@@ -25,7 +25,7 @@ namespace BeeEngine::Editor
         FrameBufferPreferences preferences;
         preferences.Width = m_Width;
         preferences.Height = m_Height;
-        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24Stencil8};
+        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
     }
@@ -72,7 +72,7 @@ namespace BeeEngine::Editor
     {
 
         m_FrameBuffer->Bind();
-        Renderer::Clear();
+        //Renderer::Clear();
         //m_CameraController.OnUpdate();
         /*const Color4 currentClearColor = Renderer::GetClearColor();
         const bool changeClearColor = currentClearColor != m_ClearColor;
@@ -80,7 +80,7 @@ namespace BeeEngine::Editor
         {
             Renderer::SetClearColor(m_ClearColor);
         }*/
-        m_FrameBuffer->ClearColorAttachment(1, -1);
+        //m_FrameBuffer->ClearColorAttachment(1, -1);
 
         m_Scene->UpdateEditor(camera);
 
@@ -150,7 +150,7 @@ namespace BeeEngine::Editor
 
     void ViewPort::Render(EditorCamera& camera) noexcept
     {
-        m_FrameBuffer->Bind();
+        //m_FrameBuffer->Bind();
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
         ImGui::Begin("Viewport");
 
@@ -174,8 +174,9 @@ namespace BeeEngine::Editor
             m_Scene->OnViewPortResize(m_Width, m_Height);
             camera.SetViewportSize(m_Width, m_Height);
         }
-        ImGui::Image((ImTextureID)m_FrameBuffer->GetColorAttachmentRendererID(0), {size.x, size.y}, ImVec2{0, 1}, ImVec2{1, 0});
-
+        auto textureID = m_FrameBuffer->GetColorAttachmentRendererID(0);
+        BeeExpects(textureID != 0);
+        ImGui::Image((ImTextureID)textureID, {size.x, size.y}, ImVec2{0, 1}, ImVec2{1, 0});
         if (m_SelectedEntity != Entity::Null && m_GuizmoOperation != GuizmoOperation::None)
         {
             RenderImGuizmo(camera);
@@ -183,7 +184,7 @@ namespace BeeEngine::Editor
 
         ImGui::End();
         ImGui::PopStyleVar();
-        m_FrameBuffer->Unbind();
+        //m_FrameBuffer->Unbind();
     }
 
     bool ViewPort::OnKeyButtonPressed(KeyPressedEvent* event) noexcept

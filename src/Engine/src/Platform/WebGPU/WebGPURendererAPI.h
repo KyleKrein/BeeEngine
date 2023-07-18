@@ -34,11 +34,17 @@ namespace BeeEngine::Internal
         void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount) override;
         void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount) override;
 
+        void SubmitCommandBuffer(const CommandBuffer& commandBuffer) override
+        {
+            m_CommandBuffersForSubmition.push_back(commandBuffer);
+        }
         [[nodiscard]] Color4 ReadPixel(uint32_t x, uint32_t y) override;
     private:
         class WebGPUGraphicsDevice& m_GraphicsDevice;
         WGPUTextureView m_NextTexture;
         CommandBuffer m_CurrentCommandBuffer;
         WGPURenderPassEncoder m_RenderPassEncoder;
+
+        std::vector<CommandBuffer> m_CommandBuffersForSubmition;
     };
 }

@@ -71,7 +71,7 @@ namespace BeeEngine::Internal
     {
         auto& io = ImGui::GetIO();
         ImGui::Render();
-        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), (WGPURenderPassEncoder)Renderer::GetMainRenderPass().GetHandle());
+        ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), (WGPURenderPassEncoder)Renderer::GetCurrentRenderPass().GetHandle());
         // Update and Render additional Platform Windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {

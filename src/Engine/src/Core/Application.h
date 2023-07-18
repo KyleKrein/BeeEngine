@@ -9,9 +9,9 @@
 #include "Core/Events/EventImplementations.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Core/Logging/Log.h"
-#include "Renderer/Shader.h"
+#include "Renderer/ShaderModule.h"
 #include "OsPlatform.h"
-
+#include "Renderer/AssetManager.h"
 
 namespace BeeEngine{
     class Application
@@ -62,18 +62,13 @@ namespace BeeEngine{
             m_Window->SetHeight(height);
         }
 
-        void AddShader(const Ref<Shader>& shader) const;
-        void AddShader(std::string_view name, const Ref<Shader>& shader) const;
-        [[nodiscard]] Ref<Shader> LoadShader(std::string_view filepath) const;
-        [[nodiscard]] Ref<Shader> LoadShader(std::string_view name, std::string_view filepath) const;
-
-        [[nodiscard]] Ref<Shader> GetShader(std::string_view name) const;
-        [[nodiscard]] bool ShaderExists(std::string_view name) const;
-
-
         void Run();
 
         void Close();
+        AssetManager& GetAssetManager()
+        {
+            return m_AssetManager;
+        }
 
     protected:
         virtual void Update() {};
@@ -110,5 +105,6 @@ namespace BeeEngine{
         Scope<WindowHandler> m_Window;
         LayerStack m_Layers;
         EventQueue m_EventQueue;
+        AssetManager m_AssetManager;
     };
 }

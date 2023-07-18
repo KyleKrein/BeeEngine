@@ -32,7 +32,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnUpdate() noexcept
     {
-        Renderer::Clear();
+        //Renderer::Clear();
         if(m_IsRuntime)
         {
             m_ViewPort.UpdateRuntime();
@@ -73,14 +73,14 @@ namespace BeeEngine::Editor
         }});
         fileMenu.AddChild({"Open Scene", [this](){
             auto filepath = BeeEngine::FileDialogs::OpenFile({"BeeEngine Scene", "*.beescene"});
-            if(!filepath.has_value())
+            if(filepath.empty())
             {
                 BeeCoreError("Unable to open file");
                 return;
             }
             m_SceneHierarchyPanel.ClearSelection();
             m_ViewPort.GetScene()->Clear();
-            m_ScenePath = *filepath;
+            m_ScenePath = filepath;
             m_SceneSerializer.Deserialize(m_ScenePath);
             m_ViewPort.GetScene()->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
         }});
@@ -88,12 +88,12 @@ namespace BeeEngine::Editor
             if(m_ScenePath.empty())
             {
                 auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
-                if(filepath->empty())
+                if(filepath.empty())
                 {
                     BeeCoreError("Unable to save to file");
                     return;
                 }
-                m_ScenePath = *filepath;
+                m_ScenePath = filepath;
                 if(!m_ScenePath.ends_with(".beescene"))
                     m_ScenePath += ".beescene";
             }
@@ -101,12 +101,12 @@ namespace BeeEngine::Editor
         }});
         fileMenu.AddChild({"Save Scene As...", [this](){
             auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
-            if(filepath->empty())
+            if(filepath.empty())
             {
                 BeeCoreError("Unable to save to file");
                 return;
             }
-            m_ScenePath = *filepath;
+            m_ScenePath = filepath;
             if(!m_ScenePath.ends_with(".beescene"))
                 m_ScenePath += ".beescene";
             m_SceneSerializer.Serialize(m_ScenePath);

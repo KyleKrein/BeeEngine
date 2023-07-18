@@ -4,6 +4,7 @@
 
 #pragma once
 #include "Core/TypeDefines.h"
+#include "Core/Color4.h"
 
 namespace BeeEngine
 {
@@ -15,10 +16,16 @@ namespace BeeEngine
         RedInteger,
 
         //depth/stencil
-        Depth24Stencil8,
+        Depth24,
 
         //defaults
-        Depth = Depth24Stencil8
+        Depth = Depth24
+    };
+    enum class FrameBufferTextureUsage
+    {
+        None = 0,
+        GPUOnly = 1,
+        CPUAndGPU = 2
     };
 
     struct FrameBufferTextureSpecification
@@ -28,8 +35,15 @@ namespace BeeEngine
         FrameBufferTextureSpecification(FrameBufferTextureFormat format)
                 : TextureFormat(format)
         {}
+        //FrameBufferTextureSpecification(FrameBufferTextureFormat format, FrameBufferTextureUsage usage)
+        //        : TextureFormat(format), TextureUsage(usage)
+        //{}
 
         FrameBufferTextureFormat TextureFormat = FrameBufferTextureFormat::None;
+        Color4 ClearColor = Color4::CornflowerBlue;
+        float ClearDepth = 1.0f;
+        int32_t ClearRedInteger= -1;
+        //FrameBufferTextureUsage TextureUsage = FrameBufferTextureUsage::GPUOnly;
     };
 
     struct FrameBufferAttachmentSpecification
@@ -62,12 +76,12 @@ namespace BeeEngine
     public:
         FrameBuffer() = default;
         virtual ~FrameBuffer() = default;
-        virtual void Bind() const = 0;
+        virtual void Bind() = 0;
         virtual void Unbind() const = 0;
         virtual void Resize(uint32_t width, uint32_t height) = 0;
         virtual void Invalidate() = 0;
-        [[nodiscard]] virtual uint32_t GetColorAttachmentRendererID(uint32_t index) const = 0;
-        [[nodiscard]] virtual uint32_t GetDepthAttachmentRendererID() const = 0;
+        [[nodiscard]] virtual uintptr_t GetColorAttachmentRendererID(uint32_t index) const = 0;
+        [[nodiscard]] virtual uintptr_t GetDepthAttachmentRendererID() const = 0;
         [[nodiscard]] virtual uint32_t GetRendererID() const = 0;
         virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const = 0;
         virtual void ClearColorAttachment(uint32_t attachmentIndex, int value) = 0;

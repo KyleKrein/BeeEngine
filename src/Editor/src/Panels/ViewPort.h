@@ -8,6 +8,7 @@
 #include "Gui/ImGui/IImGuiElement.h"
 #include "Scene/SceneCamera.h"
 #include "Scene/Entity.h"
+#include <ImGuizmo.h>
 
 namespace BeeEngine::Editor
 {

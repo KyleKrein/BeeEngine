@@ -7,6 +7,9 @@
 #include "entt/entt.hpp"
 #include "EntityID.h"
 #include "Renderer/EditorCamera.h"
+#include "Renderer/UniformBuffer.h"
+#include "Renderer/Model.h"
+#include "Renderer/Texture.h"
 
 namespace BeeEngine
 {
@@ -23,6 +26,7 @@ namespace BeeEngine
         friend class BeeEngine::Editor::InspectorPanel;
         friend class SceneSerializer;
     public:
+        Scene();
         void UpdateRuntime();
         void UpdateEditor(EditorCamera& camera);
         void OnViewPortResize(uint32_t width, uint32_t height);
@@ -42,5 +46,11 @@ namespace BeeEngine
 
 
         void UpdateScripts();
+
+        Model* m_RectModel = nullptr;
+        Texture2D* m_BlankTexture = nullptr;
+        Ref<BindingSet> m_CameraBindingSet;
+        Ref<BindingSet> m_TextureBindingSet;
+        Ref<UniformBuffer> m_CameraUniformBuffer;
     };
 }

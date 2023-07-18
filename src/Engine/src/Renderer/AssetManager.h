@@ -20,6 +20,7 @@ namespace BeeEngine
         [[nodiscard]] Mesh& LoadMesh(const std::string& name, const std::filesystem::path& path);
         [[nodiscard]] Mesh& LoadMesh(const std::string& name, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
         [[nodiscard]] Texture2D& LoadTexture(const std::string& name, const std::filesystem::path& path);
+        [[nodiscard]] Texture2D& LoadTexture(const std::string& name, uint32_t width, uint32_t height);
         [[nodiscard]] Model& LoadModel(const std::string& name, Material& material, Mesh& mesh);
 
         [[nodiscard]] Material& GetMaterial(const std::string& name);
@@ -36,5 +37,8 @@ namespace BeeEngine
         std::unordered_map<std::string, Ref<Mesh>> m_Meshes;
         std::unordered_map<std::string, Ref<Model>> m_Models;
         std::unordered_map<std::string, Ref<Texture2D>> m_Textures;
+
+        void LoadStandardAssets();
+        friend class Application;
     };
 }

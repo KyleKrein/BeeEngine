@@ -42,8 +42,9 @@ namespace BeeEngine::Internal
 
     void WebGPURendererAPI::EndFrame()
     {
-        m_GraphicsDevice.SubmitCommandBuffers(&m_CurrentCommandBuffer, 1);//TODO: make it work with multiple command buffers
-
+        SubmitCommandBuffer(m_CurrentCommandBuffer);
+        m_GraphicsDevice.SubmitCommandBuffers(m_CommandBuffersForSubmition.data(), m_CommandBuffersForSubmition.size());
+        m_CommandBuffersForSubmition.clear();
         wgpuTextureViewRelease(m_NextTexture);
         m_NextTexture = nullptr;
         wgpuSwapChainPresent(m_GraphicsDevice.GetSwapChain().GetHandle());
@@ -128,7 +129,7 @@ namespace BeeEngine::Internal
     void WebGPURendererAPI::DrawInstanced(Model &model, InstancedBuffer &instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
     {
         model.Bind();
-        auto cmd = Renderer::GetMainRenderPass();
+        auto cmd = Renderer::GetCurrentRenderPass();
         instancedBuffer.Bind(&cmd);
         uint32_t index = 0;
         for(auto& bindingSet : bindingSets)

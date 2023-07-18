@@ -4,6 +4,7 @@
 
 #include "LayerStack.h"
 #include "Application.h"
+#include "Renderer/Renderer.h"
 
 
 namespace BeeEngine{
@@ -92,6 +93,10 @@ namespace BeeEngine{
                 {
                     layer->OnUpdate();
                 }
+            }
+            {
+                BEE_PROFILE_SCOPE("Layers::Renderer::Flush");
+                Renderer::FinalFlush();
             }
             {
                 BEE_PROFILE_SCOPE("Layers::GUIRendering");

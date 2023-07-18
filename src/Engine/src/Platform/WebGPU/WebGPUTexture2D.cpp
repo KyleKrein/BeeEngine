@@ -62,6 +62,7 @@ namespace BeeEngine::Internal
         textureViewDesc.dimension = WGPUTextureViewDimension_2D;
         textureViewDesc.format = textureDesc.format;
         m_TextureView = wgpuTextureCreateView(m_Texture, &textureViewDesc);
+        m_RendererID = reinterpret_cast<uintptr_t>(m_TextureView);
     }
 
     void WebGPUTexture2D::CreateTextureAndSampler(int width, int height, WGPUDevice &device, WGPUTextureDescriptor &textureDesc)
@@ -111,6 +112,7 @@ namespace BeeEngine::Internal
     WebGPUTexture2D::WebGPUTexture2D(gsl::span<std::byte> dataFromMemory)
     {
         int width, height, channels;
+        stbi_set_flip_vertically_on_load(true);
         stbi_uc* data = nullptr;
         {
             data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(dataFromMemory.data()), gsl::narrow_cast<int>(dataFromMemory.size()), &width, &height, &channels, 0);
