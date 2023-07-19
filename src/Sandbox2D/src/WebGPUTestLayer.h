@@ -31,7 +31,7 @@ public:
     }
     bool OnWindowResize(BeeEngine::WindowResizeEvent* e) noexcept
     {
-        m_FrameBuffer->Resize(e->GetWidth(), e->GetHeight());
+        //m_FrameBuffer->Resize(e->GetWidth(), e->GetHeight());
         return false;
     }
 

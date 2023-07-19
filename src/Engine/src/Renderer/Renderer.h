@@ -133,6 +133,11 @@ namespace BeeEngine
 
         static void FinalFlush();
 
+        static CommandBuffer GetMainCommandBuffer()
+        {
+            return s_RendererAPI->GetCurrentCommandBuffer();
+        }
+
     private:
         static RenderPass GetMainRenderPass()
         {

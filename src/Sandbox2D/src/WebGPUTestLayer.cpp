@@ -6,6 +6,7 @@
 #include "Renderer/Vertex.h"
 #include "ext/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
+#include "Platform/WebGPU/WebGPUTexture2D.h"
 
 void WebGPUTestLayer::OnAttach()
 {
@@ -59,6 +60,7 @@ void WebGPUTestLayer::OnAttach()
     preferences.Height = 720 * 2;
     preferences.Attachments = {BeeEngine::FrameBufferTextureFormat::RGBA8, BeeEngine::FrameBufferTextureFormat::Depth};
     m_FrameBuffer = BeeEngine::FrameBuffer::Create(preferences);
+    m_FrameBuffer->Resize(300,300);
 }
 
 void WebGPUTestLayer::OnDetach()
@@ -67,8 +69,8 @@ void WebGPUTestLayer::OnDetach()
 }
 static float angle = 0.0f;
 static float angle2 = 0.0f;
-
-
+static BeeEngine::Scope<BeeEngine::Internal::WebGPUTexture2D> framebufferTexture;
+static BeeEngine::Ref<BeeEngine::BindingSet> framebufferSet;
 void WebGPUTestLayer::OnUpdate()
 {
     m_CameraController.OnUpdate();
@@ -99,12 +101,21 @@ void WebGPUTestLayer::OnUpdate()
 
     //bindingSets[1] = m_BlankTextureBindingSet.get();
     m_FrameBuffer->Unbind();
+    framebufferTexture = BeeEngine::CreateScope<BeeEngine::Internal::WebGPUTexture2D>((WGPUTextureView)m_FrameBuffer->GetColorAttachmentRendererID(0), 300,300);
     BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&m_InstanceBuffer[0][0], sizeof(InstanceBufferData)});
+    framebufferSet = BeeEngine::BindingSet::Create({
+                                                                    {0, *framebufferTexture}
+                                                            });
+    bindingSets[1] = framebufferSet.get();
+    BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&m_InstanceBuffer[0][1], sizeof(InstanceBufferData)});
     //BeeEngine::Renderer::SubmitInstance(*m_Model, bindingSets, {(BeeEngine::byte*)&third, sizeof(InstanceBufferData)});
 }
 
 void WebGPUTestLayer::OnGUIRendering()
 {
+    ImGui::Begin("image");
+    ImGui::Image((void*)m_FrameBuffer->GetColorAttachmentRendererID(0), ImVec2(300,300));
+    ImGui::End();
     m_FpsCounter.Update();
     m_FpsCounter.Render();
 }

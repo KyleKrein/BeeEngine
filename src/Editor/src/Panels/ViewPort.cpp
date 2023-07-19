@@ -25,7 +25,7 @@ namespace BeeEngine::Editor
         FrameBufferPreferences preferences;
         preferences.Width = m_Width;
         preferences.Height = m_Height;
-        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
+        preferences.Attachments = {FrameBufferTextureFormat::RGBA8/*, FrameBufferTextureFormat::RedInteger*/, FrameBufferTextureFormat::Depth24};
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
     }
@@ -48,39 +48,14 @@ namespace BeeEngine::Editor
     {
         Renderer::Clear();
         m_FrameBuffer->Bind();
-        //m_CameraController.OnUpdate();
-
-        /*const Color4 currentClearColor = Renderer::GetClearColor();
-        const bool changeClearColor = currentClearColor != m_ClearColor;
-        if(changeClearColor)
-        {
-            Renderer::SetClearColor(m_ClearColor);
-        }
-
-*/
 
         m_Scene->UpdateRuntime();
-
-        /*if(changeClearColor)
-        {
-            Renderer::SetClearColor(currentClearColor);
-        }*/
 
         m_FrameBuffer->Unbind();
     }
     void ViewPort::UpdateEditor(EditorCamera& camera) noexcept
     {
-
         m_FrameBuffer->Bind();
-        //Renderer::Clear();
-        //m_CameraController.OnUpdate();
-        /*const Color4 currentClearColor = Renderer::GetClearColor();
-        const bool changeClearColor = currentClearColor != m_ClearColor;
-        if(changeClearColor)
-        {
-            Renderer::SetClearColor(m_ClearColor);
-        }*/
-        //m_FrameBuffer->ClearColorAttachment(1, -1);
 
         m_Scene->UpdateEditor(camera);
 
@@ -104,11 +79,6 @@ namespace BeeEngine::Editor
             int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
             m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
         }
-
-        /*if(changeClearColor)
-        {
-            Renderer::SetClearColor(currentClearColor);
-        }*/
 
         m_FrameBuffer->Unbind();
     }
@@ -176,7 +146,7 @@ namespace BeeEngine::Editor
         }
         auto textureID = m_FrameBuffer->GetColorAttachmentRendererID(0);
         BeeExpects(textureID != 0);
-        ImGui::Image((ImTextureID)textureID, {size.x, size.y}, ImVec2{0, 1}, ImVec2{1, 0});
+        ImGui::Image((ImTextureID)textureID, {static_cast<float>(m_Width), static_cast<float>(m_Height)}/*, ImVec2{0, 1}, ImVec2{1, 0}*/);
         if (m_SelectedEntity != Entity::Null && m_GuizmoOperation != GuizmoOperation::None)
         {
             RenderImGuizmo(camera);

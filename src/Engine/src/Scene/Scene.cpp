@@ -8,6 +8,7 @@
 #include "Renderer/Renderer.h"
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Application.h"
+#include "gtc/type_ptr.hpp"
 #include <glm/glm.hpp>
 
 namespace BeeEngine
@@ -107,7 +108,7 @@ namespace BeeEngine
     void Scene::UpdateEditor(EditorCamera& camera)
     {
         auto cameraViewProj = camera.GetViewProjection();
-        m_CameraUniformBuffer->SetData(&cameraViewProj, sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
+        m_CameraUniformBuffer->SetData(glm::value_ptr(cameraViewProj), sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
 
         auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         for( auto entity : group )

@@ -14,6 +14,7 @@ namespace BeeEngine::Internal
         WebGPUTexture2D(std::string_view path);
         WebGPUTexture2D(uint32_t width, uint32_t height);
         WebGPUTexture2D(gsl::span<std::byte> data);
+        WebGPUTexture2D(WGPUTextureView textureView, uint32_t width, uint32_t height);
         ~WebGPUTexture2D() override;
 
         void Bind(uint32_t slot = 0) override;
@@ -24,7 +25,7 @@ namespace BeeEngine::Internal
         void WriteMipMaps(WGPUDevice pDevice, WGPUTexture pTexture, WGPUExtent3D extent3D, uint32_t count,
                           const unsigned char *data);
 
-        WGPUTexture m_Texture;
+        WGPUTexture m_Texture {nullptr};
         WGPUTextureView m_TextureView;
         WGPUSampler m_Sampler;
 

@@ -176,7 +176,10 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC magic_enum
         )
 
-target_compile_definitions(BeeEngine PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE PUBLIC GLM_FORCE_LEFT_HANDED)
+target_compile_definitions(BeeEngine
+        PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE
+        PUBLIC GLM_FORCE_LEFT_HANDED
+        )
 
 # Создаем определение DEBUG только для debug configuration
 add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)

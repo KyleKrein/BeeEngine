@@ -124,7 +124,7 @@ namespace BeeEngine::Internal
         OPENGL_CHECK_ERRORS
     }
 
-    void OpenGLFrameBuffer::Unbind() const
+    void OpenGLFrameBuffer::Unbind()
     {
         BEE_PROFILE_FUNCTION();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

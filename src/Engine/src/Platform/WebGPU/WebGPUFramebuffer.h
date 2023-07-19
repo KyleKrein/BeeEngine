@@ -15,19 +15,19 @@ namespace BeeEngine::Internal
         WebGPUFrameBuffer(const FrameBufferPreferences &preferences);
         ~WebGPUFrameBuffer() override;
         void Bind() override;
-        void Unbind() const override;
+        void Unbind() override;
         void Resize(uint32_t width, uint32_t height) override;
         void Invalidate() override;
         [[nodiscard]] uintptr_t GetColorAttachmentRendererID(uint32_t index) const override
         {
             BeeExpects(index < m_ColorAttachmentsTextureViews.size());
             auto textureView = m_ColorAttachmentsTextureViews[index];
-            wgpuTextureViewReference(textureView);
+            //wgpuTextureViewReference(textureView);
             return (uintptr_t)textureView;
         }
         [[nodiscard]] uintptr_t GetDepthAttachmentRendererID() const override
         {
-            wgpuTextureViewReference(m_DepthAttachmentTextureView);
+            //wgpuTextureViewReference(m_DepthAttachmentTextureView);
             return (uintptr_t)m_DepthAttachmentTextureView;
         }
         [[nodiscard]] uint32_t GetRendererID() const override;

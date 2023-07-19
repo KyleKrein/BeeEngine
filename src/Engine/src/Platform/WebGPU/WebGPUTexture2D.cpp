@@ -134,8 +134,10 @@ namespace BeeEngine::Internal
 
     WebGPUTexture2D::~WebGPUTexture2D()
     {
-        wgpuTextureViewRelease(m_TextureView);
         wgpuSamplerRelease(m_Sampler);
+        if(!m_Texture)
+            return;
+        wgpuTextureViewRelease(m_TextureView);
         wgpuTextureDestroy(m_Texture);
         wgpuTextureRelease(m_Texture);
     }
@@ -235,5 +237,27 @@ namespace BeeEngine::Internal
         WebGPUGraphicsDevice::GetInstance().SetDefault(samplerEntry);
         samplerEntry.sampler = m_Sampler;
         return { textureEntry, samplerEntry };
+    }
+
+    WebGPUTexture2D::WebGPUTexture2D(WGPUTextureView textureView, uint32_t width, uint32_t height)
+    {
+        m_TextureView = textureView;
+        m_Width = width;
+        m_Height = height;
+        auto device = WebGPUGraphicsDevice::GetInstance().GetDevice();
+        WGPUSamplerDescriptor samplerDesc;
+        samplerDesc.nextInChain = nullptr;
+        samplerDesc.label = "Texture2DSampler";
+        samplerDesc.addressModeU = WGPUAddressMode_ClampToEdge;
+        samplerDesc.addressModeV = WGPUAddressMode_ClampToEdge;
+        samplerDesc.addressModeW = WGPUAddressMode_ClampToEdge;
+        samplerDesc.magFilter = WGPUFilterMode_Linear;
+        samplerDesc.minFilter = WGPUFilterMode_Linear;
+        samplerDesc.mipmapFilter = WGPUMipmapFilterMode_Linear;
+        samplerDesc.lodMinClamp = 0.0f;
+        samplerDesc.lodMaxClamp = 1.0f;
+        samplerDesc.compare = WGPUCompareFunction_Undefined;
+        samplerDesc.maxAnisotropy = 1;
+        m_Sampler = wgpuDeviceCreateSampler(device, &samplerDesc);
     }
 }

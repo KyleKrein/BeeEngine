@@ -63,7 +63,7 @@ namespace BeeEngine
         float m_NearClip = 0.1f;
         float m_FarClip = 1000.0f;
 
-        glm::mat4 m_ViewMatrix;
+        glm::mat4 m_ViewMatrix{1.0f};
         glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
         glm::vec3 m_FocalPoint = { 0.0f, 0.0f, 0.0f };
 

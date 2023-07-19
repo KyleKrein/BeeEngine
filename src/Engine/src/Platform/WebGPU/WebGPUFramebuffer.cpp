@@ -18,7 +18,7 @@ namespace BeeEngine::Internal
         descriptor.label = "Framebuffer Texture";
         descriptor.size = {m_Preferences.Width, m_Preferences.Height, 1};
         descriptor.format = wgpuformat;
-        descriptor.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_RenderAttachment;
+        descriptor.usage = IsDepthFormat(format)? WGPUTextureUsage_CopySrc | WGPUTextureUsage_RenderAttachment : WGPUTextureUsage_TextureBinding | WGPUTextureUsage_RenderAttachment;
         descriptor.dimension = WGPUTextureDimension_2D;
         descriptor.sampleCount = m_Preferences.Samples;
         descriptor.mipLevelCount = 1;
@@ -34,7 +34,7 @@ namespace BeeEngine::Internal
         descriptor.label = "Framebuffer Texture View";
         descriptor.mipLevelCount = 1;
         descriptor.dimension = WGPUTextureViewDimension_2D;
-        descriptor.aspect = WGPUTextureAspect::WGPUTextureAspect_All;
+        descriptor.aspect = IsDepthFormat(format) ? WGPUTextureAspect_DepthOnly : WGPUTextureAspect_All;
         descriptor.format = ConvertToWebGPUTextureFormat(format);
         descriptor.arrayLayerCount = 1;
         descriptor.baseArrayLayer = 0;
@@ -72,7 +72,8 @@ namespace BeeEngine::Internal
         m_Preferences.Height = height;
         m_Invalid = true;
         // Setup viewport
-        //wgpuRenderPassEncoderSetViewport(ctx, 0, 0, draw_data->FramebufferScale.x * draw_data->DisplaySize.x, draw_data->FramebufferScale.y * draw_data->DisplaySize.y, 0, 1);
+        //if(m_CurrentRenderPass.GetHandle())
+            //wgpuRenderPassEncoderSetViewport((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle(), 0, 0, m_Preferences.Width, m_Preferences.Height, 0, 1);
     }
 
     WebGPUFrameBuffer::~WebGPUFrameBuffer()
@@ -88,6 +89,8 @@ namespace BeeEngine::Internal
         {
             Invalidate();
         }
+        m_CurrentCommandBuffer = m_GraphicsDevice.CreateCommandBuffer();
+
         std::vector<WGPURenderPassColorAttachment> colorAttachments{};
         const auto size = m_ColorAttachmentSpecification.size();
 
@@ -138,17 +141,21 @@ namespace BeeEngine::Internal
         auto renderPass = wgpuCommandEncoderBeginRenderPass(((WebGPUCommandBuffer*)&m_CurrentCommandBuffer)->GetHandle(), &descriptor);
         m_CurrentRenderPass = {renderPass};
         Renderer::SetCurrentRenderPass(m_CurrentRenderPass);
+        //wgpuRenderPassEncoderSetViewport(renderPass, 0, 0, m_Preferences.Width, m_Preferences.Height, 0, 1);
     }
 
-    void WebGPUFrameBuffer::Unbind() const
+    void WebGPUFrameBuffer::Unbind()
     {
         BEE_PROFILE_FUNCTION();
+        //wgpuRenderPassEncoderSetViewport((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle(), 0, 0, m_Preferences.Width, m_Preferences.Height, 0, 1);
+        // Apply scissor/clipping rectangle, Draw
+        //wgpuRenderPassEncoderSetScissorRect((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle(), 0, 0, m_Preferences.Width, m_Preferences.Height);
         Renderer::Flush();
         wgpuRenderPassEncoderEnd((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle());
-        //Renderer::SubmitCommandBuffer(m_CurrentCommandBuffer);
-        m_GraphicsDevice.SubmitCommandBuffers(&m_CurrentCommandBuffer, 1);
+        Renderer::SubmitCommandBuffer(m_CurrentCommandBuffer);
+        //m_GraphicsDevice.SubmitCommandBuffers(&m_CurrentCommandBuffer, 1);
         Renderer::ResetCurrentRenderPass();
-        m_CurrentCommandBuffer = m_GraphicsDevice.CreateCommandBuffer();
+        m_CurrentRenderPass = {nullptr};
     }
 
     void WebGPUFrameBuffer::Invalidate()

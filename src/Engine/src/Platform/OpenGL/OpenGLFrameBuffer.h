@@ -26,7 +26,7 @@ namespace BeeEngine
             void ClearColorAttachment(uint32_t attachmentIndex, int value) override;
             uint32_t GetRendererID() const override { return m_RendererID; }
             void Bind() override;
-            void Unbind() const override;
+            void Unbind() override;
             void Resize(uint32_t width, uint32_t height) override;
             void Invalidate() override;
 
