@@ -98,9 +98,9 @@ namespace BeeEngine
             for( auto entity : group )
             {
                 auto [transform, spriteComponent] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-                m_TextureBindingSet = BindingSet::Create({{0, spriteComponent.Texture ? *spriteComponent.Texture : *m_BlankTexture}});
+                //auto textureBindingSet = BindingSet::CreateFrameScope({{0, spriteComponent.Texture ? *spriteComponent.Texture : *m_BlankTexture}});
                 InstanceBufferData data {transform.GetTransform(), spriteComponent.Color, spriteComponent.TilingFactor};
-                std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), m_TextureBindingSet.get()};
+                std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.Texture ? spriteComponent.Texture->GetBindingSet() : m_BlankTexture->GetBindingSet())};
                 Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(InstanceBufferData)});//Renderer2D::DrawRectangleWithID(transform.GetTransform(), spriteComponent.Color, gsl::narrow<int>(entity));
             }
         }
@@ -114,9 +114,9 @@ namespace BeeEngine
         for( auto entity : group )
         {
             auto [transform, spriteComponent] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-            m_TextureBindingSet = BindingSet::Create({{0, spriteComponent.Texture ? *spriteComponent.Texture : *m_BlankTexture}});
+            //auto textureBindingSet = BindingSet::CreateFrameScope({{0, spriteComponent.Texture ? *spriteComponent.Texture : *m_BlankTexture}});
             InstanceBufferData data {transform.GetTransform(), spriteComponent.Color, spriteComponent.TilingFactor};
-            std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), m_TextureBindingSet.get()};
+            std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.Texture ? spriteComponent.Texture->GetBindingSet() : m_BlankTexture->GetBindingSet())};
             Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(InstanceBufferData)});//Renderer2D::DrawRectangleWithID(transform.GetTransform(), spriteComponent.Color, gsl::narrow<int>(entity));
         }
     }

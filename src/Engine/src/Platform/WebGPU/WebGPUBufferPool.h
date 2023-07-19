@@ -26,6 +26,14 @@ namespace BeeEngine::Internal
         {
             return !(*this == other);
         }
+    private:
+        WebGPUBuffer(WGPUBuffer buffer, uint32_t size, uint32_t offset, WebGPUBufferUsage usage, bool isDestroyed)
+        : Buffer(buffer), Size(size), Offset(offset), Usage(usage), m_IsDestroyed(isDestroyed)
+        {
+
+        }
+        bool m_IsDestroyed;
+        friend class WebGPUBufferPool;
     };
     class WebGPUBufferPool final
     {

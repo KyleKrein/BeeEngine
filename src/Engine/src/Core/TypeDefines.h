@@ -3,6 +3,7 @@
 #include <memory>
 #include "SharedPointer.h"
 #include "Core/CodeSafety/Expects.h"
+#include "FramePtr.h"
 #include <vector>
 #include <optional>
 #include <cxxabi.h>
@@ -27,6 +28,16 @@ namespace BeeEngine
     template<typename T>
     using Ref = std::shared_ptr<T>;
 #endif
+
+    template<typename T>
+    using FrameScope = FramePtr<T>;
+
+    template<typename T, typename ...Args>
+    constexpr FrameScope<T> CreateFrameScope(Args&& ...args)
+    {
+        T* ptr = new T(std::forward<Args>(args)...);
+        return FramePtr<T>(ptr);
+    }
 
     template<typename T, typename ... Args>
     constexpr Scope<T> CreateScope(Args&& ... args)

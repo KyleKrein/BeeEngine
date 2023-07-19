@@ -26,4 +26,21 @@ namespace BeeEngine
         }
         return nullptr;
     }
+
+    FrameScope<BindingSet> BindingSet::CreateFrameScope(std::initializer_list<BindingSetElement> elements)
+    {
+        switch (Renderer::GetAPI())
+        {
+            case WebGPU:
+                return CreateFrameScope<Internal::WebGPUBindingSet>(elements);
+            case OpenGL:
+            case Metal:
+            case DirectX:
+            case Vulkan:
+            case NotAvailable:
+                BeeCoreError("BindingSet::Create: API not available!");
+                return nullptr;
+        }
+        return nullptr;
+    }
 }

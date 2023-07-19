@@ -12,14 +12,21 @@ namespace BeeEngine::Internal
     const WebGPUBuffer &WebGPUBufferPool::RequestBuffer(uint32_t size, WebGPUBufferUsage usage)
     {
         //TODO implement actual pool
-        m_Buffers.push_back({CreateBuffer(size, usage), size, 0, usage});
+        m_Buffers.push_back({CreateBuffer(size, usage), size, 0, usage, false});
         return m_Buffers.back();
     }
 
     void WebGPUBufferPool::ReleaseBuffer(const WebGPUBuffer &buffer)
     {
-        DestroyBuffer(buffer);
-        std::remove(m_Buffers.begin(), m_Buffers.end(), buffer);
+        if(buffer.m_IsDestroyed)
+        {
+            return;
+        }
+
+        auto found = std::find(m_Buffers.begin(), m_Buffers.end(), buffer);
+        DestroyBuffer(*found);
+        found->m_IsDestroyed = true;
+        //std::remove(m_Buffers.begin(), m_Buffers.end(), buffer);
     }
 
     WGPUBuffer WebGPUBufferPool::CreateBuffer(uint32_t size, WebGPUBufferUsage usage)
@@ -47,6 +54,10 @@ namespace BeeEngine::Internal
         {
             for (auto& buffer : m_Buffers)
             {
+                if(buffer.m_IsDestroyed)
+                {
+                    continue;
+                }
                 DestroyBuffer(buffer);
             }
             m_Buffers.clear();

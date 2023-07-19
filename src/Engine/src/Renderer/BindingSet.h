@@ -20,6 +20,7 @@ namespace BeeEngine
         virtual void Bind(void* cmd, uint32_t index) const = 0;
         virtual ~BindingSet() = default;
         static Ref<BindingSet> Create(std::initializer_list<BindingSetElement> elements);
+        static FrameScope<BindingSet> CreateFrameScope(std::initializer_list<BindingSetElement> elements);
     protected:
         std::vector<BindingSetElement> m_Elements;
     };

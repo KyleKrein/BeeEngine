@@ -5,7 +5,6 @@
 #pragma once
 #include <functional>
 #include <deque>
-#include "TypeDefines.h"
 
 namespace BeeEngine
 {

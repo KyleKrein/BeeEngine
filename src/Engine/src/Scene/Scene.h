@@ -50,7 +50,6 @@ namespace BeeEngine
         Model* m_RectModel = nullptr;
         Texture2D* m_BlankTexture = nullptr;
         Ref<BindingSet> m_CameraBindingSet;
-        Ref<BindingSet> m_TextureBindingSet;
         Ref<UniformBuffer> m_CameraUniformBuffer;
     };
 }

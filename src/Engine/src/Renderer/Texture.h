@@ -6,6 +6,7 @@
 #include "Core/TypeDefines.h"
 #include "gsl/gsl"
 #include "IBindable.h"
+#include "BindingSet.h"
 
 namespace BeeEngine
 {
@@ -41,5 +42,14 @@ namespace BeeEngine
         static Ref<Texture2D> Create(std::string_view path);
         static Ref<Texture2D> Create(uint32_t width, uint32_t height);
         static Ref<Texture2D> CreateFromMemory(gsl::span<std::byte> data);
+
+        BindingSet* GetBindingSet()
+        {
+            return m_BindingSet.get();
+        }
+    private:
+        Ref<BindingSet> m_BindingSet = BindingSet::Create({
+            {0, *this}
+        });
     };
 }

@@ -10,10 +10,9 @@ namespace BeeEngine::Internal
 {
 
     WebGPUInstancedBuffer::WebGPUInstancedBuffer(in<WGPUVertexBufferLayout> shaderModule, size_t maxInstances)
-    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_Size(maxInstances * shaderModule.arrayStride), m_MaxInstances(maxInstances), m_OneInstanceSize(shaderModule.arrayStride)
-    {
-        m_Buffer = m_GraphicsDevice.RequestBuffer(m_Size, WebGPUBufferUsage::Vertex);
-    }
+    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_Size(maxInstances * shaderModule.arrayStride), m_MaxInstances(maxInstances), m_OneInstanceSize(shaderModule.arrayStride),
+      m_Buffer(m_GraphicsDevice.RequestBuffer(m_Size, WebGPUBufferUsage::Vertex))
+    {}
 
     WebGPUInstancedBuffer::~WebGPUInstancedBuffer()
     {
@@ -32,8 +31,9 @@ namespace BeeEngine::Internal
     }
 
     WebGPUInstancedBuffer::WebGPUInstancedBuffer(size_t size)
-    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_Size(size)
+    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_Size(size),
+      m_Buffer(m_GraphicsDevice.RequestBuffer(m_Size, WebGPUBufferUsage::Vertex))
     {
-        m_Buffer = m_GraphicsDevice.RequestBuffer(m_Size, WebGPUBufferUsage::Vertex);
+
     }
 }

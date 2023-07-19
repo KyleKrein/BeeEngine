@@ -23,9 +23,9 @@ namespace BeeEngine::Internal
         virtual size_t GetSize() override { return m_Size; }
     private:
         class WebGPUGraphicsDevice& m_GraphicsDevice;
-        WebGPUBuffer m_Buffer;
         size_t m_Size;
         size_t m_MaxInstances;
         size_t m_OneInstanceSize;
+        WebGPUBuffer m_Buffer;
     };
 }

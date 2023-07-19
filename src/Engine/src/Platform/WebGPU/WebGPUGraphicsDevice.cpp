@@ -130,6 +130,7 @@ namespace BeeEngine::Internal
     WebGPUGraphicsDevice::~WebGPUGraphicsDevice()
     {
         DeletionQueue::Main().Flush();
+        m_BufferPool.reset();
         m_SwapChain.reset();
         wgpuDeviceRelease(m_Device);
         wgpuAdapterRelease(m_Adapter);
