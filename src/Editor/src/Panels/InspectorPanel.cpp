@@ -172,8 +172,17 @@ namespace BeeEngine::Editor
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                 {
-                    const wchar_t* path = (const wchar_t*)payload->Data;
-                    std::filesystem::path texturePath = std::filesystem::path(m_WorkingDirectory) / path;
+                    std::filesystem::path texturePath;
+                    if(Application::GetOsPlatform() == OSPlatform::Windows)
+                    {
+                        const wchar_t* path = (const wchar_t*)payload->Data;
+                        texturePath = std::filesystem::path(m_WorkingDirectory) / path;
+                    }
+                    else
+                    {
+                        const char* path = (const char*)payload->Data;
+                        texturePath = std::filesystem::path(m_WorkingDirectory) / path;
+                    }
                     sprite.Texture = &Application::GetInstance().GetAssetManager().LoadTexture(ResourceManager::GetNameFromFilePath(texturePath.string()),texturePath);
                 }
                 ImGui::EndDragDropTarget();

@@ -91,7 +91,11 @@ namespace BeeEngine::Editor
                     BeeCoreError("Unable to open file");
                     goto end;
                 }
-                std::filesystem::path projectPath = (path + ".beeproj");
+                if(!path.ends_with(".beeproj"))
+                {
+                    path += ".beeproj";
+                }
+                std::filesystem::path projectPath = path;
                 auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
                 path = projectPath.remove_filename().string();
                 path.pop_back();

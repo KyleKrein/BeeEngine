@@ -5,7 +5,7 @@
 #include "AssetPanel.h"
 #include "imgui.h"
 #include "Renderer/Texture.h"
-
+#include "BeeEngine.h"
 
 
 namespace BeeEngine::Editor
@@ -46,8 +46,17 @@ namespace BeeEngine::Editor
 
             if (ImGui::BeginDragDropSource())
             {
-                const wchar_t* itemPath = relativePath.c_str();
-                ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
+                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                {
+                    auto itemPath = relativePath.wstring();
+                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath.c_str(), (itemPath.size() + 1) * sizeof(wchar_t));
+                }
+                else
+                {
+                    auto itemPath = relativePath.string();
+                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath.c_str(), itemPath.size() + 1);
+                }
+
                 ImGui::EndDragDropSource();
             }
 
