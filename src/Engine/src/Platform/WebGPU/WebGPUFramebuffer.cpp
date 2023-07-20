@@ -18,7 +18,7 @@ namespace BeeEngine::Internal
         descriptor.label = "Framebuffer Texture";
         descriptor.size = {m_Preferences.Width, m_Preferences.Height, 1};
         descriptor.format = wgpuformat;
-        descriptor.usage = IsDepthFormat(format)? WGPUTextureUsage_CopySrc | WGPUTextureUsage_RenderAttachment : WGPUTextureUsage_TextureBinding | WGPUTextureUsage_RenderAttachment;
+        descriptor.usage = IsDepthFormat(format)? WGPUTextureUsage_CopySrc | WGPUTextureUsage_RenderAttachment : WGPUTextureUsage_CopySrc | WGPUTextureUsage_TextureBinding | WGPUTextureUsage_RenderAttachment;
         descriptor.dimension = WGPUTextureDimension_2D;
         descriptor.sampleCount = m_Preferences.Samples;
         descriptor.mipLevelCount = 1;
@@ -78,7 +78,25 @@ namespace BeeEngine::Internal
 
     WebGPUFrameBuffer::~WebGPUFrameBuffer()
     {
-
+        BEE_PROFILE_FUNCTION();
+        if(m_Initiated)
+        {
+            m_GraphicsDevice.DestroyTexture(m_DepthAttachmentTexture);
+            m_GraphicsDevice.DestroyTextureView(m_DepthAttachmentTextureView);
+            for(auto& textureView: m_ColorAttachmentsTextureViews)
+            {
+                m_GraphicsDevice.DestroyTextureView(textureView);
+            }
+            for(auto& texture: m_ColorAttachmentsTextures)
+            {
+                m_GraphicsDevice.DestroyTexture(texture);
+            }
+            if(m_EntityIDBuffer)
+            {
+                wgpuBufferDestroy(m_EntityIDBuffer);
+                wgpuBufferRelease(m_EntityIDBuffer);
+            }
+        }
     }
 
     void WebGPUFrameBuffer::Bind()
@@ -201,10 +219,77 @@ namespace BeeEngine::Internal
         BeeExpects(false);
         return -1;
     }
+    /*
+    struct ReadPixelData
+    {
+        CommandBuffer CommandBuffer;
+        WGPUBuffer Buffer;
 
+    };
+    void WebGPUFrameBuffer::ReadPixelsAsync(uint32_t attachmentIndex, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const std::function<void(std::vector<uint8_t> data)>& callback)
+    {
+        BeeExpects(attachmentIndex < m_ColorAttachmentsTextureViews.size());
+
+    }
+*/
     int WebGPUFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) const
     {
         return -1;
+        BeeExpects(attachmentIndex < m_ColorAttachmentsTextureViews.size());
+        if(m_WaitingForReadPixel)
+            return static_cast<int>(m_ReadPixelValue);
+        if(!m_EntityIDBuffer)
+            m_EntityIDBuffer = m_GraphicsDevice.CreateBuffer(WGPUBufferUsage_MapRead | WGPUBufferUsage_CopyDst, sizeof (int));
+        if(!m_BufferCopyEncoder)
+            m_BufferCopyEncoder = m_GraphicsDevice.CreateCommandBuffer();
+        auto texture = m_ColorAttachmentsTextures[attachmentIndex];
+        WGPUImageCopyTexture textureCopy{};
+        textureCopy.nextInChain = nullptr;
+        textureCopy.mipLevel = 0;
+        textureCopy.origin = {static_cast<uint32_t>(x), static_cast<uint32_t>(y), 0};
+        textureCopy.aspect = WGPUTextureAspect_All;
+        textureCopy.texture = texture;
+
+        WGPUImageCopyBuffer bufferCopy{};
+        bufferCopy.nextInChain = nullptr;
+        bufferCopy.buffer = m_EntityIDBuffer;
+        bufferCopy.layout.nextInChain = nullptr;
+        bufferCopy.layout.offset = 0;
+        bufferCopy.layout.bytesPerRow = std::max(m_Preferences.Width, m_Preferences.Height) * sizeof(int) + 256 - (std::max(m_Preferences.Width, m_Preferences.Height) * sizeof(int) % 256);
+        bufferCopy.layout.rowsPerImage = 0;
+
+        WGPUExtent3D extent{0,0,0};
+        wgpuCommandEncoderCopyTextureToBuffer(((WebGPUCommandBuffer*)&m_BufferCopyEncoder)->GetHandle(), &textureCopy, &bufferCopy, &extent);
+        Renderer::SubmitCommandBuffer(m_BufferCopyEncoder);
+        m_WaitingForReadPixel = true;
+
+        DeletionQueue::Frame().PushFunction([this]()
+        {
+            auto OnBufferMapped = [](WGPUBufferMapAsyncStatus status, void* userdata)
+            {
+                BufferContext* context = (BufferContext*)userdata;
+                if(status != WGPUBufferMapAsyncStatus_Success)
+                {
+                    BeeCoreWarn("Failed to map buffer: {}", ToString(status));
+                    return ;
+                }
+                float* bufferData = (float*)wgpuBufferGetMappedRange(*context->Buffer, 0, sizeof(int));
+                if(bufferData == nullptr)
+                {
+                    BeeCoreWarn("Failed to map buffer");
+                    return ;
+                }
+                memcpy(context->Data, bufferData, sizeof(int));
+
+                wgpuBufferUnmap(*context->Buffer);
+            };
+
+            wgpuBufferMapAsync(m_EntityIDBuffer, WGPUMapMode_Read, 0, sizeof(int), OnBufferMapped, &m_EntityIDBufferContext);
+            m_WaitingForReadPixel = false;
+        });
+
+        m_BufferCopyEncoder = nullptr;
+        return static_cast<int>(m_ReadPixelValue);
     }
 
     void WebGPUFrameBuffer::ClearColorAttachment(uint32_t attachmentIndex, int value)
@@ -221,7 +306,7 @@ namespace BeeEngine::Internal
             case FrameBufferTextureFormat::RGBA8:
                 return WGPUTextureFormat_BGRA8Unorm;
             case FrameBufferTextureFormat::RedInteger:
-                return WGPUTextureFormat_R32Sint;
+                return WGPUTextureFormat_R32Float;
             case FrameBufferTextureFormat::Depth24:
                 return WGPUTextureFormat_Depth24Plus;
         }

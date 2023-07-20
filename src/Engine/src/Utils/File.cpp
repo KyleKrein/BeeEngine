@@ -76,6 +76,10 @@ namespace BeeEngine
     {
         return std::filesystem::exists(path);
     }
+    bool File::Exists(const std::filesystem::path& path)
+    {
+        return std::filesystem::exists(path);
+    }
 }
 
 #pragma clang diagnostic pop

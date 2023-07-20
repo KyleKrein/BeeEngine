@@ -13,6 +13,7 @@
 #include "Panels/MenuBar.h"
 #include "Scene/SceneSerializer.h"
 #include "Panels/AssetPanel.h"
+#include "ProjectFile.h"
 
 namespace BeeEngine::Editor
 {
@@ -38,6 +39,7 @@ namespace BeeEngine::Editor
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
         InspectorPanel m_InspectorPanel {};
         bool m_IsRuntime = false;
+        Scope<ProjectFile> m_ProjectFile = nullptr;
 
         void SetUpMenuBar();
     };

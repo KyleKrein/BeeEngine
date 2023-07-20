@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <gsl/span>
+#include <filesystem>
 
 namespace BeeEngine
 {
@@ -19,5 +20,6 @@ namespace BeeEngine
         static void WriteBinaryFile(std::string_view path, gsl::span<std::byte> content);
         static size_t Size(std::string_view path);
         static bool Exists(std::string_view path);
+        static bool Exists(const std::filesystem::path& path);
     };
 }

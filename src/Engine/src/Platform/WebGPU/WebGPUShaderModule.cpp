@@ -34,11 +34,11 @@ namespace BeeEngine::Internal
     WebGPUShaderModule::~WebGPUShaderModule()
     {
         auto layouts = m_BindGroupLayouts;
-        DeletionQueue::Main().PushFunction([layouts]()
+        DeletionQueue::Frame().PushFunction([layouts]()
         {
             for (auto[_, bindGroupLayout] : layouts)
             {
-                wgpuBindGroupLayoutRelease(bindGroupLayout);
+                wgpuBindGroupLayoutRelease(bindGroupLayout); //TODO: check why it fails if released in DeletionQueue::Main()
             }
         });
         wgpuShaderModuleRelease(m_ShaderModule);

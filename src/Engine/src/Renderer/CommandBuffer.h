@@ -14,6 +14,11 @@ namespace BeeEngine
             : m_Handle(handle)
         {}
         virtual ~CommandBuffer() = default;
+
+        operator bool()
+        {
+            return m_Handle != nullptr;
+        }
     protected:
         void* m_Handle;
     };

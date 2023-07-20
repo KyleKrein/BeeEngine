@@ -115,6 +115,11 @@ namespace BeeEngine::Internal
         wgpuDeviceSetLoggingCallback(m_Device, onDeviceLogging, nullptr /* pUserData */);
         wgpuDeviceSetDeviceLostCallback(m_Device, onDeviceLost, nullptr /* pUserData */);
 
+        auto device = m_Device;
+        DeletionQueue::Main().PushFunction([device]() {
+            wgpuDeviceTick(device);
+        });
+
         m_Queue = wgpuDeviceGetQueue(m_Device);
 
         auto onQueueWorkDone = [](WGPUQueueWorkDoneStatus status, void* /* pUserData */) {
@@ -129,7 +134,6 @@ namespace BeeEngine::Internal
 
     WebGPUGraphicsDevice::~WebGPUGraphicsDevice()
     {
-        DeletionQueue::Main().Flush();
         m_BufferPool.reset();
         m_SwapChain.reset();
         wgpuDeviceRelease(m_Device);

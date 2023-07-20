@@ -24,6 +24,11 @@ namespace BeeEngine::Internal
         }
 
         auto found = std::find(m_Buffers.begin(), m_Buffers.end(), buffer);
+        if(found == m_Buffers.end())
+        {
+            BeeCoreWarn("Tried to release buffer that was not allocated by this pool");
+            return;
+        }
         DestroyBuffer(*found);
         found->m_IsDestroyed = true;
         //std::remove(m_Buffers.begin(), m_Buffers.end(), buffer);

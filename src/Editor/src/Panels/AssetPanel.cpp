@@ -20,11 +20,13 @@ namespace BeeEngine::Editor
             if (ImGui::Button("<-"))
             {
                 m_CurrentDirectory = m_CurrentDirectory.parent_path();
+                BeeCoreTrace("Current directory: {0}", m_CurrentDirectory.string());
+                BeeCoreTrace("Working directory: {0}", m_WorkingDirectory.string());
             }
         }
 
         static float padding = 16.0f;
-        static float thumbnailSize = 128.0f;
+        static float thumbnailSize = 64.0f;
         float cellSize = thumbnailSize + padding;
 
         float panelWidth = ImGui::GetContentRegionAvail().x;
@@ -56,8 +58,8 @@ namespace BeeEngine::Editor
 
         ImGui::Columns(1);
 
-        ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 16, 512);
-        ImGui::SliderFloat("Padding", &padding, 0, 32);
+        //ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 16, 512);
+        //ImGui::SliderFloat("Padding", &padding, 0, 32);
 
         // TODO: status bar
 

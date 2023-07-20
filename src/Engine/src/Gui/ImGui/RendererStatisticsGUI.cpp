@@ -17,6 +17,8 @@ namespace BeeEngine::Internal
         ImGui::Begin("Renderer Statistics");
         ImGui::Text("Draw calls: %zu", stats.DrawCallCount);
         ImGui::Text("Instance count: %zu", stats.InstanceCount);
+        ImGui::Text("Vertex count: %zu", stats.VertexCount);
+        ImGui::Text("Index count: %zu", stats.IndexCount);
         ImGui::Text("Allocated GPU memory: %.3f MB", ConvertFromBytesToMegabytes(stats.AllocatedGPUMemory));
         ImGui::Text("Allocated CPU memory: %.3f MB", ConvertFromBytesToMegabytes(stats.AllocatedCPUMemory));
         ImGui::Text("Allocated GPU buffers: %zu", stats.AllocatedGPUBuffers);

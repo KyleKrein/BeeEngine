@@ -25,7 +25,7 @@ namespace BeeEngine::Editor
         FrameBufferPreferences preferences;
         preferences.Width = m_Width;
         preferences.Height = m_Height;
-        preferences.Attachments = {FrameBufferTextureFormat::RGBA8/*, FrameBufferTextureFormat::RedInteger*/, FrameBufferTextureFormat::Depth24};
+        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
     }

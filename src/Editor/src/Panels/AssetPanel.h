@@ -15,6 +15,7 @@ namespace BeeEngine::Editor
         void SetWorkingDirectory(const std::filesystem::path& path) noexcept
         {
             m_WorkingDirectory = path;
+            m_CurrentDirectory = path;
         }
         [[nodiscard]] std::filesystem::path GetWorkingDirectory() const noexcept
         {

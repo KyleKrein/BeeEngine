@@ -6,6 +6,7 @@
 #include "Scene/Entity.h"
 #include "Scene/Components.h"
 #include "Utils/FileDialogs.h"
+#include "Core/ResourceManager.h"
 
 
 namespace BeeEngine::Editor
@@ -46,12 +47,51 @@ namespace BeeEngine::Editor
     void EditorLayer::OnGUIRendering() noexcept
     {
         m_DockSpace.Start();
-        m_MenuBar.Render();
-        m_ViewPort.Render(m_EditorCamera);
-        m_SceneHierarchyPanel.OnGUIRender();
-        m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
-        m_AssetPanel.OnGUIRender();
-        m_FpsCounter.Render();
+        if(m_ProjectFile)
+        {
+            m_MenuBar.Render();
+            m_ViewPort.Render(m_EditorCamera);
+            m_SceneHierarchyPanel.OnGUIRender();
+            m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
+            m_AssetPanel.OnGUIRender();
+            m_FpsCounter.Render();
+        }
+        else
+        {
+            ImGui::Begin("Project");
+            if(ImGui::Button("Load project"))
+            {
+                auto path = FileDialogs::OpenFile({"BeeEngine Project", "*.beeproj"});
+                if(path.empty())
+                {
+                    BeeCoreError("Unable to open file");
+                    goto newProject;
+                    return;
+                }
+                std::filesystem::path projectPath = (path + ".beeproj");
+                path = projectPath.remove_filename().string();
+                path.pop_back();
+                m_ProjectFile = CreateScope<ProjectFile>(path, ResourceManager::GetNameFromFilePath(path));
+                m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+            }
+            newProject:
+            if(ImGui::Button("New project"))
+            {
+                auto path = FileDialogs::SaveFile({"BeeEngine Project", "*.beeproj"});
+                if(path.empty())
+                {
+                    BeeCoreError("Unable to open file");
+                    goto end;
+                }
+                std::filesystem::path projectPath = (path + ".beeproj");
+                path = projectPath.remove_filename().string();
+                path.pop_back();
+                m_ProjectFile = CreateScope<ProjectFile>(path, ResourceManager::GetNameFromFilePath(path));
+                m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+            }
+            end:
+            ImGui::End();
+        }
         m_DockSpace.End();
     }
 

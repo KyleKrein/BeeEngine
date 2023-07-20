@@ -56,5 +56,20 @@ namespace BeeEngine::Internal
 
         static WGPUTextureFormat ConvertToWebGPUTextureFormat(FrameBufferTextureFormat format);
         static bool IsDepthFormat(FrameBufferTextureFormat format);
+
+        mutable float m_ReadPixelValue {-1.0f};
+        mutable WGPUBuffer m_EntityIDBuffer {nullptr};
+
+        struct BufferContext
+        {
+            void* Data;
+            WGPUBuffer* Buffer;
+        };
+        mutable BufferContext m_EntityIDBufferContext {&m_ReadPixelValue, &m_EntityIDBuffer};
+
+        mutable CommandBuffer m_BufferCopyEncoder {nullptr};
+
+        mutable bool m_PixelDataReady {false};
+        mutable bool m_WaitingForReadPixel {false};
     };
 }

@@ -97,6 +97,7 @@ namespace BeeEngine::Internal
     SDLWindowHandler::~SDLWindowHandler()
     {
         m_Finalizer.window = m_Window;
+        DeletionQueue::Main().Flush();
     }
 
     void SDLWindowHandler::SetWidth(uint16_t width)
