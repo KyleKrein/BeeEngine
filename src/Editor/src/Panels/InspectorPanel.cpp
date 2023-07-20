@@ -8,6 +8,7 @@
 #include "gtc/type_ptr.hpp"
 #include "imgui_internal.h"
 #include "Gui/ImGuiFonts.h"
+#include "Core/ResourceManager.h"
 
 namespace BeeEngine::Editor
 {
@@ -155,6 +156,32 @@ namespace BeeEngine::Editor
         DrawComponentUI<SpriteRendererComponent>("Sprite", entity, [this](SpriteRendererComponent& sprite)
         {
             ImGui::ColorEdit4("Color", sprite.Color.ValuePtr());
+
+            if(sprite.Texture)
+            {
+                if(ImGui::ImageButton((void*)sprite.Texture->GetRendererID(), ImVec2(100.0f, 100.0f)))
+                {
+                    sprite.Texture = nullptr;
+                }
+            }
+            else
+            {
+                ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
+            }
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                {
+                    const wchar_t* path = (const wchar_t*)payload->Data;
+                    std::filesystem::path texturePath = std::filesystem::path(m_WorkingDirectory) / path;
+                    sprite.Texture = &Application::GetInstance().GetAssetManager().LoadTexture(ResourceManager::GetNameFromFilePath(texturePath.string()),texturePath);
+                }
+                ImGui::EndDragDropTarget();
+            }
+
+
+
+            ImGui::DragFloat("Tiling Factor", &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
         });
     }
 

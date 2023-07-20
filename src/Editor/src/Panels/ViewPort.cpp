@@ -7,6 +7,7 @@
 #include "Scene/Components.h"
 #include "gtc/type_ptr.hpp"
 #include "Core/Events/Event.h"
+#include "Scene/SceneSerializer.h"
 
 
 namespace BeeEngine::Editor
@@ -147,6 +148,17 @@ namespace BeeEngine::Editor
         auto textureID = m_FrameBuffer->GetColorAttachmentRendererID(0);
         BeeExpects(textureID != 0);
         ImGui::Image((ImTextureID)textureID, {static_cast<float>(m_Width), static_cast<float>(m_Height)}/*, ImVec2{0, 1}, ImVec2{1, 0}*/);
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+            {
+                const wchar_t* path = (const wchar_t*)payload->Data;
+                OpenScene(std::filesystem::path(m_WorkingDirectory) / path);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         if (m_SelectedEntity != Entity::Null && m_GuizmoOperation != GuizmoOperation::None)
         {
             RenderImGuizmo(camera);
@@ -201,5 +213,15 @@ namespace BeeEngine::Editor
             }
         }
         return false;
+    }
+
+    void ViewPort::OpenScene(const std::filesystem::path& path)
+    {
+        BeeCoreTrace("Opening scene {0}", path.string());
+        m_Scene = CreateRef<Scene>();
+        m_Scene->OnViewPortResize(m_Width, m_Height);
+        m_NewSceneWasLoaded = true;
+        SceneSerializer serializer(m_Scene);
+        serializer.Deserialize(path.string());
     }
 }

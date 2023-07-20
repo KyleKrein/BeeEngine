@@ -38,6 +38,18 @@ namespace BeeEngine::Editor
             return m_Width;
         }
 
+        void SetWorkingDirectory(const std::filesystem::path& path) noexcept
+        {
+            m_WorkingDirectory = path;
+        }
+
+        bool IsNewSceneLoaded() const noexcept
+        {
+            bool tmp = m_NewSceneWasLoaded;
+            m_NewSceneWasLoaded = false;
+            return tmp;
+        }
+
     private:
         uint32_t m_Width;
         uint32_t m_Height;
@@ -48,6 +60,8 @@ namespace BeeEngine::Editor
         Entity& m_SelectedEntity;
         GuizmoOperation m_GuizmoOperation = GuizmoOperation::Translate;
         bool m_GuizmoSnap = false;
+
+        mutable bool m_NewSceneWasLoaded = false;
         glm::vec2 m_ViewportBounds[2]
                 {
                         glm::vec2(0.0f),
@@ -56,9 +70,12 @@ namespace BeeEngine::Editor
         Color4 m_ClearColor = Color4::CornflowerBlue;
         Entity m_HoveredEntity = Entity::Null;
 
+        std::filesystem::path m_WorkingDirectory;
+
 
         bool OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept;
         bool OnKeyButtonPressed(KeyPressedEvent* event) noexcept;
         void RenderImGuizmo(EditorCamera& camera);
+        void OpenScene(const std::filesystem::path& path);
     };
 }

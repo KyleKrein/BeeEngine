@@ -20,8 +20,6 @@ namespace BeeEngine::Editor
             if (ImGui::Button("<-"))
             {
                 m_CurrentDirectory = m_CurrentDirectory.parent_path();
-                BeeCoreTrace("Current directory: {0}", m_CurrentDirectory.string());
-                BeeCoreTrace("Working directory: {0}", m_WorkingDirectory.string());
             }
         }
 
@@ -41,8 +39,19 @@ namespace BeeEngine::Editor
             const auto& path = directoryEntry.path();
             auto relativePath = std::filesystem::relative(path, m_WorkingDirectory);
             std::string filenameString = relativePath.filename().string();
-            Ref<Texture2D> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+            ImGui::PushID(filenameString.c_str());
+            Ref<Texture2D>& icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+            ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
             ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
+
+            if (ImGui::BeginDragDropSource())
+            {
+                const wchar_t* itemPath = relativePath.c_str();
+                ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
+                ImGui::EndDragDropSource();
+            }
+
+            ImGui::PopStyleColor();
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
             {
                 if (directoryEntry.is_directory())
@@ -54,6 +63,8 @@ namespace BeeEngine::Editor
             ImGui::TextWrapped(filenameString.c_str());
 
             ImGui::NextColumn();
+            
+            ImGui::PopID();
         }
 
         ImGui::Columns(1);

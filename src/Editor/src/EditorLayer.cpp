@@ -40,6 +40,11 @@ namespace BeeEngine::Editor
         else
         {
             m_ViewPort.UpdateEditor(m_EditorCamera);
+            if(m_ViewPort.IsNewSceneLoaded())
+            {
+                m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
+                m_InspectorPanel.SetContext(m_ViewPort.GetScene());
+            }
         }
         m_FpsCounter.Update();
     }
@@ -68,11 +73,14 @@ namespace BeeEngine::Editor
                     goto newProject;
                     return;
                 }
-                std::filesystem::path projectPath = (path + ".beeproj");
+                std::filesystem::path projectPath = (path);
+                auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
                 path = projectPath.remove_filename().string();
                 path.pop_back();
-                m_ProjectFile = CreateScope<ProjectFile>(path, ResourceManager::GetNameFromFilePath(path));
+                m_ProjectFile = CreateScope<ProjectFile>(path, name);
                 m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
             }
             newProject:
             if(ImGui::Button("New project"))
@@ -84,10 +92,13 @@ namespace BeeEngine::Editor
                     goto end;
                 }
                 std::filesystem::path projectPath = (path + ".beeproj");
+                auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
                 path = projectPath.remove_filename().string();
                 path.pop_back();
-                m_ProjectFile = CreateScope<ProjectFile>(path, ResourceManager::GetNameFromFilePath(path));
+                m_ProjectFile = CreateScope<ProjectFile>(path, name);
                 m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
             }
             end:
             ImGui::End();

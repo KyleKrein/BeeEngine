@@ -17,8 +17,15 @@ namespace BeeEngine::Editor
         void SetContext(const Ref<Scene>& context);
 
         void OnGUIRender(Entity selectedEntity) noexcept;
+
+        void SetWorkingDirectory(const std::filesystem::path& path) noexcept
+        {
+            m_WorkingDirectory = path;
+        }
     private:
         Ref<Scene> m_Context;
+
+        std::filesystem::path m_WorkingDirectory;
 
         void DrawComponents(Entity entity);
 

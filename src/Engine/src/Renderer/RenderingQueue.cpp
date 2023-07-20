@@ -69,8 +69,8 @@ namespace BeeEngine::Internal
             m_InstanceBuffers[m_CurrentInstanceBufferIndex]->SetData(data.Data.data(), data.Offset);
             Renderer::DrawInstanced(*instance.Model, *m_InstanceBuffers[m_CurrentInstanceBufferIndex], instance.BindingSets, data.InstanceCount);
             m_Statistics.DrawCallCount++;
-            m_Statistics.VertexCount += instance.Model->GetVertexCount();
-            m_Statistics.IndexCount += instance.Model->GetIndexCount();
+            m_Statistics.VertexCount += instance.Model->GetVertexCount() * data.InstanceCount;
+            m_Statistics.IndexCount += instance.Model->GetIndexCount() * data.InstanceCount;
             m_InstanceBuffers[m_CurrentInstanceBufferIndex]->Submit();
             data.Reset();
             //m_CurrentInstanceBufferIndex++;

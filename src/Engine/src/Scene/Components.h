@@ -73,17 +73,16 @@ namespace BeeEngine
     struct SpriteRendererComponent
     {
         Color4 Color = Color4::White;
-        Ref<Texture2D> Texture = nullptr;
+        Texture2D* Texture = nullptr;
         float TilingFactor = 1.0f;
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
         explicit SpriteRendererComponent(const Color4& color): Color(color) {}
-        explicit SpriteRendererComponent(const Ref<Texture2D>& texture): Texture(texture) {}
-        explicit SpriteRendererComponent(Ref<Texture2D>&& texture): Texture(std::move(texture)) {}
+        explicit SpriteRendererComponent(Texture2D& texture): Texture(&texture) {}
 
-        operator Ref<Texture2D>&() { return Texture; }
-        operator const Ref<Texture2D>&() const { return Texture; }
+        operator Texture2D&() { return *Texture; }
+        operator Texture2D&() const { return *Texture; }
     };
 
     struct MeshComponent
