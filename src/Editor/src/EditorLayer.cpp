@@ -8,7 +8,6 @@
 #include "Utils/FileDialogs.h"
 #include "Core/ResourceManager.h"
 
-
 namespace BeeEngine::Editor
 {
 
@@ -32,6 +31,8 @@ namespace BeeEngine::Editor
     }
     void EditorLayer::OnUpdate() noexcept
     {
+        if(m_ProjectFile == nullptr)
+            return;
         m_EditorCamera.OnUpdate();
         if(m_IsRuntime)
         {
@@ -39,6 +40,17 @@ namespace BeeEngine::Editor
         }
         else
         {
+            if(m_GameLibrary == nullptr)
+            {
+                std::string libraryName = "GameLibrary";
+                m_GameLibrary = CreateScope<DynamicLibrary>(m_ProjectFile->GetProjectPath(), libraryName);
+                m_NativeScriptFactory = CreateScope<NativeScriptFactory>(m_NativeScriptData);
+                InitFunction = reinterpret_cast<decltype(InitFunction)>(m_GameLibrary->GetFunction("InitGameLibrary"));
+                (*InitFunction)(&m_NativeScriptData);
+            }
+            auto scriptInfo = m_NativeScriptFactory->GetNativeScripts()[0];
+            ScriptableEntity* scriptableEntityFromGameLibrary = m_NativeScriptFactory->Create(scriptInfo.Name);
+            delete scriptableEntityFromGameLibrary;
             m_ViewPort.UpdateEditor(m_EditorCamera);
             if(m_ViewPort.IsNewSceneLoaded())
             {

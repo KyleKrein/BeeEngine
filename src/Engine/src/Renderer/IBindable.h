@@ -4,7 +4,6 @@
 
 #pragma once
 #include "Core/TypeDefines.h"
-#include <webgpu/webgpu.h>
 namespace BeeEngine
 {
     class IBindable
@@ -12,7 +11,7 @@ namespace BeeEngine
         public:
             virtual ~IBindable() = default;
             virtual void Bind(uint32_t slot = 0) = 0;
-            virtual std::vector<WGPUBindGroupLayoutEntry> GetBindGroupLayoutEntry() const = 0;
-            virtual std::vector<WGPUBindGroupEntry> GetBindGroupEntry() const = 0;
+            virtual std::vector<struct WGPUBindGroupLayoutEntry> GetBindGroupLayoutEntry() const = 0;
+            virtual std::vector<struct WGPUBindGroupEntry> GetBindGroupEntry() const = 0;
     };
 }

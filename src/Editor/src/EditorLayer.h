@@ -14,6 +14,8 @@
 #include "Scene/SceneSerializer.h"
 #include "Panels/AssetPanel.h"
 #include "ProjectFile.h"
+#include "Utils/DynamicLibrary.h"
+#include "Scene/NativeScriptFactory.h"
 
 namespace BeeEngine::Editor
 {
@@ -40,6 +42,11 @@ namespace BeeEngine::Editor
         InspectorPanel m_InspectorPanel {};
         bool m_IsRuntime = false;
         Scope<ProjectFile> m_ProjectFile = nullptr;
+
+        Scope<DynamicLibrary> m_GameLibrary = nullptr;
+        Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
+        BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
+        void*(*InitFunction)(void*) = nullptr;
 
         void SetUpMenuBar();
     };
