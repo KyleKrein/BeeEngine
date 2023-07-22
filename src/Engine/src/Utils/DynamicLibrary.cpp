@@ -17,23 +17,20 @@ namespace BeeEngine
         std::string fullName;
 #if defined(WINDOWS)
         fullName = "lib" + name+ ".dll";
-        auto pathStr = (path / fullName).string();
-        BeeCoreTrace("Loading library {0}", pathStr);
-        m_Handle = LoadLibraryA(TEXT(pathStr.c_str()));
+#elif defined(MACOS)
+        fullName = "lib" + name + ".dylib";
+#elif defined(LINUX)
+        fullName = "lib" + name + ".so";
 #else
+        #error "Unsupported platform"
 #endif
-        if(!m_Handle)
-            BeeCoreError("Failed to load library {0}", fullName);
-        else
-            BeeCoreTrace("Library {0} was loaded successfully", fullName);
+        m_Path = path / fullName;
+        Reload();
     }
 
     DynamicLibrary::~DynamicLibrary()
     {
-#if defined(WINDOWS)
-        FreeLibrary((HMODULE)m_Handle);
-#else
-#endif
+        Unload();
     }
 
     void *DynamicLibrary::GetFunction(const char *name)
@@ -47,5 +44,32 @@ namespace BeeEngine
             return ptr;
         BeeCoreError("Failed to get function {0}", name);
         return nullptr;
+    }
+
+    void DynamicLibrary::Reload()
+    {
+        Unload();
+        BeeCoreTrace("Loading library {0}", m_Path.string());
+#if defined(WINDOWS)
+        m_Handle = LoadLibraryA(TEXT(m_Path.string().c_str()));
+#elif defined(MACOS) || defined(LINUX)
+        m_Handle = dlopen(m_Path.string().c_str(), RTLD_LAZY);
+#endif
+        if(!m_Handle)
+            BeeCoreError("Failed to load library {0}", m_Path.string());
+        else
+            BeeCoreTrace("Library {0} was loaded successfully", m_Path.string());
+    }
+
+    void DynamicLibrary::Unload()
+    {
+        if(!m_Handle)
+            return;
+        BeeCoreTrace("Unloading library {0}", m_Path.string());
+#if defined(WINDOWS)
+        FreeLibrary((HMODULE)m_Handle);
+#elif defined(MACOS) || defined(LINUX)
+        dlclose(m_Handle);
+#endif
     }
 }

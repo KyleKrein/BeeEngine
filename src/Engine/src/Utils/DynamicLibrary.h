@@ -13,9 +13,15 @@ namespace BeeEngine
     public:
         DynamicLibrary(const std::filesystem::path& path, const std::string& name);
         ~DynamicLibrary();
-
+        bool IsLoaded()
+        {
+            return m_Handle != nullptr;
+        }
         void* GetFunction(const char* name);
+        void Reload();
+        void Unload();
     private:
         void* m_Handle;
+        std::filesystem::path m_Path;
     };
 }
