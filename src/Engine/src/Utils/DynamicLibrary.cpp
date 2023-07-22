@@ -7,6 +7,10 @@
 
 #if defined(WINDOWS)
     #include <Windows.h>
+#elif defined(MACOS)
+    #include <dlfcn.h>
+#elif defined(LINUX)
+    #include <dlfcn.h>
 #endif
 namespace BeeEngine
 {
@@ -22,7 +26,7 @@ namespace BeeEngine
 #elif defined(LINUX)
         fullName = "lib" + name + ".so";
 #else
-        #error "Unsupported platform"
+        static_assert(false, "Unsupported platform");
 #endif
         m_Path = path / fullName;
         Reload();
@@ -38,11 +42,16 @@ namespace BeeEngine
         void* ptr = nullptr;
 #if defined(WINDOWS)
         ptr = reinterpret_cast<void *>(GetProcAddress((HINSTANCE) m_Handle, TEXT(name)));
-#else
+#elif defined(MACOS) || defined(LINUX)
+        ptr = dlsym(m_Handle, name);
 #endif
         if(ptr)
             return ptr;
+#if defined(WINDOWS)
         BeeCoreError("Failed to get function {0}", name);
+#elif defined(MACOS) || defined(LINUX)
+        BeeCoreError("Failed to get function {0}: {1}", name, dlerror());
+#endif
         return nullptr;
     }
 
@@ -56,7 +65,13 @@ namespace BeeEngine
         m_Handle = dlopen(m_Path.string().c_str(), RTLD_LAZY);
 #endif
         if(!m_Handle)
+        {
+#if defined(WINDOWS)
             BeeCoreError("Failed to load library {0}", m_Path.string());
+#elif defined(MACOS) || defined(LINUX)
+            BeeCoreError("Failed to load library {0}: {1}", m_Path.string(), dlerror());
+#endif
+        }
         else
             BeeCoreTrace("Library {0} was loaded successfully", m_Path.string());
     }
