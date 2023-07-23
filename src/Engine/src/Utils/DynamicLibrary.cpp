@@ -59,6 +59,11 @@ namespace BeeEngine
     {
         Unload();
         BeeCoreTrace("Loading library {0}", m_Path.string());
+        if(!std::filesystem::exists(m_Path))
+        {
+            BeeCoreError("Failed to load library {}: File doesn't exist", m_Path.string());
+            return;
+        }
 #if defined(WINDOWS)
         m_Handle = LoadLibraryA(TEXT(m_Path.string().c_str()));
 #elif defined(MACOS) || defined(LINUX)

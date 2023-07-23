@@ -200,8 +200,11 @@ namespace BeeEngine::Editor
             m_GameLibrary = CreateScope<DynamicLibrary>(m_ProjectFile->GetProjectPath(), libraryName);
             m_NativeScriptFactory = CreateScope<NativeScriptFactory>(m_NativeScriptData);
         }
-        InitFunction = reinterpret_cast<decltype(InitFunction)>(m_GameLibrary->GetFunction("InitGameLibrary"));
-        (*InitFunction)(&m_NativeScriptData);
+        if(m_GameLibrary->IsLoaded())
+        {
+            InitFunction = reinterpret_cast<decltype(InitFunction)>(m_GameLibrary->GetFunction("InitGameLibrary"));
+            (*InitFunction)(&m_NativeScriptData);
+        }
         m_NativeScripts = m_NativeScriptFactory->GetNativeScripts();
     }
 

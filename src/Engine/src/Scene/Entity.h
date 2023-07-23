@@ -7,6 +7,8 @@
 #include "EntityID.h"
 #include "Scene.h"
 #include "Core/Logging/Log.h"
+#include "Core/UUID.h"
+//#include "Components.h"
 
 namespace BeeEngine
 {
@@ -17,6 +19,8 @@ namespace BeeEngine
         constexpr Entity(EntityID id, Scene* scene)
             : m_ID(id), m_Scene(scene)
         {}
+
+        UUID GetUUID();
 
 
         template<typename T, typename... Args>

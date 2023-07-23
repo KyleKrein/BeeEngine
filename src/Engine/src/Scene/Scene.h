@@ -31,7 +31,7 @@ namespace BeeEngine
         void UpdateEditor(EditorCamera& camera);
         void OnViewPortResize(uint32_t width, uint32_t height);
 
-        Entity CreateEntity(std::string_view name = "Entity");
+        Entity CreateEntity(const std::string& name = "Entity");
         void DestroyEntity(Entity entity);
 
         void StartRuntime();
@@ -55,5 +55,7 @@ namespace BeeEngine
         const std::vector<struct NativeScriptInfo>* m_NativeScripts = nullptr;
 
         void DestroyScripts();
+
+        Entity CreateEntityWithUUID(struct UUID uuid, const std::string& name);
     };
 }

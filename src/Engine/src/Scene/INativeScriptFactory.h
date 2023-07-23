@@ -3,9 +3,10 @@
 //
 
 #pragma once
-#include "ScriptableEntity.h"
+#include <string>
 namespace BeeEngine
 {
+    class ScriptableEntity;
     struct INativeScriptFactory
     {
         virtual ~INativeScriptFactory() = default;

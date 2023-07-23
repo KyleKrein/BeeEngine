@@ -3,9 +3,13 @@
 //
 
 #include "Entity.h"
-
+#include "Components.h"
 
 namespace BeeEngine
 {
 
+    UUID Entity::GetUUID()
+    {
+        return GetComponent<struct UUIDComponent>().ID;
+    }
 }

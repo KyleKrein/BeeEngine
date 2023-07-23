@@ -16,9 +16,14 @@
 #include "Renderer/Mesh.h"
 #include "Renderer/Material.h"
 #include "NativeScriptFactory.h"
+#include "Core/UUID.h"
 
 namespace BeeEngine
 {
+    struct UUIDComponent
+    {
+        UUID ID;
+    };
     struct TagComponent
     {
         String Tag;

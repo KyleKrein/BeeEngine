@@ -11,17 +11,14 @@
 #include "gtc/type_ptr.hpp"
 #include <glm/glm.hpp>
 #include "NativeScriptFactory.h"
+#include "Core/UUID.h"
 
 namespace BeeEngine
 {
 
-    Entity Scene::CreateEntity(std::string_view name)
+    Entity Scene::CreateEntity(const std::string& name)
     {
-        Entity entity(EntityID{m_Registry.create()}, this);
-        entity.AddComponent<TransformComponent>();
-        auto& tag = entity.AddComponent<TagComponent>();
-        tag.Tag = name;
-        return entity;
+        return CreateEntityWithUUID(UUID(), std::string(name));
     }
 
     void Scene::OnViewPortResize(uint32_t width, uint32_t height)
@@ -157,5 +154,15 @@ namespace BeeEngine
                 scriptComponent.DestroyScript(scriptComponent);
             }
         }
+    }
+
+    Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string &name)
+    {
+        Entity entity(EntityID{m_Registry.create()}, this);
+        entity.AddComponent<UUIDComponent>(uuid);
+        entity.AddComponent<TransformComponent>();
+        auto& tag = entity.AddComponent<TagComponent>();
+        tag.Tag = name;
+        return entity;
     }
 }
