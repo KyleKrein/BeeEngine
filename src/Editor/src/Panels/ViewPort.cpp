@@ -123,7 +123,7 @@ namespace BeeEngine::Editor
     {
         //m_FrameBuffer->Bind();
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
-        ImGui::Begin("Viewport");
+        ImGui::Begin("##Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
         auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
         auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
@@ -226,10 +226,7 @@ namespace BeeEngine::Editor
     void ViewPort::OpenScene(const std::filesystem::path& path)
     {
         BeeCoreTrace("Opening scene {0}", path.string());
-        m_Scene = CreateRef<Scene>();
-        m_Scene->OnViewPortResize(m_Width, m_Height);
         m_NewSceneWasLoaded = true;
-        SceneSerializer serializer(m_Scene);
-        serializer.Deserialize(path.string());
+        m_ScenePath = path.string();
     }
 }

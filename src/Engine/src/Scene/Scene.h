@@ -51,5 +51,9 @@ namespace BeeEngine
         Texture2D* m_BlankTexture = nullptr;
         Ref<BindingSet> m_CameraBindingSet;
         Ref<UniformBuffer> m_CameraUniformBuffer;
+
+        const std::vector<struct NativeScriptInfo>* m_NativeScripts = nullptr;
+
+        void DestroyScripts();
     };
 }

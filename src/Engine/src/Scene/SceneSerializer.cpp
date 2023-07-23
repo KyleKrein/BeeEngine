@@ -90,7 +90,7 @@ namespace BeeEngine
             : m_Scene(scene)
     {}
 
-    void SceneSerializer::Serialize(std::string_view filepath)
+    void SceneSerializer::Serialize(const std::filesystem::path& filepath)
     {
         YAML::Emitter out;
         out << YAML::BeginMap;
@@ -106,18 +106,18 @@ namespace BeeEngine
         out << YAML::EndSeq;
         out << YAML::EndMap;
 
-        std::ofstream fout(filepath.data());
+        std::ofstream fout(filepath);
         fout << out.c_str();
     }
 
-    void SceneSerializer::SerializeBinary(std::string_view filepath)
+    void SceneSerializer::SerializeBinary(const std::filesystem::path& filepath)
     {
         BeeCoreAssert(false, "Not implemented yet");
     }
 
-    void SceneSerializer::Deserialize(std::string_view filepath)
+    void SceneSerializer::Deserialize(const std::filesystem::path& filepath)
     {
-        YAML::Node data = YAML::LoadFile(filepath.data());
+        YAML::Node data = YAML::LoadFile(filepath.string());
         if (!data["Scene"])
             return;
         std::string sceneName = data["Scene"].as<std::string>();
@@ -177,7 +177,7 @@ namespace BeeEngine
         }
     }
 
-    void SceneSerializer::DeserializeBinary(std::string_view filepath)
+    void SceneSerializer::DeserializeBinary(const std::filesystem::path& filepath)
     {
         BeeCoreAssert(false, "Not implemented yet");
     }

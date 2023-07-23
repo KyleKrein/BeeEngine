@@ -28,6 +28,7 @@ namespace BeeEngine::Editor
         void UpdateEditor(EditorCamera& camera) noexcept;
         void Render(EditorCamera& camera) noexcept;
         Ref<Scene>& GetScene() noexcept { return m_Scene; }
+        void SetScene(const Ref<Scene>& scene) noexcept { m_Scene.reset(); m_Scene = scene; }
 
         [[nodiscard]] uint32_t GetHeight() const
         {
@@ -48,6 +49,11 @@ namespace BeeEngine::Editor
             bool tmp = m_NewSceneWasLoaded;
             m_NewSceneWasLoaded = false;
             return tmp;
+        }
+
+        const std::string& GetScenePath()
+        {
+            return m_ScenePath;
         }
 
     private:
@@ -71,6 +77,8 @@ namespace BeeEngine::Editor
         Entity m_HoveredEntity = Entity::Null;
 
         std::filesystem::path m_WorkingDirectory;
+
+        std::string m_ScenePath;
 
 
         bool OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept;

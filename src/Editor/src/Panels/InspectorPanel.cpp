@@ -65,6 +65,7 @@ namespace BeeEngine::Editor
         {
             AddComponentPopup<CameraComponent>("Camera", entity);
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
+            AddComponentPopup<NativeScriptComponent>("Native Script", entity);
             ImGui::EndPopup();
         }
 
@@ -138,18 +139,18 @@ namespace BeeEngine::Editor
                 {
                     camera.Camera.SetOrthographicFarClip(farClip);
                 }
-                ImGui::Checkbox("Fixed Aspect Ratio", &camera.FixedAspectRatio);
-                bool oldPrimary = camera.Primary;
-                ImGui::Checkbox("Primary", &camera.Primary);
-                if(camera.Primary != oldPrimary && camera.Primary)
+            }
+            ImGui::Checkbox("Fixed Aspect Ratio", &camera.FixedAspectRatio);
+            bool oldPrimary = camera.Primary;
+            ImGui::Checkbox("Primary", &camera.Primary);
+            if(camera.Primary != oldPrimary && camera.Primary)
+            {
+                auto cameras = m_Context->m_Registry.view<CameraComponent>();
+                for(auto cameraEntity : cameras)
                 {
-                    auto cameras = m_Context->m_Registry.view<CameraComponent>();
-                    for(auto cameraEntity : cameras)
-                    {
-                        m_Context->m_Registry.get<CameraComponent>(cameraEntity).Primary = false;
-                    }
-                    camera.Primary = true;
+                    m_Context->m_Registry.get<CameraComponent>(cameraEntity).Primary = false;
                 }
+                camera.Primary = true;
             }
         });
 
@@ -159,7 +160,8 @@ namespace BeeEngine::Editor
 
             if(sprite.Texture)
             {
-                if(ImGui::ImageButton((void*)sprite.Texture->GetRendererID(), ImVec2(100.0f, 100.0f)))
+                float aspectRatio = (float)sprite.Texture->GetWidth() / (float)sprite.Texture->GetHeight();
+                if(ImGui::ImageButton((void*)sprite.Texture->GetRendererID(), ImVec2(100.0f * aspectRatio, 100.0f * aspectRatio), { 0, 1 }, { 1, 0 }))
                 {
                     sprite.Texture = nullptr;
                 }
@@ -191,6 +193,39 @@ namespace BeeEngine::Editor
 
 
             ImGui::DragFloat("Tiling Factor", &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
+        });
+
+        DrawComponentUI<NativeScriptComponent>("Native Script", entity, [this](NativeScriptComponent& script)
+        {
+            std::vector<const char*> scriptNames;
+            if(m_NativeScripts == nullptr)
+            {
+                m_NativeScripts = &NativeScriptFactory::GetInstance().GetNativeScripts();
+            }
+            scriptNames.reserve(m_NativeScripts->size() + 1);
+            scriptNames.push_back("##");
+            for(auto& script : *m_NativeScripts)
+            {
+                scriptNames.push_back(script.Name.c_str());
+            }
+            const char* currentScriptName = script.Name != "" ? script.Name.c_str() : "##";
+            if(ImGui::BeginCombo("Script", currentScriptName))
+            {
+                for(auto& scriptName : scriptNames)
+                {
+                    bool isSelected = currentScriptName == scriptName;
+                    if(ImGui::Selectable(scriptName, isSelected))
+                    {
+                        currentScriptName = scriptName;
+                        script.Name = currentScriptName;
+                    }
+                    if(isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
         });
     }
 

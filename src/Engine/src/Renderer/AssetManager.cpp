@@ -42,9 +42,10 @@ BeeEngine::Mesh& BeeEngine::AssetManager::LoadMesh(const std::string& name, std:
 BeeEngine::Texture2D &BeeEngine::AssetManager::LoadTexture(const std::string &name, const std::filesystem::path &path)
 {
     if (HasTexture(name))
+    {
         return GetTexture(name);
-    else
-        return *m_Textures.emplace(name, Texture2D::Create(path.string())).first->second;
+    }
+    return *m_Textures.emplace(name, Texture2D::Create(path.string())).first->second;
 }
 
 BeeEngine::Material &BeeEngine::AssetManager::GetMaterial(const std::string &name)

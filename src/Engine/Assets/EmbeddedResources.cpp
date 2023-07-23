@@ -14,6 +14,9 @@ EmbedResource(ManropeRegular, "Fonts/Manrope/static/Manrope-Regular.ttf");
 EmbedResource(ManropeBold, "Fonts/Manrope/static/Manrope-Bold.ttf");
 EmbedResource(DirectoryTexture, "Textures/directory.png");
 EmbedResource(FileTexture, "Textures/file.png");
+EmbedResource(PlayButtonTexture, "Textures/PlayButton.png");
+EmbedResource(PauseButtonTexture, "Textures/PauseButton.png");
+EmbedResource(StopButtonTexture, "Textures/StopButton.png");
 EmbedResource(Standart2DShaderVertex, "Shaders/Standart2DVertex.glsl");
 EmbedResource(Standart2DShaderFragment, "Shaders/Standart2DFragment.glsl");
 namespace BeeEngine::Internal
@@ -34,6 +37,12 @@ namespace BeeEngine::Internal
                 return {(std::byte*)gDirectoryTextureData, gDirectoryTextureSize};
             case EmbeddedResource::FileTexture:
                 return {(std::byte*)gFileTextureData, gFileTextureSize};
+            case EmbeddedResource::PlayButtonTexture:
+                return {(std::byte*)gPlayButtonTextureData, gPlayButtonTextureSize};
+            case EmbeddedResource::PauseButtonTexture:
+                return {(std::byte*)gPauseButtonTextureData, gPauseButtonTextureSize};
+            case EmbeddedResource::StopButtonTexture:
+                return {(std::byte*)gStopButtonTextureData, gStopButtonTextureSize};
             case EmbeddedResource::Standart2DShaderVertex:
                 return {(std::byte*)gStandart2DShaderVertexData, gStandart2DShaderVertexSize};
             case EmbeddedResource::Standart2DShaderFragment:

@@ -15,6 +15,7 @@
 #include "Core/Color4.h"
 #include "Renderer/Mesh.h"
 #include "Renderer/Material.h"
+#include "NativeScriptFactory.h"
 
 namespace BeeEngine
 {
@@ -103,10 +104,13 @@ namespace BeeEngine
 
     struct NativeScriptComponent
     {
+        std::string Name = "";
         ScriptableEntity* Instance = nullptr;
 
-        ScriptableEntity*(*InstantiateScript)();
-        void (*DestroyScript)();
+        //ScriptableEntity*(*InstantiateScript)();
+        //void (*DestroyScript)();
+        std::function<ScriptableEntity*(const char*)> InstantiateScript = [](const char* name) { return NativeScriptFactory::GetInstance().Create(name); };;
+        std::function<void(NativeScriptComponent&)> DestroyScript = [](NativeScriptComponent& script) { delete script.Instance; script.Instance = nullptr; };
 
         /*
         std::function<void()> OnCreateFunction;
@@ -118,7 +122,7 @@ namespace BeeEngine
         requires std::derived_from<T, ScriptableEntity>
         void Bind()
         {
-            InstantiateScript = []() { return new T();};
+            InstantiateScript = [](const char* name) { return new T();};
             DestroyScript = [this]() {delete Instance; Instance = nullptr; };
             /*
             OnCreateFunction = [&]() { ((T*)Instance)->OnCreate();};

@@ -3,6 +3,7 @@
 //
 
 #include "NativeScriptFactory.h"
+#include "DefaultNativeScript.h"
 
 
 namespace BeeEngine
@@ -23,6 +24,8 @@ namespace BeeEngine
     ScriptableEntity* NativeScriptFactory::Create(const std::string &name)
     {
         BeeExpects(m_Data.CreateNativeScript_ClientOwned != nullptr);
+        if(name.empty() || name == "")
+            return new DefaultScript();
         if(!IsScriptRegistered(name))
         {
             BeeCoreError("Script with name {} not found", name);

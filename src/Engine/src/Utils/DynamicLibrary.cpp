@@ -86,5 +86,6 @@ namespace BeeEngine
 #elif defined(MACOS) || defined(LINUX)
         dlclose(m_Handle);
 #endif
+        m_Handle = nullptr;
     }
 }

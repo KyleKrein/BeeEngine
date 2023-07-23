@@ -27,6 +27,8 @@ namespace BeeEngine::Editor
 
         std::filesystem::path m_WorkingDirectory;
 
+        const std::vector<NativeScriptInfo>* m_NativeScripts = nullptr;
+
         void DrawComponents(Entity entity);
 
         template<typename T, typename UIFunction>

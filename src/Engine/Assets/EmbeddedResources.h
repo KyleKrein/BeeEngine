@@ -14,6 +14,9 @@ enum class EmbeddedResource
     ManropeBold = 3,
     DirectoryTexture = 100,
     FileTexture = 101,
+    PlayButtonTexture = 102,
+    PauseButtonTexture = 103,
+    StopButtonTexture = 104,
     Standart2DShaderVertex = 200,
     Standart2DShaderFragment = 201
 };

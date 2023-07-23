@@ -10,6 +10,7 @@
 #include "Core/Application.h"
 #include "gtc/type_ptr.hpp"
 #include <glm/glm.hpp>
+#include "NativeScriptFactory.h"
 
 namespace BeeEngine
 {
@@ -46,7 +47,8 @@ namespace BeeEngine
             auto& scriptComponent = view.get<NativeScriptComponent>(entity);
             if (!scriptComponent.Instance)
             {
-                scriptComponent.Instance = scriptComponent.InstantiateScript();
+                BeeCoreTrace("Instanciating Script: {0}", scriptComponent.Name);
+                scriptComponent.Instance = scriptComponent.InstantiateScript(scriptComponent.Name.c_str());
                 scriptComponent.Instance->m_Entity = Entity(EntityID{entity}, this);
                 scriptComponent.Instance->OnCreate();
             }
@@ -124,17 +126,36 @@ namespace BeeEngine
 
     void Scene::StartRuntime()
     {
+        if(m_NativeScripts == nullptr)
+        {
+            m_NativeScripts = &NativeScriptFactory::GetInstance().GetNativeScripts();
+        }
         m_IsRuntime = true;
     }
 
     void Scene::StopRuntime()
     {
         m_IsRuntime = false;
+        DestroyScripts();
     }
 
     Scene::Scene()
     : m_CameraUniformBuffer(UniformBuffer::Create(sizeof(glm::mat4))), m_RectModel(&Application::GetInstance().GetAssetManager().GetModel("Rectangle")), m_BlankTexture(&Application::GetInstance().GetAssetManager().GetTexture("Blank"))
     {
         m_CameraBindingSet = BindingSet::Create({{0,*m_CameraUniformBuffer}});
+    }
+
+    void Scene::DestroyScripts()
+    {
+        auto view = m_Registry.view<NativeScriptComponent>();
+        for (auto entity:view)
+        {
+            auto& scriptComponent = view.get<NativeScriptComponent>(entity);
+            if (scriptComponent.Instance)
+            {
+                scriptComponent.Instance->OnDestroy();
+                scriptComponent.DestroyScript(scriptComponent);
+            }
+        }
     }
 }

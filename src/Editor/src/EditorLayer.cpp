@@ -7,6 +7,7 @@
 #include "Scene/Components.h"
 #include "Utils/FileDialogs.h"
 #include "Core/ResourceManager.h"
+#include <../../Engine/Assets/EmbeddedResources.h>
 
 namespace BeeEngine::Editor
 {
@@ -14,11 +15,9 @@ namespace BeeEngine::Editor
     void EditorLayer::OnAttach() noexcept
     {
         SetUpMenuBar();
-        //Renderer::SetClearColor(Color4::Black);
-        //auto forestTexture = Texture2D::Create("Assets/Textures/forest.png");
 
-        //auto test = m_ViewPort.GetScene()->CreateEntity("Test");
-        //test.AddComponent<Texture2DComponent>(forestTexture);
+        m_PlayButtonTexture = Texture2D::CreateFromMemory(Internal::GetEmbeddedResource(EmbeddedResource::PlayButtonTexture));
+        m_StopButtonTexture = Texture2D::CreateFromMemory(Internal::GetEmbeddedResource(EmbeddedResource::StopButtonTexture));
 
         m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
@@ -34,29 +33,30 @@ namespace BeeEngine::Editor
         if(m_ProjectFile == nullptr)
             return;
         m_EditorCamera.OnUpdate();
-        if(m_IsRuntime)
+        switch (m_SceneState)
         {
-            m_ViewPort.UpdateRuntime();
+            case SceneState::Edit:
+            {
+                m_ViewPort.UpdateEditor(m_EditorCamera);
+                break;
+            }
+            case SceneState::Play:
+            {
+                m_ViewPort.UpdateRuntime();
+                break;
+            }
+            case SceneState::Pause:
+            {
+                break;
+            }
+            case SceneState::Simulate:
+            {
+                break;
+            }
         }
-        else
+        if(m_ViewPort.IsNewSceneLoaded())
         {
-            if(m_GameLibrary == nullptr)
-            {
-                std::string libraryName = "GameLibrary";
-                m_GameLibrary = CreateScope<DynamicLibrary>(m_ProjectFile->GetProjectPath(), libraryName);
-                m_NativeScriptFactory = CreateScope<NativeScriptFactory>(m_NativeScriptData);
-                InitFunction = reinterpret_cast<decltype(InitFunction)>(m_GameLibrary->GetFunction("InitGameLibrary"));
-                (*InitFunction)(&m_NativeScriptData);
-            }
-            auto scriptInfo = m_NativeScriptFactory->GetNativeScripts()[0];
-            ScriptableEntity* scriptableEntityFromGameLibrary = m_NativeScriptFactory->Create(scriptInfo.Name);
-            delete scriptableEntityFromGameLibrary;
-            m_ViewPort.UpdateEditor(m_EditorCamera);
-            if(m_ViewPort.IsNewSceneLoaded())
-            {
-                m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
-                m_InspectorPanel.SetContext(m_ViewPort.GetScene());
-            }
+            LoadScene(m_ViewPort.GetScenePath());
         }
         m_FpsCounter.Update();
     }
@@ -67,6 +67,7 @@ namespace BeeEngine::Editor
         if(m_ProjectFile)
         {
             m_MenuBar.Render();
+            UIToolbar();
             m_ViewPort.Render(m_EditorCamera);
             m_SceneHierarchyPanel.OnGUIRender();
             m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
@@ -93,6 +94,14 @@ namespace BeeEngine::Editor
                 m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+
+                SetupGameLibrary();
+
+                auto& scenePath = m_ProjectFile->GetLastUsedScenePath();
+                if(!scenePath.empty())
+                {
+                    LoadScene(scenePath);
+                }
             }
             newProject:
             if(ImGui::Button("New project"))
@@ -115,6 +124,8 @@ namespace BeeEngine::Editor
                 m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+
+                SetupGameLibrary();
             }
             end:
             ImGui::End();
@@ -143,11 +154,7 @@ namespace BeeEngine::Editor
                 BeeCoreError("Unable to open file");
                 return;
             }
-            m_SceneHierarchyPanel.ClearSelection();
-            m_ViewPort.GetScene()->Clear();
-            m_ScenePath = filepath;
-            m_SceneSerializer.Deserialize(m_ScenePath);
-            m_ViewPort.GetScene()->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
+            LoadScene(filepath);
         }});
         fileMenu.AddChild({"Save Scene", [this](){
             if(m_ScenePath.empty())
@@ -158,9 +165,9 @@ namespace BeeEngine::Editor
                     BeeCoreError("Unable to save to file");
                     return;
                 }
+                if(!filepath.ends_with(".beescene"))
+                    filepath += ".beescene";
                 m_ScenePath = filepath;
-                if(!m_ScenePath.ends_with(".beescene"))
-                    m_ScenePath += ".beescene";
             }
             m_SceneSerializer.Serialize(m_ScenePath);
         }});
@@ -171,12 +178,132 @@ namespace BeeEngine::Editor
                 BeeCoreError("Unable to save to file");
                 return;
             }
+            if(!filepath.ends_with(".beescene"))
+                filepath += ".beescene";
             m_ScenePath = filepath;
-            if(!m_ScenePath.ends_with(".beescene"))
-                m_ScenePath += ".beescene";
             m_SceneSerializer.Serialize(m_ScenePath);
         }});
         fileMenu.AddChild({"Exit", [](){BeeEngine::Application::GetInstance().Close();}});
         m_MenuBar.AddElement(fileMenu);
+    }
+
+    void EditorLayer::SetupGameLibrary()
+    {
+        if(m_GameLibrary)
+        {
+            m_GameLibrary->Reload();
+            m_NativeScriptFactory->Reload();
+        }
+        else
+        {
+            std::string libraryName = "GameLibrary";
+            m_GameLibrary = CreateScope<DynamicLibrary>(m_ProjectFile->GetProjectPath(), libraryName);
+            m_NativeScriptFactory = CreateScope<NativeScriptFactory>(m_NativeScriptData);
+        }
+        InitFunction = reinterpret_cast<decltype(InitFunction)>(m_GameLibrary->GetFunction("InitGameLibrary"));
+        (*InitFunction)(&m_NativeScriptData);
+        m_NativeScripts = m_NativeScriptFactory->GetNativeScripts();
+    }
+
+    void EditorLayer::UIToolbar() noexcept
+    {
+        auto& colors = ImGui::GetStyle().Colors;
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        const auto& buttonHovered = colors[ImGuiCol_ButtonHovered];
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                              {buttonHovered.x, buttonHovered.y, buttonHovered.z, 0.5f});
+        const auto& buttonActive = colors[ImGuiCol_ButtonActive];
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                              {buttonActive.x, buttonActive.y, buttonActive.z, 0.5f});
+        ImGui::Begin("##Toolbar", nullptr, ImGuiWindowFlags_NoDecoration| ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
+        ImTextureID textureID = (ImTextureID)(m_SceneState == SceneState::Edit ? m_PlayButtonTexture->GetRendererID() : m_StopButtonTexture->GetRendererID());
+        float size = ImGui::GetWindowHeight() - 4;
+        ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
+        if(ImGui::ImageButton(textureID, ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0))
+        {
+            if(m_SceneState == SceneState::Edit)
+            {
+                m_SceneState = SceneState::Play;
+            }
+            else
+            {
+                m_SceneState = SceneState::Edit;
+            }
+            switch (m_SceneState)
+            {
+                case SceneState::Edit:
+                {
+                    OnSceneStop();
+                    break;
+                }
+                case SceneState::Play:
+                {
+                    OnScenePlay();
+                    break;
+                }
+                case SceneState::Pause:
+                {
+                    OnScenePause();
+                    break;
+                }
+                case SceneState::Simulate:
+                {
+                    OnSceneSimulate();
+                    break;
+                }
+            }
+        }
+        ImGui::PopStyleVar(2);
+        ImGui::PopStyleColor(3);
+        ImGui::End();
+    }
+
+    void EditorLayer::OnScenePlay() noexcept
+    {
+        if(m_ScenePath.empty())
+        {
+            auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
+            if(filepath.empty())
+            {
+                BeeCoreError("Unable to save to file");
+                return;
+            }
+            if(!filepath.ends_with(".beescene"))
+                filepath += ".beescene";
+            m_ScenePath = filepath;
+        }
+        m_SceneSerializer.Serialize(m_ScenePath);
+        m_ViewPort.GetScene()->StartRuntime();
+    }
+
+    void EditorLayer::OnScenePause() noexcept
+    {
+
+    }
+
+    void EditorLayer::OnSceneStop() noexcept
+    {
+        m_ViewPort.GetScene()->StopRuntime();
+        m_SceneHierarchyPanel.ClearSelection();
+        m_ViewPort.GetScene()->Clear();
+        m_SceneSerializer.Deserialize(m_ScenePath);
+        m_ViewPort.GetScene()->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
+    }
+
+    void EditorLayer::OnSceneSimulate() noexcept
+    {
+
+    }
+
+    void EditorLayer::LoadScene(const std::filesystem::path& path)
+    {
+        m_SceneHierarchyPanel.ClearSelection();
+        m_ViewPort.GetScene()->Clear();
+        m_ScenePath = path;
+        m_SceneSerializer.Deserialize(m_ScenePath);
+        m_ViewPort.GetScene()->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
+        m_ProjectFile->SetLastUsedScenePath(m_ScenePath);
     }
 }
