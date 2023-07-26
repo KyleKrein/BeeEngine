@@ -50,6 +50,14 @@ namespace BeeEngine
             return m_Scene->m_Registry.all_of<T>(m_ID);
         }
 
+        void Destroy()
+        {
+            BeeCoreAssert(*this != Entity::Null, "Entity is null!");
+            m_Scene->DestroyEntity(*this);
+            m_ID = Null.ID;
+            m_Scene = Null.Scene;
+        }
+
         operator bool() const { return m_ID.ID != entt::null; }
         operator EntityID() const { return m_ID; }
         operator uint32_t() const { return (uint32_t)m_ID.ID; }

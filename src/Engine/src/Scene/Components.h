@@ -128,12 +128,20 @@ namespace BeeEngine
         void Bind()
         {
             InstantiateScript = [](const char* name) { return new T();};
-            DestroyScript = [this]() {delete Instance; Instance = nullptr; };
+            DestroyScript = [](NativeScriptComponent& script) { delete script.Instance; script.Instance = nullptr; };
             /*
             OnCreateFunction = [&]() { ((T*)Instance)->OnCreate();};
             OnDestroyFunction = [&]() { ((T*)Instance)->OnDestroy();};
             OnUpdateFunction = [&]() { ((T*)Instance)->OnUpdate();};
             */
+        }
+
+        ~NativeScriptComponent()
+        {
+            if (Instance)
+            {
+                DestroyScript(*this);
+            }
         }
     };
 }
