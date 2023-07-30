@@ -3,6 +3,7 @@
 //
 
 #include "EmbeddedResources.h"
+#if 0//!defined(_MSC_VER)
 #define INCBIN_SILENCE_BITCODE_WARNING
 #include "incbin.h"
 
@@ -19,6 +20,7 @@ EmbedResource(PauseButtonTexture, "Textures/PauseButton.png");
 EmbedResource(StopButtonTexture, "Textures/StopButton.png");
 EmbedResource(Standart2DShaderVertex, "Shaders/Standart2DVertex.glsl");
 EmbedResource(Standart2DShaderFragment, "Shaders/Standart2DFragment.glsl");
+
 namespace BeeEngine::Internal
 {
     gsl::span<std::byte> GetEmbeddedResource(EmbeddedResource resource) noexcept
@@ -52,4 +54,56 @@ namespace BeeEngine::Internal
         }
     }
 }
+
+#else
+extern "C"
+{
+#include <directory_png.h>
+#include <file_png.h>
+#include <Manrope_Bold_ttf.h>
+#include <Manrope_Regular_ttf.h>
+#include <OpenSans_Bold_ttf.h>
+#include <OpenSans_Regular_ttf.h>
+#include <PauseButton_png.h>
+#include <PlayButton_png.h>
+#include <Standart2DFragment_glsl.h>
+#include <Standart2DVertex_glsl.h>
+#include <StopButton_png.h>
+#include <SimulateButton_png.h>
+}
+
+namespace BeeEngine::Internal
+{
+    gsl::span<std::byte> GetEmbeddedResource(EmbeddedResource resource) noexcept
+    {
+        switch (resource)
+        {
+            case EmbeddedResource::OpenSansRegular:
+                return {(std::byte*)OpenSans_Regular_ttf_data, OpenSans_Regular_ttf_size};
+            case EmbeddedResource::OpenSansBold:
+                return {(std::byte*)OpenSans_Bold_ttf_data, OpenSans_Bold_ttf_size};
+            case EmbeddedResource::ManropeRegular:
+                return {(std::byte*)Manrope_Regular_ttf_data, Manrope_Regular_ttf_size};
+            case EmbeddedResource::ManropeBold:
+                return {(std::byte*)Manrope_Bold_ttf_data, Manrope_Bold_ttf_size};
+            case EmbeddedResource::DirectoryTexture:
+                return {(std::byte*)directory_png_data, directory_png_size};
+            case EmbeddedResource::FileTexture:
+                return {(std::byte*)file_png_data, file_png_size};
+            case EmbeddedResource::PlayButtonTexture:
+                return {(std::byte*)PlayButton_png_data, PlayButton_png_size};
+            case EmbeddedResource::PauseButtonTexture:
+                return {(std::byte*)PauseButton_png_data, PauseButton_png_size};
+            case EmbeddedResource::StopButtonTexture:
+                return {(std::byte*)StopButton_png_data, StopButton_png_size};
+            case EmbeddedResource::Standart2DShaderVertex:
+                return {(std::byte*)Standart2DVertex_glsl_data, Standart2DVertex_glsl_size};
+            case EmbeddedResource::Standart2DShaderFragment:
+                return {(std::byte*)Standart2DFragment_glsl_data, Standart2DFragment_glsl_size};
+            default:
+                return {};
+        }
+    }
+}
+#endif
 

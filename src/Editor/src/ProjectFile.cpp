@@ -91,6 +91,13 @@ namespace BeeEngine::Editor
 
     void ProjectFile::SetLastUsedScenePath(const std::filesystem::path &path) noexcept
     {
+        if(!File::Exists(path))
+        {
+            BeeCoreWarn("Scene file {0} does not exist!", path.string());
+            m_LastUsedScenePath = "";
+            Save();
+            return;
+        }
         if(m_LastUsedScenePath.is_absolute())
             m_LastUsedScenePath = std::filesystem::relative(m_LastUsedScenePath, m_ProjectPath);
         else

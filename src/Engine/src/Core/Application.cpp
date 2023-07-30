@@ -8,6 +8,7 @@
 //#include "Platform/Vulkan/VulkanRendererAPI.h"
 #include "Renderer/Renderer.h"
 #include "DeletionQueue.h"
+#include "Scripting/ScriptingEngine.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -51,11 +52,14 @@ namespace BeeEngine{
         m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
 #endif
         m_AssetManager.LoadStandardAssets();
+
+        ScriptingEngine::Init();
     }
 
     Application::~Application()
     {
         s_Instance = nullptr;
+        ScriptingEngine::Shutdown();
     }
 
     void Application::Dispatch(EventDispatcher &dispatcher)

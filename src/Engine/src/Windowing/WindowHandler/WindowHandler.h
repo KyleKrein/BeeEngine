@@ -11,7 +11,7 @@ namespace BeeEngine
 {
     enum class WindowHandlerAPI
     {
-        GLFW = 0,
+        //GLFW = 0,
         SDL = 1
     };
     class WindowHandler

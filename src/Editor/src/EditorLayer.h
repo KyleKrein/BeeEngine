@@ -16,6 +16,7 @@
 #include "ProjectFile.h"
 #include "Utils/DynamicLibrary.h"
 #include "Scene/NativeScriptFactory.h"
+#include "NativeScripting/GameBuilder.h"
 
 namespace BeeEngine::Editor
 {
@@ -43,6 +44,7 @@ namespace BeeEngine::Editor
         Scope<ProjectFile> m_ProjectFile = nullptr;
 
         Scope<DynamicLibrary> m_GameLibrary = nullptr;
+        Scope<GameBuilder> m_GameBuilder = nullptr;
         Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
         BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
         void*(*InitFunction)(void*) = nullptr;

@@ -47,7 +47,13 @@ bin
 bin/Debug
 bin/Release
 build
+build/Debug
+build/Release
 .idea
 .vscode
+.vs
+obj
+
+BeeEngineScripting.sln.DotSettings.user
 
 [Bb][Uu][Ii][Ll][Dd]/

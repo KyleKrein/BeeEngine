@@ -213,8 +213,8 @@ namespace BeeEngine::Internal
                     .hwnd =  win_hwnd
             };
             WGPUSurfaceDescriptor sfd = {
-                    .label =  "SDL Window",
-                    .nextInChain =  (WGPUChainedStruct*)&sfdHwnd
+                    .nextInChain =  (WGPUChainedStruct*)&sfdHwnd,
+                    .label =  "SDL Window"
             };
             surface = wgpuInstanceCreateSurface(instance, &sfd);
         } else

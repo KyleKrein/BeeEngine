@@ -8,17 +8,30 @@
 #include "memory.h"
 #include "debugbreak.h"
 #include <version>
+#include "spdlog/sinks/stdout_color_sinks.h"
 #if defined(__cpp_lib_source_location)
 #include <source_location>
 #else
 #include "source_location.h"
+
 #endif
 
 namespace BeeEngine{
     class Log
     {
     public:
-        static void Init();
+        static void Init()
+        {
+            spdlog::set_pattern("%^[%T] %n: %v%$");
+            s_CoreLogger = spdlog::stdout_color_mt("BeeEngine");
+            s_CoreLogger->set_level(spdlog::level::trace);
+
+
+            s_ClientLogger = spdlog::stdout_color_mt("App");
+            s_ClientLogger->set_level(spdlog::level::trace);
+
+            s_IsInit = true;
+        }
         inline constexpr static std::shared_ptr<spdlog::logger>& GetCoreLogger()
         {
             return s_CoreLogger;
@@ -40,12 +53,11 @@ namespace BeeEngine{
 }
 
 //Engine log
-
-consteval void BeeLogError(std::string_view message, std::source_location location = std::source_location::current())
+/*consteval void BeeLogError(std::string_view message, std::source_location location = std::source_location::current())
 {
     std::string final = std::string(message) + " at {1}: {2}";
     ::BeeEngine::Log::GetCoreLogger()->error(final, location.file_name(), location.line());
-}
+}*/
 #define BeeCoreFatalError(...)  ::BeeEngine::Log::GetCoreLogger()->critical(__VA_ARGS__); throw std::runtime_error(__VA_ARGS__)
 #define BeeCoreError(...)  ::BeeEngine::Log::GetCoreLogger()->error(__VA_ARGS__)
 #define BeeCoreWarn(...)   ::BeeEngine::Log::GetCoreLogger()->warn(__VA_ARGS__)

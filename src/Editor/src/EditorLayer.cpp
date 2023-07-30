@@ -8,6 +8,10 @@
 #include "Utils/FileDialogs.h"
 #include "Core/ResourceManager.h"
 #include <../../Engine/Assets/EmbeddedResources.h>
+#include "ConfigFile.h"
+#include "Scripting/ScriptingEngine.h"
+#include "Scripting/MAssembly.h"
+#include "Scripting/MClass.h"
 
 namespace BeeEngine::Editor
 {
@@ -38,6 +42,7 @@ namespace BeeEngine::Editor
             case SceneState::Edit:
             {
                 m_ViewPort.UpdateEditor(m_EditorCamera);
+                m_GameBuilder->UpdateAndCompile();
                 break;
             }
             case SceneState::Play:
@@ -185,10 +190,28 @@ namespace BeeEngine::Editor
         }});
         fileMenu.AddChild({"Exit", [](){BeeEngine::Application::GetInstance().Close();}});
         m_MenuBar.AddElement(fileMenu);
+
+        MenuBarElement BuildMenu = {"Build"};
+        BuildMenu.AddChild({"Reload Scripts", [this](){
+            SetupGameLibrary();
+        }});
+        m_MenuBar.AddElement(BuildMenu);
     }
 
     void EditorLayer::SetupGameLibrary()
     {
+        if(!m_GameBuilder)
+        {
+            m_GameBuilder = CreateScope<GameBuilder>(m_ProjectFile->GetProjectPath(), ConfigFile::LoadCompilerConfiguration());
+        }
+
+        auto& coreAssembly = ScriptingEngine::LoadAssembly("libs/BeeEngine.Core.dll");
+        auto& assemblyClasses = coreAssembly.GetClasses();
+        for(auto& klass : assemblyClasses)
+        {
+            BeeCoreTrace("Class: {0}.{1}", klass.GetNamespace(), klass.GetName());
+        }
+
         if(m_GameLibrary)
         {
             m_GameLibrary->Reload();

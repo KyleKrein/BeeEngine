@@ -45,11 +45,11 @@ namespace BeeEngine::Internal
                                     version);
         switch (windowApi)
         {
-            case WindowHandlerAPI::GLFW:
+            /*case WindowHandlerAPI::GLFW:
             {
                 ManageGLFW(appInfo);
                 break;
-            }
+            }*/
             case WindowHandlerAPI::SDL:
             {
                 ManageSDL(appInfo);

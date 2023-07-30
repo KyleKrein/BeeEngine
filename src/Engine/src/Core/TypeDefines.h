@@ -6,7 +6,15 @@
 #include "FramePtr.h"
 #include <vector>
 #include <optional>
+#include <concepts>
+#if __has_include (<cxxabi.h>)
 #include <cxxabi.h>
+#define BEE_HAS_CXXABI_H
+#define CONSTEXPR_FUNC constexpr
+#else
+#define CONSTEXPR_FUNC inline
+#endif
+
 #include <magic_enum.hpp>
 #if defined(BEE_COMPILE_WEBGPU)
 #include <webgpu/webgpu.h>
@@ -84,7 +92,7 @@ namespace BeeEngine
     template<typename T>
     using List = std::vector<T>;
     template<typename T>
-    constexpr String ToString(const T& obj);
+    CONSTEXPR_FUNC String ToString(const T& obj);
 
     template<class T>
     concept ConceptToStringAble = requires (T value)
@@ -100,27 +108,31 @@ namespace BeeEngine
 
     template<typename T>
     requires ConceptToStringAble<T>
-    constexpr std::string ToString(const T& obj)
+    CONSTEXPR_FUNC std::string ToString(const T& obj)
     {
         return obj.ToString();
     }
 
     template<typename T>
     requires std::is_enum_v<T>
-    constexpr String EnumToString(T obj);
+    CONSTEXPR_FUNC String EnumToString(T obj);
 
     template<typename T>
-    constexpr String TypeName(const T& obj)
+    CONSTEXPR_FUNC String TypeName(const T& obj)
     {
+#if defined(BEE_HAS_CXXABI_H)
         int status;
         char * demangled = abi::__cxa_demangle(typeid(obj).name(),0,0,&status);
         String result = String(demangled);
         free(demangled);
         return result;
+#else
+        return String(typeid(obj).name());
+#endif
     }
 
     template<typename T>
-    constexpr String ToString(const T& obj)
+    CONSTEXPR_FUNC String ToString(const T& obj)
     {
         if constexpr(std::is_enum_v<T>)
             return EnumToString(obj);
@@ -128,7 +140,7 @@ namespace BeeEngine
     }
     template<typename T>
     requires std::is_enum_v<T>
-    constexpr String EnumToString(T obj)
+    CONSTEXPR_FUNC String EnumToString(T obj)
     {
         //String name = String(magic_enum::enum_type_name<T>()) + "::" + String(magic_enum::enum_name(obj));
         auto name = magic_enum::enum_name(obj);
@@ -141,7 +153,7 @@ namespace BeeEngine
     }
 #if defined(BEE_COMPILE_WEBGPU)
     template<>
-    constexpr String EnumToString<WGPUFeatureName>(WGPUFeatureName obj)
+    CONSTEXPR_FUNC String EnumToString<WGPUFeatureName>(WGPUFeatureName obj)
     {
         switch (obj)
         {
@@ -226,12 +238,12 @@ namespace BeeEngine
 
 
     template<>
-    constexpr String ToString<String>(const String& obj)
+    CONSTEXPR_FUNC String ToString<String>(const String& obj)
     {
         return obj;
     }
     template<>
-    constexpr String ToString<std::string_view>(const std::string_view& obj)
+    CONSTEXPR_FUNC String ToString<std::string_view>(const std::string_view& obj)
     {
         return String{obj};
     }
@@ -243,109 +255,109 @@ namespace BeeEngine
     }
     */
     template<>
-    constexpr String ToString<int>(const int& obj)
+    CONSTEXPR_FUNC String ToString<int>(const int& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<unsigned int>(const unsigned int&obj)
+    CONSTEXPR_FUNC String ToString<unsigned int>(const unsigned int&obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<long>(const long& obj)
+    CONSTEXPR_FUNC String ToString<long>(const long& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<unsigned long>(const unsigned long& obj)
+    CONSTEXPR_FUNC String ToString<unsigned long>(const unsigned long& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<long long>(const long long& obj)
+    CONSTEXPR_FUNC String ToString<long long>(const long long& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<unsigned long long>(const unsigned long long& obj)
+    CONSTEXPR_FUNC String ToString<unsigned long long>(const unsigned long long& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<float>(const float& obj)
+    CONSTEXPR_FUNC String ToString<float>(const float& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<double>(const double& obj)
+    CONSTEXPR_FUNC String ToString<double>(const double& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<long double>(const long double& obj)
+    CONSTEXPR_FUNC String ToString<long double>(const long double& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<bool>(const bool& obj)
+    CONSTEXPR_FUNC String ToString<bool>(const bool& obj)
     {
         return obj ? "true" : "false";
     }
     template<>
-    constexpr String ToString<char>(const char& obj)
+    CONSTEXPR_FUNC String ToString<char>(const char& obj)
     {
         return String{obj};
     }
     template<>
-    constexpr String ToString<unsigned char>(const unsigned char& obj)
+    CONSTEXPR_FUNC String ToString<unsigned char>(const unsigned char& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<signed char>(const signed char& obj)
+    CONSTEXPR_FUNC String ToString<signed char>(const signed char& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<wchar_t>(const wchar_t& obj)
+    CONSTEXPR_FUNC String ToString<wchar_t>(const wchar_t& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<char8_t>(const char8_t& obj)
+    CONSTEXPR_FUNC String ToString<char8_t>(const char8_t& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<char16_t>(const char16_t& obj)
+    CONSTEXPR_FUNC String ToString<char16_t>(const char16_t& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<char32_t>(const char32_t& obj)
+    CONSTEXPR_FUNC String ToString<char32_t>(const char32_t& obj)
     {
         return std::to_string(obj);
     }
     template<>
-    constexpr String ToString<std::nullptr_t>(const std::nullptr_t& obj)
+    CONSTEXPR_FUNC String ToString<std::nullptr_t>(const std::nullptr_t& obj)
     {
         return obj == nullptr ? "nullptr" : std::to_string(reinterpret_cast<std::uintptr_t>(obj));
     }
     template<typename T>
     requires std::is_pointer_v<T>
-    constexpr String ToString(T obj)
+    CONSTEXPR_FUNC String ToString(T obj)
     {
         return obj == nullptr ? "nullptr" : std::to_string(reinterpret_cast<std::uintptr_t>(obj));
     }
     template<>
-    constexpr String ToString<std::byte>(const std::byte& obj)
+    CONSTEXPR_FUNC String ToString<std::byte>(const std::byte& obj)
     {
         return std::to_string(static_cast<int>(obj));
     }
 
     template<typename T>
-    constexpr String ToString(const std::vector<T>& collection)
+    CONSTEXPR_FUNC String ToString(const std::vector<T>& collection)
     {
         String result = "[";
         for(auto& item : collection)
@@ -356,7 +368,7 @@ namespace BeeEngine
         return result;
     }
     template<typename T, size_t numberOfElements>
-    constexpr String ToString(const std::array<T, numberOfElements>& collection)
+    CONSTEXPR_FUNC String ToString(const std::array<T, numberOfElements>& collection)
     {
         String result = "[";
         for(auto& item : collection)
@@ -367,7 +379,7 @@ namespace BeeEngine
         return result;
     }
     template<typename Key, typename Value>
-    constexpr String ToString(const std::unordered_map<Key, Value>& collection)
+    CONSTEXPR_FUNC String ToString(const std::unordered_map<Key, Value>& collection)
     {
         String result = "[";
         for(auto& item : collection)
@@ -378,3 +390,4 @@ namespace BeeEngine
         return result;
     }
 }
+#undef CONSTEXPR_FUNC

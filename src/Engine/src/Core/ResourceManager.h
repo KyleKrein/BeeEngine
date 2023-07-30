@@ -8,6 +8,7 @@
 #include "TypeDefines.h"
 #include "algorithm"
 #include "Debug/Instrumentor.h"
+#include "Core/Application.h"
 
 namespace BeeEngine
 {
@@ -29,6 +30,79 @@ namespace BeeEngine
             size_t lastSlash = result.find_last_of('/') + 1;
             size_t count = lastDot == -1ul? result.size() - lastSlash: lastDot - lastSlash;
             return String(result.substr(lastSlash, count));
+        }
+
+        inline constexpr static std::string GetDynamicLibraryName(const std::string& name, OSPlatform os)
+        {
+            std::string fullName;
+            if(os == OSPlatform::Windows)
+            {
+                fullName = "lib" + name + ".dll";
+            }
+            else if(os == OSPlatform::Mac)
+            {
+                fullName = "lib" + name + ".dylib";
+            }
+            else if(os == OSPlatform::Linux)
+            {
+                fullName = "lib" + name + ".so";
+            }
+
+            return fullName;
+        }
+        inline constexpr static std::string GetDynamicLibraryName(const std::string& name)
+        {
+            std::string fullName;
+            if(Application::GetOsPlatform() == OSPlatform::Windows)
+            {
+                fullName = "lib" + name + ".dll";
+            }
+            else if(Application::GetOsPlatform() == OSPlatform::Mac)
+            {
+                fullName = "lib" + name + ".dylib";
+            }
+            else if(Application::GetOsPlatform() == OSPlatform::Linux)
+            {
+                fullName = "lib" + name + ".so";
+            }
+
+            return fullName;
+        }
+        inline constexpr static std::string GetStaticLibraryName(const std::string& name, OSPlatform os)
+        {
+            std::string fullName;
+            if(os == OSPlatform::Windows)
+            {
+                fullName = "lib" + name + ".a";
+            }
+            else if(os == OSPlatform::Mac)
+            {
+                fullName = "lib" + name + ".a";
+            }
+            else if(os == OSPlatform::Linux)
+            {
+                fullName = "lib" + name + ".a";
+            }
+
+            return fullName;
+        }
+        inline constexpr static std::string GetStaticLibraryName(const std::string& name)
+        {
+            std::string fullName;
+            if(Application::GetOsPlatform() == OSPlatform::Windows)
+            {
+                fullName = "lib" + name + ".a";
+            }
+            else if(Application::GetOsPlatform() == OSPlatform::Mac)
+            {
+                fullName = "lib" + name + ".a";
+            }
+            else if(Application::GetOsPlatform() == OSPlatform::Linux)
+            {
+                fullName = "lib" + name + ".a";
+            }
+
+            return fullName;
         }
     };
 }
