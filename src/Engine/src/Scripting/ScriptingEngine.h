@@ -5,6 +5,7 @@
 #pragma once
 #include "Core/TypeDefines.h"
 #include <filesystem>
+#include "MClass.h"
 
 namespace BeeEngine
 {
@@ -15,6 +16,8 @@ namespace BeeEngine
         static void Shutdown();
 
         static class MAssembly& LoadAssembly(const std::filesystem::path& path);
+
+        static void RegisterInternalCall(const std::string& name, void* method);
     private:
         static void InitMono();
         static struct ScriptingEngineData s_Data;

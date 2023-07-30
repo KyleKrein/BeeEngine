@@ -4,8 +4,12 @@
 
 #pragma once
 #include <filesystem>
-#include "mono/metadata/assembly.h"
 
+extern "C"
+{
+    typedef struct _MonoAssembly MonoAssembly;
+    typedef struct _MonoImage MonoImage;
+}
 namespace BeeEngine
 {
     class MAssembly

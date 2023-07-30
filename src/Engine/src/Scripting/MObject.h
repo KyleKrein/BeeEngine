@@ -1,0 +1,27 @@
+//
+// Created by alexl on 30.07.2023.
+//
+
+#pragma once
+
+extern "C"
+{
+    typedef struct _MonoObject MonoObject;
+}
+
+namespace BeeEngine
+{
+    class MClass;
+
+    class MObject
+    {
+    public:
+        MObject(MClass& object);
+        ~MObject();
+        MClass& GetClass();
+        void Invoke(MMethod& method, void** params);
+    private:
+        MonoObject* m_MonoObject = nullptr;
+        MClass* m_Class = nullptr;
+    };
+}

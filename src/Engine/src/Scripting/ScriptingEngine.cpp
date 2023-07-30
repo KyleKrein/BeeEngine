@@ -10,6 +10,7 @@
 #include "Core/ResourceManager.h"
 #include "MClass.h"
 #include "MAssembly.h"
+#include "ScriptGlue.h"
 
 namespace BeeEngine
 {
@@ -47,11 +48,13 @@ namespace BeeEngine
         if(s_Assemblies.contains(name))
         {
             s_Assemblies.at(name).Reload();
+            ScriptGlue::RegisterInternalCalls();
             return s_Assemblies.at(name);
         }
         else
         {
             s_Assemblies.emplace(name, MAssembly(path));
+            ScriptGlue::RegisterInternalCalls();
             return s_Assemblies.at(name);
         }
     }
