@@ -17,6 +17,7 @@
 #include "Renderer/Material.h"
 #include "NativeScriptFactory.h"
 #include "Core/UUID.h"
+#include "Scripting/MObject.h"
 
 namespace BeeEngine
 {
@@ -91,7 +92,7 @@ namespace BeeEngine
         operator Texture2D&() const { return *Texture; }
     };
 
-    struct MeshComponent
+    /*struct MeshComponent
     {
         Ref<Mesh> Mesh = nullptr;
         Ref<Material> Material = nullptr;
@@ -105,6 +106,12 @@ namespace BeeEngine
 
         operator Ref<BeeEngine::Mesh>&() { return Mesh; }
         operator const Ref<BeeEngine::Mesh>&() const { return Mesh; }
+    };*/
+
+    struct ScriptComponent
+    {
+        class MClass* Class = nullptr;
+        Scope<MObject> Instance = nullptr;
     };
 
     struct NativeScriptComponent
@@ -144,4 +151,12 @@ namespace BeeEngine
             }
         }
     };
+
+
+    template<typename ... Component>
+    struct ComponentGroup{};
+
+    using AllComponents =
+            ComponentGroup<TransformComponent, TagComponent, UUIDComponent,
+            SpriteRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent>;
 }

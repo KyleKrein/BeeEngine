@@ -42,7 +42,7 @@ namespace BeeEngine::Editor
             case SceneState::Edit:
             {
                 m_ViewPort.UpdateEditor(m_EditorCamera);
-                m_GameBuilder->UpdateAndCompile();
+                //m_GameBuilder->UpdateAndCompile();
                 break;
             }
             case SceneState::Play:
@@ -200,19 +200,14 @@ namespace BeeEngine::Editor
 
     void EditorLayer::SetupGameLibrary()
     {
-        if(!m_GameBuilder)
+        /*if(!m_GameBuilder)
         {
             m_GameBuilder = CreateScope<GameBuilder>(m_ProjectFile->GetProjectPath(), ConfigFile::LoadCompilerConfiguration());
-        }
+        }*/
 
-        auto& coreAssembly = ScriptingEngine::LoadAssembly("libs/BeeEngine.Core.dll");
-        auto& assemblyClasses = coreAssembly.GetClasses();
-        for(auto& klass : assemblyClasses)
-        {
-            BeeCoreTrace("Class: {0}.{1}", klass.GetNamespace(), klass.GetName());
-        }
-
-        if(m_GameLibrary)
+        auto& coreAssembly = ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
+        //auto& gameAssembly = ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "GameLibrary.dll");
+        /*if(m_GameLibrary)
         {
             m_GameLibrary->Reload();
             m_NativeScriptFactory->Reload();
@@ -228,7 +223,7 @@ namespace BeeEngine::Editor
             InitFunction = reinterpret_cast<decltype(InitFunction)>(m_GameLibrary->GetFunction("InitGameLibrary"));
             (*InitFunction)(&m_NativeScriptData);
         }
-        m_NativeScripts = m_NativeScriptFactory->GetNativeScripts();
+        m_NativeScripts = m_NativeScriptFactory->GetNativeScripts();*/
     }
 
     void EditorLayer::UIToolbar() noexcept

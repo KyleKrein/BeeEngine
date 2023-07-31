@@ -9,6 +9,8 @@
 #include "Entity.h"
 #include "Components.h"
 #include "Core/Color4.h"
+#include "Scripting/MClass.h"
+#include "Scripting/ScriptingEngine.h"
 
 namespace YAML
 {
@@ -167,6 +169,17 @@ namespace BeeEngine
                     camera.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
                 }
 
+                auto scriptComponent = entity["ScriptComponent"];
+                if(scriptComponent)
+                {
+                    auto& script = deserializedEntity.AddComponent<ScriptComponent>();
+                    auto className = scriptComponent["FullName"].as<std::string>();
+                    if(ScriptingEngine::HasGameScript(className))
+                    {
+                        script.Class = &ScriptingEngine::GetGameScript(className);
+                    }
+                }
+
                 auto spriteRendererComponent = entity["SpriteRendererComponent"];
                 if(spriteRendererComponent)
                 {
@@ -245,6 +258,15 @@ namespace BeeEngine
 
             out << YAML::Key << "Primary" << YAML::Value << camera.Primary;
             out << YAML::Key << "FixedAspectRatio" << YAML::Value << camera.FixedAspectRatio;
+            out << YAML::EndMap;
+        }
+
+        if(entity.HasComponent<ScriptComponent>())
+        {
+            out << YAML::Key << "ScriptComponent";
+            out << YAML::BeginMap;
+            auto& scriptComponent = entity.GetComponent<ScriptComponent>();
+            out << YAML::Key << "FullName" << YAML::Value << (scriptComponent.Class ? scriptComponent.Class->GetFullName() : "");
             out << YAML::EndMap;
         }
 

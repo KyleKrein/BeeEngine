@@ -5,7 +5,6 @@
 #pragma once
 
 #include "entt/entt.hpp"
-#include "EntityID.h"
 #include "Renderer/EditorCamera.h"
 #include "Renderer/UniformBuffer.h"
 #include "Renderer/Model.h"
@@ -37,6 +36,8 @@ namespace BeeEngine
         void StartRuntime();
         void StopRuntime();
 
+        Entity GetEntityByUUID(struct UUID uuid);
+
         void Clear();
     private:
         entt::registry m_Registry;
@@ -51,6 +52,8 @@ namespace BeeEngine
         Texture2D* m_BlankTexture = nullptr;
         Ref<BindingSet> m_CameraBindingSet;
         Ref<UniformBuffer> m_CameraUniformBuffer;
+
+        std::unordered_map<uint64_t , entt::entity> m_UUIDMap;
 
         const std::vector<struct NativeScriptInfo>* m_NativeScripts = nullptr;
 

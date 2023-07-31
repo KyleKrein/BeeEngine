@@ -20,6 +20,8 @@ namespace BeeEngine
     public:
         MMethod(MClass& mClass, const String& name, int paramCount);
         ~MMethod();
+
+        bool IsValid() const { return m_MonoMethod != nullptr; }
     private:
         MonoMethod* m_MonoMethod = nullptr;
         MClass* m_Class = nullptr;

@@ -21,15 +21,19 @@ namespace BeeEngine
         friend class MObject;
         friend class MMethod;
     public:
-        const String& GetName() const { return m_Name; }
-        const String& GetNamespace() const { return m_Namespace; }
+        [[nodiscard]] const String& GetName() const { return m_Name; }
+        [[nodiscard]] const String& GetNamespace() const { return m_Namespace; }
         MObject Instantiate();
         MMethod& GetMethod(const String& name, int paramCount);
+        [[nodiscard]] const String& GetFullName() const { return m_FullName; }
+
+        bool IsDerivedFrom(MClass& other) const;
     private:
         MClass(const String& name, const String& ns, MonoImage* image);
         String m_Name;
         String m_Namespace;
         MonoClass* m_MonoClass = nullptr;
         std::unordered_map<String, class MMethod> m_Methods;
+        String m_FullName = m_Namespace + "." + m_Name;
     };
 }

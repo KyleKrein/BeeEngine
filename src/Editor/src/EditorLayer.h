@@ -43,16 +43,16 @@ namespace BeeEngine::Editor
         InspectorPanel m_InspectorPanel {};
         Scope<ProjectFile> m_ProjectFile = nullptr;
 
-        Scope<DynamicLibrary> m_GameLibrary = nullptr;
-        Scope<GameBuilder> m_GameBuilder = nullptr;
-        Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
-        BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
-        void*(*InitFunction)(void*) = nullptr;
+        //Scope<DynamicLibrary> m_GameLibrary = nullptr;
+        //Scope<GameBuilder> m_GameBuilder = nullptr;
+        //Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
+        //BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
+        //void*(*InitFunction)(void*) = nullptr;
 
         Ref<Texture2D> m_PlayButtonTexture = nullptr;
         Ref<Texture2D> m_StopButtonTexture = nullptr;
 
-        std::vector<NativeScriptInfo> m_NativeScripts = {};
+        //std::vector<NativeScriptInfo> m_NativeScripts = {};
 
         void SetUpMenuBar();
 

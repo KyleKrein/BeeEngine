@@ -14,10 +14,16 @@ namespace BeeEngine
 {
     class MAssembly
     {
+        friend class ScriptGlue;
     public:
+        MAssembly() = default;
         MAssembly(const std::filesystem::path& path);
         ~MAssembly();
-        const std::vector<class MClass>& GetClasses();
+        MAssembly(const MAssembly&) = delete;
+        MAssembly& operator=(const MAssembly&) = delete;
+        MAssembly(MAssembly&& other) noexcept;
+        MAssembly& operator=(MAssembly&&other) noexcept;
+        std::vector<class MClass>& GetClasses();
 
         void Reload();
 

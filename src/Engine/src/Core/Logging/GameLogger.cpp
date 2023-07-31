@@ -8,26 +8,26 @@
 namespace BeeEngine
 {
     template<typename... Args>
-    void GameLogger::Info(Args &&... args)
+    void GameLogger::Info(std::string_view format, Args &&... args)
     {
-        BeeInfo(std::forward<Args>(args)...);
+        BeeInfo(format, std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    void GameLogger::Error(Args &&... args)
+    void GameLogger::Error(std::string_view format, Args &&... args)
     {
-        BeeError(std::forward<Args>(args)...);
+        BeeError(format, std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    void GameLogger::Trace(Args &&... args)
+    void GameLogger::Trace(std::string_view format, Args &&... args)
     {
-        BeeTrace(std::forward<Args>(args)...);
+        BeeTrace(format, std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    void GameLogger::Warn(Args &&... args)
+    void GameLogger::Warn(std::string_view format, Args &&... args)
     {
-        BeeWarn(std::forward<Args>(args)...);
+        BeeWarn(format, std::forward<Args>(args)...);
     }
 }

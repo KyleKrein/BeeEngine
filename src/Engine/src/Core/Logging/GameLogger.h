@@ -3,19 +3,19 @@
 //
 
 #pragma once
-
+#include <string_view>
 namespace BeeEngine
 {
     class GameLogger
     {
     public:
         template<typename ...Args>
-        static void Info(Args &&...args);
+        static void Info(std::string_view format, Args &&...args);
         template<typename ...Args>
-        static void Error(Args &&...args);
+        static void Error(std::string_view format, Args &&...args);
         template<typename ...Args>
-        static void Trace(Args &&...args);
+        static void Trace(std::string_view format, Args &&...args);
         template<typename ...Args>
-        static void Warn(Args &&...args);
+        static void Warn(std::string_view format, Args &&...args);
     };
 }

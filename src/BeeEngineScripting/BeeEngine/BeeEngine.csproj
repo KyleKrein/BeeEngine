@@ -40,7 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components.cs" />
+    <Compile Include="Entity.cs" />
+    <Compile Include="Input.cs" />
     <Compile Include="Internal\InternalCalls.cs" />
+    <Compile Include="KeyCodes.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="Math\Data\Color.cs" />
@@ -60,6 +64,7 @@
     <Compile Include="Math\Vector\Vector4.cs" />
     <Compile Include="Math\Vector\Vector4i.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Unsafe.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

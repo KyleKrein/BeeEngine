@@ -14,7 +14,9 @@
 #include "MObject.h"
 #include "mono/metadata/appdomain.h"
 #include "MMethod.h"
+#include "GameScript.h"
 #include <mono/metadata/object.h>
+#include "Scene/Entity.h"
 
 
 namespace BeeEngine
@@ -42,7 +44,7 @@ namespace BeeEngine
         m_MonoAssembly = mono_assembly_load_from_full(m_MonoImage, m_Path.string().c_str(), &status, false);
     }
 
-    const std::vector<MClass>& MAssembly::GetClasses()
+    std::vector<MClass>& MAssembly::GetClasses()
     {
         return m_Classes;
     }
@@ -84,8 +86,32 @@ namespace BeeEngine
             mono_image_close(m_MonoImage);
             m_MonoImage = nullptr;
         }
-        mono_assembly_close(m_MonoAssembly);
-        m_MonoAssembly = nullptr;
+        if(m_MonoAssembly)
+        {
+            mono_assembly_close(m_MonoAssembly);
+            m_MonoAssembly = nullptr;
+        }
+    }
+
+    MAssembly::MAssembly(MAssembly &&other) noexcept
+    {
+        this->m_MonoImage = other.m_MonoImage;
+        this->m_MonoAssembly = other.m_MonoAssembly;
+        this->m_Path = std::move(other.m_Path);
+        this->m_Classes = std::move(other.m_Classes);
+        other.m_MonoImage = nullptr;
+        other.m_MonoAssembly = nullptr;
+    }
+
+    MAssembly &MAssembly::operator=(MAssembly &&other) noexcept
+    {
+        this->m_MonoImage = other.m_MonoImage;
+        this->m_MonoAssembly = other.m_MonoAssembly;
+        this->m_Path = std::move(other.m_Path);
+        this->m_Classes = std::move(other.m_Classes);
+        other.m_MonoImage = nullptr;
+        other.m_MonoAssembly = nullptr;
+        return *this;
     }
 
     void ScriptingEngine::RegisterInternalCall(const std::string &name, void *method)
@@ -135,6 +161,11 @@ namespace BeeEngine
         return m_Methods.at(name);
     }
 
+    bool MClass::IsDerivedFrom(MClass &other) const
+    {
+        return mono_class_is_subclass_of(m_MonoClass, other.m_MonoClass, false);
+    }
+
 
     MMethod::MMethod(MClass &mClass, const String &name, int paramCount)
     {
@@ -144,5 +175,44 @@ namespace BeeEngine
     MMethod::~MMethod()
     {
 
+    }
+
+    GameScript::GameScript(MClass& mClass, Entity entity)
+    : m_Instance(mClass.Instantiate())
+    {
+        auto& constructor = ScriptingEngine::GetEntityClass().GetMethod(".ctor", 1);
+        auto uuid = entity.GetUUID();
+        void* params[1] {&uuid};
+        m_Instance.Invoke(constructor, params);
+        m_OnCreate = &mClass.GetMethod("OnCreate", 0);
+        if(!m_OnCreate->IsValid())
+            m_OnCreate = nullptr;
+        m_OnDestroy = &mClass.GetMethod("OnDestroy", 0);
+        if(!m_OnDestroy->IsValid())
+            m_OnDestroy = nullptr;
+        m_OnUpdate = &mClass.GetMethod("OnUpdate", 0);
+        if(!m_OnUpdate->IsValid())
+            m_OnUpdate = nullptr;
+    }
+
+    void GameScript::InvokeOnCreate()
+    {
+        if(m_OnCreate)
+            m_Instance.Invoke(*m_OnCreate, nullptr);
+    }
+
+    void GameScript::InvokeOnDestroy()
+    {
+        if(m_OnDestroy)
+        {
+            m_Instance.Invoke(*m_OnDestroy, nullptr);
+            m_OnDestroy = nullptr;
+        }
+    }
+
+    void GameScript::InvokeOnUpdate()
+    {
+        if(m_OnUpdate)
+            m_Instance.Invoke(*m_OnUpdate, nullptr);
     }
 }

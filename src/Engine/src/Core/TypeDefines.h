@@ -127,7 +127,30 @@ namespace BeeEngine
         free(demangled);
         return result;
 #else
-        return String(typeid(obj).name());
+        std::string_view typeName = typeid(obj).name();
+        size_t pos = typeName.find_first_of(" ");
+        //if (pos != std::string_view::npos)
+            return String(typeName.substr(pos + 1));
+        //else
+        //    return String(typeName);
+#endif
+    }
+    template<typename T>
+    CONSTEXPR_FUNC String TypeName()
+    {
+#if defined(BEE_HAS_CXXABI_H)
+        int status;
+        char * demangled = abi::__cxa_demangle(typeid(T).name(),0,0,&status);
+        String result = String(demangled);
+        free(demangled);
+        return result;
+#else
+        std::string_view typeName = typeid(T).name();
+        size_t pos = typeName.find_last_of(' ');
+        //if (pos != std::string_view::npos)
+        return String(typeName.substr(pos + 1));
+        //else
+        //    return String(typeName);
 #endif
     }
 

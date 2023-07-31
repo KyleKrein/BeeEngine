@@ -9,6 +9,7 @@
 
 namespace BeeEngine
 {
+    struct Entity;
     class ScriptingEngine
     {
     public:
@@ -17,12 +18,39 @@ namespace BeeEngine
 
         static class MAssembly& LoadAssembly(const std::filesystem::path& path);
 
+        static class MAssembly& LoadGameAssembly(const std::filesystem::path& path);
+        static class MAssembly& LoadCoreAssembly(const std::filesystem::path& path);
+        static class MAssembly& GetCoreAssembly();
+
+        static void OnRuntimeStart(class Scene* scene);
+        static void OnRuntimeStop();
+
+        static MClass& GetGameScript(const String& name);
+        static bool HasGameScript(const String& name)
+        {
+            return s_GameScripts.contains(name);
+        }
+        static const std::unordered_map<String, MClass>& GetGameScripts() { return s_GameScripts; }
+
         static void RegisterInternalCall(const std::string& name, void* method);
+
+        static void OnEntityCreated(Entity entity, MClass *pClass);
+        static void OnEntityDestroyed(BeeEngine::Entity entity);
+        static void OnEntityUpdate(Entity entity);
+
+        static Scene* GetSceneContext();
+        static MClass& GetEntityClass()
+        {
+            return *s_EntityBaseClass;
+        }
     private:
         static void InitMono();
+        static bool IsGameScript(const MClass& klass);
         static struct ScriptingEngineData s_Data;
 
         static std::unordered_map<String, class MAssembly> s_Assemblies;
+        static std::unordered_map<String, MClass> s_GameScripts;
+        static MClass* s_EntityBaseClass;
 
         static void MonoShutdown();
     };

@@ -19,7 +19,7 @@ namespace BeeEngine
         MObject(MClass& object);
         ~MObject();
         MClass& GetClass();
-        void Invoke(MMethod& method, void** params);
+        void Invoke(class MMethod& method, void** params);
     private:
         MonoObject* m_MonoObject = nullptr;
         MClass* m_Class = nullptr;

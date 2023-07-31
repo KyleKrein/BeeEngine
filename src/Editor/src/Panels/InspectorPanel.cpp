@@ -9,6 +9,8 @@
 #include "imgui_internal.h"
 #include "Gui/ImGuiFonts.h"
 #include "Core/ResourceManager.h"
+#include "Scripting/MClass.h"
+#include "Scripting/ScriptingEngine.h"
 
 namespace BeeEngine::Editor
 {
@@ -65,7 +67,8 @@ namespace BeeEngine::Editor
         {
             AddComponentPopup<CameraComponent>("Camera", entity);
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
-            AddComponentPopup<NativeScriptComponent>("Native Script", entity);
+            //AddComponentPopup<NativeScriptComponent>("Native Script", entity);
+            AddComponentPopup<ScriptComponent>("Script", entity);
             ImGui::EndPopup();
         }
 
@@ -193,6 +196,42 @@ namespace BeeEngine::Editor
 
 
             ImGui::DragFloat("Tiling Factor", &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
+        });
+
+        DrawComponentUI<ScriptComponent>("Script", entity, [this](ScriptComponent& script){
+            std::vector<const char*> scriptNames;
+            auto& scripts = ScriptingEngine::GetGameScripts();
+            scriptNames.reserve(m_NativeScripts->size() + 1);
+            scriptNames.push_back("##");
+            for(auto& script : scripts)
+            {
+                scriptNames.push_back(script.second.GetFullName().c_str());
+            }
+            const char* currentScriptName = script.Class != nullptr ? script.Class->GetFullName().c_str() : "##";
+            if(ImGui::BeginCombo("Class", currentScriptName))
+            {
+                for(auto& scriptName : scriptNames)
+                {
+                    bool isSelected = currentScriptName == scriptName;
+                    if(ImGui::Selectable(scriptName, isSelected))
+                    {
+                        currentScriptName = scriptName;
+                        if(!strcmp(currentScriptName, "##"))
+                        {
+                            script.Class = nullptr;
+                        }
+                        else
+                        {
+                            script.Class = &ScriptingEngine::GetGameScript(currentScriptName);
+                        }
+                    }
+                    if(isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
         });
 
         DrawComponentUI<NativeScriptComponent>("Native Script", entity, [this](NativeScriptComponent& script)

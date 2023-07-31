@@ -12,6 +12,7 @@
 #include <glm/glm.hpp>
 #include "NativeScriptFactory.h"
 #include "Core/UUID.h"
+#include "Scripting/ScriptingEngine.h"
 
 namespace BeeEngine
 {
@@ -38,10 +39,10 @@ namespace BeeEngine
 
     void Scene::UpdateScripts()
     {
-        auto view = m_Registry.view<NativeScriptComponent>();
-        for (auto entity:view)
+        auto nativeScriptsView = m_Registry.view<NativeScriptComponent>();
+        for (auto entity:nativeScriptsView)
         {
-            auto& scriptComponent = view.get<NativeScriptComponent>(entity);
+            auto& scriptComponent = nativeScriptsView.get<NativeScriptComponent>(entity);
             if (!scriptComponent.Instance)
             {
                 BeeCoreTrace("Instanciating Script: {0}", scriptComponent.Name);
@@ -52,10 +53,24 @@ namespace BeeEngine
 
             scriptComponent.Instance->OnUpdate();
         }
+
+        auto view = m_Registry.view<ScriptComponent>();
+        for (auto e : view)
+        {
+            Entity entity {EntityID{e}, this};
+            auto& scriptComponent = entity.GetComponent<ScriptComponent>();
+            if(scriptComponent.Class)
+            {
+                ScriptingEngine::OnEntityCreated(entity, scriptComponent.Class);
+                ScriptingEngine::OnEntityUpdate(entity);
+            }
+        }
     }
 
     void Scene::DestroyEntity(Entity entity)
     {
+        ScriptingEngine::OnEntityDestroyed(entity);
+        m_UUIDMap.erase(entity.GetUUID());
         m_Registry.destroy(entity);
     }
 
@@ -123,17 +138,19 @@ namespace BeeEngine
 
     void Scene::StartRuntime()
     {
-        if(m_NativeScripts == nullptr)
+        /*if(m_NativeScripts == nullptr)
         {
             m_NativeScripts = &NativeScriptFactory::GetInstance().GetNativeScripts();
-        }
+        }*/
         m_IsRuntime = true;
+        ScriptingEngine::OnRuntimeStart(this);
     }
 
     void Scene::StopRuntime()
     {
         m_IsRuntime = false;
-        DestroyScripts();
+        ScriptingEngine::OnRuntimeStop();
+        //DestroyScripts();
     }
 
     Scene::Scene()
@@ -163,6 +180,12 @@ namespace BeeEngine
         entity.AddComponent<TransformComponent>();
         auto& tag = entity.AddComponent<TagComponent>();
         tag.Tag = name;
+        m_UUIDMap[uuid] = entity;
         return entity;
+    }
+
+    Entity Scene::GetEntityByUUID(UUID uuid)
+    {
+        return {m_UUIDMap.at(uuid), this};
     }
 }
