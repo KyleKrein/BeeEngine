@@ -6,6 +6,7 @@
 #include "Core/TypeDefines.h"
 #include <filesystem>
 #include "MClass.h"
+#include "Core/UUID.h"
 
 namespace BeeEngine
 {
@@ -41,8 +42,12 @@ namespace BeeEngine
         static Scene* GetSceneContext();
         static MClass& GetEntityClass()
         {
+            BeeExpects(s_EntityBaseClass != nullptr);
             return *s_EntityBaseClass;
         }
+
+        static class GameScript* GetEntityScriptInstance(BeeEngine::UUID uuid);
+
     private:
         static void InitMono();
         static bool IsGameScript(const MClass& klass);

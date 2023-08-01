@@ -11,6 +11,7 @@
 #include "Core/ResourceManager.h"
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptingEngine.h"
+#include "Scripting/GameScript.h"
 
 namespace BeeEngine::Editor
 {
@@ -198,10 +199,10 @@ namespace BeeEngine::Editor
             ImGui::DragFloat("Tiling Factor", &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
         });
 
-        DrawComponentUI<ScriptComponent>("Script", entity, [this](ScriptComponent& script){
+        DrawComponentUI<ScriptComponent>("Script", entity, [this, entity](ScriptComponent& script) mutable{
             std::vector<const char*> scriptNames;
             auto& scripts = ScriptingEngine::GetGameScripts();
-            scriptNames.reserve(m_NativeScripts->size() + 1);
+            scriptNames.reserve(scripts.size() + 1);
             scriptNames.push_back("##");
             for(auto& script : scripts)
             {
@@ -231,6 +232,91 @@ namespace BeeEngine::Editor
                     }
                 }
                 ImGui::EndCombo();
+            }
+            if(!script.Class)
+                return;
+            auto* scriptInstance = ScriptingEngine::GetEntityScriptInstance(entity.GetUUID());
+            if(!scriptInstance)
+                return;
+            auto& fields = scriptInstance->GetEditableFields();
+            auto& mObject = scriptInstance->GetMObject();
+            for (auto& [name, field]:fields)
+            {
+                switch (field->GetType())
+                {
+                    case MType::Boolean:
+                    {
+                        bool value = false;
+                        mObject.GetFieldValue(*field, &value);
+                        if(ImGui::Checkbox(name.data(), &value))
+                        {
+                            mObject.SetFieldValue(*field, &value);
+                        }
+                        break;
+                    }
+                    case MType::Int32:
+                    {
+                        int32_t value = 0;
+                        mObject.GetFieldValue(*field, &value);
+                        if(ImGui::DragInt(name.data(), &value))
+                        {
+                            mObject.SetFieldValue(*field, &value);
+                        }
+                        break;
+                    }
+                    case MType::Single:
+                    {
+                        float value = 0;
+                        mObject.GetFieldValue(*field, &value);
+                        if(ImGui::DragFloat(name.data(), &value))
+                        {
+                            mObject.SetFieldValue(*field, &value);
+                        }
+                        break;
+                    }
+                    case MType::String:
+                    {
+                        std::string value;
+                        mObject.GetFieldValue(*field, &value);
+                        char buffer[256];
+                        strcpy(buffer, value.c_str());
+                        if(ImGui::InputText(name.data(), buffer, 256))
+                        {
+                            mObject.SetFieldValue(*field, buffer);
+                        }
+                        break;
+                    }
+                    case MType::Vector2:
+                    {
+                        glm::vec2 value;
+                        mObject.GetFieldValue(*field, &value);
+                        if(ImGui::DragFloat2(name.data(), glm::value_ptr(value)))
+                        {
+                            mObject.SetFieldValue(*field, glm::value_ptr(value));
+                        }
+                        break;
+                    }
+                    case MType::Vector3:
+                    {
+                        glm::vec3 value;
+                        mObject.GetFieldValue(*field, &value);
+                        if(ImGui::DragFloat3(name.data(), glm::value_ptr(value)))
+                        {
+                            mObject.SetFieldValue(*field, glm::value_ptr(value));
+                        }
+                        break;
+                    }
+                    case MType::Vector4:
+                    {
+                        glm::vec4 value;
+                        mObject.GetFieldValue(*field, &value);
+                        if(ImGui::DragFloat4(name.data(), glm::value_ptr(value)))
+                        {
+                            mObject.SetFieldValue(*field, glm::value_ptr(value));
+                        }
+                        break;
+                    }
+                }
             }
         });
 

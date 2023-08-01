@@ -13,23 +13,25 @@ namespace BeeEngine
     {
         internal unsafe void* ComponentHandle;
         internal ulong EntityID;
+
+        internal abstract unsafe void Contruct();
     }
 
-    public class TransformComponent : Component
+    public sealed class TransformComponent : Component
     {
         private unsafe Vector3* m_Translation;
         private unsafe Vector3* m_Rotation;
         private unsafe Vector3* m_Scale;
 
-        internal unsafe TransformComponent()
+        public unsafe ref Vector3 Translation => ref Unsafe.AsRef<Vector3>(m_Translation);
+        public unsafe ref Vector3 Rotation => ref Unsafe.AsRef<Vector3>(m_Rotation);
+        public unsafe ref Vector3 Scale => ref Unsafe.AsRef<Vector3>(m_Scale);
+
+        internal override unsafe void Contruct()
         {
             m_Translation = (Vector3*)ComponentHandle;
             m_Rotation = m_Translation + 1;
             m_Scale = m_Rotation + 1;
         }
-
-        public unsafe ref Vector3 Translation => ref Unsafe.AsRef<Vector3>(m_Translation);
-        public unsafe ref Vector3 Rotation => ref Unsafe.AsRef<Vector3>(m_Rotation);
-        public unsafe ref Vector3 Scale => ref Unsafe.AsRef<Vector3>(m_Scale);
     }
 }

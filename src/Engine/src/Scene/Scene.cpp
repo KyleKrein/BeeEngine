@@ -186,6 +186,7 @@ namespace BeeEngine
 
     Entity Scene::GetEntityByUUID(UUID uuid)
     {
+        BeeExpects(m_UUIDMap.contains(uuid));
         return {m_UUIDMap.at(uuid), this};
     }
 }

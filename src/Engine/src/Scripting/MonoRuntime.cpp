@@ -17,6 +17,9 @@
 #include "GameScript.h"
 #include <mono/metadata/object.h>
 #include "Scene/Entity.h"
+#include "MField.h"
+#include "MUtils.h"
+#include "mono/metadata/tabledefs.h"
 
 
 namespace BeeEngine
@@ -139,14 +142,77 @@ namespace BeeEngine
     void MObject::Invoke(MMethod &method, void **params)
     {
         BeeExpects(method.m_MonoMethod != nullptr);
-        BeeExpects(method.m_Class == m_Class);
-        mono_runtime_invoke(method.m_MonoMethod, m_MonoObject, params, nullptr);
+        //BeeExpects(method.m_Class == m_Class);
+        MonoObject *exception = nullptr;
+        mono_runtime_invoke(method.m_MonoMethod, m_MonoObject, params, &exception);
+        if(exception)
+        {
+            mono_print_unhandled_exception(exception);
+            mono_free(exception);
+        }
+    }
+
+    void MObject::SetFieldValue(MField &field, void* value)
+    {
+        mono_field_set_value(m_MonoObject, field.m_MonoField, value);
+    }
+
+    bool MObject::GetFieldValue(MField &field, void* value)
+    {
+        mono_field_get_value(m_MonoObject, field.m_MonoField, value);
+        return true;
+    }
+    String MObject::GetFieldStringValue(MField &field)
+    {
+        BeeCoreAssert(field.m_Type == MType::String, "Field is not a string!");
+        auto* str = reinterpret_cast<MonoString*>(mono_field_get_value_object(mono_domain_get(), field.m_MonoField, m_MonoObject));
+        String value = mono_string_to_utf8(str);
+        mono_free(str);
+        return value;
     }
 
     MClass::MClass(const String &name, const String &ns, MonoImage* image)
             : m_Name(name), m_Namespace(ns)
     {
         m_MonoClass = mono_class_from_name(image, m_Namespace.c_str(), m_Name.c_str());
+
+        /*//Retrieve methods from class
+        void* iterator = nullptr;
+
+        while (MonoMethod* method = mono_class_get_methods(m_MonoClass, &iterator))
+        {
+            const char* methodName = mono_method_get_name(method);
+            uint32_t flags = mono_method_get_flags(method, nullptr);
+            MVisibility visibility = MUtils::MonoMethodFlagsToVisibility(flags);
+        }*/
+
+
+        // This routine is an iterator routine for retrieving the fields in a class.
+        // You must pass a gpointer that points to zero and is treated as an opaque handle
+        // to iterate over all of the elements. When no more values are available, the return value is NULL.
+
+        int fieldCount = mono_class_num_fields(m_MonoClass);
+        BeeCoreTrace("{} has {} fields:", m_Name, fieldCount);
+        void* iterator = nullptr;
+        m_IsEnum = mono_class_is_enum(m_MonoClass);
+        m_IsValueType = mono_class_is_valuetype(m_MonoClass);
+        if(m_IsEnum)
+            return;
+        m_Fields.reserve(fieldCount);
+        while (MonoClassField* field = mono_class_get_fields(m_MonoClass, &iterator))
+        {
+            const char* fieldName = mono_field_get_name(field);
+            uint32_t flags = mono_field_get_flags(field);
+            MVisibility visibility = MUtils::MonoFieldFlagsToVisibility(flags);
+            bool isStatic = flags & FIELD_ATTRIBUTE_STATIC;
+
+            MonoType* type = mono_field_get_type(field);
+            MType fieldType = MUtils::MonoTypeToMType(type);
+            BeeCoreTrace("  {} ({})", fieldName, MUtils::MTypeToString(fieldType));
+            if(fieldType == MType::None)
+                continue;
+            m_Fields.emplace(fieldName, MField(*this, fieldName, fieldType, visibility, field, isStatic));
+        }
     }
 
     MObject MClass::Instantiate()
@@ -157,7 +223,7 @@ namespace BeeEngine
     MMethod &MClass::GetMethod(const String &name, int paramCount)
     {
         if(!m_Methods.contains(name))
-            m_Methods.emplace(name, MMethod(*this, name, 0));
+            m_Methods.emplace(name, MMethod(*this, name, paramCount));
         return m_Methods.at(name);
     }
 
@@ -166,8 +232,14 @@ namespace BeeEngine
         return mono_class_is_subclass_of(m_MonoClass, other.m_MonoClass, false);
     }
 
+    MField &MClass::GetField(const String &name)
+    {
+        return m_Fields.at(name);
+    }
+
 
     MMethod::MMethod(MClass &mClass, const String &name, int paramCount)
+    : m_Class(&mClass), m_Name(name), m_ParamCount(paramCount)
     {
         m_MonoMethod = mono_class_get_method_from_name(mClass.m_MonoClass, name.c_str(), paramCount);
     }
@@ -193,6 +265,9 @@ namespace BeeEngine
         m_OnUpdate = &mClass.GetMethod("OnUpdate", 0);
         if(!m_OnUpdate->IsValid())
             m_OnUpdate = nullptr;
+
+
+        SelectEditableFields(mClass);
     }
 
     void GameScript::InvokeOnCreate()
@@ -214,5 +289,17 @@ namespace BeeEngine
     {
         if(m_OnUpdate)
             m_Instance.Invoke(*m_OnUpdate, nullptr);
+    }
+
+    void GameScript::SelectEditableFields(MClass &aClass)
+    {
+        auto& fields = aClass.GetFields();
+        for(auto& [name, field] : fields)
+        {
+            if(MUtils::IsSutableForEdit(field))
+            {
+                m_EditableFields.emplace(name, &field);
+            }
+        }
     }
 }

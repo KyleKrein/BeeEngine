@@ -11,10 +11,11 @@ namespace BeeEngine
     public abstract class Entity
     {
         internal readonly ulong ID;
-        private Dictionary<Type, Component> m_ComponentCache;
+        private Dictionary<Type, Component> m_ComponentCache = new Dictionary<Type, Component>();
 
         internal Entity(ulong id)
         {
+            Log.Info("ID set to {0}", id);
             ID = id;
         }
 
@@ -58,10 +59,13 @@ namespace BeeEngine
             if (m_ComponentCache.ContainsKey(componentType))
             {
                 m_ComponentCache.TryGetValue(componentType, out var component);
+                DebugLog.AssertAndThrow(component != null, "Component {0} is null in dictionary", componentType.Name);
                 return (T)component;
             }
             void* componentPtr = InternalCalls.Entity_GetComponent(ID, componentType);
+            DebugLog.AssertAndThrow(componentPtr != (void*)0, "Component {0} is nullptr", componentType.Name);
             T cmp = new T { EntityID = ID, ComponentHandle = componentPtr };
+            cmp.Contruct();
             m_ComponentCache.Add(componentType, cmp);
             return cmp;
         }

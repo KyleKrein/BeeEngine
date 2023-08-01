@@ -113,6 +113,15 @@ namespace BeeEngine
                 break;
             }
         }
+
+        for(auto& klass : assembly.GetClasses())
+        {
+            if(IsGameScript(klass))
+            {
+                BeeCoreTrace("Found game script: {0}", klass.GetFullName());
+                s_GameScripts.emplace(klass.GetFullName(), klass);
+            }
+        }
         return assembly;
     }
 
@@ -158,5 +167,14 @@ namespace BeeEngine
     class MAssembly &ScriptingEngine::GetCoreAssembly()
     {
         return s_Assemblies.at("BeeEngine.Core");
+    }
+
+    class GameScript* ScriptingEngine::GetEntityScriptInstance(BeeEngine::UUID uuid)
+    {
+        if(!s_Data.EntityObjects.contains(uuid))
+        {
+            return nullptr;
+        }
+        return s_Data.EntityObjects.at(uuid).get();
     }
 }

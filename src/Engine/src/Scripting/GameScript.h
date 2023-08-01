@@ -15,6 +15,9 @@ namespace BeeEngine
         void InvokeOnCreate();
         void InvokeOnDestroy();
         void InvokeOnUpdate();
+        MObject& GetMObject() { return m_Instance; }
+        std::unordered_map<std::string_view, class MField*>& GetEditableFields() { return m_EditableFields; }
+
         ~GameScript()
         {
             if(m_OnDestroy)
@@ -26,5 +29,8 @@ namespace BeeEngine
         MMethod* m_OnCreate = nullptr;
         MMethod* m_OnDestroy = nullptr;
         MMethod* m_OnUpdate = nullptr;
+        std::unordered_map<std::string_view , class MField*> m_EditableFields;
+
+        void SelectEditableFields(MClass &aClass);
     };
 }

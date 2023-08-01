@@ -9,12 +9,12 @@ namespace BeeEngine
 {
     public static class Input
     {
-        private static bool IsKeyDown(Key key)
+        public static bool IsKeyDown(Key key)
         {
             return InternalCalls.Input_IsKeyDown(key);
         }
 
-        private static bool IsMouseButtonDown(MouseButton button)
+        public static bool IsMouseButtonDown(MouseButton button)
         {
             return InternalCalls.Input_IsMouseButtonDown(button);
         }
