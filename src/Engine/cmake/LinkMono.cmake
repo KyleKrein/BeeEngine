@@ -33,7 +33,7 @@ function(enable_mono target)
         message(FATAL_ERROR "iOS mono is not supported yet")
     elseif(APPLE)
         # Covers macOS implementation
-        message(FATAL_ERROR "MacOS mono is not supported yet")
+
     elseif(ANDROID)
         # Covers Android implementation
         message(FATAL_ERROR "Android mono is not supported yet")
@@ -59,7 +59,20 @@ function(copy_mono_dlls target)
         message(FATAL_ERROR "iOS mono is not supported yet")
     elseif(APPLE)
         # Covers macOS implementation
-        message(FATAL_ERROR "MacOS mono is not supported yet")
+        add_library(mono-2.0-sgen SHARED IMPORTED)
+        set_target_properties(mono-2.0-sgen PROPERTIES IMPORTED_LOCATION ${MONO_ROOT_DIR_CACHE}/libmonosgen-2.0.dylib)
+        set_target_properties(mono-2.0-sgen PROPERTIES IMPORTED_IMPLIB ${MONO_ROOT_DIR_CACHE}/libmonosgen-2.0.a)
+        target_link_libraries(${target} PUBLIC mono-2.0-sgen)
+
+        add_library(mono-nativ-compat SHARED IMPORTED)
+        set_target_properties(mono-nativ-compat PROPERTIES IMPORTED_LOCATION ${MONO_ROOT_DIR_CACHE}/libmono-native-compat.dylib)
+        set_target_properties(mono-nativ-compat PROPERTIES IMPORTED_IMPLIB ${MONO_ROOT_DIR_CACHE}/libmono-native-compat.a)
+        target_link_libraries(${target} PUBLIC mono-nativ-compat)
+
+        add_library(mono-nativ-unified SHARED IMPORTED)
+        set_target_properties(mono-nativ-unified PROPERTIES IMPORTED_LOCATION ${MONO_ROOT_DIR_CACHE}/libmono-native-unified.dylib)
+        set_target_properties(mono-nativ-unified PROPERTIES IMPORTED_IMPLIB ${MONO_ROOT_DIR_CACHE}/libmono-native-unified.a)
+        target_link_libraries(${target} PUBLIC mono-nativ-unified)
     elseif(ANDROID)
         # Covers Android implementation
         message(FATAL_ERROR "Android mono is not supported yet")

@@ -14,6 +14,12 @@ extern "C"
 
 namespace BeeEngine
 {
+    class MAssembly;
+    class ScriptingEngine;
+    class MObject;
+    class MMethod;
+    class MField;
+
     class MClass
     {
         friend class MAssembly;

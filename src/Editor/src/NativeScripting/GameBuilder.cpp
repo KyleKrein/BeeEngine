@@ -9,6 +9,8 @@
 #include <RuntimeInclude.h>
 #include "NativeScripting/StdioLogSystem.h"
 #include <Compiler.h>
+#include <string>
+#include <filesystem>
 
 namespace BeeEngine::Editor
 {
@@ -46,7 +48,7 @@ namespace BeeEngine::Editor
             BeeCoreTrace("Compiler path: {}", compilerPath.string());
             g_pRuntimeObjectSystem->SetCompilerLocation(compilerPath.string().c_str());
 
-            g_pRuntimeObjectSystem->AddLibraryDir((currentDirectory / "libs" / ResourceManager::GetStaticLibraryName("BeeEngine")).string().c_str());
+            //TODO: FIX ON APPLE CLANG g_pRuntimeObjectSystem->AddLibraryDir((currentDirectory / "libs" / ResourceManager::GetStaticLibraryName("BeeEngine")).string().c_str());
             auto sourcesPath = (m_WorkingDirectory/ "Scripts");
             g_pRuntimeObjectSystem->AddPathToSourceSearch(sourcesPath.string().c_str());
             g_pRuntimeObjectSystem->SetIntermediateDir((m_WorkingDirectory / ".beeengine" / "build").string().c_str());
@@ -69,13 +71,13 @@ namespace BeeEngine::Editor
 
     void GameBuilder::Load()
     {
-        if(!std::filesystem::exists(m_WorkingDirectory / ".beeengine" / m_NativeGameLibraryName))
+        /*TODO: FIX ON APPLE CLANG if(!std::filesystem::exists(m_WorkingDirectory / ".beeengine" / m_NativeGameLibraryName))
         {
             BeeCoreError("Failed to find game library {0}", m_NativeGameLibraryName);
             return;
-        }
+        }*/
         Unload();
-        std::filesystem::copy(m_WorkingDirectory / ".beeengine" / s_GameLibraryName, m_WorkingDirectory / ".beeengine" / ResourceManager::GetDynamicLibraryName(m_TemporaryNames[0]), std::filesystem::copy_options::overwrite_existing);
+        //TODO: FIX ON APPLE CLANG std::filesystem::copy(m_WorkingDirectory / ".beeengine" / s_GameLibraryName, m_WorkingDirectory / ".beeengine" / ResourceManager::GetDynamicLibraryName(m_TemporaryNames[0]), std::filesystem::copy_options::overwrite_existing);
         m_GameLibrary = CreateScope<DynamicLibrary>(m_WorkingDirectory / ".beeengine", m_TemporaryNames[0]);
     }
 

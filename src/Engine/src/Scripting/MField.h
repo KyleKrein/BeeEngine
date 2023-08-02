@@ -12,6 +12,8 @@ extern "C"
 
 namespace BeeEngine
 {
+    class MClass;
+    class MObject;
     class MField
     {
         friend class MClass;

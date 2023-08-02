@@ -53,6 +53,7 @@ build/Release
 .vscode
 .vs
 obj
+.DS_Store
 
 BeeEngineScripting.sln.DotSettings.user
 

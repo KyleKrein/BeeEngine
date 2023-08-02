@@ -10,20 +10,20 @@ namespace BeeEngine.Internal
     public static class Unsafe
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe ref T AsRef<T>(void* source)
+        public static unsafe ref T AsRef<T>(void* source) where T: unmanaged
         {
             return ref *(T*)source;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe bool IsNullRef<T>(ref T source)
+        public static unsafe bool IsNullRef<T>(ref T source) where T: unmanaged
         {
             fixed (void* ptr = &source)
                 return ptr == (void*)0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe ref T NullRef<T>()
+        public static unsafe ref T NullRef<T>() where T: unmanaged
         {
             return ref *(T*)0;
         }

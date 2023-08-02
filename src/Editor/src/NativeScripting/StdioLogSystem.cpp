@@ -22,6 +22,7 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <iostream>
+#include "Core/Logging/Log.h"
 
 #ifdef _WIN32
     #include "Windows.h"
