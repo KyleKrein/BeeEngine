@@ -11,9 +11,32 @@
 #include "Core/Color4.h"
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptingEngine.h"
+#include <vector>
+#include "Scripting/GameScript.h"
+#include "Scripting/MUtils.h"
 
 namespace YAML
 {
+    template<>
+    struct convert<glm::vec2>
+    {
+        static Node encode(const glm::vec2& rhs)
+        {
+            Node node;
+            node.push_back(rhs.x);
+            node.push_back(rhs.y);
+            return node;
+        }
+
+        static bool decode(const Node& node, glm::vec2& rhs)
+        {
+            if (!node.IsSequence() || node.size() != 4)
+                return false;
+            rhs.x = node[0].as<float>();
+            rhs.y = node[1].as<float>();
+            return true;
+        }
+    };
     template<>
     struct convert<glm::vec3>
     {
@@ -83,10 +106,40 @@ namespace YAML
             return true;
         }
     };
+
+    template<>
+    struct convert<BeeEngine::UUID>
+    {
+        static Node encode(const BeeEngine::UUID& uuid)
+        {
+            Node node;
+            node.push_back((uint64_t)uuid);
+            return node;
+        }
+
+        static bool decode(const Node& node, BeeEngine::UUID& uuid)
+        {
+            uuid = node.as<uint64_t>();
+            return true;
+        }
+    };
 }
 
 namespace BeeEngine
 {
+
+#define WRITE_SCRIPT_FIELD(FieldType, Type)           \
+			case MType::FieldType:          \
+				out << field.GetData<Type>();  \
+				break
+
+#define READ_SCRIPT_FIELD(FieldType, Type)             \
+    case MType::FieldType:                   \
+	{                                                  \
+		Type fieldData = scriptField["Data"].as<Type>();    \
+		field->SetData(fieldData);                  \
+		break;                                         \
+	}
 
     SceneSerializer::SceneSerializer(Ref<Scene> &scene)
             : m_Scene(scene)
@@ -176,7 +229,49 @@ namespace BeeEngine
                     auto className = scriptComponent["FullName"].as<std::string>();
                     if(ScriptingEngine::HasGameScript(className))
                     {
-                        script.Class = &ScriptingEngine::GetGameScript(className);
+                        script.SetClass(&ScriptingEngine::GetGameScript(className));
+
+                        const auto& scriptFields = scriptComponent["Fields"];
+                        auto& fields = script.EditableFields;
+                        std::unordered_map<std::string_view, GameScriptField*> fieldsMap;
+                        for (auto& field : fields)
+                        {
+                            fieldsMap[field.GetMField().GetName()] = &field;
+                        }
+                        for( auto& scriptField : scriptFields)
+                        {
+                            std::string name = scriptField["Name"].as<std::string>();
+                            if(!fieldsMap.contains(name))
+                            {
+                                BeeCoreWarn("Script field {0} not found in script {1}", name, className);
+                                continue;
+                            }
+                            std::string typeString = scriptField["Type"].as<std::string>();
+                            auto type = MUtils::StringToMType(typeString);
+                            auto* field = fieldsMap.at(name);
+
+                            switch (type)
+                            {
+                                READ_SCRIPT_FIELD(Single, float);
+                                READ_SCRIPT_FIELD(Double, double);
+                                READ_SCRIPT_FIELD(Boolean, bool);
+                                READ_SCRIPT_FIELD(Char, char);
+                                READ_SCRIPT_FIELD(Byte, uint8_t);
+                                READ_SCRIPT_FIELD(Int16, int16_t);
+                                READ_SCRIPT_FIELD(Int32, int32_t);
+                                READ_SCRIPT_FIELD(Int64, int64_t);
+                                READ_SCRIPT_FIELD(SByte, int8_t);
+                                READ_SCRIPT_FIELD(UInt16, uint16_t);
+                                READ_SCRIPT_FIELD(UInt32, uint32_t);
+                                READ_SCRIPT_FIELD(UInt64, uint64_t);
+                                READ_SCRIPT_FIELD(Vector2, glm::vec2);
+                                READ_SCRIPT_FIELD(Vector3, glm::vec3);
+                                READ_SCRIPT_FIELD(Vector4, glm::vec4);
+                                READ_SCRIPT_FIELD(Color, Color4);
+                                READ_SCRIPT_FIELD(Entity, UUID);
+
+                            }
+                        }
                     }
                 }
 
@@ -193,6 +288,12 @@ namespace BeeEngine
     void SceneSerializer::DeserializeBinary(const std::filesystem::path& filepath)
     {
         BeeCoreAssert(false, "Not implemented yet");
+    }
+    YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& vec)
+    {
+        out << YAML::Flow;
+        out << YAML::BeginSeq << vec.x << vec.y << YAML::EndSeq;
+        return out;
     }
     YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& vec)
     {
@@ -267,6 +368,51 @@ namespace BeeEngine
             out << YAML::BeginMap;
             auto& scriptComponent = entity.GetComponent<ScriptComponent>();
             out << YAML::Key << "FullName" << YAML::Value << (scriptComponent.Class ? scriptComponent.Class->GetFullName() : "");
+            auto& fields = scriptComponent.EditableFields;
+            if(fields.size() > 0)
+            {
+                out << YAML::Key << "Fields" << YAML::Value;
+                out << YAML::BeginSeq;
+                for(auto& field : fields)
+                {
+                    auto& mField = field.GetMField();
+                    MType type = mField.GetType();
+                    if(mField.IsStatic() ||
+                    type == MType::None || type == MType::Object
+                    || type == MType::String || type == MType::Array
+                    || type == MType::List || type == MType::Dictionary
+                    || type == MType::Ptr || type == MType::Void)
+                        continue;
+                    out << YAML::BeginMap;
+                    out << YAML::Key << "Name" << YAML::Value << mField.GetName();
+                    out << YAML::Key << "Type" << YAML::Value << MUtils::MTypeToString(type);
+                    out << YAML::Key << "Data" << YAML::Value;
+
+                    switch (type)
+                    {
+                        WRITE_SCRIPT_FIELD(Single, float);
+                        WRITE_SCRIPT_FIELD(Double, double);
+                        WRITE_SCRIPT_FIELD(Boolean, bool);
+                        WRITE_SCRIPT_FIELD(Char, char);
+                        WRITE_SCRIPT_FIELD(Byte, uint8_t);
+                        WRITE_SCRIPT_FIELD(Int16, int16_t);
+                        WRITE_SCRIPT_FIELD(Int32, int32_t);
+                        WRITE_SCRIPT_FIELD(Int64, int64_t);
+                        WRITE_SCRIPT_FIELD(SByte, int8_t);
+                        WRITE_SCRIPT_FIELD(UInt16, uint16_t);
+                        WRITE_SCRIPT_FIELD(UInt32, uint32_t);
+                        WRITE_SCRIPT_FIELD(UInt64, uint64_t);
+                        WRITE_SCRIPT_FIELD(Vector2, glm::vec2);
+                        WRITE_SCRIPT_FIELD(Vector3, glm::vec3);
+                        WRITE_SCRIPT_FIELD(Vector4, glm::vec4);
+                        WRITE_SCRIPT_FIELD(Color, Color4);
+                        WRITE_SCRIPT_FIELD(Entity, UUID);
+                    }
+                    out << YAML::EndMap;
+                }
+                out << YAML::EndSeq;
+            }
+
             out << YAML::EndMap;
         }
 

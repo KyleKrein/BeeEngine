@@ -8,6 +8,41 @@
 
 namespace BeeEngine
 {
+    class GameScriptField
+    {
+    public:
+        constexpr static size_t MAX_FIELD_SIZE = 16;
+        GameScriptField(MField& field): m_Field(&field) {}
+        MField& GetMField() { return *m_Field; }
+
+        template<class T>
+        void SetData(const T& data)
+        {
+            static_assert(sizeof (T)<= MAX_FIELD_SIZE, "Type is too large");
+            memcpy(m_Buffer, &data, sizeof (T));
+        }
+
+        void SetData(void* data)
+        {
+            memcpy(m_Buffer, data, MAX_FIELD_SIZE);
+        }
+
+        template<class T>
+        [[nodiscard]] const T& GetData()
+        {
+            static_assert(sizeof(T) <= MAX_FIELD_SIZE, "Type is too large");
+            return *(T*)m_Buffer;
+        }
+
+        [[nodiscard]] void* GetData()
+        {
+            return m_Buffer;
+        }
+
+    private:
+        MField* m_Field;
+        byte m_Buffer[MAX_FIELD_SIZE];
+    };
     class GameScript
     {
     public:
@@ -16,7 +51,6 @@ namespace BeeEngine
         void InvokeOnDestroy();
         void InvokeOnUpdate();
         MObject& GetMObject() { return m_Instance; }
-        std::unordered_map<std::string_view, class MField*>& GetEditableFields() { return m_EditableFields; }
 
         ~GameScript()
         {
@@ -29,8 +63,7 @@ namespace BeeEngine
         MMethod* m_OnCreate = nullptr;
         MMethod* m_OnDestroy = nullptr;
         MMethod* m_OnUpdate = nullptr;
-        std::unordered_map<std::string_view , class MField*> m_EditableFields;
 
-        void SelectEditableFields(MClass &aClass);
+        void CopyFieldsData(std::vector<GameScriptField> &aClass);
     };
 }

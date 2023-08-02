@@ -15,6 +15,7 @@
 #include "Scene/Entity.h"
 #include "MObject.h"
 #include "GameScript.h"
+#include "MUtils.h"
 
 namespace BeeEngine
 {
@@ -25,10 +26,11 @@ namespace BeeEngine
 
         Scene* CurrentScene = nullptr;
         std::unordered_map<UUID, Ref<GameScript>> EntityObjects;
+        std::unordered_map<MClass*, std::vector<GameScriptField>> EditableFieldsDefaults;
     };
     ScriptingEngineData ScriptingEngine::s_Data = {};
     std::unordered_map<String, MAssembly> ScriptingEngine::s_Assemblies = {};
-    std::unordered_map<String, MClass> ScriptingEngine::s_GameScripts = {};
+    std::unordered_map<String, Ref<MClass>> ScriptingEngine::s_GameScripts = {};
     MClass* ScriptingEngine::s_EntityBaseClass = nullptr;
     void ScriptingEngine::Init()
     {
@@ -87,10 +89,25 @@ namespace BeeEngine
         auto& assembly = LoadAssembly(path);
         for(auto& klass : assembly.GetClasses())
         {
-            if(IsGameScript(klass))
+            if(IsGameScript(*klass))
             {
-                BeeCoreTrace("Found game script: {0}", klass.GetFullName());
-                s_GameScripts.emplace(klass.GetFullName(), klass);
+                BeeCoreTrace("Found game script: {0}", klass->GetFullName());
+                s_GameScripts[klass->GetFullName()] = klass;
+                auto& fields = (s_Data.EditableFieldsDefaults[klass.get()] = {});
+                MObject obj = klass->Instantiate();
+                auto& klassFields = klass->GetFields();
+                for(auto& fieldPair : klassFields)
+                {
+                    auto& field = fieldPair.second;
+                    if(MUtils::IsSutableForEdit(field))
+                    {
+                        auto& scriptField = fields.emplace_back(field);
+                        byte buffer[GameScriptField::MAX_FIELD_SIZE];
+                        memset(buffer, 0, GameScriptField::MAX_FIELD_SIZE);
+                        obj.GetFieldValue(field, buffer);
+                        scriptField.SetData(buffer);
+                    }
+                }
             }
         }
         ScriptGlue::Register();
@@ -99,7 +116,7 @@ namespace BeeEngine
 
     MClass &ScriptingEngine::GetGameScript(const String &name)
     {
-        return s_GameScripts.at(name);
+        return *s_GameScripts.at(name);
     }
 
     class MAssembly &ScriptingEngine::LoadCoreAssembly(const std::filesystem::path &path)
@@ -107,19 +124,34 @@ namespace BeeEngine
         auto& assembly = LoadAssembly(path);
         for (auto& mClass : assembly.GetClasses())
         {
-            if(mClass.GetName() == "Entity")
+            if(mClass->GetName() == "Entity")
             {
-                s_EntityBaseClass = &mClass;
+                s_EntityBaseClass = mClass.get();
                 break;
             }
         }
 
         for(auto& klass : assembly.GetClasses())
         {
-            if(IsGameScript(klass))
+            if(IsGameScript(*klass))
             {
-                BeeCoreTrace("Found game script: {0}", klass.GetFullName());
-                s_GameScripts.emplace(klass.GetFullName(), klass);
+                BeeCoreTrace("Found game script: {0}", klass->GetFullName());
+                s_GameScripts[klass->GetFullName()] = klass;
+                auto& fields = (s_Data.EditableFieldsDefaults[klass.get()] = {});
+                MObject obj = klass->Instantiate();
+                auto& klassFields = klass->GetFields();
+                for(auto& fieldPair : klassFields)
+                {
+                    auto& field = fieldPair.second;
+                    if(MUtils::IsSutableForEdit(field))
+                    {
+                        auto& scriptField = fields.emplace_back(field);
+                        byte buffer[GameScriptField::MAX_FIELD_SIZE];
+                        memset(buffer, 0, GameScriptField::MAX_FIELD_SIZE);
+                        obj.GetFieldValue(field, buffer);
+                        scriptField.SetData(buffer);
+                    }
+                }
             }
         }
         return assembly;
@@ -176,5 +208,10 @@ namespace BeeEngine
             return nullptr;
         }
         return s_Data.EntityObjects.at(uuid).get();
+    }
+
+    std::vector<class GameScriptField> &ScriptingEngine::GetDefaultScriptFields(MClass *klass)
+    {
+        return s_Data.EditableFieldsDefaults.at(klass);
     }
 }

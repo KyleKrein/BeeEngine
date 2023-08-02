@@ -18,6 +18,7 @@
 #include "NativeScriptFactory.h"
 #include "Core/UUID.h"
 #include "Scripting/MObject.h"
+#include "Scripting/GameScript.h"
 
 namespace BeeEngine
 {
@@ -111,7 +112,8 @@ namespace BeeEngine
     struct ScriptComponent
     {
         class MClass* Class = nullptr;
-        Scope<MObject> Instance = nullptr;
+        std::vector<GameScriptField> EditableFields;
+        void SetClass(class MClass* mClass) noexcept;
     };
 
     struct NativeScriptComponent

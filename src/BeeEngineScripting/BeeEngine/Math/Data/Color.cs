@@ -27,8 +27,9 @@ using System;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using BeeEngine.Math;
 
-namespace BeeEngine.Math
+namespace BeeEngine
 {
     /// <summary>
     /// Represents a color with 4 floating-point components (R, G, B, A).

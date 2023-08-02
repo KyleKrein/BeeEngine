@@ -8,10 +8,14 @@
 #include "mono/metadata/object.h"
 #include "mono/metadata/tabledefs.h"
 #include "MField.h"
+#include "vec2.hpp"
+#include "vec3.hpp"
+#include "vec4.hpp"
+#include "Core/Color4.h"
 
 namespace BeeEngine
 {
-    MType MUtils::StringToMType(const String& name)
+    MType MUtils::ManagedNameToMType(const String& name)
     {
         static std::unordered_map<String, MType> MTypeMap = {
                 {"System.Void", MType::Void},
@@ -34,6 +38,7 @@ namespace BeeEngine
                 {"BeeEngine.Math.Vector2", MType::Vector2},
                 {"BeeEngine.Math.Vector3", MType::Vector3},
                 {"BeeEngine.Math.Vector4", MType::Vector4},
+                {"BeeEngine.Color", MType::Color},
                 {"BeeEngine.Entity", MType::Entity},
         };
         if(MTypeMap.contains(name))
@@ -47,10 +52,44 @@ namespace BeeEngine
         return MType::None;
     }
 
+    MType MUtils::StringToMType(const String& name)
+    {
+        static std::unordered_map<std::string_view, MType> MTypeMap = {
+                {"void", MType::Void},
+                {"bool", MType::Boolean},
+                {"char", MType::Char},
+                {"sbyte", MType::SByte},
+                {"byte", MType::Byte},
+                {"short", MType::Int16},
+                {"ushort", MType::UInt16},
+                {"int", MType::Int32},
+                {"uint", MType::UInt32},
+                {"long", MType::Int64},
+                {"ulong", MType::UInt64},
+                {"float", MType::Single},
+                {"double", MType::Double},
+                {"string", MType::String},
+                {"object", MType::Object},
+                {"void*", MType::Ptr},
+                {"Array", MType::Array},
+                {"Dictionary", MType::Dictionary},
+                {"List", MType::List},
+
+                {"Vector2", MType::Vector2},
+                {"Vector3", MType::Vector3},
+                {"Vector4", MType::Vector4},
+                {"Color", MType::Color},
+                {"Entity", MType::Entity}
+        };
+        if(MTypeMap.contains(name))
+            return MTypeMap.at(name);
+        return MType::None;
+    }
+
     MType MUtils::MonoTypeToMType(MonoType *monoType)
     {
         char* typeName = mono_type_get_name(monoType);
-        MType type = StringToMType(typeName);
+        MType type = ManagedNameToMType(typeName);
         mono_free(typeName);
         if(type == MType::None)
         {
@@ -108,6 +147,8 @@ namespace BeeEngine
                 return "Vector3";
             case MType::Vector4:
                 return "Vector4";
+            case MType::Color:
+                return "Color";
             case MType::Entity:
                 return "Entity";
 
@@ -157,5 +198,61 @@ namespace BeeEngine
             return MVisibility::ProtectedInternal;
         if(flags & METHOD_ATTRIBUTE_FAM_OR_ASSEM)
             return MVisibility::ProtectedInternal;
+        return MVisibility::Private;
+    }
+
+    size_t MUtils::SizeOfMType(MType type)
+    {
+        switch (type)
+        {
+            case MType::Char:
+                return 2;
+            case MType::Boolean:
+            case MType::SByte:
+            case MType::Byte:
+                return 1;
+            case MType::Int16:
+                return sizeof (int16_t);
+            case MType::UInt16:
+                return sizeof (uint16_t);
+            case MType::Int32:
+                return sizeof (int32_t);
+            case MType::UInt32:
+                return sizeof (uint32_t);
+            case MType::Int64:
+                return sizeof (int64_t);
+            case MType::UInt64:
+                return sizeof (uint64_t);
+            case MType::Single:
+                return sizeof (float);
+            case MType::Double:
+                return sizeof (double);
+            case MType::String:
+                return sizeof (MonoString*);
+            case MType::Ptr:
+                return sizeof (void*);
+            case MType::Dictionary:
+                return sizeof (MonoObject*);
+            case MType::Array:
+                return sizeof (MonoArray*);
+            case MType::List:
+                return sizeof (MonoObject*);
+            case MType::Object:
+                return sizeof (MonoObject*);
+            case MType::Vector2:
+                return sizeof (glm::vec2);
+            case MType::Vector3:
+                return sizeof (glm::vec3);
+            case MType::Vector4:
+                return sizeof (glm::vec4);
+            case MType::Color:
+                return sizeof (Color4);
+            case MType::Entity:
+                return sizeof (MonoObject*);
+            case MType::None:
+            case MType::Void:
+                return 0;
+        }
+        return 0;
     }
 }

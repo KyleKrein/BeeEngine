@@ -5,12 +5,12 @@
 #pragma once
 #include "Core/TypeDefines.h"
 #include <filesystem>
-#include "MClass.h"
 #include "Core/UUID.h"
 
 namespace BeeEngine
 {
     struct Entity;
+    class MClass;
     class ScriptingEngine
     {
     public:
@@ -31,7 +31,7 @@ namespace BeeEngine
         {
             return s_GameScripts.contains(name);
         }
-        static const std::unordered_map<String, MClass>& GetGameScripts() { return s_GameScripts; }
+        static const std::unordered_map<String, Ref<MClass>>& GetGameScripts() { return s_GameScripts; }
 
         static void RegisterInternalCall(const std::string& name, void* method);
 
@@ -47,6 +47,7 @@ namespace BeeEngine
         }
 
         static class GameScript* GetEntityScriptInstance(BeeEngine::UUID uuid);
+        static std::vector<class GameScriptField>& GetDefaultScriptFields(MClass* klass);
 
     private:
         static void InitMono();
@@ -54,7 +55,7 @@ namespace BeeEngine
         static struct ScriptingEngineData s_Data;
 
         static std::unordered_map<String, class MAssembly> s_Assemblies;
-        static std::unordered_map<String, MClass> s_GameScripts;
+        static std::unordered_map<String, Ref<MClass>> s_GameScripts;
         static MClass* s_EntityBaseClass;
 
         static void MonoShutdown();

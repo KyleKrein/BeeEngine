@@ -4,6 +4,7 @@
 
 #pragma once
 #include <filesystem>
+#include "Core/TypeDefines.h"
 
 extern "C"
 {
@@ -23,7 +24,7 @@ namespace BeeEngine
         MAssembly& operator=(const MAssembly&) = delete;
         MAssembly(MAssembly&& other) noexcept;
         MAssembly& operator=(MAssembly&&other) noexcept;
-        std::vector<class MClass>& GetClasses();
+        std::vector<Ref<class MClass>>& GetClasses();
 
         void Reload();
 
@@ -31,7 +32,7 @@ namespace BeeEngine
         MonoAssembly* m_MonoAssembly = nullptr;
         MonoImage* m_MonoImage = nullptr;
         std::filesystem::path m_Path;
-        std::vector<class MClass> m_Classes;
+        std::vector<Ref<class MClass>> m_Classes;
 
         void LoadAssembly();
         void GetClassesFromAssembly();

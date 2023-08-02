@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BeeEngine.Math;
 
 namespace BeeEngine.Test
 {
     public class MoveScript : Entity
     {
         public float Speed = 0.01f;
+        public bool ControlFromKeyboard = false;
+        public bool UseWASD = true;
+        public Vector3 zhu = new Vector3(4, 2, 0.5f);
         private TransformComponent m_Transform;
 
         private void OnCreate()
@@ -19,19 +18,21 @@ namespace BeeEngine.Test
 
         private void OnUpdate()
         {
-            if (Input.IsKeyDown(Key.W))
+            if (!ControlFromKeyboard)
+                return;
+            if (UseWASD ? Input.IsKeyDown(Key.W) : Input.IsKeyDown(Key.Up))
             {
                 m_Transform.Translation.Y += 1 * Speed;
             }
-            if (Input.IsKeyDown(Key.S))
+            if (UseWASD ? Input.IsKeyDown(Key.S) : Input.IsKeyDown(Key.Down))
             {
                 m_Transform.Translation.Y -= 1 * Speed;
             }
-            if (Input.IsKeyDown(Key.A))
+            if (UseWASD ? Input.IsKeyDown(Key.A) : Input.IsKeyDown(Key.Left))
             {
                 m_Transform.Translation.X -= 1 * Speed;
             }
-            if (Input.IsKeyDown(Key.D))
+            if (UseWASD ? Input.IsKeyDown(Key.D) : Input.IsKeyDown(Key.Right))
             {
                 m_Transform.Translation.X += 1 * Speed;
             }

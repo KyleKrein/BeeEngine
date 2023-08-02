@@ -42,8 +42,8 @@ namespace BeeEngine
         bool IsDerivedFrom(MClass& other) const;
         bool IsEnum() const { return m_IsEnum; }
         bool IsValueType() const { return m_IsValueType; }
-    private:
         MClass(const String& name, const String& ns, MonoImage* image);
+    private:
         String m_Name;
         String m_Namespace;
         MonoClass* m_MonoClass = nullptr;

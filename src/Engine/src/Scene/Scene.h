@@ -38,6 +38,8 @@ namespace BeeEngine
 
         Entity GetEntityByUUID(struct UUID uuid);
 
+        [[nodiscard]] bool IsRuntime() const noexcept { return m_IsRuntime; }
+
         void Clear();
     private:
         entt::registry m_Registry;

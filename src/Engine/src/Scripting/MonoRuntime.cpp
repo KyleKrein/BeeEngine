@@ -20,6 +20,7 @@
 #include "MField.h"
 #include "MUtils.h"
 #include "mono/metadata/tabledefs.h"
+#include "Scene/Components.h"
 
 
 namespace BeeEngine
@@ -47,7 +48,7 @@ namespace BeeEngine
         m_MonoAssembly = mono_assembly_load_from_full(m_MonoImage, m_Path.string().c_str(), &status, false);
     }
 
-    std::vector<MClass>& MAssembly::GetClasses()
+    std::vector<Ref<MClass>>& MAssembly::GetClasses()
     {
         return m_Classes;
     }
@@ -68,7 +69,7 @@ namespace BeeEngine
                 continue;
             const char* ns = mono_metadata_string_heap(m_MonoImage, cols[MONO_TYPEDEF_NAMESPACE]);
 
-            m_Classes.emplace_back(MClass(name, ns, m_MonoImage));
+            m_Classes.emplace_back(CreateRef<MClass>(name, ns, m_MonoImage));
         }
     }
 
@@ -266,8 +267,11 @@ namespace BeeEngine
         if(!m_OnUpdate->IsValid())
             m_OnUpdate = nullptr;
 
-
-        SelectEditableFields(mClass);
+        if(entity.HasComponent<ScriptComponent>())
+        {
+            auto& sc = entity.GetComponent<ScriptComponent>();
+            CopyFieldsData(sc.EditableFields);
+        }
     }
 
     void GameScript::InvokeOnCreate()
@@ -291,15 +295,12 @@ namespace BeeEngine
             m_Instance.Invoke(*m_OnUpdate, nullptr);
     }
 
-    void GameScript::SelectEditableFields(MClass &aClass)
+    void GameScript::CopyFieldsData(std::vector<GameScriptField> &aClass)
     {
-        auto& fields = aClass.GetFields();
-        for(auto& [name, field] : fields)
+        for(auto& field : aClass)
         {
-            if(MUtils::IsSutableForEdit(field))
-            {
-                m_EditableFields.emplace(name, &field);
-            }
+            auto& mField = field.GetMField();
+            m_Instance.SetFieldValue(mField, field.GetData());
         }
     }
 }
