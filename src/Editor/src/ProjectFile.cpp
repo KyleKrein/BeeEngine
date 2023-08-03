@@ -5,6 +5,7 @@
 #include "ProjectFile.h"
 #include "Utils/File.h"
 #include "Core/Logging/Log.h"
+#include "VSProjectGeneration.h"
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 namespace BeeEngine::Editor
@@ -15,6 +16,11 @@ namespace BeeEngine::Editor
     {
         BeeCoreTrace("ProjectName: {0}", m_ProjectName);
         BeeCoreTrace("ProjectPath: {0}", m_ProjectPath.string());
+        if(!std::filesystem::exists(m_ProjectPath / ".beeengine"))
+        {
+            std::filesystem::create_directory(m_ProjectPath / ".beeengine");
+        }
+        std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll", m_ProjectPath / ".beeengine" / "BeeEngine.Core.dll", std::filesystem::copy_options::overwrite_existing);
         if(!File::Exists(m_ProjectFilePath))
         {
             init:
@@ -50,7 +56,14 @@ namespace BeeEngine::Editor
             }
             std::filesystem::create_directory(m_ProjectPath / "Assets");
             std::filesystem::create_directory(m_ProjectPath / "Scenes");
+
+            VSProjectGeneration::GenerateAssemblyInfoFile(m_ProjectPath, m_ProjectName);
+            RegenerateSolution();
             return;
+        }
+        else
+        {
+            RegenerateSolution();
         }
         YAML::Node data = YAML::LoadFile(m_ProjectFilePath.string());
         if(!data["ProjectName"])
@@ -103,5 +116,11 @@ namespace BeeEngine::Editor
         else
             m_LastUsedScenePath = path;
         Save();
+    }
+
+    void ProjectFile::RegenerateSolution()
+    {
+        auto sources = VSProjectGeneration::GetSourceFiles(m_ProjectPath);
+        VSProjectGeneration::GenerateProject(m_ProjectPath, sources, m_ProjectName);
     }
 }

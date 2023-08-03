@@ -17,47 +17,41 @@ namespace BeeEngine
         static void Init();
         static void Shutdown();
 
-        static class MAssembly& LoadAssembly(const std::filesystem::path& path);
+        static void LoadGameAssembly(const std::filesystem::path& path);
 
-        static class MAssembly& LoadGameAssembly(const std::filesystem::path& path);
-        static class MAssembly& LoadCoreAssembly(const std::filesystem::path& path);
+        static void LoadCoreAssembly(const std::filesystem::path& path);
+        static void ReloadAssemblies();
         static class MAssembly& GetCoreAssembly();
-
         static void OnRuntimeStart(class Scene* scene);
+
         static void OnRuntimeStop();
-
         static MClass& GetGameScript(const String& name);
-        static bool HasGameScript(const String& name)
-        {
-            return s_GameScripts.contains(name);
-        }
-        static const std::unordered_map<String, Ref<MClass>>& GetGameScripts() { return s_GameScripts; }
 
+        static bool HasGameScript(const String& name);
+        static const std::unordered_map<String, Ref<MClass>>& GetGameScripts();
         static void RegisterInternalCall(const std::string& name, void* method);
 
         static void OnEntityCreated(Entity entity, MClass *pClass);
+
         static void OnEntityDestroyed(BeeEngine::Entity entity);
         static void OnEntityUpdate(Entity entity);
+        static class MObject* GetEntityScriptInstance(Entity entity);
 
         static Scene* GetSceneContext();
-        static MClass& GetEntityClass()
-        {
-            BeeExpects(s_EntityBaseClass != nullptr);
-            return *s_EntityBaseClass;
-        }
 
+        static MClass& GetEntityClass();
         static class GameScript* GetEntityScriptInstance(BeeEngine::UUID uuid);
-        static std::vector<class GameScriptField>& GetDefaultScriptFields(MClass* klass);
 
+        static std::vector<class GameScriptField>& GetDefaultScriptFields(MClass* klass);
     private:
+
+        static class MAssembly& LoadAssembly(const std::filesystem::path& path);
         static void InitMono();
         static bool IsGameScript(const MClass& klass);
         static struct ScriptingEngineData s_Data;
 
-        static std::unordered_map<String, class MAssembly> s_Assemblies;
-        static std::unordered_map<String, Ref<MClass>> s_GameScripts;
-        static MClass* s_EntityBaseClass;
-
         static void MonoShutdown();
+
+        static void CreateAppDomain();
     };
 }

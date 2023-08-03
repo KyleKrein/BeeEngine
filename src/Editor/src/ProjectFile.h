@@ -30,6 +30,8 @@ namespace BeeEngine::Editor
 
         void RenameProject(const std::string& newName) noexcept;
 
+        void RegenerateSolution();
+
         void Save() noexcept;
     private:
         std::filesystem::path m_ProjectPath;

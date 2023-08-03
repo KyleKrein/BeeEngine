@@ -37,6 +37,7 @@ namespace BeeEngine
         void StopRuntime();
 
         Entity GetEntityByUUID(struct UUID uuid);
+        Entity GetEntityByName(std::string_view name);
 
         [[nodiscard]] bool IsRuntime() const noexcept { return m_IsRuntime; }
 

@@ -25,6 +25,9 @@ namespace BeeEngine
 
         bool GetFieldValue(class MField& field, void* value);
         String GetFieldStringValue(class MField& field);
+
+        MonoObject *GetMonoObject();
+
     private:
         MonoObject* m_MonoObject = nullptr;
         MClass* m_Class = nullptr;

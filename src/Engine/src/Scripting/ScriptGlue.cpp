@@ -70,6 +70,8 @@ namespace BeeEngine
             BEE_INTERNAL_CALL(Entity_CreateComponent);
             BEE_INTERNAL_CALL(Entity_HasComponent);
             BEE_INTERNAL_CALL(Entity_RemoveComponent);
+            BEE_INTERNAL_CALL(Entity_FindEntityByName);
+            BEE_INTERNAL_CALL(Entity_GetScriptInstance);
 
             BEE_INTERNAL_CALL(Entity_GetTransformComponent);
             BEE_INTERNAL_CALL(Entity_GetTranslation);
@@ -231,5 +233,21 @@ namespace BeeEngine
             return nullptr;
         }
 #endif
+    }
+
+    MonoObject *ScriptGlue::Entity_GetScriptInstance(UUID id)
+    {
+        return ScriptingEngine::GetEntityScriptInstance(id)->GetMObject().GetMonoObject();
+    }
+
+    UUID ScriptGlue::Entity_FindEntityByName(MonoString *name)
+    {
+        char* nameStr = mono_string_to_utf8(name);
+        auto* scene = ScriptingEngine::GetSceneContext();
+        auto entity = scene->GetEntityByName(nameStr);
+        mono_free(nameStr);
+        if(!entity)
+            return 0;
+        return entity.GetUUID();
     }
 }

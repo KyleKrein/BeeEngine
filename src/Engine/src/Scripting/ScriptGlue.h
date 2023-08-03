@@ -33,6 +33,8 @@ namespace BeeEngine
         static void* Entity_GetComponent(UUID id, MonoReflectionType* reflectionType);
         static void Entity_GetTranslation(UUID id, glm::vec3* outTranslation);
         static void Entity_SetTranslation(UUID id, glm::vec3* inTranslation);
+        static UUID Entity_FindEntityByName(MonoString* name);
+        static MonoObject * Entity_GetScriptInstance(UUID id);
         static bool Input_IsKeyDown(Key key);
         static bool Input_IsMouseButtonDown(MouseButton button);
     };

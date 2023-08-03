@@ -192,8 +192,27 @@ namespace BeeEngine::Editor
         m_MenuBar.AddElement(fileMenu);
 
         MenuBarElement BuildMenu = {"Build"};
+        BuildMenu.AddChild({"Regenerate VS Solution", [this](){
+            if(!m_ProjectFile)
+            {
+                BeeCoreError("No project loaded");
+                return;
+            }
+            m_ProjectFile->RegenerateSolution();
+        }});
         BuildMenu.AddChild({"Reload Scripts", [this](){
-            SetupGameLibrary();
+            if(!m_ScenePath.empty())
+            {
+                m_SceneSerializer.Serialize(m_ScenePath);
+            }
+            ScriptingEngine::ReloadAssemblies();
+            if(!m_ScenePath.empty())
+            {
+                m_SceneHierarchyPanel.ClearSelection();
+                m_ViewPort.GetScene()->Clear();
+                m_SceneSerializer.Deserialize(m_ScenePath);
+                m_ViewPort.GetScene()->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
+            }
         }});
         m_MenuBar.AddElement(BuildMenu);
     }
@@ -205,7 +224,8 @@ namespace BeeEngine::Editor
             m_GameBuilder = CreateScope<GameBuilder>(m_ProjectFile->GetProjectPath(), ConfigFile::LoadCompilerConfiguration());
         }*/
 
-        auto& coreAssembly = ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
+        ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
+        ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "build"/ "GameLibrary.dll");
         //auto& gameAssembly = ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "GameLibrary.dll");
         /*if(m_GameLibrary)
         {

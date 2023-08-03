@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BeeEngine
 {
-    public abstract class Entity
+    public class Entity
     {
         internal readonly ulong ID;
         private Dictionary<Type, Component> m_ComponentCache = new Dictionary<Type, Component>();
@@ -87,6 +87,21 @@ namespace BeeEngine
                 return;
             InternalCalls.Entity_RemoveComponent(ID, type);
             m_ComponentCache.Remove(type);
+        }
+
+        public Entity FindEntityByName(string name)
+        {
+            ulong entityID = InternalCalls.Entity_FindEntityByName(name);
+            if (entityID == 0)
+                return null;
+
+            return new Entity(entityID);
+        }
+
+        public T As<T>() where T : Entity, new()
+        {
+            object instance = InternalCalls.GetScriptInstance(ID);
+            return instance as T;
         }
     }
 }

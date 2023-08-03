@@ -64,7 +64,6 @@
     <Compile Include="Math\Vector\Vector4.cs" />
     <Compile Include="Math\Vector\Vector4i.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Test\MoveScript.cs" />
     <Compile Include="Unsafe.cs" />
   </ItemGroup>
   <ItemGroup />

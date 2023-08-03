@@ -35,7 +35,7 @@ namespace BeeEngine
     }
     MAssembly::~MAssembly()
     {
-        UnloadAssembly();
+        //UnloadAssembly();
     }
     void MAssembly::LoadAssembly()
     {
@@ -170,6 +170,11 @@ namespace BeeEngine
         String value = mono_string_to_utf8(str);
         mono_free(str);
         return value;
+    }
+
+    MonoObject *MObject::GetMonoObject()
+    {
+        return m_MonoObject;
     }
 
     MClass::MClass(const String &name, const String &ns, MonoImage* image)

@@ -44,6 +44,12 @@ namespace BeeEngine.Internal
         internal static extern void Entity_SetTranslation(ulong id, ref Vector3 vec);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern ulong Entity_FindEntityByName(string name);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern object Entity_GetScriptInstance(ulong id);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Input_IsKeyDown(Key key);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

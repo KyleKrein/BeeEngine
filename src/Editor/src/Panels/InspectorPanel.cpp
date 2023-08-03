@@ -342,6 +342,15 @@ namespace BeeEngine::Editor
                         }
                         break;
                     }
+                    case MType::Color:
+                    {
+                        Color4 value;
+                        GetFieldData(mField, &value, mObject, field);
+                        if(ImGui::ColorEdit4(name, value.ValuePtr()))
+                        {
+                            SetFieldData(mField, &value, mObject, field);
+                        }
+                    }
                 }
             }
         });

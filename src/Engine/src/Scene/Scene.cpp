@@ -189,4 +189,18 @@ namespace BeeEngine
         BeeExpects(m_UUIDMap.contains(uuid));
         return {m_UUIDMap.at(uuid), this};
     }
+
+    Entity Scene::GetEntityByName(std::string_view name)
+    {
+        auto view = m_Registry.view<TagComponent>();
+        for (auto entity:view)
+        {
+            auto& tag = view.get<TagComponent>(entity);
+            if (tag.Tag == name)
+            {
+                return {EntityID{entity}, this};
+            }
+        }
+        return {};
+    }
 }
