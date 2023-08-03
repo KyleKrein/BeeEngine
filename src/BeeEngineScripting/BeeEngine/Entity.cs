@@ -15,7 +15,6 @@ namespace BeeEngine
 
         internal Entity(ulong id)
         {
-            Log.Info("ID set to {0}", id);
             ID = id;
         }
 
@@ -100,7 +99,7 @@ namespace BeeEngine
 
         public T As<T>() where T : Entity, new()
         {
-            object instance = InternalCalls.GetScriptInstance(ID);
+            object instance = InternalCalls.Entity_GetScriptInstance(ID);
             return instance as T;
         }
     }

@@ -12,6 +12,7 @@
 #include "Scripting/ScriptingEngine.h"
 #include "Scripting/MAssembly.h"
 #include "Scripting/MClass.h"
+#include "Scripting/ScriptGlue.h"
 
 namespace BeeEngine::Editor
 {
@@ -230,6 +231,7 @@ namespace BeeEngine::Editor
 
         ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
         ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "build"/ "GameLibrary.dll");
+        ScriptGlue::Register();
         //auto& gameAssembly = ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "GameLibrary.dll");
         /*if(m_GameLibrary)
         {
