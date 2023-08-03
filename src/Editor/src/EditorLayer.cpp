@@ -41,6 +41,8 @@ namespace BeeEngine::Editor
         {
             case SceneState::Edit:
             {
+                if(m_AssetPanel.NeedsToRegenerateSolution())
+                    m_ProjectFile->RegenerateSolution();
                 m_ViewPort.UpdateEditor(m_EditorCamera);
                 //m_GameBuilder->UpdateAndCompile();
                 break;
@@ -99,6 +101,7 @@ namespace BeeEngine::Editor
                 m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 
                 SetupGameLibrary();
 
@@ -129,6 +132,7 @@ namespace BeeEngine::Editor
                 m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 
                 SetupGameLibrary();
             }

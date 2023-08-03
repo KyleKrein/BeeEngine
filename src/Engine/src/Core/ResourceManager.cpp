@@ -8,5 +8,5 @@
 
 namespace BeeEngine
 {
-
+    std::string ResourceManager::ProjectName;
 }

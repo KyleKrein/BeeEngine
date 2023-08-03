@@ -22,6 +22,13 @@ namespace BeeEngine::Editor
             return m_WorkingDirectory;
         }
 
+        bool NeedsToRegenerateSolution() noexcept
+        {
+            bool temp = m_NeedToRegenerateSolution;
+            m_NeedToRegenerateSolution = false;
+            return temp;
+        }
+
         void OnGUIRender() noexcept;
     private:
         std::filesystem::path m_WorkingDirectory;
@@ -29,5 +36,6 @@ namespace BeeEngine::Editor
 
         Ref<Texture2D> m_DirectoryIcon;
         Ref<Texture2D> m_FileIcon;
+        bool m_NeedToRegenerateSolution = false;
     };
 }
