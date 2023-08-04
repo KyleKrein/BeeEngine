@@ -75,5 +75,7 @@ namespace BeeEngine::Editor
         void OnScenePause() noexcept;
         void OnSceneStop() noexcept;
         void OnSceneSimulate() noexcept;
+
+        void ReloadAssembly();
     };
 }

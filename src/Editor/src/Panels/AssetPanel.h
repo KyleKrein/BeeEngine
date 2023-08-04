@@ -37,5 +37,7 @@ namespace BeeEngine::Editor
         Ref<Texture2D> m_DirectoryIcon;
         Ref<Texture2D> m_FileIcon;
         bool m_NeedToRegenerateSolution = false;
+
+        void DragAndDropFileToFolder(const std::filesystem::path &path);
     };
 }

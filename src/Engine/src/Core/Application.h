@@ -41,6 +41,11 @@ namespace BeeEngine{
             return *s_Instance;
         }
 
+        static void SubmitToMainThread(const std::function<void()>& func)
+        {
+            s_Instance->SubmitToMainThread_Impl(func);
+        }
+
         [[nodiscard]] bool IsMinimized() const
         {
             return m_IsMinimized;
@@ -98,13 +103,17 @@ namespace BeeEngine{
         static bool OnWindowClose(WindowCloseEvent& event);
         void CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept;
         bool OnWindowResize(WindowResizeEvent* event);
+        void SubmitToMainThread_Impl(const std::function<void()> &function);
+        void ExecuteMainThreadQueue() noexcept;
     private:
+        std::vector<std::function<void()>> m_MainThreadQueue;
+        std::mutex m_MainThreadQueueMutex;
         static Application* s_Instance;
-
         bool m_IsMinimized;
         Scope<WindowHandler> m_Window;
         LayerStack m_Layers;
         EventQueue m_EventQueue;
+
         AssetManager m_AssetManager;
     };
 }

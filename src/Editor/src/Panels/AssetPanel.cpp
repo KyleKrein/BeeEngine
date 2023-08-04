@@ -21,8 +21,7 @@ namespace BeeEngine::Editor
         if (ImGui::BeginPopup(name))
         {
             static char buffer[256] = { 0 };
-            ImGui::Text("Name:");
-            ImGui::SameLine();
+            ImGui::Text("Name");
             ImGui::InputText("##Name", buffer, sizeof(buffer));
 
             if (ImGui::Button("Create", { 120, 0 }))
@@ -53,38 +52,7 @@ namespace BeeEngine::Editor
             {
                 m_CurrentDirectory = m_CurrentDirectory.parent_path();
             }
-            if (ImGui::BeginDragDropTarget())
-            {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-                {
-                    std::filesystem::path filePath;
-
-                    if(Application::GetOsPlatform() == OSPlatform::Windows)
-                    {
-                        filePath = (const wchar_t*)payload->Data;
-                    }
-                    else
-                    {
-                        filePath = (const char*)payload->Data;
-                    }
-                    if(!filePath.is_absolute())
-                    {
-                        filePath = m_WorkingDirectory / filePath;
-                    }
-                    std::error_code error;
-                    if(std::filesystem::copy_file(filePath, m_CurrentDirectory.parent_path() / filePath.filename(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error))
-                    {
-                        std::filesystem::remove_all(filePath);
-                        if(filePath.extension() == ".cs")
-                        {
-                            m_NeedToRegenerateSolution = true;
-                        }
-                    }
-                    else
-                        BeeCoreError("Failed to copy file: {0}", error.message());
-                }
-                ImGui::EndDragDropTarget();
-            }
+            DragAndDropFileToFolder(m_CurrentDirectory.parent_path());
         }
 
         static float padding = 16.0f;
@@ -129,38 +97,7 @@ namespace BeeEngine::Editor
 
             if(is_directory(path))
             {
-                if (ImGui::BeginDragDropTarget())
-                {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-                    {
-                        std::filesystem::path filePath;
-
-                        if(Application::GetOsPlatform() == OSPlatform::Windows)
-                        {
-                            filePath = (const wchar_t*)payload->Data;
-                        }
-                        else
-                        {
-                            filePath = (const char*)payload->Data;
-                        }
-                        if(!filePath.is_absolute())
-                        {
-                            filePath = m_WorkingDirectory / filePath;
-                        }
-                        std::error_code error;
-                        if(std::filesystem::copy_file(filePath, path / filePath.filename(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error))
-                        {
-                            std::filesystem::remove_all(filePath);
-                            if(filePath.extension() == ".cs")
-                            {
-                                m_NeedToRegenerateSolution = true;
-                            }
-                        }
-                        else
-                            BeeCoreError("Failed to copy file: {0}", error.message());
-                    }
-                    ImGui::EndDragDropTarget();
-                }
+                DragAndDropFileToFolder(path);
             }
 
             ImGui::PopStyleColor();
@@ -227,6 +164,42 @@ namespace BeeEngine::Editor
         });
 
         ImGui::End();
+    }
+
+    void AssetPanel::DragAndDropFileToFolder(const std::filesystem::path &path)
+    {
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+            {
+                std::filesystem::path filePath;
+
+                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                {
+                    filePath = (const wchar_t*)payload->Data;
+                }
+                else
+                {
+                    filePath = (const char*)payload->Data;
+                }
+                if(!filePath.is_absolute())
+                {
+                    filePath = m_WorkingDirectory / filePath;
+                }
+                std::error_code error;
+                if(std::filesystem::copy_file(filePath, path / filePath.filename(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error))
+                {
+                    std::filesystem::remove_all(filePath);
+                    if(filePath.extension() == ".cs")
+                    {
+                        m_NeedToRegenerateSolution = true;
+                    }
+                }
+                else
+                    BeeCoreError("Failed to copy file: {0}", error.message());
+            }
+            ImGui::EndDragDropTarget();
+        }
     }
 
     AssetPanel::AssetPanel(const std::filesystem::path &workingDirectory) noexcept

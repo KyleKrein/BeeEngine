@@ -44,6 +44,8 @@ namespace BeeEngine::Editor
             {
                 if(m_AssetPanel.NeedsToRegenerateSolution())
                     m_ProjectFile->RegenerateSolution();
+                if(m_ProjectFile->IsAssemblyReloadPending())
+                    ReloadAssembly();
                 m_ViewPort.UpdateEditor(m_EditorCamera);
                 //m_GameBuilder->UpdateAndCompile();
                 break;
@@ -206,20 +208,25 @@ namespace BeeEngine::Editor
             m_ProjectFile->RegenerateSolution();
         }});
         BuildMenu.AddChild({"Reload Scripts", [this](){
-            if(!m_ScenePath.empty())
-            {
-                m_SceneSerializer.Serialize(m_ScenePath);
-            }
-            ScriptingEngine::ReloadAssemblies();
-            if(!m_ScenePath.empty())
-            {
-                m_SceneHierarchyPanel.ClearSelection();
-                m_ViewPort.GetScene()->Clear();
-                m_SceneSerializer.Deserialize(m_ScenePath);
-                m_ViewPort.GetScene()->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
-            }
+            ReloadAssembly();
         }});
         m_MenuBar.AddElement(BuildMenu);
+    }
+
+    void EditorLayer::ReloadAssembly()
+    {
+        if(!m_ScenePath.empty())
+        {
+            m_SceneSerializer.Serialize(m_ScenePath);
+        }
+        ScriptingEngine::ReloadAssemblies();
+        if(!m_ScenePath.empty())
+        {
+            m_SceneHierarchyPanel.ClearSelection();
+            m_ViewPort.GetScene()->Clear();
+            m_SceneSerializer.Deserialize(m_ScenePath);
+            m_ViewPort.GetScene()->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
+        }
     }
 
     void EditorLayer::SetupGameLibrary()

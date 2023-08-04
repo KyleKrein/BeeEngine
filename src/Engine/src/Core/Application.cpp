@@ -20,6 +20,7 @@ namespace BeeEngine{
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
+            ExecuteMainThreadQueue();
             m_Window->ProcessEvents();
             m_EventQueue.Dispatch();
             m_Window->UpdateTime();
@@ -85,13 +86,13 @@ namespace BeeEngine{
         {
             case RenderAPI::WebGPU:
                 return;
-            case RenderAPI::OpenGL:
             case RenderAPI::Vulkan:
                 return;
             case RenderAPI::DirectX:
+            case RenderAPI::OpenGL:
             case RenderAPI::Metal:
             default:
-                BeeCoreWarn("Unable to use {} as render API. Using OpenGL instead", ToString(properties.PreferredRenderAPI));
+                BeeCoreWarn("Unable to use {} as render API", ToString(properties.PreferredRenderAPI));
                 //properties.PreferredRenderAPI = RenderAPI::OpenGL;
                 return;
         }
@@ -108,6 +109,22 @@ namespace BeeEngine{
         }
         m_IsMinimized = false;
         return false;
+    }
+
+    void Application::SubmitToMainThread_Impl(const std::function<void()> &function)
+    {
+        std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+        m_MainThreadQueue.push_back(function);
+    }
+
+    void Application::ExecuteMainThreadQueue() noexcept
+    {
+        std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+        for(auto& function : m_MainThreadQueue)
+        {
+            function();
+        }
+        m_MainThreadQueue.clear();
     }
 }
 

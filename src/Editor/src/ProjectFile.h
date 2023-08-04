@@ -4,6 +4,8 @@
 
 #pragma once
 #include <filesystem>
+#include "FileWatch.hpp"
+#include "Core/TypeDefines.h"
 
 namespace BeeEngine::Editor
 {
@@ -28,15 +30,27 @@ namespace BeeEngine::Editor
             Save();
         }
 
+        bool IsAssemblyReloadPending() const noexcept
+        {
+            bool temp = m_AssemblyReloadPending;
+            m_AssemblyReloadPending = false;
+            return temp;
+        }
+
         void RenameProject(const std::string& newName) noexcept;
 
         void RegenerateSolution();
 
         void Save() noexcept;
+
     private:
+        void OnAppAssemblyFileSystemEvent(const std::string& path, filewatch::Event changeType);
+
         std::filesystem::path m_ProjectPath;
         std::string m_ProjectName;
         const std::filesystem::path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
         std::filesystem::path m_LastUsedScenePath {""};
+        Scope<filewatch::FileWatch<std::string>> m_AppAssemblyFileWatcher;
+        mutable bool m_AssemblyReloadPending = false;
     };
 }

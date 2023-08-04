@@ -8,6 +8,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 target_include_directories(BeeEngineEditor
         PUBLIC ../Engine/include/
         PRIVATE ../Engine/vendor/
+        PRIVATE vendor/FileWatcher
         PUBLIC src
         )
 

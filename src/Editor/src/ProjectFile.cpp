@@ -20,6 +20,11 @@ namespace BeeEngine::Editor
         {
             std::filesystem::create_directory(m_ProjectPath / ".beeengine");
         }
+        if(!std::filesystem::exists(m_ProjectPath / ".beeengine" /"build"))
+        {
+            std::filesystem::create_directory(m_ProjectPath / ".beeengine" / "build");
+        }
+        m_AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_ProjectPath / ".beeengine" / "build" / "GameLibrary.dll").string(), [this](const std::string & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll", m_ProjectPath / ".beeengine" / "BeeEngine.Core.dll", std::filesystem::copy_options::overwrite_existing);
         if(!File::Exists(m_ProjectFilePath))
         {
@@ -122,5 +127,13 @@ namespace BeeEngine::Editor
     {
         auto sources = VSProjectGeneration::GetSourceFiles(m_ProjectPath);
         VSProjectGeneration::GenerateProject(m_ProjectPath, sources, m_ProjectName);
+    }
+
+    void ProjectFile::OnAppAssemblyFileSystemEvent(const std::string &path, const filewatch::Event changeType)
+    {
+        if(!m_AssemblyReloadPending && (changeType == filewatch::Event::modified || changeType == filewatch::Event::added ))
+        {
+            m_AssemblyReloadPending = true;
+        }
     }
 }
