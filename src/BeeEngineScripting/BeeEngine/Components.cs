@@ -14,7 +14,7 @@ namespace BeeEngine
         internal unsafe void* ComponentHandle;
         internal ulong EntityID;
 
-        internal abstract unsafe void Contruct();
+        internal abstract unsafe void Construct();
     }
 
     public sealed class TransformComponent : Component
@@ -27,11 +27,23 @@ namespace BeeEngine
         public unsafe ref Vector3 Rotation => ref Unsafe.AsRef<Vector3>(m_Rotation);
         public unsafe ref Vector3 Scale => ref Unsafe.AsRef<Vector3>(m_Scale);
 
-        internal override unsafe void Contruct()
+        internal override unsafe void Construct()
         {
             m_Translation = (Vector3*)ComponentHandle;
             m_Rotation = m_Translation + 1;
             m_Scale = m_Rotation + 1;
+        }
+    }
+
+    public sealed class SpriteRendererComponent : Component
+    {
+        private unsafe Color* m_Color;
+
+        public unsafe ref Color Color => ref Unsafe.AsRef<Color>(m_Color);
+
+        internal override unsafe void Construct()
+        {
+            m_Color = (Color*)ComponentHandle;
         }
     }
 }

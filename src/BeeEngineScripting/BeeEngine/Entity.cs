@@ -64,7 +64,7 @@ namespace BeeEngine
             void* componentPtr = InternalCalls.Entity_GetComponent(ID, componentType);
             DebugLog.AssertAndThrow(componentPtr != (void*)0, "Component {0} is nullptr", componentType.Name);
             T cmp = new T { EntityID = ID, ComponentHandle = componentPtr };
-            cmp.Contruct();
+            cmp.Construct();
             m_ComponentCache.Add(componentType, cmp);
             return cmp;
         }
