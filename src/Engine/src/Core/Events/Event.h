@@ -32,8 +32,9 @@ namespace BeeEngine
         KeyReleased = 10,
         KeyTyped = 11,
         MouseButtonPressed = 12,
-        MouseMoved = 13,
-        MouseScrolled = 14
+        MouseButtonReleased = 13,
+        MouseMoved = 14,
+        MouseScrolled = 15
     };
     class Event
     {

@@ -229,8 +229,13 @@ namespace BeeEngine::Internal
                 {
                     break;
                 }
-                case SDL_EVENT_KEY_DOWN:
                 case SDL_EVENT_KEY_UP:
+                {
+                    auto event = CreateScope<KeyReleasedEvent>(ConvertKeyCode(sdlEvent.key.keysym.scancode));
+                    m_Events.AddEvent(std::move(event));
+                    break;
+                }
+                case SDL_EVENT_KEY_DOWN:
                 {
                     auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.keysym.scancode), sdlEvent.key.repeat);
                     m_Events.AddEvent(std::move(event));
@@ -260,8 +265,13 @@ namespace BeeEngine::Internal
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
-                case SDL_EVENT_MOUSE_BUTTON_DOWN:
                 case SDL_EVENT_MOUSE_BUTTON_UP:
+                {
+                    auto event = CreateScope<MouseButtonReleasedEvent>(ConvertMouseButton(sdlEvent.button.button));
+                    m_Events.AddEvent(std::move(event));
+                    break;
+                }
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
                 {
                     auto event = CreateScope<MouseButtonPressedEvent>(ConvertMouseButton(sdlEvent.button.button));
                     m_Events.AddEvent(std::move(event));

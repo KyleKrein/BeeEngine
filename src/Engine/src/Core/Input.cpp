@@ -164,13 +164,25 @@ namespace BeeEngine
             case BeeEngine::KeyPressed:
             {
                 Key key = ((KeyPressedEvent *) event)->GetKey();
-                s_Keys[key] = !s_Keys[key];
+                s_Keys[key] = true;
+                break;
+            }
+            case BeeEngine::KeyReleased:
+            {
+                Key key = ((KeyReleasedEvent *) event)->GetKey();
+                s_Keys[key] = false;
                 break;
             }
             case BeeEngine::MouseButtonPressed:
             {
                 MouseButton button = ((MouseButtonPressedEvent *) event)->GetButton();
-                s_MouseButtons[button] = !s_MouseButtons[button];
+                s_MouseButtons[button] = true;
+                break;
+            }
+            case BeeEngine::MouseButtonReleased:
+            {
+                MouseButton button = ((MouseButtonReleasedEvent *) event)->GetButton();
+                s_MouseButtons[button] = false;
                 break;
             }
             case BeeEngine::MouseMoved:

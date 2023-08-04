@@ -86,6 +86,23 @@ namespace BeeEngine
         MouseButton m_Button;
     };
 
+    struct MouseButtonReleasedEvent: public Event
+    {
+    public:
+        explicit MouseButtonReleasedEvent(MouseButton button) noexcept
+        : m_Button(button)
+        {
+            Category = static_cast<EventCategory>(EventCategory::Mouse & EventCategory::Input);
+            m_Type = EventType::MouseButtonReleased;
+        }
+        MouseButton GetButton()
+        {
+            return m_Button;
+        }
+    private:
+        MouseButton m_Button;
+    };
+
     struct MouseMovedEvent: public Event
     {
     public:

@@ -12,12 +12,12 @@ namespace BeeEngine
     class FileDialogs
     {
     private:
-        static const char* GetFilter(void* filter);
+        static std::string GetFilter(void* filter);
 
     public:
         struct Filter
         {
-            friend const char* FileDialogs::GetFilter(void* filter);
+            friend std::string FileDialogs::GetFilter(void* filter);
             friend class ::TestFileDialogs;
             const char* name;
             const char* filter;
