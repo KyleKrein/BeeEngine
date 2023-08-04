@@ -45,7 +45,7 @@ namespace BeeEngine
             auto& scriptComponent = nativeScriptsView.get<NativeScriptComponent>(entity);
             if (!scriptComponent.Instance)
             {
-                BeeCoreTrace("Instanciating Script: {0}", scriptComponent.Name);
+                BeeCoreTrace("Instantiating Script: {0}", scriptComponent.Name);
                 scriptComponent.Instance = scriptComponent.InstantiateScript(scriptComponent.Name.c_str());
                 scriptComponent.Instance->m_Entity = Entity(EntityID{entity}, this);
                 scriptComponent.Instance->OnCreate();
@@ -62,6 +62,14 @@ namespace BeeEngine
             if(scriptComponent.Class)
             {
                 ScriptingEngine::OnEntityCreated(entity, scriptComponent.Class);
+            }
+        }
+        for( auto e: view)
+        {
+            Entity entity {EntityID{e}, this};
+            auto& scriptComponent = entity.GetComponent<ScriptComponent>();
+            if(scriptComponent.Class)
+            {
                 ScriptingEngine::OnEntityUpdate(entity);
             }
         }
@@ -69,9 +77,11 @@ namespace BeeEngine
 
     void Scene::DestroyEntity(Entity entity)
     {
-        ScriptingEngine::OnEntityDestroyed(entity);
-        m_UUIDMap.erase(entity.GetUUID());
+        UUID uuid = entity.GetUUID();
+        m_UUIDMap.erase(uuid);
         m_Registry.destroy(entity);
+        if(m_IsRuntime)
+            ScriptingEngine::OnEntityDestroyed(uuid);
     }
 
     void Scene::Clear()

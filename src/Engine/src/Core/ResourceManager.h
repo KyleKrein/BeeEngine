@@ -114,7 +114,7 @@ namespace BeeEngine
             script << "\n";
             script << "namespace " << ProjectName << "\n";
             script << "{\n";
-            script << "\tpublic class " << scriptName << ": Entity\n";
+            script << "\tpublic class " << scriptName << ": Behaviour\n";
             script << "\t{\n";
             script << "\t\tvoid OnUpdate()\n";
             script << "\t\t{\n";

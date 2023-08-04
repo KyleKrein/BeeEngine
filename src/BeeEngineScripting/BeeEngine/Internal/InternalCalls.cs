@@ -50,6 +50,9 @@ namespace BeeEngine.Internal
         internal static extern object Entity_GetScriptInstance(ulong id);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Entity_Destroy(ulong id);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Input_IsKeyDown(Key key);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

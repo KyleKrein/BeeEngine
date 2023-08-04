@@ -21,14 +21,28 @@
 #include "MUtils.h"
 #include "mono/metadata/tabledefs.h"
 #include "Scene/Components.h"
+#include "mono/metadata/threads.h"
+#include "mono/metadata/mono-debug.h"
 
 
 namespace BeeEngine
 {
-    MAssembly::MAssembly(const std::filesystem::path& path)
+    MAssembly::MAssembly(const std::filesystem::path& path, bool debug)
     : m_Path(path)
     {
         LoadAssembly();
+        if(debug)
+        {
+            std::filesystem::path pdbPath = path;
+            pdbPath.replace_extension(".pdb");
+
+            if (std::filesystem::exists(pdbPath))
+            {
+                auto pdbFile = File::ReadBinaryFile(pdbPath);
+                mono_debug_open_image_from_memory(m_MonoImage, (const mono_byte*)pdbFile.data(), pdbFile.size());
+                BeeCoreInfo("Loaded PDB {}", pdbPath.string());
+            }
+        }
         mono_image_close(m_MonoImage);
         m_MonoImage = mono_assembly_get_image(m_MonoAssembly);
         GetClassesFromAssembly();
@@ -71,16 +85,6 @@ namespace BeeEngine
 
             m_Classes.emplace_back(CreateRef<MClass>(name, ns, m_MonoImage));
         }
-    }
-
-    void MAssembly::Reload()
-    {
-        UnloadAssembly();
-        LoadAssembly();
-        mono_image_close(m_MonoImage);
-        m_MonoImage = mono_assembly_get_image(m_MonoAssembly);
-        GetClassesFromAssembly();
-        m_MonoImage = nullptr;
     }
 
     void MAssembly::UnloadAssembly()
@@ -149,7 +153,6 @@ namespace BeeEngine
         if(exception)
         {
             mono_print_unhandled_exception(exception);
-            mono_free(exception);
         }
     }
 
@@ -198,7 +201,7 @@ namespace BeeEngine
         // to iterate over all of the elements. When no more values are available, the return value is NULL.
 
         int fieldCount = mono_class_num_fields(m_MonoClass);
-        BeeCoreTrace("{} has {} fields:", m_Name, fieldCount);
+        //BeeCoreTrace("{} has {} fields:", m_Name, fieldCount);
         void* iterator = nullptr;
         m_IsEnum = mono_class_is_enum(m_MonoClass);
         m_IsValueType = mono_class_is_valuetype(m_MonoClass);
@@ -214,7 +217,7 @@ namespace BeeEngine
 
             MonoType* type = mono_field_get_type(field);
             MType fieldType = MUtils::MonoTypeToMType(type);
-            BeeCoreTrace("  {} ({})", fieldName, MUtils::MTypeToString(fieldType));
+            //BeeCoreTrace("  {} ({})", fieldName, MUtils::MTypeToString(fieldType));
             if(fieldType == MType::None)
                 continue;
             m_Fields.emplace(fieldName, MField(*this, fieldName, fieldType, visibility, field, isStatic));
@@ -258,10 +261,10 @@ namespace BeeEngine
     GameScript::GameScript(MClass& mClass, Entity entity)
     : m_Instance(mClass.Instantiate())
     {
-        auto& constructor = ScriptingEngine::GetEntityClass().GetMethod(".ctor", 1);
-        auto uuid = entity.GetUUID();
-        void* params[1] {&uuid};
-        m_Instance.Invoke(constructor, params);
+        //auto& constructor = ScriptingEngine::GetEntityClass().GetMethod(".ctor", 1);
+        //auto uuid = entity.GetUUID();
+        //void* params[1] {&uuid};
+        //m_Instance.Invoke(constructor, params);
         m_OnCreate = &mClass.GetMethod("OnCreate", 0);
         if(!m_OnCreate->IsValid())
             m_OnCreate = nullptr;

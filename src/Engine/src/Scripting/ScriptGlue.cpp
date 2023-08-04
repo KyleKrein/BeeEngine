@@ -72,6 +72,7 @@ namespace BeeEngine
             BEE_INTERNAL_CALL(Entity_RemoveComponent);
             BEE_INTERNAL_CALL(Entity_FindEntityByName);
             BEE_INTERNAL_CALL(Entity_GetScriptInstance);
+            BEE_INTERNAL_CALL(Entity_Destroy);
 
             BEE_INTERNAL_CALL(Entity_GetTransformComponent);
             BEE_INTERNAL_CALL(Entity_GetTranslation);
@@ -110,14 +111,14 @@ namespace BeeEngine
         mono_free(msg);
     }
 
-    void ScriptGlue::Entity_GetTranslation(UUID id, glm::vec3 *outTranslation)
+    void ScriptGlue::Entity_GetTranslation(uint64_t id, glm::vec3 *outTranslation)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         Entity entity = scene->GetEntityByUUID(id);
         *outTranslation = entity.GetComponent<TransformComponent>().Translation;
     }
 
-    void ScriptGlue::Entity_SetTranslation(UUID id, glm::vec3 *inTranslation)
+    void ScriptGlue::Entity_SetTranslation(uint64_t id, glm::vec3 *inTranslation)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         Entity entity = scene->GetEntityByUUID(id);
@@ -134,14 +135,14 @@ namespace BeeEngine
         return Input::MouseKeyPressed(button);
     }
 
-    void *ScriptGlue::Entity_GetTransformComponent(UUID id)
+    void *ScriptGlue::Entity_GetTransformComponent(uint64_t id)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         Entity entity = scene->GetEntityByUUID(id);
         return &entity.GetComponent<TransformComponent>();
     }
 
-    void *ScriptGlue::Entity_CreateComponent(UUID id, MonoReflectionType *reflectionType)
+    void *ScriptGlue::Entity_CreateComponent(uint64_t id, MonoReflectionType *reflectionType)
     {
         auto entity = GetEntity(id);
         BeeExpects(entity);
@@ -170,7 +171,7 @@ namespace BeeEngine
         return scene->GetEntityByUUID(id);
     }
 
-    bool ScriptGlue::Entity_HasComponent(UUID id, MonoReflectionType *reflectionType)
+    bool ScriptGlue::Entity_HasComponent(uint64_t id, MonoReflectionType *reflectionType)
     {
         auto entity = GetEntity(id);
         BeeExpects(entity);
@@ -189,7 +190,7 @@ namespace BeeEngine
         }
     }
 
-    void ScriptGlue::Entity_RemoveComponent(UUID id, MonoReflectionType *reflectionType)
+    void ScriptGlue::Entity_RemoveComponent(uint64_t id, MonoReflectionType *reflectionType)
     {
         auto entity = GetEntity(id);
         BeeExpects(entity);
@@ -212,7 +213,7 @@ namespace BeeEngine
 #endif
     }
 
-    void *ScriptGlue::Entity_GetComponent(UUID id, MonoReflectionType *reflectionType)
+    void *ScriptGlue::Entity_GetComponent(uint64_t id, MonoReflectionType *reflectionType)
     {
         auto entity = GetEntity(id);
         BeeExpects(entity);
@@ -235,19 +236,48 @@ namespace BeeEngine
 #endif
     }
 
-    MonoObject *ScriptGlue::Entity_GetScriptInstance(UUID id)
+    MonoObject *ScriptGlue::Entity_GetScriptInstance(uint64_t id)
     {
         return ScriptingEngine::GetEntityScriptInstance(id)->GetMObject().GetMonoObject();
     }
 
-    UUID ScriptGlue::Entity_FindEntityByName(MonoString *name)
+    uint64_t ScriptGlue::Entity_FindEntityByName(MonoString *name)
     {
-        char* nameStr = mono_string_to_utf8(name);
+        MonoError error {};
+        char* nameStr = mono_string_to_utf8_checked(name, &error);
+        if(error.error_code != MONO_ERROR_NONE)
+        {
+            BeeError("Could not convert MonoString to char*: {}", mono_error_get_message(&error));
+            return 0;
+        }
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByName(nameStr);
-        mono_free(nameStr);
         if(!entity)
+        {
+            BeeCoreTrace("Could not find entity with name {}", nameStr);
+            mono_free(nameStr);
             return 0;
-        return entity.GetUUID();
+        }
+        UUID uuid = entity.GetUUID();
+        BeeCoreTrace("Found entity with name {} and id {}", nameStr, uuid);
+        mono_free(nameStr);
+        return uuid;
+    }
+
+    void ScriptGlue::Entity_Destroy(uint64_t id)
+    {
+        /*DeletionQueue::Frame().PushFunction([id]()
+        {
+            auto* scene = ScriptingEngine::GetSceneContext();
+            if(!scene)
+                return;
+            auto entity = scene->GetEntityByUUID(id);
+            if(!entity)
+                return;
+            scene->DestroyEntity(entity);
+        });*/
+        auto* scene = ScriptingEngine::GetSceneContext();
+        auto entity = scene->GetEntityByUUID(id);
+        scene->DestroyEntity(entity);
     }
 }

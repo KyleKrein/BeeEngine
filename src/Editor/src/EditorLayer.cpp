@@ -94,7 +94,6 @@ namespace BeeEngine::Editor
                 {
                     BeeCoreError("Unable to open file");
                     goto newProject;
-                    return;
                 }
                 std::filesystem::path projectPath = (path);
                 auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
@@ -235,7 +234,8 @@ namespace BeeEngine::Editor
         {
             m_GameBuilder = CreateScope<GameBuilder>(m_ProjectFile->GetProjectPath(), ConfigFile::LoadCompilerConfiguration());
         }*/
-
+        ScriptingEngine::EnableDebugging();
+        ScriptingEngine::Init();
         ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
         ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "build"/ "GameLibrary.dll");
         ScriptGlue::Register();

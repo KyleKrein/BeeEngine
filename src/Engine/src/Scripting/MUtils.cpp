@@ -90,11 +90,11 @@ namespace BeeEngine
     {
         char* typeName = mono_type_get_name(monoType);
         MType type = ManagedNameToMType(typeName);
-        mono_free(typeName);
         if(type == MType::None)
         {
-            BeeCoreError("Unknown type: {}", typeName);
+            BeeCoreTrace("Unknown type: {}", typeName);
         }
+        mono_free(typeName);
         return type;
     }
 

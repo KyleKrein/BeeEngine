@@ -17,6 +17,8 @@ namespace BeeEngine
         static void Init();
         static void Shutdown();
 
+        static void EnableDebugging();
+
         static void LoadGameAssembly(const std::filesystem::path& path);
 
         static void LoadCoreAssembly(const std::filesystem::path& path);
@@ -33,7 +35,7 @@ namespace BeeEngine
 
         static void OnEntityCreated(Entity entity, MClass *pClass);
 
-        static void OnEntityDestroyed(BeeEngine::Entity entity);
+        static void OnEntityDestroyed(UUID uuid);
         static void OnEntityUpdate(Entity entity);
         static class MObject* GetEntityScriptInstance(Entity entity);
 

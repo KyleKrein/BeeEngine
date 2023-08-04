@@ -16,17 +16,16 @@ namespace BeeEngine
     class MAssembly
     {
         friend class ScriptGlue;
+        friend class ScriptingEngine;
     public:
         MAssembly() = default;
-        MAssembly(const std::filesystem::path& path);
+        MAssembly(const std::filesystem::path& path, bool debug);
         ~MAssembly();
         MAssembly(const MAssembly&) = delete;
         MAssembly& operator=(const MAssembly&) = delete;
         MAssembly(MAssembly&& other) noexcept;
         MAssembly& operator=(MAssembly&&other) noexcept;
         std::vector<Ref<class MClass>>& GetClasses();
-
-        void Reload();
 
     private:
         MonoAssembly* m_MonoAssembly = nullptr;

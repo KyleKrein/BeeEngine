@@ -13,13 +13,12 @@
 namespace BeeEngine
 {
 
-    std::vector<std::byte> File::ReadBinaryFile(std::string_view path)
+    std::vector<std::byte> File::ReadBinaryFile(const std::filesystem::path &path)
     {
-
-        std::ifstream ifs(std::string(path), std::ios::binary|std::ios::ate);
+        std::ifstream ifs(path, std::ios::binary|std::ios::ate);
 
         if(!ifs)
-            throw std::runtime_error(std::string(path) + ": " + std::strerror(errno));
+            throw std::runtime_error(path.string() + ": " + std::strerror(errno));
 
         auto end = ifs.tellg();
         ifs.seekg(0, std::ios::beg);
@@ -32,7 +31,7 @@ namespace BeeEngine
         std::vector<std::byte> buffer(size);
 
         if(!ifs.read((char*)buffer.data(), buffer.size()))
-            throw std::runtime_error(std::string(path) + ": " + std::strerror(errno));
+            throw std::runtime_error(path.string() + ": " + std::strerror(errno));
         ifs.close();
 
         return buffer;

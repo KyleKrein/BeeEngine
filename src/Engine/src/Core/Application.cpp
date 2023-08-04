@@ -54,7 +54,7 @@ namespace BeeEngine{
 #endif
         m_AssetManager.LoadStandardAssets();
 
-        ScriptingEngine::Init();
+        //ScriptingEngine::Init();
     }
 
     Application::~Application()

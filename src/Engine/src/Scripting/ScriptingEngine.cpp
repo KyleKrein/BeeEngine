@@ -16,13 +16,26 @@
 #include "MObject.h"
 #include "GameScript.h"
 #include "MUtils.h"
+#include <mono/metadata/mono-debug.h>
+#include <mono/metadata/threads.h>
 
 namespace BeeEngine
 {
+    typedef void(__stdcall *AddEntityScript)(uint64_t id, MonoObject* behaviour, MonoException** exception);
+    typedef void(__stdcall *EntityWasRemoved)(uint64_t id, MonoException ** exception);
     struct ScriptingEngineData
     {
         MonoDomain* RootDomain = nullptr;
         MonoDomain* AppDomain = nullptr;
+
+        AddEntityScript AddEntityScriptMethod = nullptr;
+        EntityWasRemoved EntityWasRemovedMethod = nullptr;
+
+        void(*EndSceneMethod)() = nullptr;
+
+        MonoClass* ulongClass = nullptr;
+
+        bool EnableDebugging = false;
 
         Scene* CurrentScene = nullptr;
         std::unordered_map<UUID, Ref<GameScript>> EntityObjects;
@@ -43,14 +56,41 @@ namespace BeeEngine
 
     void ScriptingEngine::Shutdown()
     {
+        s_Data.EntityObjects.clear();
+        s_Data.GameScripts.clear();
+        s_Data.EditableFieldsDefaults.clear();
+        s_Data.Assemblies.clear();
+        s_Data.CurrentScene = nullptr;
+        s_Data.EntityBaseClass = nullptr;
+        s_Data.AddEntityScriptMethod = nullptr;
+        s_Data.EntityWasRemovedMethod = nullptr;
+        s_Data.ulongClass = nullptr;
+
         MonoShutdown();
     }
 
     void ScriptingEngine::InitMono()
     {
         mono_set_assemblies_path("mono/lib");
+        if(s_Data.EnableDebugging)
+        {
+            const char* argv[2] = {
+                    "--debugger-agent=transport=dt_socket,address=127.0.0.1:2550,server=y,suspend=n,loglevel=3,logfile=MonoDebugger.log",
+                    "--soft-breakpoints"
+            };
+            mono_jit_parse_options(2, (char**)argv);
+            mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+        }
+
         s_Data.RootDomain = mono_jit_init("BeeEngineJITRuntime");
         BeeCoreAssert(s_Data.RootDomain, "Failed to initialize Mono JIT!");
+
+        if(s_Data.EnableDebugging)
+        {
+            mono_debug_domain_create(s_Data.RootDomain);
+        }
+        mono_thread_set_main(mono_thread_current());
+
         CreateAppDomain();
 
         BeeCoreInfo("Mono JIT initialized successfully!");
@@ -66,7 +106,7 @@ namespace BeeEngine
     {
         auto name = ResourceManager::GetNameFromFilePath(path.string());
 
-        s_Data.Assemblies[name] = {path};
+        s_Data.Assemblies[name] = {path, s_Data.EnableDebugging};
         return s_Data.Assemblies.at(name);
     }
 
@@ -129,12 +169,21 @@ namespace BeeEngine
         auto& assembly = LoadAssembly(path);
         for (auto& mClass : assembly.GetClasses())
         {
-            if(mClass->GetName() == "Entity")
+            if(mClass->GetName() == "Behaviour")
             {
                 s_Data.EntityBaseClass = mClass.get();
                 break;
             }
         }
+        MonoClass* lifeTimeManager = mono_class_from_name(assembly.m_MonoImage, "BeeEngine.Internal", "LifeTimeManager");
+        MonoMethod* addEntityScriptMethod = mono_class_get_method_from_name(lifeTimeManager, "AddEntityScript", 2);
+        MonoMethod* entityWasRemovedMethod = mono_class_get_method_from_name(lifeTimeManager, "EntityWasRemoved", 1);
+        MonoMethod* endSceneMethod = mono_class_get_method_from_name(lifeTimeManager, "EndScene", 0);
+        s_Data.AddEntityScriptMethod = (AddEntityScript)mono_method_get_unmanaged_thunk(addEntityScriptMethod);
+        s_Data.EntityWasRemovedMethod = (EntityWasRemoved)mono_method_get_unmanaged_thunk(entityWasRemovedMethod);
+        s_Data.EndSceneMethod = (void(*)())mono_method_get_unmanaged_thunk(endSceneMethod);
+        s_Data.ulongClass = mono_class_from_name(mono_get_corlib(), "System", "UInt64");
+
     }
 
     void ScriptingEngine::OnRuntimeStart(Scene *scene)
@@ -145,6 +194,7 @@ namespace BeeEngine
     void ScriptingEngine::OnRuntimeStop()
     {
         s_Data.CurrentScene = nullptr;
+        s_Data.EndSceneMethod();
         s_Data.EntityObjects.clear();
     }
 
@@ -156,12 +206,34 @@ namespace BeeEngine
             return;
         }
         auto script = CreateRef<GameScript>(*pClass, entity);
-        s_Data.EntityObjects.emplace(entity.GetUUID(), script);
+        s_Data.EntityObjects[uuid] = script;
+        //
+        {
+            //MonoObject *entityID = mono_value_box(s_Data.AppDomain, s_Data.ulongClass, &ulongUUID);
+            MonoException *exc = nullptr;
+            MonoObject* instance = script->GetMObject().GetMonoObject();
+            s_Data.AddEntityScriptMethod(uuid, instance, &exc);
+            if (exc)
+            {
+                mono_print_unhandled_exception((MonoObject*)exc);
+            }
+        }
         script->InvokeOnCreate();
     }
-    void ScriptingEngine::OnEntityDestroyed(BeeEngine::Entity entity)
+    void ScriptingEngine::OnEntityDestroyed(UUID uuid)
     {
-        s_Data.EntityObjects.erase(entity.GetUUID());
+        MonoException *exc = nullptr;
+        bool contains = s_Data.EntityObjects.contains(uuid);
+        if(contains)
+        {
+            s_Data.EntityObjects.at(uuid)->InvokeOnDestroy();
+        }
+        s_Data.EntityWasRemovedMethod(uuid, &exc);
+        if (exc)
+        {
+            mono_print_unhandled_exception((MonoObject*)exc);
+        }
+        s_Data.EntityObjects.erase(uuid);
     }
     void ScriptingEngine::OnEntityUpdate(BeeEngine::Entity entity)
     {
@@ -235,5 +307,11 @@ namespace BeeEngine
         LoadGameAssembly(s_Data.GameAssemblyPath);
 
         ScriptGlue::Register();
+    }
+
+    void ScriptingEngine::EnableDebugging()
+    {
+        BeeCoreAssert(s_Data.RootDomain == nullptr, "Cannot enable debugging after the runtime has been initialized!");
+        s_Data.EnableDebugging = true;
     }
 }

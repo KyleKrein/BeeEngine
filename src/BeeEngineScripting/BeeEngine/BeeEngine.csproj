@@ -41,10 +41,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Components.cs" />
+    <Compile Include="Behaviour.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Internal\InternalCalls.cs" />
     <Compile Include="KeyCodes.cs" />
+    <Compile Include="Internal\LifeTimeManager.cs" />
     <Compile Include="Logging\Log.cs" />
     <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="Math\Data\Color.cs" />
