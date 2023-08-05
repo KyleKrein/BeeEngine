@@ -23,6 +23,7 @@ namespace BeeEngine.Internal
             CreateEntityIfNotExists(entityID);
             Log.Info("Adding Entity {0}", entityID);
             s_Entities[entityID].SetBehaviour(behaviour);
+            DebugLog.AssertAndThrow(behaviour == null || s_Entities[entityID].HasBehaviour(), "Behaviour for {0} is not set!", entityID);
         }
 
         //For calling from C++
@@ -39,8 +40,10 @@ namespace BeeEngine.Internal
              * If invalidation is better, then it's a MUST to firstly destroy
              * every object pending for destruction and then invalidate once
              */
+            DebugLog.Debug("Alive: ");
             foreach (var entity in s_Entities)
             {
+                DebugLog.Debug("\t {0}, Has Behaviour: {1}", entity.Key, entity.Value.HasBehaviour());
                 entity.Value.Invalidate();
             }
         }

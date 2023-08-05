@@ -27,6 +27,9 @@ namespace BeeEngine
         friend class BeeEngine::Editor::InspectorPanel;
         friend class SceneSerializer;
     public:
+        static Ref<Scene> Copy(const Scene& scene);
+
+
         Scene();
         void UpdateRuntime();
         void UpdateEditor(EditorCamera& camera);
@@ -34,6 +37,7 @@ namespace BeeEngine
 
         Entity CreateEntity(const std::string& name = "Entity");
         void DestroyEntity(Entity entity);
+        Entity DuplicateEntity(Entity entity);
 
         void StartRuntime();
         void StopRuntime();

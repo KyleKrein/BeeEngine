@@ -200,7 +200,7 @@ namespace BeeEngine
     struct ComponentGroup{};
 
     using AllComponents =
-            ComponentGroup<TransformComponent, TagComponent, UUIDComponent,
+            ComponentGroup<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
             SpriteRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
             RigidBody2DComponent, BoxCollider2DComponent>;
 }

@@ -37,7 +37,6 @@ namespace BeeEngine::Editor
         AssetPanel m_AssetPanel {std::filesystem::current_path()};
         SceneHierarchyPanel m_SceneHierarchyPanel {};
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
-        SceneSerializer m_SceneSerializer {m_ViewPort.GetScene()};
         std::filesystem::path m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
         InspectorPanel m_InspectorPanel {};
@@ -65,6 +64,8 @@ namespace BeeEngine::Editor
 
         void LoadScene(const std::filesystem::path& path);
 
+        bool OnKeyPressed(KeyPressedEvent* e) noexcept;
+
         enum class SceneState
         {
             Edit = 0,
@@ -80,5 +81,9 @@ namespace BeeEngine::Editor
         void OnSceneSimulate() noexcept;
 
         void ReloadAssembly();
+
+        void SetScene(const Ref <Scene> &sharedPtr);
+
+        void SaveScene();
     };
 }

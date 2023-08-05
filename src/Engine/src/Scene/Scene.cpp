@@ -302,4 +302,50 @@ namespace BeeEngine
             transform.Rotation.z = body->GetAngle();
         }
     }
+    //Good example of variadic templates
+    template<typename Component>
+    static void CopyComponent(entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
+    {
+        if(!src.all_of<Component>(srcEntity))
+        {
+            return;
+        }
+        auto& component = src.get<Component>(srcEntity);
+        dst.emplace_or_replace<Component>(dstEntity, component);
+    }
+
+    template<typename ...Component>
+    static void CopyComponents(ComponentGroup<Component...> c,entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
+    {
+        (CopyComponent<Component>(dst, src, srcEntity, dstEntity), ...);
+    }
+
+    Ref<Scene> Scene::Copy(const Scene &scene)
+    {
+        Ref<Scene> newScene = CreateRef<Scene>();
+        newScene->m_CameraUniformBuffer = scene.m_CameraUniformBuffer;
+        newScene->m_CameraBindingSet = scene.m_CameraBindingSet;
+        newScene->m_RectModel = scene.m_RectModel;
+        newScene->m_BlankTexture = scene.m_BlankTexture;
+
+        auto& srcRegistry = scene.m_Registry;
+        auto& dstRegistry = newScene->m_Registry;
+        auto idView = srcRegistry.view<UUIDComponent>();
+        for (auto e : idView)
+        {
+            UUID uuid = idView.get<UUIDComponent>(e).ID;
+            const auto& name = srcRegistry.get<TagComponent>(e).Tag;
+            Entity entity = newScene->CreateEntityWithUUID(uuid, name);
+            CopyComponents(AllComponents{}, dstRegistry, srcRegistry, e, (entt::entity)entity);
+        }
+        return newScene;
+    }
+
+    Entity Scene::DuplicateEntity(Entity entity)
+    {
+        UUID uuid = {};
+        Entity newEntity = CreateEntityWithUUID(uuid, entity.GetComponent<TagComponent>().Tag);
+        CopyComponents(AllComponents{}, m_Registry, m_Registry, (entt::entity)entity, (entt::entity)newEntity);
+        return newEntity;
+    }
 }

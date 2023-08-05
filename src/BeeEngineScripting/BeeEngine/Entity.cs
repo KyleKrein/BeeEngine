@@ -29,6 +29,7 @@ namespace BeeEngine
             if (m_Behaviour != null)
             {
                 m_Behaviour.ThisEntity = this;
+                DebugLog.Debug("Setting behaviour script for {0}", ID);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -233,7 +233,8 @@ namespace BeeEngine
         {
             mono_print_unhandled_exception((MonoObject*)exc);
         }
-        s_Data.EntityObjects.erase(uuid);
+        auto result = s_Data.EntityObjects.erase(uuid);
+        BeeCoreTrace("Entity removed from EntityObjects: {0}", result);
     }
     void ScriptingEngine::OnEntityUpdate(BeeEngine::Entity entity)
     {

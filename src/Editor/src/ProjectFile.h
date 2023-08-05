@@ -18,9 +18,9 @@ namespace BeeEngine::Editor
         [[nodiscard]] const std::string& GetProjectName() const noexcept;
         [[nodiscard]] const std::filesystem::path& GetProjectFilePath() const noexcept;
 
-        const std::filesystem::path& GetLastUsedScenePath() const noexcept
+        std::filesystem::path GetLastUsedScenePath() const noexcept
         {
-            return m_LastUsedScenePath;
+            return m_LastUsedScenePath.empty() ? m_LastUsedScenePath : m_ProjectPath / m_LastUsedScenePath;
         }
         void SetLastUsedScenePath(const std::filesystem::path& path) noexcept;
 
@@ -43,6 +43,8 @@ namespace BeeEngine::Editor
 
         void Save() noexcept;
 
+        void Update() noexcept;
+
     private:
         void OnAppAssemblyFileSystemEvent(const std::string& path, filewatch::Event changeType);
 
@@ -50,7 +52,8 @@ namespace BeeEngine::Editor
         std::string m_ProjectName;
         const std::filesystem::path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
         std::filesystem::path m_LastUsedScenePath {""};
-        Scope<filewatch::FileWatch<std::string>> m_AppAssemblyFileWatcher;
+        Scope<filewatch::FileWatch<std::string>> m_AppAssemblyFileWatcher = nullptr;
         mutable bool m_AssemblyReloadPending = false;
+        std::filesystem::path m_AppAssemblyPath;
     };
 }

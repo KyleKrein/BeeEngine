@@ -18,6 +18,8 @@ namespace BeeEngine::Editor
 
         void OnGUIRender() noexcept;
 
+        void OnEvent(EventDispatcher& e) noexcept;
+
         [[nodiscard]] Entity GetSelectedEntity() const noexcept { return m_SelectedEntity; }
         [[nodiscard]] Entity& GetSelectedEntityRef() noexcept { return m_SelectedEntity; }
 
@@ -25,6 +27,7 @@ namespace BeeEngine::Editor
 
     private:
         void DrawEntityNode(Entity entity) noexcept;
+        bool OnKeyPressedEvent(KeyPressedEvent* e) noexcept;
 
         Ref<Scene> m_Context;
         Entity m_SelectedEntity;
