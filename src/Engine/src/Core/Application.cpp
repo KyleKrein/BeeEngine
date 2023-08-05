@@ -60,7 +60,6 @@ namespace BeeEngine{
     Application::~Application()
     {
         s_Instance = nullptr;
-        ScriptingEngine::Shutdown();
     }
 
     void Application::Dispatch(EventDispatcher &dispatcher)

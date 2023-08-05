@@ -30,7 +30,7 @@ namespace YAML
 
         static bool decode(const Node& node, glm::vec2& rhs)
         {
-            if (!node.IsSequence() || node.size() != 4)
+            if (!node.IsSequence() || node.size() != 2)
                 return false;
             rhs.x = node[0].as<float>();
             rhs.y = node[1].as<float>();
@@ -140,6 +140,25 @@ namespace BeeEngine
 		field->SetData(fieldData);                  \
 		break;                                         \
 	}
+
+    static std::string RigidBodyTypeToString(RigidBody2DComponent::BodyType type)
+    {
+        switch (type)
+        {
+            case RigidBody2DComponent::BodyType::Static: return "Static";
+            case RigidBody2DComponent::BodyType::Dynamic: return "Dynamic";
+            case RigidBody2DComponent::BodyType::Kinematic: return "Kinematic";
+        }
+        return "Unknown";
+    }
+    static RigidBody2DComponent::BodyType RigidBodyTypeFromString(const std::string& type)
+    {
+        if (type == "Static") return RigidBody2DComponent::BodyType::Static;
+        if (type == "Dynamic") return RigidBody2DComponent::BodyType::Dynamic;
+        if (type == "Kinematic") return RigidBody2DComponent::BodyType::Kinematic;
+        return RigidBody2DComponent::BodyType::Static;
+    }
+
 
     SceneSerializer::SceneSerializer(Ref<Scene> &scene)
             : m_Scene(scene)
@@ -280,6 +299,24 @@ namespace BeeEngine
                 {
                     auto& spriteRenderer = deserializedEntity.AddComponent<SpriteRendererComponent>();
                     spriteRenderer.Color = spriteRendererComponent["Color"].as<Color4>();
+                }
+                auto rigidBody2DComponent = entity["RigidBody2DComponent"];
+                if(rigidBody2DComponent)
+                {
+                    auto& rb2dcomp = deserializedEntity.AddComponent<RigidBody2DComponent>();
+                    rb2dcomp.Type = RigidBodyTypeFromString(rigidBody2DComponent["Type"].as<std::string>());
+                    rb2dcomp.FixedRotation = rigidBody2DComponent["FixedRotation"].as<bool>();
+                }
+                auto boxCollider2DComponent = entity["BoxCollider2DComponent"];
+                if(boxCollider2DComponent)
+                {
+                    auto& boxCollider = deserializedEntity.AddComponent<BoxCollider2DComponent>();
+                    boxCollider.Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+                    boxCollider.Size = boxCollider2DComponent["Size"].as<glm::vec2>();
+                    boxCollider.Density = boxCollider2DComponent["Density"].as<float>();
+                    boxCollider.Friction = boxCollider2DComponent["Friction"].as<float>();
+                    boxCollider.Restitution = boxCollider2DComponent["Restitution"].as<float>();
+                    boxCollider.RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
                 }
             }
         }
@@ -422,6 +459,30 @@ namespace BeeEngine
             out << YAML::BeginMap;
             auto& spriteRenderer = entity.GetComponent<SpriteRendererComponent>();
             out << YAML::Key << "Color" << YAML::Value << spriteRenderer.Color;
+            out << YAML::EndMap;
+        }
+
+        if(entity.HasComponent<RigidBody2DComponent>())
+        {
+            out << YAML::Key << "RigidBody2DComponent";
+            out << YAML::BeginMap;
+            auto& rigidBody2dComponent = entity.GetComponent<RigidBody2DComponent>();
+            out << YAML::Key << "Type" << YAML::Value << RigidBodyTypeToString(rigidBody2dComponent.Type);
+            out << YAML::Key << "FixedRotation" << YAML::Value << rigidBody2dComponent.FixedRotation;
+            out << YAML::EndMap;
+        }
+
+        if(entity.HasComponent<BoxCollider2DComponent>())
+        {
+            out << YAML::Key << "BoxCollider2DComponent";
+            out << YAML::BeginMap;
+            auto& boxCollider2dComponent = entity.GetComponent<BoxCollider2DComponent>();
+            out << YAML::Key << "Offset" << YAML::Value << boxCollider2dComponent.Offset;
+            out << YAML::Key << "Size" << YAML::Value << boxCollider2dComponent.Size;
+            out << YAML::Key << "Density" << YAML::Value << boxCollider2dComponent.Density;
+            out << YAML::Key << "Friction" << YAML::Value << boxCollider2dComponent.Friction;
+            out << YAML::Key << "Restitution" << YAML::Value << boxCollider2dComponent.Restitution;
+            out << YAML::Key << "RestitutionThreshold" << YAML::Value << boxCollider2dComponent.RestitutionThreshold;
             out << YAML::EndMap;
         }
 

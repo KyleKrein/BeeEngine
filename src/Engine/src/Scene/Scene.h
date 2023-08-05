@@ -10,6 +10,8 @@
 #include "Renderer/Model.h"
 #include "Renderer/Texture.h"
 
+class b2World;
+
 namespace BeeEngine
 {
     namespace Editor
@@ -47,7 +49,7 @@ namespace BeeEngine
 
         bool m_IsRuntime = false;
         //void ResetScene();
-
+        b2World* m_2DPhysicsWorld;
 
         void UpdateScripts();
 
@@ -63,5 +65,11 @@ namespace BeeEngine
         void DestroyScripts();
 
         Entity CreateEntityWithUUID(struct UUID uuid, const std::string& name);
+
+        void StartPhysicsWorld();
+
+        void StopPhysicsWorld();
+
+        void Update2DPhysics();
     };
 }

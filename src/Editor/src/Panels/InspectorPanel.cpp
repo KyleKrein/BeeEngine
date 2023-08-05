@@ -90,6 +90,8 @@ namespace BeeEngine::Editor
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
             //AddComponentPopup<NativeScriptComponent>("Native Script", entity);
             AddComponentPopup<ScriptComponent>("Script", entity);
+            AddComponentPopup<RigidBody2DComponent>("Rigid Body 2D", entity);
+            AddComponentPopup<BoxCollider2DComponent>("Box Collider 2D", entity);
             ImGui::EndPopup();
         }
 
@@ -355,6 +357,38 @@ namespace BeeEngine::Editor
             }
         });
 
+        DrawComponentUI<RigidBody2DComponent>("Rigid Body 2D", entity, [this](RigidBody2DComponent& component){
+            constexpr static const char* bodyTypeStrings[] = {"Static", "Dynamic", "Kinematic"};
+            const char* currentBodyTypeString = bodyTypeStrings[static_cast<int>(component.Type)];
+            if(ImGui::BeginCombo("Body Type", currentBodyTypeString))
+            {
+                for(int i = 0; i < 2; ++i)
+                {
+                    bool isSelected = currentBodyTypeString == bodyTypeStrings[i];
+                    if(ImGui::Selectable(bodyTypeStrings[i], isSelected))
+                    {
+                        currentBodyTypeString = bodyTypeStrings[i];
+                        component.Type = static_cast<RigidBody2DComponent::BodyType>(i);
+                    }
+                    if(isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
+        });
+        DrawComponentUI<BoxCollider2DComponent>("Box Collider 2D", entity, [this](auto& component){
+            if(ImGui::DragFloat2("Size", glm::value_ptr(component.Size)))
+            {}
+            ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
+            ImGui::DragFloat("Density", &component.Density, 0.1f, 0.0f, 1.0f);
+            ImGui::DragFloat("Friction", &component.Friction, 0.1f, 0.0f, 1.0f);
+            ImGui::DragFloat("Restitution", &component.Restitution, 0.1f, 0.0f, 1.0f);
+            ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.1f, 0.0f);
+        });
+
         DrawComponentUI<NativeScriptComponent>("Native Script", entity, [this](NativeScriptComponent& script)
         {
             std::vector<const char*> scriptNames;
@@ -465,6 +499,8 @@ namespace BeeEngine::Editor
     template<typename T>
     void InspectorPanel::AddComponentPopup(std::string_view label, Entity entity)
     {
+        if(entity.HasComponent<T>())
+            return;
         if(ImGui::MenuItem(label.data()))
         {
             entity.AddComponent<T>();

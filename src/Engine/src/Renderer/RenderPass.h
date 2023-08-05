@@ -14,6 +14,6 @@ namespace BeeEngine
         void* GetHandle() const { return m_Handle; }
         virtual ~RenderPass() = default;
     private:
-        void* m_Handle;
+        void* m_Handle = nullptr;
     };
 }

@@ -171,6 +171,7 @@ namespace BeeEngine::Internal
         Renderer::Flush();
         wgpuRenderPassEncoderEnd((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle());
         Renderer::SubmitCommandBuffer(m_CurrentCommandBuffer);
+        wgpuRenderPassEncoderRelease((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle());
         //m_GraphicsDevice.SubmitCommandBuffers(&m_CurrentCommandBuffer, 1);
         Renderer::ResetCurrentRenderPass();
         m_CurrentRenderPass = {nullptr};

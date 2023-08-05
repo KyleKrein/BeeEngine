@@ -153,6 +153,7 @@ add_subdirectory(vendor/ImGuizmo)
 add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/sdl)
 add_subdirectory(vendor/magic_enum)
+add_subdirectory(vendor/Box2D)
 
 find_package(Vulkan REQUIRED)
 target_include_directories( ${PROJECT_NAME}
@@ -192,6 +193,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC tinyobjloader
         PUBLIC SDL3::SDL3
         PUBLIC magic_enum
+        PUBLIC Box2D
         )
 
 target_compile_definitions(BeeEngine

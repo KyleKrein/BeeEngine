@@ -27,11 +27,15 @@ namespace BeeEngine::Editor
         m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
         m_InspectorPanel.SetContext(m_ViewPort.GetScene());
+        //m_EditorScene = m_ViewPort.GetScene();
     }
 
     void EditorLayer::OnDetach() noexcept
     {
-
+        if(m_ProjectFile)
+        {
+            ScriptingEngine::Shutdown();
+        }
     }
     void EditorLayer::OnUpdate() noexcept
     {
@@ -66,6 +70,11 @@ namespace BeeEngine::Editor
         }
         if(m_ViewPort.IsNewSceneLoaded())
         {
+            if(m_SceneState == SceneState::Play)
+            {
+                m_SceneState = SceneState::Edit;
+                OnSceneStop();
+            }
             LoadScene(m_ViewPort.GetScenePath());
         }
         m_FpsCounter.Update();

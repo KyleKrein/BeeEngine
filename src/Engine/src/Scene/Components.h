@@ -154,11 +154,53 @@ namespace BeeEngine
         }
     };
 
+    //Physics
+    struct RigidBody2DComponent
+    {
+        enum class BodyType
+        {
+            Static = 0,
+            Dynamic = 1,
+            Kinematic = 2
+        };
+        BodyType Type = BodyType::Static;
+        bool FixedRotation = false;
+
+        void* RuntimeBody = nullptr;
+        /*float Mass = 1.0f;
+        float Friction = 0.5f;
+        float Restitution = 0.5f;
+        bool IsKinematic = false;
+        bool UseGravity = true;
+        bool FreezeRotation = false;
+        bool FreezePosition = false;
+        bool FreezeRotationX = false;
+        bool FreezeRotationY = false;
+        bool FreezeRotationZ = false;
+        bool FreezePositionX = false;
+        bool FreezePositionY = false;
+        bool FreezePositionZ = false;*/
+    };
+    struct BoxCollider2DComponent
+    {
+        glm::vec2 Offset = glm::vec2(0.0f);
+        glm::vec2 Size = glm::vec2(0.5f);
+
+        //move to physics material
+        float Density = 1.0f;
+        float Friction = 0.5f;
+        float Restitution = 0.0f;
+        float RestitutionThreshold = 0.5f;
+
+        void* RuntimeFixture = nullptr;
+    };
+
 
     template<typename ... Component>
     struct ComponentGroup{};
 
     using AllComponents =
             ComponentGroup<TransformComponent, TagComponent, UUIDComponent,
-            SpriteRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent>;
+            SpriteRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
+            RigidBody2DComponent, BoxCollider2DComponent>;
 }

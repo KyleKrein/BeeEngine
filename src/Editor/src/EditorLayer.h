@@ -43,6 +43,9 @@ namespace BeeEngine::Editor
         InspectorPanel m_InspectorPanel {};
         Scope<ProjectFile> m_ProjectFile = nullptr;
 
+        Ref<Scene> m_ActiveScene = nullptr;
+        Ref<Scene> m_EditorScene = nullptr;
+
         //Scope<DynamicLibrary> m_GameLibrary = nullptr;
         //Scope<GameBuilder> m_GameBuilder = nullptr;
         //Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;

@@ -14,8 +14,26 @@
 #include "Core/UUID.h"
 #include "Scripting/ScriptingEngine.h"
 
+#include <box2d/box2d.h>
+#include <box2d/b2_body.h>
+
 namespace BeeEngine
 {
+    static b2BodyType ConvertRigidBodyTypeToBox2D(RigidBody2DComponent::BodyType type)
+    {
+        switch (type)
+        {
+
+            case RigidBody2DComponent::BodyType::Static:
+                return b2BodyType::b2_staticBody;
+            case RigidBody2DComponent::BodyType::Dynamic:
+                return b2BodyType::b2_dynamicBody;
+            case RigidBody2DComponent::BodyType::Kinematic:
+                return b2BodyType::b2_kinematicBody;
+        }
+        BeeCoreAssert(false, "Unknown RigidBody2DComponent::BodyType");
+        return b2BodyType::b2_staticBody;
+    }
 
     Entity Scene::CreateEntity(const std::string& name)
     {
@@ -98,6 +116,7 @@ namespace BeeEngine
     void Scene::UpdateRuntime()
     {
         UpdateScripts();
+        Update2DPhysics();
 
         SceneCamera* mainCamera = nullptr;
         glm::mat4 cameraTransform;
@@ -153,6 +172,7 @@ namespace BeeEngine
             m_NativeScripts = &NativeScriptFactory::GetInstance().GetNativeScripts();
         }*/
         m_IsRuntime = true;
+        StartPhysicsWorld();
         ScriptingEngine::OnRuntimeStart(this);
     }
 
@@ -160,6 +180,7 @@ namespace BeeEngine
     {
         m_IsRuntime = false;
         ScriptingEngine::OnRuntimeStop();
+        StopPhysicsWorld();
         //DestroyScripts();
     }
 
@@ -212,5 +233,73 @@ namespace BeeEngine
             }
         }
         return {};
+    }
+
+    void Scene::StartPhysicsWorld()
+    {
+        m_2DPhysicsWorld = new b2World({0.0f, -9.81f}); //TODO: make gravity configurable
+
+        auto view = m_Registry.view<RigidBody2DComponent>();
+        for (auto e:view)
+        {
+            Entity entity{EntityID{e}, this};
+            auto& rigidBody = entity.GetComponent<RigidBody2DComponent>();
+            auto& transform = entity.GetComponent<TransformComponent>();
+            b2BodyDef bodyDef;
+            bodyDef.type = ConvertRigidBodyTypeToBox2D(rigidBody.Type);
+            bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
+            bodyDef.angle = transform.Rotation.z;
+
+            b2Body* body = m_2DPhysicsWorld->CreateBody(&bodyDef);
+            body->SetFixedRotation(rigidBody.FixedRotation);
+            rigidBody.RuntimeBody = body;
+
+
+            if(!entity.HasComponent<BoxCollider2DComponent>())
+            {
+                continue;
+            }
+            auto& boxCollider = entity.GetComponent<BoxCollider2DComponent>();
+
+            b2PolygonShape boxShape;
+            boxShape.SetAsBox(boxCollider.Size.x * transform.Scale.x, boxCollider.Size.y * transform.Scale.y);
+
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &boxShape;
+            fixtureDef.density = boxCollider.Density;
+            fixtureDef.friction = boxCollider.Friction;
+            fixtureDef.restitution = boxCollider.Restitution;
+            fixtureDef.restitutionThreshold = boxCollider.RestitutionThreshold;
+            body->CreateFixture(&fixtureDef);
+        }
+    }
+
+    void Scene::StopPhysicsWorld()
+    {
+        delete m_2DPhysicsWorld;
+        m_2DPhysicsWorld = nullptr;
+    }
+
+    void Scene::Update2DPhysics()
+    {
+        static constexpr int32_t velocityIterations = 6;
+        static constexpr int32_t positionIterations = 2; //TODO: expose to editor
+        m_2DPhysicsWorld->Step(gsl::narrow_cast<float>(Time::DeltaTime()), velocityIterations, positionIterations);
+
+        auto view = m_Registry.view<RigidBody2DComponent>();
+        for (auto e:view)
+        {
+            Entity entity{EntityID{e}, this};
+            auto& rigidBody = entity.GetComponent<RigidBody2DComponent>();
+            auto& transform = entity.GetComponent<TransformComponent>();
+            b2Body* body = (b2Body*)rigidBody.RuntimeBody;
+            if(body == nullptr)
+            {
+                continue;
+            }
+            const auto& position = body->GetPosition();
+            transform.Translation = {position.x, position.y, transform.Translation.z};
+            transform.Rotation.z = body->GetAngle();
+        }
     }
 }
