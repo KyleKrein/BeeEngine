@@ -58,6 +58,7 @@ namespace BeeEngine
         void UpdateScripts();
 
         Model* m_RectModel = nullptr;
+        Model* m_CircleModel = nullptr;
         Texture2D* m_BlankTexture = nullptr;
         Ref<BindingSet> m_CameraBindingSet;
         Ref<UniformBuffer> m_CameraUniformBuffer;

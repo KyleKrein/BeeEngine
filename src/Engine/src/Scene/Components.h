@@ -93,6 +93,13 @@ namespace BeeEngine
         operator Texture2D&() const { return *Texture; }
     };
 
+    struct CircleRendererComponent
+    {
+        Color4 Color = Color4::White;
+        float Thickness = 1.0f;
+        float Fade = 0.005f;
+    };
+
     /*struct MeshComponent
     {
         Ref<Mesh> Mesh = nullptr;
@@ -201,6 +208,6 @@ namespace BeeEngine
 
     using AllComponents =
             ComponentGroup<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
-            SpriteRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
+            SpriteRendererComponent, CircleRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
             RigidBody2DComponent, BoxCollider2DComponent>;
 }

@@ -29,7 +29,7 @@ void WebGPUTestLayer::OnAttach()
     m_ModelBindingSet = BeeEngine::BindingSet::Create({
                                                          {0, *m_CameraUniformBuffer}
                                                  });
-    auto& material = m_AssetManager.LoadMaterial("StandardMaterial", "Shaders/WebGPUTestShader.vert", "Shaders/WebGPUTestShader.frag");
+    auto& material = m_AssetManager.LoadMaterial("StandardMaterial", "Shaders/Renderer2D_SpriteShader.vert", "Shaders/Renderer2D_SpriteShader.frag");
 
     std::vector<BeeEngine::Vertex> vertexBuffer =
             {
