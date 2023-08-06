@@ -43,6 +43,7 @@ namespace BeeEngine::Editor
             return;
         m_ProjectFile->Update();
         m_EditorCamera.OnUpdate();
+        ScriptingEngine::UpdateAllocatorStatistics();
         switch (m_SceneState)
         {
             case SceneState::Edit:

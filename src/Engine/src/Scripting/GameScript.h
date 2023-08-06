@@ -6,6 +6,11 @@
 #include "MObject.h"
 #include "MMethod.h"
 
+extern "C"
+{
+    typedef struct _MonoException MonoException;
+}
+
 namespace BeeEngine
 {
     class GameScriptField
@@ -46,6 +51,8 @@ namespace BeeEngine
     class GameScript
     {
     public:
+        using OnFunction = void(*)(MonoObject* self, MonoException** exc);
+
         GameScript(MClass& mClass, class Entity entity);
         void InvokeOnCreate();
         void InvokeOnDestroy();
@@ -60,9 +67,9 @@ namespace BeeEngine
     private:
         MObject m_Instance;
 
-        MMethod* m_OnCreate = nullptr;
-        MMethod* m_OnDestroy = nullptr;
-        MMethod* m_OnUpdate = nullptr;
+        OnFunction m_OnCreate = nullptr;
+        OnFunction m_OnDestroy = nullptr;
+        OnFunction m_OnUpdate = nullptr;
 
         void CopyFieldsData(std::vector<GameScriptField> &aClass);
     };

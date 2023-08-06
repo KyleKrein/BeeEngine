@@ -22,6 +22,8 @@ namespace BeeEngine
         ~MMethod();
 
         bool IsValid() const { return m_MonoMethod != nullptr; }
+
+        operator MonoMethod*() const { return m_MonoMethod; }
     private:
         MonoMethod* m_MonoMethod = nullptr;
         MClass* m_Class = nullptr;

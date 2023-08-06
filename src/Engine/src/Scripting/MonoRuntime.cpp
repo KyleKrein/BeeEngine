@@ -130,13 +130,14 @@ namespace BeeEngine
     MObject::MObject(MClass &object)
     {
         m_Class = &object;
-        m_MonoObject = mono_object_new(mono_domain_get(), m_Class->m_MonoClass);
-        mono_runtime_object_init(m_MonoObject);
+        MonoObject* instance = mono_object_new(mono_domain_get(), m_Class->m_MonoClass);
+        mono_runtime_object_init(instance);
+        m_Handle = mono_gchandle_new(instance, false);
     }
 
     MObject::~MObject()
     {
-
+        mono_gchandle_free(m_Handle);
     }
 
     MClass &MObject::GetClass()
@@ -148,8 +149,9 @@ namespace BeeEngine
     {
         BeeExpects(method.m_MonoMethod != nullptr);
         //BeeExpects(method.m_Class == m_Class);
+        MonoObject* instance = mono_gchandle_get_target(m_Handle);
         MonoObject *exception = nullptr;
-        mono_runtime_invoke(method.m_MonoMethod, m_MonoObject, params, &exception);
+        mono_runtime_invoke(method.m_MonoMethod, instance, params, &exception);
         if(exception)
         {
             mono_print_unhandled_exception(exception);
@@ -158,18 +160,21 @@ namespace BeeEngine
 
     void MObject::SetFieldValue(MField &field, void* value)
     {
-        mono_field_set_value(m_MonoObject, field.m_MonoField, value);
+        MonoObject* instance = mono_gchandle_get_target(m_Handle);
+        mono_field_set_value(instance, field.m_MonoField, value);
     }
 
     bool MObject::GetFieldValue(MField &field, void* value)
     {
-        mono_field_get_value(m_MonoObject, field.m_MonoField, value);
+        MonoObject* instance = mono_gchandle_get_target(m_Handle);
+        mono_field_get_value(instance, field.m_MonoField, value);
         return true;
     }
     String MObject::GetFieldStringValue(MField &field)
     {
         BeeCoreAssert(field.m_Type == MType::String, "Field is not a string!");
-        auto* str = reinterpret_cast<MonoString*>(mono_field_get_value_object(mono_domain_get(), field.m_MonoField, m_MonoObject));
+        MonoObject* instance = mono_gchandle_get_target(m_Handle);
+        auto* str = reinterpret_cast<MonoString*>(mono_field_get_value_object(mono_domain_get(), field.m_MonoField, instance));
         String value = mono_string_to_utf8(str);
         mono_free(str);
         return value;
@@ -177,7 +182,7 @@ namespace BeeEngine
 
     MonoObject *MObject::GetMonoObject()
     {
-        return m_MonoObject;
+        return mono_gchandle_get_target(m_Handle);;
     }
 
     MClass::MClass(const String &name, const String &ns, MonoImage* image)
@@ -265,15 +270,15 @@ namespace BeeEngine
         //auto uuid = entity.GetUUID();
         //void* params[1] {&uuid};
         //m_Instance.Invoke(constructor, params);
-        m_OnCreate = &mClass.GetMethod("OnCreate", 0);
-        if(!m_OnCreate->IsValid())
-            m_OnCreate = nullptr;
-        m_OnDestroy = &mClass.GetMethod("OnDestroy", 0);
-        if(!m_OnDestroy->IsValid())
-            m_OnDestroy = nullptr;
-        m_OnUpdate = &mClass.GetMethod("OnUpdate", 0);
-        if(!m_OnUpdate->IsValid())
-            m_OnUpdate = nullptr;
+        auto& onCreate = mClass.GetMethod("OnCreate", 0);
+        if(onCreate.IsValid())
+            m_OnCreate = (OnFunction)mono_method_get_unmanaged_thunk(onCreate);
+        auto& onDestroy = mClass.GetMethod("OnDestroy", 0);
+        if(onDestroy.IsValid())
+            m_OnDestroy = (OnFunction)mono_method_get_unmanaged_thunk(onDestroy);
+        auto& onUpdate = mClass.GetMethod("OnUpdate", 0);
+        if(onUpdate.IsValid())
+            m_OnUpdate = (OnFunction)mono_method_get_unmanaged_thunk(onUpdate);
 
         if(entity.HasComponent<ScriptComponent>())
         {
@@ -284,23 +289,47 @@ namespace BeeEngine
 
     void GameScript::InvokeOnCreate()
     {
-        if(m_OnCreate)
-            m_Instance.Invoke(*m_OnCreate, nullptr);
+        if(!m_OnCreate)
+            return;
+        MonoException* exc = nullptr;
+        m_OnCreate(m_Instance.GetMonoObject(), &exc);
+        if(exc)
+        {
+            MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
+            char* message = mono_string_to_utf8(msg);
+            BeeCoreError("Exception in script: {}", message);
+            mono_free(message);
+        }
     }
 
     void GameScript::InvokeOnDestroy()
     {
-        if(m_OnDestroy)
+        if(!m_OnDestroy)
+            return;
+        MonoException *exc = nullptr;
+        m_OnDestroy(m_Instance.GetMonoObject(), &exc);
+        if(exc)
         {
-            m_Instance.Invoke(*m_OnDestroy, nullptr);
-            m_OnDestroy = nullptr;
+            MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
+            char* message = mono_string_to_utf8(msg);
+            BeeCoreError("Exception in script: {}", message);
+            mono_free(message);
         }
     }
 
     void GameScript::InvokeOnUpdate()
     {
-        if(m_OnUpdate)
-            m_Instance.Invoke(*m_OnUpdate, nullptr);
+        if(!m_OnUpdate)
+            return;
+        MonoException *exc = nullptr;
+        m_OnUpdate(m_Instance.GetMonoObject(), &exc);
+        if(exc)
+        {
+            MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
+            char* message = mono_string_to_utf8(msg);
+            BeeCoreError("Exception in script: {}", message);
+            mono_free(message);
+        }
     }
 
     void GameScript::CopyFieldsData(std::vector<GameScriptField> &aClass)

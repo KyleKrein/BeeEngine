@@ -39,6 +39,8 @@ namespace BeeEngine
         static void OnEntityUpdate(Entity entity);
         static class MObject* GetEntityScriptInstance(Entity entity);
 
+        static void UpdateAllocatorStatistics();
+
         static Scene* GetSceneContext();
 
         static MClass& GetEntityClass();

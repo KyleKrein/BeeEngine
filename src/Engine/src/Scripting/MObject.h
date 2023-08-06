@@ -29,7 +29,8 @@ namespace BeeEngine
         MonoObject *GetMonoObject();
 
     private:
-        MonoObject* m_MonoObject = nullptr;
+        //MonoObject* m_MonoObject = nullptr;
+        uint32_t m_Handle = 0;
         MClass* m_Class = nullptr;
     };
 }

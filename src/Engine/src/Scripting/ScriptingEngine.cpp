@@ -16,8 +16,10 @@
 #include "MObject.h"
 #include "GameScript.h"
 #include "MUtils.h"
+#include "AllocatorStatistics.h"
 #include <mono/metadata/mono-debug.h>
 #include <mono/metadata/threads.h>
+#include <mono/metadata/mono-gc.h>
 
 namespace BeeEngine
 {
@@ -213,9 +215,12 @@ namespace BeeEngine
             MonoException *exc = nullptr;
             MonoObject* instance = script->GetMObject().GetMonoObject();
             s_Data.AddEntityScriptMethod(uuid, instance, &exc);
-            if (exc)
+            if(exc)
             {
-                mono_print_unhandled_exception((MonoObject*)exc);
+                MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
+                char* message = mono_string_to_utf8(msg);
+                BeeCoreError("Exception while adding script for entity {} in C#: {}", uuid, message);
+                mono_free(message);
             }
         }
         script->InvokeOnCreate();
@@ -229,12 +234,14 @@ namespace BeeEngine
             s_Data.EntityObjects.at(uuid)->InvokeOnDestroy();
         }
         s_Data.EntityWasRemovedMethod(uuid, &exc);
-        if (exc)
+        if(exc)
         {
-            mono_print_unhandled_exception((MonoObject*)exc);
+            MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
+            char* message = mono_string_to_utf8(msg);
+            BeeCoreError("Exception while removing entity {} from C#: {}", uuid, message);
+            mono_free(message);
         }
-        auto result = s_Data.EntityObjects.erase(uuid);
-        BeeCoreTrace("Entity removed from EntityObjects: {0}", result);
+        s_Data.EntityObjects.erase(uuid);
     }
     void ScriptingEngine::OnEntityUpdate(BeeEngine::Entity entity)
     {
@@ -314,5 +321,13 @@ namespace BeeEngine
     {
         BeeCoreAssert(s_Data.RootDomain == nullptr, "Cannot enable debugging after the runtime has been initialized!");
         s_Data.EnableDebugging = true;
+    }
+
+    void ScriptingEngine::UpdateAllocatorStatistics()
+    {
+        auto& stats = BeeEngine::Internal::AllocatorStatistics::GetStatistics();
+        stats.gcGenerations.store(mono_gc_max_generation());
+        stats.gcHeapSize.store(mono_gc_get_heap_size());
+        stats.gcUsedMemory.store(mono_gc_get_used_size());
     }
 }

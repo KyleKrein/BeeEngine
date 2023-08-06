@@ -40,10 +40,9 @@ namespace BeeEngine.Internal
              * If invalidation is better, then it's a MUST to firstly destroy
              * every object pending for destruction and then invalidate once
              */
-            DebugLog.Debug("Alive: ");
+            DebugLog.Debug("Alive: {0}", s_Entities.Count);
             foreach (var entity in s_Entities)
             {
-                DebugLog.Debug("\t {0}, Has Behaviour: {1}", entity.Key, entity.Value.HasBehaviour());
                 entity.Value.Invalidate();
             }
         }
@@ -60,7 +59,7 @@ namespace BeeEngine.Internal
         {
             if (!s_Entities.ContainsKey(entityId))
             {
-                Log.Debug("Unable to found {0} in C#. Creating...", entityId);
+                //Log.Debug("Unable to found {0} in C#. Creating...", entityId);
                 s_Entities[entityId] = new Entity(entityId);
             }
         }
