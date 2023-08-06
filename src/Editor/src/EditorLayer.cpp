@@ -237,7 +237,7 @@ namespace BeeEngine::Editor
         {
             m_GameBuilder = CreateScope<GameBuilder>(m_ProjectFile->GetProjectPath(), ConfigFile::LoadCompilerConfiguration());
         }*/
-        ScriptingEngine::EnableDebugging();
+        //ScriptingEngine::EnableDebugging(); //TODO: enable only in debug builds
         ScriptingEngine::Init();
         ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
         ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "build"/ "GameLibrary.dll");
@@ -319,18 +319,6 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnScenePlay() noexcept
     {
-        if(m_ScenePath.empty())
-        {
-            auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
-            if(filepath.empty())
-            {
-                BeeCoreError("Unable to save to file");
-                return;
-            }
-            if(!filepath.ends_with(".beescene"))
-                filepath += ".beescene";
-            m_ScenePath = filepath;
-        }
         m_EditorScene = Scene::Copy(*m_ActiveScene);
         m_ActiveScene->StartRuntime();
     }

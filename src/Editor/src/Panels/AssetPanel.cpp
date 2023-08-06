@@ -69,14 +69,23 @@ namespace BeeEngine::Editor
         for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
         {
             const auto& path = directoryEntry.path();
-            std::string pathStr = path.string();
-            if(pathStr.contains(".beeengine") || pathStr.contains(".csproj"))
+            auto filename = path.filename();
+            auto extension = path.extension();
+            if(extension == ".csproj" || extension == ".sln" ||
+            (is_directory(path) &&
+            (filename == "beeengine" || filename == ".vs" || filename == ".beeengine")))
                 continue;
             auto relativePath = std::filesystem::relative(path, m_WorkingDirectory);
             std::string filenameString = relativePath.filename().string();
             ImGui::PushID(filenameString.c_str());
             Ref<Texture2D>& icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
             ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
+           // ImVec4 hoveredColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
+            //hoveredColor.w = 0.3f;
+            //ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
+            //ImVec4 activeColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
+            //activeColor.w = 0.5f;
+            //ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
             ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 
             if (ImGui::BeginDragDropSource())

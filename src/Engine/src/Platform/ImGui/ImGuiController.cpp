@@ -8,15 +8,15 @@
 namespace BeeEngine
 {
 
-    void BeeEngine::ImGuiController::SetDefaultTheme()
+    void BeeEngine::ImGuiController::SetDefaultTheme(float fontSize)
     {
         using namespace Internal;
         ImGuiIO& io = ImGui::GetIO();
         ImGuiStyle& style = ImGui::GetStyle();
         auto OpenSansRegularFont = GetEmbeddedResource(EmbeddedResource::OpenSansRegular);
         auto OpenSansBoldFont = GetEmbeddedResource(EmbeddedResource::OpenSansBold);
-        io.FontDefault = io.Fonts->AddFontFromMemoryTTF((void *) OpenSansRegularFont.data(), OpenSansRegularFont.size_bytes(), 18.0f);
-        io.Fonts->AddFontFromMemoryTTF((void *) OpenSansBoldFont.data(), OpenSansBoldFont.size_bytes(), 18.0f);
+        io.FontDefault = io.Fonts->AddFontFromMemoryTTF((void *) OpenSansRegularFont.data(), OpenSansRegularFont.size_bytes(), fontSize);
+        io.Fonts->AddFontFromMemoryTTF((void *) OpenSansBoldFont.data(), OpenSansBoldFont.size_bytes(), fontSize);
 
         style.WindowMinSize.x = 370.0f;
 
