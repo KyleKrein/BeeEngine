@@ -284,11 +284,27 @@ namespace BeeEngine
             }
             auto& boxCollider = entity.GetComponent<BoxCollider2DComponent>();
 
-            b2PolygonShape boxShape;
-            boxShape.SetAsBox(boxCollider.Size.x * transform.Scale.x, boxCollider.Size.y * transform.Scale.y);
+            if(boxCollider.Type == BoxCollider2DComponent::ColliderType::Box)
+            {
+                b2PolygonShape boxShape;
+                boxShape.SetAsBox(boxCollider.Size.x * transform.Scale.x, boxCollider.Size.y * transform.Scale.y);
+
+                b2FixtureDef fixtureDef;
+                fixtureDef.shape = &boxShape;
+                fixtureDef.density = boxCollider.Density;
+                fixtureDef.friction = boxCollider.Friction;
+                fixtureDef.restitution = boxCollider.Restitution;
+                fixtureDef.restitutionThreshold = boxCollider.RestitutionThreshold;
+                body->CreateFixture(&fixtureDef);
+                continue;
+            }
+
+            b2CircleShape circleShape;
+            circleShape.m_radius = boxCollider.Size.x * transform.Scale.x;
+            circleShape.m_p.Set(boxCollider.Offset.x * transform.Scale.x, boxCollider.Offset.y * transform.Scale.y);
 
             b2FixtureDef fixtureDef;
-            fixtureDef.shape = &boxShape;
+            fixtureDef.shape = &circleShape;
             fixtureDef.density = boxCollider.Density;
             fixtureDef.friction = boxCollider.Friction;
             fixtureDef.restitution = boxCollider.Restitution;

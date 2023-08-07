@@ -388,8 +388,26 @@ namespace BeeEngine::Editor
             ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
         });
         DrawComponentUI<BoxCollider2DComponent>("Box Collider 2D", entity, [this](auto& component){
-            if(ImGui::DragFloat2("Size", glm::value_ptr(component.Size)))
-            {}
+            constexpr static const char* typeStrings[] = {"Box", "Circle"};
+            const char* currentTypeString = typeStrings[static_cast<int>(component.Type)];
+            if(ImGui::BeginCombo("Collider Type", currentTypeString))
+            {
+                for(int i = 0; i < 2; ++i)
+                {
+                    bool isSelected = currentTypeString == typeStrings[i];
+                    if(ImGui::Selectable(typeStrings[i], isSelected))
+                    {
+                        currentTypeString = typeStrings[i];
+                        component.Type = static_cast<BoxCollider2DComponent::ColliderType>(i);
+                    }
+                    if(isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::DragFloat2("Size", glm::value_ptr(component.Size));
             ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
             ImGui::DragFloat("Density", &component.Density, 0.1f, 0.0f, 1.0f);
             ImGui::DragFloat("Friction", &component.Friction, 0.1f, 0.0f, 1.0f);

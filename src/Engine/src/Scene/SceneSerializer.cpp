@@ -159,6 +159,39 @@ namespace BeeEngine
         return RigidBody2DComponent::BodyType::Static;
     }
 
+    static BoxCollider2DComponent::ColliderType BoxCollider2DTypeFromString(std::string basicString)
+    {
+        if(basicString == "Box")
+            return BoxCollider2DComponent::ColliderType::Box;
+        if(basicString == "Circle")
+            return BoxCollider2DComponent::ColliderType::Circle;
+        /*if(basicString == "Polygon")
+            return BoxCollider2DComponent::ColliderType::Polygon;
+        if(basicString == "Chain")
+            return BoxCollider2DComponent::ColliderType::Chain;
+        if(basicString == "Edge")
+            return BoxCollider2DComponent::ColliderType::Edge;*/
+        return BoxCollider2DComponent::ColliderType::Box;
+    }
+
+    static const char* BoxCollider2DTypeToString(BoxCollider2DComponent::ColliderType type)
+    {
+        switch (type)
+        {
+            case BoxCollider2DComponent::ColliderType::Box:
+                return "Box";
+            case BoxCollider2DComponent::ColliderType::Circle:
+                return "Circle";
+                /*case BoxCollider2DComponent::ColliderType::Polygon:
+                    return "Polygon";
+                case BoxCollider2DComponent::ColliderType::Chain:
+                    return "Chain";
+                case BoxCollider2DComponent::ColliderType::Edge:
+                    return "Edge";*/
+        }
+        return "Box";
+    }
+
 
     SceneSerializer::SceneSerializer(Ref<Scene> &scene)
             : m_Scene(scene)
@@ -319,6 +352,7 @@ namespace BeeEngine
                 if(boxCollider2DComponent)
                 {
                     auto& boxCollider = deserializedEntity.AddComponent<BoxCollider2DComponent>();
+                    boxCollider.Type = BoxCollider2DTypeFromString(boxCollider2DComponent["Type"].as<std::string>());
                     boxCollider.Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
                     boxCollider.Size = boxCollider2DComponent["Size"].as<glm::vec2>();
                     boxCollider.Density = boxCollider2DComponent["Density"].as<float>();
@@ -495,6 +529,7 @@ namespace BeeEngine
             out << YAML::Key << "BoxCollider2DComponent";
             out << YAML::BeginMap;
             auto& boxCollider2dComponent = entity.GetComponent<BoxCollider2DComponent>();
+            out << YAML::Key << "Type" << YAML::Value << BoxCollider2DTypeToString(boxCollider2dComponent.Type);
             out << YAML::Key << "Offset" << YAML::Value << boxCollider2dComponent.Offset;
             out << YAML::Key << "Size" << YAML::Value << boxCollider2dComponent.Size;
             out << YAML::Key << "Density" << YAML::Value << boxCollider2dComponent.Density;

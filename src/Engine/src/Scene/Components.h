@@ -190,6 +190,12 @@ namespace BeeEngine
     };
     struct BoxCollider2DComponent
     {
+        enum class ColliderType
+        {
+            Box = 0,
+            Circle = 1
+        };
+        ColliderType Type = ColliderType::Box;
         glm::vec2 Offset = glm::vec2(0.0f);
         glm::vec2 Size = glm::vec2(0.5f);
 
