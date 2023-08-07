@@ -54,7 +54,7 @@ std::string BeeEngine::FileDialogs::SaveFile(Filter filter)
 
 std::string BeeEngine::FileDialogs::GetFilter(void* filter)
 {
-    return {((FileDialogs::Filter*)filter)->filter + 2};
+    return std::string(((FileDialogs::Filter*)filter)->filter + 2);
 }
 #pragma clang diagnostic pop
 #endif

@@ -9,6 +9,7 @@
 #include "algorithm"
 #include "Debug/Instrumentor.h"
 #include "Core/Application.h"
+#include <sstream>
 
 namespace BeeEngine
 {
