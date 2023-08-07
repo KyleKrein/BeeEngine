@@ -46,7 +46,6 @@ namespace BeeEngine
             Finalize();
             return false;
         }
-
         glslang::GlslangToSpv(*program.getIntermediate(stage), spirv);
         return true;
     }

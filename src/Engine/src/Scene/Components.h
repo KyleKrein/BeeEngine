@@ -17,6 +17,8 @@
 #include "Renderer/Material.h"
 #include "NativeScriptFactory.h"
 #include "Core/UUID.h"
+#include "Scripting/MObject.h"
+#include "Scripting/GameScript.h"
 
 namespace BeeEngine
 {
@@ -91,7 +93,14 @@ namespace BeeEngine
         operator Texture2D&() const { return *Texture; }
     };
 
-    struct MeshComponent
+    struct CircleRendererComponent
+    {
+        Color4 Color = Color4::White;
+        float Thickness = 1.0f;
+        float Fade = 0.005f;
+    };
+
+    /*struct MeshComponent
     {
         Ref<Mesh> Mesh = nullptr;
         Ref<Material> Material = nullptr;
@@ -105,6 +114,13 @@ namespace BeeEngine
 
         operator Ref<BeeEngine::Mesh>&() { return Mesh; }
         operator const Ref<BeeEngine::Mesh>&() const { return Mesh; }
+    };*/
+
+    struct ScriptComponent
+    {
+        class MClass* Class = nullptr;
+        std::vector<GameScriptField> EditableFields;
+        void SetClass(class MClass* mClass) noexcept;
     };
 
     struct NativeScriptComponent
@@ -144,4 +160,60 @@ namespace BeeEngine
             }
         }
     };
+
+    //Physics
+    struct RigidBody2DComponent
+    {
+        enum class BodyType
+        {
+            Static = 0,
+            Dynamic = 1,
+            Kinematic = 2
+        };
+        BodyType Type = BodyType::Static;
+        bool FixedRotation = false;
+
+        void* RuntimeBody = nullptr;
+        /*float Mass = 1.0f;
+        float Friction = 0.5f;
+        float Restitution = 0.5f;
+        bool IsKinematic = false;
+        bool UseGravity = true;
+        bool FreezeRotation = false;
+        bool FreezePosition = false;
+        bool FreezeRotationX = false;
+        bool FreezeRotationY = false;
+        bool FreezeRotationZ = false;
+        bool FreezePositionX = false;
+        bool FreezePositionY = false;
+        bool FreezePositionZ = false;*/
+    };
+    struct BoxCollider2DComponent
+    {
+        enum class ColliderType
+        {
+            Box = 0,
+            Circle = 1
+        };
+        ColliderType Type = ColliderType::Box;
+        glm::vec2 Offset = glm::vec2(0.0f);
+        glm::vec2 Size = glm::vec2(0.5f);
+
+        //move to physics material
+        float Density = 1.0f;
+        float Friction = 0.5f;
+        float Restitution = 0.0f;
+        float RestitutionThreshold = 0.5f;
+
+        void* RuntimeFixture = nullptr;
+    };
+
+
+    template<typename ... Component>
+    struct ComponentGroup{};
+
+    using AllComponents =
+            ComponentGroup<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
+            SpriteRendererComponent, CircleRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
+            RigidBody2DComponent, BoxCollider2DComponent>;
 }

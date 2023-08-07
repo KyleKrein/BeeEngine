@@ -110,12 +110,12 @@ namespace BeeEngine::Internal
         colorTarget.blend = &blendState;
         colorTarget.writeMask = WGPUColorWriteMask_All; // We could write to only some of the color channels.
 
-        WGPUColorTargetState entityIDColorTarget{};
+       /* WGPUColorTargetState entityIDColorTarget{};
         entityIDColorTarget.format = WGPUTextureFormat_R32Float;
         entityIDColorTarget.blend = nullptr;
-        entityIDColorTarget.writeMask = WGPUColorWriteMask::WGPUColorWriteMask_All;
+        entityIDColorTarget.writeMask = WGPUColorWriteMask::WGPUColorWriteMask_All;*/
 
-        std::vector<WGPUColorTargetState> colorTargets {colorTarget, entityIDColorTarget};
+        std::vector<WGPUColorTargetState> colorTargets {colorTarget/*, entityIDColorTarget*/};
 
         // We have only one target because our render pass has only one output color
         // attachment.

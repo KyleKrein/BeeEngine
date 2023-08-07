@@ -18,13 +18,6 @@ namespace BeeEngine{
         BeeExpects(properties.Width > 0 && properties.Height > 0 && properties.Title != nullptr);
         switch (api)
         {
-            case WindowHandlerAPI::GLFW:
-#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
-                s_API = WindowHandlerAPI::GLFW;
-                return new GLFWWindowHandler(properties, eventQueue);
-#else
-            BeeCoreWarn("GLFW is not supported. Switching to SDL3");
-#endif
             case WindowHandlerAPI::SDL:
                 s_API = WindowHandlerAPI::SDL;
                 return new SDLWindowHandler(properties, eventQueue);

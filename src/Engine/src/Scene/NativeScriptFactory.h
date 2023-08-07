@@ -7,6 +7,8 @@
 #include "INativeScriptRegistry.h"
 #include "INativeScriptFactory.h"
 #include <unordered_set>
+#include <vector>
+#include <string>
 
 namespace BeeEngine
 {

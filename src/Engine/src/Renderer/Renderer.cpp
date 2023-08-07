@@ -10,7 +10,7 @@ namespace BeeEngine
 {
     RenderAPI Renderer::s_Api = RenderAPI::NotAvailable;
     Ref<RendererAPI> Renderer::s_RendererAPI = nullptr;
-    Color4 Renderer::s_ClearColor = Color4::CornflowerBlue;
+    Color4 Renderer::s_ClearColor = Color4::DarkGray;
     RendererStatistics Renderer::s_Statistics {};
     bool Renderer::s_FrameStarted = false;
 

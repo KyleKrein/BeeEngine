@@ -11,7 +11,8 @@ std::string BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
 {
     // Create the File Open Dialog class.
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
-    NSString *f = [NSString stringWithUTF8String:GetFilter(&filter)];
+    auto strFilter = GetFilter(&filter);
+    NSString *f = [NSString stringWithUTF8String:strFilter.c_str()];
     //[openDlg setAllowedFileTypes:[NSArray arrayWithObject:@filter]];
     [openDlg setAllowedFileTypes:[NSArray arrayWithObject:f]];
 // Enable the selection of files in the dialog.
@@ -36,7 +37,8 @@ std::string BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
 
 std::string BeeEngine::FileDialogs::SaveFile(Filter filter)
 {
-    NSString *f = [NSString stringWithUTF8String:GetFilter(&filter)];
+    auto strFilter = GetFilter(&filter);
+    NSString *f = [NSString stringWithUTF8String:strFilter.c_str()];
     NSSavePanel *saveDlg = [NSSavePanel savePanel];
     [saveDlg setAllowedFileTypes:[NSArray arrayWithObject:f]];
     if ([saveDlg runModal] == NSModalResponseOK) {
@@ -50,9 +52,9 @@ std::string BeeEngine::FileDialogs::SaveFile(Filter filter)
     return std::string();
 }
 
-const char *BeeEngine::FileDialogs::GetFilter(void* filter)
+std::string BeeEngine::FileDialogs::GetFilter(void* filter)
 {
-    return ((FileDialogs::Filter*)filter)->filter + 2;
+    return std::string(((FileDialogs::Filter*)filter)->filter + 2);
 }
 #pragma clang diagnostic pop
 #endif

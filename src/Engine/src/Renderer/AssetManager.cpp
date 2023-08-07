@@ -126,7 +126,8 @@ void BeeEngine::AssetManager::LoadStandardAssets()
     uint32_t data = 0xffffffff;
     blank.SetData({(byte *)&data, 4});
 
-    auto& material = LoadMaterial("StandardMaterial", "Shaders/WebGPUTestShader.vert", "Shaders/WebGPUTestShader.frag");
+    auto& spriteMaterial = LoadMaterial("Renderer2D_SpriteMaterial", "Shaders/Renderer2D_SpriteShader.vert", "Shaders/Renderer2D_SpriteShader.frag");
+
 
     std::vector<BeeEngine::Vertex> vertexBuffer =
             {
@@ -136,7 +137,9 @@ void BeeEngine::AssetManager::LoadStandardAssets()
                     {{-0.5f, 0.5f, 0.0f},  {1.0f, 1.0f, 1.0f},  {0.0f, 1.0f} }
             };
     std::vector<uint32_t> indexBuffer = {2, 1, 0, 0, 3, 2};
-    auto& mesh = LoadMesh("RectMesh", vertexBuffer, indexBuffer);
-    auto& rectModel = LoadModel("Rectangle", material, mesh);
+    auto& mesh = LoadMesh("Renderer2D_RectangleMesh", vertexBuffer, indexBuffer);
+    auto& rectModel = LoadModel("Renderer2D_Rectangle", spriteMaterial, mesh);
 
+    auto& circleMaterial = LoadMaterial("Renderer2D_CircleMaterial", "Shaders/Renderer2D_CircleShader.vert", "Shaders/Renderer2D_CircleShader.frag");
+    auto& circleModel = LoadModel("Renderer2D_Circle", circleMaterial, mesh);
 }

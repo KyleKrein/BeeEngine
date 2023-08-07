@@ -71,6 +71,10 @@ namespace BeeEngine::Editor
             {
                 entityDeleted = true;
             }
+            if(ImGui::MenuItem("Duplicate Entity"))
+            {
+                m_Context->DuplicateEntity(entity);
+            }
             ImGui::EndPopup();
         }
 
@@ -92,5 +96,24 @@ namespace BeeEngine::Editor
     void SceneHierarchyPanel::ClearSelection()
     {
         m_SelectedEntity = Entity::Null;
+    }
+
+    void SceneHierarchyPanel::OnEvent(EventDispatcher &e) noexcept
+    {
+        DISPATCH_EVENT(e, KeyPressedEvent, EventType::KeyPressed, OnKeyPressedEvent);
+    }
+
+    bool SceneHierarchyPanel::OnKeyPressedEvent(KeyPressedEvent *e) noexcept
+    {
+        bool ctrl = Input::KeyPressed(Key::LeftControl) || Input::KeyPressed(Key::RightControl);
+        if(ctrl && Input::KeyPressed(Key::D))
+        {
+            if(m_SelectedEntity)
+            {
+                m_Context->DuplicateEntity(m_SelectedEntity);
+                return true;
+            }
+        }
+        return false;
     }
 }

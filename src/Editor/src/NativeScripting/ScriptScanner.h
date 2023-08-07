@@ -84,7 +84,7 @@ namespace BeeEngine::Editor
 
         inline Token GenerateErrorToken()
         {
-            return { -1uz, -1uz, TokenType::ERROR_TYPE, "" };
+            return { 0, 0, TokenType::ERROR_TYPE, "" };
         }
 
         const std::map<std::string, TokenType> m_Keywords = {

@@ -8,6 +8,13 @@
  */
 #ifndef INCBIN_HDR
 #define INCBIN_HDR
+#ifdef _MSC_VER
+#define ASM_START __asm(
+#define ASM_END )
+#else
+#define ASM_START __asm__ (
+#define ASM_END )
+#endif
 #include <limits.h>
 #if   defined(__AVX512BW__) || \
       defined(__AVX512CD__) || \
@@ -396,7 +403,7 @@
  * To externally reference the data included by this in another translation unit
  * please @see INCBIN_EXTERN.
  */
-#ifdef _MSC_VER
+#ifdef z_MSC_VER
 #  define INCBIN(NAME, FILENAME) \
       INCBIN_EXTERN(NAME)
 #else
@@ -413,7 +420,7 @@
       INCBIN_3(unsigned char, NAME, FILENAME)
 #  define INCBIN_3(TYPE, NAME, FILENAME) INCBIN_COMMON(TYPE, NAME, FILENAME, /* No terminator for binary data */)
 #  define INCBIN_COMMON(TYPE, NAME, FILENAME, TERMINATOR) \
-    __asm__(INCBIN_SECTION \
+    ASM_START INCBIN_SECTION \
             INCBIN_GLOBAL_LABELS(NAME, DATA) \
             INCBIN_ALIGN_HOST \
             INCBIN_MANGLE INCBIN_STRINGIZE(INCBIN_PREFIX) #NAME INCBIN_STYLE_STRING(DATA) ":\n" \
@@ -430,7 +437,7 @@
                            INCBIN_MANGLE INCBIN_STRINGIZE(INCBIN_PREFIX) #NAME INCBIN_STYLE_STRING(DATA) "\n" \
             INCBIN_ALIGN_HOST \
             ".text\n" \
-    ); \
+    ASM_END; \
     INCBIN_EXTERN(TYPE, NAME)
 #endif
 

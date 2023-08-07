@@ -44,6 +44,7 @@ namespace BeeEngine::Internal
     {
         SubmitCommandBuffer(m_CurrentCommandBuffer);
         m_GraphicsDevice.SubmitCommandBuffers(m_CommandBuffersForSubmition.data(), m_CommandBuffersForSubmition.size());
+        wgpuRenderPassEncoderRelease(m_RenderPassEncoder);
         m_CommandBuffersForSubmition.clear();
         wgpuTextureViewRelease(m_NextTexture);
         m_NextTexture = nullptr;

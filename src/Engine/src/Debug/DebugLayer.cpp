@@ -4,8 +4,7 @@
 
 #include "DebugLayer.h"
 #include "Instrumentor.h"
-#include "../../vendor/BeeAlloc/include/GeneralPurposeAllocator.h"
-#include "../../vendor/BeeAlloc/include/AllocatorBlockHeader.h"
+#include "AllocatorStatistics.h"
 #include <imgui.h>
 
 
@@ -68,11 +67,15 @@ namespace BeeEngine
 
             ImGui::Begin("Allocator statistics");
             const BeeEngine::Internal::AllocatorStatistics& stats = BeeEngine::Internal::AllocatorStatistics::GetStatistics();
-            ImGui::Text("Allocated memory: %.10f MB", toMB(stats.allocatedMemory));
-            ImGui::Text("Allocated blocks: %lu", stats.allocatedBlocks.load());
-            ImGui::Text("Free blocks: %lu", stats.freeBlocks.load());
-            ImGui::Text("Free blocks combined: %lu", stats.blocksCombined.load());
-            ImGui::Text("Memory pages: %lu", stats.totalMemoryPages.load());
+            ImGui::Text("Total allocated memory: %.10f MB", toMB(stats.totalAllocatedMemory.load()));
+            ImGui::Text("Native Allocated memory: %.10f MB", toMB(stats.allocatedMemory.load()));
+            ImGui::Text("GC heap size: %.10f MB", toMB(stats.gcHeapSize.load()));
+            ImGui::Text("GC used memory: %.10f MB", toMB(stats.gcUsedMemory.load()));
+            ImGui::Text("GC generations: %llu", stats.gcGenerations.load());
+            //ImGui::Text("Allocated blocks: %llu", stats.allocatedBlocks.load());
+            //ImGui::Text("Free blocks: %llu", stats.freeBlocks.load());
+            //ImGui::Text("Free blocks combined: %llu", stats.blocksCombined.load());
+            //ImGui::Text("Memory pages: %llu", stats.totalMemoryPages.load());
             ImGui::End();
 
             m_RendererStatisticsGUI.Render();

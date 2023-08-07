@@ -9,6 +9,9 @@
 #include "imgui_internal.h"
 #include "Gui/ImGuiFonts.h"
 #include "Core/ResourceManager.h"
+#include "Scripting/MClass.h"
+#include "Scripting/ScriptingEngine.h"
+#include "Scripting/GameScript.h"
 
 namespace BeeEngine::Editor
 {
@@ -36,6 +39,26 @@ namespace BeeEngine::Editor
         DrawComponents(selectedEntity);
 
         ImGui::End();
+    }
+    template<typename T>
+    static void GetFieldData(MField& field, T* value, MObject* mObject, GameScriptField& gameScriptField)
+    {
+        if(mObject)
+        {
+            mObject->GetFieldValue(field, value);
+            return;
+        }
+        *value = gameScriptField.GetData<T>();
+    }
+    template<typename T>
+    static void SetFieldData(MField& field, T* value, MObject* mObject, GameScriptField& gameScriptField)
+    {
+        if(mObject)
+        {
+            mObject->SetFieldValue(field, value);
+            return;
+        }
+        gameScriptField.SetData<T>(*value);
     }
 
     void InspectorPanel::DrawComponents(Entity entity)
@@ -65,7 +88,11 @@ namespace BeeEngine::Editor
         {
             AddComponentPopup<CameraComponent>("Camera", entity);
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
-            AddComponentPopup<NativeScriptComponent>("Native Script", entity);
+            AddComponentPopup<CircleRendererComponent>("Circle", entity);
+            //AddComponentPopup<NativeScriptComponent>("Native Script", entity);
+            AddComponentPopup<ScriptComponent>("Script", entity);
+            AddComponentPopup<RigidBody2DComponent>("Rigid Body 2D", entity);
+            AddComponentPopup<BoxCollider2DComponent>("Box Collider 2D", entity);
             ImGui::EndPopup();
         }
 
@@ -195,6 +222,199 @@ namespace BeeEngine::Editor
             ImGui::DragFloat("Tiling Factor", &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
         });
 
+        DrawComponentUI<CircleRendererComponent>("Circle Renderer", entity, [this](CircleRendererComponent& circle)
+        {
+            ImGui::ColorEdit4("Color", circle.Color.ValuePtr());
+            ImGui::DragFloat("Thickness", &circle.Thickness, 0.025f, 0.0f, 1.0f);
+            ImGui::DragFloat("Fade", &circle.Fade, 0.0025f, 0.005f, 1.0f);
+        });
+
+        DrawComponentUI<ScriptComponent>("Script", entity, [this, entity](ScriptComponent& script) mutable{
+            std::vector<const char*> scriptNames;
+            auto& scripts = ScriptingEngine::GetGameScripts();
+            scriptNames.reserve(scripts.size() + 1);
+            scriptNames.push_back("##");
+            for(auto& script : scripts)
+            {
+                scriptNames.push_back(script.second->GetFullName().c_str());
+            }
+            const char* currentScriptName = script.Class != nullptr ? script.Class->GetFullName().c_str() : "##";
+            if(ImGui::BeginCombo("Class", currentScriptName))
+            {
+                for(auto& scriptName : scriptNames)
+                {
+                    bool isSelected = currentScriptName == scriptName;
+                    if(ImGui::Selectable(scriptName, isSelected))
+                    {
+                        currentScriptName = scriptName;
+                        if(!strcmp(currentScriptName, "##"))
+                        {
+                            script.SetClass(nullptr);
+                        }
+                        else
+                        {
+                            script.SetClass(&ScriptingEngine::GetGameScript(currentScriptName));
+                        }
+                    }
+                    if(isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            if(!script.Class)
+                return;
+            auto& fields = script.EditableFields;
+            MObject* mObject = nullptr;
+            if(m_Context->IsRuntime())
+            {
+                auto* scriptInstance = ScriptingEngine::GetEntityScriptInstance(entity.GetUUID());
+                if(!scriptInstance)
+                    return;
+                mObject = &scriptInstance->GetMObject();
+            }
+            for (auto& field:fields)
+            {
+                auto& mField = field.GetMField();
+                auto* name = mField.GetName().c_str();
+                switch (mField.GetType())
+                {
+                    case MType::Boolean:
+                    {
+                        bool value = false;
+                        GetFieldData(mField, &value, mObject, field);
+                        if(ImGui::Checkbox(name, &value))
+                        {
+                            SetFieldData(mField, &value, mObject, field);
+                        }
+                        break;
+                    }
+                    case MType::Int32:
+                    {
+                        int32_t value = 0;
+                        GetFieldData(mField, &value, mObject, field);
+                        if(ImGui::DragInt(name, &value))
+                        {
+                            SetFieldData(mField, &value, mObject, field);
+                        }
+                        break;
+                    }
+                    case MType::Single:
+                    {
+                        float value = 0;
+                        GetFieldData(mField, &value, mObject, field);
+                        if(ImGui::DragFloat(name, &value))
+                        {
+                            SetFieldData(mField, &value, mObject, field);
+                        }
+                        break;
+                    }
+                    /*case MType::String:
+                    {
+                        std::string value;
+                        mObject.GetFieldValue(*field, &value);
+                        char buffer[256];
+                        strcpy(buffer, value.c_str());
+                        if(ImGui::InputText(name.data(), buffer, 256))
+                        {
+                            mObject.SetFieldValue(*field, buffer);
+                        }
+                        break;
+                    }*/
+                    case MType::Vector2:
+                    {
+                        glm::vec2 value;
+                        GetFieldData(mField, &value, mObject, field);
+                        if(ImGui::DragFloat2(name, glm::value_ptr(value)))
+                        {
+                            SetFieldData(mField, &value, mObject, field);
+                        }
+                        break;
+                    }
+                    case MType::Vector3:
+                    {
+                        glm::vec3 value;
+                        GetFieldData(mField, &value, mObject, field);
+                        if(ImGui::DragFloat3(name, glm::value_ptr(value)))
+                        {
+                            SetFieldData(mField, &value, mObject, field);
+                        }
+                        break;
+                    }
+                    case MType::Vector4:
+                    {
+                        glm::vec4 value;
+                        GetFieldData(mField, &value, mObject, field);
+                        if(ImGui::DragFloat4(name, glm::value_ptr(value)))
+                        {
+                            SetFieldData(mField, &value, mObject, field);
+                        }
+                        break;
+                    }
+                    case MType::Color:
+                    {
+                        Color4 value;
+                        GetFieldData(mField, &value, mObject, field);
+                        if(ImGui::ColorEdit4(name, value.ValuePtr()))
+                        {
+                            SetFieldData(mField, &value, mObject, field);
+                        }
+                    }
+                }
+            }
+        });
+
+        DrawComponentUI<RigidBody2DComponent>("Rigid Body 2D", entity, [this](RigidBody2DComponent& component){
+            constexpr static const char* bodyTypeStrings[] = {"Static", "Dynamic", "Kinematic"};
+            const char* currentBodyTypeString = bodyTypeStrings[static_cast<int>(component.Type)];
+            if(ImGui::BeginCombo("Body Type", currentBodyTypeString))
+            {
+                for(int i = 0; i < 2; ++i)
+                {
+                    bool isSelected = currentBodyTypeString == bodyTypeStrings[i];
+                    if(ImGui::Selectable(bodyTypeStrings[i], isSelected))
+                    {
+                        currentBodyTypeString = bodyTypeStrings[i];
+                        component.Type = static_cast<RigidBody2DComponent::BodyType>(i);
+                    }
+                    if(isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::Checkbox("Fixed Rotation", &component.FixedRotation);
+        });
+        DrawComponentUI<BoxCollider2DComponent>("Box Collider 2D", entity, [this](auto& component){
+            constexpr static const char* typeStrings[] = {"Box", "Circle"};
+            const char* currentTypeString = typeStrings[static_cast<int>(component.Type)];
+            if(ImGui::BeginCombo("Collider Type", currentTypeString))
+            {
+                for(int i = 0; i < 2; ++i)
+                {
+                    bool isSelected = currentTypeString == typeStrings[i];
+                    if(ImGui::Selectable(typeStrings[i], isSelected))
+                    {
+                        currentTypeString = typeStrings[i];
+                        component.Type = static_cast<BoxCollider2DComponent::ColliderType>(i);
+                    }
+                    if(isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::DragFloat2("Size", glm::value_ptr(component.Size));
+            ImGui::DragFloat2("Offset", glm::value_ptr(component.Offset));
+            ImGui::DragFloat("Density", &component.Density, 0.1f, 0.0f, 1.0f);
+            ImGui::DragFloat("Friction", &component.Friction, 0.1f, 0.0f, 1.0f);
+            ImGui::DragFloat("Restitution", &component.Restitution, 0.1f, 0.0f, 1.0f);
+            ImGui::DragFloat("Restitution Threshold", &component.RestitutionThreshold, 0.1f, 0.0f);
+        });
+
         DrawComponentUI<NativeScriptComponent>("Native Script", entity, [this](NativeScriptComponent& script)
         {
             std::vector<const char*> scriptNames;
@@ -305,6 +525,8 @@ namespace BeeEngine::Editor
     template<typename T>
     void InspectorPanel::AddComponentPopup(std::string_view label, Entity entity)
     {
+        if(entity.HasComponent<T>())
+            return;
         if(ImGui::MenuItem(label.data()))
         {
             entity.AddComponent<T>();

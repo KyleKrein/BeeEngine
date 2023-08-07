@@ -1,0 +1,36 @@
+//
+// Created by alexl on 30.07.2023.
+//
+
+#pragma once
+
+extern "C"
+{
+    typedef struct _MonoObject MonoObject;
+}
+
+namespace BeeEngine
+{
+    class MClass;
+
+    class MObject
+    {
+    public:
+        MObject(MClass& object);
+        ~MObject();
+        MClass& GetClass();
+        void Invoke(class MMethod& method, void** params);
+
+        void SetFieldValue(class MField& field, void* value);
+
+        bool GetFieldValue(class MField& field, void* value);
+        String GetFieldStringValue(class MField& field);
+
+        MonoObject *GetMonoObject();
+
+    private:
+        //MonoObject* m_MonoObject = nullptr;
+        uint32_t m_Handle = 0;
+        MClass* m_Class = nullptr;
+    };
+}

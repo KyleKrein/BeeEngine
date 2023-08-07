@@ -16,6 +16,7 @@
 #include "ProjectFile.h"
 #include "Utils/DynamicLibrary.h"
 #include "Scene/NativeScriptFactory.h"
+#include "NativeScripting/GameBuilder.h"
 
 namespace BeeEngine::Editor
 {
@@ -36,21 +37,24 @@ namespace BeeEngine::Editor
         AssetPanel m_AssetPanel {std::filesystem::current_path()};
         SceneHierarchyPanel m_SceneHierarchyPanel {};
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
-        SceneSerializer m_SceneSerializer {m_ViewPort.GetScene()};
         std::filesystem::path m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
         InspectorPanel m_InspectorPanel {};
         Scope<ProjectFile> m_ProjectFile = nullptr;
 
-        Scope<DynamicLibrary> m_GameLibrary = nullptr;
-        Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
-        BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
-        void*(*InitFunction)(void*) = nullptr;
+        Ref<Scene> m_ActiveScene = nullptr;
+        Ref<Scene> m_EditorScene = nullptr;
+
+        //Scope<DynamicLibrary> m_GameLibrary = nullptr;
+        //Scope<GameBuilder> m_GameBuilder = nullptr;
+        //Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
+        //BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
+        //void*(*InitFunction)(void*) = nullptr;
 
         Ref<Texture2D> m_PlayButtonTexture = nullptr;
         Ref<Texture2D> m_StopButtonTexture = nullptr;
 
-        std::vector<NativeScriptInfo> m_NativeScripts = {};
+        //std::vector<NativeScriptInfo> m_NativeScripts = {};
 
         void SetUpMenuBar();
 
@@ -59,6 +63,8 @@ namespace BeeEngine::Editor
         void SetupGameLibrary();
 
         void LoadScene(const std::filesystem::path& path);
+
+        bool OnKeyPressed(KeyPressedEvent* e) noexcept;
 
         enum class SceneState
         {
@@ -73,5 +79,11 @@ namespace BeeEngine::Editor
         void OnScenePause() noexcept;
         void OnSceneStop() noexcept;
         void OnSceneSimulate() noexcept;
+
+        void ReloadAssembly();
+
+        void SetScene(const Ref <Scene> &sharedPtr);
+
+        void SaveScene();
     };
 }

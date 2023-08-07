@@ -19,7 +19,8 @@ namespace BeeEngine
 {
     std::string FileDialogs::OpenFile(Filter filter)
     {
-        const char* f = GetFilter(&filter);
+        auto strFilter = GetFilter(&filter);
+        const char* f = strFilter.c_str();
         OPENFILENAMEA ofn;
         CHAR szFile[260] = { 0 };
         CHAR currentDir[256] = { 0 };
@@ -49,7 +50,8 @@ namespace BeeEngine
     }
     std::string FileDialogs::SaveFile(Filter filter)
     {
-        const char* f = GetFilter(&filter);
+        auto strFilter = GetFilter(&filter);
+        const char* f = strFilter.c_str();
         OPENFILENAMEA ofn;      // common dialog box structure
         CHAR szFile[260] = { 0 };      // if using TCHAR macros
         CHAR currentDir[256] = { 0 };
@@ -79,9 +81,9 @@ namespace BeeEngine
         return {};
     }
 
-    const char *FileDialogs::GetFilter(void* filter)
+    std::string FileDialogs::GetFilter(void* filter)
     {
-        return ((FileDialogs::Filter*)filter)->WindowsFilter().c_str();
+        return ((FileDialogs::Filter*)filter)->WindowsFilter();
     }
 }
 #endif

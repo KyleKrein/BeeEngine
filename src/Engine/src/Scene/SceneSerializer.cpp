@@ -9,9 +9,34 @@
 #include "Entity.h"
 #include "Components.h"
 #include "Core/Color4.h"
+#include "Scripting/MClass.h"
+#include "Scripting/ScriptingEngine.h"
+#include <vector>
+#include "Scripting/GameScript.h"
+#include "Scripting/MUtils.h"
 
 namespace YAML
 {
+    template<>
+    struct convert<glm::vec2>
+    {
+        static Node encode(const glm::vec2& rhs)
+        {
+            Node node;
+            node.push_back(rhs.x);
+            node.push_back(rhs.y);
+            return node;
+        }
+
+        static bool decode(const Node& node, glm::vec2& rhs)
+        {
+            if (!node.IsSequence() || node.size() != 2)
+                return false;
+            rhs.x = node[0].as<float>();
+            rhs.y = node[1].as<float>();
+            return true;
+        }
+    };
     template<>
     struct convert<glm::vec3>
     {
@@ -81,10 +106,92 @@ namespace YAML
             return true;
         }
     };
+
+    template<>
+    struct convert<BeeEngine::UUID>
+    {
+        static Node encode(const BeeEngine::UUID& uuid)
+        {
+            Node node;
+            node.push_back((uint64_t)uuid);
+            return node;
+        }
+
+        static bool decode(const Node& node, BeeEngine::UUID& uuid)
+        {
+            uuid = node.as<uint64_t>();
+            return true;
+        }
+    };
 }
 
 namespace BeeEngine
 {
+
+#define WRITE_SCRIPT_FIELD(FieldType, Type)           \
+			case MType::FieldType:          \
+				out << field.GetData<Type>();  \
+				break
+
+#define READ_SCRIPT_FIELD(FieldType, Type)             \
+    case MType::FieldType:                   \
+	{                                                  \
+		Type fieldData = scriptField["Data"].as<Type>();    \
+		field->SetData(fieldData);                  \
+		break;                                         \
+	}
+
+    static std::string RigidBodyTypeToString(RigidBody2DComponent::BodyType type)
+    {
+        switch (type)
+        {
+            case RigidBody2DComponent::BodyType::Static: return "Static";
+            case RigidBody2DComponent::BodyType::Dynamic: return "Dynamic";
+            case RigidBody2DComponent::BodyType::Kinematic: return "Kinematic";
+        }
+        return "Unknown";
+    }
+    static RigidBody2DComponent::BodyType RigidBodyTypeFromString(const std::string& type)
+    {
+        if (type == "Static") return RigidBody2DComponent::BodyType::Static;
+        if (type == "Dynamic") return RigidBody2DComponent::BodyType::Dynamic;
+        if (type == "Kinematic") return RigidBody2DComponent::BodyType::Kinematic;
+        return RigidBody2DComponent::BodyType::Static;
+    }
+
+    static BoxCollider2DComponent::ColliderType BoxCollider2DTypeFromString(std::string basicString)
+    {
+        if(basicString == "Box")
+            return BoxCollider2DComponent::ColliderType::Box;
+        if(basicString == "Circle")
+            return BoxCollider2DComponent::ColliderType::Circle;
+        /*if(basicString == "Polygon")
+            return BoxCollider2DComponent::ColliderType::Polygon;
+        if(basicString == "Chain")
+            return BoxCollider2DComponent::ColliderType::Chain;
+        if(basicString == "Edge")
+            return BoxCollider2DComponent::ColliderType::Edge;*/
+        return BoxCollider2DComponent::ColliderType::Box;
+    }
+
+    static const char* BoxCollider2DTypeToString(BoxCollider2DComponent::ColliderType type)
+    {
+        switch (type)
+        {
+            case BoxCollider2DComponent::ColliderType::Box:
+                return "Box";
+            case BoxCollider2DComponent::ColliderType::Circle:
+                return "Circle";
+                /*case BoxCollider2DComponent::ColliderType::Polygon:
+                    return "Polygon";
+                case BoxCollider2DComponent::ColliderType::Chain:
+                    return "Chain";
+                case BoxCollider2DComponent::ColliderType::Edge:
+                    return "Edge";*/
+        }
+        return "Box";
+    }
+
 
     SceneSerializer::SceneSerializer(Ref<Scene> &scene)
             : m_Scene(scene)
@@ -167,11 +274,91 @@ namespace BeeEngine
                     camera.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
                 }
 
+                auto scriptComponent = entity["ScriptComponent"];
+                if(scriptComponent)
+                {
+                    auto& script = deserializedEntity.AddComponent<ScriptComponent>();
+                    auto className = scriptComponent["FullName"].as<std::string>();
+                    if(ScriptingEngine::HasGameScript(className))
+                    {
+                        script.SetClass(&ScriptingEngine::GetGameScript(className));
+
+                        const auto& scriptFields = scriptComponent["Fields"];
+                        auto& fields = script.EditableFields;
+                        std::unordered_map<std::string_view, GameScriptField*> fieldsMap;
+                        for (auto& field : fields)
+                        {
+                            fieldsMap[field.GetMField().GetName()] = &field;
+                        }
+                        for( auto& scriptField : scriptFields)
+                        {
+                            std::string name = scriptField["Name"].as<std::string>();
+                            if(!fieldsMap.contains(name))
+                            {
+                                BeeCoreWarn("Script field {0} not found in script {1}", name, className);
+                                continue;
+                            }
+                            std::string typeString = scriptField["Type"].as<std::string>();
+                            auto type = MUtils::StringToMType(typeString);
+                            auto* field = fieldsMap.at(name);
+
+                            switch (type)
+                            {
+                                READ_SCRIPT_FIELD(Single, float);
+                                READ_SCRIPT_FIELD(Double, double);
+                                READ_SCRIPT_FIELD(Boolean, bool);
+                                READ_SCRIPT_FIELD(Char, char);
+                                READ_SCRIPT_FIELD(Byte, uint8_t);
+                                READ_SCRIPT_FIELD(Int16, int16_t);
+                                READ_SCRIPT_FIELD(Int32, int32_t);
+                                READ_SCRIPT_FIELD(Int64, int64_t);
+                                READ_SCRIPT_FIELD(SByte, int8_t);
+                                READ_SCRIPT_FIELD(UInt16, uint16_t);
+                                READ_SCRIPT_FIELD(UInt32, uint32_t);
+                                READ_SCRIPT_FIELD(UInt64, uint64_t);
+                                READ_SCRIPT_FIELD(Vector2, glm::vec2);
+                                READ_SCRIPT_FIELD(Vector3, glm::vec3);
+                                READ_SCRIPT_FIELD(Vector4, glm::vec4);
+                                READ_SCRIPT_FIELD(Color, Color4);
+                                READ_SCRIPT_FIELD(Entity, UUID);
+
+                            }
+                        }
+                    }
+                }
+
                 auto spriteRendererComponent = entity["SpriteRendererComponent"];
                 if(spriteRendererComponent)
                 {
                     auto& spriteRenderer = deserializedEntity.AddComponent<SpriteRendererComponent>();
                     spriteRenderer.Color = spriteRendererComponent["Color"].as<Color4>();
+                }
+                auto circleRendererComponent = entity["CircleRendererComponent"];
+                if(circleRendererComponent)
+                {
+                    auto& circleRenderer = deserializedEntity.AddComponent<CircleRendererComponent>();
+                    circleRenderer.Color = circleRendererComponent["Color"].as<Color4>();
+                    circleRenderer.Thickness = circleRendererComponent["Thickness"].as<float>();
+                    circleRenderer.Fade = circleRendererComponent["Fade"].as<float>();
+                }
+                auto rigidBody2DComponent = entity["RigidBody2DComponent"];
+                if(rigidBody2DComponent)
+                {
+                    auto& rb2dcomp = deserializedEntity.AddComponent<RigidBody2DComponent>();
+                    rb2dcomp.Type = RigidBodyTypeFromString(rigidBody2DComponent["Type"].as<std::string>());
+                    rb2dcomp.FixedRotation = rigidBody2DComponent["FixedRotation"].as<bool>();
+                }
+                auto boxCollider2DComponent = entity["BoxCollider2DComponent"];
+                if(boxCollider2DComponent)
+                {
+                    auto& boxCollider = deserializedEntity.AddComponent<BoxCollider2DComponent>();
+                    boxCollider.Type = BoxCollider2DTypeFromString(boxCollider2DComponent["Type"].as<std::string>());
+                    boxCollider.Offset = boxCollider2DComponent["Offset"].as<glm::vec2>();
+                    boxCollider.Size = boxCollider2DComponent["Size"].as<glm::vec2>();
+                    boxCollider.Density = boxCollider2DComponent["Density"].as<float>();
+                    boxCollider.Friction = boxCollider2DComponent["Friction"].as<float>();
+                    boxCollider.Restitution = boxCollider2DComponent["Restitution"].as<float>();
+                    boxCollider.RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
                 }
             }
         }
@@ -180,6 +367,12 @@ namespace BeeEngine
     void SceneSerializer::DeserializeBinary(const std::filesystem::path& filepath)
     {
         BeeCoreAssert(false, "Not implemented yet");
+    }
+    YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& vec)
+    {
+        out << YAML::Flow;
+        out << YAML::BeginSeq << vec.x << vec.y << YAML::EndSeq;
+        return out;
     }
     YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& vec)
     {
@@ -248,12 +441,101 @@ namespace BeeEngine
             out << YAML::EndMap;
         }
 
+        if(entity.HasComponent<ScriptComponent>())
+        {
+            out << YAML::Key << "ScriptComponent";
+            out << YAML::BeginMap;
+            auto& scriptComponent = entity.GetComponent<ScriptComponent>();
+            out << YAML::Key << "FullName" << YAML::Value << (scriptComponent.Class ? scriptComponent.Class->GetFullName() : "");
+            auto& fields = scriptComponent.EditableFields;
+            if(fields.size() > 0)
+            {
+                out << YAML::Key << "Fields" << YAML::Value;
+                out << YAML::BeginSeq;
+                for(auto& field : fields)
+                {
+                    auto& mField = field.GetMField();
+                    MType type = mField.GetType();
+                    if(mField.IsStatic() ||
+                    type == MType::None || type == MType::Object
+                    || type == MType::String || type == MType::Array
+                    || type == MType::List || type == MType::Dictionary
+                    || type == MType::Ptr || type == MType::Void)
+                        continue;
+                    out << YAML::BeginMap;
+                    out << YAML::Key << "Name" << YAML::Value << mField.GetName();
+                    out << YAML::Key << "Type" << YAML::Value << MUtils::MTypeToString(type);
+                    out << YAML::Key << "Data" << YAML::Value;
+
+                    switch (type)
+                    {
+                        WRITE_SCRIPT_FIELD(Single, float);
+                        WRITE_SCRIPT_FIELD(Double, double);
+                        WRITE_SCRIPT_FIELD(Boolean, bool);
+                        WRITE_SCRIPT_FIELD(Char, char);
+                        WRITE_SCRIPT_FIELD(Byte, uint8_t);
+                        WRITE_SCRIPT_FIELD(Int16, int16_t);
+                        WRITE_SCRIPT_FIELD(Int32, int32_t);
+                        WRITE_SCRIPT_FIELD(Int64, int64_t);
+                        WRITE_SCRIPT_FIELD(SByte, int8_t);
+                        WRITE_SCRIPT_FIELD(UInt16, uint16_t);
+                        WRITE_SCRIPT_FIELD(UInt32, uint32_t);
+                        WRITE_SCRIPT_FIELD(UInt64, uint64_t);
+                        WRITE_SCRIPT_FIELD(Vector2, glm::vec2);
+                        WRITE_SCRIPT_FIELD(Vector3, glm::vec3);
+                        WRITE_SCRIPT_FIELD(Vector4, glm::vec4);
+                        WRITE_SCRIPT_FIELD(Color, Color4);
+                        WRITE_SCRIPT_FIELD(Entity, UUID);
+                    }
+                    out << YAML::EndMap;
+                }
+                out << YAML::EndSeq;
+            }
+
+            out << YAML::EndMap;
+        }
+
         if(entity.HasComponent<SpriteRendererComponent>())
         {
             out << YAML::Key << "SpriteRendererComponent";
             out << YAML::BeginMap;
             auto& spriteRenderer = entity.GetComponent<SpriteRendererComponent>();
             out << YAML::Key << "Color" << YAML::Value << spriteRenderer.Color;
+            out << YAML::EndMap;
+        }
+        if(entity.HasComponent<CircleRendererComponent>())
+        {
+            out << YAML::Key << "CircleRendererComponent";
+            out << YAML::BeginMap;
+            auto& circleRenderer = entity.GetComponent<CircleRendererComponent>();
+            out << YAML::Key << "Color" << YAML::Value << circleRenderer.Color;
+            out << YAML::Key << "Thickness" << YAML::Value << circleRenderer.Thickness;
+            out << YAML::Key << "Fade" << YAML::Value << circleRenderer.Fade;
+            out << YAML::EndMap;
+        }
+
+        if(entity.HasComponent<RigidBody2DComponent>())
+        {
+            out << YAML::Key << "RigidBody2DComponent";
+            out << YAML::BeginMap;
+            auto& rigidBody2dComponent = entity.GetComponent<RigidBody2DComponent>();
+            out << YAML::Key << "Type" << YAML::Value << RigidBodyTypeToString(rigidBody2dComponent.Type);
+            out << YAML::Key << "FixedRotation" << YAML::Value << rigidBody2dComponent.FixedRotation;
+            out << YAML::EndMap;
+        }
+
+        if(entity.HasComponent<BoxCollider2DComponent>())
+        {
+            out << YAML::Key << "BoxCollider2DComponent";
+            out << YAML::BeginMap;
+            auto& boxCollider2dComponent = entity.GetComponent<BoxCollider2DComponent>();
+            out << YAML::Key << "Type" << YAML::Value << BoxCollider2DTypeToString(boxCollider2dComponent.Type);
+            out << YAML::Key << "Offset" << YAML::Value << boxCollider2dComponent.Offset;
+            out << YAML::Key << "Size" << YAML::Value << boxCollider2dComponent.Size;
+            out << YAML::Key << "Density" << YAML::Value << boxCollider2dComponent.Density;
+            out << YAML::Key << "Friction" << YAML::Value << boxCollider2dComponent.Friction;
+            out << YAML::Key << "Restitution" << YAML::Value << boxCollider2dComponent.Restitution;
+            out << YAML::Key << "RestitutionThreshold" << YAML::Value << boxCollider2dComponent.RestitutionThreshold;
             out << YAML::EndMap;
         }
 

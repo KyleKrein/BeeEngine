@@ -11,5 +11,6 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/Texture.h"
 #include "Scene/Scene.h"
+#include "Scene/Components.h"
 #include <Scene/ScriptableEntity.h>
 #include "Renderer/FrameBuffer.h"

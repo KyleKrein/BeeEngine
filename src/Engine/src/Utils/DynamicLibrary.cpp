@@ -4,6 +4,7 @@
 
 #include "DynamicLibrary.h"
 #include "Core/Logging/Log.h"
+#include "Core/ResourceManager.h"
 
 #if defined(WINDOWS)
     #include <Windows.h>
@@ -19,12 +20,8 @@ namespace BeeEngine
     : m_Handle(nullptr)
     {
         std::string fullName;
-#if defined(WINDOWS)
-        fullName = "lib" + name+ ".dll";
-#elif defined(MACOS)
-        fullName = "lib" + name + ".dylib";
-#elif defined(LINUX)
-        fullName = "lib" + name + ".so";
+#if defined(WINDOWS) || defined(MACOS) || defined(LINUX)
+        fullName = ResourceManager::GetDynamicLibraryName(name);
 #else
         static_assert(false, "Unsupported platform");
 #endif

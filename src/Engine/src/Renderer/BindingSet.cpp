@@ -6,6 +6,7 @@
 #include "IBindable.h"
 #include "Renderer/Renderer.h"
 #include "Platform/WebGPU/WebGPUBindingSet.h"
+#include "Core/TypeDefines.h"
 
 namespace BeeEngine
 {
@@ -32,7 +33,8 @@ namespace BeeEngine
         switch (Renderer::GetAPI())
         {
             case WebGPU:
-                return CreateFrameScope<Internal::WebGPUBindingSet>(elements);
+                //return CreateFrameScope<Internal::WebGPUBindingSet>(elements);
+                return FramePtr<Internal::WebGPUBindingSet>(new Internal::WebGPUBindingSet(elements));
             case OpenGL:
             case Metal:
             case DirectX:

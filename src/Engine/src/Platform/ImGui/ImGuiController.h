@@ -14,6 +14,6 @@ namespace BeeEngine
         virtual ~ImGuiController() = default;
         void SetDarkThemeColors();
     protected:
-        void SetDefaultTheme();
+        void SetDefaultTheme(float fontSize = 18.0f);
     };
 }

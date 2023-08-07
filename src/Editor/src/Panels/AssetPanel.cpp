@@ -6,10 +6,41 @@
 #include "imgui.h"
 #include "Renderer/Texture.h"
 #include "BeeEngine.h"
+#include "Core/ResourceManager.h"
 
 
 namespace BeeEngine::Editor
 {
+    static void OpenCreatePopup(const char* name, bool open, const std::function<void(const char*)>& onCreate) noexcept
+    {
+        if (open)
+        {
+            ImGui::OpenPopup(name);
+        }
+
+        if (ImGui::BeginPopup(name))
+        {
+            static char buffer[256] = { 0 };
+            ImGui::Text("Name");
+            ImGui::InputText("##Name", buffer, sizeof(buffer));
+
+            if (ImGui::Button("Create", { 120, 0 }))
+            {
+                onCreate(buffer);
+                ImGui::CloseCurrentPopup();
+                buffer[0] = '\0';
+            }
+
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", { 120, 0 }))
+            {
+                ImGui::CloseCurrentPopup();
+                buffer[0] = '\0';
+            }
+
+            ImGui::EndPopup();
+        }
+    }
 
     void AssetPanel::OnGUIRender() noexcept
     {
@@ -21,6 +52,7 @@ namespace BeeEngine::Editor
             {
                 m_CurrentDirectory = m_CurrentDirectory.parent_path();
             }
+            DragAndDropFileToFolder(m_CurrentDirectory.parent_path());
         }
 
         static float padding = 16.0f;
@@ -32,16 +64,28 @@ namespace BeeEngine::Editor
         if (columnCount < 1)
             columnCount = 1;
 
-        ImGui::Columns(columnCount, 0, false);
+        ImGui::Columns(columnCount, "retbsfbd", false);
 
         for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
         {
             const auto& path = directoryEntry.path();
+            auto filename = path.filename();
+            auto extension = path.extension();
+            if(extension == ".csproj" || extension == ".sln" ||
+            (is_directory(path) &&
+            (filename == "beeengine" || filename == ".vs" || filename == ".beeengine")))
+                continue;
             auto relativePath = std::filesystem::relative(path, m_WorkingDirectory);
             std::string filenameString = relativePath.filename().string();
             ImGui::PushID(filenameString.c_str());
             Ref<Texture2D>& icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
             ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
+           // ImVec4 hoveredColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
+            //hoveredColor.w = 0.3f;
+            //ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
+            //ImVec4 activeColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
+            //activeColor.w = 0.5f;
+            //ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
             ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 
             if (ImGui::BeginDragDropSource())
@@ -58,6 +102,11 @@ namespace BeeEngine::Editor
                 }
 
                 ImGui::EndDragDropSource();
+            }
+
+            if(is_directory(path))
+            {
+                DragAndDropFileToFolder(path);
             }
 
             ImGui::PopStyleColor();
@@ -83,7 +132,83 @@ namespace BeeEngine::Editor
 
         // TODO: status bar
 
+        bool createScriptPopupOpen = false;
+        bool createScenePopupOpen = false;
+        bool createFolderPopupOpen = false;
+        if (ImGui::BeginPopupContextWindow("##CreateMenu", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
+        {
+            if(ImGui::MenuItem("Create Folder"))
+            {
+                createFolderPopupOpen = true;
+            }
+            if (ImGui::MenuItem("Create Script"))
+            {
+                createScriptPopupOpen = true;
+            }
+            if (ImGui::MenuItem("Create Scene"))
+            {
+                createScenePopupOpen = true;
+            }
+            ImGui::EndPopup();
+        }
+        OpenCreatePopup("Create Folder", createFolderPopupOpen, [&](const char* name)
+        {
+            auto path = m_CurrentDirectory / name;
+            std::filesystem::create_directory(path);
+        });
+        OpenCreatePopup("Create Script", createScriptPopupOpen, [&](const char* name)
+        {
+            std::string scriptName = name;
+            if (scriptName.empty())
+                scriptName = "NewScript";
+            std::filesystem::path scriptPath = m_CurrentDirectory / (scriptName + ".cs");
+            std::ofstream scriptFile(scriptPath);
+            scriptFile << ResourceManager::GetScriptTemplate(scriptName);
+            scriptFile.close();
+            m_NeedToRegenerateSolution = true;
+        });
+        OpenCreatePopup("Create Scene", createScenePopupOpen, [&](const char* name)
+        {
+
+        });
+
         ImGui::End();
+    }
+
+    void AssetPanel::DragAndDropFileToFolder(const std::filesystem::path &path)
+    {
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+            {
+                std::filesystem::path filePath;
+
+                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                {
+                    filePath = (const wchar_t*)payload->Data;
+                }
+                else
+                {
+                    filePath = (const char*)payload->Data;
+                }
+                if(!filePath.is_absolute())
+                {
+                    filePath = m_WorkingDirectory / filePath;
+                }
+                std::error_code error;
+                if(std::filesystem::copy_file(filePath, path / filePath.filename(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error))
+                {
+                    std::filesystem::remove_all(filePath);
+                    if(filePath.extension() == ".cs")
+                    {
+                        m_NeedToRegenerateSolution = true;
+                    }
+                }
+                else
+                    BeeCoreError("Failed to copy file: {0}", error.message());
+            }
+            ImGui::EndDragDropTarget();
+        }
     }
 
     AssetPanel::AssetPanel(const std::filesystem::path &workingDirectory) noexcept

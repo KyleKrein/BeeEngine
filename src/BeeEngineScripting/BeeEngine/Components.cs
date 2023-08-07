@@ -1,0 +1,256 @@
+﻿using BeeEngine.Internal;
+using BeeEngine.Math;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BeeEngine
+{
+    public abstract class Component
+    {
+        internal unsafe void* ComponentHandle;
+        internal ulong EntityID;
+
+        internal bool Destroyed = false;
+
+        internal abstract unsafe void Construct();
+
+        internal void CheckIfDestroyed()
+        {
+            Log.AssertAndThrow(!Destroyed, "Trying to access data of a destroyed entity");
+        }
+    }
+
+    public sealed class TransformComponent : Component
+    {
+        private unsafe Vector3* m_Translation;
+        private unsafe Vector3* m_Rotation;
+        private unsafe Vector3* m_Scale;
+
+        public unsafe ref Vector3 Translation
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Vector3>(m_Translation);
+            }
+        }
+
+        public unsafe ref Vector3 Rotation
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Vector3>(m_Rotation);
+            }
+        }
+
+        public unsafe ref Vector3 Scale
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Vector3>(m_Scale);
+            }
+        }
+
+        internal override unsafe void Construct()
+        {
+            m_Translation = (Vector3*)ComponentHandle;
+            m_Rotation = m_Translation + 1;
+            m_Scale = m_Rotation + 1;
+        }
+    }
+
+    public sealed class SpriteRendererComponent : Component
+    {
+        private unsafe Color* m_Color;
+
+        public unsafe ref Color Color
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Color>(m_Color);
+            }
+        }
+
+        internal override unsafe void Construct()
+        {
+            m_Color = (Color*)ComponentHandle;
+        }
+    }
+
+    public sealed class CircleRendererComponent : Component
+    {
+        private unsafe Color* m_Color;
+        private unsafe float* m_Thickness;
+        private unsafe float* m_Fade;
+
+        public unsafe ref Color Color
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Color>(m_Color);
+            }
+        }
+
+        public unsafe ref float Thickness
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<float>(m_Thickness);
+            }
+        }
+
+        public unsafe ref float Fade
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<float>(m_Fade);
+            }
+        }
+
+        internal override unsafe void Construct()
+        {
+            m_Color = (Color*)ComponentHandle;
+            m_Thickness = (float*)(m_Color + 1);
+            m_Fade = m_Thickness + 1;
+        }
+    }
+
+    public enum RigidBodyType
+    {
+        Static = 0,
+        Dynamic = 1,
+        Kinematic = 2,
+    }
+
+    public sealed class RigidBody2DComponent : Component
+    {
+        private unsafe RigidBodyType* m_BodyType;
+        private unsafe bool* m_FixedRotation;
+
+        public unsafe ref RigidBodyType Type
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<RigidBodyType>(m_BodyType);
+            }
+        }
+
+        public unsafe ref bool FixedRotation
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<bool>(m_FixedRotation);
+            }
+        }
+
+        internal override unsafe void Construct()
+        {
+            m_BodyType = (RigidBodyType*)ComponentHandle;
+            m_FixedRotation = (bool*)(m_BodyType + 1);
+        }
+    }
+
+    public enum BoxCollider2DType
+    {
+        Box = 0,
+        Circle = 1
+    }
+
+    public sealed class BoxCollider2DComponent : Component
+    {
+        private unsafe BoxCollider2DType* m_Type;
+        private unsafe Vector2* m_Offset;
+        private unsafe Vector2* m_Size;
+
+        private unsafe float* m_Density;
+        private unsafe float* m_Friction;
+        private unsafe float* m_Restitution;
+        private unsafe float* m_RestitutionThreshold;
+
+        public unsafe ref BoxCollider2DType Type
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<BoxCollider2DType>(m_Type);
+            }
+        }
+
+        public unsafe ref Vector2 Offset
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Vector2>(m_Offset);
+            }
+        }
+
+        public unsafe ref Vector2 Size
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Vector2>(m_Size);
+            }
+        }
+
+        public unsafe ref float Density
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<float>(m_Density);
+            }
+        }
+
+        public unsafe ref float Friction
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<float>(m_Friction);
+            }
+        }
+
+        public unsafe ref float Restitution
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<float>(m_Restitution);
+            }
+        }
+
+        public unsafe ref float RestitutionThreshold
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<float>(m_RestitutionThreshold);
+            }
+        }
+
+        internal override unsafe void Construct()
+        {
+            m_Type = (BoxCollider2DType*)ComponentHandle;
+            m_Offset = (Vector2*)(m_Type + 1);
+            m_Size = m_Offset + 1;
+            m_Density = (float*)(m_Size + 1);
+            m_Friction = m_Density + 1;
+            m_Restitution = m_Friction + 1;
+            m_RestitutionThreshold = m_Restitution + 1;
+        }
+    }
+}

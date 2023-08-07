@@ -26,7 +26,7 @@ namespace BeeEngine::Editor
         FrameBufferPreferences preferences;
         preferences.Width = m_Width;
         preferences.Height = m_Height;
-        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
+        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, /*FrameBufferTextureFormat::RedInteger, */FrameBufferTextureFormat::Depth24};
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
     }
@@ -77,8 +77,8 @@ namespace BeeEngine::Editor
         && gsl::narrow_cast<float>(mouseX) < viewportSize.x
         && gsl::narrow_cast<float>(mouseY) < viewportSize.y)
         {
-            int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
-            m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
+            //int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
+            //m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
         }
 
         m_FrameBuffer->Unbind();
