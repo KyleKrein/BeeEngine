@@ -154,6 +154,7 @@ add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/sdl)
 add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
+add_subdirectory(vendor/msdfgen)
 
 find_package(Vulkan REQUIRED)
 target_include_directories( ${PROJECT_NAME}
@@ -194,6 +195,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC SDL3::SDL3
         PUBLIC magic_enum
         PUBLIC Box2D
+        PUBLIC MSDFGEN
         )
 
 target_compile_definitions(BeeEngine
