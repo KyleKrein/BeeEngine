@@ -33,7 +33,20 @@ namespace BeeEngine
         msdfgen::BitmapConstRef<T, N> bitmap = generator.atlasStorage();
 
         Ref<Texture2D> texture = Texture2D::Create(bitmap.width, bitmap.height);
-        texture->SetData({(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)});
+
+        unsigned char* data = new unsigned char[bitmap.width * bitmap.height * N];
+        memcpy(data, bitmap.pixels, bitmap.width * bitmap.height * N);
+        for(size_t x = 0; x < bitmap.width; x+=N)
+        {
+            for(size_t y = 0; y < bitmap.height / 2; y+=N)
+            {
+                for(size_t i = 0; i < N; i++)
+                    std::swap(data[(y * bitmap.width + x) * N + i], data[((bitmap.height - y - 1) * bitmap.width + x) * N + i]);
+            }
+        }
+
+        texture->SetData({(byte*)data, (size_t)(bitmap.width * bitmap.height * N)}, N);
+        delete[] data;
         return texture;
     }
 
@@ -49,6 +62,35 @@ namespace BeeEngine
         {
             BeeCoreError("Failed to load font: {}", pathStr);
         }
+        LoadFont(font, pathStr);
+        msdfgen::destroyFont(font);
+        msdfgen::deinitializeFreetype(ft);
+    }
+
+    Font::~Font()
+    {
+        delete m_Data;
+    }
+
+    Font::Font(const std::string& name, gsl::span<byte> data)
+    : m_Data(new Internal::MSDFData())
+    {
+        msdfgen::FreetypeHandle *ft = msdfgen::initializeFreetype();
+        if(!ft)
+            return;
+        msdfgen::FontHandle *font = msdfgen::loadFontData(ft, reinterpret_cast<const msdfgen::byte *>(data.data()), data.size());
+        if (!font)
+        {
+            BeeCoreError("Failed to load font: {}", name);
+        }
+        LoadFont(font, name);
+        msdfgen::destroyFont(font);
+        msdfgen::deinitializeFreetype(ft);
+    }
+
+    void Font::LoadFont(void *handle, const std::string& name)
+    {
+        msdfgen::FontHandle *font = (msdfgen::FontHandle*)handle;
         m_Data->FontGeometry = msdf_atlas::FontGeometry(&m_Data->Glyphs);
         constexpr static float fontScale = 1.0f;
 
@@ -119,7 +161,7 @@ namespace BeeEngine
 #undef LCG_MULTIPLIER
 #undef LCG_INCREMENT
 
-        m_AtlasTexture = CreateAndCacheAtlas<uint8_t , float, 4, msdf_atlas::mtsdfGenerator>(pathStr, emSize, m_Data->Glyphs, m_Data->FontGeometry, {width, height});
+        m_AtlasTexture = CreateAndCacheAtlas<uint8_t , float, 3, msdf_atlas::msdfGenerator>(name, emSize, m_Data->Glyphs, m_Data->FontGeometry, {width, height});
 #if 0
         msdfgen::Shape shape;
         if(msdfgen::loadGlyph(shape, font, 'A'))
@@ -134,12 +176,5 @@ namespace BeeEngine
         }
         msdfgen::loadGlyph(shape, font, 'A');
 #endif
-        msdfgen::destroyFont(font);
-        msdfgen::deinitializeFreetype(ft);
-    }
-
-    Font::~Font()
-    {
-        delete m_Data;
     }
 }

@@ -4,6 +4,9 @@
 
 #include "AssetManager.h"
 #include "Utils/ModelLoader.h"
+#include "../../Assets/EmbeddedResources.h"
+#include <glm.hpp>
+#include "Vertex.h"
 
 BeeEngine::Material &
 BeeEngine::AssetManager::LoadMaterial(const std::string &name, const std::filesystem::path &vertexShader,
@@ -37,6 +40,16 @@ BeeEngine::Mesh& BeeEngine::AssetManager::LoadMesh(const std::string& name, std:
         return GetMesh(name);
     else
         return *m_Meshes.emplace(name, Mesh::Create(vertices, indices)).first->second;
+}
+template<typename VertexType>
+BeeEngine::Mesh& BeeEngine::AssetManager::LoadMesh(const std::string& name, std::vector<VertexType>& vertices, std::vector<uint32_t>& indices)
+{
+    if(HasMesh(name))
+        return GetMesh(name);
+    size_t vertexCount = vertices.size();
+    size_t size = vertexCount * sizeof(VertexType);
+    void* data = (void*)vertices.data();
+    return *m_Meshes.emplace(name, Mesh::Create(data, size, vertexCount, indices)).first->second;
 }
 
 BeeEngine::Texture2D &BeeEngine::AssetManager::LoadTexture(const std::string &name, const std::filesystem::path &path)
@@ -119,6 +132,33 @@ BeeEngine::Texture2D&  BeeEngine::AssetManager::LoadTexture(const std::string& n
     return *m_Textures.at(name);
 }
 
+BeeEngine::Font &BeeEngine::AssetManager::LoadFont(const std::string &name, const std::filesystem::path &path)
+{
+    if(HasFont(name))
+        return GetFont(name);
+    else
+        return *m_Fonts.emplace(name, CreateRef<Font>(path)).first->second;
+}
+
+BeeEngine::Font &BeeEngine::AssetManager::LoadFont(const std::string &name, gsl::span<byte> data)
+{
+    if(HasFont(name))
+        return GetFont(name);
+    else
+        return *m_Fonts.emplace(name, CreateRef<Font>(name, data)).first->second;
+}
+
+BeeEngine::Font &BeeEngine::AssetManager::GetFont(const std::string &name)
+{
+    BeeExpects(HasFont(name));
+    return *m_Fonts.at(name);
+}
+
+bool BeeEngine::AssetManager::HasFont(const std::string &name) const
+{
+    return m_Fonts.contains(name);
+}
+
 void BeeEngine::AssetManager::LoadStandardAssets()
 {
     using namespace BeeEngine;
@@ -142,4 +182,18 @@ void BeeEngine::AssetManager::LoadStandardAssets()
 
     auto& circleMaterial = LoadMaterial("Renderer2D_CircleMaterial", "Shaders/Renderer2D_CircleShader.vert", "Shaders/Renderer2D_CircleShader.frag");
     auto& circleModel = LoadModel("Renderer2D_Circle", circleMaterial, mesh);
+
+    auto& fontMaterial = LoadMaterial("Renderer_FontMaterial", "Shaders/Renderer_FontShader.vert", "Shaders/Renderer_FontShader.frag");
+
+    std::vector<glm::vec3> fontVertexBuffer = {
+            {-0.5f, -0.5f, 0.0f},
+            {0.5f, -0.5f, 0.0f},
+            {0.5f, 0.5f, 0.0f},
+            {-0.5f, 0.5f, 0.0f},
+    };
+
+    auto& fontMesh = LoadMesh<glm::vec3>("Renderer_FontMesh", fontVertexBuffer, indexBuffer);
+    auto& fontModel = LoadModel("Renderer_Font", fontMaterial, fontMesh);
+
+    auto& openSansRegularFont = LoadFont("OpenSansRegular", Internal::GetEmbeddedResource(EmbeddedResource::OpenSansRegular));
 }

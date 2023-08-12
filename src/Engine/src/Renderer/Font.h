@@ -16,6 +16,7 @@ namespace BeeEngine
     {
     public:
         Font(const std::filesystem::path& path);
+        Font(const std::string& name,gsl::span<byte> data);
         Font(const Font&) = delete;
         Font& operator=(const Font&) = delete;
         Font(Font&&) noexcept = default;
@@ -28,5 +29,7 @@ namespace BeeEngine
     private:
         Internal::MSDFData* m_Data = nullptr;
         Ref<Texture2D> m_AtlasTexture;
+
+        void LoadFont(void *handle, const std::string& name);
     };
 }

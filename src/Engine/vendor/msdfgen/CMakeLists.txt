@@ -1,5 +1,5 @@
 CPMAddPackage(
-        NAME Freetype
+        NAME freetype
         GITHUB_REPOSITORY freetype/freetype
         GIT_TAG 4d8db130ea4342317581bab65fc96365ce806b77
         FIND_PACKAGE_ARGUMENTS
@@ -67,9 +67,9 @@ add_library(msdfgen-ext "${msdfgen_SOURCE_DIR}/msdfgen-ext.h" ${MSDFGEN_EXT_HEAD
 add_library(msdfgen::msdfgen-ext ALIAS msdfgen-ext)
 set_target_properties(msdfgen-ext PROPERTIES PUBLIC_HEADER "${MSDFGEN_EXT_HEADERS} ${MSDFGEN_EXT_HEADERS2}")
 target_compile_definitions(msdfgen-ext INTERFACE MSDFGEN_EXTENSIONS)
-target_compile_definitions(msdfgen-ext INTERFACE MSDFGEN_DISABLE_SVG)
+target_compile_definitions(msdfgen-ext PUBLIC MSDFGEN_DISABLE_SVG)
 #target_compile_definitions(msdfgen-ext INTERFACE MSDFGEN_DISABLE_PNG)
-find_package(Freetype REQUIRED)
+find_package(freetype REQUIRED)
 target_link_libraries(msdfgen-ext PRIVATE freetype msdfgen::msdfgen-core)
 target_include_directories(msdfgen-ext
         PUBLIC

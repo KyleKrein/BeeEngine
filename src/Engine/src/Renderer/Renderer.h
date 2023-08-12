@@ -66,7 +66,7 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             s_RendererAPI->DrawInstanced(model, instancedBuffer, bindingSets, instanceCount);
         }
-        static void DrawString(const String& text, Font& font, const glm::mat4& transform, const Color4& color);
+        static void DrawString(const String& text, Font& font, BindingSet& cameraBindingSet, const glm::mat4& transform, const Color4& foregroundColor, const Color4& backgroundColor);
         static void SubmitCommandBuffer(const CommandBuffer& commandBuffer)
         {
             s_RendererAPI->SubmitCommandBuffer(commandBuffer);

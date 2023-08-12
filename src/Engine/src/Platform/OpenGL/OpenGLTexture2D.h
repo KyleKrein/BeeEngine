@@ -17,7 +17,7 @@ namespace BeeEngine::Internal
         OpenGLTexture2D(gsl::span<std::byte> data);
         virtual ~OpenGLTexture2D() override;
 
-        virtual void SetData(gsl::span<std::byte> data) override;
+        virtual void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels) override;
 
         virtual void Bind(uint32_t slot = 0) const;
     private:

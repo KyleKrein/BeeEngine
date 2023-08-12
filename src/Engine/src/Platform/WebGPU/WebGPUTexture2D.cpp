@@ -147,8 +147,22 @@ namespace BeeEngine::Internal
 
     }
 
-    void WebGPUTexture2D::SetData(gsl::span<std::byte> data)
+    void WebGPUTexture2D::SetData(gsl::span<std::byte> data, uint32_t numberOfChannels)
     {
+        if(numberOfChannels == 3)
+        {
+            std::vector<std::byte> dataWithAlpha;
+            dataWithAlpha.resize(data.size() * 4 / 3);
+            for(int i = 0; i < data.size() / 3; i++)
+            {
+                dataWithAlpha[i * 4] = data[i * 3];
+                dataWithAlpha[i * 4 + 1] = data[i * 3 + 1];
+                dataWithAlpha[i * 4 + 2] = data[i * 3 + 2];
+                dataWithAlpha[i * 4 + 3] = std::byte(255);
+            }
+            WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, 1, (const unsigned char *)dataWithAlpha.data());
+            return;
+        }
         WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, 1, (const unsigned char *)data.data());
     }
 

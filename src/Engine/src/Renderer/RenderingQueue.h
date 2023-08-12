@@ -9,6 +9,8 @@
 #include "Model.h"
 #include "Platform/WebGPU/WebGPUBufferPool.h"
 #include "RendererStatistics.h"
+#include "Core/Color4.h"
+#include "Font.h"
 
 namespace BeeEngine::Internal
 {
@@ -69,6 +71,12 @@ namespace BeeEngine::Internal
         {
             GetInstance().SubmitInstanceImpl(std::move(instance), instanceData);
         }
+
+        static void SubmitText(const std::string& text, Font& font, BindingSet& cameraBindingSet, const glm::mat4& transform, const Color4& foregroundColor, const Color4& backgroundColor)
+        {
+            GetInstance().SubmitTextImpl(text, font, cameraBindingSet, transform, foregroundColor, backgroundColor);
+        }
+
         static void Flush()
         {
             GetInstance().FlushImpl();
@@ -85,8 +93,10 @@ namespace BeeEngine::Internal
         {
             GetInstance().ResetStatisticsImpl();
         }
-
     private:
+
+        void SubmitTextImpl(const std::string &text, Font& font, BindingSet& cameraBindingSet, const glm::mat4 &transform, const Color4 &foregroundColor,
+                            const Color4 &backgroundColor);
         static RenderingQueue& GetInstance()
         {
             static RenderingQueue instance {};

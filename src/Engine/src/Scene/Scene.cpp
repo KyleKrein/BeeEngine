@@ -162,6 +162,14 @@ namespace BeeEngine
                 CircleInstanceBufferData data {transform.GetTransform(), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
                 Renderer::SubmitInstance(*m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
             }
+
+            auto textGroup = m_Registry.view<TransformComponent, TextRendererComponent>();
+            auto& font = Application::GetInstance().GetAssetManager().GetFont("OpenSansRegular");
+            for( auto entity : textGroup )
+            {
+                auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
+                Renderer::DrawString(textComponent.Text, font, *m_CameraBindingSet,transform.GetTransform(), textComponent.ForegroundColor, textComponent.BackgroundColor);
+            }
         }
     }
     void Scene::UpdateEditor(EditorCamera& camera)
@@ -185,6 +193,14 @@ namespace BeeEngine
             auto [transform, circleComponent] = circleGroup.get<TransformComponent, CircleRendererComponent>(entity);
             CircleInstanceBufferData data {transform.GetTransform(), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
             Renderer::SubmitInstance(*m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
+        }
+
+        auto textGroup = m_Registry.view<TransformComponent, TextRendererComponent>();
+        auto& font = Application::GetInstance().GetAssetManager().GetFont("OpenSansRegular");
+        for( auto entity : textGroup )
+        {
+            auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
+            Renderer::DrawString(textComponent.Text, font, *m_CameraBindingSet,transform.GetTransform(), textComponent.ForegroundColor, textComponent.BackgroundColor);
         }
     }
 

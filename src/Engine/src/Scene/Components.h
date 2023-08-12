@@ -100,6 +100,13 @@ namespace BeeEngine
         float Fade = 0.005f;
     };
 
+    struct TextRendererComponent
+    {
+        std::string Text;
+        Color4 ForegroundColor = Color4::Black;
+        Color4 BackgroundColor = Color4::Transparent;
+    };
+
     /*struct MeshComponent
     {
         Ref<Mesh> Mesh = nullptr;
@@ -214,6 +221,6 @@ namespace BeeEngine
 
     using AllComponents =
             ComponentGroup<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
-            SpriteRendererComponent, CircleRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
+            SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
             RigidBody2DComponent, BoxCollider2DComponent>;
 }

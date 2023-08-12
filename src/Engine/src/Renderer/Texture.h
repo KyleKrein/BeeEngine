@@ -37,7 +37,7 @@ namespace BeeEngine
     public:
         virtual ~Texture2D() = default;
 
-        virtual void SetData(gsl::span<std::byte> data) = 0;
+        virtual void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels = 4) = 0;
 
         static Ref<Texture2D> Create(std::string_view path);
         static Ref<Texture2D> Create(uint32_t width, uint32_t height);

@@ -89,6 +89,7 @@ namespace BeeEngine::Editor
             AddComponentPopup<CameraComponent>("Camera", entity);
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
             AddComponentPopup<CircleRendererComponent>("Circle", entity);
+            AddComponentPopup<TextRendererComponent>("Text", entity);
             //AddComponentPopup<NativeScriptComponent>("Native Script", entity);
             AddComponentPopup<ScriptComponent>("Script", entity);
             AddComponentPopup<RigidBody2DComponent>("Rigid Body 2D", entity);
@@ -227,6 +228,17 @@ namespace BeeEngine::Editor
             ImGui::ColorEdit4("Color", circle.Color.ValuePtr());
             ImGui::DragFloat("Thickness", &circle.Thickness, 0.025f, 0.0f, 1.0f);
             ImGui::DragFloat("Fade", &circle.Fade, 0.0025f, 0.005f, 1.0f);
+        });
+        DrawComponentUI<TextRendererComponent>("Text Renderer", entity, [this](TextRendererComponent& component){
+           char text[256];
+           memset(text, 0, sizeof(text));
+           memcpy(text, component.Text.c_str(), (component.Text.size() + 1) * sizeof(char));
+           if(ImGui::InputText("Text", (char*)text, sizeof(text)))
+           {
+               component.Text = std::string(text);
+           }
+           ImGui::ColorEdit4("Foreground", component.ForegroundColor.ValuePtr());
+           ImGui::ColorEdit4("Background", component.BackgroundColor.ValuePtr());
         });
 
         DrawComponentUI<ScriptComponent>("Script", entity, [this, entity](ScriptComponent& script) mutable{

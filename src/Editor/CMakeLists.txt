@@ -11,8 +11,12 @@ target_include_directories(BeeEngineEditor
         PRIVATE vendor/FileWatcher
         PUBLIC src
         )
-
 target_link_libraries(BeeEngineEditor PUBLIC BeeEngine)
+#if(PROJECT_IS_TOP_LEVEL)
+        set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Engine/vendor/mono/libs/)
+        configureMono(${MONO_DIRECTORY})
+        #enable_mono(BeeEngineEditor)
+#endif ()
 copy_mono_dlls(BeeEngineEditor)
 add_compile_definitions(BEE_ENABLE_CHECKS)
 #file(COPY Assets DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})

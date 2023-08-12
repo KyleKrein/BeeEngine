@@ -85,6 +85,10 @@ namespace BeeEngine::Editor
     void EditorLayer::OnGUIRendering() noexcept
     {
         m_DockSpace.Start();
+        auto& fontTexture = Application::GetInstance().GetAssetManager().GetFont("OpenSansRegular").GetAtlasTexture();
+        ImGui::Begin("zjjzjz");
+        ImGui::Image((ImTextureID)fontTexture.GetRendererID(), ImVec2(512, 512));
+        ImGui::End();
         if(m_ProjectFile)
         {
             m_MenuBar.Render();
