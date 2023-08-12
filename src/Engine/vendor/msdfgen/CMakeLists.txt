@@ -1,9 +1,9 @@
-#[[CPMAddPackage(
-        NAME FreeType
+CPMAddPackage(
+        NAME Freetype
         GITHUB_REPOSITORY freetype/freetype
         GIT_TAG 4d8db130ea4342317581bab65fc96365ce806b77
         FIND_PACKAGE_ARGUMENTS
-)]]
+)
 
 CPMAddPackage(
         NAME msdfgen
@@ -32,8 +32,12 @@ endif()
 file(GLOB_RECURSE MSDFGEN_CORE_HEADERS ${msdfgen_SOURCE_DIR}/core/*.hpp)
 file(GLOB_RECURSE MSDFGEN_CORE_HEADERS2 ${msdfgen_SOURCE_DIR}/core/*.h)
 file(GLOB_RECURSE MSDFGEN_CORE_SOURCES ${msdfgen_SOURCE_DIR}/core/*.cpp)
-file(GLOB_RECURSE MSDFGEN_EXT_HEADERS RELATIVE ${msdfgen_SOURCE_DIR} "ext/*.h" "ext/*.hpp")
-file(GLOB_RECURSE MSDFGEN_EXT_SOURCES RELATIVE ${msdfgen_SOURCE_DIR} "ext/*.cpp" "lib/*.cpp")
+file(GLOB_RECURSE MSDFGEN_EXT_HEADERS ${msdfgen_SOURCE_DIR}/ext/*.h)
+file(GLOB_RECURSE MSDFGEN_EXT_HEADERS2 ${msdfgen_SOURCE_DIR}/ext/*.hpp)
+file(GLOB_RECURSE MSDFGEN_EXT_SOURCES ${msdfgen_SOURCE_DIR}/ext/*.cpp)
+file(GLOB_RECURSE MSDFGEN_EXT_SOURCES2 ${msdfgen_SOURCE_DIR}/lib/*.cpp)
+
+
 
 # Core library
 add_library(msdfgen-core "${msdfgen_SOURCE_DIR}/msdfgen.h" ${MSDFGEN_CORE_HEADERS} ${MSDFGEN_CORE_HEADERS2} ${MSDFGEN_CORE_SOURCES})
@@ -59,7 +63,29 @@ endif()
 
 target_compile_definitions(msdfgen-core PUBLIC MSDFGEN_PUBLIC=)
 
-add_library(msdfgen::msdfgen ALIAS msdfgen-core)
+add_library(msdfgen-ext "${msdfgen_SOURCE_DIR}/msdfgen-ext.h" ${MSDFGEN_EXT_HEADERS} ${MSDFGEN_EXT_SOURCES} ${MSDFGEN_EXT_HEADERS2} ${MSDFGEN_EXT_SOURCES2})
+add_library(msdfgen::msdfgen-ext ALIAS msdfgen-ext)
+set_target_properties(msdfgen-ext PROPERTIES PUBLIC_HEADER "${MSDFGEN_EXT_HEADERS} ${MSDFGEN_EXT_HEADERS2}")
+target_compile_definitions(msdfgen-ext INTERFACE MSDFGEN_EXTENSIONS)
+target_compile_definitions(msdfgen-ext INTERFACE MSDFGEN_DISABLE_SVG)
+#target_compile_definitions(msdfgen-ext INTERFACE MSDFGEN_DISABLE_PNG)
+find_package(Freetype REQUIRED)
+target_link_libraries(msdfgen-ext PRIVATE freetype msdfgen::msdfgen-core)
+target_include_directories(msdfgen-ext
+        PUBLIC
+        $<INSTALL_INTERFACE:include/msdfgen>
+        $<BUILD_INTERFACE:${msdfgen_SOURCE_DIR}>
+        PRIVATE
+        ${msdfgen_SOURCE_DIR}/include
+        ${freetype_SOURCE_DIR}/include
+        ${freetype_BINARY_DIR}/include
+        ${freetype_SOURCE_DIR}/include/freetype
+)
+target_compile_definitions(msdfgen-ext PUBLIC MSDFGEN_EXT_PUBLIC=)
+
+add_library(msdfgen-full INTERFACE)
+add_library(msdfgen::msdfgen ALIAS msdfgen-full)
+target_link_libraries(msdfgen-full INTERFACE msdfgen::msdfgen-core msdfgen::msdfgen-ext)
 
 # Hide ZERO_CHECK and ALL_BUILD targets
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -97,7 +123,7 @@ if (MSVC)
     target_compile_definitions(msdf-atlas-gen PUBLIC _CRT_SECURE_NO_WARNINGS)
 endif()
 target_compile_features(msdf-atlas-gen PUBLIC cxx_std_11)
-target_link_libraries(msdf-atlas-gen PUBLIC Threads::Threads msdfgen::msdfgen)
+target_link_libraries(msdf-atlas-gen PUBLIC Threads::Threads msdfgen::msdfgen msdfgen-ext)
 
 add_library(MSDFGEN INTERFACE)
 target_link_libraries(MSDFGEN INTERFACE msdf-atlas-gen::msdf-atlas-gen)
