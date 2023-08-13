@@ -131,7 +131,7 @@ namespace BeeEngine
 
         std::ostringstream sln;
         sln << "Microsoft Visual Studio Solution File, Format Version 12.00\n";
-        sln << "Project(\"{"<<projectName<<"}\") = \"" << projectName << "\", \"" << projectName << ".csproj\", \"{"<<projectName<<"}\"\n";
+        sln << "Project(\"{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}\") = \"" << projectName << "\", \"" << projectName << ".csproj\", \"{425D7973-9025-4564-B598-73F36A5979FE}\"\n"; //TODO: GUID
         sln << "EndProject\n";
         sln << "Global\n";
         sln << "	GlobalSection(SolutionConfigurationPlatforms) = preSolution\n";
@@ -139,10 +139,10 @@ namespace BeeEngine
         sln << "		Release|Any CPU = Release|Any CPU\n";
         sln << "	EndGlobalSection\n";
         sln << "	GlobalSection(ProjectConfigurationPlatforms) = postSolution\n";
-        sln << "		{"<<projectName<<"}.Debug|Any CPU.ActiveCfg = Debug|Any CPU\n";
-        sln << "		{"<<projectName<<"}.Debug|Any CPU.Build.0 = Debug|Any CPU\n";
-        sln << "		{"<<projectName<<"}.Release|Any CPU.ActiveCfg = Release|Any CPU\n";
-        sln << "		{"<<projectName<<"}.Release|Any CPU.Build.0 = Release|Any CPU\n";
+        sln << "		{425D7973-9025-4564-B598-73F36A5979FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU\n";
+        sln << "		{425D7973-9025-4564-B598-73F36A5979FE}.Debug|Any CPU.Build.0 = Debug|Any CPU\n";
+        sln << "		{425D7973-9025-4564-B598-73F36A5979FE}.Release|Any CPU.ActiveCfg = Release|Any CPU\n";
+        sln << "		{425D7973-9025-4564-B598-73F36A5979FE}.Release|Any CPU.Build.0 = Release|Any CPU\n";
         sln << "	EndGlobalSection\n";
         sln << "EndGlobal\n";
 

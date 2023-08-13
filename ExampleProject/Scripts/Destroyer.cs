@@ -2,7 +2,7 @@ using BeeEngine;
 using System;
 using System.Security.Cryptography;
 
-namespace Zhu
+namespace Example
 {
     public class Destroyer : Behaviour
     {

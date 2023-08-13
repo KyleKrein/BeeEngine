@@ -24,9 +24,10 @@ namespace BeeEngine::Editor
         {
             std::filesystem::create_directory(m_ProjectPath / ".beeengine" / "build");
         }
-        m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build" / "GameLibrary.dll";
+        m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
         if(File::Exists(m_AppAssemblyPath))
             m_AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_AppAssemblyPath).string(), [this](const std::string & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+        m_AppAssemblyPath = m_AppAssemblyPath / "GameLibrary.dll";
         std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll", m_ProjectPath / ".beeengine" / "BeeEngine.Core.dll", std::filesystem::copy_options::overwrite_existing);
         if(!File::Exists(m_ProjectFilePath))
         {

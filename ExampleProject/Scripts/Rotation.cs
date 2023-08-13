@@ -1,7 +1,7 @@
 using BeeEngine;
 using System;
 
-namespace Zhu
+namespace Example
 {
     public sealed class Rotation : Behaviour
     {

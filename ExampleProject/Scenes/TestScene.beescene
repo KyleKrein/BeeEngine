@@ -8,7 +8,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     ScriptComponent:
-      FullName: Zhu.RandomColor
+      FullName: Example.RandomColor
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
   - Entity: 11146239361119753478
@@ -19,7 +19,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     ScriptComponent:
-      FullName: Zhu.Helper
+      FullName: Example.Helper
     CircleRendererComponent:
       Color: [1, 1, 1, 1]
       Thickness: 1
@@ -32,11 +32,11 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     ScriptComponent:
-      FullName: Zhu.Rotation
+      FullName: Example.Rotation
       Fields:
         - Name: Speed
           Type: float
-          Data: 0.100000001
+          Data: 0.150000006
     SpriteRendererComponent:
       Color: [0.835616469, 0.49450177, 0.49450177, 1]
   - Entity: 12919446828236504033
@@ -47,7 +47,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     ScriptComponent:
-      FullName: Zhu.Destroyer
+      FullName: Example.Destroyer
     SpriteRendererComponent:
       Color: [0.719782054, 0.454666883, 0.906849325, 1]
   - Entity: 14059197146731187119
@@ -58,7 +58,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     ScriptComponent:
-      FullName: Zhu.SetScore
+      FullName: Example.SetScore
       Fields:
         - Name: Offset
           Type: Vector3
@@ -85,11 +85,11 @@ Entities:
         OrthographicSize: 10
         OrthographicNearClip: -1
         OrthographicFarClip: 1
-        AspectRatio: 1.47933888
+        AspectRatio: 1.16906476
       Primary: true
       FixedAspectRatio: false
     ScriptComponent:
-      FullName: Zhu.Camera
+      FullName: Example.Camera
       Fields:
         - Name: Speed
           Type: float

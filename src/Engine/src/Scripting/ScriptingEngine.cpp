@@ -5,6 +5,7 @@
 #include "ScriptingEngine.h"
 #include <mono/jit/jit.h>
 #include "mono/metadata/assembly.h"
+#include <mono/metadata/mono-config.h>
 #include "Core/Logging/Log.h"
 #include <filesystem>
 #include "Core/ResourceManager.h"
@@ -82,6 +83,12 @@ namespace BeeEngine
             };
             mono_jit_parse_options(2, (char**)argv);
             mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+        }
+
+        if constexpr (Application::GetOsPlatform() != OSPlatform::Windows)
+        {
+            //mono_set_crash_chaining(true);
+            mono_config_parse("config");
         }
 
         s_Data.RootDomain = mono_jit_init("BeeEngineJITRuntime");

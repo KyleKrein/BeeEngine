@@ -2,7 +2,7 @@ using BeeEngine;
 using System;
 using BeeEngine.Math;
 
-namespace Zhu
+namespace Example
 {
     public sealed class Camera : Behaviour
     {
