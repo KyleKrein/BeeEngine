@@ -1,0 +1,13 @@
+Scene: Untitled
+Entities:
+  - Entity: 3451285928844202304
+    TagComponent:
+      Tag: Circle
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Thickness: 0.425000012
+      Fade: 0.577000022
