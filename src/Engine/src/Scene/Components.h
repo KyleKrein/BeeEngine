@@ -19,6 +19,7 @@
 #include "Core/UUID.h"
 #include "Scripting/MObject.h"
 #include "Scripting/GameScript.h"
+#include "Renderer/TextRenderingConfiguration.h"
 
 namespace BeeEngine
 {
@@ -102,9 +103,8 @@ namespace BeeEngine
 
     struct TextRendererComponent
     {
+        TextRenderingConfiguration Configuration;
         std::string Text;
-        Color4 ForegroundColor = Color4::Black;
-        Color4 BackgroundColor = Color4::Transparent;
     };
 
     /*struct MeshComponent

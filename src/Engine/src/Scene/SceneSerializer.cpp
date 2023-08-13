@@ -341,6 +341,16 @@ namespace BeeEngine
                     circleRenderer.Thickness = circleRendererComponent["Thickness"].as<float>();
                     circleRenderer.Fade = circleRendererComponent["Fade"].as<float>();
                 }
+                auto textRendererComponent = entity["TextRendererComponent"];
+                if(textRendererComponent)
+                {
+                    auto& textRenderer = deserializedEntity.AddComponent<TextRendererComponent>();
+                    textRenderer.Text = textRendererComponent["Text"].as<std::string>();
+                    textRenderer.Configuration.ForegroundColor = textRendererComponent["Foreground Color"].as<Color4>();
+                    textRenderer.Configuration.BackgroundColor = textRendererComponent["Background Color"].as<Color4>();
+                    textRenderer.Configuration.KerningOffset = textRendererComponent["Kerning"].as<float>();
+                    textRenderer.Configuration.LineSpacing = textRendererComponent["Line Spacing"].as<float>();
+                }
                 auto rigidBody2DComponent = entity["RigidBody2DComponent"];
                 if(rigidBody2DComponent)
                 {
@@ -511,6 +521,18 @@ namespace BeeEngine
             out << YAML::Key << "Color" << YAML::Value << circleRenderer.Color;
             out << YAML::Key << "Thickness" << YAML::Value << circleRenderer.Thickness;
             out << YAML::Key << "Fade" << YAML::Value << circleRenderer.Fade;
+            out << YAML::EndMap;
+        }
+        if(entity.HasComponent<TextRendererComponent>())
+        {
+            out << YAML::Key << "TextRendererComponent";
+            out << YAML::BeginMap;
+            auto& textRenderer = entity.GetComponent<TextRendererComponent>();
+            out << YAML::Key << "Text" << YAML::Value << textRenderer.Text;
+            out << YAML::Key << "Foreground Color" << YAML::Value << textRenderer.Configuration.ForegroundColor;
+            out << YAML::Key << "Background Color" << YAML::Value << textRenderer.Configuration.BackgroundColor;
+            out << YAML::Key << "Kerning" << YAML::Value << textRenderer.Configuration.KerningOffset;
+            out << YAML::Key << "Line Spacing" << YAML::Value << textRenderer.Configuration.LineSpacing;
             out << YAML::EndMap;
         }
 

@@ -11,6 +11,7 @@
 #include "RendererStatistics.h"
 #include "Core/Color4.h"
 #include "Font.h"
+#include "TextRenderingConfiguration.h"
 
 namespace BeeEngine::Internal
 {
@@ -72,9 +73,9 @@ namespace BeeEngine::Internal
             GetInstance().SubmitInstanceImpl(std::move(instance), instanceData);
         }
 
-        static void SubmitText(const std::string& text, Font& font, BindingSet& cameraBindingSet, const glm::mat4& transform, const Color4& foregroundColor, const Color4& backgroundColor)
+        static void SubmitText(const std::string& text, Font& font, BindingSet& cameraBindingSet, const glm::mat4& transform, const TextRenderingConfiguration& config)
         {
-            GetInstance().SubmitTextImpl(text, font, cameraBindingSet, transform, foregroundColor, backgroundColor);
+            GetInstance().SubmitTextImpl(text, font, cameraBindingSet, transform, config);
         }
 
         static void Flush()
@@ -95,8 +96,7 @@ namespace BeeEngine::Internal
         }
     private:
 
-        void SubmitTextImpl(const std::string &text, Font& font, BindingSet& cameraBindingSet, const glm::mat4 &transform, const Color4 &foregroundColor,
-                            const Color4 &backgroundColor);
+        void SubmitTextImpl(const std::string &text, Font& font, BindingSet& cameraBindingSet, const glm::mat4 &transform, const TextRenderingConfiguration& config);
         static RenderingQueue& GetInstance()
         {
             static RenderingQueue instance {};

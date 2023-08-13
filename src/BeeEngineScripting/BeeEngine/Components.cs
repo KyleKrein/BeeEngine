@@ -253,4 +253,62 @@ namespace BeeEngine
             m_RestitutionThreshold = m_Restitution + 1;
         }
     }
+
+    public sealed class TextRendererComponent : Component
+    {
+        private unsafe Color* m_ForegroundColor;
+        private unsafe Color* m_BackgroundColor;
+        private unsafe float* m_Kerning;
+        private unsafe float* m_LineSpacing;
+
+        public string Text
+        {
+            get => InternalCalls.TextRendererComponent_GetText(EntityID);
+            set => InternalCalls.TextRendererComponent_SetText(EntityID, value);
+        }
+
+        public unsafe ref Color Foreground
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Color>(m_ForegroundColor);
+            }
+        }
+
+        public unsafe ref Color Background
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Color>(m_BackgroundColor);
+            }
+        }
+
+        public unsafe ref float Kerning
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<float>(m_Kerning);
+            }
+        }
+
+        public unsafe ref float LineSpacing
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<float>(m_LineSpacing);
+            }
+        }
+
+        internal override unsafe void Construct()
+        {
+            m_ForegroundColor = (Color*)ComponentHandle;
+            m_BackgroundColor = m_ForegroundColor + 1;
+            m_Kerning = (float*)(m_BackgroundColor + 1);
+            m_LineSpacing = m_Kerning + 1;
+        }
+    }
 }

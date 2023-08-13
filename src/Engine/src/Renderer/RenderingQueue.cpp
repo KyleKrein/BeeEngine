@@ -117,7 +117,7 @@ namespace BeeEngine::Internal
         Color4 BackgroundColor;
     };
     void RenderingQueue::SubmitTextImpl(const std::string &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform,
-                                        const Color4 &foregroundColor, const Color4 &backgroundColor)
+                                        const TextRenderingConfiguration& config)
     {
         auto& textModel = Application::GetInstance().GetAssetManager().GetModel("Renderer_Font");
 
@@ -128,9 +128,10 @@ namespace BeeEngine::Internal
         double x = 0.0;
         double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
         double y = 0.0;//-fsScale * metrics.ascenderY;
-        float lineHeightOffset = 0.0f;
 
         size_t length = text.size();
+
+        const auto spaceGlyph =  fontGeometry.getGlyph(' ');
 
         for (size_t i = 0; i < length; ++i)
         {
@@ -142,11 +143,41 @@ namespace BeeEngine::Internal
             if (character == '\n')
             {
                 x = 0;
-                y -= fsScale * metrics.lineHeight + lineHeightOffset;
+                y -= fsScale * metrics.lineHeight + config.LineSpacing;
+                continue;
+            }
+            if(character == ' ')
+            {
+                if(i < length - 1)
+                {
+                    double advance = spaceGlyph->getAdvance();
+                    char32_t nextCharacter = text[i + 1];
+                    fontGeometry.getAdvance(advance, character, nextCharacter);
+
+                    x += fsScale * advance + config.KerningOffset;
+                }
                 continue;
             }
             if (character == '\t')
-                character = ' ';
+            {
+                if(i < length - 1)
+                {
+                    for (int j = 0; j < 3; ++j)
+                    {
+                        double advance = spaceGlyph->getAdvance();
+                        char32_t nextCharacter = ' ';
+                        fontGeometry.getAdvance(advance, character, nextCharacter);
+
+                        x += fsScale * advance + config.KerningOffset;
+                    }
+                    double advance = spaceGlyph->getAdvance();
+                    char32_t nextCharacter = text[i + 1];
+                    fontGeometry.getAdvance(advance, character, nextCharacter);
+
+                    x += fsScale * advance + config.KerningOffset;
+                }
+                continue;
+            }
             auto glyph = fontGeometry.getGlyph(character);
             if(!glyph)
             {
@@ -185,8 +216,8 @@ namespace BeeEngine::Internal
                 .PositionOffset1 = transform * glm::vec4{quadMin.x, quadMax.y, 0.0f, 1.0f},
                 .PositionOffset2 = transform * glm::vec4(quadMax, 0.0f, 1.0f),
                 .PositionOffset3 = transform * glm::vec4{quadMax.x, quadMin.y, 0.0f, 1.0f},
-                .ForegroundColor = foregroundColor,
-                .BackgroundColor = backgroundColor,
+                .ForegroundColor = config.ForegroundColor,
+                .BackgroundColor = config.BackgroundColor,
             };
             SubmitInstanceImpl({.Model = &textModel, .BindingSets = {&cameraBindingSet, atlasTexture.GetBindingSet()}}, {(byte*)&data, sizeof(TextInstancedData)});
 
@@ -196,8 +227,7 @@ namespace BeeEngine::Internal
                 char32_t nextCharacter = text[i + 1];
                 fontGeometry.getAdvance(advance, character, nextCharacter);
 
-                float kerningOffset = 0.0f;
-                x += fsScale * advance + kerningOffset;
+                x += fsScale * advance + config.KerningOffset;
             }
         }
     }

@@ -50,6 +50,12 @@ namespace BeeEngine.Internal
         internal static extern object Entity_GetScriptInstance(ulong id);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern string TextRendererComponent_GetText(ulong id);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void TextRendererComponent_SetText(ulong id, string text);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Entity_Destroy(ulong id);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

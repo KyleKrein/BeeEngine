@@ -12,6 +12,7 @@
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Scripting/GameScript.h"
+#include <misc/cpp/imgui_stdlib.h>
 
 namespace BeeEngine::Editor
 {
@@ -230,15 +231,11 @@ namespace BeeEngine::Editor
             ImGui::DragFloat("Fade", &circle.Fade, 0.0025f, 0.005f, 1.0f);
         });
         DrawComponentUI<TextRendererComponent>("Text Renderer", entity, [this](TextRendererComponent& component){
-           char text[256];
-           memset(text, 0, sizeof(text));
-           memcpy(text, component.Text.c_str(), (component.Text.size() + 1) * sizeof(char));
-           if(ImGui::InputText("Text", (char*)text, sizeof(text)))
-           {
-               component.Text = std::string(text);
-           }
-           ImGui::ColorEdit4("Foreground", component.ForegroundColor.ValuePtr());
-           ImGui::ColorEdit4("Background", component.BackgroundColor.ValuePtr());
+           ImGui::InputTextMultiline("Text", &component.Text);
+           ImGui::ColorEdit4("Foreground", component.Configuration.ForegroundColor.ValuePtr());
+           ImGui::ColorEdit4("Background", component.Configuration.BackgroundColor.ValuePtr());
+           ImGui::DragFloat("Kerning offset", &component.Configuration.KerningOffset, 0.025f);
+           ImGui::DragFloat("Line spacing", &component.Configuration.LineSpacing, 0.025f);
         });
 
         DrawComponentUI<ScriptComponent>("Script", entity, [this, entity](ScriptComponent& script) mutable{

@@ -50,9 +50,8 @@ namespace BeeEngine
         Internal::RenderingQueue::FinishFrame();
     }
 
-    void Renderer::DrawString(const String &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform, const Color4 &foregroundColor,
-                              const Color4 &backgroundColor)
+    void Renderer::DrawString(const String &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform, const TextRenderingConfiguration& config)
     {
-        Internal::RenderingQueue::SubmitText(text, font, cameraBindingSet, transform, foregroundColor, backgroundColor);
+        Internal::RenderingQueue::SubmitText(text, font, cameraBindingSet, transform, config);
     }
 }
