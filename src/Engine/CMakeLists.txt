@@ -15,7 +15,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Renderer/Font.cpp
         src/Renderer/Font.h
         src/Renderer/MSDFData.h
-        src/Renderer/TextRenderingConfiguration.h)
+        src/Renderer/TextRenderingConfiguration.h
+        src/Threading/ThreadPool.h)
 
 function(DesktopPlatformsOnly)
     add_compile_definitions(DESKTOP_PLATFORM)
