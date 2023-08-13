@@ -9,6 +9,7 @@
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <msdf-atlas-gen/GlyphGeometry.h>
 #include "MSDFData.h"
+#include <glm.hpp>
 
 namespace BeeEngine
 {
@@ -34,19 +35,23 @@ namespace BeeEngine
 
         Ref<Texture2D> texture = Texture2D::Create(bitmap.width, bitmap.height);
 
-        unsigned char* data = new unsigned char[bitmap.width * bitmap.height * N];
-        memcpy(data, bitmap.pixels, bitmap.width * bitmap.height * N);
-        for(size_t x = 0; x < bitmap.width; x+=N)
-        {
-            for(size_t y = 0; y < bitmap.height / 2; y+=N)
-            {
-                for(size_t i = 0; i < N; i++)
-                    std::swap(data[(y * bitmap.width + x) * N + i], data[((bitmap.height - y - 1) * bitmap.width + x) * N + i]);
-            }
-        }
+        unsigned char* pixels = new unsigned char[bitmap.width * bitmap.height * N];
+        memcpy(pixels, bitmap.pixels, bitmap.width * bitmap.height * N);
+#if 0 //flip image vertically
+        const size_t stride = bitmap.width * N;
+        unsigned char *row = (decltype(row))malloc(stride);
+        unsigned char *low = pixels;
+        unsigned char *high = &pixels[(bitmap.height - 1) * stride];
 
-        texture->SetData({(byte*)data, (size_t)(bitmap.width * bitmap.height * N)}, N);
-        delete[] data;
+        for (; low < high; low += stride, high -= stride) {
+            memcpy(row, low, stride);
+            memcpy(low, high, stride);
+            memcpy(high, row, stride);
+        }
+        free(row);
+#endif
+        texture->SetData({(byte*)pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
+        delete[] pixels;
         return texture;
     }
 
@@ -161,7 +166,7 @@ namespace BeeEngine
 #undef LCG_MULTIPLIER
 #undef LCG_INCREMENT
 
-        m_AtlasTexture = CreateAndCacheAtlas<uint8_t , float, 3, msdf_atlas::msdfGenerator>(name, emSize, m_Data->Glyphs, m_Data->FontGeometry, {width, height});
+        m_AtlasTexture = CreateAndCacheAtlas<uint8_t , float, 4, msdf_atlas::mtsdfGenerator>(name, emSize, m_Data->Glyphs, m_Data->FontGeometry, {width, height});
 #if 0
         msdfgen::Shape shape;
         if(msdfgen::loadGlyph(shape, font, 'A'))

@@ -105,17 +105,16 @@ namespace BeeEngine::Internal
     }
     struct TextInstancedData
     {
-        alignas(alignof(glm::vec3)) glm::vec2 TexCoord0;
-        alignas(alignof(glm::vec3)) glm::vec2 TexCoord1;
-        alignas(alignof(glm::vec3)) glm::vec2 TexCoord2;
-        alignas(alignof(glm::vec3)) glm::vec2 TexCoord3;
-        alignas(alignof(glm::vec3)) glm::vec2 PositionOffset0;
-        alignas(alignof(glm::vec3)) glm::vec2 PositionOffset1;
-        alignas(alignof(glm::vec3)) glm::vec2 PositionOffset2;
-        alignas(alignof(glm::vec3)) glm::vec2 PositionOffset3;
-        alignas(alignof(glm::vec4)) Color4 ForegroundColor;
-        alignas(alignof(glm::vec4)) Color4 BackgroundColor;
-        alignas(alignof(glm::vec4)) glm::mat4 Transform;
+        glm::vec2 TexCoord0;
+        glm::vec2 TexCoord1;
+        glm::vec2 TexCoord2;
+        glm::vec2 TexCoord3;
+        glm::vec2 PositionOffset0;
+        glm::vec2 PositionOffset1;
+        glm::vec2 PositionOffset2;
+        glm::vec2 PositionOffset3;
+        Color4 ForegroundColor;
+        Color4 BackgroundColor;
     };
     void RenderingQueue::SubmitTextImpl(const std::string &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform,
                                         const Color4 &foregroundColor, const Color4 &backgroundColor)
@@ -182,13 +181,12 @@ namespace BeeEngine::Internal
                 .TexCoord1 = {texCoordMin.x, texCoordMax.y},
                 .TexCoord2 = texCoordMax,
                 .TexCoord3 = {texCoordMax.x, texCoordMin.y},
-                .PositionOffset0 = quadMin,
-                .PositionOffset1 = {quadMin.x, quadMax.y},
-                .PositionOffset2 = quadMax,
-                .PositionOffset3 = {quadMax.x, quadMin.y},
+                .PositionOffset0 = transform * glm::vec4(quadMin, 0.0f, 1.0f),
+                .PositionOffset1 = transform * glm::vec4{quadMin.x, quadMax.y, 0.0f, 1.0f},
+                .PositionOffset2 = transform * glm::vec4(quadMax, 0.0f, 1.0f),
+                .PositionOffset3 = transform * glm::vec4{quadMax.x, quadMin.y, 0.0f, 1.0f},
                 .ForegroundColor = foregroundColor,
                 .BackgroundColor = backgroundColor,
-                .Transform = transform
             };
             SubmitInstanceImpl({.Model = &textModel, .BindingSets = {&cameraBindingSet, atlasTexture.GetBindingSet()}}, {(byte*)&data, sizeof(TextInstancedData)});
 

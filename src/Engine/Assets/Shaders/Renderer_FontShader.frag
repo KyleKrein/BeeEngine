@@ -30,10 +30,8 @@ void main()
     float screenPxDistance = screenPxRange() * (sd - 0.5f);
     float opacity = clamp(screenPxDistance + 0.5f, 0.0f, 1.0f);
 
-    if(opacity == 0.0f)
-    {
-        discard;
-    }
-
     outColor = mix(fBackgroundColor, fForegroundColor, opacity);
+
+    if(outColor.a == 0.0f)
+        discard;
 }

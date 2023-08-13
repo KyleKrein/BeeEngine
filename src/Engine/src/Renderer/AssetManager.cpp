@@ -185,14 +185,14 @@ void BeeEngine::AssetManager::LoadStandardAssets()
 
     auto& fontMaterial = LoadMaterial("Renderer_FontMaterial", "Shaders/Renderer_FontShader.vert", "Shaders/Renderer_FontShader.frag");
 
-    std::vector<glm::vec3> fontVertexBuffer = {
-            {-0.5f, -0.5f, 0.0f},
-            {0.5f, -0.5f, 0.0f},
-            {0.5f, 0.5f, 0.0f},
-            {-0.5f, 0.5f, 0.0f},
+    std::vector<glm::vec2> fontVertexBuffer = {
+            {-0.5f, -0.5f},
+            {0.5f, -0.5f},
+            {0.5f, 0.5f},
+            {-0.5f, 0.5f}
     };
 
-    auto& fontMesh = LoadMesh<glm::vec3>("Renderer_FontMesh", fontVertexBuffer, indexBuffer);
+    auto& fontMesh = LoadMesh<glm::vec2>("Renderer_FontMesh", fontVertexBuffer, indexBuffer);
     auto& fontModel = LoadModel("Renderer_Font", fontMaterial, fontMesh);
 
     auto& openSansRegularFont = LoadFont("OpenSansRegular", Internal::GetEmbeddedResource(EmbeddedResource::OpenSansRegular));

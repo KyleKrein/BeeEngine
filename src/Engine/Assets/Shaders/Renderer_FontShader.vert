@@ -1,6 +1,5 @@
 #version 450 core
-
-layout (location = 0) in vec3 vPosition;
+layout (location = 0) in vec2 vPosition;
 
 layout (instanced location = 1) in vec2 vTexCoord0;
 layout (instanced location = 2) in vec2 vTexCoord1;
@@ -12,7 +11,6 @@ layout (instanced location = 7) in vec2 vPositionOffset2;
 layout (instanced location = 8) in vec2 vPositionOffset3;
 layout (instanced location = 9) in vec4 vForegroundColor;
 layout (instanced location = 10) in vec4 vBackgroundColor;
-layout (instanced location = 11) in mat4 vModel;
 //layout (instanced location = 10) in int vEntityID;
 
 layout(location = 0) out vec4 outForegroundColor;
@@ -33,22 +31,26 @@ void main()
     switch(gl_VertexIndex)
     {
         case 0:
-            outTexCoord = vTexCoord0;
-            offset = vPositionOffset0;
-            break;
+        outTexCoord = vTexCoord0;
+        offset = vPositionOffset0;
+        break;
         case 1:
-            outTexCoord = vTexCoord1;
-            offset = vPositionOffset1;
-            break;
+        outTexCoord = vTexCoord1;
+        offset = vPositionOffset1;
+        break;
         case 2:
-            outTexCoord = vTexCoord2;
-            offset = vPositionOffset2;
-            break;
+        outTexCoord = vTexCoord2;
+        offset = vPositionOffset2;
+        break;
         case 3:
-            outTexCoord = vTexCoord3;
-            offset = vPositionOffset3;
-            break;
+        outTexCoord = vTexCoord3;
+        offset = vPositionOffset3;
+        break;
+        default:
+        outTexCoord = vTexCoord0;
+        offset = vPositionOffset0;
+        break;
     }
 
-    gl_Position = camera.projView * vModel * vec4(vPosition, 1.0) * vec4(offset, 0.0, 1.0);
+    gl_Position = camera.projView * vec4(offset, 0.0, 1.0);
 }
