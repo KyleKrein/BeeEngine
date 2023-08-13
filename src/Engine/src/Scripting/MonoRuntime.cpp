@@ -300,6 +300,7 @@ namespace BeeEngine
             BeeCoreError("Exception in script: {}", message);
             mono_free(message);
         }
+        m_OnCreate = nullptr;
     }
 
     void GameScript::InvokeOnDestroy()

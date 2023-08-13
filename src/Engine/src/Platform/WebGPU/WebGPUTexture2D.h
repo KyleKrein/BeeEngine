@@ -20,7 +20,7 @@ namespace BeeEngine::Internal
         void Bind(uint32_t slot = 0) override;
         std::vector<WGPUBindGroupLayoutEntry> GetBindGroupLayoutEntry() const override;
         std::vector<WGPUBindGroupEntry> GetBindGroupEntry() const override;
-        void SetData(gsl::span<std::byte> data) override;
+        void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels) override;
     private:
         void WriteMipMaps(WGPUDevice pDevice, WGPUTexture pTexture, WGPUExtent3D extent3D, uint32_t count,
                           const unsigned char *data);

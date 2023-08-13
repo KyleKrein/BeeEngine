@@ -82,6 +82,15 @@ namespace BeeEngine
                 ScriptingEngine::OnEntityCreated(entity, scriptComponent.Class);
             }
         }
+        for (auto e : view)
+        {
+            Entity entity {EntityID{e}, this};
+            auto& scriptComponent = entity.GetComponent<ScriptComponent>();
+            if(scriptComponent.Class)
+            {
+                ScriptingEngine::GetEntityScriptInstance(entity.GetUUID())->InvokeOnCreate();
+            }
+        }
         for( auto e: view)
         {
             Entity entity {EntityID{e}, this};
@@ -162,6 +171,14 @@ namespace BeeEngine
                 CircleInstanceBufferData data {transform.GetTransform(), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
                 Renderer::SubmitInstance(*m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
             }
+
+            auto textGroup = m_Registry.view<TransformComponent, TextRendererComponent>();
+            auto& font = Application::GetInstance().GetAssetManager().GetFont("OpenSansRegular");
+            for( auto entity : textGroup )
+            {
+                auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
+                Renderer::DrawString(textComponent.Text, font, *m_CameraBindingSet,transform.GetTransform(), textComponent.Configuration);
+            }
         }
     }
     void Scene::UpdateEditor(EditorCamera& camera)
@@ -185,6 +202,14 @@ namespace BeeEngine
             auto [transform, circleComponent] = circleGroup.get<TransformComponent, CircleRendererComponent>(entity);
             CircleInstanceBufferData data {transform.GetTransform(), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
             Renderer::SubmitInstance(*m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
+        }
+
+        auto textGroup = m_Registry.view<TransformComponent, TextRendererComponent>();
+        auto& font = Application::GetInstance().GetAssetManager().GetFont("OpenSansRegular");
+        for( auto entity : textGroup )
+        {
+            auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
+            Renderer::DrawString(textComponent.Text, font, *m_CameraBindingSet,transform.GetTransform(), textComponent.Configuration);
         }
     }
 
@@ -287,7 +312,7 @@ namespace BeeEngine
             if(boxCollider.Type == BoxCollider2DComponent::ColliderType::Box)
             {
                 b2PolygonShape boxShape;
-                boxShape.SetAsBox(boxCollider.Size.x * transform.Scale.x, boxCollider.Size.y * transform.Scale.y);
+                boxShape.SetAsBox(boxCollider.Size.x * transform.Scale.x, boxCollider.Size.y * transform.Scale.y, b2Vec2(boxCollider.Offset.x, boxCollider.Offset.y), 0.0f);
 
                 b2FixtureDef fixtureDef;
                 fixtureDef.shape = &boxShape;

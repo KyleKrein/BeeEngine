@@ -12,6 +12,7 @@
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Scripting/GameScript.h"
+#include <misc/cpp/imgui_stdlib.h>
 
 namespace BeeEngine::Editor
 {
@@ -89,6 +90,7 @@ namespace BeeEngine::Editor
             AddComponentPopup<CameraComponent>("Camera", entity);
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
             AddComponentPopup<CircleRendererComponent>("Circle", entity);
+            AddComponentPopup<TextRendererComponent>("Text", entity);
             //AddComponentPopup<NativeScriptComponent>("Native Script", entity);
             AddComponentPopup<ScriptComponent>("Script", entity);
             AddComponentPopup<RigidBody2DComponent>("Rigid Body 2D", entity);
@@ -227,6 +229,13 @@ namespace BeeEngine::Editor
             ImGui::ColorEdit4("Color", circle.Color.ValuePtr());
             ImGui::DragFloat("Thickness", &circle.Thickness, 0.025f, 0.0f, 1.0f);
             ImGui::DragFloat("Fade", &circle.Fade, 0.0025f, 0.005f, 1.0f);
+        });
+        DrawComponentUI<TextRendererComponent>("Text Renderer", entity, [this](TextRendererComponent& component){
+           ImGui::InputTextMultiline("Text", &component.Text);
+           ImGui::ColorEdit4("Foreground", component.Configuration.ForegroundColor.ValuePtr());
+           ImGui::ColorEdit4("Background", component.Configuration.BackgroundColor.ValuePtr());
+           ImGui::DragFloat("Kerning offset", &component.Configuration.KerningOffset, 0.025f);
+           ImGui::DragFloat("Line spacing", &component.Configuration.LineSpacing, 0.025f);
         });
 
         DrawComponentUI<ScriptComponent>("Script", entity, [this, entity](ScriptComponent& script) mutable{

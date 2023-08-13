@@ -78,6 +78,9 @@ namespace BeeEngine
             BEE_INTERNAL_CALL(Entity_GetTranslation);
             BEE_INTERNAL_CALL(Entity_SetTranslation);
 
+            BEE_INTERNAL_CALL(TextRendererComponent_GetText);
+            BEE_INTERNAL_CALL(TextRendererComponent_SetText);
+
             BEE_INTERNAL_CALL(Input_IsKeyDown);
             BEE_INTERNAL_CALL(Input_IsMouseButtonDown);
         }
@@ -279,5 +282,31 @@ namespace BeeEngine
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByUUID(id);
         scene->DestroyEntity(entity);
+    }
+
+    MonoString *ScriptGlue::TextRendererComponent_GetText(uint64_t id)
+    {
+        auto entity = GetEntity(id);
+        MonoString* string = mono_string_new(mono_domain_get(), entity.GetComponent<TextRendererComponent>().Text.c_str());
+        return string;
+    }
+
+    void ScriptGlue::TextRendererComponent_SetText(uint64_t id, MonoString *text)
+    {
+        MonoError error {};
+        char* textStr = mono_string_to_utf8_checked(text, &error);
+        if(error.error_code != MONO_ERROR_NONE)
+        {
+            BeeError("Could not convert MonoString to char*: {}", mono_error_get_message(&error));
+            return;
+        }
+        auto entity = GetEntity(id);
+        if(!entity)
+        {
+            BeeError("Could not find entity with id {}", id);
+            mono_free(textStr);
+            return;
+        }
+        entity.GetComponent<TextRendererComponent>().Text = textStr;
     }
 }

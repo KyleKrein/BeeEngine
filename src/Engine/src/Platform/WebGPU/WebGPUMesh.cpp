@@ -10,14 +10,14 @@ namespace BeeEngine::Internal
 {
 
     WebGPUMesh::WebGPUMesh(in<std::vector<Vertex>> vertices)
-    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_VertexCount(vertices.size())
+    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_Size(vertices.size() * sizeof(Vertex))
     {
-        CreateVertexBuffers(vertices);
+        CreateVertexBuffers((void*)vertices.data());
     }
     WebGPUMesh::WebGPUMesh(in<std::vector<Vertex>> vertices, in<std::vector<uint32_t>> indices)
-    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexCount(indices.size()), m_IndexSize(indices.size() * sizeof(uint32_t))
+    : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexCount(indices.size()), m_IndexSize(indices.size() * sizeof(uint32_t)), m_Size(vertices.size() * sizeof(Vertex))
     {
-        CreateVertexBuffers(vertices);
+        CreateVertexBuffers((void*)vertices.data());
         CreateIndexBuffers(indices);
     }
 
@@ -31,12 +31,10 @@ namespace BeeEngine::Internal
             wgpuBufferRelease(m_IndexBuffer);
         }
     }
-
-    void WebGPUMesh::CreateVertexBuffers(in<std::vector<Vertex>> data)
+    void WebGPUMesh::CreateVertexBuffers(void* data)
     {
-        m_Size = data.size() * sizeof(Vertex);
         m_VertexBuffer = m_GraphicsDevice.CreateBuffer(WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex, m_Size);
-        m_GraphicsDevice.CopyDataToBuffer({(byte*)data.data(), m_Size}, m_VertexBuffer);
+        m_GraphicsDevice.CopyDataToBuffer({(byte*)data, m_Size}, m_VertexBuffer);
     }
     void WebGPUMesh::CreateIndexBuffers(in<std::vector<uint32_t>> data)
     {
@@ -51,5 +49,12 @@ namespace BeeEngine::Internal
         {
             wgpuRenderPassEncoderSetIndexBuffer((WGPURenderPassEncoder)(((RenderPass*)commandBuffer)->GetHandle()), m_IndexBuffer, WGPUIndexFormat_Uint32, 0, m_IndexSize);
         }
+    }
+
+    WebGPUMesh::WebGPUMesh(void *data, size_t size, size_t vertexCount, const std::vector<uint32_t> &indices)
+            : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()), m_VertexCount(vertexCount), m_IndexCount(indices.size()), m_IndexSize(indices.size() * sizeof(uint32_t)), m_Size(size)
+    {
+        CreateVertexBuffers(data);
+        CreateIndexBuffers(indices);
     }
 }

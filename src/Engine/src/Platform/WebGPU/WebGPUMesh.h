@@ -13,9 +13,13 @@ namespace BeeEngine::Internal
     public:
         WebGPUMesh(in<std::vector<Vertex>> vertices);
         WebGPUMesh(in<std::vector<Vertex>> vertices, in<std::vector<uint32_t>> indices);
+
+        WebGPUMesh(void* data, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices);
         ~WebGPUMesh() override;
         WebGPUMesh(const WebGPUMesh& other) = delete;
         WebGPUMesh& operator=(const WebGPUMesh& other ) = delete;
+        WebGPUMesh(WebGPUMesh&& other) noexcept = default;
+        WebGPUMesh& operator=(WebGPUMesh&& other) noexcept = default;
         [[nodiscard]] bool IsIndexed() const override
         {
             return m_IndexBuffer != nullptr;
@@ -30,7 +34,7 @@ namespace BeeEngine::Internal
         }
         void Bind(void* commandBuffer) override;
     private:
-        void CreateVertexBuffers(in<std::vector<Vertex>> data);
+        void CreateVertexBuffers(void* data);
         void CreateIndexBuffers(in<std::vector<uint32_t>> data);
 
         WGPUBuffer m_VertexBuffer;

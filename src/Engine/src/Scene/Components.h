@@ -19,6 +19,7 @@
 #include "Core/UUID.h"
 #include "Scripting/MObject.h"
 #include "Scripting/GameScript.h"
+#include "Renderer/TextRenderingConfiguration.h"
 
 namespace BeeEngine
 {
@@ -98,6 +99,12 @@ namespace BeeEngine
         Color4 Color = Color4::White;
         float Thickness = 1.0f;
         float Fade = 0.005f;
+    };
+
+    struct TextRendererComponent
+    {
+        TextRenderingConfiguration Configuration;
+        std::string Text;
     };
 
     /*struct MeshComponent
@@ -214,6 +221,6 @@ namespace BeeEngine
 
     using AllComponents =
             ComponentGroup<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
-            SpriteRendererComponent, CircleRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
+            SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
             RigidBody2DComponent, BoxCollider2DComponent>;
 }

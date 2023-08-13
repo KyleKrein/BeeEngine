@@ -34,6 +34,8 @@ namespace BeeEngine
         static void Entity_GetTranslation(uint64_t id, glm::vec3* outTranslation);
         static void Entity_SetTranslation(uint64_t id, glm::vec3* inTranslation);
         static void Entity_Destroy(uint64_t id);
+        static MonoString * TextRendererComponent_GetText(uint64_t id);
+        static void TextRendererComponent_SetText(uint64_t id, MonoString* text);
         static uint64_t Entity_FindEntityByName(MonoString* name);
         static MonoObject * Entity_GetScriptInstance(uint64_t id);
         static bool Input_IsKeyDown(Key key);

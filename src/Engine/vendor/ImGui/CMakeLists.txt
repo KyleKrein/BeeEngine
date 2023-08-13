@@ -17,6 +17,7 @@ set(ImGui_SOURCES
         ${ImGui_SOURCE_DIR}/imgui.cpp
         ${ImGui_SOURCE_DIR}/imgui_draw.cpp
         ${ImGui_SOURCE_DIR}/imgui_widgets.cpp
+        ${ImGui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
         ${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
         ${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
         ${ImGui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp

@@ -87,7 +87,7 @@ namespace BeeEngine::Internal
         //OPENGL_CHECK_ERRORS //todo fix spamming error 1282
     }
 
-    void OpenGLTexture2D::SetData(gsl::span<std::byte> data)
+    void OpenGLTexture2D::SetData(gsl::span<std::byte> data, uint32_t numberOfChannels)
     {
         BEE_PROFILE_FUNCTION();
         uint32_t bpp = m_InternalFormat == GL_RGBA8 ? 4 : 3;

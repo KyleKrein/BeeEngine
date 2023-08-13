@@ -6,7 +6,8 @@
 #include "Core/DeletionQueue.h"
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 #include "Renderer.h"
-
+#include "MSDFData.h"
+#include "Core/Application.h"
 
 namespace BeeEngine::Internal
 {
@@ -101,5 +102,133 @@ namespace BeeEngine::Internal
         m_Statistics.DrawCallCount = 0;
         m_Statistics.VertexCount = 0;
         m_Statistics.IndexCount = 0;
+    }
+    struct TextInstancedData
+    {
+        glm::vec2 TexCoord0;
+        glm::vec2 TexCoord1;
+        glm::vec2 TexCoord2;
+        glm::vec2 TexCoord3;
+        glm::vec2 PositionOffset0;
+        glm::vec2 PositionOffset1;
+        glm::vec2 PositionOffset2;
+        glm::vec2 PositionOffset3;
+        Color4 ForegroundColor;
+        Color4 BackgroundColor;
+    };
+    void RenderingQueue::SubmitTextImpl(const std::string &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform,
+                                        const TextRenderingConfiguration& config)
+    {
+        auto& textModel = Application::GetInstance().GetAssetManager().GetModel("Renderer_Font");
+
+        auto& fontGeometry = font.GetMSDFData().FontGeometry;
+        auto& metrics = fontGeometry.getMetrics();
+        auto& atlasTexture = font.GetAtlasTexture();
+
+        double x = 0.0;
+        double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
+        double y = 0.0;//-fsScale * metrics.ascenderY;
+
+        size_t length = text.size();
+
+        const auto spaceGlyph =  fontGeometry.getGlyph(' ');
+
+        for (size_t i = 0; i < length; ++i)
+        {
+            char32_t character = text[i];
+
+            if (character == '\r')
+                continue;
+
+            if (character == '\n')
+            {
+                x = 0;
+                y -= fsScale * metrics.lineHeight + config.LineSpacing;
+                continue;
+            }
+            if(character == ' ')
+            {
+                if(i < length - 1)
+                {
+                    double advance = spaceGlyph->getAdvance();
+                    char32_t nextCharacter = text[i + 1];
+                    fontGeometry.getAdvance(advance, character, nextCharacter);
+
+                    x += fsScale * advance + config.KerningOffset;
+                }
+                continue;
+            }
+            if (character == '\t')
+            {
+                if(i < length - 1)
+                {
+                    for (int j = 0; j < 3; ++j)
+                    {
+                        double advance = spaceGlyph->getAdvance();
+                        char32_t nextCharacter = ' ';
+                        fontGeometry.getAdvance(advance, character, nextCharacter);
+
+                        x += fsScale * advance + config.KerningOffset;
+                    }
+                    double advance = spaceGlyph->getAdvance();
+                    char32_t nextCharacter = text[i + 1];
+                    fontGeometry.getAdvance(advance, character, nextCharacter);
+
+                    x += fsScale * advance + config.KerningOffset;
+                }
+                continue;
+            }
+            auto glyph = fontGeometry.getGlyph(character);
+            if(!glyph)
+            {
+                glyph = fontGeometry.getGlyph('?');
+                if(!glyph)
+                    continue;
+            }
+            double al, ab, ar, at;
+            glyph->getQuadAtlasBounds(al, ab, ar, at);
+
+            glm::vec2 texCoordMin{al, ab};
+            glm::vec2 texCoordMax{ar, at};
+
+            double pl, pb, pr, pt;
+            glyph->getQuadPlaneBounds(pl, pb, pr, pt);
+
+            glm::vec2 quadMin{pl, pb};
+            glm::vec2 quadMax{pr, pt};
+
+
+            quadMin *= fsScale, quadMax *= fsScale;
+            quadMin += glm::vec2(x, y), quadMax += glm::vec2(x, y);
+
+            float texelWidth = 1.0f / (float)atlasTexture.GetWidth();
+            float texelHeight = 1.0f / (float)atlasTexture.GetHeight();
+
+            texCoordMin *= glm::vec2(texelWidth, texelHeight);
+            texCoordMax *= glm::vec2(texelWidth, texelHeight);
+
+            TextInstancedData data{
+                .TexCoord0 = texCoordMin,
+                .TexCoord1 = {texCoordMin.x, texCoordMax.y},
+                .TexCoord2 = texCoordMax,
+                .TexCoord3 = {texCoordMax.x, texCoordMin.y},
+                .PositionOffset0 = transform * glm::vec4(quadMin, 0.0f, 1.0f),
+                .PositionOffset1 = transform * glm::vec4{quadMin.x, quadMax.y, 0.0f, 1.0f},
+                .PositionOffset2 = transform * glm::vec4(quadMax, 0.0f, 1.0f),
+                .PositionOffset3 = transform * glm::vec4{quadMax.x, quadMin.y, 0.0f, 1.0f},
+                .ForegroundColor = config.ForegroundColor,
+                .BackgroundColor = config.BackgroundColor,
+            };
+            SubmitInstanceImpl({.Model = &textModel, .BindingSets = {&cameraBindingSet, atlasTexture.GetBindingSet()}}, {(byte*)&data, sizeof(TextInstancedData)});
+
+            if(i < length - 1)
+            {
+                double advance = glyph->getAdvance();
+                char32_t nextCharacter = text[i + 1];
+                fontGeometry.getAdvance(advance, character, nextCharacter);
+
+                x += fsScale * advance + config.KerningOffset;
+            }
+        }
     }
 }

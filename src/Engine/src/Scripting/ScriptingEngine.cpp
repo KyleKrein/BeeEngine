@@ -223,7 +223,6 @@ namespace BeeEngine
                 mono_free(message);
             }
         }
-        script->InvokeOnCreate();
     }
     void ScriptingEngine::OnEntityDestroyed(UUID uuid)
     {
