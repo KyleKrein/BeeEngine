@@ -71,9 +71,9 @@ namespace BeeEngine::Editor
             const auto& path = directoryEntry.path();
             auto filename = path.filename();
             auto extension = path.extension();
-            if(extension == ".csproj" || extension == ".sln" ||
+            if(extension == ".csproj" || extension == ".sln" || filename == ".DS_Store" ||
             (is_directory(path) &&
-            (filename == "beeengine" || filename == ".vs" || filename == ".beeengine")))
+            (filename == "beeengine" || filename == ".vs" || filename == ".beeengine" || filename == ".idea")))
                 continue;
             auto relativePath = std::filesystem::relative(path, m_WorkingDirectory);
             std::string filenameString = relativePath.filename().string();
