@@ -79,7 +79,13 @@ namespace BeeEngine
 
             std::string name = mono_metadata_string_heap(m_MonoImage, cols[MONO_TYPEDEF_NAME]);
             static const char* anType = "<>f__AnonymousType";
-            if(name.contains("<Module>") || name.contains(anType))
+            //static const char* displayType = "<>c__DisplayClass"; //Anonymous type for lambda
+            static const char* compilerGenerated = "<>c";
+            static const char* enumerator = "<GetEnumerator>";
+            static const char* keyHolder = "KeyHolder";
+            if(name.contains("<Module>") || name.contains(anType)
+            || name.contains(compilerGenerated) || name.contains(enumerator)
+            || name.contains(keyHolder))
                 continue;
             const char* ns = mono_metadata_string_heap(m_MonoImage, cols[MONO_TYPEDEF_NAMESPACE]);
 

@@ -253,7 +253,7 @@ namespace BeeEngine.Collections.Weak
             this.Dispose(true);
         }
 
-        protected void Dispose(bool bManual)
+        private void Dispose(bool bManual)
         {
             if (bManual)
             {
