@@ -13,16 +13,19 @@
 #include "Scripting/MAssembly.h"
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptGlue.h"
+#include "Core/AssetManagement/AssetManager.h"
+#include "Core/AssetManagement/EngineAssetRegistry.h"
 
 namespace BeeEngine::Editor
 {
 
     void EditorLayer::OnAttach() noexcept
     {
+        RegisterAssetManager(&m_EditorAssetManager);
+        EngineAssetRegistry::RegisterAssetTypes(&m_EditorAssetManager);
         SetUpMenuBar();
-
-        m_PlayButtonTexture = Texture2D::CreateFromMemory(Internal::GetEmbeddedResource(EmbeddedResource::PlayButtonTexture));
-        m_StopButtonTexture = Texture2D::CreateFromMemory(Internal::GetEmbeddedResource(EmbeddedResource::StopButtonTexture));
+        m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture);
+        m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture);
 
         m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());

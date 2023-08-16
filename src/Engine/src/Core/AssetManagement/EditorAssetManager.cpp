@@ -9,7 +9,7 @@
 namespace BeeEngine
 {
 
-    Ref<Asset> EditorAssetManager::GetAsset(AssetHandle handle) const
+    Ref<Asset> EditorAssetManager::GetAssetRef(AssetHandle handle) const
     {
         BeeExpects(IsAssetHandleValid(handle));
         if(!IsAssetLoaded(handle))
@@ -60,5 +60,16 @@ namespace BeeEngine
     bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const
     {
         return m_AssetMap.contains(handle);
+    }
+
+    Asset * EditorAssetManager::GetAsset(AssetHandle handle) const
+    {
+        BeeExpects(IsAssetHandleValid(handle));
+        if(!IsAssetLoaded(handle))
+        {
+            const auto& metadata = m_AssetRegistry.at(handle);
+            m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
+        }
+        return m_AssetMap.at(handle).get();
     }
 }

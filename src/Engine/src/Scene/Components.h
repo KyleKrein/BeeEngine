@@ -20,6 +20,8 @@
 #include "Scripting/MObject.h"
 #include "Scripting/GameScript.h"
 #include "Renderer/TextRenderingConfiguration.h"
+#include "Core/AssetManagement/EngineAssetRegistry.h"
+#include "Renderer/Font.h"
 
 namespace BeeEngine
 {
@@ -82,16 +84,20 @@ namespace BeeEngine
     struct SpriteRendererComponent
     {
         Color4 Color = Color4::White;
-        Texture2D* Texture = nullptr;
         float TilingFactor = 1.0f;
+        AssetHandle TextureHandle;
+        bool HasTexture = false;
+
+        Texture2D* Texture() const
+        {
+            return &AssetManager::GetAsset<Texture2D>(TextureHandle);
+        }
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
-        explicit SpriteRendererComponent(const Color4& color): Color(color) {}
-        explicit SpriteRendererComponent(Texture2D& texture): Texture(&texture) {}
 
-        operator Texture2D&() { return *Texture; }
-        operator Texture2D&() const { return *Texture; }
+        operator Texture2D&() { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
+        operator Texture2D&() const { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
     };
 
     struct CircleRendererComponent
@@ -105,6 +111,12 @@ namespace BeeEngine
     {
         TextRenderingConfiguration Configuration;
         std::string Text;
+        AssetHandle FontHandle = EngineAssetRegistry::OpenSansRegular;
+
+        Font& Font() const
+        {
+            return AssetManager::GetAsset<BeeEngine::Font>(FontHandle);
+        }
     };
 
     /*struct MeshComponent

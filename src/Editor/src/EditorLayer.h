@@ -17,6 +17,7 @@
 #include "Utils/DynamicLibrary.h"
 #include "Scene/NativeScriptFactory.h"
 #include "NativeScripting/GameBuilder.h"
+#include "Core/AssetManagement/EditorAssetManager.h"
 
 namespace BeeEngine::Editor
 {
@@ -31,6 +32,7 @@ namespace BeeEngine::Editor
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
+        EditorAssetManager m_EditorAssetManager {};
         EditorCamera m_EditorCamera = {};
         DockSpace m_DockSpace {};
         MenuBar m_MenuBar {};

@@ -13,8 +13,11 @@ namespace BeeEngine
     {
         None = 0,
         Texture2D = 1,
-        Shader = 2,
-        Font = 3
+        Font = 2,
+        Shader = 3,
+        Mesh = 4,
+        Material = 5,
+        Model = 6,
     };
     enum class AssetLocation: uint16_t
     {

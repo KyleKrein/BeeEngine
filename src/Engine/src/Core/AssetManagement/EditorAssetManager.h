@@ -9,7 +9,9 @@ namespace BeeEngine
     class EditorAssetManager final: public IAssetManager
     {
     public:
-        [[nodiscard]] Ref<Asset> GetAsset(AssetHandle handle) const final;
+        [[nodiscard]] Ref<Asset> GetAssetRef(AssetHandle handle) const final;
+
+        Asset* GetAsset(AssetHandle handle) const final;
 
         void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type) final;
 
@@ -20,6 +22,8 @@ namespace BeeEngine
         [[nodiscard]] bool IsAssetHandleValid(AssetHandle handle) const final;
 
         [[nodiscard]] bool IsAssetLoaded(AssetHandle handle) const final;
+
+        [[nodiscard]] AssetRegistry& GetAssetRegistry() const final { return m_AssetRegistry; }
 
     private:
         mutable AssetMap m_AssetMap;

@@ -14,7 +14,7 @@
 
 namespace BeeEngine
 {
-    class AssetManager final
+    class InternalAssetManager final
     {
     public:
         [[nodiscard]] Material& LoadMaterial(const std::string& name, const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader);
@@ -23,7 +23,7 @@ namespace BeeEngine
         template<typename VertexType>
         [[nodiscard]] Mesh& LoadMesh(const std::string& name, std::vector<VertexType>& vertices, std::vector<uint32_t>& indices);
         [[nodiscard]] Texture2D& LoadTexture(const std::string& name, const std::filesystem::path& path);
-        [[nodiscard]] Texture2D& LoadTexture(const std::string& name, uint32_t width, uint32_t height);
+        [[nodiscard]] Texture2D& LoadTexture(const std::string& name, uint32_t width, uint32_t height, gsl::span<byte> data);
         [[nodiscard]] Model& LoadModel(const std::string& name, Material& material, Mesh& mesh);
         [[nodiscard]] Font& LoadFont(const std::string& name, const std::filesystem::path& path);
         [[nodiscard]] Font& LoadFont(const std::string& name, gsl::span<byte> data);

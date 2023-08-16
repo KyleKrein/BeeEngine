@@ -70,7 +70,7 @@ namespace BeeEngine{
         void Run();
 
         void Close();
-        AssetManager& GetAssetManager()
+        InternalAssetManager& GetAssetManager()
         {
             return m_AssetManager;
         }
@@ -114,6 +114,6 @@ namespace BeeEngine{
         LayerStack m_Layers;
         EventQueue m_EventQueue;
 
-        AssetManager m_AssetManager;
+        InternalAssetManager m_AssetManager;
     };
 }

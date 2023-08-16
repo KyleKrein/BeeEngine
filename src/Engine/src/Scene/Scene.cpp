@@ -159,7 +159,7 @@ namespace BeeEngine
             {
                 auto [transform, spriteComponent] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
                 SpriteInstanceBufferData data {transform.GetTransform(), spriteComponent.Color, spriteComponent.TilingFactor};
-                std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.Texture ? spriteComponent.Texture->GetBindingSet() : m_BlankTexture->GetBindingSet())};
+                std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture()->GetBindingSet() : m_BlankTexture->GetBindingSet())};
                 Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
             }
 
@@ -173,11 +173,10 @@ namespace BeeEngine
             }
 
             auto textGroup = m_Registry.view<TransformComponent, TextRendererComponent>();
-            auto& font = Application::GetInstance().GetAssetManager().GetFont("OpenSansRegular");
             for( auto entity : textGroup )
             {
                 auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
-                Renderer::DrawString(textComponent.Text, font, *m_CameraBindingSet,transform.GetTransform(), textComponent.Configuration);
+                Renderer::DrawString(textComponent.Text, textComponent.Font(), *m_CameraBindingSet,transform.GetTransform(), textComponent.Configuration);
             }
         }
     }
@@ -191,7 +190,7 @@ namespace BeeEngine
         {
             auto [transform, spriteComponent] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
             SpriteInstanceBufferData data {transform.GetTransform(), spriteComponent.Color, spriteComponent.TilingFactor};
-            std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.Texture ? spriteComponent.Texture->GetBindingSet() : m_BlankTexture->GetBindingSet())};
+            std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture()->GetBindingSet() : m_BlankTexture->GetBindingSet())};
             Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
         }
 
@@ -205,11 +204,10 @@ namespace BeeEngine
         }
 
         auto textGroup = m_Registry.view<TransformComponent, TextRendererComponent>();
-        auto& font = Application::GetInstance().GetAssetManager().GetFont("OpenSansRegular");
         for( auto entity : textGroup )
         {
             auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
-            Renderer::DrawString(textComponent.Text, font, *m_CameraBindingSet,transform.GetTransform(), textComponent.Configuration);
+            Renderer::DrawString(textComponent.Text, textComponent.Font(), *m_CameraBindingSet,transform.GetTransform(), textComponent.Configuration);
         }
     }
 

@@ -27,7 +27,15 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/AssetManagement/AssetManager.cpp
         src/Core/AssetManagement/AssetManager.h
         src/Core/AssetManagement/EditorAssetManager.cpp
-        src/Core/AssetManagement/EditorAssetManager.h)
+        src/Core/AssetManagement/EditorAssetManager.h
+        src/Core/AssetManagement/FontImporter.cpp
+        src/Core/AssetManagement/FontImporter.h
+        src/Core/AssetManagement/MeshImporter.cpp
+        src/Core/AssetManagement/MeshImporter.h
+        src/Core/AssetManagement/EngineAssetRegistry.cpp
+        src/Core/AssetManagement/EngineAssetRegistry.h
+        src/Core/AssetManagement/AssetRegistrySerializer.cpp
+        src/Core/AssetManagement/AssetRegistrySerializer.h)
 
 function(DesktopPlatformsOnly)
     add_compile_definitions(DESKTOP_PLATFORM)
