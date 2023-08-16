@@ -11,9 +11,7 @@ namespace BeeEngine::Internal
     class WebGPUTexture2D final: public Texture2D
     {
     public:
-        WebGPUTexture2D(std::string_view path);
-        WebGPUTexture2D(uint32_t width, uint32_t height);
-        WebGPUTexture2D(gsl::span<std::byte> data);
+        WebGPUTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels);
         WebGPUTexture2D(WGPUTextureView textureView, uint32_t width, uint32_t height);
         ~WebGPUTexture2D() override;
 

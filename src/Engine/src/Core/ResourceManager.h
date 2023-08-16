@@ -10,6 +10,8 @@
 #include "Debug/Instrumentor.h"
 #include "Core/Application.h"
 #include <sstream>
+#include "Core/AssetManagement/Asset.h"
+#include <string_view>
 
 namespace BeeEngine
 {
@@ -124,6 +126,27 @@ namespace BeeEngine
             script << "\t}\n";
             script << "}\n";
             return script.str();
+        }
+
+        static AssetType GetAssetTypeFromFilePath(std::string_view extension)
+        {
+            if(extension == ".png" or
+            extension == ".jpg" or
+            extension == ".jpeg" or
+            extension == ".bmp")
+            {
+                return AssetType::Texture2D;
+            }
+            if(extension == ".ttf")
+            {
+                return AssetType::Font;
+            }
+            if(extension == ".frag" or
+            extension == ".vert")
+            {
+                return AssetType::Shader;
+            }
+            return AssetType::None;
         }
     };
 }

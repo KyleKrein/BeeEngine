@@ -16,7 +16,18 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Renderer/Font.h
         src/Renderer/MSDFData.h
         src/Renderer/TextRenderingConfiguration.h
-        src/Threading/ThreadPool.h)
+        src/Threading/ThreadPool.h
+        src/Core/AssetManagement/Asset.h
+        src/Core/AssetManagement/IAssetManager.h
+        src/Core/AssetManagement/AssetImporter.cpp
+        src/Core/AssetManagement/AssetImporter.h
+        src/Core/AssetManagement/AssetMetadata.h
+        src/Core/AssetManagement/TextureImporter.cpp
+        src/Core/AssetManagement/TextureImporter.h
+        src/Core/AssetManagement/AssetManager.cpp
+        src/Core/AssetManagement/AssetManager.h
+        src/Core/AssetManagement/EditorAssetManager.cpp
+        src/Core/AssetManagement/EditorAssetManager.h)
 
 function(DesktopPlatformsOnly)
     add_compile_definitions(DESKTOP_PLATFORM)
