@@ -17,7 +17,8 @@
 namespace BeeEngine::Editor
 {
 
-    InspectorPanel::InspectorPanel(const Ref<Scene> &context)
+    InspectorPanel::InspectorPanel(const Ref<Scene> &context, EditorAssetManager* assetManager)
+    : m_AssetManager(assetManager)
     {
         SetContext(context);
     }
@@ -187,12 +188,13 @@ namespace BeeEngine::Editor
         {
             ImGui::ColorEdit4("Color", sprite.Color.ValuePtr());
 
-            if(sprite.Texture)
+            if(sprite.HasTexture)
             {
-                float aspectRatio = (float)sprite.Texture->GetWidth() / (float)sprite.Texture->GetHeight();
-                if(ImGui::ImageButton((void*)sprite.Texture->GetRendererID(), ImVec2(100.0f * aspectRatio, 100.0f * aspectRatio), { 0, 1 }, { 1, 0 }))
+                auto* texture = sprite.Texture();
+                float aspectRatio = (float)texture->GetWidth() / (float)texture->GetHeight();
+                if(ImGui::ImageButton((void*)texture->GetRendererID(), ImVec2(100.0f * aspectRatio, 100.0f * aspectRatio), { 0, 1 }, { 1, 0 }))
                 {
-                    sprite.Texture = nullptr;
+                    sprite.HasTexture = false;
                 }
             }
             else
@@ -214,7 +216,11 @@ namespace BeeEngine::Editor
                         const char* path = (const char*)payload->Data;
                         texturePath = std::filesystem::path(m_WorkingDirectory) / path;
                     }
-                    sprite.Texture = &Application::GetInstance().GetAssetManager().LoadTexture(ResourceManager::GetNameFromFilePath(texturePath.string()),texturePath);
+                    if(ResourceManager::IsTexture2DExtension(texturePath.extension()))
+                    {
+                        sprite.TextureHandle = *m_AssetManager->GetAssetHandleByName(ResourceManager::GetNameFromFilePath(texturePath.string()));
+                        sprite.HasTexture = true;
+                    }
                 }
                 ImGui::EndDragDropTarget();
             }

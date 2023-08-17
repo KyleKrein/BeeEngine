@@ -5,14 +5,17 @@
 #pragma once
 
 #include "BeeEngine.h"
+#include "Core/AssetManagement/EditorAssetManager.h"
 
 namespace BeeEngine::Editor
 {
     class InspectorPanel
     {
     public:
-        InspectorPanel() = default;
-        explicit InspectorPanel(const Ref<Scene>& context);
+        InspectorPanel(EditorAssetManager* assetManager)
+        : m_AssetManager(assetManager)
+        {}
+        explicit InspectorPanel(const Ref<Scene>& context, EditorAssetManager* assetManager);
 
         void SetContext(const Ref<Scene>& context);
 
@@ -24,6 +27,7 @@ namespace BeeEngine::Editor
         }
     private:
         Ref<Scene> m_Context;
+        EditorAssetManager* m_AssetManager = nullptr;
 
         std::filesystem::path m_WorkingDirectory;
 

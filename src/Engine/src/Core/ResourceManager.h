@@ -148,5 +148,13 @@ namespace BeeEngine
             }
             return AssetType::None;
         }
+
+        static bool IsTexture2DExtension(const std::filesystem::path &extension)
+        {
+            return extension == ".png" or
+                   extension == ".jpg" or
+                   extension == ".jpeg" or
+                   extension == ".bmp";
+        }
     };
 }

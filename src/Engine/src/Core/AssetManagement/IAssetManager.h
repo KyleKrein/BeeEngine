@@ -25,6 +25,6 @@ namespace BeeEngine
         virtual bool IsAssetHandleValid(AssetHandle handle) const = 0;
         virtual bool IsAssetLoaded(AssetHandle handle) const = 0;
 
-        virtual AssetRegistry& GetAssetRegistry() const = 0;
+        virtual AssetRegistry& GetAssetRegistry() = 0;
     };
 }

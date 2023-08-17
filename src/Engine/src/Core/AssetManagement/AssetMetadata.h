@@ -7,6 +7,7 @@
 #include "Asset.h"
 #include "Core/TypeDefines.h"
 #include "gsl/span"
+#include <variant>
 
 namespace BeeEngine
 {
@@ -15,8 +16,7 @@ namespace BeeEngine
         std::string Name;
         AssetType Type = AssetType::None;
         AssetLocation Location = AssetLocation::FileSystem;
-        gsl::span<byte> Data;
-        std::filesystem::path FilePath;
+        std::variant<gsl::span<byte>, std::filesystem::path> Data;
 
         operator bool() const { return Type != AssetType::None; }
     };

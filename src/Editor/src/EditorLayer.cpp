@@ -15,6 +15,7 @@
 #include "Scripting/ScriptGlue.h"
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/AssetManagement/EngineAssetRegistry.h"
+#include "Core/AssetManagement/AssetRegistrySerializer.h"
 
 namespace BeeEngine::Editor
 {
@@ -120,6 +121,12 @@ namespace BeeEngine::Editor
                 ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 
                 SetupGameLibrary();
+
+                if(std::filesystem::exists(m_ProjectFile->GetProjectAssetRegistryPath()))
+                {
+                    AssetRegistrySerializer assetRegistrySerializer(&m_EditorAssetManager, m_ProjectFile->GetProjectPath());
+                    assetRegistrySerializer.Deserialize(m_ProjectFile->GetProjectAssetRegistryPath());
+                }
 
                 auto scenePath = m_ProjectFile->GetLastUsedScenePath();
                 if(!scenePath.empty())

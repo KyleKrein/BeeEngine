@@ -44,7 +44,7 @@ namespace BeeEngine
     }
 
     template<typename ...Component>
-    void ScriptGlue::RegisterComponent(ComponentGroup<Component...>)
+    void ScriptGlue::RegisterComponent(TypeSequence<Component...>)
     {
         RegisterComponent<Component...>();
     }

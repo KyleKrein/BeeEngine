@@ -41,7 +41,7 @@ namespace BeeEngine::Editor
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         std::filesystem::path m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
-        InspectorPanel m_InspectorPanel {};
+        InspectorPanel m_InspectorPanel {&m_EditorAssetManager};
         Scope<ProjectFile> m_ProjectFile = nullptr;
 
         Ref<Scene> m_ActiveScene = nullptr;

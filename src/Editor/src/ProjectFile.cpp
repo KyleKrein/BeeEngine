@@ -6,6 +6,7 @@
 #include "Utils/File.h"
 #include "Core/Logging/Log.h"
 #include "VSProjectGeneration.h"
+#include "Core/ResourceManager.h"
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 namespace BeeEngine::Editor
@@ -102,7 +103,7 @@ namespace BeeEngine::Editor
         out << YAML::BeginMap;
 
         out << YAML::Key << "ProjectName" << YAML::Value << m_ProjectName;
-        out << YAML::Key << "LastUsedScene" << YAML::Value << m_LastUsedScenePath.string();
+        out << YAML::Key << "LastUsedScene" << YAML::Value << ResourceManager::ProcessFilePath(m_LastUsedScenePath.string());
         out << YAML::EndMap;
 
         std::ofstream fout(m_ProjectFilePath, std::ios::out);
@@ -148,5 +149,15 @@ namespace BeeEngine::Editor
         {
             m_AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_AppAssemblyPath).string(), [this](const std::string & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         }
+    }
+
+    const std::filesystem::path &ProjectFile::GetProjectFilePath() const noexcept
+    {
+        return m_ProjectFilePath;
+    }
+
+    const std::filesystem::path &ProjectFile::GetProjectAssetRegistryPath() const noexcept
+    {
+        return m_ProjectAssetRegistryPath;
     }
 }

@@ -16,17 +16,17 @@ namespace BeeEngine
         stbi_uc* data = nullptr;
         if(metadata.Location == AssetLocation::FileSystem)
         {
-            std::string path = metadata.FilePath.string();
+            std::string path = std::get<std::filesystem::path>(metadata.Data).string();
             data = stbi_load(path.c_str(), &width, &height, &channels, 4);
         }
         else
         {
-            BeeExpects(!metadata.Data.empty());
-            data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(metadata.Data.data()), gsl::narrow_cast<int>(metadata.Data.size()), &width, &height, &channels, 4);
+            BeeExpects(!std::get<gsl::span<byte>>(metadata.Data).empty());
+            data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(std::get<gsl::span<byte>>(metadata.Data).data()), gsl::narrow_cast<int>(std::get<gsl::span<byte>>(metadata.Data).size()), &width, &height, &channels, 4);
         }
         if (!data)
         {
-            BeeCoreError("Failed to load image: {0}", metadata.Location == AssetLocation::FileSystem ? metadata.FilePath.string() : "from memory");
+            BeeCoreError("Failed to load image: {0}", metadata.Location == AssetLocation::FileSystem ? std::get<std::filesystem::path>(metadata.Data).string() : "from memory");
             return nullptr;
         }
         if (channels == 3)

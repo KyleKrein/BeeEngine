@@ -36,12 +36,13 @@ namespace BeeEngine
     {
         BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
         AssetMetadata metadata;
-        metadata.FilePath = path;
+        metadata.Data = path;
         std::string pathStr = path.string();
         metadata.Name = ResourceManager::GetNameFromFilePath(pathStr);
         metadata.Type = ResourceManager::GetAssetTypeFromFilePath(pathStr);
         metadata.Location = AssetLocation::FileSystem;
         m_AssetRegistry[handle] = metadata;
+        m_AssetNameMap[metadata.Name] = handle;
         BeeEnsures(IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
     }
 
@@ -71,5 +72,14 @@ namespace BeeEngine
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
         }
         return m_AssetMap.at(handle).get();
+    }
+
+    const AssetHandle* EditorAssetManager::GetAssetHandleByName(std::string_view name) const
+    {
+        if(!m_AssetNameMap.contains(name.data()))
+        {
+            return nullptr;
+        }
+        return &m_AssetNameMap.at(name.data());
     }
 }

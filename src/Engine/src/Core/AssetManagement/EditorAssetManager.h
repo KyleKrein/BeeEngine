@@ -13,6 +13,8 @@ namespace BeeEngine
 
         Asset* GetAsset(AssetHandle handle) const final;
 
+        const AssetHandle*  GetAssetHandleByName(std::string_view name) const;
+
         void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type) final;
 
         void LoadAsset(const std::filesystem::path &path, AssetHandle handle) final;
@@ -23,10 +25,11 @@ namespace BeeEngine
 
         [[nodiscard]] bool IsAssetLoaded(AssetHandle handle) const final;
 
-        [[nodiscard]] AssetRegistry& GetAssetRegistry() const final { return m_AssetRegistry; }
+        [[nodiscard]] AssetRegistry& GetAssetRegistry() final { return m_AssetRegistry; }
 
     private:
         mutable AssetMap m_AssetMap;
         AssetRegistry m_AssetRegistry;
+        std::map<std::string, AssetHandle> m_AssetNameMap;
     };
 }

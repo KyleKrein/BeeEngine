@@ -377,7 +377,7 @@ namespace BeeEngine
     }
 
     template<typename ...Component>
-    static void CopyComponents(ComponentGroup<Component...> c,entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
+    static void CopyComponents(TypeSequence<Component...> c,entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
     {
         (CopyComponent<Component>(dst, src, srcEntity, dstEntity), ...);
     }

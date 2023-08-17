@@ -22,6 +22,7 @@
 #include "Renderer/TextRenderingConfiguration.h"
 #include "Core/AssetManagement/EngineAssetRegistry.h"
 #include "Renderer/Font.h"
+#include "Core/TypeSequence.h"
 
 namespace BeeEngine
 {
@@ -227,12 +228,8 @@ namespace BeeEngine
         void* RuntimeFixture = nullptr;
     };
 
-
-    template<typename ... Component>
-    struct ComponentGroup{};
-
     using AllComponents =
-            ComponentGroup<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
+            TypeSequence<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
             SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
             RigidBody2DComponent, BoxCollider2DComponent>;
 }

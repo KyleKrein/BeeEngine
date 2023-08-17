@@ -20,7 +20,7 @@ namespace BeeEngine
         template<typename ...Component>
         static void RegisterComponent();
         template<typename ...Component>
-        static void RegisterComponent(ComponentGroup<Component...>);
+        static void RegisterComponent(TypeSequence<Component...>);
 
         static void Log_Warn(MonoString* message);
         static void Log_Info(MonoString* message);
