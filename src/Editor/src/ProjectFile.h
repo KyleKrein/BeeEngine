@@ -6,6 +6,7 @@
 #include <filesystem>
 #include "FileWatch.hpp"
 #include "Core/TypeDefines.h"
+#include "Core/UUID.h"
 
 namespace BeeEngine::Editor
 {
@@ -38,6 +39,11 @@ namespace BeeEngine::Editor
             return temp;
         }
 
+        UUID GetAssetRegistryID() const noexcept
+        {
+            return m_AssetRegistryID;
+        }
+
         void RenameProject(const std::string& newName) noexcept;
 
         void RegenerateSolution();
@@ -57,5 +63,6 @@ namespace BeeEngine::Editor
         Scope<filewatch::FileWatch<std::string>> m_AppAssemblyFileWatcher = nullptr;
         mutable bool m_AssemblyReloadPending = false;
         std::filesystem::path m_AppAssemblyPath;
+        BeeEngine::UUID m_AssetRegistryID;
     };
 }

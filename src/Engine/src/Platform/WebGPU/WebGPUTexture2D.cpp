@@ -7,6 +7,34 @@
 
 namespace BeeEngine::Internal
 {
+    WebGPUTexture2D::WebGPUTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels)
+    {
+        m_Width = width;
+        m_Height = height;
+        WGPUDevice device;
+        WGPUTextureDescriptor textureDesc;
+        CreateTextureAndSampler(m_Width, m_Height, device, textureDesc);
+
+        if(numberOfChannels == 3)
+        {
+            std::vector<std::byte> dataWithAlpha;
+            dataWithAlpha.resize(data.size() * 4 / 3);
+            for(int i = 0; i < data.size() / 3; i++)
+            {
+                dataWithAlpha[i * 4] = data[i * 3];
+                dataWithAlpha[i * 4 + 1] = data[i * 3 + 1];
+                dataWithAlpha[i * 4 + 2] = data[i * 3 + 2];
+                dataWithAlpha[i * 4 + 3] = std::byte(255);
+            }
+            WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, textureDesc.mipLevelCount, (const unsigned char *)dataWithAlpha.data());
+        }
+        else
+        {
+            WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, textureDesc.mipLevelCount, (const unsigned char *)data.data());
+        }
+        CreateTextureView(textureDesc);
+    }
+
     void WebGPUTexture2D::CreateTextureView(const WGPUTextureDescriptor &textureDesc)
     {
         WGPUTextureViewDescriptor textureViewDesc;
@@ -55,17 +83,6 @@ namespace BeeEngine::Internal
         samplerDesc.compare = WGPUCompareFunction_Undefined;
         samplerDesc.maxAnisotropy = 1;
         m_Sampler = wgpuDeviceCreateSampler(device, &samplerDesc);
-    }
-
-    WebGPUTexture2D::WebGPUTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels)
-    {
-        m_Width = width;
-        m_Height = height;
-        WGPUDevice device;
-        WGPUTextureDescriptor textureDesc;
-        CreateTextureAndSampler(m_Width, m_Height, device, textureDesc);
-        CreateTextureView(textureDesc);
-        SetData(data, numberOfChannels);
     }
 
     WebGPUTexture2D::~WebGPUTexture2D()

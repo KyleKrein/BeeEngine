@@ -12,7 +12,7 @@
 namespace BeeEngine
 {
     using AssetMap = std::map<AssetHandle, Ref<Asset>>;
-    using AssetRegistry = std::map<AssetHandle, AssetMetadata>;
+    using AssetRegistry = std::map<UUID, std::map<UUID,AssetMetadata>>;
     class IAssetManager
     {
     public:

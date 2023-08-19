@@ -17,45 +17,24 @@ namespace BeeEngine
         if(metadata.Location == AssetLocation::FileSystem)
         {
             std::string path = std::get<std::filesystem::path>(metadata.Data).string();
-            data = stbi_load(path.c_str(), &width, &height, &channels, 4);
+            data = stbi_load(path.c_str(), &width, &height, &channels, 0);
         }
         else
         {
             BeeExpects(!std::get<gsl::span<byte>>(metadata.Data).empty());
-            data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(std::get<gsl::span<byte>>(metadata.Data).data()), gsl::narrow_cast<int>(std::get<gsl::span<byte>>(metadata.Data).size()), &width, &height, &channels, 4);
+            data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(std::get<gsl::span<byte>>(metadata.Data).data()), gsl::narrow_cast<int>(std::get<gsl::span<byte>>(metadata.Data).size()), &width, &height, &channels, 0);
         }
         if (!data)
         {
             BeeCoreError("Failed to load image: {0}", metadata.Location == AssetLocation::FileSystem ? std::get<std::filesystem::path>(metadata.Data).string() : "from memory");
             return nullptr;
         }
-        if (channels == 3)
-        {
-            BeeCoreTrace("Converting image from RGB to RGBA");
-            // Add alpha channel
-            auto *dataWithAlpha = new unsigned char[width * height * 4];
-            for (int i = 0; i < width * height; ++i)
-            {
-                dataWithAlpha[i * 4] = data[i * 3];
-                dataWithAlpha[i * 4 + 1] = data[i * 3 + 1];
-                dataWithAlpha[i * 4 + 2] = data[i * 3 + 2];
-                dataWithAlpha[i * 4 + 3] = 255;
-            }
-            stbi_image_free(data);
-            data = dataWithAlpha;
-        }
 
-        auto result =  Texture2D::Create(width, height, {(byte*)data, size_t(width * height * 4)});
+        auto result =  Texture2D::Create(width, height, {(byte*)data, size_t(width * height * channels)}, channels);
         result->Handle = handle;
         result->Location = metadata.Location;
-        if (channels == 3)
-        {
-            delete[] data;
-        }
-        else
-        {
-            stbi_image_free(data);
-        }
+
+        stbi_image_free(data);
         return result;
     }
 }

@@ -79,6 +79,7 @@ namespace BeeEngine::Editor
         {
             goto init;
         }
+        m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
         SetLastUsedScenePath(data["LastUsedScene"].as<std::string>());
     }
 
@@ -103,6 +104,7 @@ namespace BeeEngine::Editor
         out << YAML::BeginMap;
 
         out << YAML::Key << "ProjectName" << YAML::Value << m_ProjectName;
+        out << YAML::Key << "Asset Registry ID" << YAML::Value << (uint64_t)m_AssetRegistryID;
         out << YAML::Key << "LastUsedScene" << YAML::Value << ResourceManager::ProcessFilePath(m_LastUsedScenePath.string());
         out << YAML::EndMap;
 

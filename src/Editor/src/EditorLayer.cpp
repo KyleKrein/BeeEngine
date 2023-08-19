@@ -22,8 +22,6 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnAttach() noexcept
     {
-        RegisterAssetManager(&m_EditorAssetManager);
-        EngineAssetRegistry::RegisterAssetTypes(&m_EditorAssetManager);
         SetUpMenuBar();
         m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture);
         m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture);
@@ -124,9 +122,11 @@ namespace BeeEngine::Editor
 
                 if(std::filesystem::exists(m_ProjectFile->GetProjectAssetRegistryPath()))
                 {
-                    AssetRegistrySerializer assetRegistrySerializer(&m_EditorAssetManager, m_ProjectFile->GetProjectPath());
+                    AssetRegistrySerializer assetRegistrySerializer(&m_EditorAssetManager, m_ProjectFile->GetProjectPath(), m_ProjectFile->GetAssetRegistryID());
                     assetRegistrySerializer.Deserialize(m_ProjectFile->GetProjectAssetRegistryPath());
                 }
+
+                m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
 
                 auto scenePath = m_ProjectFile->GetLastUsedScenePath();
                 if(!scenePath.empty())
@@ -156,6 +156,8 @@ namespace BeeEngine::Editor
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
+
+                m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
 
                 SetupGameLibrary();
             }
@@ -373,6 +375,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::SaveScene()
     {
+        SaveAssetRegistry();
         if(m_ScenePath.empty())
         {
             auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
@@ -398,5 +401,11 @@ namespace BeeEngine::Editor
             return true;
         }
         return false;
+    }
+
+    void EditorLayer::SaveAssetRegistry()
+    {
+        AssetRegistrySerializer serializer(&m_EditorAssetManager, m_ProjectFile->GetProjectPath(), m_ProjectFile->GetAssetRegistryID());
+        serializer.Serialize(m_ProjectFile->GetProjectAssetRegistryPath());
     }
 }

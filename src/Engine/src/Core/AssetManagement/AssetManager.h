@@ -28,9 +28,16 @@ namespace BeeEngine
             return *(T*)s_AssetManager->GetAsset(handle);
         }
 
+        static bool IsAssetHandleValid(const AssetHandle& handle)
+        {
+            BeeExpects(s_AssetManager);
+            return s_AssetManager->IsAssetHandleValid(handle);
+        }
+
     private:
         static IAssetManager* s_AssetManager;
         friend class Application;
         friend class Layer;
+        friend class EditorAssetManager;
     };
 }

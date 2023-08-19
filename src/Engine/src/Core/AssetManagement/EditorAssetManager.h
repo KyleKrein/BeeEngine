@@ -9,6 +9,7 @@ namespace BeeEngine
     class EditorAssetManager final: public IAssetManager
     {
     public:
+        EditorAssetManager();
         [[nodiscard]] Ref<Asset> GetAssetRef(AssetHandle handle) const final;
 
         Asset* GetAsset(AssetHandle handle) const final;

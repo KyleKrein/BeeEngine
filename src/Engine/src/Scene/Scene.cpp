@@ -154,37 +154,21 @@ namespace BeeEngine
             auto cameraViewProj = mainCamera->GetProjectionMatrix() * glm::inverse(cameraTransform);
             m_CameraUniformBuffer->SetData(&cameraViewProj, sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
 
-            auto spriteGroup = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-            for( auto entity : spriteGroup )
-            {
-                auto [transform, spriteComponent] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
-                SpriteInstanceBufferData data {transform.GetTransform(), spriteComponent.Color, spriteComponent.TilingFactor};
-                std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture()->GetBindingSet() : m_BlankTexture->GetBindingSet())};
-                Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
-            }
+            RenderScene();
 
-            auto circleGroup = m_Registry.view<TransformComponent, CircleRendererComponent>();
-            std::vector<BindingSet*> circleBindingSets {m_CameraBindingSet.get()};
-            for( auto entity : circleGroup )
-            {
-                auto [transform, circleComponent] = circleGroup.get<TransformComponent, CircleRendererComponent>(entity);
-                CircleInstanceBufferData data {transform.GetTransform(), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
-                Renderer::SubmitInstance(*m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
-            }
-
-            auto textGroup = m_Registry.view<TransformComponent, TextRendererComponent>();
-            for( auto entity : textGroup )
-            {
-                auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
-                Renderer::DrawString(textComponent.Text, textComponent.Font(), *m_CameraBindingSet,transform.GetTransform(), textComponent.Configuration);
-            }
         }
     }
+
     void Scene::UpdateEditor(EditorCamera& camera)
     {
         auto cameraViewProj = camera.GetViewProjection();
         m_CameraUniformBuffer->SetData(glm::value_ptr(cameraViewProj), sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
 
+        RenderScene();
+    }
+
+    void Scene::RenderScene()
+    {
         auto spriteGroup = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
         for( auto entity : spriteGroup )
         {
@@ -207,7 +191,7 @@ namespace BeeEngine
         for( auto entity : textGroup )
         {
             auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
-            Renderer::DrawString(textComponent.Text, textComponent.Font(), *m_CameraBindingSet,transform.GetTransform(), textComponent.Configuration);
+            Renderer::DrawString(textComponent.Text, textComponent.Font(), *m_CameraBindingSet, transform.GetTransform(), textComponent.Configuration);
         }
     }
 
@@ -377,7 +361,7 @@ namespace BeeEngine
     }
 
     template<typename ...Component>
-    static void CopyComponents(TypeSequence<Component...> c,entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
+    static void CopyComponents(TypeSequence<Component...>,entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
     {
         (CopyComponent<Component>(dst, src, srcEntity, dstEntity), ...);
     }

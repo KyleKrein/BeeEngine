@@ -87,5 +87,7 @@ namespace BeeEngine::Editor
         void SetScene(const Ref <Scene> &sharedPtr);
 
         void SaveScene();
+
+        void SaveAssetRegistry();
     };
 }

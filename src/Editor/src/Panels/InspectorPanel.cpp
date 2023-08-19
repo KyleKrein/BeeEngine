@@ -218,8 +218,16 @@ namespace BeeEngine::Editor
                     }
                     if(ResourceManager::IsTexture2DExtension(texturePath.extension()))
                     {
-                        sprite.TextureHandle = *m_AssetManager->GetAssetHandleByName(ResourceManager::GetNameFromFilePath(texturePath.string()));
+                        auto name = ResourceManager::GetNameFromFilePath(texturePath.string());
+                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                        if(!handlePtr)
+                        {
+                            m_AssetManager->LoadAsset(texturePath, {m_ProjectAssetRegistryID});
+                            handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                        }
+                        BeeCoreAssert(handlePtr, "Failed to load texture from path: {0}", texturePath.string());
                         sprite.HasTexture = true;
+                        sprite.TextureHandle = *handlePtr;
                     }
                 }
                 ImGui::EndDragDropTarget();

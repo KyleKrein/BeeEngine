@@ -18,6 +18,10 @@ namespace BeeEngine::Editor
         explicit InspectorPanel(const Ref<Scene>& context, EditorAssetManager* assetManager);
 
         void SetContext(const Ref<Scene>& context);
+        void SetProjectAssetRegistryID(UUID id)
+        {
+            m_ProjectAssetRegistryID = id;
+        }
 
         void OnGUIRender(Entity selectedEntity) noexcept;
 
@@ -26,6 +30,7 @@ namespace BeeEngine::Editor
             m_WorkingDirectory = path;
         }
     private:
+        UUID m_ProjectAssetRegistryID;
         Ref<Scene> m_Context;
         EditorAssetManager* m_AssetManager = nullptr;
 

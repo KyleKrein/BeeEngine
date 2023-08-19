@@ -5,10 +5,43 @@
 #pragma once
 
 #include "Core/UUID.h"
-
 namespace BeeEngine
 {
-    using AssetHandle = UUID;
+    struct AssetHandle
+    {
+        UUID RegistryID {};
+        UUID AssetID {};
+        constexpr AssetHandle() = default;
+        constexpr AssetHandle(UUID registryID, UUID assetID)
+            : RegistryID(registryID), AssetID(assetID)
+        {}
+        AssetHandle(UUID registryID)
+                : RegistryID(registryID)
+        {}
+        constexpr AssetHandle(AssetHandle&& other) noexcept
+            : RegistryID(other.RegistryID), AssetID(other.AssetID)
+        {}
+        constexpr AssetHandle(const AssetHandle& other) noexcept
+            : RegistryID(other.RegistryID), AssetID(other.AssetID)
+        {}
+        constexpr AssetHandle& operator=(AssetHandle&& other) noexcept
+        {
+            RegistryID = other.RegistryID;
+            AssetID = other.AssetID;
+            return *this;
+        }
+        constexpr AssetHandle& operator=(const AssetHandle& other) noexcept
+        {
+            RegistryID = other.RegistryID;
+            AssetID = other.AssetID;
+            return *this;
+        }
+
+        bool operator < (const AssetHandle& other) const
+        {
+            return RegistryID < other.RegistryID || (RegistryID == other.RegistryID && AssetID < other.AssetID);
+        }
+    };
     enum class AssetType: uint16_t
     {
         None = 0,
@@ -32,4 +65,16 @@ namespace BeeEngine
 
         virtual ~Asset() = default;
     };
+}
+namespace std
+{
+    template<>
+    struct hash<BeeEngine::AssetHandle>
+    {
+        std::size_t operator()(const BeeEngine::AssetHandle& uuid) const
+        {
+            return hash<BeeEngine::UUID>()(uuid.RegistryID) / 2 + hash<BeeEngine::UUID>()(uuid.AssetID) / 2;
+        }
+    };
+
 }

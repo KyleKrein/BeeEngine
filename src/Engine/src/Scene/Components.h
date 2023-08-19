@@ -23,6 +23,7 @@
 #include "Core/AssetManagement/EngineAssetRegistry.h"
 #include "Renderer/Font.h"
 #include "Core/TypeSequence.h"
+#include "Core/AssetManagement/AssetManager.h"
 
 namespace BeeEngine
 {

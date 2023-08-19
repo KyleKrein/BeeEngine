@@ -5,6 +5,7 @@
 #include "EditorAssetManager.h"
 #include "Core/ResourceManager.h"
 #include "AssetImporter.h"
+#include "EngineAssetRegistry.h"
 
 namespace BeeEngine
 {
@@ -14,7 +15,7 @@ namespace BeeEngine
         BeeExpects(IsAssetHandleValid(handle));
         if(!IsAssetLoaded(handle))
         {
-            const auto& metadata = m_AssetRegistry.at(handle);
+            const auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
         }
         return m_AssetMap.at(handle);
@@ -28,22 +29,34 @@ namespace BeeEngine
         metadata.Type = type;
         metadata.Location = AssetLocation::Embedded;
         metadata.Data = data;
-        m_AssetRegistry[handle] = metadata;
+        m_AssetRegistry[handle.RegistryID][handle.AssetID] = metadata;
         BeeEnsures(IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
     }
 
     void EditorAssetManager::LoadAsset(const std::filesystem::path &path, AssetHandle handle)
     {
-        BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
+        //BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
+        if(IsAssetHandleValid(handle) && IsAssetLoaded(handle))
+        {
+            auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
+            if(path != std::get<std::filesystem::path>(metadata.Data))
+            {
+                metadata.Data = path;
+            }
+            UnloadAsset(handle);
+            return;
+        }
         AssetMetadata metadata;
         metadata.Data = path;
         std::string pathStr = path.string();
         metadata.Name = ResourceManager::GetNameFromFilePath(pathStr);
-        metadata.Type = ResourceManager::GetAssetTypeFromFilePath(pathStr);
+        metadata.Type = ResourceManager::GetAssetTypeFromExtension(path.extension());
         metadata.Location = AssetLocation::FileSystem;
-        m_AssetRegistry[handle] = metadata;
+        m_AssetRegistry[handle.RegistryID][handle.AssetID] = metadata;
         m_AssetNameMap[metadata.Name] = handle;
-        BeeEnsures(IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
+        BeeEnsures(IsAssetHandleValid(handle));
+
+        BeeCoreTrace("Loaded asset: {0}", metadata.Name);
     }
 
     void EditorAssetManager::UnloadAsset(AssetHandle handle)
@@ -55,7 +68,7 @@ namespace BeeEngine
 
     bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
     {
-        return m_AssetRegistry.contains(handle);
+        return m_AssetRegistry.contains(handle.RegistryID) && m_AssetRegistry.at(handle.RegistryID).contains(handle.AssetID);
     }
 
     bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const
@@ -68,7 +81,7 @@ namespace BeeEngine
         BeeExpects(IsAssetHandleValid(handle));
         if(!IsAssetLoaded(handle))
         {
-            const auto& metadata = m_AssetRegistry.at(handle);
+            const auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
         }
         return m_AssetMap.at(handle).get();
@@ -81,5 +94,11 @@ namespace BeeEngine
             return nullptr;
         }
         return &m_AssetNameMap.at(name.data());
+    }
+
+    EditorAssetManager::EditorAssetManager()
+    {
+        AssetManager::s_AssetManager = this;
+        EngineAssetRegistry::RegisterAssetTypes(this);
     }
 }

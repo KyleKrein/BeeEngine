@@ -1,7 +1,6 @@
 //
 // Created by alexl on 07.06.2023.
 //
-#include "../../../Engine/Assets/EmbeddedResources.h"
 #include "AssetPanel.h"
 #include "imgui.h"
 #include "Renderer/Texture.h"
@@ -215,8 +214,7 @@ namespace BeeEngine::Editor
             : m_WorkingDirectory(workingDirectory)
             , m_CurrentDirectory(workingDirectory)
     {
-        using namespace BeeEngine::Internal;
-        m_DirectoryIcon = Texture2D::CreateFromMemory(GetEmbeddedResource(EmbeddedResource::DirectoryTexture));
-        m_FileIcon = Texture2D::CreateFromMemory(GetEmbeddedResource(EmbeddedResource::FileTexture));
+        m_DirectoryIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture);
+        m_FileIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::FileTexture);
     }
 }

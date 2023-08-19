@@ -14,15 +14,15 @@ namespace BeeEngine
     public:
         static void RegisterAssetTypes(IAssetManager* assetManager);
 
-        static constexpr AssetHandle OpenSansRegular = 328465234592345234;
-        static constexpr AssetHandle OpenSansBold = 34564386543524541;
+        static constexpr AssetHandle OpenSansRegular = {0, 328465234592345234};
+        static constexpr AssetHandle OpenSansBold = {0, 34564386543524541};
 
-        static constexpr AssetHandle ManropeRegular = 786587689586932544;
-        static constexpr AssetHandle ManropeBold = 54646863746848;
+        static constexpr AssetHandle ManropeRegular = {0, 786587689586932544};
+        static constexpr AssetHandle ManropeBold = {0, 54646863746848};
 
-        static constexpr AssetHandle StopButtonTexture = 52345743905231234;
-        static constexpr AssetHandle PlayButtonTexture = 899864344847468468;
-        static constexpr AssetHandle DirectoryTexture = 849648416847684646;
-        static constexpr AssetHandle FileTexture = 8496488484431620020;
+        static constexpr AssetHandle StopButtonTexture = {0, 52345743905231234};
+        static constexpr AssetHandle PlayButtonTexture = {0, 899864344847468468};
+        static constexpr AssetHandle DirectoryTexture = {0, 849648416847684646};
+        static constexpr AssetHandle FileTexture = {0, 8496488484431620020};
     };
 }

@@ -128,33 +128,40 @@ namespace BeeEngine
             return script.str();
         }
 
-        static AssetType GetAssetTypeFromFilePath(std::string_view extension)
-        {
-            if(extension == ".png" or
-            extension == ".jpg" or
-            extension == ".jpeg" or
-            extension == ".bmp")
-            {
-                return AssetType::Texture2D;
-            }
-            if(extension == ".ttf")
-            {
-                return AssetType::Font;
-            }
-            if(extension == ".frag" or
-            extension == ".vert")
-            {
-                return AssetType::Shader;
-            }
-            return AssetType::None;
-        }
-
         static bool IsTexture2DExtension(const std::filesystem::path &extension)
         {
             return extension == ".png" or
                    extension == ".jpg" or
                    extension == ".jpeg" or
                    extension == ".bmp";
+        }
+
+        static bool IsSceneExtension(const std::filesystem::path &extension) noexcept
+        {
+            return extension == ".beescene";
+        }
+
+        static bool IsFontExtension(const std::filesystem::path &extension) noexcept
+        {
+            return extension == ".ttf";
+        }
+
+        static bool IsAssetExtension(const std::filesystem::path &extension) noexcept
+        {
+            return IsTexture2DExtension(extension) || IsFontExtension(extension);
+        }
+
+        static AssetType GetAssetTypeFromExtension(const std::filesystem::path &extension)
+        {
+            if(IsTexture2DExtension(extension))
+            {
+                return AssetType::Texture2D;
+            }
+            if(IsFontExtension(extension))
+            {
+                return AssetType::Font;
+            }
+            return AssetType::None;
         }
     };
 }

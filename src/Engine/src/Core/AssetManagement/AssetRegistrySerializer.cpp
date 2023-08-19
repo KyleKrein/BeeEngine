@@ -55,11 +55,15 @@ namespace BeeEngine
     void AssetRegistrySerializer::Serialize(const std::filesystem::path &path)
     {
         auto& registry = m_AssetManager->GetAssetRegistry();
+        if(!registry.contains(m_ProjectRegistryID))
+            return;
         YAML::Emitter out;
         out << YAML::BeginMap;
+        out << YAML::Key << "Registry ID" << YAML::Value << m_ProjectRegistryID;
         out << YAML::Key << "Assets";
         out << YAML::Value << YAML::BeginSeq;
-        for(auto& [handle, metadata] : registry)
+        auto& registryMap = registry.at(m_ProjectRegistryID);
+        for(auto& [handle, metadata] : registryMap)
         {
             if (metadata.Location != AssetLocation::FileSystem)
             {
@@ -87,6 +91,7 @@ namespace BeeEngine
     void AssetRegistrySerializer::Deserialize(const std::filesystem::path &path)
     {
         YAML::Node data = YAML::LoadFile(path.string());
+        UUID registryID = data["Registry ID"].as<uint64_t>();
         for(auto asset : data["Assets"])
         {
             std::filesystem::path filePath = asset["FilePath"].as<std::string>();
@@ -99,7 +104,7 @@ namespace BeeEngine
                 BeeCoreError("Asset file {0} does not exist!", filePath.string());
                 continue;
             }
-            m_AssetManager->LoadAsset(filePath, asset["Handle"].as<uint64_t>());
+            m_AssetManager->LoadAsset(filePath, {registryID,asset["Handle"].as<uint64_t>()});
         }
     }
 }

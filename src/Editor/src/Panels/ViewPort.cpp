@@ -8,6 +8,7 @@
 #include "gtc/type_ptr.hpp"
 #include "Core/Events/Event.h"
 #include "Scene/SceneSerializer.h"
+#include "Core/ResourceManager.h"
 
 
 namespace BeeEngine::Editor
@@ -153,15 +154,18 @@ namespace BeeEngine::Editor
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
             {
+                std::filesystem::path p;
                 if(Application::GetOsPlatform() == OSPlatform::Windows)
                 {
-                    const wchar_t* path = (const wchar_t*)payload->Data;
-                    OpenScene(std::filesystem::path(m_WorkingDirectory) / path);
+                    p = m_WorkingDirectory / (const wchar_t*)payload->Data;
                 }
                 else
                 {
-                    const char* path = (const char*)payload->Data;
-                    OpenScene(std::filesystem::path(m_WorkingDirectory) / path);
+                    p = m_WorkingDirectory / (const char*)payload->Data;
+                }
+                if(ResourceManager::IsSceneExtension(p.extension()))
+                {
+                    OpenScene(p);
                 }
             }
             ImGui::EndDragDropTarget();

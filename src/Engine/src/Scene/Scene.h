@@ -76,5 +76,7 @@ namespace BeeEngine
         void StopPhysicsWorld();
 
         void Update2DPhysics();
+
+        void RenderScene();
     };
 }
