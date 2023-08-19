@@ -18,6 +18,7 @@
 #include "Scene/NativeScriptFactory.h"
 #include "NativeScripting/GameBuilder.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
+#include "Panels/AssetPanel.h"
 
 namespace BeeEngine::Editor
 {
@@ -36,7 +37,8 @@ namespace BeeEngine::Editor
         EditorCamera m_EditorCamera = {};
         DockSpace m_DockSpace {};
         MenuBar m_MenuBar {};
-        ContentBrowserPanel m_AssetPanel {std::filesystem::current_path()};
+        AssetPanel m_AssetPanel {&m_EditorAssetManager};
+        ContentBrowserPanel m_ContentBrowserPanel {std::filesystem::current_path()};
         SceneHierarchyPanel m_SceneHierarchyPanel {};
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         std::filesystem::path m_ScenePath;

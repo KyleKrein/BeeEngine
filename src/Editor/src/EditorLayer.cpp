@@ -50,7 +50,7 @@ namespace BeeEngine::Editor
         {
             case SceneState::Edit:
             {
-                if(m_AssetPanel.NeedsToRegenerateSolution())
+                if(m_ContentBrowserPanel.NeedsToRegenerateSolution())
                     m_ProjectFile->RegenerateSolution();
                 if(m_ProjectFile->IsAssemblyReloadPending())
                     ReloadAssembly();
@@ -94,7 +94,8 @@ namespace BeeEngine::Editor
             m_ViewPort.Render(m_EditorCamera);
             m_SceneHierarchyPanel.OnGUIRender();
             m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
-            m_AssetPanel.OnGUIRender();
+            m_ContentBrowserPanel.OnGUIRender();
+            m_AssetPanel.Render();
             m_FpsCounter.Render();
         }
         else
@@ -113,7 +114,7 @@ namespace BeeEngine::Editor
                 path = projectPath.remove_filename().string();
                 path.pop_back();
                 m_ProjectFile = CreateScope<ProjectFile>(path, name);
-                m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
@@ -127,6 +128,7 @@ namespace BeeEngine::Editor
                 }
 
                 m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
+                m_AssetPanel.SetProject(m_ProjectFile.get());
 
                 auto scenePath = m_ProjectFile->GetLastUsedScenePath();
                 if(!scenePath.empty())
@@ -152,12 +154,14 @@ namespace BeeEngine::Editor
                 path = projectPath.remove_filename().string();
                 path.pop_back();
                 m_ProjectFile = CreateScope<ProjectFile>(path, name);
-                m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 
                 m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
+
+                m_AssetPanel.SetProject(m_ProjectFile.get());
 
                 SetupGameLibrary();
             }

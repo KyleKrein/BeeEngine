@@ -1,31 +1,5 @@
 Scene: Untitled
 Entities:
-  - Entity: 17555633365339120199
-    TagComponent:
-      Tag: Text
-    TransformComponent:
-      Translation: [-0.410511494, -0.526110172, 0]
-      Rotation: [0, 0, 0]
-      Scale: [0.800000012, 1, 1]
-    TextRendererComponent:
-      Text: Guten Morgen!
-      Font: [0, 328465234592345234]
-      Foreground Color: [0, 0, 0, 1]
-      Background Color: [0, 0, 0, 0]
-      Kerning: 0
-      Line Spacing: 0
-  - Entity: 5187028349339385160
-    TagComponent:
-      Tag: Google logo
-    TransformComponent:
-      Translation: [-5.53321648, 0.0912876725, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-      Has Texture: true
-      Texture: [3753192931707503016, 13987028760561915515]
-      Tiling Factor: 1
   - Entity: 14261551586041856979
     TagComponent:
       Tag: Computer
@@ -38,3 +12,29 @@ Entities:
       Has Texture: true
       Texture: [3753192931707503016, 7772243033513047726]
       Tiling Factor: 1
+  - Entity: 5187028349339385160
+    TagComponent:
+      Tag: Google logo
+    TransformComponent:
+      Translation: [-5.53321648, 0.0912876725, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Has Texture: true
+      Texture: [3753192931707503016, 13987028760561915515]
+      Tiling Factor: 1
+  - Entity: 17555633365339120199
+    TagComponent:
+      Tag: Text
+    TransformComponent:
+      Translation: [-0.410511494, -0.526110172, 0]
+      Rotation: [0, 0, 0]
+      Scale: [0.800000012, 1, 1]
+    TextRendererComponent:
+      Text: Guten Morgen!
+      Font: [0, 54646863746848]
+      Foreground Color: [0, 0, 0, 1]
+      Background Color: [0, 0, 0, 0]
+      Kerning: 0
+      Line Spacing: 0

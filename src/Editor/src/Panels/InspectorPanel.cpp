@@ -233,6 +233,19 @@ namespace BeeEngine::Editor
                 ImGui::EndDragDropTarget();
             }
 
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
+                {
+                    auto* handlePtr = (AssetHandle*)payload->Data;
+                    BeeExpects(handlePtr);
+                    BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                    sprite.HasTexture = true;
+                    sprite.TextureHandle = *handlePtr;
+                }
+                ImGui::EndDragDropTarget();
+            }
+
 
 
             ImGui::DragFloat("Tiling Factor", &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
@@ -257,13 +270,11 @@ namespace BeeEngine::Editor
                    std::filesystem::path fontPath;
                    if(Application::GetOsPlatform() == OSPlatform::Windows)
                    {
-                       const wchar_t* path = (const wchar_t*)payload->Data;
-                       fontPath = std::filesystem::path(m_WorkingDirectory) / path;
+                       fontPath = std::filesystem::path(m_WorkingDirectory) / (const wchar_t*)payload->Data;
                    }
                    else
                    {
-                       const char* path = (const char*)payload->Data;
-                       fontPath = std::filesystem::path(m_WorkingDirectory) / path;
+                       fontPath = std::filesystem::path(m_WorkingDirectory) / (const char*)payload->Data;
                    }
                    if(ResourceManager::IsFontExtension(fontPath.extension()))
                    {
@@ -277,6 +288,17 @@ namespace BeeEngine::Editor
                        BeeCoreAssert(handlePtr, "Failed to load font from path: {0}", fontPath.string());
                        component.FontHandle = *handlePtr;
                    }
+               }
+               ImGui::EndDragDropTarget();
+           }
+           if (ImGui::BeginDragDropTarget())
+           {
+               if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
+               {
+                   auto* handlePtr = (AssetHandle*)payload->Data;
+                   BeeExpects(handlePtr);
+                   BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                   component.FontHandle = *handlePtr;
                }
                ImGui::EndDragDropTarget();
            }
