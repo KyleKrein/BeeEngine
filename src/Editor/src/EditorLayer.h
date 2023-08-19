@@ -12,7 +12,7 @@
 #include "Panels/InspectorPanel.h"
 #include "Panels/MenuBar.h"
 #include "Scene/SceneSerializer.h"
-#include "Panels/AssetPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 #include "ProjectFile.h"
 #include "Utils/DynamicLibrary.h"
 #include "Scene/NativeScriptFactory.h"
@@ -36,7 +36,7 @@ namespace BeeEngine::Editor
         EditorCamera m_EditorCamera = {};
         DockSpace m_DockSpace {};
         MenuBar m_MenuBar {};
-        AssetPanel m_AssetPanel {std::filesystem::current_path()};
+        ContentBrowserPanel m_AssetPanel {std::filesystem::current_path()};
         SceneHierarchyPanel m_SceneHierarchyPanel {};
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         std::filesystem::path m_ScenePath;

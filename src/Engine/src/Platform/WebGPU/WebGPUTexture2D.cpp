@@ -15,23 +15,9 @@ namespace BeeEngine::Internal
         WGPUTextureDescriptor textureDesc;
         CreateTextureAndSampler(m_Width, m_Height, device, textureDesc);
 
-        if(numberOfChannels == 3)
-        {
-            std::vector<std::byte> dataWithAlpha;
-            dataWithAlpha.resize(data.size() * 4 / 3);
-            for(int i = 0; i < data.size() / 3; i++)
-            {
-                dataWithAlpha[i * 4] = data[i * 3];
-                dataWithAlpha[i * 4 + 1] = data[i * 3 + 1];
-                dataWithAlpha[i * 4 + 2] = data[i * 3 + 2];
-                dataWithAlpha[i * 4 + 3] = std::byte(255);
-            }
-            WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, textureDesc.mipLevelCount, (const unsigned char *)dataWithAlpha.data());
-        }
-        else
-        {
-            WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, textureDesc.mipLevelCount, (const unsigned char *)data.data());
-        }
+        m_MipLevels = textureDesc.mipLevelCount;
+
+        SetData(data, numberOfChannels);
         CreateTextureView(textureDesc);
     }
 
@@ -113,10 +99,10 @@ namespace BeeEngine::Internal
                 dataWithAlpha[i * 4 + 2] = data[i * 3 + 2];
                 dataWithAlpha[i * 4 + 3] = std::byte(255);
             }
-            WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, 1, (const unsigned char *)dataWithAlpha.data());
+            WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, m_MipLevels, (const unsigned char *)dataWithAlpha.data());
             return;
         }
-        WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, 1, (const unsigned char *)data.data());
+        WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, m_MipLevels, (const unsigned char *)data.data());
     }
 
     void WebGPUTexture2D::WriteMipMaps(WGPUDevice device,

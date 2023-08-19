@@ -246,6 +246,40 @@ namespace BeeEngine::Editor
         });
         DrawComponentUI<TextRendererComponent>("Text Renderer", entity, [this](TextRendererComponent& component){
            ImGui::InputTextMultiline("Text", &component.Text);
+           if(ImGui::Button(component.Font().Name.data(), ImVec2(0.0f, 0.0f)))
+           {
+               component.FontHandle = EngineAssetRegistry::OpenSansRegular;
+           }
+           if (ImGui::BeginDragDropTarget())
+           {
+               if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+               {
+                   std::filesystem::path fontPath;
+                   if(Application::GetOsPlatform() == OSPlatform::Windows)
+                   {
+                       const wchar_t* path = (const wchar_t*)payload->Data;
+                       fontPath = std::filesystem::path(m_WorkingDirectory) / path;
+                   }
+                   else
+                   {
+                       const char* path = (const char*)payload->Data;
+                       fontPath = std::filesystem::path(m_WorkingDirectory) / path;
+                   }
+                   if(ResourceManager::IsFontExtension(fontPath.extension()))
+                   {
+                       auto name = ResourceManager::GetNameFromFilePath(fontPath.string());
+                       auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                       if(!handlePtr)
+                       {
+                           m_AssetManager->LoadAsset(fontPath, {m_ProjectAssetRegistryID});
+                           handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                       }
+                       BeeCoreAssert(handlePtr, "Failed to load font from path: {0}", fontPath.string());
+                       component.FontHandle = *handlePtr;
+                   }
+               }
+               ImGui::EndDragDropTarget();
+           }
            ImGui::ColorEdit4("Foreground", component.Configuration.ForegroundColor.ValuePtr());
            ImGui::ColorEdit4("Background", component.Configuration.BackgroundColor.ValuePtr());
            ImGui::DragFloat("Kerning offset", &component.Configuration.KerningOffset, 0.025f);

@@ -26,6 +26,7 @@ namespace BeeEngine::Internal
         WGPUTexture m_Texture {nullptr};
         WGPUTextureView m_TextureView;
         WGPUSampler m_Sampler;
+        uint32_t m_MipLevels;
 
         void CreateTextureAndSampler(int width, int height, WGPUDevice &device, WGPUTextureDescriptor &textureDesc);
 

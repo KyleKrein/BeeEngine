@@ -17,6 +17,7 @@ namespace BeeEngine
         {
             const auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
+            m_AssetMap.at(handle)->Name = metadata.Name;
         }
         return m_AssetMap.at(handle);
     }
@@ -83,6 +84,7 @@ namespace BeeEngine
         {
             const auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
+            m_AssetMap.at(handle)->Name = metadata.Name;
         }
         return m_AssetMap.at(handle).get();
     }

@@ -61,6 +61,7 @@ namespace BeeEngine
     {
         AssetHandle Handle;
         AssetLocation Location = AssetLocation::FileSystem;
+        std::string_view Name;
         virtual constexpr AssetType GetType() const = 0;
 
         virtual ~Asset() = default;
