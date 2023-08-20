@@ -10,6 +10,7 @@
 #include <filesystem>
 #include "Core/ResourceManager.h"
 #include "MClass.h"
+#include "MField.h"
 #include "MAssembly.h"
 #include "ScriptGlue.h"
 #include "Scene/Scene.h"
@@ -21,6 +22,7 @@
 #include <mono/metadata/mono-debug.h>
 #include <mono/metadata/threads.h>
 #include <mono/metadata/mono-gc.h>
+#include "MTypes.h"
 
 namespace BeeEngine
 {
@@ -47,6 +49,10 @@ namespace BeeEngine
         std::unordered_map<String, MAssembly> Assemblies = {};
         std::unordered_map<String, Ref<MClass>> GameScripts = {};
         MClass* EntityBaseClass = nullptr;
+
+        MField* AssetHandleField = nullptr;
+        MClass* Texture2DClass = nullptr;
+        MClass* FontClass = nullptr;
 
         std::filesystem::path GameAssemblyPath = "";
         std::filesystem::path CoreAssemblyPath = "";
@@ -131,6 +137,7 @@ namespace BeeEngine
     }
     bool ScriptingEngine::IsGameScript(const MClass& klass)
     {
+        BeeExpects(s_Data.EntityBaseClass != nullptr);
         return klass.IsDerivedFrom(*s_Data.EntityBaseClass);
     }
     void ScriptingEngine::LoadGameAssembly(const std::filesystem::path& path)
@@ -181,6 +188,26 @@ namespace BeeEngine
             if(mClass->GetName() == "Behaviour")
             {
                 s_Data.EntityBaseClass = mClass.get();
+                continue;
+            }
+            if(mClass->GetName() == "Asset")
+            {
+                s_Data.AssetHandleField = &mClass->GetField("m_Handle");
+                continue;
+            }
+            if(mClass->GetName() == "Texture2D")
+            {
+                s_Data.Texture2DClass = mClass.get();
+                continue;
+            }
+            if(mClass->GetName() == "Font")
+            {
+                s_Data.FontClass = mClass.get();
+                continue;
+            }
+
+            if(s_Data.EntityBaseClass && s_Data.AssetHandleField && s_Data.Texture2DClass && s_Data.FontClass)
+            {
                 break;
             }
         }
@@ -312,6 +339,11 @@ namespace BeeEngine
         s_Data.EditableFieldsDefaults.clear();
         s_Data.Assemblies.clear();
 
+        s_Data.EntityBaseClass = nullptr;
+        s_Data.AssetHandleField = nullptr;
+        s_Data.Texture2DClass = nullptr;
+        s_Data.FontClass = nullptr;
+
         mono_domain_set(mono_get_root_domain(), false);
         mono_domain_unload(s_Data.AppDomain);
 
@@ -335,5 +367,35 @@ namespace BeeEngine
         stats.gcGenerations.store(mono_gc_max_generation());
         stats.gcHeapSize.store(mono_gc_get_heap_size());
         stats.gcUsedMemory.store(mono_gc_get_used_size());
+    }
+
+    void ScriptingEngine::SetAssetHandle(MObject& obj, MField& field, AssetHandle& handle, MType type)
+    {
+        BeeExpects(
+                type == MType::Texture2D ||
+                        type == MType::Font
+        );
+        if(type == MType::Texture2D)
+        {
+            MObject assetObj = s_Data.Texture2DClass->Instantiate();
+            auto* assetMonoObj = assetObj.GetMonoObject();
+            assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
+            obj.SetFieldValue(field, assetMonoObj);
+            return;
+        }
+        if(type == MType::Font)
+        {
+            MObject assetObj = s_Data.FontClass->Instantiate();
+            auto* assetMonoObj = assetObj.GetMonoObject();
+            assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
+            obj.SetFieldValue(field, assetMonoObj);
+            return;
+        }
+    }
+
+    void ScriptingEngine::GetAssetHandle(void* monoObject, AssetHandle &handle)
+    {
+        MObject obj {(MonoObject*)monoObject};
+        obj.GetFieldValue(*s_Data.AssetHandleField, &handle);
     }
 }

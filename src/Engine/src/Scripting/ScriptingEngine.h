@@ -6,11 +6,14 @@
 #include "Core/TypeDefines.h"
 #include <filesystem>
 #include "Core/UUID.h"
+#include "Core/AssetManagement/Asset.h"
+#include "MTypes.h"
 
 namespace BeeEngine
 {
     struct Entity;
     class MClass;
+    class MField;
     class ScriptingEngine
     {
     public:
@@ -47,6 +50,10 @@ namespace BeeEngine
         static class GameScript* GetEntityScriptInstance(BeeEngine::UUID uuid);
 
         static std::vector<class GameScriptField>& GetDefaultScriptFields(MClass* klass);
+        static void SetAssetHandle(MObject& obj, MField& field, AssetHandle& handle, MType type);
+
+        static void GetAssetHandle(void* monoObject, AssetHandle &handle);
+
     private:
 
         static class MAssembly& LoadAssembly(const std::filesystem::path& path);

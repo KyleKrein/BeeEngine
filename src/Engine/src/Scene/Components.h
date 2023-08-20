@@ -85,13 +85,15 @@ namespace BeeEngine
 
     struct SpriteRendererComponent
     {
-        Color4 Color = Color4::White;
         float TilingFactor = 1.0f;
+        Color4 Color = Color4::White;
         AssetHandle TextureHandle;
-        bool HasTexture = false;
+        int16_t HasTexture = false;
 
         Texture2D* Texture() const
         {
+            BeeExpects(HasTexture);
+            BeeExpects(AssetManager::IsAssetHandleValid(TextureHandle));
             return &AssetManager::GetAsset<Texture2D>(TextureHandle);
         }
 
@@ -112,8 +114,8 @@ namespace BeeEngine
     struct TextRendererComponent
     {
         TextRenderingConfiguration Configuration;
-        std::string Text;
         AssetHandle FontHandle = EngineAssetRegistry::OpenSansRegular;
+        std::string Text;
 
         Font& Font() const
         {

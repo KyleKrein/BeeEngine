@@ -1,5 +1,24 @@
 Scene: Untitled
 Entities:
+  - Entity: 8182705666171971767
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0.756646633, -0.301609039, -21.2714558]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveVerticalFOV: 0.785398185
+        PerspectiveNearClip: 0.00999999978
+        PerspectiveFarClip: 1000
+        OrthographicSize: 10
+        OrthographicNearClip: -1
+        OrthographicFarClip: 1
+        AspectRatio: 1.28366756
+      Primary: true
+      FixedAspectRatio: false
   - Entity: 14261551586041856979
     TagComponent:
       Tag: Computer
@@ -19,6 +38,24 @@ Entities:
       Translation: [-5.53321648, 0.0912876725, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.RandomTexture
+      Fields:
+        - Name: Texture1
+          Type: Texture2D
+          Data: [3753192931707503016, 7772243033513047726]
+        - Name: Texture2
+          Type: Texture2D
+          Data: [3753192931707503016, 13987028760561915515]
+        - Name: Texture3
+          Type: Texture2D
+          Data: [0, 8496488484431620020]
+        - Name: Texture4
+          Type: Texture2D
+          Data: [0, 849648416847684646]
+        - Name: Texture5
+          Type: Texture2D
+          Data: [0, 52345743905231234]
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
       Has Texture: true
@@ -31,6 +68,18 @@ Entities:
       Translation: [-0.410511494, -0.526110172, 0]
       Rotation: [0, 0, 0]
       Scale: [0.800000012, 1, 1]
+    ScriptComponent:
+      FullName: Example.SetFont
+      Fields:
+        - Name: FirstFont
+          Type: Font
+          Data: [0, 328465234592345234]
+        - Name: SecondFont
+          Type: Font
+          Data: [0, 54646863746848]
+        - Name: ThirdFont
+          Type: Font
+          Data: [0, 786587689586932544]
     TextRendererComponent:
       Text: Guten Morgen!
       Font: [0, 54646863746848]

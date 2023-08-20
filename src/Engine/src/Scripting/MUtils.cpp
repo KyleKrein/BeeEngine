@@ -12,6 +12,7 @@
 #include "vec3.hpp"
 #include "vec4.hpp"
 #include "Core/Color4.h"
+#include "Core/AssetManagement/Asset.h"
 
 namespace BeeEngine
 {
@@ -40,6 +41,11 @@ namespace BeeEngine
                 {"BeeEngine.Math.Vector4", MType::Vector4},
                 {"BeeEngine.Color", MType::Color},
                 {"BeeEngine.Entity", MType::Entity},
+
+                {"BeeEngine.Internal.AssetHandle", MType::AssetHandle},
+                {"BeeEngine.Asset", MType::Asset},
+                {"BeeEngine.Texture2D", MType::Texture2D},
+                {"BeeEngine.Font", MType::Font},
         };
         if(MTypeMap.contains(name))
             return MTypeMap.at(name);
@@ -79,7 +85,12 @@ namespace BeeEngine
                 {"Vector3", MType::Vector3},
                 {"Vector4", MType::Vector4},
                 {"Color", MType::Color},
-                {"Entity", MType::Entity}
+                {"Entity", MType::Entity},
+
+                {"AssetHandle", MType::AssetHandle},
+                {"Asset", MType::Asset},
+                {"Texture2D", MType::Texture2D},
+                {"Font", MType::Font},
         };
         if(MTypeMap.contains(name))
             return MTypeMap.at(name);
@@ -151,6 +162,14 @@ namespace BeeEngine
                 return "Color";
             case MType::Entity:
                 return "Entity";
+            case MType::AssetHandle:
+                return "AssetHandle";
+            case MType::Asset:
+                return "Asset";
+            case MType::Texture2D:
+                return "Texture2D";
+            case MType::Font:
+                return "Font";
 
             case MType::None:
                 break;
@@ -249,6 +268,11 @@ namespace BeeEngine
                 return sizeof (Color4);
             case MType::Entity:
                 return sizeof (MonoObject*);
+            case MType::Asset:
+            case MType::Texture2D:
+            case MType::Font:
+                return sizeof (AssetHandle);
+
             case MType::None:
             case MType::Void:
                 return 0;

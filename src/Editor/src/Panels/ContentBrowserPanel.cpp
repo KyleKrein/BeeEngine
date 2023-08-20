@@ -107,6 +107,16 @@ namespace BeeEngine::Editor
             {
                 DragAndDropFileToFolder(path);
             }
+            /*else if(ResourceManager::IsAssetExtension(extension))
+            {
+                if (ImGui::BeginPopupContextWindow("##AssetPopup", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
+                {
+                    if (ImGui::MenuItem("Load Asset"))
+                    {
+                    }
+                    ImGui::EndPopup();
+                }
+            }*/
 
             ImGui::PopStyleColor();
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))

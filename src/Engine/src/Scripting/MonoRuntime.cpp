@@ -191,6 +191,11 @@ namespace BeeEngine
         return mono_gchandle_get_target(m_Handle);;
     }
 
+    MObject::MObject(MonoObject *object)
+    {
+        m_Handle = mono_gchandle_new(object, false);
+    }
+
     MClass::MClass(const String &name, const String &ns, MonoImage* image)
             : m_Name(name), m_Namespace(ns)
     {
@@ -339,11 +344,36 @@ namespace BeeEngine
         }
     }
 
+    static MType AssetTypeToMType(AssetType type)
+    {
+        switch(type)
+        {
+            case AssetType::Texture2D:
+                return MType::Texture2D;
+            case AssetType::Font:
+                return MType::Font;
+            default:
+                return MType::Asset;
+        }
+    }
+
     void GameScript::CopyFieldsData(std::vector<GameScriptField> &aClass)
     {
         for(auto& field : aClass)
         {
             auto& mField = field.GetMField();
+            auto type = mField.GetType();
+            if(type == MType::Asset || type == MType::Texture2D || type == MType::Font)
+            {
+                AssetHandle handle = field.GetData<AssetHandle>();
+                if(AssetManager::IsAssetHandleValid(handle))
+                {
+                    if(type == MType::Asset)
+                        type = AssetTypeToMType(AssetManager::GetAsset<Asset>(handle).GetType());
+                    ScriptingEngine::SetAssetHandle(m_Instance, mField, handle, type);
+                }
+                continue;
+            }
             m_Instance.SetFieldValue(mField, field.GetData());
         }
     }

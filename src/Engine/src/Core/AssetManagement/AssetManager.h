@@ -15,14 +15,14 @@ namespace BeeEngine
     public:
         template<typename T>
         requires std::is_base_of_v<Asset, T>
-        static Ref<T> GetAssetRef(AssetHandle handle)
+        static Ref<T> GetAssetRef(const AssetHandle& handle)
         {
             BeeExpects(s_AssetManager);
             return std::dynamic_pointer_cast<T>(s_AssetManager->GetAssetRef(handle));
         }
         template<typename T>
         requires std::is_base_of_v<Asset, T>
-        static T& GetAsset(AssetHandle handle)
+        static T& GetAsset(const AssetHandle& handle)
         {
             BeeExpects(s_AssetManager);
             return *(T*)s_AssetManager->GetAsset(handle);
@@ -32,6 +32,18 @@ namespace BeeEngine
         {
             BeeExpects(s_AssetManager);
             return s_AssetManager->IsAssetHandleValid(handle);
+        }
+
+        static bool IsAssetLoaded(const AssetHandle& handle)
+        {
+            BeeExpects(s_AssetManager);
+            return s_AssetManager->IsAssetLoaded(handle);
+        }
+
+        static void UnloadAsset(const AssetHandle& handle)
+        {
+            BeeExpects(s_AssetManager);
+            s_AssetManager->UnloadAsset(handle);
         }
 
     private:

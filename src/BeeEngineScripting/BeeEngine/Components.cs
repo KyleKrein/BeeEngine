@@ -67,7 +67,12 @@ namespace BeeEngine
 
     public sealed class SpriteRendererComponent : Component
     {
+        private unsafe float* m_TilingFactor;
         private unsafe Color* m_Color;
+        private unsafe AssetHandle* m_AssetHandle;
+        private unsafe Int16* m_HasTexture;
+
+        private Texture2D m_Texture2D = new Texture2D();
 
         public unsafe ref Color Color
         {
@@ -78,9 +83,55 @@ namespace BeeEngine
             }
         }
 
+        public unsafe Texture2D Texture
+        {
+            get
+            {
+                CheckIfDestroyed();
+                if (*m_HasTexture != 0)
+                {
+                    m_Texture2D.m_Handle = *m_AssetHandle;
+                    return m_Texture2D;
+                }
+
+                return null;
+            }
+            set
+            {
+                CheckIfDestroyed();
+                if (value == null)
+                {
+                    *m_HasTexture = 0;
+                    return;
+                }
+                Log.AssertAndThrow(value.IsValid(), "Texture2D is invalid");
+
+                *m_AssetHandle = value.m_Handle;
+                *m_HasTexture = 1;
+                m_Texture2D.m_Handle = *m_AssetHandle;
+
+                DebugLog.Assert(*m_AssetHandle == value.m_Handle, "Asset handle was not copied");
+                DebugLog.Assert(*m_HasTexture == 1, "HasTexture was not copied");
+                DebugLog.Assert(m_Texture2D.IsValid(), "Invalid asset handle");
+            }
+        }
+
+        public unsafe ref float TilingFactor
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<float>(m_TilingFactor);
+            }
+        }
+
         internal override unsafe void Construct()
         {
-            m_Color = (Color*)ComponentHandle;
+            m_TilingFactor = (float*)(ComponentHandle);
+            m_Color = (Color*)(m_TilingFactor + 1);
+            m_AssetHandle = (AssetHandle*)(m_Color + 1);
+            m_HasTexture = (Int16*)(m_AssetHandle + 1);
+            m_Texture2D.m_Handle = *m_AssetHandle;
         }
     }
 
@@ -260,11 +311,38 @@ namespace BeeEngine
         private unsafe Color* m_BackgroundColor;
         private unsafe float* m_Kerning;
         private unsafe float* m_LineSpacing;
+        private unsafe AssetHandle* m_AssetHandle;
+
+        private Font m_Font = new Font();
 
         public string Text
         {
-            get => InternalCalls.TextRendererComponent_GetText(EntityID);
-            set => InternalCalls.TextRendererComponent_SetText(EntityID, value);
+            get
+            {
+                CheckIfDestroyed();
+                return InternalCalls.TextRendererComponent_GetText(EntityID);
+            }
+            set
+            {
+                CheckIfDestroyed();
+                InternalCalls.TextRendererComponent_SetText(EntityID, value);
+            }
+        }
+
+        public unsafe Font Font
+        {
+            get
+            {
+                CheckIfDestroyed();
+                m_Font.m_Handle = *m_AssetHandle;
+                return m_Font;
+            }
+            set
+            {
+                CheckIfDestroyed();
+                Log.AssertAndThrow(value.IsValid(), "Font asset is invalid");
+                *m_AssetHandle = value.m_Handle;
+            }
         }
 
         public unsafe ref Color Foreground
@@ -309,6 +387,7 @@ namespace BeeEngine
             m_BackgroundColor = m_ForegroundColor + 1;
             m_Kerning = (float*)(m_BackgroundColor + 1);
             m_LineSpacing = m_Kerning + 1;
+            m_AssetHandle = (AssetHandle*)(m_LineSpacing + 1);
         }
     }
 }

@@ -6,6 +6,7 @@
 
 #include "BeeEngine.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
+#include "ProjectFile.h"
 
 namespace BeeEngine::Editor
 {
@@ -16,6 +17,11 @@ namespace BeeEngine::Editor
         : m_AssetManager(assetManager)
         {}
         explicit InspectorPanel(const Ref<Scene>& context, EditorAssetManager* assetManager);
+
+        void SetProject(ProjectFile* project)
+        {
+            m_Project = project;
+        }
 
         void SetContext(const Ref<Scene>& context);
         void SetProjectAssetRegistryID(UUID id)
@@ -32,6 +38,7 @@ namespace BeeEngine::Editor
     private:
         UUID m_ProjectAssetRegistryID;
         Ref<Scene> m_Context;
+        ProjectFile* m_Project = nullptr;
         EditorAssetManager* m_AssetManager = nullptr;
 
         std::filesystem::path m_WorkingDirectory;

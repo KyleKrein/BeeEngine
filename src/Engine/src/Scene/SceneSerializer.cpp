@@ -341,7 +341,9 @@ namespace BeeEngine
                                 READ_SCRIPT_FIELD(Vector4, glm::vec4);
                                 READ_SCRIPT_FIELD(Color, Color4);
                                 READ_SCRIPT_FIELD(Entity, UUID);
-
+                                READ_SCRIPT_FIELD(Asset, AssetHandle);
+                                READ_SCRIPT_FIELD(Texture2D, AssetHandle);
+                                READ_SCRIPT_FIELD(Font, AssetHandle);
                             }
                         }
                     }
@@ -533,6 +535,9 @@ namespace BeeEngine
                         WRITE_SCRIPT_FIELD(Vector3, glm::vec3);
                         WRITE_SCRIPT_FIELD(Vector4, glm::vec4);
                         WRITE_SCRIPT_FIELD(Color, Color4);
+                        WRITE_SCRIPT_FIELD(Asset, AssetHandle);
+                        WRITE_SCRIPT_FIELD(Texture2D, AssetHandle);
+                        WRITE_SCRIPT_FIELD(Font, AssetHandle);
                         //WRITE_SCRIPT_FIELD(Entity, UUID);
                     }
                     out << YAML::EndMap;

@@ -33,22 +33,22 @@ namespace BeeEngine::Editor
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
             {
-                std::filesystem::path fontPath;
+                std::filesystem::path assetPath;
                 if(Application::GetOsPlatform() == OSPlatform::Windows)
                 {
-                    fontPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
+                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
                 }
                 else
                 {
-                    fontPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
+                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
                 }
-                if(ResourceManager::IsAssetExtension(fontPath.extension()))
+                if(ResourceManager::IsAssetExtension(assetPath.extension()))
                 {
-                    auto name = ResourceManager::GetNameFromFilePath(fontPath.string());
+                    auto name = ResourceManager::GetNameFromFilePath(assetPath.string());
                     auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
                     if(!handlePtr)
                     {
-                        m_AssetManager->LoadAsset(fontPath, {m_Project->GetAssetRegistryID()});
+                        m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
                     }
                 }
             }

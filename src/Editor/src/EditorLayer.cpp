@@ -128,6 +128,7 @@ namespace BeeEngine::Editor
                 }
 
                 m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
+                m_InspectorPanel.SetProject(m_ProjectFile.get());
                 m_AssetPanel.SetProject(m_ProjectFile.get());
 
                 auto scenePath = m_ProjectFile->GetLastUsedScenePath();
@@ -160,6 +161,7 @@ namespace BeeEngine::Editor
                 ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 
                 m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
+                m_InspectorPanel.SetProject(m_ProjectFile.get());
 
                 m_AssetPanel.SetProject(m_ProjectFile.get());
 

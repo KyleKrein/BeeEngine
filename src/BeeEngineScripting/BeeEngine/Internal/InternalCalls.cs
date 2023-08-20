@@ -63,5 +63,14 @@ namespace BeeEngine.Internal
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Input_IsMouseButtonDown(MouseButton button);
+        
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Asset_Load(AssetHandle handle);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Asset_Unload(AssetHandle handle);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool Asset_IsValid(AssetHandle handle);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool Asset_IsLoaded(AssetHandle handle);
     }
 }
