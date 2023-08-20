@@ -67,10 +67,10 @@ namespace BeeEngine
 
     public sealed class SpriteRendererComponent : Component
     {
-        private unsafe float* m_TilingFactor;
         private unsafe Color* m_Color;
         private unsafe AssetHandle* m_AssetHandle;
-        private unsafe Int16* m_HasTexture;
+        private unsafe float* m_TilingFactor;
+        private unsafe bool* m_HasTexture;
 
         private Texture2D m_Texture2D = new Texture2D();
 
@@ -88,30 +88,26 @@ namespace BeeEngine
             get
             {
                 CheckIfDestroyed();
-                if (*m_HasTexture != 0)
-                {
-                    m_Texture2D.m_Handle = *m_AssetHandle;
-                    return m_Texture2D;
-                }
-
-                return null;
+                if (*m_HasTexture == false) return null;
+                m_Texture2D.m_Handle = *m_AssetHandle;
+                return m_Texture2D;
             }
             set
             {
                 CheckIfDestroyed();
                 if (value == null)
                 {
-                    *m_HasTexture = 0;
+                    *m_HasTexture = false;
                     return;
                 }
                 Log.AssertAndThrow(value.IsValid(), "Texture2D is invalid");
 
                 *m_AssetHandle = value.m_Handle;
-                *m_HasTexture = 1;
-                m_Texture2D.m_Handle = *m_AssetHandle;
+                *m_HasTexture = true;
+                m_Texture2D.m_Handle = value.m_Handle;
 
                 DebugLog.Assert(*m_AssetHandle == value.m_Handle, "Asset handle was not copied");
-                DebugLog.Assert(*m_HasTexture == 1, "HasTexture was not copied");
+                DebugLog.Assert(*m_HasTexture == true, "HasTexture was not copied");
                 DebugLog.Assert(m_Texture2D.IsValid(), "Invalid asset handle");
             }
         }
@@ -127,10 +123,11 @@ namespace BeeEngine
 
         internal override unsafe void Construct()
         {
-            m_TilingFactor = (float*)(ComponentHandle);
-            m_Color = (Color*)(m_TilingFactor + 1);
+            m_Color = (Color*)(ComponentHandle);
             m_AssetHandle = (AssetHandle*)(m_Color + 1);
-            m_HasTexture = (Int16*)(m_AssetHandle + 1);
+            m_TilingFactor = (float*)(m_AssetHandle + 1);
+            //m_HasTexture = (bool*)((byte*)ComponentHandle + 36);
+            m_HasTexture = (bool*)(m_TilingFactor + 1);
             m_Texture2D.m_Handle = *m_AssetHandle;
         }
     }
@@ -340,6 +337,7 @@ namespace BeeEngine
             set
             {
                 CheckIfDestroyed();
+                Log.AssertAndThrow(value != null, "Font in TextRendererComponent can't be null");
                 Log.AssertAndThrow(value.IsValid(), "Font asset is invalid");
                 *m_AssetHandle = value.m_Handle;
             }

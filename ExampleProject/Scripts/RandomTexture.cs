@@ -11,6 +11,8 @@ namespace Example
         public Texture2D Texture4;
         public Texture2D Texture5;
 
+        public Texture2D Sprite;
+
         private Texture2D[] m_Textures;
         private SpriteRendererComponent m_Sprite;
         private Random m_Random = new Random();
@@ -24,6 +26,7 @@ namespace Example
                 Texture1, Texture2, Texture3, Texture4, Texture5
             };
             m_Sprite = GetComponent<SpriteRendererComponent>();
+            Sprite = m_Sprite.Texture;
             Log.Info("RandomTexture OnCreate");
         }
 

@@ -4,7 +4,7 @@ namespace BeeEngine
 {
     public abstract class Asset
     {
-        internal AssetHandle m_Handle;
+        internal AssetHandle m_Handle = new AssetHandle();
 
         public void Load()
         {

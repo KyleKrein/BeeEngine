@@ -191,6 +191,7 @@ void BeeEngine::InternalAssetManager::LoadStandardAssets()
             {0.5f, 0.5f},
             {-0.5f, 0.5f}
     };
+    indexBuffer = {0, 1, 2, 2, 3, 0};
 
     auto& fontMesh = LoadMesh<glm::vec2>("Renderer_FontMesh", fontVertexBuffer, indexBuffer);
     auto& fontModel = LoadModel("Renderer_Font", fontMaterial, fontMesh);

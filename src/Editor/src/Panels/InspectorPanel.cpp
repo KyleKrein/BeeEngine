@@ -535,7 +535,7 @@ namespace BeeEngine::Editor
                             value = field.GetData<AssetHandle>();
                         }
                         bool isValid = AssetManager::IsAssetHandleValid(value);
-                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Asset>(value).Name.data() : "null"))
+                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Texture2D>(value).Name.data() : "null"))
                         {
                             value = {0,0};
                             if(!m_Context->IsRuntime())
@@ -601,7 +601,7 @@ namespace BeeEngine::Editor
                             value = field.GetData<AssetHandle>();
                         }
                         bool isValid = AssetManager::IsAssetHandleValid(value);
-                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Asset>(value).Name.data() : "null"))
+                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Font>(value).Name.data() : "null"))
                         {
                             value = {0,0};
                             if(!m_Context->IsRuntime())

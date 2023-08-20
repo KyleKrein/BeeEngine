@@ -85,10 +85,10 @@ namespace BeeEngine
 
     struct SpriteRendererComponent
     {
-        float TilingFactor = 1.0f;
         Color4 Color = Color4::White;
         AssetHandle TextureHandle;
-        int16_t HasTexture = false;
+        float TilingFactor = 1.0f;
+        bool HasTexture = false;
 
         Texture2D* Texture() const
         {
