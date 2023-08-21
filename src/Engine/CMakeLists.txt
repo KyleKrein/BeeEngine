@@ -36,7 +36,9 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/AssetManagement/EngineAssetRegistry.h
         src/Core/AssetManagement/AssetRegistrySerializer.cpp
         src/Core/AssetManagement/AssetRegistrySerializer.h
-        src/Core/TypeSequence.h)
+        src/Core/TypeSequence.h
+        src/Core/Expected.h
+)
 
 function(DesktopPlatformsOnly)
     add_compile_definitions(DESKTOP_PLATFORM)
