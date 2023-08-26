@@ -54,6 +54,10 @@ namespace BeeEngine
         MClass* Texture2DClass = nullptr;
         MClass* FontClass = nullptr;
 
+        MonoVTable* TimeVTable = nullptr;
+        MonoClassField * DeltaTimeField = nullptr;
+        MonoClassField* TotalTimeField = nullptr;
+
         std::filesystem::path GameAssemblyPath = "";
         std::filesystem::path CoreAssemblyPath = "";
     };
@@ -205,8 +209,17 @@ namespace BeeEngine
                 s_Data.FontClass = mClass.get();
                 continue;
             }
+            if(mClass->GetName() == "Time")
+            {
+                s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
+                s_Data.DeltaTimeField = mClass->GetField("m_DeltaTime");
+                s_Data.TotalTimeField = mClass->GetField("m_TotalTime");
+                continue;
+            }
 
-            if(s_Data.EntityBaseClass && s_Data.AssetHandleField && s_Data.Texture2DClass && s_Data.FontClass)
+            if(s_Data.EntityBaseClass && s_Data.AssetHandleField &&
+            s_Data.Texture2DClass && s_Data.FontClass &&
+            s_Data.TotalTimeField && s_Data.DeltaTimeField && s_Data.TimeVTable)
             {
                 break;
             }
@@ -344,6 +357,10 @@ namespace BeeEngine
         s_Data.Texture2DClass = nullptr;
         s_Data.FontClass = nullptr;
 
+        s_Data.TimeVTable = nullptr;
+        s_Data.TotalTimeField = nullptr;
+        s_Data.DeltaTimeField = nullptr;
+
         mono_domain_set(mono_get_root_domain(), false);
         mono_domain_unload(s_Data.AppDomain);
 
@@ -397,5 +414,13 @@ namespace BeeEngine
     {
         MObject obj {(MonoObject*)monoObject};
         obj.GetFieldValue(*s_Data.AssetHandleField, &handle);
+    }
+
+    void ScriptingEngine::UpdateTime(double deltaTime, double totalTime)
+    {
+        if(!s_Data.DeltaTimeField)
+            return;
+        mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTime);
+        mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTime);
     }
 }

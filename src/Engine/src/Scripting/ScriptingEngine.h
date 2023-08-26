@@ -54,6 +54,8 @@ namespace BeeEngine
 
         static void GetAssetHandle(void* monoObject, AssetHandle &handle);
 
+        static void UpdateTime(double deltaTime, double totalTime);
+
     private:
 
         static class MAssembly& LoadAssembly(const std::filesystem::path& path);

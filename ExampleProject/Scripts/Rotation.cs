@@ -16,9 +16,9 @@ namespace Example
 
         private void OnUpdate()
         {
-            m_Transform.Rotation.Y += Speed;
-            m_Transform.Rotation.X += Speed;
-            m_Transform.Rotation.Z += Speed;
+            m_Transform.Rotation.Y += Speed * Time.DeltaTime;
+            m_Transform.Rotation.X += Speed * Time.DeltaTime;
+            m_Transform.Rotation.Z += Speed * Time.DeltaTime;
         }
 
         private void OnDestroy()

@@ -72,6 +72,7 @@
     <Compile Include="Math\Vector\Vector4.cs" />
     <Compile Include="Math\Vector\Vector4i.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Time.cs" />
     <Compile Include="Unsafe.cs" />
     <Compile Include="Events\WeakEvent.cs" />
   </ItemGroup>

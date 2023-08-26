@@ -17,7 +17,7 @@ namespace Example
         private SpriteRendererComponent m_Sprite;
         private Random m_Random = new Random();
 
-        private uint m_Counter = 0;
+        private float m_PrevTime;
 
         private void OnCreate()
         {
@@ -28,13 +28,15 @@ namespace Example
             m_Sprite = GetComponent<SpriteRendererComponent>();
             Sprite = m_Sprite.Texture;
             Log.Info("RandomTexture OnCreate");
+            m_PrevTime = Time.TotalTime;
         }
 
         private void OnUpdate()
         {
-            if (m_Counter++ < 60)
+            float currentTime = Time.TotalTime;
+            if (currentTime - m_PrevTime < 1)
                 return;
-            m_Counter = 0;
+            m_PrevTime = currentTime;
             m_Sprite.Texture = m_Textures[m_Random.Next(0, 5)];
         }
     }

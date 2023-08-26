@@ -26,6 +26,7 @@ namespace BeeEngine
             MVisibility GetVisibility() const { return m_Visibility; }
             const String& GetName() const { return m_Name; }
             MClass& GetClass() const { return *m_Class; }
+            operator MonoClassField*() const { return m_MonoField; }
     private:
         MClass* m_Class = nullptr;
         MType m_Type;
