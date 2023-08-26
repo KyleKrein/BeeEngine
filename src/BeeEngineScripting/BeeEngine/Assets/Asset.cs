@@ -8,22 +8,22 @@ namespace BeeEngine
 
         public void Load()
         {
-            InternalCalls.Asset_Load(m_Handle);
+            InternalCalls.Asset_Load(ref m_Handle);
         }
 
         public void Unload()
         {
-            InternalCalls.Asset_Unload(m_Handle);
+            InternalCalls.Asset_Unload(ref m_Handle);
         }
 
         public bool IsValid()
         {
-            return InternalCalls.Asset_IsValid(m_Handle);
+            return InternalCalls.Asset_IsValid(ref m_Handle);
         }
 
         public bool IsLoaded()
         {
-            return InternalCalls.Asset_IsLoaded(m_Handle);
+            return InternalCalls.Asset_IsLoaded(ref m_Handle);
         }
     }
 }

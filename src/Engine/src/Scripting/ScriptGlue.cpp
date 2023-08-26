@@ -315,23 +315,23 @@ namespace BeeEngine
         entity.GetComponent<TextRendererComponent>().Text = textStr;
     }
 
-    void ScriptGlue::Asset_Load(AssetHandle handle)
+    void ScriptGlue::Asset_Load(AssetHandle* handle)
     {
-        AssetManager::GetAsset<Asset>(handle);
+        AssetManager::GetAsset<Asset>(*handle);
     }
 
-    void ScriptGlue::Asset_Unload(AssetHandle handle)
+    void ScriptGlue::Asset_Unload(AssetHandle* handle)
     {
-        AssetManager::UnloadAsset(handle);
+        AssetManager::UnloadAsset(*handle);
     }
 
-    bool ScriptGlue::Asset_IsLoaded(AssetHandle handle)
+    bool ScriptGlue::Asset_IsLoaded(AssetHandle* handle)
     {
-        return AssetManager::IsAssetHandleValid(handle);
+        return AssetManager::IsAssetHandleValid(*handle);
     }
 
-    bool ScriptGlue::Asset_IsValid(AssetHandle handle)
+    bool ScriptGlue::Asset_IsValid(AssetHandle* handle)
     {
-        return AssetManager::IsAssetLoaded(handle);
+        return AssetManager::IsAssetLoaded(*handle);
     }
 }
