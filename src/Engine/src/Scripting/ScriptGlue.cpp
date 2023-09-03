@@ -44,7 +44,7 @@ namespace BeeEngine
     }
 
     template<typename ...Component>
-    void ScriptGlue::RegisterComponent(ComponentGroup<Component...>)
+    void ScriptGlue::RegisterComponent(TypeSequence<Component...>)
     {
         RegisterComponent<Component...>();
     }
@@ -83,6 +83,11 @@ namespace BeeEngine
 
             BEE_INTERNAL_CALL(Input_IsKeyDown);
             BEE_INTERNAL_CALL(Input_IsMouseButtonDown);
+
+            BEE_INTERNAL_CALL(Asset_Load);
+            BEE_INTERNAL_CALL(Asset_Unload);
+            BEE_INTERNAL_CALL(Asset_IsValid);
+            BEE_INTERNAL_CALL(Asset_IsLoaded);
         }
     }
 
@@ -308,5 +313,25 @@ namespace BeeEngine
             return;
         }
         entity.GetComponent<TextRendererComponent>().Text = textStr;
+    }
+
+    void ScriptGlue::Asset_Load(AssetHandle* handle)
+    {
+        AssetManager::GetAsset<Asset>(*handle);
+    }
+
+    void ScriptGlue::Asset_Unload(AssetHandle* handle)
+    {
+        AssetManager::UnloadAsset(*handle);
+    }
+
+    bool ScriptGlue::Asset_IsLoaded(AssetHandle* handle)
+    {
+        return AssetManager::IsAssetHandleValid(*handle);
+    }
+
+    bool ScriptGlue::Asset_IsValid(AssetHandle* handle)
+    {
+        return AssetManager::IsAssetLoaded(*handle);
     }
 }

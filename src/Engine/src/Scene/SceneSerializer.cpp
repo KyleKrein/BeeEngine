@@ -108,6 +108,26 @@ namespace YAML
     };
 
     template<>
+    struct convert<BeeEngine::AssetHandle>
+    {
+        static Node encode(const BeeEngine::AssetHandle& rhs)
+        {
+            Node node;
+            node.push_back((uint64_t)rhs.RegistryID);
+            node.push_back((uint64_t)rhs.AssetID);
+            return node;
+        }
+
+        static bool decode(const Node& node, BeeEngine::AssetHandle& rhs)
+        {
+            if (!node.IsSequence() || node.size() != 2)
+                return false;
+            rhs = BeeEngine::AssetHandle(node[0].as<uint64_t>(), node[1].as<uint64_t>());
+            return true;
+        }
+    };
+
+    template<>
     struct convert<BeeEngine::UUID>
     {
         static Node encode(const BeeEngine::UUID& uuid)
@@ -321,7 +341,9 @@ namespace BeeEngine
                                 READ_SCRIPT_FIELD(Vector4, glm::vec4);
                                 READ_SCRIPT_FIELD(Color, Color4);
                                 READ_SCRIPT_FIELD(Entity, UUID);
-
+                                READ_SCRIPT_FIELD(Asset, AssetHandle);
+                                READ_SCRIPT_FIELD(Texture2D, AssetHandle);
+                                READ_SCRIPT_FIELD(Font, AssetHandle);
                             }
                         }
                     }
@@ -332,6 +354,13 @@ namespace BeeEngine
                 {
                     auto& spriteRenderer = deserializedEntity.AddComponent<SpriteRendererComponent>();
                     spriteRenderer.Color = spriteRendererComponent["Color"].as<Color4>();
+                    spriteRenderer.HasTexture = spriteRendererComponent["Has Texture"].as<bool>();
+                    spriteRenderer.TextureHandle = spriteRendererComponent["Texture"].as<AssetHandle>();
+                    if(spriteRenderer.HasTexture && !AssetManager::IsAssetHandleValid(spriteRenderer.TextureHandle))
+                    {
+                        spriteRenderer.HasTexture = false;
+                    }
+                    spriteRenderer.TilingFactor = spriteRendererComponent["Tiling Factor"].as<float>();
                 }
                 auto circleRendererComponent = entity["CircleRendererComponent"];
                 if(circleRendererComponent)
@@ -346,6 +375,11 @@ namespace BeeEngine
                 {
                     auto& textRenderer = deserializedEntity.AddComponent<TextRendererComponent>();
                     textRenderer.Text = textRendererComponent["Text"].as<std::string>();
+                    textRenderer.FontHandle = textRendererComponent["Font"].as<AssetHandle>();
+                    if(!AssetManager::IsAssetHandleValid(textRenderer.FontHandle))
+                    {
+                        textRenderer.FontHandle = EngineAssetRegistry::OpenSansRegular;
+                    }
                     textRenderer.Configuration.ForegroundColor = textRendererComponent["Foreground Color"].as<Color4>();
                     textRenderer.Configuration.BackgroundColor = textRendererComponent["Background Color"].as<Color4>();
                     textRenderer.Configuration.KerningOffset = textRendererComponent["Kerning"].as<float>();
@@ -384,6 +418,12 @@ namespace BeeEngine
         out << YAML::BeginSeq << vec.x << vec.y << YAML::EndSeq;
         return out;
     }
+    YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle& handle)
+    {
+        out << YAML::Flow;
+        out << YAML::BeginSeq << (uint64_t)handle.RegistryID << (uint64_t)handle.AssetID << YAML::EndSeq;
+        return out;
+    }
     YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& vec)
     {
         out << YAML::Flow;
@@ -407,7 +447,7 @@ namespace BeeEngine
     {
         BeeCoreAssert(entity.HasComponent<UUIDComponent>(), "Entity has no UUID component");
         out << YAML::BeginMap; //Entity
-        out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
+        out << YAML::Key << "Entity" << YAML::Value << (uint64_t)entity.GetUUID();
         if (entity.HasComponent<TagComponent>())
         {
             out << YAML::Key << "TagComponent";
@@ -495,7 +535,10 @@ namespace BeeEngine
                         WRITE_SCRIPT_FIELD(Vector3, glm::vec3);
                         WRITE_SCRIPT_FIELD(Vector4, glm::vec4);
                         WRITE_SCRIPT_FIELD(Color, Color4);
-                        WRITE_SCRIPT_FIELD(Entity, UUID);
+                        WRITE_SCRIPT_FIELD(Asset, AssetHandle);
+                        WRITE_SCRIPT_FIELD(Texture2D, AssetHandle);
+                        WRITE_SCRIPT_FIELD(Font, AssetHandle);
+                        //WRITE_SCRIPT_FIELD(Entity, UUID);
                     }
                     out << YAML::EndMap;
                 }
@@ -511,6 +554,9 @@ namespace BeeEngine
             out << YAML::BeginMap;
             auto& spriteRenderer = entity.GetComponent<SpriteRendererComponent>();
             out << YAML::Key << "Color" << YAML::Value << spriteRenderer.Color;
+            out << YAML::Key << "Has Texture" << YAML::Value << spriteRenderer.HasTexture;
+            out << YAML::Key << "Texture" << YAML::Value << spriteRenderer.TextureHandle;
+            out << YAML::Key << "Tiling Factor" << YAML::Value << spriteRenderer.TilingFactor;
             out << YAML::EndMap;
         }
         if(entity.HasComponent<CircleRendererComponent>())
@@ -529,6 +575,7 @@ namespace BeeEngine
             out << YAML::BeginMap;
             auto& textRenderer = entity.GetComponent<TextRendererComponent>();
             out << YAML::Key << "Text" << YAML::Value << textRenderer.Text;
+            out << YAML::Key << "Font" << YAML::Value << textRenderer.FontHandle;
             out << YAML::Key << "Foreground Color" << YAML::Value << textRenderer.Configuration.ForegroundColor;
             out << YAML::Key << "Background Color" << YAML::Value << textRenderer.Configuration.BackgroundColor;
             out << YAML::Key << "Kerning" << YAML::Value << textRenderer.Configuration.KerningOffset;

@@ -33,10 +33,8 @@ namespace BeeEngine
         generator.generate(glyphs.data(), glyphs.size());
         msdfgen::BitmapConstRef<T, N> bitmap = generator.atlasStorage();
 
-        Ref<Texture2D> texture = Texture2D::Create(bitmap.width, bitmap.height);
-
-        unsigned char* pixels = new unsigned char[bitmap.width * bitmap.height * N];
-        memcpy(pixels, bitmap.pixels, bitmap.width * bitmap.height * N);
+        //unsigned char* pixels = new unsigned char[bitmap.width * bitmap.height * N];
+        //memcpy(pixels, bitmap.pixels, bitmap.width * bitmap.height * N);
 #if 0 //flip image vertically
         const size_t stride = bitmap.width * N;
         unsigned char *row = (decltype(row))malloc(stride);
@@ -50,9 +48,8 @@ namespace BeeEngine
         }
         free(row);
 #endif
-        texture->SetData({(byte*)pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
-        delete[] pixels;
-        return texture;
+        //delete[] pixels;
+        return Texture2D::Create(bitmap.width, bitmap.height, {(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
     }
 
     Font::Font(const std::filesystem::path &path)

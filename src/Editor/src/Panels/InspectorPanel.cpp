@@ -17,7 +17,8 @@
 namespace BeeEngine::Editor
 {
 
-    InspectorPanel::InspectorPanel(const Ref<Scene> &context)
+    InspectorPanel::InspectorPanel(const Ref<Scene> &context, EditorAssetManager* assetManager)
+    : m_AssetManager(assetManager)
     {
         SetContext(context);
     }
@@ -187,12 +188,13 @@ namespace BeeEngine::Editor
         {
             ImGui::ColorEdit4("Color", sprite.Color.ValuePtr());
 
-            if(sprite.Texture)
+            if(sprite.HasTexture)
             {
-                float aspectRatio = (float)sprite.Texture->GetWidth() / (float)sprite.Texture->GetHeight();
-                if(ImGui::ImageButton((void*)sprite.Texture->GetRendererID(), ImVec2(100.0f * aspectRatio, 100.0f * aspectRatio), { 0, 1 }, { 1, 0 }))
+                auto* texture = sprite.Texture();
+                float aspectRatio = (float)texture->GetWidth() / (float)texture->GetHeight();
+                if(ImGui::ImageButton((void*)texture->GetRendererID(), ImVec2(100.0f * aspectRatio, 100.0f * aspectRatio), { 0, 1 }, { 1, 0 }))
                 {
-                    sprite.Texture = nullptr;
+                    sprite.HasTexture = false;
                 }
             }
             else
@@ -214,7 +216,32 @@ namespace BeeEngine::Editor
                         const char* path = (const char*)payload->Data;
                         texturePath = std::filesystem::path(m_WorkingDirectory) / path;
                     }
-                    sprite.Texture = &Application::GetInstance().GetAssetManager().LoadTexture(ResourceManager::GetNameFromFilePath(texturePath.string()),texturePath);
+                    if(ResourceManager::IsTexture2DExtension(texturePath.extension()))
+                    {
+                        auto name = ResourceManager::GetNameFromFilePath(texturePath.string());
+                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                        if(!handlePtr)
+                        {
+                            m_AssetManager->LoadAsset(texturePath, {m_ProjectAssetRegistryID});
+                            handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                        }
+                        BeeCoreAssert(handlePtr, "Failed to load texture from path: {0}", texturePath.string());
+                        sprite.HasTexture = true;
+                        sprite.TextureHandle = *handlePtr;
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
+                {
+                    auto* handlePtr = (AssetHandle*)payload->Data;
+                    BeeExpects(handlePtr);
+                    BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                    sprite.HasTexture = true;
+                    sprite.TextureHandle = *handlePtr;
                 }
                 ImGui::EndDragDropTarget();
             }
@@ -232,6 +259,49 @@ namespace BeeEngine::Editor
         });
         DrawComponentUI<TextRendererComponent>("Text Renderer", entity, [this](TextRendererComponent& component){
            ImGui::InputTextMultiline("Text", &component.Text);
+           if(ImGui::Button(component.Font().Name.data(), ImVec2(0.0f, 0.0f)))
+           {
+               component.FontHandle = EngineAssetRegistry::OpenSansRegular;
+           }
+           if (ImGui::BeginDragDropTarget())
+           {
+               if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+               {
+                   std::filesystem::path fontPath;
+                   if(Application::GetOsPlatform() == OSPlatform::Windows)
+                   {
+                       fontPath = std::filesystem::path(m_WorkingDirectory) / (const wchar_t*)payload->Data;
+                   }
+                   else
+                   {
+                       fontPath = std::filesystem::path(m_WorkingDirectory) / (const char*)payload->Data;
+                   }
+                   if(ResourceManager::IsFontExtension(fontPath.extension()))
+                   {
+                       auto name = ResourceManager::GetNameFromFilePath(fontPath.string());
+                       auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                       if(!handlePtr)
+                       {
+                           m_AssetManager->LoadAsset(fontPath, {m_ProjectAssetRegistryID});
+                           handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                       }
+                       BeeCoreAssert(handlePtr, "Failed to load font from path: {0}", fontPath.string());
+                       component.FontHandle = *handlePtr;
+                   }
+               }
+               ImGui::EndDragDropTarget();
+           }
+           if (ImGui::BeginDragDropTarget())
+           {
+               if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
+               {
+                   auto* handlePtr = (AssetHandle*)payload->Data;
+                   BeeExpects(handlePtr);
+                   BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                   component.FontHandle = *handlePtr;
+               }
+               ImGui::EndDragDropTarget();
+           }
            ImGui::ColorEdit4("Foreground", component.Configuration.ForegroundColor.ValuePtr());
            ImGui::ColorEdit4("Background", component.Configuration.BackgroundColor.ValuePtr());
            ImGui::DragFloat("Kerning offset", &component.Configuration.KerningOffset, 0.025f);
@@ -369,6 +439,217 @@ namespace BeeEngine::Editor
                         {
                             SetFieldData(mField, &value, mObject, field);
                         }
+                        break;
+                    }
+                    case MType::Asset:
+                    {
+                        AssetHandle value;
+                        ImGui::Text(name);
+                        ImGui::SameLine();
+                        if(mObject)
+                        {
+                            MonoObject* monoObject;
+                            mObject->GetFieldValue(mField, &monoObject);
+                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                        }
+                        else
+                        {
+                            value = field.GetData<AssetHandle>();
+                        }
+                        bool isValid = AssetManager::IsAssetHandleValid(value);
+                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Asset>(value).Name.data() : "null"))
+                        {
+                            value = {0,0};
+                            if(!m_Context->IsRuntime())
+                                SetFieldData(mField, &value, mObject, field);
+                        }
+                        if(m_Context->IsRuntime())
+                            break;
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                            {
+                                std::filesystem::path assetPath;
+                                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                                {
+                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
+                                }
+                                else
+                                {
+                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
+                                }
+                                if(ResourceManager::IsAssetExtension(assetPath.extension()))
+                                {
+                                    auto name = ResourceManager::GetNameFromFilePath(assetPath.string());
+                                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    if(!handlePtr)
+                                    {
+                                        m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
+                                    }
+                                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    value = *handlePtr;
+                                    SetFieldData(mField, &value, mObject, field);
+                                }
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
+                            {
+                                auto* handlePtr = (AssetHandle*)payload->Data;
+                                BeeExpects(handlePtr);
+                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                                value = *handlePtr;
+                                SetFieldData(mField, &value, mObject, field);
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
+                            {
+                                auto* handlePtr = (AssetHandle*)payload->Data;
+                                BeeExpects(handlePtr);
+                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                                value = *handlePtr;
+                                SetFieldData(mField, &value, mObject, field);
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        break;
+                    }
+                    case MType::Texture2D:
+                    {
+                        AssetHandle value;
+                        ImGui::Text(name);
+                        ImGui::SameLine();
+                        if(mObject)
+                        {
+                            MonoObject* monoObject;
+                            mObject->GetFieldValue(mField, &monoObject);
+                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                        }
+                        else
+                        {
+                            value = field.GetData<AssetHandle>();
+                        }
+                        bool isValid = AssetManager::IsAssetHandleValid(value);
+                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Texture2D>(value).Name.data() : "null"))
+                        {
+                            value = {0,0};
+                            if(!m_Context->IsRuntime())
+                                SetFieldData(mField, &value, mObject, field);
+                        }
+                        if(m_Context->IsRuntime())
+                            break;
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                            {
+                                std::filesystem::path assetPath;
+                                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                                {
+                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
+                                }
+                                else
+                                {
+                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
+                                }
+                                if(ResourceManager::IsTexture2DExtension(assetPath.extension()))
+                                {
+                                    auto name = ResourceManager::GetNameFromFilePath(assetPath.string());
+                                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    if(!handlePtr)
+                                    {
+                                        m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
+                                    }
+                                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    value = *handlePtr;
+                                    SetFieldData(mField, &value, mObject, field);
+                                }
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
+                            {
+                                auto* handlePtr = (AssetHandle*)payload->Data;
+                                BeeExpects(handlePtr);
+                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                                value = *handlePtr;
+                                SetFieldData(mField, &value, mObject, field);
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        break;
+                    }
+                    case MType::Font:
+                    {
+                        AssetHandle value;
+                        ImGui::Text(name);
+                        ImGui::SameLine();
+                        if(mObject)
+                        {
+                            MonoObject* monoObject;
+                            mObject->GetFieldValue(mField, &monoObject);
+                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                        }
+                        else
+                        {
+                            value = field.GetData<AssetHandle>();
+                        }
+                        bool isValid = AssetManager::IsAssetHandleValid(value);
+                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Font>(value).Name.data() : "null"))
+                        {
+                            value = {0,0};
+                            if(!m_Context->IsRuntime())
+                                SetFieldData(mField, &value, mObject, field);
+                        }
+                        if(m_Context->IsRuntime())
+                            break;
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                            {
+                                std::filesystem::path assetPath;
+                                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                                {
+                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
+                                }
+                                else
+                                {
+                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
+                                }
+                                if(ResourceManager::IsFontExtension(assetPath.extension()))
+                                {
+                                    auto name = ResourceManager::GetNameFromFilePath(assetPath.string());
+                                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    if(!handlePtr)
+                                    {
+                                        m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
+                                    }
+                                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    value = *handlePtr;
+                                    SetFieldData(mField, &value, mObject, field);
+                                }
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
+                            {
+                                auto* handlePtr = (AssetHandle*)payload->Data;
+                                BeeExpects(handlePtr);
+                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                                value = *handlePtr;
+                                SetFieldData(mField, &value, mObject, field);
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        break;
                     }
                 }
             }

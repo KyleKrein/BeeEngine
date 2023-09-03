@@ -45,6 +45,11 @@ namespace BeeEngine
         Vector4 = 0x22,
         Color = 0x23,
         Entity = 0x24,
+
+        AssetHandle = 0x25,
+        Asset = 0x26,
+        Texture2D = 0x27,
+        Font = 0x28,
         /*I1 = 0x04,
         U1 = 0x05,
         I2 = 0x06,

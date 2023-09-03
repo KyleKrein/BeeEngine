@@ -1,0 +1,10 @@
+Registry ID: 3753192931707503016
+Assets:
+  - Name: pc
+    Type: AssetType::Texture2D
+    Handle: 7772243033513047726
+    FilePath: Assets/pc.png
+  - Name: google_logo
+    Type: AssetType::Texture2D
+    Handle: 13987028760561915515
+    FilePath: Assets/google_logo.png

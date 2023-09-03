@@ -4,6 +4,8 @@
 #include "Platform/ImGui/ImGuiController.h"
 #include "Renderer/Shader.h"
 #include "Debug/Instrumentor.h"
+#include "Core/AssetManagement/IAssetManager.h"
+#include "Core/AssetManagement/AssetManager.h"
 
 
 namespace BeeEngine
@@ -18,6 +20,10 @@ namespace BeeEngine
         virtual void OnGUIRendering() {}
         virtual void OnEvent(EventDispatcher& e) {}
     protected:
+        void RegisterAssetManager(IAssetManager* assetManager)
+        {
+            AssetManager::s_AssetManager = assetManager;
+        }
     };
 
     class ImGuiLayer: public Layer

@@ -10,6 +10,8 @@
 #include "Debug/Instrumentor.h"
 #include "Core/Application.h"
 #include <sstream>
+#include "Core/AssetManagement/Asset.h"
+#include <string_view>
 
 namespace BeeEngine
 {
@@ -124,6 +126,42 @@ namespace BeeEngine
             script << "\t}\n";
             script << "}\n";
             return script.str();
+        }
+
+        static bool IsTexture2DExtension(const std::filesystem::path &extension)
+        {
+            return extension == ".png" or
+                   extension == ".jpg" or
+                   extension == ".jpeg" or
+                   extension == ".bmp";
+        }
+
+        static bool IsSceneExtension(const std::filesystem::path &extension) noexcept
+        {
+            return extension == ".beescene";
+        }
+
+        static bool IsFontExtension(const std::filesystem::path &extension) noexcept
+        {
+            return extension == ".ttf";
+        }
+
+        static bool IsAssetExtension(const std::filesystem::path &extension) noexcept
+        {
+            return IsTexture2DExtension(extension) || IsFontExtension(extension);
+        }
+
+        static AssetType GetAssetTypeFromExtension(const std::filesystem::path &extension)
+        {
+            if(IsTexture2DExtension(extension))
+            {
+                return AssetType::Texture2D;
+            }
+            if(IsFontExtension(extension))
+            {
+                return AssetType::Font;
+            }
+            return AssetType::None;
         }
     };
 }

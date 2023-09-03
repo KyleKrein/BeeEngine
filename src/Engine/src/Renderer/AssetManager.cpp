@@ -9,7 +9,7 @@
 #include "Vertex.h"
 
 BeeEngine::Material &
-BeeEngine::AssetManager::LoadMaterial(const std::string &name, const std::filesystem::path &vertexShader,
+BeeEngine::InternalAssetManager::LoadMaterial(const std::string &name, const std::filesystem::path &vertexShader,
                                       const std::filesystem::path &fragmentShader)
 {
     if(HasMaterial(name))
@@ -20,7 +20,7 @@ BeeEngine::AssetManager::LoadMaterial(const std::string &name, const std::filesy
                                                            )).first->second;
 }
 
-BeeEngine::Mesh &BeeEngine::AssetManager::LoadMesh(const std::string &name, const std::filesystem::path &path)
+BeeEngine::Mesh &BeeEngine::InternalAssetManager::LoadMesh(const std::string &name, const std::filesystem::path &path)
 {
     if(HasMesh(name))
         return GetMesh(name);
@@ -34,7 +34,7 @@ BeeEngine::Mesh &BeeEngine::AssetManager::LoadMesh(const std::string &name, cons
     }
 }
 
-BeeEngine::Mesh& BeeEngine::AssetManager::LoadMesh(const std::string& name, std::vector<BeeEngine::Vertex>& vertices, std::vector<uint32_t>& indices)
+BeeEngine::Mesh& BeeEngine::InternalAssetManager::LoadMesh(const std::string& name, std::vector<BeeEngine::Vertex>& vertices, std::vector<uint32_t>& indices)
 {
     if(HasMesh(name))
         return GetMesh(name);
@@ -42,7 +42,7 @@ BeeEngine::Mesh& BeeEngine::AssetManager::LoadMesh(const std::string& name, std:
         return *m_Meshes.emplace(name, Mesh::Create(vertices, indices)).first->second;
 }
 template<typename VertexType>
-BeeEngine::Mesh& BeeEngine::AssetManager::LoadMesh(const std::string& name, std::vector<VertexType>& vertices, std::vector<uint32_t>& indices)
+BeeEngine::Mesh& BeeEngine::InternalAssetManager::LoadMesh(const std::string& name, std::vector<VertexType>& vertices, std::vector<uint32_t>& indices)
 {
     if(HasMesh(name))
         return GetMesh(name);
@@ -52,34 +52,35 @@ BeeEngine::Mesh& BeeEngine::AssetManager::LoadMesh(const std::string& name, std:
     return *m_Meshes.emplace(name, Mesh::Create(data, size, vertexCount, indices)).first->second;
 }
 
-BeeEngine::Texture2D &BeeEngine::AssetManager::LoadTexture(const std::string &name, const std::filesystem::path &path)
+BeeEngine::Texture2D &BeeEngine::InternalAssetManager::LoadTexture(const std::string &name, const std::filesystem::path &path)
 {
     if (HasTexture(name))
     {
         return GetTexture(name);
     }
-    return *m_Textures.emplace(name, Texture2D::Create(path.string())).first->second;
+    BeeCoreAssert(false, "Not implemented!");
+    //return *m_Textures.emplace(name, Texture2D::Create(path.string())).first->second;
 }
 
-BeeEngine::Material &BeeEngine::AssetManager::GetMaterial(const std::string &name)
+BeeEngine::Material &BeeEngine::InternalAssetManager::GetMaterial(const std::string &name)
 {
     BeeExpects(HasMaterial(name));
     return *m_Materials.at(name);
 }
 
-BeeEngine::Mesh &BeeEngine::AssetManager::GetMesh(const std::string &name)
+BeeEngine::Mesh &BeeEngine::InternalAssetManager::GetMesh(const std::string &name)
 {
     BeeExpects(HasMesh(name));
     return *m_Meshes.at(name);
 }
 
-BeeEngine::Texture2D &BeeEngine::AssetManager::GetTexture(const std::string &name)
+BeeEngine::Texture2D &BeeEngine::InternalAssetManager::GetTexture(const std::string &name)
 {
     BeeExpects(HasTexture(name));
     return *m_Textures.at(name);
 }
 
-bool BeeEngine::AssetManager::HasMaterial(const std::string &name) const
+bool BeeEngine::InternalAssetManager::HasMaterial(const std::string &name) const
 {
     if(m_Materials.find(name) != m_Materials.end())
         return true;
@@ -87,7 +88,7 @@ bool BeeEngine::AssetManager::HasMaterial(const std::string &name) const
         return false;
 }
 
-bool BeeEngine::AssetManager::HasMesh(const std::string &name) const
+bool BeeEngine::InternalAssetManager::HasMesh(const std::string &name) const
 {
     if (m_Meshes.find(name) != m_Meshes.end())
         return true;
@@ -95,7 +96,7 @@ bool BeeEngine::AssetManager::HasMesh(const std::string &name) const
         return false;
 }
 
-bool BeeEngine::AssetManager::HasTexture(const std::string &name) const
+bool BeeEngine::InternalAssetManager::HasTexture(const std::string &name) const
 {
     if (m_Textures.find(name) != m_Textures.end())
         return true;
@@ -104,7 +105,7 @@ bool BeeEngine::AssetManager::HasTexture(const std::string &name) const
 }
 
 BeeEngine::Model &
-BeeEngine::AssetManager::LoadModel(const std::string &name, BeeEngine::Material &material, BeeEngine::Mesh &mesh)
+BeeEngine::InternalAssetManager::LoadModel(const std::string &name, BeeEngine::Material &material, BeeEngine::Mesh &mesh)
 {
     if(HasModel(name))
         return GetModel(name);
@@ -112,13 +113,13 @@ BeeEngine::AssetManager::LoadModel(const std::string &name, BeeEngine::Material 
         return *m_Models.emplace(name, Model::Load(mesh, material)).first->second;
 }
 
-BeeEngine::Model &BeeEngine::AssetManager::GetModel(const std::string &name)
+BeeEngine::Model &BeeEngine::InternalAssetManager::GetModel(const std::string &name)
 {
     BeeExpects(HasModel(name));
     return *m_Models.at(name);
 }
 
-bool BeeEngine::AssetManager::HasModel(const std::string &name) const
+bool BeeEngine::InternalAssetManager::HasModel(const std::string &name) const
 {
     if(m_Models.find(name) != m_Models.end())
         return true;
@@ -126,13 +127,13 @@ bool BeeEngine::AssetManager::HasModel(const std::string &name) const
         return false;
 }
 
-BeeEngine::Texture2D&  BeeEngine::AssetManager::LoadTexture(const std::string& name, uint32_t width, uint32_t height)
+BeeEngine::Texture2D&  BeeEngine::InternalAssetManager::LoadTexture(const std::string& name, uint32_t width, uint32_t height, gsl::span<byte> data)
 {
-    m_Textures.emplace(name, Texture2D::Create(width, height));
+    m_Textures.emplace(name, Texture2D::Create(width, height, data));
     return *m_Textures.at(name);
 }
 
-BeeEngine::Font &BeeEngine::AssetManager::LoadFont(const std::string &name, const std::filesystem::path &path)
+BeeEngine::Font &BeeEngine::InternalAssetManager::LoadFont(const std::string &name, const std::filesystem::path &path)
 {
     if(HasFont(name))
         return GetFont(name);
@@ -140,7 +141,7 @@ BeeEngine::Font &BeeEngine::AssetManager::LoadFont(const std::string &name, cons
         return *m_Fonts.emplace(name, CreateRef<Font>(path)).first->second;
 }
 
-BeeEngine::Font &BeeEngine::AssetManager::LoadFont(const std::string &name, gsl::span<byte> data)
+BeeEngine::Font &BeeEngine::InternalAssetManager::LoadFont(const std::string &name, gsl::span<byte> data)
 {
     if(HasFont(name))
         return GetFont(name);
@@ -148,23 +149,22 @@ BeeEngine::Font &BeeEngine::AssetManager::LoadFont(const std::string &name, gsl:
         return *m_Fonts.emplace(name, CreateRef<Font>(name, data)).first->second;
 }
 
-BeeEngine::Font &BeeEngine::AssetManager::GetFont(const std::string &name)
+BeeEngine::Font &BeeEngine::InternalAssetManager::GetFont(const std::string &name)
 {
     BeeExpects(HasFont(name));
     return *m_Fonts.at(name);
 }
 
-bool BeeEngine::AssetManager::HasFont(const std::string &name) const
+bool BeeEngine::InternalAssetManager::HasFont(const std::string &name) const
 {
     return m_Fonts.contains(name);
 }
 
-void BeeEngine::AssetManager::LoadStandardAssets()
+void BeeEngine::InternalAssetManager::LoadStandardAssets()
 {
     using namespace BeeEngine;
-    auto& blank= LoadTexture("Blank", 1, 1);
     uint32_t data = 0xffffffff;
-    blank.SetData({(byte *)&data, 4});
+    auto& blank= LoadTexture("Blank", 1, 1, {(byte *)&data, 4});
 
     auto& spriteMaterial = LoadMaterial("Renderer2D_SpriteMaterial", "Shaders/Renderer2D_SpriteShader.vert", "Shaders/Renderer2D_SpriteShader.frag");
 
@@ -191,6 +191,7 @@ void BeeEngine::AssetManager::LoadStandardAssets()
             {0.5f, 0.5f},
             {-0.5f, 0.5f}
     };
+    indexBuffer = {0, 1, 2, 2, 3, 0};
 
     auto& fontMesh = LoadMesh<glm::vec2>("Renderer_FontMesh", fontVertexBuffer, indexBuffer);
     auto& fontModel = LoadModel("Renderer_Font", fontMaterial, fontMesh);

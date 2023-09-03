@@ -7,10 +7,11 @@
 #include "gsl/gsl"
 #include "IBindable.h"
 #include "BindingSet.h"
+#include "Core/AssetManagement/Asset.h"
 
 namespace BeeEngine
 {
-    class Texture: public IBindable
+    class Texture: public IBindable, public Asset
     {
     public:
         virtual ~Texture() = default;
@@ -39,9 +40,12 @@ namespace BeeEngine
 
         virtual void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels = 4) = 0;
 
-        static Ref<Texture2D> Create(std::string_view path);
-        static Ref<Texture2D> Create(uint32_t width, uint32_t height);
-        static Ref<Texture2D> CreateFromMemory(gsl::span<std::byte> data);
+        [[nodiscard]] constexpr AssetType GetType() const override
+        {
+            return AssetType::Texture2D;
+        }
+
+        static Ref<Texture2D> Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels = 4);
 
         BindingSet* GetBindingSet()
         {

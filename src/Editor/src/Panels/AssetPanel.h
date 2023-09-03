@@ -1,43 +1,31 @@
 //
-// Created by alexl on 07.06.2023.
+// Created by alexl on 19.08.2023.
 //
 
 #pragma once
-#include <filesystem>
-#include "Renderer/Texture.h"
+
+#include "ProjectFile.h"
+#include "Core/AssetManagement/EditorAssetManager.h"
 
 namespace BeeEngine::Editor
 {
     class AssetPanel
     {
     public:
-        AssetPanel(const std::filesystem::path& workingDirectory) noexcept;
-        void SetWorkingDirectory(const std::filesystem::path& path) noexcept
+        AssetPanel(EditorAssetManager* assetManager);
+        void SetProject(ProjectFile* project);
+
+        void SetAssetDeletedCallback(const std::function<void(AssetHandle)>& callback)
         {
-            m_WorkingDirectory = path;
-            m_CurrentDirectory = path;
-        }
-        [[nodiscard]] std::filesystem::path GetWorkingDirectory() const noexcept
-        {
-            return m_WorkingDirectory;
+            m_OnAssetDeleted = callback;
         }
 
-        bool NeedsToRegenerateSolution() noexcept
-        {
-            bool temp = m_NeedToRegenerateSolution;
-            m_NeedToRegenerateSolution = false;
-            return temp;
-        }
-
-        void OnGUIRender() noexcept;
+        void Render();
     private:
-        std::filesystem::path m_WorkingDirectory;
-        std::filesystem::path m_CurrentDirectory;
+        EditorAssetManager* m_AssetManager;
+        ProjectFile* m_Project;
+        std::function<void(AssetHandle)> m_OnAssetDeleted;
 
-        Ref<Texture2D> m_DirectoryIcon;
-        Ref<Texture2D> m_FileIcon;
-        bool m_NeedToRegenerateSolution = false;
-
-        void DragAndDropFileToFolder(const std::filesystem::path &path);
+        const char *GetDragAndDropTypeName(AssetType type);
     };
 }

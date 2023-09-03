@@ -6,6 +6,7 @@
 #include "Core/Events/EventQueue.h"
 #include "Core/Time.h"
 #include "Renderer/Instance.h"
+#include "Scripting/ScriptingEngine.h"
 
 namespace BeeEngine
 {
@@ -73,6 +74,7 @@ namespace BeeEngine
         void SetDeltaTime(double deltaTime, double totalTime)
         {
             Time::Set(deltaTime, totalTime);
+            ScriptingEngine::UpdateTime(deltaTime, totalTime);
         }
         uint16_t m_Width;
         uint16_t m_Height;

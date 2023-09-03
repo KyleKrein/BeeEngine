@@ -10,7 +10,9 @@ namespace BeeEngine
     {
     public:
         UUID();
-        UUID(uint64_t uuid);
+        constexpr UUID(uint64_t uuid)
+            : m_UUID(uuid)
+        {}
         UUID(const UUID&) = default;
 
         operator uint64_t() const { return m_UUID; }

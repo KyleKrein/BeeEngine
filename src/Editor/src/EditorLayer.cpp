@@ -13,6 +13,9 @@
 #include "Scripting/MAssembly.h"
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptGlue.h"
+#include "Core/AssetManagement/AssetManager.h"
+#include "Core/AssetManagement/EngineAssetRegistry.h"
+#include "Core/AssetManagement/AssetRegistrySerializer.h"
 
 namespace BeeEngine::Editor
 {
@@ -20,9 +23,8 @@ namespace BeeEngine::Editor
     void EditorLayer::OnAttach() noexcept
     {
         SetUpMenuBar();
-
-        m_PlayButtonTexture = Texture2D::CreateFromMemory(Internal::GetEmbeddedResource(EmbeddedResource::PlayButtonTexture));
-        m_StopButtonTexture = Texture2D::CreateFromMemory(Internal::GetEmbeddedResource(EmbeddedResource::StopButtonTexture));
+        m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture);
+        m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture);
 
         m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
@@ -48,7 +50,7 @@ namespace BeeEngine::Editor
         {
             case SceneState::Edit:
             {
-                if(m_AssetPanel.NeedsToRegenerateSolution())
+                if(m_ContentBrowserPanel.NeedsToRegenerateSolution())
                     m_ProjectFile->RegenerateSolution();
                 if(m_ProjectFile->IsAssemblyReloadPending())
                     ReloadAssembly();
@@ -92,7 +94,8 @@ namespace BeeEngine::Editor
             m_ViewPort.Render(m_EditorCamera);
             m_SceneHierarchyPanel.OnGUIRender();
             m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
-            m_AssetPanel.OnGUIRender();
+            m_ContentBrowserPanel.OnGUIRender();
+            m_AssetPanel.Render();
             m_FpsCounter.Render();
         }
         else
@@ -110,13 +113,26 @@ namespace BeeEngine::Editor
                 auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
                 path = projectPath.remove_filename().string();
                 path.pop_back();
-                m_ProjectFile = CreateScope<ProjectFile>(path, name);
-                m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_ProjectFile = CreateScope<ProjectFile>(path, name, &m_EditorAssetManager);
+                m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 
                 SetupGameLibrary();
+
+                if(std::filesystem::exists(m_ProjectFile->GetProjectAssetRegistryPath()))
+                {
+                    AssetRegistrySerializer assetRegistrySerializer(&m_EditorAssetManager, m_ProjectFile->GetProjectPath(), m_ProjectFile->GetAssetRegistryID());
+                    assetRegistrySerializer.Deserialize(m_ProjectFile->GetProjectAssetRegistryPath());
+                }
+
+                m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
+                m_InspectorPanel.SetProject(m_ProjectFile.get());
+                m_AssetPanel.SetProject(m_ProjectFile.get());
+                m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
+                    DeleteAsset(handle);
+                });
 
                 auto scenePath = m_ProjectFile->GetLastUsedScenePath();
                 if(!scenePath.empty())
@@ -141,11 +157,19 @@ namespace BeeEngine::Editor
                 auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
                 path = projectPath.remove_filename().string();
                 path.pop_back();
-                m_ProjectFile = CreateScope<ProjectFile>(path, name);
-                m_AssetPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_ProjectFile = CreateScope<ProjectFile>(path, name, &m_EditorAssetManager);
+                m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
+
+                m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
+                m_InspectorPanel.SetProject(m_ProjectFile.get());
+
+                m_AssetPanel.SetProject(m_ProjectFile.get());
+                m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
+                    DeleteAsset(handle);
+                });
 
                 SetupGameLibrary();
             }
@@ -363,6 +387,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::SaveScene()
     {
+        SaveAssetRegistry();
         if(m_ScenePath.empty())
         {
             auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
@@ -388,5 +413,42 @@ namespace BeeEngine::Editor
             return true;
         }
         return false;
+    }
+
+    void EditorLayer::SaveAssetRegistry()
+    {
+        AssetRegistrySerializer serializer(&m_EditorAssetManager, m_ProjectFile->GetProjectPath(), m_ProjectFile->GetAssetRegistryID());
+        serializer.Serialize(m_ProjectFile->GetProjectAssetRegistryPath());
+    }
+
+    void EditorLayer::DeleteAsset(const AssetHandle &handle)
+    {
+        auto type = m_EditorAssetManager.GetAsset(handle)->GetType();
+        if(type == AssetType::Texture2D)
+        {
+            auto view = m_ActiveScene->m_Registry.view<SpriteRendererComponent>();
+            for(auto& entity : view)
+            {
+                auto& spriteRenderer = view.get<SpriteRendererComponent>(entity);
+                if(spriteRenderer.HasTexture && spriteRenderer.TextureHandle == handle)
+                {
+                    spriteRenderer.HasTexture = false;
+                }
+            }
+        }
+        else if(type == AssetType::Font)
+        {
+            auto view = m_ActiveScene->m_Registry.view<TextRendererComponent>();
+            for(auto& entity : view)
+            {
+                auto& textComponent = view.get<TextRendererComponent>(entity);
+                if(textComponent.FontHandle == handle)
+                {
+                    textComponent.FontHandle = EngineAssetRegistry::OpenSansRegular;
+                }
+            }
+        }
+        m_EditorAssetManager.RemoveAsset(handle);
+        SaveAssetRegistry();
     }
 }

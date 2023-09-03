@@ -4,49 +4,21 @@
 
 #include "WebGPUTexture2D.h"
 #include "WebGPUGraphicsDevice.h"
-#include <stb_image.h>
 
 namespace BeeEngine::Internal
 {
-
-    WebGPUTexture2D::WebGPUTexture2D(std::string_view path)
+    WebGPUTexture2D::WebGPUTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels)
     {
-        int width, height, channels;
-        stbi_set_flip_vertically_on_load(true);
-        unsigned char *data = stbi_load(path.data(), &width, &height, &channels, 0);
-        if (!data)
-        {
-            BeeCoreError("Failed to load image: {0}", path);
-            throw std::exception();
-        }
-        if(channels == 3)
-        {
-            // Add alpha channel
-            unsigned char *dataWithAlpha = new unsigned char[width * height * 4];
-            for (int i = 0; i < width * height; ++i)
-            {
-                dataWithAlpha[i * 4] = data[i * 3];
-                dataWithAlpha[i * 4 + 1] = data[i * 3 + 1];
-                dataWithAlpha[i * 4 + 2] = data[i * 3 + 2];
-                dataWithAlpha[i * 4 + 3] = 255;
-            }
-            stbi_image_free(data);
-            data = dataWithAlpha;
-        }
         m_Width = width;
         m_Height = height;
         WGPUDevice device;
         WGPUTextureDescriptor textureDesc;
-        CreateTextureAndSampler(width, height, device, textureDesc);
+        CreateTextureAndSampler(m_Width, m_Height, device, textureDesc);
 
-        // Upload data to the GPU texture (to be implemented!)
-        WriteMipMaps(device, m_Texture, textureDesc.size, textureDesc.mipLevelCount, data);
+        m_MipLevels = textureDesc.mipLevelCount;
 
+        SetData(data, numberOfChannels);
         CreateTextureView(textureDesc);
-        if(channels == 3)
-            delete[] data;
-        else
-            stbi_image_free(data);
     }
 
     void WebGPUTexture2D::CreateTextureView(const WGPUTextureDescriptor &textureDesc)
@@ -99,39 +71,6 @@ namespace BeeEngine::Internal
         m_Sampler = wgpuDeviceCreateSampler(device, &samplerDesc);
     }
 
-    WebGPUTexture2D::WebGPUTexture2D(uint32_t width, uint32_t height)
-    {
-        m_Width = width;
-        m_Height = height;
-        WGPUDevice device;
-        WGPUTextureDescriptor textureDesc;
-        CreateTextureAndSampler(m_Width, m_Height, device, textureDesc);
-        CreateTextureView(textureDesc);
-    }
-
-    WebGPUTexture2D::WebGPUTexture2D(gsl::span<std::byte> dataFromMemory)
-    {
-        int width, height, channels;
-        stbi_set_flip_vertically_on_load(true);
-        stbi_uc* data = nullptr;
-        {
-            data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(dataFromMemory.data()), gsl::narrow_cast<int>(dataFromMemory.size()), &width, &height, &channels, 0);
-        }
-        if (!data)
-        {
-            BeeCoreError("Failed to load image from memory!");
-            throw std::exception();//return;
-        }
-        m_Width = width;
-        m_Height = height;
-        WGPUDevice device;
-        WGPUTextureDescriptor textureDesc;
-        CreateTextureAndSampler(width, height, device, textureDesc);
-        WriteMipMaps(device, m_Texture, textureDesc.size, textureDesc.mipLevelCount, data);
-        CreateTextureView(textureDesc);
-        stbi_image_free(data);
-    }
-
     WebGPUTexture2D::~WebGPUTexture2D()
     {
         wgpuSamplerRelease(m_Sampler);
@@ -160,10 +99,10 @@ namespace BeeEngine::Internal
                 dataWithAlpha[i * 4 + 2] = data[i * 3 + 2];
                 dataWithAlpha[i * 4 + 3] = std::byte(255);
             }
-            WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, 1, (const unsigned char *)dataWithAlpha.data());
+            WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, m_MipLevels, (const unsigned char *)dataWithAlpha.data());
             return;
         }
-        WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, 1, (const unsigned char *)data.data());
+        WriteMipMaps(WebGPUGraphicsDevice::GetInstance().GetDevice(), m_Texture, { m_Width, m_Height, 1 }, m_MipLevels, (const unsigned char *)data.data());
     }
 
     void WebGPUTexture2D::WriteMipMaps(WGPUDevice device,

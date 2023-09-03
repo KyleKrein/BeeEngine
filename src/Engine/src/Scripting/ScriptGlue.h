@@ -8,6 +8,7 @@
 #include "Core/UUID.h"
 #include "KeyCodes.h"
 #include "Scene/Components.h"
+#include "Core/AssetManagement/AssetManager.h"
 
 namespace BeeEngine
 {
@@ -20,7 +21,7 @@ namespace BeeEngine
         template<typename ...Component>
         static void RegisterComponent();
         template<typename ...Component>
-        static void RegisterComponent(ComponentGroup<Component...>);
+        static void RegisterComponent(TypeSequence<Component...>);
 
         static void Log_Warn(MonoString* message);
         static void Log_Info(MonoString* message);
@@ -40,5 +41,9 @@ namespace BeeEngine
         static MonoObject * Entity_GetScriptInstance(uint64_t id);
         static bool Input_IsKeyDown(Key key);
         static bool Input_IsMouseButtonDown(MouseButton button);
+        static void Asset_Load(AssetHandle* handle);
+        static void Asset_Unload(AssetHandle* handle);
+        static bool Asset_IsLoaded(AssetHandle* handle);
+        static bool Asset_IsValid(AssetHandle* handle);
     };
 }

@@ -40,6 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\AssetHandle.cs" />
+    <Compile Include="Assets\Font.cs" />
+    <Compile Include="Assets\Asset.cs" />
+    <Compile Include="Assets\Texture2D.cs" />
     <Compile Include="Collections\Weak\WeakCollection.cs" />
     <Compile Include="Collections\Weak\WeakDictionary.cs" />
     <Compile Include="Components.cs" />
@@ -68,6 +72,7 @@
     <Compile Include="Math\Vector\Vector4.cs" />
     <Compile Include="Math\Vector\Vector4i.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Time.cs" />
     <Compile Include="Unsafe.cs" />
     <Compile Include="Events\WeakEvent.cs" />
   </ItemGroup>

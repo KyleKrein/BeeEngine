@@ -20,6 +20,10 @@
 #include "Scripting/MObject.h"
 #include "Scripting/GameScript.h"
 #include "Renderer/TextRenderingConfiguration.h"
+#include "Core/AssetManagement/EngineAssetRegistry.h"
+#include "Renderer/Font.h"
+#include "Core/TypeSequence.h"
+#include "Core/AssetManagement/AssetManager.h"
 
 namespace BeeEngine
 {
@@ -82,16 +86,22 @@ namespace BeeEngine
     struct SpriteRendererComponent
     {
         Color4 Color = Color4::White;
-        Texture2D* Texture = nullptr;
+        AssetHandle TextureHandle;
         float TilingFactor = 1.0f;
+        bool HasTexture = false;
+
+        Texture2D* Texture() const
+        {
+            BeeExpects(HasTexture);
+            BeeExpects(AssetManager::IsAssetHandleValid(TextureHandle));
+            return &AssetManager::GetAsset<Texture2D>(TextureHandle);
+        }
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
-        explicit SpriteRendererComponent(const Color4& color): Color(color) {}
-        explicit SpriteRendererComponent(Texture2D& texture): Texture(&texture) {}
 
-        operator Texture2D&() { return *Texture; }
-        operator Texture2D&() const { return *Texture; }
+        operator Texture2D&() { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
+        operator Texture2D&() const { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
     };
 
     struct CircleRendererComponent
@@ -104,7 +114,13 @@ namespace BeeEngine
     struct TextRendererComponent
     {
         TextRenderingConfiguration Configuration;
+        AssetHandle FontHandle = EngineAssetRegistry::OpenSansRegular;
         std::string Text;
+
+        Font& Font() const
+        {
+            return AssetManager::GetAsset<BeeEngine::Font>(FontHandle);
+        }
     };
 
     /*struct MeshComponent
@@ -215,12 +231,8 @@ namespace BeeEngine
         void* RuntimeFixture = nullptr;
     };
 
-
-    template<typename ... Component>
-    struct ComponentGroup{};
-
     using AllComponents =
-            ComponentGroup<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
+            TypeSequence<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
             SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
             RigidBody2DComponent, BoxCollider2DComponent>;
 }

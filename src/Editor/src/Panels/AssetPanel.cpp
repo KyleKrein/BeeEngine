@@ -1,59 +1,61 @@
 //
-// Created by alexl on 07.06.2023.
+// Created by alexl on 19.08.2023.
 //
-#include "../../../Engine/Assets/EmbeddedResources.h"
+
 #include "AssetPanel.h"
 #include "imgui.h"
 #include "Renderer/Texture.h"
-#include "BeeEngine.h"
+#include "Core/AssetManagement/AssetManager.h"
+#include "Renderer/Font.h"
+#include "Core/AssetManagement/EngineAssetRegistry.h"
+#include "Core/Application.h"
 #include "Core/ResourceManager.h"
 
 
 namespace BeeEngine::Editor
 {
-    static void OpenCreatePopup(const char* name, bool open, const std::function<void(const char*)>& onCreate) noexcept
+
+    AssetPanel::AssetPanel(EditorAssetManager *assetManager)
+    : m_AssetManager(assetManager)
     {
-        if (open)
-        {
-            ImGui::OpenPopup(name);
-        }
 
-        if (ImGui::BeginPopup(name))
-        {
-            static char buffer[256] = { 0 };
-            ImGui::Text("Name");
-            ImGui::InputText("##Name", buffer, sizeof(buffer));
-
-            if (ImGui::Button("Create", { 120, 0 }))
-            {
-                onCreate(buffer);
-                ImGui::CloseCurrentPopup();
-                buffer[0] = '\0';
-            }
-
-            ImGui::SameLine();
-            if (ImGui::Button("Cancel", { 120, 0 }))
-            {
-                ImGui::CloseCurrentPopup();
-                buffer[0] = '\0';
-            }
-
-            ImGui::EndPopup();
-        }
     }
 
-    void AssetPanel::OnGUIRender() noexcept
+    void AssetPanel::SetProject(ProjectFile* project)
     {
-        ImGui::Begin("Content Browser");
+        m_Project = project;
+    }
 
-        if (m_CurrentDirectory != std::filesystem::path(m_WorkingDirectory))
+    void AssetPanel::Render()
+    {
+        ImGui::Begin("Assets");
+        if (ImGui::BeginDragDropTarget())
         {
-            if (ImGui::Button("<-"))
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
             {
-                m_CurrentDirectory = m_CurrentDirectory.parent_path();
+                std::filesystem::path assetPath;
+                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                {
+                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
+                }
+                else
+                {
+                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
+                }
+                if(ResourceManager::IsAssetExtension(assetPath.extension()))
+                {
+                    auto name = ResourceManager::GetNameFromFilePath(assetPath.string());
+                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                    if(!handlePtr)
+                    {
+                        m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
+                    }
+                }
             }
-            DragAndDropFileToFolder(m_CurrentDirectory.parent_path());
+            ImGui::EndDragDropTarget();
         }
+
+        auto& registry = m_AssetManager->GetAssetRegistry();
 
         static float padding = 16.0f;
         static float thumbnailSize = 64.0f;
@@ -64,159 +66,90 @@ namespace BeeEngine::Editor
         if (columnCount < 1)
             columnCount = 1;
 
-        ImGui::Columns(columnCount, "retbsfbd", false);
+        ImGui::Columns(columnCount, "AssetPanelColumns", false);
 
-        for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
+        for (auto& [registryID, registryMap] : registry)
         {
-            const auto& path = directoryEntry.path();
-            auto filename = path.filename();
-            auto extension = path.extension();
-            if(extension == ".csproj" || extension == ".sln" || filename == ".DS_Store" ||
-            (is_directory(path) &&
-            (filename == "beeengine" || filename == ".vs" || filename == ".beeengine" || filename == ".idea")))
-                continue;
-            auto relativePath = std::filesystem::relative(path, m_WorkingDirectory);
-            std::string filenameString = relativePath.filename().string();
-            ImGui::PushID(filenameString.c_str());
-            Ref<Texture2D>& icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
-            ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
-           // ImVec4 hoveredColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
-            //hoveredColor.w = 0.3f;
-            //ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
-            //ImVec4 activeColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
-            //activeColor.w = 0.5f;
-            //ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
-            ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
-
-            if (ImGui::BeginDragDropSource())
+            for(auto& [assetID, metadata] : registryMap)
             {
-                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                ImGui::PushID(metadata.Name.c_str());
+                Texture2D* icon = nullptr;
+                AssetHandle handle = {registryID, assetID};
+                switch (metadata.Type)
                 {
-                    auto itemPath = relativePath.wstring();
-                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath.c_str(), (itemPath.size() + 1) * sizeof(wchar_t));
+                    case AssetType::Texture2D:
+                    {
+                        icon = &AssetManager::GetAsset<Texture2D>(handle);
+                        break;
+                    }
+                    case AssetType::Font:
+                    {
+                        icon = &AssetManager::GetAsset<Font>(handle).GetAtlasTexture();
+                        break;
+                    }
+                    default:
+                    {
+                        icon = &AssetManager::GetAsset<Texture2D>(EngineAssetRegistry::FileTexture);
+                        break;
+                    }
                 }
-                else
+                ImGui::PushStyleColor(ImGuiCol_Button, {0, 0, 0, 0});
+                // ImVec4 hoveredColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
+                //hoveredColor.w = 0.3f;
+                //ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
+                //ImVec4 activeColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
+                //activeColor.w = 0.5f;
+                //ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
+                ImGui::ImageButton((ImTextureID) icon->GetRendererID(), {thumbnailSize, thumbnailSize}, {0, 1}, {1, 0});
+
+                if(handle.RegistryID == m_Project->GetAssetRegistryID())
                 {
-                    auto itemPath = relativePath.string();
-                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath.c_str(), itemPath.size() + 1);
+                    if(ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonRight))
+                    {
+                        if(ImGui::MenuItem("Delete Asset"))
+                        {
+                            Application::SubmitToMainThread([this, handle]()
+                                                            {
+                                                                m_OnAssetDeleted(handle);
+                                                            });
+                        }
+                        ImGui::EndPopup();
+                    }
                 }
 
-                ImGui::EndDragDropSource();
-            }
-
-            if(is_directory(path))
-            {
-                DragAndDropFileToFolder(path);
-            }
-
-            ImGui::PopStyleColor();
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-            {
-                if (directoryEntry.is_directory())
+                if (ImGui::BeginDragDropSource())
                 {
-                    m_CurrentDirectory /= path.filename();
+                    const char* name = GetDragAndDropTypeName(metadata.Type);
+                    ImGui::SetDragDropPayload(name, &handle, sizeof(AssetHandle));
+
+                    ImGui::EndDragDropSource();
                 }
+
+                ImGui::PopStyleColor();
+
+
+                ImGui::TextWrapped(metadata.Name.c_str());
+
+                ImGui::NextColumn();
+
+                ImGui::PopID();
             }
-
-            ImGui::TextWrapped(filenameString.c_str());
-
-            ImGui::NextColumn();
-            
-            ImGui::PopID();
         }
 
         ImGui::Columns(1);
-
-        //ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 16, 512);
-        //ImGui::SliderFloat("Padding", &padding, 0, 32);
-
-        // TODO: status bar
-
-        bool createScriptPopupOpen = false;
-        bool createScenePopupOpen = false;
-        bool createFolderPopupOpen = false;
-        if (ImGui::BeginPopupContextWindow("##CreateMenu", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
-        {
-            if(ImGui::MenuItem("Create Folder"))
-            {
-                createFolderPopupOpen = true;
-            }
-            if (ImGui::MenuItem("Create Script"))
-            {
-                createScriptPopupOpen = true;
-            }
-            if (ImGui::MenuItem("Create Scene"))
-            {
-                createScenePopupOpen = true;
-            }
-            ImGui::EndPopup();
-        }
-        OpenCreatePopup("Create Folder", createFolderPopupOpen, [&](const char* name)
-        {
-            auto path = m_CurrentDirectory / name;
-            std::filesystem::create_directory(path);
-        });
-        OpenCreatePopup("Create Script", createScriptPopupOpen, [&](const char* name)
-        {
-            std::string scriptName = name;
-            if (scriptName.empty())
-                scriptName = "NewScript";
-            std::filesystem::path scriptPath = m_CurrentDirectory / (scriptName + ".cs");
-            std::ofstream scriptFile(scriptPath);
-            scriptFile << ResourceManager::GetScriptTemplate(scriptName);
-            scriptFile.close();
-            m_NeedToRegenerateSolution = true;
-        });
-        OpenCreatePopup("Create Scene", createScenePopupOpen, [&](const char* name)
-        {
-
-        });
-
         ImGui::End();
     }
 
-    void AssetPanel::DragAndDropFileToFolder(const std::filesystem::path &path)
+    const char *AssetPanel::GetDragAndDropTypeName(AssetType type)
     {
-        if (ImGui::BeginDragDropTarget())
+        switch (type)
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-            {
-                std::filesystem::path filePath;
-
-                if(Application::GetOsPlatform() == OSPlatform::Windows)
-                {
-                    filePath = (const wchar_t*)payload->Data;
-                }
-                else
-                {
-                    filePath = (const char*)payload->Data;
-                }
-                if(!filePath.is_absolute())
-                {
-                    filePath = m_WorkingDirectory / filePath;
-                }
-                std::error_code error;
-                if(std::filesystem::copy_file(filePath, path / filePath.filename(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error))
-                {
-                    std::filesystem::remove_all(filePath);
-                    if(filePath.extension() == ".cs")
-                    {
-                        m_NeedToRegenerateSolution = true;
-                    }
-                }
-                else
-                    BeeCoreError("Failed to copy file: {0}", error.message());
-            }
-            ImGui::EndDragDropTarget();
+            case AssetType::Texture2D:
+                return "ASSET_BROWSER_TEXTURE2D_ITEM";
+            case AssetType::Font:
+                return "ASSET_BROWSER_FONT_ITEM";
+            default:
+                return "ASSET_BROWSER_UNKNOWN_ITEM";
         }
-    }
-
-    AssetPanel::AssetPanel(const std::filesystem::path &workingDirectory) noexcept
-            : m_WorkingDirectory(workingDirectory)
-            , m_CurrentDirectory(workingDirectory)
-    {
-        using namespace BeeEngine::Internal;
-        m_DirectoryIcon = Texture2D::CreateFromMemory(GetEmbeddedResource(EmbeddedResource::DirectoryTexture));
-        m_FileIcon = Texture2D::CreateFromMemory(GetEmbeddedResource(EmbeddedResource::FileTexture));
     }
 }

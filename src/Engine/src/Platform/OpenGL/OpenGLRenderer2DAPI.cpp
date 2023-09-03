@@ -45,9 +45,8 @@ namespace BeeEngine::Internal
         m_Data.VertexArray = VertexArray::Create(m_Data.RectVertexBuffer, indexBuffer);
         delete[] rectangleIndices;
 
-        m_Data.BlankTexture = Texture2D::Create(1, 1);
         uint32_t blankTexturePixel = 0xffffffff;
-        m_Data.BlankTexture->SetData({(std::byte*)&blankTexturePixel, sizeof(uint32_t)});
+        m_Data.BlankTexture = Texture2D::Create(1, 1, {(std::byte*)&blankTexturePixel, sizeof(uint32_t)});
 
         int samplers[BeeEngine::Internal::Renderer2DData::MaxTextureSlots];
         for (int i = 0; i < BeeEngine::Internal::Renderer2DData::MaxTextureSlots; i++)

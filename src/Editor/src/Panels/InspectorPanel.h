@@ -5,16 +5,29 @@
 #pragma once
 
 #include "BeeEngine.h"
+#include "Core/AssetManagement/EditorAssetManager.h"
+#include "ProjectFile.h"
 
 namespace BeeEngine::Editor
 {
     class InspectorPanel
     {
     public:
-        InspectorPanel() = default;
-        explicit InspectorPanel(const Ref<Scene>& context);
+        InspectorPanel(EditorAssetManager* assetManager)
+        : m_AssetManager(assetManager)
+        {}
+        explicit InspectorPanel(const Ref<Scene>& context, EditorAssetManager* assetManager);
+
+        void SetProject(ProjectFile* project)
+        {
+            m_Project = project;
+        }
 
         void SetContext(const Ref<Scene>& context);
+        void SetProjectAssetRegistryID(UUID id)
+        {
+            m_ProjectAssetRegistryID = id;
+        }
 
         void OnGUIRender(Entity selectedEntity) noexcept;
 
@@ -23,7 +36,10 @@ namespace BeeEngine::Editor
             m_WorkingDirectory = path;
         }
     private:
+        UUID m_ProjectAssetRegistryID;
         Ref<Scene> m_Context;
+        ProjectFile* m_Project = nullptr;
+        EditorAssetManager* m_AssetManager = nullptr;
 
         std::filesystem::path m_WorkingDirectory;
 

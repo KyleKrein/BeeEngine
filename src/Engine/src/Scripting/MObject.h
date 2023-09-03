@@ -17,6 +17,7 @@ namespace BeeEngine
     {
     public:
         MObject(MClass& object);
+        MObject(MonoObject* object);
         ~MObject();
         MClass& GetClass();
         void Invoke(class MMethod& method, void** params);

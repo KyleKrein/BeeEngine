@@ -12,7 +12,7 @@ namespace BeeEngine
     {
         struct MSDFData;
     }
-    class Font
+    class Font final: public Asset
     {
     public:
         Font(const std::filesystem::path& path);
@@ -21,7 +21,12 @@ namespace BeeEngine
         Font& operator=(const Font&) = delete;
         Font(Font&&) noexcept = default;
         Font& operator=(Font&&) noexcept = default;
-        ~Font();
+        ~Font() final;
+
+        [[nodiscard]] constexpr AssetType GetType() const override
+        {
+            return AssetType::Font;
+        }
 
         Texture2D& GetAtlasTexture() const { return *m_AtlasTexture; }
         const Internal::MSDFData& GetMSDFData() const { return *m_Data; }

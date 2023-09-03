@@ -22,22 +22,22 @@ namespace Example
             bool changed = false;
             if (Input.IsKeyDown(Key.W))
             {
-                m_Transform.Translation.Y += Speed;
+                m_Transform.Translation.Y += Speed * Time.DeltaTime;
                 changed = true;
             }
             if (Input.IsKeyDown(Key.S))
             {
-                m_Transform.Translation.Y -= Speed;
+                m_Transform.Translation.Y -= Speed * Time.DeltaTime;
                 changed = true;
             }
             if (Input.IsKeyDown(Key.D))
             {
-                m_Transform.Translation.X += Speed;
+                m_Transform.Translation.X += Speed * Time.DeltaTime;
                 changed = true;
             }
             if (Input.IsKeyDown(Key.A))
             {
-                m_Transform.Translation.X -= Speed;
+                m_Transform.Translation.X -= Speed * Time.DeltaTime;
                 changed = true;
             }
 
