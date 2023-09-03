@@ -41,6 +41,11 @@ namespace BeeEngine
         {
             return RegistryID < other.RegistryID || (RegistryID == other.RegistryID && AssetID < other.AssetID);
         }
+
+        bool operator == (const AssetHandle& other) const
+        {
+            return RegistryID == other.RegistryID && AssetID == other.AssetID;
+        }
     };
     enum class AssetType: uint16_t
     {

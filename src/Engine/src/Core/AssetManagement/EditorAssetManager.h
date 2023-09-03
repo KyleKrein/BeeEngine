@@ -28,6 +28,8 @@ namespace BeeEngine
 
         [[nodiscard]] AssetRegistry& GetAssetRegistry() final { return m_AssetRegistry; }
 
+        void RemoveAsset(AssetHandle handle);
+
     private:
         mutable AssetMap m_AssetMap;
         AssetRegistry m_AssetRegistry;

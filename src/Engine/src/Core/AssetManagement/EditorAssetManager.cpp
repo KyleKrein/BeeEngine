@@ -103,4 +103,20 @@ namespace BeeEngine
         AssetManager::s_AssetManager = this;
         EngineAssetRegistry::RegisterAssetTypes(this);
     }
+
+    void EditorAssetManager::RemoveAsset(AssetHandle handle)
+    {
+        BeeExpects(IsAssetHandleValid(handle));
+        if(IsAssetLoaded(handle))
+        {
+            UnloadAsset(handle);
+        }
+        auto metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
+        m_AssetRegistry.at(handle.RegistryID).erase(handle.AssetID);
+        m_AssetNameMap.erase(metadata.Name);
+        /*if(m_AssetRegistry.at(handle.RegistryID).empty()) //Commented out because deleting of last element in project's asset registry makes it impossible to save registry correctly
+        {
+            m_AssetRegistry.erase(handle.RegistryID);
+        }*/
+    }
 }

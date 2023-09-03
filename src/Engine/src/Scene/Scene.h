@@ -18,6 +18,7 @@ namespace BeeEngine
     {
         class SceneHierarchyPanel;
         class InspectorPanel;
+        class EditorLayer;
     }
     class Entity;
     class Scene
@@ -25,6 +26,7 @@ namespace BeeEngine
         friend class Entity;
         friend class BeeEngine::Editor::SceneHierarchyPanel;
         friend class BeeEngine::Editor::InspectorPanel;
+        friend class BeeEngine::Editor::EditorLayer;
         friend class SceneSerializer;
     public:
         static Ref<Scene> Copy(const Scene& scene);

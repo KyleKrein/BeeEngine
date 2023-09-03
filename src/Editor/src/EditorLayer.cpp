@@ -130,6 +130,9 @@ namespace BeeEngine::Editor
                 m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
                 m_InspectorPanel.SetProject(m_ProjectFile.get());
                 m_AssetPanel.SetProject(m_ProjectFile.get());
+                m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
+                    DeleteAsset(handle);
+                });
 
                 auto scenePath = m_ProjectFile->GetLastUsedScenePath();
                 if(!scenePath.empty())
@@ -164,6 +167,9 @@ namespace BeeEngine::Editor
                 m_InspectorPanel.SetProject(m_ProjectFile.get());
 
                 m_AssetPanel.SetProject(m_ProjectFile.get());
+                m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
+                    DeleteAsset(handle);
+                });
 
                 SetupGameLibrary();
             }
@@ -413,5 +419,36 @@ namespace BeeEngine::Editor
     {
         AssetRegistrySerializer serializer(&m_EditorAssetManager, m_ProjectFile->GetProjectPath(), m_ProjectFile->GetAssetRegistryID());
         serializer.Serialize(m_ProjectFile->GetProjectAssetRegistryPath());
+    }
+
+    void EditorLayer::DeleteAsset(const AssetHandle &handle)
+    {
+        auto type = m_EditorAssetManager.GetAsset(handle)->GetType();
+        if(type == AssetType::Texture2D)
+        {
+            auto view = m_ActiveScene->m_Registry.view<SpriteRendererComponent>();
+            for(auto& entity : view)
+            {
+                auto& spriteRenderer = view.get<SpriteRendererComponent>(entity);
+                if(spriteRenderer.HasTexture && spriteRenderer.TextureHandle == handle)
+                {
+                    spriteRenderer.HasTexture = false;
+                }
+            }
+        }
+        else if(type == AssetType::Font)
+        {
+            auto view = m_ActiveScene->m_Registry.view<TextRendererComponent>();
+            for(auto& entity : view)
+            {
+                auto& textComponent = view.get<TextRendererComponent>(entity);
+                if(textComponent.FontHandle == handle)
+                {
+                    textComponent.FontHandle = EngineAssetRegistry::OpenSansRegular;
+                }
+            }
+        }
+        m_EditorAssetManager.RemoveAsset(handle);
+        SaveAssetRegistry();
     }
 }

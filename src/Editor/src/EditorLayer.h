@@ -91,5 +91,7 @@ namespace BeeEngine::Editor
         void SaveScene();
 
         void SaveAssetRegistry();
+
+        void DeleteAsset(const AssetHandle &handle);
     };
 }

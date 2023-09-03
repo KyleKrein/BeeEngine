@@ -102,6 +102,21 @@ namespace BeeEngine::Editor
                 //ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
                 ImGui::ImageButton((ImTextureID) icon->GetRendererID(), {thumbnailSize, thumbnailSize}, {0, 1}, {1, 0});
 
+                if(handle.RegistryID == m_Project->GetAssetRegistryID())
+                {
+                    if(ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonRight))
+                    {
+                        if(ImGui::MenuItem("Delete Asset"))
+                        {
+                            Application::SubmitToMainThread([this, handle]()
+                                                            {
+                                                                m_OnAssetDeleted(handle);
+                                                            });
+                        }
+                        ImGui::EndPopup();
+                    }
+                }
+
                 if (ImGui::BeginDragDropSource())
                 {
                     const char* name = GetDragAndDropTypeName(metadata.Type);
