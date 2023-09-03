@@ -113,7 +113,7 @@ namespace BeeEngine::Editor
                 auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
                 path = projectPath.remove_filename().string();
                 path.pop_back();
-                m_ProjectFile = CreateScope<ProjectFile>(path, name);
+                m_ProjectFile = CreateScope<ProjectFile>(path, name, &m_EditorAssetManager);
                 m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
@@ -154,7 +154,7 @@ namespace BeeEngine::Editor
                 auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
                 path = projectPath.remove_filename().string();
                 path.pop_back();
-                m_ProjectFile = CreateScope<ProjectFile>(path, name);
+                m_ProjectFile = CreateScope<ProjectFile>(path, name, &m_EditorAssetManager);
                 m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());

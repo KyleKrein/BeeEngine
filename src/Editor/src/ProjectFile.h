@@ -7,13 +7,14 @@
 #include "FileWatch.hpp"
 #include "Core/TypeDefines.h"
 #include "Core/UUID.h"
+#include "Core/AssetManagement/EditorAssetManager.h"
 
 namespace BeeEngine::Editor
 {
     class ProjectFile
     {
     public:
-        ProjectFile(const std::filesystem::path& projectPath, const std::string& projectName) noexcept;
+        ProjectFile(const std::filesystem::path& projectPath, const std::string& projectName, EditorAssetManager* assetManager) noexcept;
 
         [[nodiscard]] const std::filesystem::path& GetProjectPath() const noexcept;
         [[nodiscard]] const std::string& GetProjectName() const noexcept;
@@ -54,6 +55,7 @@ namespace BeeEngine::Editor
 
     private:
         void OnAppAssemblyFileSystemEvent(const std::string& path, filewatch::Event changeType);
+        void OnAssetFileSystemEvent(const std::string& path, filewatch::Event changeType);
 
         std::filesystem::path m_ProjectPath;
         std::string m_ProjectName;
@@ -64,5 +66,8 @@ namespace BeeEngine::Editor
         mutable bool m_AssemblyReloadPending = false;
         std::filesystem::path m_AppAssemblyPath;
         BeeEngine::UUID m_AssetRegistryID;
+
+        Scope<filewatch::FileWatch<std::string>> m_AssetFileWatcher = nullptr;
+        EditorAssetManager* m_AssetManager;
     };
 }

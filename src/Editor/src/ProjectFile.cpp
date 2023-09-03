@@ -7,13 +7,14 @@
 #include "Core/Logging/Log.h"
 #include "VSProjectGeneration.h"
 #include "Core/ResourceManager.h"
+#include "Core/AssetManagement/AssetRegistrySerializer.h"
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 namespace BeeEngine::Editor
 {
 
-    ProjectFile::ProjectFile(const std::filesystem::path &projectPath, const std::string &projectName) noexcept
-    : m_ProjectName(projectName), m_ProjectPath(projectPath)
+    ProjectFile::ProjectFile(const std::filesystem::path &projectPath, const std::string &projectName, EditorAssetManager* assetManager) noexcept
+    : m_ProjectName(projectName), m_ProjectPath(projectPath), m_AssetManager(assetManager)
     {
         BeeCoreTrace("ProjectName: {0}", m_ProjectName);
         BeeCoreTrace("ProjectPath: {0}", m_ProjectPath.string());
@@ -68,6 +69,7 @@ namespace BeeEngine::Editor
 
             VSProjectGeneration::GenerateAssemblyInfoFile(m_ProjectPath, m_ProjectName);
             RegenerateSolution();
+            m_AssetFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_ProjectPath).string(), [this](const std::string & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
             return;
         }
         else
@@ -81,6 +83,7 @@ namespace BeeEngine::Editor
         }
         m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
         SetLastUsedScenePath(data["LastUsedScene"].as<std::string>());
+        m_AssetFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_ProjectPath).string(), [this](const std::string & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
     }
 
     const std::filesystem::path &ProjectFile::GetProjectPath() const noexcept
@@ -161,5 +164,56 @@ namespace BeeEngine::Editor
     const std::filesystem::path &ProjectFile::GetProjectAssetRegistryPath() const noexcept
     {
         return m_ProjectAssetRegistryPath;
+    }
+
+    void ProjectFile::OnAssetFileSystemEvent(const std::string &path, filewatch::Event changeType)
+    {
+        std::filesystem::path p = path;
+        if(!ResourceManager::IsAssetExtension(p.extension()))
+            return;
+        if(p.is_relative())
+            p = m_ProjectPath / p;
+        std::string name = ResourceManager::GetNameFromFilePath(p.string());
+        const AssetHandle* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+        if(!handlePtr)
+            return;
+        AssetHandle handle = *handlePtr;
+        bool changed = false;
+
+        switch (changeType)
+        {
+            case filewatch::Event::added:
+                Application::SubmitToMainThread([this, p, handle]()
+                {
+                    m_AssetManager->LoadAsset(p, handle);
+                });
+                changed = true;
+                break;
+            case filewatch::Event::removed:
+                break;
+            case filewatch::Event::modified:
+                if(m_AssetManager->IsAssetLoaded(handle))
+                {
+                    Application::SubmitToMainThread([this, p, handle]()
+                    {
+                        if(m_AssetManager->IsAssetLoaded(handle))
+                            m_AssetManager->UnloadAsset(handle);
+                    });
+                }
+                break;
+            case filewatch::Event::renamed_old:
+                break;
+            case filewatch::Event::renamed_new:
+                break;
+        }
+        if(changed)
+        {
+            Application::SubmitToMainThread([this]()
+                                            {
+                                                AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
+                                                serializer.Serialize(m_ProjectAssetRegistryPath);
+                                            });
+
+        }
     }
 }
