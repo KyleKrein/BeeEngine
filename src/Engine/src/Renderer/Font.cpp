@@ -106,6 +106,9 @@ namespace BeeEngine
         static constexpr CharsetRange charsetRanges[] =
                 {
                         {0x0020, 0x00FF}, // Basic Latin + Latin Supplement
+                        {0x0400, 0x052F}, //Cyrillic + Cyrillic Supplement
+                        {0x2DE0, 0x2DFF}, // Cyrillic Extended-A
+                        {0xA640, 0xA69F}, // Cyrillic Extended-B
                 };
 
         msdf_atlas::Charset charset;

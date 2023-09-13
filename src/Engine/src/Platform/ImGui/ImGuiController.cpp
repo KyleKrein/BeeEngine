@@ -15,9 +15,20 @@ namespace BeeEngine
         ImGuiStyle& style = ImGui::GetStyle();
         auto OpenSansRegularFont = GetEmbeddedResource(EmbeddedResource::OpenSansRegular);
         auto OpenSansBoldFont = GetEmbeddedResource(EmbeddedResource::OpenSansBold);
-        io.FontDefault = io.Fonts->AddFontFromMemoryTTF((void *) OpenSansRegularFont.data(), OpenSansRegularFont.size_bytes(), fontSize);
-        io.Fonts->AddFontFromMemoryTTF((void *) OpenSansBoldFont.data(), OpenSansBoldFont.size_bytes(), fontSize);
 
+        static const ImWchar  icons_ranges[] = { //0x20, 0xFFFF // full range
+                                                0x0020, 0x00FF,
+                                                 0x0400, 0x052F,
+                                                 0x2DE0, 0x2DFF,
+                                                 0xA640, 0xA69F,
+                                                 0 };
+
+        ImFontConfig config {};
+        //config.MergeMode = true;
+
+        io.FontDefault = io.Fonts->AddFontFromMemoryTTF((void *) OpenSansRegularFont.data(), OpenSansRegularFont.size_bytes(), fontSize, &config, icons_ranges);
+        io.Fonts->AddFontFromMemoryTTF((void *) OpenSansBoldFont.data(), OpenSansBoldFont.size_bytes(), fontSize, &config, icons_ranges);
+        //io.Fonts->GetGlyphRangesCyrillic();
         style.WindowMinSize.x = 370.0f;
 
 

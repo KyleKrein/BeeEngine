@@ -20,11 +20,10 @@
 #include <webgpu/webgpu.h>
 #endif
 
+#include "String.h"
 
 namespace BeeEngine
 {
-    using String = std::string;
-
     template<typename T>
     using Scope = std::unique_ptr<T>;
     template<typename T>

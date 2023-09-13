@@ -119,6 +119,7 @@ namespace BeeEngine::Internal
     void RenderingQueue::SubmitTextImpl(const std::string &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform,
                                         const TextRenderingConfiguration& config)
     {
+        BeeExpects(IsValidString(text));
         auto& textModel = Application::GetInstance().GetAssetManager().GetModel("Renderer_Font");
 
         auto& fontGeometry = font.GetMSDFData().FontGeometry;
@@ -129,13 +130,15 @@ namespace BeeEngine::Internal
         double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
         double y = 0.0;//-fsScale * metrics.ascenderY;
 
-        size_t length = text.size();
-
         const auto spaceGlyph =  fontGeometry.getGlyph(' ');
 
-        for (size_t i = 0; i < length; ++i)
+        auto it = text.begin();
+        auto end = text.end();
+
+
+        while(it != text.end())
         {
-            char32_t character = text[i];
+            char32_t character = GetNextUTF8Char(it, end);
 
             if (character == '\r')
                 continue;
@@ -148,19 +151,21 @@ namespace BeeEngine::Internal
             }
             if(character == ' ')
             {
-                if(i < length - 1)
+                if(it != end)
                 {
                     double advance = spaceGlyph->getAdvance();
-                    char32_t nextCharacter = text[i + 1];
+                    auto newit = it;
+                    char32_t nextCharacter = GetNextUTF8Char(newit, end);
                     fontGeometry.getAdvance(advance, character, nextCharacter);
 
                     x += fsScale * advance + config.KerningOffset;
                 }
+
                 continue;
             }
             if (character == '\t')
             {
-                if(i < length - 1)
+                if(it != end)
                 {
                     for (int j = 0; j < 3; ++j)
                     {
@@ -171,7 +176,8 @@ namespace BeeEngine::Internal
                         x += fsScale * advance + config.KerningOffset;
                     }
                     double advance = spaceGlyph->getAdvance();
-                    char32_t nextCharacter = text[i + 1];
+                    auto newit = it;
+                    char32_t nextCharacter = GetNextUTF8Char(newit, end);
                     fontGeometry.getAdvance(advance, character, nextCharacter);
 
                     x += fsScale * advance + config.KerningOffset;
@@ -221,10 +227,11 @@ namespace BeeEngine::Internal
             };
             SubmitInstanceImpl({.Model = &textModel, .BindingSets = {&cameraBindingSet, atlasTexture.GetBindingSet()}}, {(byte*)&data, sizeof(TextInstancedData)});
 
-            if(i < length - 1)
+            if(it != end)
             {
                 double advance = glyph->getAdvance();
-                char32_t nextCharacter = text[i + 1];
+                auto newit = it;
+                char32_t nextCharacter = GetNextUTF8Char(newit, end);
                 fontGeometry.getAdvance(advance, character, nextCharacter);
 
                 x += fsScale * advance + config.KerningOffset;

@@ -392,6 +392,9 @@ namespace BeeEngine
         UUID uuid = {};
         Entity newEntity = CreateEntityWithUUID(uuid, entity.GetComponent<TagComponent>().Tag);
         CopyComponents(AllComponents{}, m_Registry, m_Registry, (entt::entity)entity, (entt::entity)newEntity);
+        auto& uuidComponent = newEntity.GetComponent<UUIDComponent>();
+        uuidComponent.ID = uuid;
+        BeeEnsures(entity.GetUUID() != newEntity.GetUUID());
         return newEntity;
     }
 }

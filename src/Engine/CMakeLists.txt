@@ -38,6 +38,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/AssetManagement/AssetRegistrySerializer.h
         src/Core/TypeSequence.h
         src/Core/Expected.h
+        src/Core/String.cpp
+        src/Core/String.h
 )
 
 function(DesktopPlatformsOnly)
@@ -204,6 +206,8 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/tinyobjloader
         PUBLIC vendor/sdl/include
         PUBLIC vendor/magic_enum/include
+
+        PUBLIC vendor/utfcpp/include
         )
 target_link_libraries( ${PROJECT_NAME}
         #PRIVATE project_warnings
