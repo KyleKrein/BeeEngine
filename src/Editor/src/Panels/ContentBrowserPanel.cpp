@@ -6,6 +6,7 @@
 #include "Renderer/Texture.h"
 #include "BeeEngine.h"
 #include "Core/ResourceManager.h"
+#include "Utils/File.h"
 
 
 namespace BeeEngine::Editor
@@ -45,13 +46,13 @@ namespace BeeEngine::Editor
     {
         ImGui::Begin("Content Browser");
 
-        if (m_CurrentDirectory != std::filesystem::path(m_WorkingDirectory))
+        if (m_CurrentDirectory != m_WorkingDirectory)
         {
             if (ImGui::Button("<-"))
             {
-                m_CurrentDirectory = m_CurrentDirectory.parent_path();
+                m_CurrentDirectory = m_CurrentDirectory.GetParent();
             }
-            DragAndDropFileToFolder(m_CurrentDirectory.parent_path());
+            DragAndDropFileToFolder(m_CurrentDirectory.GetParent());
         }
 
         static float padding = 16.0f;
@@ -65,17 +66,19 @@ namespace BeeEngine::Editor
 
         ImGui::Columns(columnCount, "retbsfbd", false);
 
-        for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
+        auto stdCurrentDirectory = m_CurrentDirectory.ToStdPath();
+
+        for (auto& directoryEntry : std::filesystem::directory_iterator(stdCurrentDirectory))
         {
-            const auto& path = directoryEntry.path();
-            auto filename = path.filename();
-            auto extension = path.extension();
+            const Path& path = directoryEntry.path();
+            auto filename = path.GetFileName();
+            auto extension = path.GetExtension();
             if(extension == ".csproj" || extension == ".sln" || filename == ".DS_Store" ||
-            (is_directory(path) &&
+            (File::IsDirectory(path) &&
             (filename == "beeengine" || filename == ".vs" || filename == ".beeengine" || filename == ".idea")))
                 continue;
-            auto relativePath = std::filesystem::relative(path, m_WorkingDirectory);
-            std::string filenameString = relativePath.filename().string();
+            auto relativePath = path.GetRelativePath( m_WorkingDirectory);
+            String filenameString = relativePath.GetFileName().AsUTF8();
             ImGui::PushID(filenameString.c_str());
             Ref<Texture2D>& icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
             ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
@@ -89,21 +92,12 @@ namespace BeeEngine::Editor
 
             if (ImGui::BeginDragDropSource())
             {
-                if(Application::GetOsPlatform() == OSPlatform::Windows)
-                {
-                    auto itemPath = relativePath.wstring();
-                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath.c_str(), (itemPath.size() + 1) * sizeof(wchar_t));
-                }
-                else
-                {
-                    auto itemPath = relativePath.string();
-                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath.c_str(), itemPath.size() + 1);
-                }
-
+                const auto& itemPath = relativePath.AsUTF8();
+                ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath.c_str(), itemPath.size() + 1);
                 ImGui::EndDragDropSource();
             }
 
-            if(is_directory(path))
+            if(File::IsDirectory(path))
             {
                 DragAndDropFileToFolder(path);
             }
@@ -123,7 +117,7 @@ namespace BeeEngine::Editor
             {
                 if (directoryEntry.is_directory())
                 {
-                    m_CurrentDirectory /= path.filename();
+                    m_CurrentDirectory /= path.GetFileName();
                 }
             }
 
@@ -163,14 +157,14 @@ namespace BeeEngine::Editor
         OpenCreatePopup("Create Folder", createFolderPopupOpen, [&](const char* name)
         {
             auto path = m_CurrentDirectory / name;
-            std::filesystem::create_directory(path);
+            File::CreateDirectory(path);
         });
         OpenCreatePopup("Create Script", createScriptPopupOpen, [&](const char* name)
         {
             std::string scriptName = name;
             if (scriptName.empty())
                 scriptName = "NewScript";
-            std::filesystem::path scriptPath = m_CurrentDirectory / (scriptName + ".cs");
+            Path scriptPath = m_CurrentDirectory / (scriptName + ".cs");
             std::ofstream scriptFile(scriptPath);
             scriptFile << ResourceManager::GetScriptTemplate(scriptName);
             scriptFile.close();
@@ -184,31 +178,23 @@ namespace BeeEngine::Editor
         ImGui::End();
     }
 
-    void ContentBrowserPanel::DragAndDropFileToFolder(const std::filesystem::path &path)
+    void ContentBrowserPanel::DragAndDropFileToFolder(const Path &path)
     {
         if (ImGui::BeginDragDropTarget())
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
             {
-                std::filesystem::path filePath;
+                Path filePath = (const char*)payload->Data;
 
-                if(Application::GetOsPlatform() == OSPlatform::Windows)
-                {
-                    filePath = (const wchar_t*)payload->Data;
-                }
-                else
-                {
-                    filePath = (const char*)payload->Data;
-                }
-                if(!filePath.is_absolute())
+                if(!filePath.IsAbsolute())
                 {
                     filePath = m_WorkingDirectory / filePath;
                 }
                 std::error_code error;
-                if(std::filesystem::copy_file(filePath, path / filePath.filename(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error))
+                if(std::filesystem::copy_file(filePath.ToStdPath(), (path / filePath.GetFileName()).ToStdPath(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error))
                 {
-                    std::filesystem::remove_all(filePath);
-                    if(filePath.extension() == ".cs")
+                    std::filesystem::remove_all(filePath.ToStdPath());
+                    if(filePath.GetFileName() == ".cs")
                     {
                         m_NeedToRegenerateSolution = true;
                     }
@@ -220,7 +206,7 @@ namespace BeeEngine::Editor
         }
     }
 
-    ContentBrowserPanel::ContentBrowserPanel(const std::filesystem::path &workingDirectory) noexcept
+    ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory) noexcept
             : m_WorkingDirectory(workingDirectory)
             , m_CurrentDirectory(workingDirectory)
     {

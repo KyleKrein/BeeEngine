@@ -13,12 +13,12 @@
 namespace BeeEngine
 {
 
-    std::vector<std::byte> File::ReadBinaryFile(const std::filesystem::path &path)
+    std::vector<std::byte> File::ReadBinaryFile(const Path &path)
     {
         std::ifstream ifs(path, std::ios::binary|std::ios::ate);
 
         if(!ifs)
-            throw std::runtime_error(path.string() + ": " + std::strerror(errno));
+            throw std::runtime_error(path.AsUTF8() + ": " + std::strerror(errno));
 
         auto end = ifs.tellg();
         ifs.seekg(0, std::ios::beg);
@@ -31,7 +31,7 @@ namespace BeeEngine
         std::vector<std::byte> buffer(size);
 
         if(!ifs.read((char*)buffer.data(), buffer.size()))
-            throw std::runtime_error(path.string() + ": " + std::strerror(errno));
+            throw std::runtime_error(path.AsUTF8() + ": " + std::strerror(errno));
         ifs.close();
 
         return buffer;
@@ -78,6 +78,26 @@ namespace BeeEngine
     bool File::Exists(const std::filesystem::path& path)
     {
         return std::filesystem::exists(path);
+    }
+
+    bool File::Exists(const Path &path)
+    {
+        return std::filesystem::exists(path.ToStdPath());
+    }
+
+    bool File::CreateDirectory(const Path &path)
+    {
+        return std::filesystem::create_directory(path.ToStdPath());
+    }
+
+    bool File::CopyFile(const Path &from, const Path &to)
+    {
+        return std::filesystem::copy_file(from.ToStdPath(), to.ToStdPath());
+    }
+
+    bool File::IsDirectory(const Path &path)
+    {
+        return std::filesystem::is_directory(path.ToStdPath());
     }
 }
 

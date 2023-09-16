@@ -13,7 +13,6 @@ namespace BeeEngine
     using String = std::string;
     using UTF8String = String;
     using UTF16String = std::u16string;
-    using Path = std::filesystem::path;
 
     bool IsValidString(const UTF8String& string);
     UTF16String ConvertUTF8ToUTF16(const UTF8String& string);
@@ -23,5 +22,20 @@ namespace BeeEngine
     {
         char32_t codepoint = utf8::next(it, end);
         return codepoint;
+    }
+
+
+    constexpr std::size_t constexpr_strlen(const char* s)
+    {
+        return std::char_traits<char>::length(s);
+        // or
+        return std::string::traits_type::length(s);
+    }
+
+    constexpr std::size_t constexpr_wcslen(const wchar_t* s)
+    {
+        return std::char_traits<wchar_t>::length(s);
+        // or
+        return std::wstring::traits_type::length(s);
     }
 }

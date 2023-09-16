@@ -52,10 +52,10 @@ namespace BeeEngine
         return Texture2D::Create(bitmap.width, bitmap.height, {(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
     }
 
-    Font::Font(const std::filesystem::path &path)
+    Font::Font(const Path &path)
     : m_Data(new Internal::MSDFData())
     {
-        std::string pathStr = path.string();
+        String pathStr = path;
         msdfgen::FreetypeHandle *ft = msdfgen::initializeFreetype();
         if(!ft)
             return;
@@ -106,6 +106,8 @@ namespace BeeEngine
         static constexpr CharsetRange charsetRanges[] =
                 {
                         {0x0020, 0x00FF}, // Basic Latin + Latin Supplement
+                        {0x0100, 0x017F}, //Latin Extended-A
+                        {0x0180, 0x024F}, //Latin Extended-B
                         {0x0400, 0x052F}, //Cyrillic + Cyrillic Supplement
                         {0x2DE0, 0x2DFF}, // Cyrillic Extended-A
                         {0xA640, 0xA69F}, // Cyrillic Extended-B

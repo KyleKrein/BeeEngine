@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include <filesystem>
+#include "Core/Path.h"
 #include "Core/TypeDefines.h"
 
 extern "C"
@@ -19,7 +19,7 @@ namespace BeeEngine
         friend class ScriptingEngine;
     public:
         MAssembly() = default;
-        MAssembly(const std::filesystem::path& path, bool debug);
+        MAssembly(const Path& path, bool debug);
         ~MAssembly();
         MAssembly(const MAssembly&) = delete;
         MAssembly& operator=(const MAssembly&) = delete;
@@ -30,7 +30,7 @@ namespace BeeEngine
     private:
         MonoAssembly* m_MonoAssembly = nullptr;
         MonoImage* m_MonoImage = nullptr;
-        std::filesystem::path m_Path;
+        Path m_Path;
         std::vector<Ref<class MClass>> m_Classes;
 
         void LoadAssembly();

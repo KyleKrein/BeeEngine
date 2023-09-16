@@ -34,13 +34,13 @@ namespace BeeEngine
         BeeEnsures(IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
     }
 
-    void EditorAssetManager::LoadAsset(const std::filesystem::path &path, AssetHandle handle)
+    void EditorAssetManager::LoadAsset(const Path &path, AssetHandle handle)
     {
         //BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
         if(IsAssetHandleValid(handle) && IsAssetLoaded(handle))
         {
             auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
-            if(path != std::get<std::filesystem::path>(metadata.Data))
+            if(path != std::get<Path>(metadata.Data))
             {
                 metadata.Data = path;
             }
@@ -49,9 +49,8 @@ namespace BeeEngine
         }
         AssetMetadata metadata;
         metadata.Data = path;
-        std::string pathStr = path.string();
-        metadata.Name = ResourceManager::GetNameFromFilePath(pathStr);
-        metadata.Type = ResourceManager::GetAssetTypeFromExtension(path.extension());
+        metadata.Name = path.GetFileNameWithoutExtension();
+        metadata.Type = ResourceManager::GetAssetTypeFromExtension(path.GetExtension());
         metadata.Location = AssetLocation::FileSystem;
         m_AssetRegistry[handle.RegistryID][handle.AssetID] = metadata;
         m_AssetNameMap[metadata.Name] = handle;

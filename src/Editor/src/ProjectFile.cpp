@@ -10,32 +10,33 @@
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
 #include <yaml-cpp/yaml.h>
 #include <fstream>
+#include <filesystem>
 namespace BeeEngine::Editor
 {
 
-    ProjectFile::ProjectFile(const std::filesystem::path &projectPath, const std::string &projectName, EditorAssetManager* assetManager) noexcept
+    ProjectFile::ProjectFile(const Path &projectPath, const std::string &projectName, EditorAssetManager* assetManager) noexcept
     : m_ProjectName(projectName), m_ProjectPath(projectPath), m_AssetManager(assetManager)
     {
         BeeCoreTrace("ProjectName: {0}", m_ProjectName);
-        BeeCoreTrace("ProjectPath: {0}", m_ProjectPath.string());
-        if(!std::filesystem::exists(m_ProjectPath / ".beeengine"))
+        BeeCoreTrace("ProjectPath: {0}", m_ProjectPath.AsUTF8());
+        if(!File::Exists(m_ProjectPath / ".beeengine"))
         {
-            std::filesystem::create_directory(m_ProjectPath / ".beeengine");
+            File::CreateDirectory(m_ProjectPath / ".beeengine");
         }
-        if(!std::filesystem::exists(m_ProjectPath / ".beeengine" /"build"))
+        if(!File::Exists(m_ProjectPath / ".beeengine" /"build"))
         {
-            std::filesystem::create_directory(m_ProjectPath / ".beeengine" / "build");
+            File::CreateDirectory(m_ProjectPath / ".beeengine" / "build");
         }
         m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
         if(File::Exists(m_AppAssemblyPath))
-            m_AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_AppAssemblyPath).string(), [this](const std::string & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_AppAssemblyPath).AsUTF8(), [this](const std::string & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         m_AppAssemblyPath = m_AppAssemblyPath / "GameLibrary.dll";
-        std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll", m_ProjectPath / ".beeengine" / "BeeEngine.Core.dll", std::filesystem::copy_options::overwrite_existing);
+        std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll", m_ProjectPath.ToStdPath() / ".beeengine" / "BeeEngine.Core.dll", std::filesystem::copy_options::overwrite_existing);
         if(!File::Exists(m_ProjectFilePath))
         {
             init:
             Save();
-            auto currentConfigFile = std::filesystem::current_path() / "projects.cfg";
+            Path currentConfigFile = std::filesystem::current_path() / "projects.cfg";
             if(!File::Exists(currentConfigFile))
             {
                 std::ofstream fout(currentConfigFile, std::ios::out);
@@ -45,7 +46,7 @@ namespace BeeEngine::Editor
                 out << YAML::BeginSeq;
                 out << YAML::BeginMap;
                 out << YAML::Key << "ProjectName" << YAML::Value << m_ProjectName;
-                out << YAML::Key << "ProjectPath" << YAML::Value << m_ProjectPath.string();
+                out << YAML::Key << "ProjectPath" << YAML::Value << m_ProjectPath.AsUTF8();
                 out << YAML::EndMap;
                 out << YAML::EndSeq;
                 out << YAML::EndMap;
@@ -64,29 +65,29 @@ namespace BeeEngine::Editor
                 std::ofstream fout(currentConfigFile);
                 fout << data;*/
             }
-            std::filesystem::create_directory(m_ProjectPath / "Assets");
-            std::filesystem::create_directory(m_ProjectPath / "Scenes");
+            File::CreateDirectory(m_ProjectPath / "Assets");
+            File::CreateDirectory(m_ProjectPath / "Scenes");
 
             VSProjectGeneration::GenerateAssemblyInfoFile(m_ProjectPath, m_ProjectName);
             RegenerateSolution();
-            m_AssetFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_ProjectPath).string(), [this](const std::string & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
+            m_AssetFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_ProjectPath).AsUTF8(), [this](const std::string & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
             return;
         }
         else
         {
             RegenerateSolution();
         }
-        YAML::Node data = YAML::LoadFile(m_ProjectFilePath.string());
+        YAML::Node data = YAML::LoadFile(m_ProjectFilePath.AsUTF8());
         if(!data["ProjectName"])
         {
             goto init;
         }
         m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
         SetLastUsedScenePath(data["LastUsedScene"].as<std::string>());
-        m_AssetFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_ProjectPath).string(), [this](const std::string & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
+        m_AssetFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_ProjectPath).AsUTF8(), [this](const std::string & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
     }
 
-    const std::filesystem::path &ProjectFile::GetProjectPath() const noexcept
+    const Path &ProjectFile::GetProjectPath() const noexcept
     {
         return m_ProjectPath;
     }
@@ -108,7 +109,7 @@ namespace BeeEngine::Editor
 
         out << YAML::Key << "ProjectName" << YAML::Value << m_ProjectName;
         out << YAML::Key << "Asset Registry ID" << YAML::Value << (uint64_t)m_AssetRegistryID;
-        out << YAML::Key << "LastUsedScene" << YAML::Value << ResourceManager::ProcessFilePath(m_LastUsedScenePath.string());
+        out << YAML::Key << "LastUsedScene" << YAML::Value << m_LastUsedScenePath.AsUTF8();
         out << YAML::EndMap;
 
         std::ofstream fout(m_ProjectFilePath, std::ios::out);
@@ -116,14 +117,14 @@ namespace BeeEngine::Editor
         fout.close();
     }
 
-    void ProjectFile::SetLastUsedScenePath(const std::filesystem::path &path) noexcept
+    void ProjectFile::SetLastUsedScenePath(const Path &path) noexcept
     {
         auto p = path;
-        if(path.is_absolute())
-            p = std::filesystem::relative(path, m_ProjectPath);
+        if(path.IsAbsolute())
+            p = path.GetRelativePath(m_ProjectPath);
         if(!File::Exists(m_ProjectPath / p))
         {
-            BeeCoreWarn("Scene file {0} does not exist!", p.string());
+            BeeCoreWarn("Scene file {0} does not exist!", p.AsUTF8());
             m_LastUsedScenePath = "";
             Save();
             return;
@@ -152,28 +153,28 @@ namespace BeeEngine::Editor
             return;
         if(File::Exists(m_AppAssemblyPath))
         {
-            m_AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_AppAssemblyPath).string(), [this](const std::string & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_AppAssemblyPath).AsUTF8(), [this](const std::string & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         }
     }
 
-    const std::filesystem::path &ProjectFile::GetProjectFilePath() const noexcept
+    const Path &ProjectFile::GetProjectFilePath() const noexcept
     {
         return m_ProjectFilePath;
     }
 
-    const std::filesystem::path &ProjectFile::GetProjectAssetRegistryPath() const noexcept
+    const Path &ProjectFile::GetProjectAssetRegistryPath() const noexcept
     {
         return m_ProjectAssetRegistryPath;
     }
 
     void ProjectFile::OnAssetFileSystemEvent(const std::string &path, filewatch::Event changeType)
     {
-        std::filesystem::path p = path;
-        if(!ResourceManager::IsAssetExtension(p.extension()))
+        Path p = path;
+        if(!ResourceManager::IsAssetExtension(p.GetExtension()))
             return;
-        if(p.is_relative())
+        if(p.IsRelative())
             p = m_ProjectPath / p;
-        std::string name = ResourceManager::GetNameFromFilePath(p.string());
+        std::string name = p.GetFileNameWithoutExtension();
         const AssetHandle* handlePtr = m_AssetManager->GetAssetHandleByName(name);
         if(!handlePtr)
             return;

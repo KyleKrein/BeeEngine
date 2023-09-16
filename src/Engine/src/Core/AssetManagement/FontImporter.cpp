@@ -13,7 +13,7 @@ namespace BeeEngine
         Ref<Font> result;
         if(metadata.Location == AssetLocation::FileSystem)
         {
-            result = CreateRef<Font>(std::get<std::filesystem::path>(metadata.Data));
+            result = CreateRef<Font>(std::get<Path>(metadata.Data));
         }
         else
         {

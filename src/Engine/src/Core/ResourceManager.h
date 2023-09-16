@@ -11,6 +11,7 @@
 #include "Core/Application.h"
 #include <sstream>
 #include "Core/AssetManagement/Asset.h"
+#include "Path.h"
 #include <string_view>
 
 namespace BeeEngine
@@ -128,7 +129,7 @@ namespace BeeEngine
             return script.str();
         }
 
-        static bool IsTexture2DExtension(const std::filesystem::path &extension)
+        static bool IsTexture2DExtension(const Path &extension)
         {
             return extension == ".png" or
                    extension == ".jpg" or
@@ -136,22 +137,22 @@ namespace BeeEngine
                    extension == ".bmp";
         }
 
-        static bool IsSceneExtension(const std::filesystem::path &extension) noexcept
+        static bool IsSceneExtension(const Path &extension) noexcept
         {
             return extension == ".beescene";
         }
 
-        static bool IsFontExtension(const std::filesystem::path &extension) noexcept
+        static bool IsFontExtension(const Path &extension) noexcept
         {
             return extension == ".ttf";
         }
 
-        static bool IsAssetExtension(const std::filesystem::path &extension) noexcept
+        static bool IsAssetExtension(const Path &extension) noexcept
         {
             return IsTexture2DExtension(extension) || IsFontExtension(extension);
         }
 
-        static AssetType GetAssetTypeFromExtension(const std::filesystem::path &extension)
+        static AssetType GetAssetTypeFromExtension(const Path &extension)
         {
             if(IsTexture2DExtension(extension))
             {

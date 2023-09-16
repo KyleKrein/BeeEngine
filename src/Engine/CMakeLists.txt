@@ -40,6 +40,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/Expected.h
         src/Core/String.cpp
         src/Core/String.h
+        src/Core/Path.cpp
+        src/Core/Path.h
 )
 
 function(DesktopPlatformsOnly)

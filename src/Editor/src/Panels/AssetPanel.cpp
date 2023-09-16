@@ -10,6 +10,7 @@
 #include "Core/AssetManagement/EngineAssetRegistry.h"
 #include "Core/Application.h"
 #include "Core/ResourceManager.h"
+#include "Core/Path.h"
 
 
 namespace BeeEngine::Editor
@@ -33,18 +34,10 @@ namespace BeeEngine::Editor
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
             {
-                std::filesystem::path assetPath;
-                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
+                if(ResourceManager::IsAssetExtension(assetPath.GetExtension()))
                 {
-                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
-                }
-                else
-                {
-                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
-                }
-                if(ResourceManager::IsAssetExtension(assetPath.extension()))
-                {
-                    auto name = ResourceManager::GetNameFromFilePath(assetPath.string());
+                    auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
                     auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
                     if(!handlePtr)
                     {

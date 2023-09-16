@@ -17,7 +17,9 @@ namespace BeeEngine
         auto OpenSansBoldFont = GetEmbeddedResource(EmbeddedResource::OpenSansBold);
 
         static const ImWchar  icons_ranges[] = { //0x20, 0xFFFF // full range
-                                                0x0020, 0x00FF,
+                                                0x0020, 0x00FF, //Latin + Suplement
+                                                0x0100, 0x017F, //Latin Extended-A
+                                                0x0180, 0x024F, //Latin Extended-B
                                                  0x0400, 0x052F,
                                                  0x2DE0, 0x2DFF,
                                                  0xA640, 0xA69F,

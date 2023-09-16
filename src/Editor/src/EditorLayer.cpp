@@ -16,6 +16,7 @@
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/AssetManagement/EngineAssetRegistry.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
+#include "Utils/File.h"
 
 namespace BeeEngine::Editor
 {
@@ -121,7 +122,7 @@ namespace BeeEngine::Editor
 
                 SetupGameLibrary();
 
-                if(std::filesystem::exists(m_ProjectFile->GetProjectAssetRegistryPath()))
+                if(File::Exists(m_ProjectFile->GetProjectAssetRegistryPath()))
                 {
                     AssetRegistrySerializer assetRegistrySerializer(&m_EditorAssetManager, m_ProjectFile->GetProjectPath(), m_ProjectFile->GetAssetRegistryID());
                     assetRegistrySerializer.Deserialize(m_ProjectFile->GetProjectAssetRegistryPath());
@@ -135,7 +136,7 @@ namespace BeeEngine::Editor
                 });
 
                 auto scenePath = m_ProjectFile->GetLastUsedScenePath();
-                if(!scenePath.empty())
+                if(!scenePath.IsEmpty())
                 {
                     LoadScene(scenePath);
                 }
@@ -197,7 +198,7 @@ namespace BeeEngine::Editor
         fileMenu.AddChild({"New Scene", [this](){
             m_SceneHierarchyPanel.ClearSelection();
             m_ViewPort.GetScene()->Clear();
-            m_ScenePath.clear();
+            m_ScenePath.Clear();
         }});
         fileMenu.AddChild({"Open Scene", [this](){
             auto filepath = BeeEngine::FileDialogs::OpenFile({"BeeEngine Scene", "*.beescene"});
@@ -244,7 +245,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::ReloadAssembly()
     {
-        const std::filesystem::path tempPath = m_ProjectFile->GetProjectPath() / ".beeengine" / "temp.beescene";
+        const Path tempPath = m_ProjectFile->GetProjectPath() / ".beeengine" / "temp.beescene";
         SceneSerializer serializer(m_ActiveScene);
         serializer.Serialize(tempPath);
 
@@ -366,7 +367,7 @@ namespace BeeEngine::Editor
 
     }
 
-    void EditorLayer::LoadScene(const std::filesystem::path& path)
+    void EditorLayer::LoadScene(const Path& path)
     {
         m_SceneHierarchyPanel.ClearSelection();
         m_ViewPort.GetScene()->Clear();
@@ -388,7 +389,7 @@ namespace BeeEngine::Editor
     void EditorLayer::SaveScene()
     {
         SaveAssetRegistry();
-        if(m_ScenePath.empty())
+        if(m_ScenePath.IsEmpty())
         {
             auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
             if(filepath.empty())

@@ -4,14 +4,16 @@
 
 #pragma once
 #include <filesystem>
+#include "Core/Path.h"
+
 namespace BeeEngine
 {
     class VSProjectGeneration
     {
     public:
-        static void GenerateAssemblyInfoFile(const std::filesystem::path& path, std::string_view projectName);
-        static std::vector<std::filesystem::path> GetSourceFiles(const std::filesystem::path& path);
-        static void GenerateProject(const std::filesystem::path& path, const std::vector<std::filesystem::path>& sources, const std::string& projectName);
+        static void GenerateAssemblyInfoFile(const Path& path, std::string_view projectName);
+        static std::vector<Path> GetSourceFiles(const Path& path);
+        static void GenerateProject(const Path& path, const std::vector<Path>& sources, const std::string& projectName);
     private:
     };
 }

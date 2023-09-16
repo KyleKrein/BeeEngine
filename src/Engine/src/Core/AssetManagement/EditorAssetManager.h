@@ -18,7 +18,7 @@ namespace BeeEngine
 
         void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type) final;
 
-        void LoadAsset(const std::filesystem::path &path, AssetHandle handle) final;
+        void LoadAsset(const Path &path, AssetHandle handle) final;
 
         void UnloadAsset(AssetHandle handle) final;
 

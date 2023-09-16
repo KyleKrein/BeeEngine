@@ -7,17 +7,17 @@
 #include "Scene.h"
 #include "Core/TypeDefines.h"
 #include "yaml-cpp/emitter.h"
-#include <filesystem>
+#include "Core/Path.h"
 namespace BeeEngine
 {
     class SceneSerializer
     {
     public:
         SceneSerializer(Ref<Scene>& scene);
-        void Serialize(const std::filesystem::path& filepath);
-        void SerializeBinary(const std::filesystem::path& filepath);
-        void Deserialize(const std::filesystem::path& filepath);
-        void DeserializeBinary(const std::filesystem::path& filepath);
+        void Serialize(const Path& filepath);
+        void SerializeBinary(const Path& filepath);
+        void Deserialize(const Path& filepath);
+        void DeserializeBinary(const Path& filepath);
     private:
         Ref<Scene> m_Scene;
 

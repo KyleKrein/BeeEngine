@@ -31,7 +31,7 @@ namespace BeeEngine::Editor
 
         void OnGUIRender(Entity selectedEntity) noexcept;
 
-        void SetWorkingDirectory(const std::filesystem::path& path) noexcept
+        void SetWorkingDirectory(const Path& path) noexcept
         {
             m_WorkingDirectory = path;
         }
@@ -41,7 +41,7 @@ namespace BeeEngine::Editor
         ProjectFile* m_Project = nullptr;
         EditorAssetManager* m_AssetManager = nullptr;
 
-        std::filesystem::path m_WorkingDirectory;
+        Path m_WorkingDirectory;
 
         const std::vector<NativeScriptInfo>* m_NativeScripts = nullptr;
 

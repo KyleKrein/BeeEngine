@@ -8,7 +8,7 @@
 namespace BeeEngine
 {
 
-    void BeeEngine::VSProjectGeneration::GenerateAssemblyInfoFile(const std::filesystem::path &path, std::string_view projectName)
+    void BeeEngine::VSProjectGeneration::GenerateAssemblyInfoFile(const Path &path, std::string_view projectName)
     {
         std::ostringstream source;
         source << "using System.Reflection;\n";
@@ -49,24 +49,25 @@ namespace BeeEngine
         file.close();
     }
 
-    std::vector <std::filesystem::path>
-    BeeEngine::VSProjectGeneration::GetSourceFiles(const std::filesystem::path &path)
+    std::vector <Path>
+    BeeEngine::VSProjectGeneration::GetSourceFiles(const Path &path)
     {
-        std::vector <std::filesystem::path> sources;
-        for (const auto &entry : std::filesystem::recursive_directory_iterator(path))
+        std::vector <Path> sources;
+        auto stdpath = path.ToStdPath();
+        for (const auto &entry : std::filesystem::recursive_directory_iterator(stdpath))
         {
             if(entry.path().string().contains(".beeengine"))
                 continue;
             if (entry.path().extension() == ".cs")
             {
-                sources.push_back(entry.path());
+                sources.emplace_back(entry.path());
             }
         }
         return sources;
     }
 
-    void BeeEngine::VSProjectGeneration::GenerateProject(const std::filesystem::path &path,
-                                                         const std::vector <std::filesystem::path> &sources,
+    void BeeEngine::VSProjectGeneration::GenerateProject(const Path &path,
+                                                         const std::vector <Path> &sources,
                                                          const std::string& projectName)
     {
         std::ostringstream csproj;
@@ -113,10 +114,12 @@ namespace BeeEngine
         csproj << "    <Reference Include=\"System.Data\" />\n";
         csproj << "  </ItemGroup>\n";
         csproj << "  <ItemGroup>\n";
-        for (const auto &source : sources)
+        auto stdpath = path.ToStdPath();
+        for (const auto &sourcePath : sources)
         {
+            auto source = sourcePath.ToStdPath();
             if(source.is_absolute())
-                csproj << "    <Compile Include=" << source.lexically_relative(path) << "/>\n";
+                csproj << "    <Compile Include=" << source.lexically_relative(stdpath) << "/>\n";
             else
                 csproj << "    <Compile Include=" << source << "/>\n";
         }

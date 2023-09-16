@@ -4,7 +4,7 @@
 
 #pragma once
 #include "Core/TypeDefines.h"
-#include <filesystem>
+#include "Core/Path.h"
 #include "Core/UUID.h"
 #include "Core/AssetManagement/Asset.h"
 #include "MTypes.h"
@@ -22,9 +22,9 @@ namespace BeeEngine
 
         static void EnableDebugging();
 
-        static void LoadGameAssembly(const std::filesystem::path& path);
+        static void LoadGameAssembly(const Path& path);
 
-        static void LoadCoreAssembly(const std::filesystem::path& path);
+        static void LoadCoreAssembly(const Path& path);
         static void ReloadAssemblies();
         static class MAssembly& GetCoreAssembly();
         static void OnRuntimeStart(class Scene* scene);
@@ -58,7 +58,7 @@ namespace BeeEngine
 
     private:
 
-        static class MAssembly& LoadAssembly(const std::filesystem::path& path);
+        static class MAssembly& LoadAssembly(const Path& path);
         static void InitMono();
         static bool IsGameScript(const MClass& klass);
         static struct ScriptingEngineData s_Data;

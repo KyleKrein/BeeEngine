@@ -27,20 +27,20 @@
 
 namespace BeeEngine
 {
-    MAssembly::MAssembly(const std::filesystem::path& path, bool debug)
+    MAssembly::MAssembly(const Path& path, bool debug)
     : m_Path(path)
     {
         LoadAssembly();
         if(debug)
         {
-            std::filesystem::path pdbPath = path;
-            pdbPath.replace_extension(".pdb");
+            Path pdbPath = path;
+            pdbPath.ReplaceExtension(".pdb");
 
-            if (std::filesystem::exists(pdbPath))
+            if (File::Exists(pdbPath))
             {
                 auto pdbFile = File::ReadBinaryFile(pdbPath);
                 mono_debug_open_image_from_memory(m_MonoImage, (const mono_byte*)pdbFile.data(), pdbFile.size());
-                BeeCoreInfo("Loaded PDB {}", pdbPath.string());
+                BeeCoreInfo("Loaded PDB {}", pdbPath.AsUTF8());
             }
         }
         mono_image_close(m_MonoImage);
@@ -53,13 +53,13 @@ namespace BeeEngine
     }
     void MAssembly::LoadAssembly()
     {
-        auto fileData = File::ReadBinaryFile(m_Path.string());
+        auto fileData = File::ReadBinaryFile(m_Path.AsUTF8());
 
         MonoImageOpenStatus status;
         m_MonoImage = mono_image_open_from_data_full(reinterpret_cast<char *>(fileData.data()), fileData.size(), true,
                                                      &status, false);
         BeeCoreAssert(status == MONO_IMAGE_OK, "Failed to load assembly! Status: {}", mono_image_strerror(status));
-        m_MonoAssembly = mono_assembly_load_from_full(m_MonoImage, m_Path.string().c_str(), &status, false);
+        m_MonoAssembly = mono_assembly_load_from_full(m_MonoImage, m_Path.AsCString(), &status, false);
     }
 
     std::vector<Ref<MClass>>& MAssembly::GetClasses()

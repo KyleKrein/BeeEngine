@@ -205,27 +205,17 @@ namespace BeeEngine::Editor
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                 {
-                    std::filesystem::path texturePath;
-                    if(Application::GetOsPlatform() == OSPlatform::Windows)
+                    Path texturePath = m_WorkingDirectory / (const char*)payload->Data;
+                    if(ResourceManager::IsTexture2DExtension(texturePath.GetExtension()))
                     {
-                        const wchar_t* path = (const wchar_t*)payload->Data;
-                        texturePath = std::filesystem::path(m_WorkingDirectory) / path;
-                    }
-                    else
-                    {
-                        const char* path = (const char*)payload->Data;
-                        texturePath = std::filesystem::path(m_WorkingDirectory) / path;
-                    }
-                    if(ResourceManager::IsTexture2DExtension(texturePath.extension()))
-                    {
-                        auto name = ResourceManager::GetNameFromFilePath(texturePath.string());
+                        auto name = texturePath.GetFileNameWithoutExtension().AsUTF8();
                         auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
                         if(!handlePtr)
                         {
                             m_AssetManager->LoadAsset(texturePath, {m_ProjectAssetRegistryID});
                             handlePtr = m_AssetManager->GetAssetHandleByName(name);
                         }
-                        BeeCoreAssert(handlePtr, "Failed to load texture from path: {0}", texturePath.string());
+                        BeeCoreAssert(handlePtr, "Failed to load texture from path: {0}", texturePath.AsUTF8());
                         sprite.HasTexture = true;
                         sprite.TextureHandle = *handlePtr;
                     }
@@ -267,25 +257,17 @@ namespace BeeEngine::Editor
            {
                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                {
-                   std::filesystem::path fontPath;
-                   if(Application::GetOsPlatform() == OSPlatform::Windows)
+                   Path fontPath = m_WorkingDirectory / (const char*)payload->Data;
+                   if(ResourceManager::IsFontExtension(fontPath.GetExtension()))
                    {
-                       fontPath = std::filesystem::path(m_WorkingDirectory) / (const wchar_t*)payload->Data;
-                   }
-                   else
-                   {
-                       fontPath = std::filesystem::path(m_WorkingDirectory) / (const char*)payload->Data;
-                   }
-                   if(ResourceManager::IsFontExtension(fontPath.extension()))
-                   {
-                       auto name = ResourceManager::GetNameFromFilePath(fontPath.string());
+                       auto name = fontPath.GetFileNameWithoutExtension().AsUTF8();
                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
                        if(!handlePtr)
                        {
                            m_AssetManager->LoadAsset(fontPath, {m_ProjectAssetRegistryID});
                            handlePtr = m_AssetManager->GetAssetHandleByName(name);
                        }
-                       BeeCoreAssert(handlePtr, "Failed to load font from path: {0}", fontPath.string());
+                       BeeCoreAssert(handlePtr, "Failed to load font from path: {0}", fontPath.AsUTF8());
                        component.FontHandle = *handlePtr;
                    }
                }
@@ -469,18 +451,11 @@ namespace BeeEngine::Editor
                         {
                             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                             {
-                                std::filesystem::path assetPath;
-                                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                                Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
+
+                                if(ResourceManager::IsAssetExtension(assetPath.GetExtension()))
                                 {
-                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
-                                }
-                                else
-                                {
-                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
-                                }
-                                if(ResourceManager::IsAssetExtension(assetPath.extension()))
-                                {
-                                    auto name = ResourceManager::GetNameFromFilePath(assetPath.string());
+                                    auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
                                     auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
                                     if(!handlePtr)
                                     {
@@ -547,18 +522,10 @@ namespace BeeEngine::Editor
                         {
                             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                             {
-                                std::filesystem::path assetPath;
-                                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                                Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
+                                if(ResourceManager::IsTexture2DExtension(assetPath.GetExtension()))
                                 {
-                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
-                                }
-                                else
-                                {
-                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
-                                }
-                                if(ResourceManager::IsTexture2DExtension(assetPath.extension()))
-                                {
-                                    auto name = ResourceManager::GetNameFromFilePath(assetPath.string());
+                                    auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
                                     auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
                                     if(!handlePtr)
                                     {
@@ -613,18 +580,10 @@ namespace BeeEngine::Editor
                         {
                             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                             {
-                                std::filesystem::path assetPath;
-                                if(Application::GetOsPlatform() == OSPlatform::Windows)
+                                Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
+                                if(ResourceManager::IsFontExtension(assetPath.GetExtension()))
                                 {
-                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const wchar_t*)payload->Data;
-                                }
-                                else
-                                {
-                                    assetPath = std::filesystem::path(m_Project->GetProjectPath()) / (const char*)payload->Data;
-                                }
-                                if(ResourceManager::IsFontExtension(assetPath.extension()))
-                                {
-                                    auto name = ResourceManager::GetNameFromFilePath(assetPath.string());
+                                    auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
                                     auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
                                     if(!handlePtr)
                                     {

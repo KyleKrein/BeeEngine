@@ -154,16 +154,8 @@ namespace BeeEngine::Editor
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
             {
-                std::filesystem::path p;
-                if(Application::GetOsPlatform() == OSPlatform::Windows)
-                {
-                    p = m_WorkingDirectory / (const wchar_t*)payload->Data;
-                }
-                else
-                {
-                    p = m_WorkingDirectory / (const char*)payload->Data;
-                }
-                if(ResourceManager::IsSceneExtension(p.extension()))
+                Path p = m_WorkingDirectory / (const char*)payload->Data;
+                if(ResourceManager::IsSceneExtension(p.GetExtension()))
                 {
                     OpenScene(p);
                 }
@@ -227,10 +219,10 @@ namespace BeeEngine::Editor
         return false;
     }
 
-    void ViewPort::OpenScene(const std::filesystem::path& path)
+    void ViewPort::OpenScene(const Path& path)
     {
-        BeeCoreTrace("Opening scene {0}", path.string());
+        BeeCoreTrace("Opening scene {0}", path.AsUTF8());
         m_NewSceneWasLoaded = true;
-        m_ScenePath = path.string();
+        m_ScenePath = path.AsUTF8();
     }
 }

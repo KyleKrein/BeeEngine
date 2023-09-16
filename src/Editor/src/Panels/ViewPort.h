@@ -39,7 +39,7 @@ namespace BeeEngine::Editor
             return m_Width;
         }
 
-        void SetWorkingDirectory(const std::filesystem::path& path) noexcept
+        void SetWorkingDirectory(const Path& path) noexcept
         {
             m_WorkingDirectory = path;
         }
@@ -76,7 +76,7 @@ namespace BeeEngine::Editor
         Color4 m_ClearColor = Color4::CornflowerBlue;
         Entity m_HoveredEntity = Entity::Null;
 
-        std::filesystem::path m_WorkingDirectory;
+        Path m_WorkingDirectory;
 
         std::string m_ScenePath;
 
@@ -84,6 +84,6 @@ namespace BeeEngine::Editor
         bool OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept;
         bool OnKeyButtonPressed(KeyPressedEvent* event) noexcept;
         void RenderImGuizmo(EditorCamera& camera);
-        void OpenScene(const std::filesystem::path& path);
+        void OpenScene(const Path& path);
     };
 }

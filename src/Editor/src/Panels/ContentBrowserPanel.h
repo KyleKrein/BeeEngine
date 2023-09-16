@@ -5,19 +5,20 @@
 #pragma once
 #include <filesystem>
 #include "Renderer/Texture.h"
+#include "Core/Path.h"
 
 namespace BeeEngine::Editor
 {
     class ContentBrowserPanel
     {
     public:
-        ContentBrowserPanel(const std::filesystem::path& workingDirectory) noexcept;
-        void SetWorkingDirectory(const std::filesystem::path& path) noexcept
+        ContentBrowserPanel(const Path& workingDirectory) noexcept;
+        void SetWorkingDirectory(const Path& path) noexcept
         {
             m_WorkingDirectory = path;
             m_CurrentDirectory = path;
         }
-        [[nodiscard]] std::filesystem::path GetWorkingDirectory() const noexcept
+        [[nodiscard]] Path GetWorkingDirectory() const noexcept
         {
             return m_WorkingDirectory;
         }
@@ -31,13 +32,13 @@ namespace BeeEngine::Editor
 
         void OnGUIRender() noexcept;
     private:
-        std::filesystem::path m_WorkingDirectory;
-        std::filesystem::path m_CurrentDirectory;
+        Path m_WorkingDirectory;
+        Path m_CurrentDirectory;
 
         Ref<Texture2D> m_DirectoryIcon;
         Ref<Texture2D> m_FileIcon;
         bool m_NeedToRegenerateSolution = false;
 
-        void DragAndDropFileToFolder(const std::filesystem::path &path);
+        void DragAndDropFileToFolder(const Path &path);
     };
 }

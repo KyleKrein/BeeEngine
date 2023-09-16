@@ -14,18 +14,18 @@ namespace BeeEngine::Editor
     class ProjectFile
     {
     public:
-        ProjectFile(const std::filesystem::path& projectPath, const std::string& projectName, EditorAssetManager* assetManager) noexcept;
+        ProjectFile(const Path& projectPath, const std::string& projectName, EditorAssetManager* assetManager) noexcept;
 
-        [[nodiscard]] const std::filesystem::path& GetProjectPath() const noexcept;
+        [[nodiscard]] const Path& GetProjectPath() const noexcept;
         [[nodiscard]] const std::string& GetProjectName() const noexcept;
-        [[nodiscard]] const std::filesystem::path& GetProjectFilePath() const noexcept;
-        [[nodiscard]] const std::filesystem::path& GetProjectAssetRegistryPath() const noexcept;
+        [[nodiscard]] const Path& GetProjectFilePath() const noexcept;
+        [[nodiscard]] const Path& GetProjectAssetRegistryPath() const noexcept;
 
-        std::filesystem::path GetLastUsedScenePath() const noexcept
+        Path GetLastUsedScenePath() const noexcept
         {
-            return m_LastUsedScenePath.empty() ? m_LastUsedScenePath : m_ProjectPath / m_LastUsedScenePath;
+            return m_LastUsedScenePath.IsEmpty() ? m_LastUsedScenePath : m_ProjectPath / m_LastUsedScenePath;
         }
-        void SetLastUsedScenePath(const std::filesystem::path& path) noexcept;
+        void SetLastUsedScenePath(const Path& path) noexcept;
 
         void SetLastUsedSceneToNull() noexcept
         {
@@ -57,14 +57,14 @@ namespace BeeEngine::Editor
         void OnAppAssemblyFileSystemEvent(const std::string& path, filewatch::Event changeType);
         void OnAssetFileSystemEvent(const std::string& path, filewatch::Event changeType);
 
-        std::filesystem::path m_ProjectPath;
+        Path m_ProjectPath;
         std::string m_ProjectName;
-        const std::filesystem::path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
-        const std::filesystem::path m_ProjectAssetRegistryPath = m_ProjectPath / (m_ProjectName + ".beeassetregistry");
-        std::filesystem::path m_LastUsedScenePath {""};
+        const Path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
+        const Path m_ProjectAssetRegistryPath = m_ProjectPath / (m_ProjectName + ".beeassetregistry");
+        Path m_LastUsedScenePath {""};
         Scope<filewatch::FileWatch<std::string>> m_AppAssemblyFileWatcher = nullptr;
         mutable bool m_AssemblyReloadPending = false;
-        std::filesystem::path m_AppAssemblyPath;
+        Path m_AppAssemblyPath;
         BeeEngine::UUID m_AssetRegistryID;
 
         Scope<filewatch::FileWatch<std::string>> m_AssetFileWatcher = nullptr;

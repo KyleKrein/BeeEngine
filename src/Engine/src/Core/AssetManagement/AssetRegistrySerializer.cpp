@@ -6,6 +6,7 @@
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 #include "Core/ResourceManager.h"
+#include "Utils/File.h"
 
 namespace BeeEngine
 {
@@ -52,7 +53,7 @@ namespace BeeEngine
         return AssetType::None;
     }
 
-    void AssetRegistrySerializer::Serialize(const std::filesystem::path &path)
+    void AssetRegistrySerializer::Serialize(const Path &path)
     {
         auto& registry = m_AssetManager->GetAssetRegistry();
         if(!registry.contains(m_ProjectRegistryID))
@@ -73,12 +74,12 @@ namespace BeeEngine
             out << YAML::Key << "Name" << YAML::Value << metadata.Name;
             out << YAML::Key << "Type" << YAML::Value << AssetTypeToString(metadata.Type);
             out << YAML::Key << "Handle" << YAML::Value << handle;
-            auto path = std::get<std::filesystem::path>(metadata.Data);
-            if(path.is_absolute())
+            auto filepath = std::get<Path>(metadata.Data);
+            if(filepath.IsAbsolute())
             {
-                path = std::filesystem::relative(path, m_ProjectPath);
+                filepath = path.GetRelativePath(m_ProjectPath);
             }
-            out << YAML::Key << "FilePath" << YAML::Value << ResourceManager::ProcessFilePath(path.string());
+            out << YAML::Key << "FilePath" << YAML::Value << filepath.AsUTF8();
             out << YAML::EndMap;
         }
         out << YAML::EndSeq;
@@ -88,20 +89,20 @@ namespace BeeEngine
         fout << out.c_str();
     }
 
-    void AssetRegistrySerializer::Deserialize(const std::filesystem::path &path)
+    void AssetRegistrySerializer::Deserialize(const Path &path)
     {
-        YAML::Node data = YAML::LoadFile(path.string());
+        YAML::Node data = YAML::LoadFile(path.AsUTF8());
         UUID registryID = data["Registry ID"].as<uint64_t>();
         for(auto asset : data["Assets"])
         {
-            std::filesystem::path filePath = asset["FilePath"].as<std::string>();
-            if(filePath.is_relative())
+            Path filePath = asset["FilePath"].as<std::string>();
+            if(filePath.IsRelative())
             {
                 filePath = m_ProjectPath / filePath;
             }
-            if(!std::filesystem::exists(filePath))
+            if(!File::Exists(filePath))
             {
-                BeeCoreError("Asset file {0} does not exist!", filePath.string());
+                BeeCoreError("Asset file {0} does not exist!", filePath.AsUTF8());
                 continue;
             }
             m_AssetManager->LoadAsset(filePath, {registryID,asset["Handle"].as<uint64_t>()});

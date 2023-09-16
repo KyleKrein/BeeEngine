@@ -41,7 +41,7 @@ namespace BeeEngine::Editor
         ContentBrowserPanel m_ContentBrowserPanel {std::filesystem::current_path()};
         SceneHierarchyPanel m_SceneHierarchyPanel {};
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
-        std::filesystem::path m_ScenePath;
+        Path m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
         InspectorPanel m_InspectorPanel {&m_EditorAssetManager};
         Scope<ProjectFile> m_ProjectFile = nullptr;
@@ -66,7 +66,7 @@ namespace BeeEngine::Editor
 
         void SetupGameLibrary();
 
-        void LoadScene(const std::filesystem::path& path);
+        void LoadScene(const Path& path);
 
         bool OnKeyPressed(KeyPressedEvent* e) noexcept;
 

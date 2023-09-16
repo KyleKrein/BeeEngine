@@ -11,15 +11,15 @@ namespace BeeEngine
     class AssetRegistrySerializer
     {
     public:
-        AssetRegistrySerializer(IAssetManager* assetManager, const std::filesystem::path& projectPath, UUID projectRegistryID)
+        AssetRegistrySerializer(IAssetManager* assetManager, const Path& projectPath, UUID projectRegistryID)
             : m_AssetManager(assetManager), m_ProjectPath(projectPath), m_ProjectRegistryID(projectRegistryID)
         {}
 
-        void Serialize(const std::filesystem::path& path);
-        void Deserialize(const std::filesystem::path& path);
+        void Serialize(const Path& path);
+        void Deserialize(const Path& path);
     private:
         IAssetManager* m_AssetManager;
-        std::filesystem::path m_ProjectPath;
+        Path m_ProjectPath;
         UUID m_ProjectRegistryID;
     };
 }

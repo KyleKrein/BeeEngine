@@ -23,6 +23,7 @@
 #include <mono/metadata/threads.h>
 #include <mono/metadata/mono-gc.h>
 #include "MTypes.h"
+#include "Utils/File.h"
 
 namespace BeeEngine
 {
@@ -58,8 +59,8 @@ namespace BeeEngine
         MonoClassField * DeltaTimeField = nullptr;
         MonoClassField* TotalTimeField = nullptr;
 
-        std::filesystem::path GameAssemblyPath = "";
-        std::filesystem::path CoreAssemblyPath = "";
+        Path GameAssemblyPath = "";
+        Path CoreAssemblyPath = "";
     };
     ScriptingEngineData ScriptingEngine::s_Data = {};
     void ScriptingEngine::Init()
@@ -121,9 +122,9 @@ namespace BeeEngine
         mono_domain_set(s_Data.AppDomain, true);
     }
 
-    MAssembly& ScriptingEngine::LoadAssembly(const std::filesystem::path &path)
+    MAssembly& ScriptingEngine::LoadAssembly(const Path &path)
     {
-        auto name = ResourceManager::GetNameFromFilePath(path.string());
+        auto name = path.GetFileNameWithoutExtension().AsUTF8();
 
         s_Data.Assemblies[name] = {path, s_Data.EnableDebugging};
         return s_Data.Assemblies.at(name);
@@ -144,10 +145,10 @@ namespace BeeEngine
         BeeExpects(s_Data.EntityBaseClass != nullptr);
         return klass.IsDerivedFrom(*s_Data.EntityBaseClass);
     }
-    void ScriptingEngine::LoadGameAssembly(const std::filesystem::path& path)
+    void ScriptingEngine::LoadGameAssembly(const Path& path)
     {
         s_Data.GameAssemblyPath = path;
-        if(!std::filesystem::exists(path))
+        if(!File::Exists(path))
         {
             BeeCoreWarn("Game assembly not found!");
             return;
@@ -183,7 +184,7 @@ namespace BeeEngine
         return *s_Data.GameScripts.at(name);
     }
 
-    void ScriptingEngine::LoadCoreAssembly(const std::filesystem::path &path)
+    void ScriptingEngine::LoadCoreAssembly(const Path &path)
     {
         s_Data.CoreAssemblyPath = path;
         auto& assembly = LoadAssembly(path);

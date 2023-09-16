@@ -16,7 +16,7 @@ namespace BeeEngine
         stbi_uc* data = nullptr;
         if(metadata.Location == AssetLocation::FileSystem)
         {
-            std::string path = std::get<std::filesystem::path>(metadata.Data).string();
+            String path = std::get<Path>(metadata.Data);
             data = stbi_load(path.c_str(), &width, &height, &channels, 0);
         }
         else
@@ -26,7 +26,7 @@ namespace BeeEngine
         }
         if (!data)
         {
-            BeeCoreError("Failed to load image: {0}", metadata.Location == AssetLocation::FileSystem ? std::get<std::filesystem::path>(metadata.Data).string() : "from memory");
+            BeeCoreError("Failed to load image: {0}", metadata.Location == AssetLocation::FileSystem ? std::get<Path>(metadata.Data).AsCString() : "from memory");
             return nullptr;
         }
 

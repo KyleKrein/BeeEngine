@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include <filesystem>
+#include "Core/Path.h"
 #include "Texture.h"
 
 namespace BeeEngine
@@ -15,7 +15,7 @@ namespace BeeEngine
     class Font final: public Asset
     {
     public:
-        Font(const std::filesystem::path& path);
+        Font(const Path& path);
         Font(const std::string& name,gsl::span<byte> data);
         Font(const Font&) = delete;
         Font& operator=(const Font&) = delete;
