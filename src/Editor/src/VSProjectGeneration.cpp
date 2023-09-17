@@ -3,6 +3,7 @@
 //
 
 #include "VSProjectGeneration.h"
+#include "Core/CodeSafety/Expects.h"
 #include "Utils/File.h"
 #include <fstream>
 #include <sstream>
