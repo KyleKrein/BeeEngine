@@ -194,7 +194,7 @@ namespace BeeEngine::Editor
                 if(std::filesystem::copy_file(filePath.ToStdPath(), (path / filePath.GetFileName()).ToStdPath(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error))
                 {
                     std::filesystem::remove_all(filePath.ToStdPath());
-                    if(filePath.GetFileName() == ".cs")
+                    if(filePath.GetExtension() == ".cs")
                     {
                         m_NeedToRegenerateSolution = true;
                     }

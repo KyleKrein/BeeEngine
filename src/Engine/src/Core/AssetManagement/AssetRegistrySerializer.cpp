@@ -77,7 +77,7 @@ namespace BeeEngine
             auto filepath = std::get<Path>(metadata.Data);
             if(filepath.IsAbsolute())
             {
-                filepath = path.GetRelativePath(m_ProjectPath);
+                filepath = filepath.GetRelativePath(m_ProjectPath);
             }
             out << YAML::Key << "FilePath" << YAML::Value << filepath.AsUTF8();
             out << YAML::EndMap;
