@@ -3,7 +3,14 @@
 //
 
 #include "TextureImporter.h"
+#if defined(WINDOWS)
+#define STBI_WINDOWS_UTF8
+#include "Platform/Windows/WindowsString.h"
+#endif
 #include <stb_image.h>
+#if defined(WINDOWS)
+STBIDEF stbi_uc *stbi_load(const wchar_t *filename, int *x, int *y, int *comp, int req_comp);
+#endif
 
 
 namespace BeeEngine
@@ -16,7 +23,11 @@ namespace BeeEngine
         stbi_uc* data = nullptr;
         if(metadata.Location == AssetLocation::FileSystem)
         {
+#if defined(WINDOWS)
+            std::wstring path = Internal::WStringFromUTF8(std::get<Path>(metadata.Data));
+#else
             String path = std::get<Path>(metadata.Data);
+#endif
             data = stbi_load(path.c_str(), &width, &height, &channels, 0);
         }
         else

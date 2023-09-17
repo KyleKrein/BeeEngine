@@ -81,6 +81,8 @@ elseif(ANDROID)
 elseif(WIN32)
     # Covers Windows implementation
     list(APPEND SOURCE_FILES "src/Platform/Windows/FileDialogsWindows.cpp")
+    list(APPEND SOURCE_FILES "src/Platform/Windows/WindowsString.cpp")
+    list(APPEND SOURCE_FILES "src/Platform/Windows/WindowsString.h")
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
 elseif (UNIX AND NOT APPLE)

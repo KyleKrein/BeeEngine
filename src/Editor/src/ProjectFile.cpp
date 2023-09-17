@@ -11,6 +11,12 @@
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 #include <filesystem>
+#if defined(WINDOWS) && 1
+#include "Platform/Windows/WindowsString.h"
+#define WatchPath(x) x.ToStdPath().wstring()
+#else
+#define WatchPath(x) x.AsUTF8()
+#endif
 namespace BeeEngine::Editor
 {
 
@@ -29,7 +35,7 @@ namespace BeeEngine::Editor
         }
         m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
         if(File::Exists(m_AppAssemblyPath))
-            m_AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_AppAssemblyPath).AsUTF8(), [this](const std::string & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyFileWatcher = CreateScope<FileWatcher>(WatchPath(m_AppAssemblyPath), [this](const FileWatchString & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         m_AppAssemblyPath = m_AppAssemblyPath / "GameLibrary.dll";
         std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll", m_ProjectPath.ToStdPath() / ".beeengine" / "BeeEngine.Core.dll", std::filesystem::copy_options::overwrite_existing);
         if(!File::Exists(m_ProjectFilePath))
@@ -39,7 +45,7 @@ namespace BeeEngine::Editor
             Path currentConfigFile = std::filesystem::current_path() / "projects.cfg";
             if(!File::Exists(currentConfigFile))
             {
-                std::ofstream fout(currentConfigFile, std::ios::out);
+                /*std::ofstream fout(currentConfigFile, std::ios::out);
                 YAML::Emitter out;
                 out << YAML::BeginMap;
                 out << YAML::Key << "Projects";
@@ -51,7 +57,7 @@ namespace BeeEngine::Editor
                 out << YAML::EndSeq;
                 out << YAML::EndMap;
                 fout << "LastProject: " << m_ProjectName;
-                fout.close();
+                fout.close();*/
             }
             else
             {
@@ -70,21 +76,23 @@ namespace BeeEngine::Editor
 
             VSProjectGeneration::GenerateAssemblyInfoFile(m_ProjectPath, m_ProjectName);
             RegenerateSolution();
-            m_AssetFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_ProjectPath).AsUTF8(), [this](const std::string & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
+            m_AssetFileWatcher = CreateScope<FileWatcher>(WatchPath(m_ProjectPath), [this](const FileWatchString & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
             return;
         }
         else
         {
             RegenerateSolution();
         }
-        YAML::Node data = YAML::LoadFile(m_ProjectFilePath.AsUTF8());
+        std::ifstream ifs(m_ProjectFilePath.ToStdPath());
+        YAML::Node data = YAML::Load(ifs);
+        ifs.close();
         if(!data["ProjectName"])
         {
             goto init;
         }
         m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
         SetLastUsedScenePath(data["LastUsedScene"].as<std::string>());
-        m_AssetFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_ProjectPath).AsUTF8(), [this](const std::string & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
+        m_AssetFileWatcher = CreateScope<FileWatcher>(WatchPath(m_ProjectPath), [this](const FileWatchString & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
     }
 
     const Path &ProjectFile::GetProjectPath() const noexcept
@@ -112,9 +120,7 @@ namespace BeeEngine::Editor
         out << YAML::Key << "LastUsedScene" << YAML::Value << m_LastUsedScenePath.AsUTF8();
         out << YAML::EndMap;
 
-        std::ofstream fout(m_ProjectFilePath, std::ios::out);
-        fout << out.c_str();
-        fout.close();
+        File::WriteFile(m_ProjectFilePath, out.c_str());
     }
 
     void ProjectFile::SetLastUsedScenePath(const Path &path) noexcept
@@ -139,7 +145,7 @@ namespace BeeEngine::Editor
         VSProjectGeneration::GenerateProject(m_ProjectPath, sources, m_ProjectName);
     }
 
-    void ProjectFile::OnAppAssemblyFileSystemEvent(const std::string &path, const filewatch::Event changeType)
+    void ProjectFile::OnAppAssemblyFileSystemEvent(const FileWatchString &path, const filewatch::Event changeType)
     {
         if(!m_AssemblyReloadPending && (changeType == filewatch::Event::modified || changeType == filewatch::Event::added ))
         {
@@ -153,7 +159,7 @@ namespace BeeEngine::Editor
             return;
         if(File::Exists(m_AppAssemblyPath))
         {
-            m_AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>((m_AppAssemblyPath).AsUTF8(), [this](const std::string & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyFileWatcher = CreateScope<FileWatcher>(WatchPath(m_AppAssemblyPath), [this](const FileWatchString & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         }
     }
 
@@ -167,9 +173,13 @@ namespace BeeEngine::Editor
         return m_ProjectAssetRegistryPath;
     }
 
-    void ProjectFile::OnAssetFileSystemEvent(const std::string &path, filewatch::Event changeType)
+    void ProjectFile::OnAssetFileSystemEvent(const FileWatchString &path, filewatch::Event changeType)
     {
+#if defined(WINDOWS) && 1
+        Path p = Internal::WStringToUTF8(path);
+#else
         Path p = path;
+#endif
         if(!ResourceManager::IsAssetExtension(p.GetExtension()))
             return;
         if(p.IsRelative())

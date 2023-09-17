@@ -9,6 +9,7 @@
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <msdf-atlas-gen/GlyphGeometry.h>
 #include "MSDFData.h"
+#include "Utils/File.h"
 #include <glm.hpp>
 
 namespace BeeEngine
@@ -59,7 +60,8 @@ namespace BeeEngine
         msdfgen::FreetypeHandle *ft = msdfgen::initializeFreetype();
         if(!ft)
             return;
-        msdfgen::FontHandle *font = msdfgen::loadFont(ft, pathStr.c_str());
+        auto data = File::ReadBinaryFile(path);
+        msdfgen::FontHandle *font = msdfgen::loadFontData(ft, (const msdfgen::byte*)data.data(), data.size());
         if (!font)
         {
             BeeCoreError("Failed to load font: {}", pathStr);

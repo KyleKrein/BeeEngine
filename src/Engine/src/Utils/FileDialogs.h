@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include <string>
-#include <optional>
+#include "Core/String.h"
+#include "Core/Path.h"
 
 class TestFileDialogs;
 namespace BeeEngine
@@ -35,8 +35,8 @@ namespace BeeEngine
 
         };
     public:
-        static std::string OpenFile(Filter filter);
-        static std::string SaveFile(Filter filter);
+        static Path OpenFile(Filter filter);
+        static Path SaveFile(Filter filter);
     private:
         /*static void CheckFilter(Filter& filter)
         {

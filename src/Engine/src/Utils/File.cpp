@@ -15,7 +15,7 @@ namespace BeeEngine
 
     std::vector<std::byte> File::ReadBinaryFile(const Path &path)
     {
-        std::ifstream ifs(path, std::ios::binary|std::ios::ate);
+        std::ifstream ifs(path.ToStdPath(), std::ios::binary|std::ios::ate);
 
         if(!ifs)
             throw std::runtime_error(path.AsUTF8() + ": " + std::strerror(errno));
@@ -37,38 +37,38 @@ namespace BeeEngine
         return buffer;
     }
 
-    void File::WriteBinaryFile(std::string_view path, gsl::span<std::byte> content)
+    void File::WriteBinaryFile(const Path& path, gsl::span<std::byte> content)
     {
-        std::ofstream ofs(std::string(path), std::ios::out |std::ios::binary);
+        std::ofstream ofs(path.ToStdPath(), std::ios::out |std::ios::binary);
         if(!ofs)
-            throw std::runtime_error(std::string(path) + ": " + std::strerror(errno));
+            throw std::runtime_error(path.AsUTF8() + ": " + std::strerror(errno));
         ofs.write((char*)content.data(), content.size());
         ofs.close();
     }
 
-    std::string File::ReadFile(std::string_view path)
+    std::string File::ReadFile(const Path& path)
     {
-        std::ifstream ifs((std::string(path)));
+        std::ifstream ifs(path.ToStdPath());
         if(!ifs)
-            throw std::runtime_error(std::string(path) + ": " + std::strerror(errno));
+            throw std::runtime_error(path.AsUTF8() + ": " + std::strerror(errno));
         std::string content;
         ifs>>content;
         ifs.close();
         return content;
     }
 
-    void File::WriteFile(std::string_view path, std::string_view content)
+    void File::WriteFile(const Path& path, std::string_view content)
     {
-        std::ofstream ofs(std::string(path), std::ios::out);
+        std::ofstream ofs(path.ToStdPath(), std::ios::out);
         if(!ofs)
-            throw std::runtime_error(std::string(path) + ": " + std::strerror(errno));
+            throw std::runtime_error(path.AsUTF8() + ": " + std::strerror(errno));
         ofs << content;
         ofs.close();
     }
 
-    size_t File::Size(std::string_view path)
+    size_t File::Size(const Path& path)
     {
-        return std::filesystem::file_size(path);
+        return std::filesystem::file_size(path.ToStdPath());
     }
 
     bool File::Exists(std::string_view path)

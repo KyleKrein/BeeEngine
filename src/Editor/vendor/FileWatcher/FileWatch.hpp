@@ -36,6 +36,7 @@
 #include <tchar.h>
 #include <Pathcch.h>
 #include <shlwapi.h>
+#include "Platform/Windows/WindowsString.h"
 #endif // WIN32
 
 #if __unix__
@@ -725,21 +726,38 @@ namespace filewatch {
                   return StringType {buf};
             }
 #elif _WIN32
+#if 1 //Not so portable, but works for String
             static StringType absolute_path_of(const StringType& path) {
+                  constexpr size_t size = MAX_PATH;
+                  wchar_t buf[size];
+
+                  DWORD length = GetFullPathNameW((LPCWSTR)path.c_str(),
+                              size / sizeof(TCHAR),
+                              (LPWSTR)buf,
+                              nullptr);
+                  buf[length] = '\0';
+                  auto s = BeeEngine::Internal::WStringToUTF8({(const wchar_t*)buf});
+                  return StringType{s.begin(), s.end()};
+            }
+#else //Original code
+        static StringType absolute_path_of(const StringType& path) {
                   constexpr size_t size = IsWChar<C>::value? MAX_PATH : 32767 * sizeof(wchar_t);
                   char buf[size];
 
-                  DWORD length = IsWChar<C>::value? 
-                        GetFullPathNameW((LPCWSTR)path.c_str(), 
+                  DWORD length = length = IsWChar<C>::value?
+                        GetFullPathNameW((LPCWSTR)path.c_str(),
                               size / sizeof(TCHAR),
                               (LPWSTR)buf,
-                              nullptr) : 
-                        GetFullPathNameA((LPCSTR)path.c_str(), 
+                              nullptr) :
+                        GetFullPathNameA((LPCSTR)path.c_str(),
                               size / sizeof(TCHAR),
                               buf,
                               nullptr);
+                  auto s = BeeEngine::Internal::WStringToUTF8({(const wchar_t*)buf});
                   return StringType{(C*)buf, length};
             }
+
+#endif
 #endif
 
 #if FILEWATCH_PLATFORM_MAC

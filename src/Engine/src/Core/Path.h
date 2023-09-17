@@ -52,10 +52,7 @@ namespace BeeEngine
             return ConvertUTF8ToUTF16(m_Path);
         }
 
-        std::filesystem::path ToStdPath() const
-        {
-            return {m_Path};
-        }
+        std::filesystem::path ToStdPath() const;
 
         operator UTF8String&()
         {
@@ -81,8 +78,8 @@ namespace BeeEngine
 
         void ReplaceExtension(const Path& newExtension);
         void ReplaceFileName(const Path& newFileName);
-        void RemoveExtension();
-        void RemoveFileName();
+        Path RemoveExtension() const;
+        Path RemoveFileName() const;
 
         Path& operator/=(const Path& other);
         Path& operator/=(Path&& other);

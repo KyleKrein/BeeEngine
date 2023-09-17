@@ -13,6 +13,12 @@ namespace BeeEngine::Editor
 {
     class ProjectFile
     {
+#if defined(WINDOWS)
+    using FileWatchString = std::wstring;
+#else
+    using FileWatchString = std::string;
+#endif
+        using FileWatcher = filewatch::FileWatch<FileWatchString>;
     public:
         ProjectFile(const Path& projectPath, const std::string& projectName, EditorAssetManager* assetManager) noexcept;
 
@@ -54,20 +60,20 @@ namespace BeeEngine::Editor
         void Update() noexcept;
 
     private:
-        void OnAppAssemblyFileSystemEvent(const std::string& path, filewatch::Event changeType);
-        void OnAssetFileSystemEvent(const std::string& path, filewatch::Event changeType);
+        void OnAppAssemblyFileSystemEvent(const FileWatchString& path, filewatch::Event changeType);
+        void OnAssetFileSystemEvent(const FileWatchString& path, filewatch::Event changeType);
 
         Path m_ProjectPath;
         std::string m_ProjectName;
         const Path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
         const Path m_ProjectAssetRegistryPath = m_ProjectPath / (m_ProjectName + ".beeassetregistry");
         Path m_LastUsedScenePath {""};
-        Scope<filewatch::FileWatch<std::string>> m_AppAssemblyFileWatcher = nullptr;
+        Scope<FileWatcher> m_AppAssemblyFileWatcher = nullptr;
         mutable bool m_AssemblyReloadPending = false;
         Path m_AppAssemblyPath;
         BeeEngine::UUID m_AssetRegistryID;
 
-        Scope<filewatch::FileWatch<std::string>> m_AssetFileWatcher = nullptr;
+        Scope<FileWatcher> m_AssetFileWatcher = nullptr;
         EditorAssetManager* m_AssetManager;
     };
 }

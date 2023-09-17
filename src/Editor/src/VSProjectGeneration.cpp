@@ -3,13 +3,14 @@
 //
 
 #include "VSProjectGeneration.h"
+#include "Utils/File.h"
 #include <fstream>
 #include <sstream>
 namespace BeeEngine
 {
-
     void BeeEngine::VSProjectGeneration::GenerateAssemblyInfoFile(const Path &path, std::string_view projectName)
     {
+        BeeExpects(IsValidString(String(projectName)));
         std::ostringstream source;
         source << "using System.Reflection;\n";
         source << "using System.Runtime.InteropServices;\n";
@@ -44,9 +45,7 @@ namespace BeeEngine
         source << "[assembly: AssemblyVersion(\"1.0.0.0\")]\n";
         source << "[assembly: AssemblyFileVersion(\"1.0.0.0\")]\n";
         source.flush(); //Might not be necessary
-        std::ofstream file(path / "AssemblyInfo.cs", std::ios::out);
-        file << source.str();
-        file.close();
+        File::WriteFile(path / "AssemblyInfo.cs", source.str());
     }
 
     std::vector <Path>
@@ -70,6 +69,9 @@ namespace BeeEngine
                                                          const std::vector <Path> &sources,
                                                          const std::string& projectName)
     {
+        BeeExpects(IsValidString(String(projectName)));
+        static constexpr unsigned char bom[] = { 0xEF,0xBB,0xBF };
+
         std::ostringstream csproj;
         csproj << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
         csproj << "<Project ToolsVersion=\"15.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n";
@@ -119,22 +121,29 @@ namespace BeeEngine
         {
             auto source = sourcePath.ToStdPath();
             if(source.is_absolute())
-                csproj << "    <Compile Include=" << source.lexically_relative(stdpath) << "/>\n";
+                csproj << "    <Compile Include=\"" << Path{source.lexically_relative(stdpath)}.AsUTF8() << "\"/>\n";
             else
-                csproj << "    <Compile Include=" << source << "/>\n";
+                csproj << "    <Compile Include=\"" << sourcePath.AsUTF8() << "\"/>\n";
         }
         csproj << "  </ItemGroup>\n";
         csproj << "  <Import Project=\"$(MSBuildToolsPath)\\Microsoft.CSharp.targets\" />\n";
         csproj << "</Project>\n";
 
-        std::fstream csprojStream(path / (projectName + ".csproj"), std::ios::out);
         csproj.flush();
-        csprojStream << csproj.str();
-        csprojStream.close();
+        {
+            std::ofstream ofs((path / (projectName + ".csproj")).ToStdPath());
+            ofs.write((char*)bom, sizeof(bom));
+            ofs << csproj.str();
+            ofs.close();
+        }
 
         std::ostringstream sln;
+        sln << '\n';
         sln << "Microsoft Visual Studio Solution File, Format Version 12.00\n";
-        sln << "Project(\"{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}\") = \"" << projectName << "\", \"" << projectName << ".csproj\", \"{425D7973-9025-4564-B598-73F36A5979FE}\"\n"; //TODO: GUID
+        sln << "# Visual Studio Version 17\n";
+        sln << "VisualStudioVersion = 17.6.33829.357\n";
+        sln << "MinimumVisualStudioVersion = 10.0.40219.1\n";
+        sln << "Project(\"{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}\") = \"" << projectName << "\", \"" << projectName << ".csproj\", \"{877FEBCD-BDEB-41C4-9887-F072CB32A77D}\"\n"; //TODO: GUID
         sln << "EndProject\n";
         sln << "Global\n";
         sln << "	GlobalSection(SolutionConfigurationPlatforms) = preSolution\n";
@@ -142,16 +151,25 @@ namespace BeeEngine
         sln << "		Release|Any CPU = Release|Any CPU\n";
         sln << "	EndGlobalSection\n";
         sln << "	GlobalSection(ProjectConfigurationPlatforms) = postSolution\n";
-        sln << "		{425D7973-9025-4564-B598-73F36A5979FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU\n";
-        sln << "		{425D7973-9025-4564-B598-73F36A5979FE}.Debug|Any CPU.Build.0 = Debug|Any CPU\n";
-        sln << "		{425D7973-9025-4564-B598-73F36A5979FE}.Release|Any CPU.ActiveCfg = Release|Any CPU\n";
-        sln << "		{425D7973-9025-4564-B598-73F36A5979FE}.Release|Any CPU.Build.0 = Release|Any CPU\n";
+        sln << "		{877FEBCD-BDEB-41C4-9887-F072CB32A77D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU\n";
+        sln << "		{877FEBCD-BDEB-41C4-9887-F072CB32A77D}.Debug|Any CPU.Build.0 = Debug|Any CPU\n";
+        sln << "		{877FEBCD-BDEB-41C4-9887-F072CB32A77D}.Release|Any CPU.ActiveCfg = Release|Any CPU\n";
+        sln << "		{877FEBCD-BDEB-41C4-9887-F072CB32A77D}.Release|Any CPU.Build.0 = Release|Any CPU\n";
+        sln << "	EndGlobalSection\n";
+        sln << "	GlobalSection(SolutionProperties) = preSolution\n";
+        sln << "		HideSolutionNode = FALSE\n";
+        sln << "	EndGlobalSection\n";
+        sln << "	GlobalSection(ExtensibilityGlobals) = postSolution\n";
+        sln << "		SolutionGuid = {B0F3E0A0-0B0A-4F0B-9F0A-0B0A0B0A0B0A}\n";
         sln << "	EndGlobalSection\n";
         sln << "EndGlobal\n";
 
         sln.flush();
-        std::fstream slnStream(path / (projectName + ".sln"), std::ios::out);
-        slnStream << sln.str();
-        slnStream.close();
+        {
+            std::ofstream ofs((path / (projectName + ".sln")).ToStdPath());
+            ofs.write((char *) bom, sizeof(bom));
+            ofs << sln.str();
+            ofs.close();
+        }
     }
 }

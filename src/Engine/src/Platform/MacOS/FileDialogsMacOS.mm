@@ -7,7 +7,7 @@
 #include "Cocoa/Cocoa.h"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-std::string BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
+Path BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
 {
     // Create the File Open Dialog class.
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
@@ -29,13 +29,13 @@ std::string BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
             NSString *path = [[nsurl absoluteURL] path];
             std::string result = std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
             if(result.empty())
-                return std::string();
+                return {};
             return result;
     }
-    return std::string();
+    return {};
 }
 
-std::string BeeEngine::FileDialogs::SaveFile(Filter filter)
+Path BeeEngine::FileDialogs::SaveFile(Filter filter)
 {
     auto strFilter = GetFilter(&filter);
     NSString *f = [NSString stringWithUTF8String:strFilter.c_str()];
@@ -46,10 +46,10 @@ std::string BeeEngine::FileDialogs::SaveFile(Filter filter)
         // nsurl.path contains the NSString I want to return as std::string
         std::string result = std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
         if(result.empty())
-            return std::string();
+            return {};
         return result;
     }
-    return std::string();
+    return {};
 }
 
 std::string BeeEngine::FileDialogs::GetFilter(void* filter)

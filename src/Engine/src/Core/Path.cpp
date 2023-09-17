@@ -4,6 +4,11 @@
 
 #include "Path.h"
 #include "Core/CodeSafety/Expects.h"
+#include "Core/Application.h"
+
+#if defined(WINDOWS)
+#include "Platform/Windows/WindowsString.h"
+#endif
 
 
 namespace BeeEngine
@@ -24,7 +29,11 @@ namespace BeeEngine
 
     Path::Path(const std::filesystem::path &path)
     {
+#if defined(WINDOWS)
+        auto utf8 = Internal::WStringToUTF8(path.wstring());
+#else
         auto utf8 = path.string();
+#endif
         std::replace(utf8.begin(), utf8.end(), '\\', '/');
         m_Path = std::move(utf8);
         BeeEnsures(IsValidString(m_Path));
@@ -60,7 +69,11 @@ namespace BeeEngine
 
     Path::Path(std::filesystem::path &&path) noexcept
     {
+#if defined(WINDOWS)
+        auto utf8 = Internal::WStringToUTF8(path.wstring());
+#else
         auto utf8 = path.string();
+#endif
         std::replace(utf8.begin(), utf8.end(), '\\', '/');
         m_Path = std::move(utf8);
         BeeEnsures(IsValidString(m_Path));
@@ -84,7 +97,11 @@ namespace BeeEngine
 
     Path &Path::operator=(const std::filesystem::path &path)
     {
+#if defined(WINDOWS)
+        auto utf8 = Internal::WStringToUTF8(path.wstring());
+#else
         auto utf8 = path.string();
+#endif
         std::replace(utf8.begin(), utf8.end(), '\\', '/');
         m_Path = std::move(utf8);
         BeeEnsures(IsValidString(m_Path));
@@ -124,7 +141,11 @@ namespace BeeEngine
 
     Path &Path::operator=(std::filesystem::path &&path) noexcept
     {
+#if defined(WINDOWS)
+        auto utf8 = Internal::WStringToUTF8(path.wstring());
+#else
         auto utf8 = path.string();
+#endif
         std::replace(utf8.begin(), utf8.end(), '\\', '/');
         m_Path = std::move(utf8);
         BeeEnsures(IsValidString(m_Path));
@@ -258,52 +279,61 @@ namespace BeeEngine
 
     void Path::ReplaceExtension(const Path &newExtension)
     {
-        auto dot = std::find_end(m_Path.begin(), m_Path.end(), ".", ".");
-        if (dot == m_Path.end())
+        auto dot = m_Path.find_last_of('.');
+        if (dot == BeeEngine::UTF8String::npos)
         {
             m_Path += newExtension.m_Path;
         }
         else
         {
-            m_Path = UTF8String(m_Path.begin(), dot) + newExtension.m_Path;
+            m_Path = UTF8String(m_Path.begin(), m_Path.begin() + dot) + newExtension.m_Path;
         }
     }
 
     void Path::ReplaceFileName(const Path &newFileName)
     {
-        auto slash = std::find_end(m_Path.begin(), m_Path.end(), "/", "/");
-        if (slash == m_Path.end())
+        auto slash = m_Path.find_last_of('/');
+        if (slash == BeeEngine::UTF8String::npos)
         {
             m_Path = newFileName.m_Path;
         }
         else
         {
-            m_Path = UTF8String(m_Path.begin(), slash + 1) + newFileName.m_Path;
+            m_Path = UTF8String(m_Path.begin(), m_Path.begin() + slash + 1) + newFileName.m_Path;
         }
     }
 
-    void Path::RemoveExtension()
+    Path Path::RemoveExtension() const
     {
-        auto dot = std::find_end(m_Path.begin(), m_Path.end(), ".", ".");
-        if (dot == m_Path.end())
+        auto dot = m_Path.find_last_of('.');
+        if (dot == BeeEngine::UTF8String::npos)
         {
-            return;
+            return *this;
         }
-        m_Path = UTF8String(m_Path.begin(), dot - 1);
+        return UTF8String(m_Path.begin(), m_Path.begin() + dot);
     }
 
-    void Path::RemoveFileName()
+    Path Path::RemoveFileName() const
     {
-        auto slash = std::find_end(m_Path.begin(), m_Path.end(), "/", "/");
-        if (slash == m_Path.end())
+        auto slash = m_Path.find_last_of('/');
+        if (slash == BeeEngine::UTF8String::npos)
         {
-            return;
+            return *this;
         }
-        m_Path = UTF8String(m_Path.begin(), slash - 1);
+        return UTF8String(m_Path.begin(), m_Path.begin() + slash);
     }
 
     Path Path::operator/(const Path &other) const
     {
         return Path(*this) /= other;
+    }
+
+    std::filesystem::path Path::ToStdPath() const
+    {
+#if defined(WINDOWS)
+        return {Internal::WStringFromUTF8(m_Path)};
+#else
+        return {m_Path};
+#endif
     }
 }

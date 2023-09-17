@@ -104,17 +104,16 @@ namespace BeeEngine::Editor
             ImGui::Begin("Project");
             if(ImGui::Button("Load project"))
             {
-                auto path = FileDialogs::OpenFile({"BeeEngine Project", "*.beeproj"});
-                if(path.empty())
+                auto projectPath = FileDialogs::OpenFile({"BeeEngine Project", "*.beeproj"});
+                if(projectPath.IsEmpty())
                 {
                     BeeCoreError("Unable to open file");
                     goto newProject;
                 }
-                std::filesystem::path projectPath = (path);
-                auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
-                path = projectPath.remove_filename().string();
-                path.pop_back();
-                m_ProjectFile = CreateScope<ProjectFile>(path, name, &m_EditorAssetManager);
+                String pathString = projectPath.AsUTF8();
+                auto name = projectPath.GetFileNameWithoutExtension().AsUTF8();
+                pathString = projectPath.RemoveFileName().AsUTF8();
+                m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &m_EditorAssetManager);
                 m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
@@ -144,21 +143,19 @@ namespace BeeEngine::Editor
             newProject:
             if(ImGui::Button("New project"))
             {
-                auto path = FileDialogs::SaveFile({"BeeEngine Project", "*.beeproj"});
-                if(path.empty())
+                auto projectPath = FileDialogs::SaveFile({"BeeEngine Project", "*.beeproj"});
+                if(projectPath.IsEmpty())
                 {
                     BeeCoreError("Unable to open file");
                     goto end;
                 }
-                if(!path.ends_with(".beeproj"))
+                if(projectPath.GetExtension() != ".beeproj")
                 {
-                    path += ".beeproj";
+                    projectPath.ReplaceExtension(".beeproj");
                 }
-                std::filesystem::path projectPath = path;
-                auto name = ResourceManager::GetNameFromFilePath(projectPath.string());
-                path = projectPath.remove_filename().string();
-                path.pop_back();
-                m_ProjectFile = CreateScope<ProjectFile>(path, name, &m_EditorAssetManager);
+                auto name = projectPath.GetFileNameWithoutExtension().AsUTF8();
+                String pathString = projectPath.RemoveFileName().AsUTF8();
+                m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &m_EditorAssetManager);
                 m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
@@ -202,7 +199,7 @@ namespace BeeEngine::Editor
         }});
         fileMenu.AddChild({"Open Scene", [this](){
             auto filepath = BeeEngine::FileDialogs::OpenFile({"BeeEngine Scene", "*.beescene"});
-            if(filepath.empty())
+            if(filepath.IsEmpty())
             {
                 BeeCoreError("Unable to open file");
                 return;
@@ -214,13 +211,13 @@ namespace BeeEngine::Editor
         }});
         fileMenu.AddChild({"Save Scene As...", [this](){
             auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
-            if(filepath.empty())
+            if(filepath.IsEmpty())
             {
                 BeeCoreError("Unable to save to file");
                 return;
             }
-            if(!filepath.ends_with(".beescene"))
-                filepath += ".beescene";
+            if(filepath.GetExtension() != ".beescene")
+                filepath.ReplaceExtension(".beescene");
             m_ScenePath = filepath;
             SceneSerializer serializer(m_ActiveScene);
             serializer.Serialize(m_ScenePath);
@@ -392,13 +389,13 @@ namespace BeeEngine::Editor
         if(m_ScenePath.IsEmpty())
         {
             auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
-            if(filepath.empty())
+            if(filepath.IsEmpty())
             {
                 BeeCoreError("Unable to save to file");
                 return;
             }
-            if(!filepath.ends_with(".beescene"))
-                filepath += ".beescene";
+            if(filepath.GetExtension()!= ".beescene")
+                filepath.ReplaceExtension(".beescene");
             m_ScenePath = filepath;
         }
         SceneSerializer serializer(m_ActiveScene);

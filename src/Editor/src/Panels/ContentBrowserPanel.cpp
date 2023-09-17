@@ -165,9 +165,8 @@ namespace BeeEngine::Editor
             if (scriptName.empty())
                 scriptName = "NewScript";
             Path scriptPath = m_CurrentDirectory / (scriptName + ".cs");
-            std::ofstream scriptFile(scriptPath);
-            scriptFile << ResourceManager::GetScriptTemplate(scriptName);
-            scriptFile.close();
+            auto templ = ResourceManager::GetScriptTemplate(scriptName);
+            File::WriteFile(scriptPath, templ);
             m_NeedToRegenerateSolution = true;
         });
         OpenCreatePopup("Create Scene", createScenePopupOpen, [&](const char* name)

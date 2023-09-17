@@ -14,6 +14,7 @@
 #include <vector>
 #include "Scripting/GameScript.h"
 #include "Scripting/MUtils.h"
+#include "Utils/File.h"
 
 namespace YAML
 {
@@ -233,8 +234,7 @@ namespace BeeEngine
         out << YAML::EndSeq;
         out << YAML::EndMap;
 
-        std::ofstream fout(filepath);
-        fout << out.c_str();
+        File::WriteFile(filepath, out.c_str());
     }
 
     void SceneSerializer::SerializeBinary(const Path& filepath)
@@ -244,7 +244,9 @@ namespace BeeEngine
 
     void SceneSerializer::Deserialize(const Path& filepath)
     {
-        YAML::Node data = YAML::LoadFile(filepath.AsUTF8());
+        std::ifstream ifs(filepath.ToStdPath());
+        YAML::Node data = YAML::Load(ifs);
+        ifs.close();
         if (!data["Scene"])
             return;
         std::string sceneName = data["Scene"].as<std::string>();

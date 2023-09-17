@@ -85,13 +85,14 @@ namespace BeeEngine
         out << YAML::EndSeq;
         out << YAML::EndMap;
 
-        std::ofstream fout(path, std::ios::out);
-        fout << out.c_str();
+        File::WriteFile(path, out.c_str());
     }
 
     void AssetRegistrySerializer::Deserialize(const Path &path)
     {
-        YAML::Node data = YAML::LoadFile(path.AsUTF8());
+        std::ifstream ifs(path.ToStdPath());
+        YAML::Node data = YAML::Load(ifs);
+        ifs.close();
         UUID registryID = data["Registry ID"].as<uint64_t>();
         for(auto asset : data["Assets"])
         {
