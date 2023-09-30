@@ -163,11 +163,17 @@ namespace BeeEngine
 
     bool Path::IsAbsolute() const noexcept
     {
+#if defined(WINDOWS)
         if(m_Path.size() >= 3 && m_Path[1] == ':' && m_Path[2] == '/')
         {
             return true;
         }
         return m_Path.size() >= 2 && m_Path[0] == '/' && m_Path[1] == '/';
+#elif defined(MACOS) || defined(LINUX)
+        return !m_Path.empty() && m_Path[0] == '/';
+#else
+        #error "Path is unsupported on this platform"
+#endif
     }
 
     bool Path::IsRelative() const noexcept

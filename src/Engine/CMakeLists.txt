@@ -113,9 +113,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/LinkMono.cmake)
 add_library(BeeEngine ${SOURCE_FILES})
 
 set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/vendor/mono/libs/)
-if(PROJECT_IS_TOP_LEVEL)
+#if(PROJECT_IS_TOP_LEVEL)
     configureMono(${MONO_DIRECTORY})
-endif ()
+#endif ()
 enable_mono(BeeEngine)
 target_link_libraries(BeeEngine PRIVATE file_embed)
 

@@ -7,7 +7,7 @@
 #include "Cocoa/Cocoa.h"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-Path BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
+BeeEngine::Path BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
 {
     // Create the File Open Dialog class.
     NSOpenPanel* openDlg = [NSOpenPanel openPanel];
@@ -35,7 +35,7 @@ Path BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
     return {};
 }
 
-Path BeeEngine::FileDialogs::SaveFile(Filter filter)
+BeeEngine::Path BeeEngine::FileDialogs::SaveFile(Filter filter)
 {
     auto strFilter = GetFilter(&filter);
     NSString *f = [NSString stringWithUTF8String:strFilter.c_str()];
