@@ -4,6 +4,7 @@
 
 #pragma once
 #include <FileSystem/FileWatcher.h>
+#include <thread>
 
 namespace BeeEngine::Internal
 {
@@ -27,6 +28,8 @@ namespace BeeEngine::Internal
         std::atomic<bool> m_Running = false;
         const std::wstring m_Path;
         const std::function<void(const Path &, Event)> m_Callback;
+#if defined(WINDOWS)
         Scope<std::jthread> m_Thread = nullptr;
+#endif
     };
 }

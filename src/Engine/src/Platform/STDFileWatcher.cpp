@@ -3,6 +3,9 @@
 //
 
 #include "STDFileWatcher.h"
+#include <chrono>
+#include <filesystem>
+#include "FileSystem/File.h"
 
 
 namespace BeeEngine::Internal
@@ -12,7 +15,7 @@ namespace BeeEngine::Internal
     {
         // Time interval at which we check the base folder for changes
         constexpr std::chrono::duration<int, std::milli> delay = std::chrono::milliseconds(500);// Why 500ms? Because it's a good compromise between responsiveness and performance
-        std::unordered_map<std::filesystem::path, std::filesystem::file_time_type> paths;
+        std::unordered_map<Path, std::filesystem::file_time_type> paths;
         for(auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
         {
             paths[file.path()] = std::filesystem::last_write_time(file);
@@ -24,7 +27,7 @@ namespace BeeEngine::Internal
             // Check if a file was deleted
             while (it != paths.end())
             {
-                if(!std::filesystem::exists(it->first))
+                if(!File::Exists(it->first))
                 {
                     watcher.m_Callback(it->first, FileWatcher::Event::Removed);
                     it = paths.erase(it);
@@ -57,12 +60,20 @@ namespace BeeEngine::Internal
         if(IsRunning())
             return;
         m_Running.store(true);
+#if defined(__cpp_lib_jthread)
         m_Thread = CreateScope<std::jthread>(STDFileWatcherThread, std::ref(*this));
+#else
+        m_Thread = CreateScope<std::thread>(STDFileWatcherThread, std::ref(*this));
+#endif
     }
 
     void STDFileWatcher::Stop()
     {
         m_Running.store(false);
+#if !defined(__cpp_lib_jthread)
+        if(m_Thread && m_Thread->joinable())
+            m_Thread->join();
+#endif
         m_Thread = nullptr;
     }
 

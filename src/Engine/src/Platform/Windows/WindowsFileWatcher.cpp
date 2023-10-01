@@ -133,15 +133,19 @@ namespace BeeEngine::Internal
 
     void WindowsFileWatcher::Start()
     {
+#if defined(WINDOWS)
         if(m_Running)
             return;
         m_Running.store(true);
         m_Thread = CreateScope<std::jthread>(WindowsFileWatcherThread, std::ref(*this));
+#endif
     }
 
     void WindowsFileWatcher::Stop()
     {
+#if defined(WINDOWS)
         m_Running.store(false);
         m_Thread = nullptr;
+#endif
     }
 }

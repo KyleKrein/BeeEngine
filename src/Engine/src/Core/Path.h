@@ -97,3 +97,14 @@ namespace BeeEngine
         UTF8String m_Path;
     };
 }
+namespace std
+{
+    template<>
+    struct hash<BeeEngine::Path>
+    {
+        size_t operator()(const BeeEngine::Path& path) const noexcept
+        {
+            return hash<BeeEngine::UTF8String>()(path.AsUTF8());
+        }
+    };
+}

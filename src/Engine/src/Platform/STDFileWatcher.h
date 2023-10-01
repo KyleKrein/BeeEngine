@@ -6,6 +6,7 @@
 #include <FileSystem/FileWatcher.h>
 #include <filesystem>
 #include <unordered_map>
+#include <version>
 #include <thread>
 #include <chrono>
 
@@ -35,6 +36,10 @@ namespace BeeEngine::Internal
         std::atomic<bool> m_Running = false;
         const std::filesystem::path m_Path;
         const std::function<void(const Path &, Event)> m_Callback;
+#if defined(__cpp_lib_jthread)
         Scope<std::jthread> m_Thread = nullptr;
+#else
+        Scope<std::thread> m_Thread = nullptr;
+#endif
     };
 }
