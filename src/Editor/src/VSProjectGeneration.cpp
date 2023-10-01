@@ -4,7 +4,7 @@
 
 #include "VSProjectGeneration.h"
 #include "Core/CodeSafety/Expects.h"
-#include "Utils/File.h"
+#include "FileSystem/File.h"
 #include <fstream>
 #include <sstream>
 namespace BeeEngine

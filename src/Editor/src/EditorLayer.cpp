@@ -16,7 +16,7 @@
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/AssetManagement/EngineAssetRegistry.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
-#include "Utils/File.h"
+#include "FileSystem/File.h"
 
 namespace BeeEngine::Editor
 {

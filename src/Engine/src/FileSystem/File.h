@@ -6,7 +6,7 @@
 
 #include <string>
 #include <vector>
-#include <gsl/span>
+#include "gsl/span"
 #include <filesystem>
 #include "Core/Path.h"
 #undef CreateDirectory

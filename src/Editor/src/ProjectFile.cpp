@@ -3,7 +3,7 @@
 //
 
 #include "ProjectFile.h"
-#include "Utils/File.h"
+#include "FileSystem/File.h"
 #include "Core/Logging/Log.h"
 #include "VSProjectGeneration.h"
 #include "Core/ResourceManager.h"
@@ -11,12 +11,6 @@
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 #include <filesystem>
-#if defined(WINDOWS) && 1
-#include "Platform/Windows/WindowsString.h"
-#define WatchPath(x) x.ToStdPath().wstring()
-#else
-#define WatchPath(x) x.AsUTF8()
-#endif
 namespace BeeEngine::Editor
 {
 
@@ -35,7 +29,7 @@ namespace BeeEngine::Editor
         }
         m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
         if(File::Exists(m_AppAssemblyPath))
-            m_AppAssemblyFileWatcher = CreateScope<FileWatcher>(WatchPath(m_AppAssemblyPath), [this](const FileWatchString & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath, [this](const Path & path, FileWatcher::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         m_AppAssemblyPath = m_AppAssemblyPath / "GameLibrary.dll";
         std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll", m_ProjectPath.ToStdPath() / ".beeengine" / "BeeEngine.Core.dll", std::filesystem::copy_options::overwrite_existing);
         if(!File::Exists(m_ProjectFilePath))
@@ -76,7 +70,7 @@ namespace BeeEngine::Editor
 
             VSProjectGeneration::GenerateAssemblyInfoFile(m_ProjectPath, m_ProjectName);
             RegenerateSolution();
-            m_AssetFileWatcher = CreateScope<FileWatcher>(WatchPath(m_ProjectPath), [this](const FileWatchString & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
+            m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath, [this](const Path & path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
             return;
         }
         else
@@ -92,7 +86,7 @@ namespace BeeEngine::Editor
         }
         m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
         SetLastUsedScenePath(data["LastUsedScene"].as<std::string>());
-        m_AssetFileWatcher = CreateScope<FileWatcher>(WatchPath(m_ProjectPath), [this](const FileWatchString & path, filewatch::Event event) { OnAssetFileSystemEvent(path, event); });
+        m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath, [this](const Path & path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
     }
 
     const Path &ProjectFile::GetProjectPath() const noexcept
@@ -145,9 +139,9 @@ namespace BeeEngine::Editor
         VSProjectGeneration::GenerateProject(m_ProjectPath, sources, m_ProjectName);
     }
 
-    void ProjectFile::OnAppAssemblyFileSystemEvent(const FileWatchString &path, const filewatch::Event changeType)
+    void ProjectFile::OnAppAssemblyFileSystemEvent(const Path &path, const FileWatcher::Event changeType)
     {
-        if(!m_AssemblyReloadPending && (changeType == filewatch::Event::modified || changeType == filewatch::Event::added ))
+        if(!m_AssemblyReloadPending && (changeType == FileWatcher::Event::Modified || changeType == FileWatcher::Event::Added ))
         {
             m_AssemblyReloadPending = true;
         }
@@ -159,7 +153,7 @@ namespace BeeEngine::Editor
             return;
         if(File::Exists(m_AppAssemblyPath))
         {
-            m_AppAssemblyFileWatcher = CreateScope<FileWatcher>(WatchPath(m_AppAssemblyPath), [this](const FileWatchString & path, filewatch::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath, [this](const Path & path, FileWatcher::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         }
     }
 
@@ -173,13 +167,9 @@ namespace BeeEngine::Editor
         return m_ProjectAssetRegistryPath;
     }
 
-    void ProjectFile::OnAssetFileSystemEvent(const FileWatchString &path, filewatch::Event changeType)
+    void ProjectFile::OnAssetFileSystemEvent(const Path &path, FileWatcher::Event changeType)
     {
-#if defined(WINDOWS) && 1
-        Path p = Internal::WStringToUTF8(path);
-#else
         Path p = path;
-#endif
         if(!ResourceManager::IsAssetExtension(p.GetExtension()))
             return;
         if(p.IsRelative())
@@ -193,16 +183,16 @@ namespace BeeEngine::Editor
 
         switch (changeType)
         {
-            case filewatch::Event::added:
+            case FileWatcher::Event::Added:
                 Application::SubmitToMainThread([this, p, handle]()
                 {
                     m_AssetManager->LoadAsset(p, handle);
                 });
                 changed = true;
                 break;
-            case filewatch::Event::removed:
+            case FileWatcher::Event::Removed:
                 break;
-            case filewatch::Event::modified:
+            case FileWatcher::Event::Modified:
                 if(m_AssetManager->IsAssetLoaded(handle))
                 {
                     Application::SubmitToMainThread([this, p, handle]()
@@ -212,9 +202,9 @@ namespace BeeEngine::Editor
                     });
                 }
                 break;
-            case filewatch::Event::renamed_old:
+            case FileWatcher::Event::RenamedOldName:
                 break;
-            case filewatch::Event::renamed_new:
+            case FileWatcher::Event::RenamedNewName:
                 break;
         }
         if(changed)

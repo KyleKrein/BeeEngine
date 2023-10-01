@@ -9,7 +9,7 @@
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <msdf-atlas-gen/GlyphGeometry.h>
 #include "MSDFData.h"
-#include "Utils/File.h"
+#include "FileSystem/File.h"
 #include <glm.hpp>
 
 namespace BeeEngine

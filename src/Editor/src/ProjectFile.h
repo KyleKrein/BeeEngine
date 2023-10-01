@@ -4,21 +4,15 @@
 
 #pragma once
 #include <filesystem>
-#include "FileWatch.hpp"
 #include "Core/TypeDefines.h"
 #include "Core/UUID.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
+#include "FileSystem/FileWatcher.h"
 
 namespace BeeEngine::Editor
 {
     class ProjectFile
     {
-#if defined(WINDOWS)
-    using FileWatchString = std::wstring;
-#else
-    using FileWatchString = std::string;
-#endif
-        using FileWatcher = filewatch::FileWatch<FileWatchString>;
     public:
         ProjectFile(const Path& projectPath, const std::string& projectName, EditorAssetManager* assetManager) noexcept;
 
@@ -60,8 +54,8 @@ namespace BeeEngine::Editor
         void Update() noexcept;
 
     private:
-        void OnAppAssemblyFileSystemEvent(const FileWatchString& path, filewatch::Event changeType);
-        void OnAssetFileSystemEvent(const FileWatchString& path, filewatch::Event changeType);
+        void OnAppAssemblyFileSystemEvent(const Path& path, FileWatcher::Event changeType);
+        void OnAssetFileSystemEvent(const Path& path, FileWatcher::Event changeType);
 
         Path m_ProjectPath;
         std::string m_ProjectName;
