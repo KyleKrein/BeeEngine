@@ -12,7 +12,7 @@
 namespace BeeEngine
 {
 
-    Scope<FileWatcher> FileWatcher::Create(const Path &path, const std::function<void(const Path &, Event)> &callback)
+    Scope<FileWatcher> FileWatcher::Create(const Path &path, const std::function<void(Path, Event)> &callback)
     {
         BeeExpects(!path.IsEmpty());
         BeeExpects(path.IsAbsolute());

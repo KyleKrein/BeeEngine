@@ -125,7 +125,7 @@ namespace BeeEngine::Internal
         }
     }
 #endif
-    WindowsFileWatcher::WindowsFileWatcher(const Path& path, const std::function<void(const Path &, Event)> &callback)
+    WindowsFileWatcher::WindowsFileWatcher(const Path& path, const std::function<void(Path, Event)> &callback)
     : m_Path(std::move(path.ToStdPath().wstring())), m_Callback(callback)
     {
 

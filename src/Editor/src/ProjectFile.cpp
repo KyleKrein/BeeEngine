@@ -176,8 +176,20 @@ namespace BeeEngine::Editor
             p = m_ProjectPath / p;
         std::string name = p.GetFileNameWithoutExtension();
         const AssetHandle* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-        if(!handlePtr)
+        if(!handlePtr and changeType != FileWatcher::Event::RenamedNewName)
+        {
             return;
+        }
+        static Path oldNameOnRenamed;
+        if(changeType == FileWatcher::Event::RenamedNewName)
+        {
+            BeeCoreTrace("Renamed {0} to {1}", oldNameOnRenamed.AsUTF8(), p.AsUTF8());
+            Application::SubmitToMainThread([oldPath = p, newPath = oldNameOnRenamed]()
+                                            {
+                                                //m_AssetManager->RenameAsset(oldPath, newPath, handle);
+                                            });
+            return;
+        }
         AssetHandle handle = *handlePtr;
         bool changed = false;
 
@@ -203,8 +215,7 @@ namespace BeeEngine::Editor
                 }
                 break;
             case FileWatcher::Event::RenamedOldName:
-                break;
-            case FileWatcher::Event::RenamedNewName:
+                oldNameOnRenamed = p;
                 break;
         }
         if(changed)

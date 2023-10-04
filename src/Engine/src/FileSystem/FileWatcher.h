@@ -27,6 +27,6 @@ namespace BeeEngine
 
         virtual ~FileWatcher() = default;
 
-        static Scope<FileWatcher> Create(const Path& path, const std::function<void(const Path&, Event)>& callback);
+        static Scope<FileWatcher> Create(const Path& path, const std::function<void(Path, Event)>& callback);
     };
 }

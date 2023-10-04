@@ -62,7 +62,7 @@ namespace BeeEngine
 #if __cpp_lib_move_only_function
             std::packaged_task<decltype(f(args...))()> task(std::forward<F>(f), std::forward<Args>(args)...);
         auto future       = task.get_future();
-        auto wrapperFunc = [task = move(task)]() mutable { std::move(task)(); };
+        auto wrapperFunc = [task = std::move(task)]() mutable { std::move(task)(); };
         {
             std::lock_guard<std::mutex> lock(m_Mutex);
             m_Queue.push(std::move(wrapperFunc));

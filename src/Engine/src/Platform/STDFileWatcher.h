@@ -17,7 +17,7 @@ namespace BeeEngine::Internal
         friend void STDFileWatcherThread(STDFileWatcher& watcher);
 
     public:
-        STDFileWatcher(const Path& path, const std::function<void(const Path &, Event)> &callback);
+        STDFileWatcher(const Path& path, const std::function<void(Path, Event)> &callback);
         void Start() override;
 
         void Stop() override;
@@ -35,7 +35,7 @@ namespace BeeEngine::Internal
     private:
         std::atomic<bool> m_Running = false;
         const std::filesystem::path m_Path;
-        const std::function<void(const Path &, Event)> m_Callback;
+        const std::function<void(Path, Event)> m_Callback;
 #if defined(__cpp_lib_jthread)
         Scope<std::jthread> m_Thread = nullptr;
 #else
