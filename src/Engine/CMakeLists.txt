@@ -50,6 +50,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Platform/Windows/WindowsFileWatcher.h
         src/Platform/STDFileWatcher.cpp
         src/Platform/STDFileWatcher.h
+        src/Platform/MacOS/MacOSFileWatcher.cpp
+        src/Platform/MacOS/MacOSFileWatcher.h
 )
 
 function(DesktopPlatformsOnly)

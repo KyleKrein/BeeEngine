@@ -4,6 +4,7 @@
 
 #include "FileWatcher.h"
 #include "Platform/Windows/WindowsFileWatcher.h"
+#include "Platform/MacOS/MacOSFileWatcher.h"
 #include "Core/Application.h"
 #include "Platform/STDFileWatcher.h"
 #include "File.h"
@@ -23,9 +24,11 @@ namespace BeeEngine
             case OSPlatform::Windows:
                 result = CreateScope<Internal::WindowsFileWatcher>(path, callback);
                 break;
-            case OSPlatform::Linux:
             case OSPlatform::Mac:
+                result = CreateScope<Internal::MacOSFileWatcher>(path, callback);
+                break;
             case OSPlatform::Android:
+            case OSPlatform::Linux:
             case OSPlatform::iOS:
             default:
             {

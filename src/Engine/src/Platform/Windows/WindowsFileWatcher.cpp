@@ -137,7 +137,11 @@ namespace BeeEngine::Internal
         if(m_Running)
             return;
         m_Running.store(true);
+#if defined(__cpp_lib_jthread)
         m_Thread = CreateScope<std::jthread>(WindowsFileWatcherThread, std::ref(*this));
+#else
+        m_Thread = CreateScope<std::thread>(WindowsFileWatcherThread, std::ref(*this));
+#endif
 #endif
     }
 
@@ -145,6 +149,10 @@ namespace BeeEngine::Internal
     {
 #if defined(WINDOWS)
         m_Running.store(false);
+#if !defined(__cpp_lib_jthread)
+        if(m_Thread && m_Thread->joinable())
+            m_Thread->join();
+#endif
         m_Thread = nullptr;
 #endif
     }
