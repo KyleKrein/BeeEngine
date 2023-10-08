@@ -5,7 +5,9 @@ project(BeeEngine_Tests)
 
 
 add_executable(BeeEngine_Tests tests_main.cpp GeneralPurposeAllocatorTest.cpp StringTests.cpp RenderingTests/TextureTest.cpp ApplicationInit.h "RenderingTests/GeneralRenderingTests.cpp" PropertyClassTest.cpp TestFileDialogs.cpp CodeSafetyCheck.cpp
-        ThreadPoolTest.cpp)
+        ThreadPoolTest.cpp
+        TypeDefinesTests.cpp
+        FormatStringTest.cpp)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 
