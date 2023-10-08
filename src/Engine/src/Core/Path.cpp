@@ -49,6 +49,8 @@ namespace BeeEngine
 
     Path::Path(const char *path)
     {
+        if(path == nullptr)
+            return;
         size_t len = constexpr_strlen(path);
         BeeExpects(len < bufferSize);
         char buffer[bufferSize];

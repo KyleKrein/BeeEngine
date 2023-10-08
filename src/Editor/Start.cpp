@@ -8,7 +8,7 @@
 
 
 
-gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication()
+gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication(const BeeEngine::ApplicationArgs& args)
 {
     return new BeeEngine::Editor::EditorApplication(BeeEngine::Editor::ConfigFile::LoadWindowConfiguration());
 }

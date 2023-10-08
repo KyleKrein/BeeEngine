@@ -1,11 +1,11 @@
 //
 // Created by alexl on 19.05.2023.
 //
-#include "BeeEngine.h"
+/*#include "BeeEngine.h"
 #include "gtest/gtest.h"
 #include "../Engine/vendor/BeeAlloc/include/GeneralPurposeAllocator.h"
 #include "thread"
-#include "AllocatorBlockHeader.h"
+#include "AllocatorBlockHeader.h"*/
 /*
 namespace BeeEngine::Internal
 {

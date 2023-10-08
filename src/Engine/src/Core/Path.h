@@ -18,8 +18,14 @@ namespace BeeEngine
         Path(const UTF16String& path);
         Path(const char* path);
         Path(std::string_view path)
-            : Path(path.data())
-        {}
+        {
+            if(path.data() == nullptr)
+                return;
+            if(path.empty())
+            {
+                return;
+            }
+        }
         Path(UTF8String&& path) noexcept;
         Path(std::filesystem::path&& path) noexcept;
         Path(UTF16String&& path) noexcept;

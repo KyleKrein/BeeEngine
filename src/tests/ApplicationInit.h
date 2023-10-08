@@ -10,6 +10,9 @@ class TestApplication : public BeeEngine::Application
 {
 public:
     TestApplication(BeeEngine::WindowProperties& properties)
-    : BeeEngine::Application(properties) {}
+    : BeeEngine::Application(properties)
+    {
+
+    }
     ~TestApplication() override {};
 };
