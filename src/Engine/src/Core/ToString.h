@@ -11,7 +11,7 @@
 #if __has_include (<cxxabi.h>)
 #include <cxxabi.h>
 #define BEE_HAS_CXXABI_H
-#define CONSTEXPR_FUNC constexpr
+#define CONSTEXPR_FUNC inline
 #else
 #define CONSTEXPR_FUNC inline
 #endif

@@ -3,6 +3,8 @@
 //
 
 #include "Format.h"
+#include <sstream>
+#include <algorithm>
 
 namespace BeeEngine::Internal
 {
