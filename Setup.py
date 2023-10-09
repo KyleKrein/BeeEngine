@@ -2,6 +2,7 @@ import subprocess
 import platform
 import re
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO)
 
@@ -136,7 +137,22 @@ def init_git_submodules():
         logging.error("Failed to initialize Git submodules. You might want to try running 'git submodule update --init --recursive' manually.")
 
 
+def build_csharp_project_with_mono():
+    logging.info("Building C# project with Mono...")
+    sln_path = 'src/BeeEngineScripting/BeeEngineScripting.sln'
+
+    if os.path.exists(sln_path):
+        try:
+            subprocess.run(['msbuild', '/p:Configuration=Release', sln_path], check=True)
+            logging.info("C# project built successfully.")
+        except subprocess.CalledProcessError:
+            logging.error("Failed to build C# project. Maybe your Mono is tired. Try giving it a coffee break.")
+    else:
+        logging.error(
+            f"Solution file not found at {sln_path}. Current working directory: {os.getcwd()}. Please make sure you are in the right place.")
+
 
 if __name__ == '__main__':
     install_dependencies()
     init_git_submodules()
+    build_csharp_project_with_mono()
