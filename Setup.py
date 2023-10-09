@@ -78,7 +78,10 @@ def install_dependencies():
             subprocess.run(['choco', 'install', 'cmake'])
         if not check_version_installed('cl'):
             logging.info("Installing MSVC Build Tools...")
-            subprocess.run(['choco', 'install', 'visualstudio2019buildtools'])
+            subprocess.run(['choco', 'install', 'visualstudio2022buildtools'])
+        if not check_version_installed('ccache'):
+            logging.info("Installing ccache...")
+            subprocess.run(["choco", "install", "ccache"], check=True)
 
     elif os_name == 'Darwin':
         check_and_install_brew()
@@ -89,6 +92,9 @@ def install_dependencies():
             logging.info("Installing CMake...")
             subprocess.run(['brew', 'install', 'cmake'])
         install_xcode_command_line_tools()
+        if not check_version_installed('ccache'):
+            logging.info("Installing ccache...")
+            subprocess.run(["brew", "install", "ccache"], check=True)
 
     elif os_name == 'Linux':
         if not check_version_installed('git'):
@@ -100,6 +106,10 @@ def install_dependencies():
         if not check_version_installed('gcc'):
             logging.info("Installing GCC...")
             subprocess.run(['sudo', 'apt-get', 'install', '-y', 'build-essential'])
+        if not check_version_installed('ccache'):
+            logging.info("Installing ccache...")
+            subprocess.run(["sudo", "apt", "update"], check=True)
+            subprocess.run(["sudo", "apt", "install", "-y", "ccache"], check=True)
 
 
 def init_git_submodules():
