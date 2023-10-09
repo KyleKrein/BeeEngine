@@ -143,13 +143,13 @@ def build_csharp_project_with_mono():
 
     if os.path.exists(sln_path):
         try:
-            subprocess.run(['msbuild', '/p:Configuration=Release', sln_path], check=True)
-            subprocess.run(['msbuild', '/p:Configuration=Debug', sln_path], check=True)
+            subprocess.run(['msbuild', '/p:Configuration=Release', '/p:Platform=Any CPU', sln_path], check=True)
+            subprocess.run(['msbuild', '/p:Configuration=Debug', '/p:Platform=Any CPU', sln_path], check=True)
             logging.info("C# project built successfully.")
         except subprocess.CalledProcessError:
-            logging.error("Failed to build C# project. Maybe your Mono is tired. Try giving it a coffee break.")
+            raise Exception("Failed to build C# project")
     else:
-        logging.error(
+        raise Exception(
             f"Solution file not found at {sln_path}. Current working directory: {os.getcwd()}. Please make sure you are in the right place.")
 
 
