@@ -46,8 +46,8 @@ jobs:
       uses: actions/cache@v2
       with:
           path: build/
-          key: ${{ runner.os }}-build-${{ matrix.build_type }}-${{ github.sha }}
-          restore-keys: ${{ runner.os }}-build-${{ matrix.build_type }}-
+          key: ${{ runner.os }}-build-${{ matrix.build_type }}
+          restore-keys: ${{ runner.os }}-build-${{ matrix.build_type }}
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -95,9 +95,9 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          ${{ env.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests.exe
+          ${{ steps.strings.outputs.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests.exe
         else
-          ${{ env.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests
+          ${{ steps.strings.outputs.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests
         fi
 
     #- name: Test
