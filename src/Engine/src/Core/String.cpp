@@ -179,4 +179,9 @@ namespace BeeEngine
         }
         m_Codepoint = codePoint;
     }
+    UTF8StringView::UTF8StringView(const UTF8String &string)
+    : m_String(&string)
+    {
+        BeeExpects(IsValidString(string));
+    }
 }

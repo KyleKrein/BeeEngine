@@ -19,11 +19,7 @@ namespace BeeEngine
     class UTF8StringView
     {
     public:
-        UTF8StringView(const UTF8String& string)
-        : m_String(&string)
-        {
-
-        }
+        UTF8StringView(const UTF8String& string);
         class iterator: public std::iterator<std::bidirectional_iterator_tag, char32_t, std::string::difference_type, const char32_t*, const char32_t&>
         {
         public:
