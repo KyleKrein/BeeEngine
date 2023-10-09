@@ -132,13 +132,14 @@ namespace BeeEngine::Internal
 
         const auto spaceGlyph =  fontGeometry.getGlyph(' ');
 
-        auto it = text.begin();
-        auto end = text.end();
+        UTF8StringView textView(text);
+        auto it = textView.begin();
+        auto end = textView.end();
 
 
         while(it != text.end())
         {
-            char32_t character = GetNextUTF8Char(it, end);
+            char32_t character = *it++;
 
             if (character == '\r')
                 continue;
@@ -155,7 +156,8 @@ namespace BeeEngine::Internal
                 {
                     double advance = spaceGlyph->getAdvance();
                     auto newit = it;
-                    char32_t nextCharacter = GetNextUTF8Char(newit, end);
+                    newit++;
+                    char32_t nextCharacter = *newit;
                     fontGeometry.getAdvance(advance, character, nextCharacter);
 
                     x += fsScale * advance + config.KerningOffset;
@@ -177,7 +179,8 @@ namespace BeeEngine::Internal
                     }
                     double advance = spaceGlyph->getAdvance();
                     auto newit = it;
-                    char32_t nextCharacter = GetNextUTF8Char(newit, end);
+                    newit++;
+                    char32_t nextCharacter = *newit;
                     fontGeometry.getAdvance(advance, character, nextCharacter);
 
                     x += fsScale * advance + config.KerningOffset;
@@ -231,7 +234,8 @@ namespace BeeEngine::Internal
             {
                 double advance = glyph->getAdvance();
                 auto newit = it;
-                char32_t nextCharacter = GetNextUTF8Char(newit, end);
+                newit++;
+                char32_t nextCharacter = *newit;
                 fontGeometry.getAdvance(advance, character, nextCharacter);
 
                 x += fsScale * advance + config.KerningOffset;
