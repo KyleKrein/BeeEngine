@@ -3,6 +3,7 @@ import platform
 import re
 import logging
 import os
+import glob
 
 logging.basicConfig(level=logging.INFO)
 
@@ -78,8 +79,13 @@ def install_dependencies():
             logging.info("Installing CMake...")
             subprocess.run(['choco', 'install', 'cmake'])
         if not check_version_installed('cl'):
-            logging.info("Installing MSVC Build Tools...")
-            subprocess.run(['choco', 'install', 'visualstudio2022buildtools'])
+            # Поиск папки установки MSVC
+            vs_installation_paths = glob.glob("C:/Program Files (x86)/Microsoft Visual Studio/*/BuildTools/VC/Tools/MSVC/*")
+            if not vs_installation_paths:
+                logging.info("MSVC Build Tools not found. Installing...")
+                subprocess.run(['choco', 'install', 'visualstudio2022buildtools'])
+            else:
+                logging.info(f"MSVC Build Tools found at {vs_installation_paths[0]}")
         if not check_version_installed('ccache'):
             logging.info("Installing ccache...")
             subprocess.run(["choco", "install", "ccache"], check=True)

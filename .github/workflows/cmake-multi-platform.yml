@@ -41,6 +41,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Cache Build Artifacts
+      id: cache-build
+      uses: actions/cache@v2
+      with:
+          path: build/
+          key: ${{ runner.os }}-build-${{ matrix.build_type }}-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-build-${{ matrix.build_type }}-
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -77,16 +84,20 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -S ${{ github.workspace }}
       
-    - name: Build
-      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --target BeeEngine --target BeeEngineEditor --target BeeEngine_Tests
+    - name: Build BeeEngine
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --target BeeEngine
+    - name: Build BeeEngine Editor
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --target BeeEngineEditor
+    - name: Build Tests for BeeEngine
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --target BeeEngine_Tests
 
     - name: Test
+      shell: bash
       run: |
         if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          ${{ steps.strings.outputs.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests.exe
+          ${{ env.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests.exe
         else
-          ${{ steps.strings.outputs.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests
+          ${{ env.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests
         fi
 
     #- name: Test
