@@ -55,18 +55,18 @@ namespace BeeEngine
     struct CharTypedEvent: public Event
     {
     public:
-        explicit CharTypedEvent(char character) noexcept
+        explicit CharTypedEvent(char32_t character) noexcept
         {
             Category = static_cast<EventCategory>(EventCategory::Keyboard & EventCategory::Input);
             m_Character = character;
             m_Type = EventType::KeyTyped;
         }
-        [[nodiscard]] char GetCharacter() const
+        [[nodiscard]] char32_t GetCharacter() const
         {
             return m_Character;
         }
     private:
-        char m_Character;
+        char32_t m_Character;
     };
 
     struct MouseButtonPressedEvent: public Event

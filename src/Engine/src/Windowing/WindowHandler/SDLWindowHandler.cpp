@@ -137,7 +137,7 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::HideCursor()
     {
-
+        SDL_HideCursor();
     }
 
     void SDLWindowHandler::DisableCursor()
@@ -147,7 +147,7 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::ShowCursor()
     {
-
+        SDL_ShowCursor();
     }
 
     void SDLWindowHandler::ProcessEvents()
@@ -247,10 +247,10 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_TEXT_INPUT:
                 {
-                    auto size = strlen(sdlEvent.text.text);
-                    for (int i = 0; i < size; ++i)
+                    UTF8StringView text(sdlEvent.text.text);
+                    for (char32_t c : text)
                     {
-                        auto event = CreateScope<CharTypedEvent>(sdlEvent.text.text[i]);
+                        auto event = CreateScope<CharTypedEvent>(c);
                         m_Events.AddEvent(std::move(event));
                     }
                     break;
