@@ -18,7 +18,4 @@ namespace BeeEngine
 
         return Internal::CustomFormat_Impl(format, asStrings);
     }
-    constexpr const UTF8String& FormatString(const UTF8String& format) {
-        return format;
-    }
 }
