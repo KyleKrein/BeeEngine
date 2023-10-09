@@ -24,7 +24,7 @@ def check_version_installed(command, version_required=None):
             logging.info(f"{command} already installed: version {version_installed}")
             return True
         return False
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return False
 
 
