@@ -6,6 +6,7 @@
 #include "Debug/Instrumentor.h"
 //#include "SDL_main.h"
 #include "Utils/ShaderConverter.h"
+#include "Platform/Windows/WindowsUTF8ConsoleOutput.h"
 
 //AllocatorInitializer AllocatorInitializer::instance = AllocatorInitializer();
 
@@ -46,6 +47,7 @@ namespace BeeEngine
             g_Restart = false;
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
             Internal::InitEngine();
+            Internal::WindowsUTF8ConsoleOutput consoleOutput;
             Application* application = CreateApplication({argc, argv});
             BEE_DEBUG_END_PROFILING_SESSION();
             application->Run();

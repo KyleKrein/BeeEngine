@@ -178,9 +178,7 @@ namespace BeeEngine::Internal
                         x += fsScale * advance + config.KerningOffset;
                     }
                     double advance = spaceGlyph->getAdvance();
-                    auto newit = it;
-                    newit++;
-                    char32_t nextCharacter = *newit;
+                    char32_t nextCharacter = *it++;
                     fontGeometry.getAdvance(advance, character, nextCharacter);
 
                     x += fsScale * advance + config.KerningOffset;
@@ -233,9 +231,7 @@ namespace BeeEngine::Internal
             if(it != end)
             {
                 double advance = glyph->getAdvance();
-                auto newit = it;
-                newit++;
-                char32_t nextCharacter = *newit;
+                char32_t nextCharacter = *it++;
                 fontGeometry.getAdvance(advance, character, nextCharacter);
 
                 x += fsScale * advance + config.KerningOffset;
