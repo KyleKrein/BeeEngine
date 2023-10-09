@@ -1,6 +1,7 @@
 //
 // Created by alexl on 10.06.2023.
 //
+#if defined(BEE_COMPILE_VULKAN)
 #define VK_VERSION_
 #define GLFW_INCLUDE_VULKAN
 #if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
@@ -293,3 +294,4 @@ namespace BeeEngine
         ImGui_ImplVulkan_RenderDrawData(draw_data, commandBuffer);
     }
 }
+#endif

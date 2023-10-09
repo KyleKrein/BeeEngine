@@ -82,6 +82,9 @@ def install_dependencies():
         if not check_version_installed('ccache'):
             logging.info("Installing ccache...")
             subprocess.run(["choco", "install", "ccache"], check=True)
+        if not check_version_installed('ninja'):
+            logging.info("Installing Ninja...")
+            subprocess.run(["choco", "install", "ninja"], check=True)
 
     elif os_name == 'Darwin':
         check_and_install_brew()
@@ -95,6 +98,9 @@ def install_dependencies():
         if not check_version_installed('ccache'):
             logging.info("Installing ccache...")
             subprocess.run(["brew", "install", "ccache"], check=True)
+        if not check_version_installed('ninja'):
+            logging.info("Installing Ninja...")
+            subprocess.run(["sudo", "apt", "install", "-y", "ninja-build"], check=True)
 
     elif os_name == 'Linux':
         if not check_version_installed('git'):
@@ -110,6 +116,9 @@ def install_dependencies():
             logging.info("Installing ccache...")
             subprocess.run(["sudo", "apt", "update"], check=True)
             subprocess.run(["sudo", "apt", "install", "-y", "ccache"], check=True)
+        if not check_version_installed('ninja'):
+            logging.info("Installing Ninja...")
+            subprocess.run(["sudo", "apt", "install", "-y", "ninja-build"], check=True)
 
 
 def init_git_submodules():

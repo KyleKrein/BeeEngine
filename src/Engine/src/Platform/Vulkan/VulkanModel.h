@@ -1,5 +1,5 @@
 #pragma once
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanGraphicsDevice.h"
 #include "Renderer/Mesh.h"
 
@@ -61,3 +61,4 @@ namespace BeeEngine::Internal
         std::vector<VkVertexInputAttributeDescription> m_AttributeDescriptions;
     };
 }
+#endif

@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "Core/Logging/Log.h"
 #include "VulkanPipeline.h"
 #include "FileSystem/File.h"
@@ -347,3 +347,4 @@ namespace BeeEngine::Internal
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Pipeline);
     }
 }
+#endif

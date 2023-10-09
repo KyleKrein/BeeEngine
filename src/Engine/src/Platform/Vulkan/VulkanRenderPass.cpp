@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanRenderPass.h"
 #include "VulkanGraphicsDevice.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
@@ -77,3 +77,4 @@ namespace BeeEngine::Internal
         return *this;
     }
 }
+#endif

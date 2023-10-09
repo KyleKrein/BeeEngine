@@ -1,7 +1,7 @@
 //
 // Created by alexl on 10.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanCommandBuffer.h"
 #include "Core/Logging/Log.h"
 #include "Core/Color4.h"
@@ -46,3 +46,4 @@ namespace BeeEngine::Internal
         }
     }
 }
+#endif

@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #pragma once
 
 #include "Renderer/Surface.h"
@@ -24,3 +24,4 @@ namespace BeeEngine::Internal
         WindowHandlerAPI m_WindowApi;
     };
 }
+#endif

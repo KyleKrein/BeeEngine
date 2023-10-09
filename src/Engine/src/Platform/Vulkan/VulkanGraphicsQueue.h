@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Renderer/GraphicsQueue.h"
+#if defined(BEE_COMPILE_VULKAN)
 #include "vulkan/vulkan.hpp"
 
 namespace BeeEngine::Internal
@@ -23,3 +24,4 @@ namespace BeeEngine::Internal
         vk::Queue m_Queue;
     };
 }
+#endif

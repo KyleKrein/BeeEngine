@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_VULKAN)
 #include "vulkan/vulkan.hpp"
 #include "Renderer/QueueFamilyIndices.h"
 #include "Renderer/SwapChain.h"
@@ -118,3 +119,4 @@ namespace BeeEngine::Internal
         VkFormat FindDepthFormat();
     };
 }
+#endif

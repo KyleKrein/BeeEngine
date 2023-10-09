@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "vk_mem_alloc.h"
 
 namespace BeeEngine::Internal
@@ -16,3 +16,4 @@ namespace BeeEngine::Internal
         void Destroy();
     };
 }
+#endif

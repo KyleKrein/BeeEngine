@@ -63,9 +63,11 @@ namespace BeeEngine::Internal
         m_Height = height;
         switch (properties.PreferredRenderAPI)
         {
+#if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
                 InitializeVulkan();
                 break;
+#endif
             case WebGPU:
                 InitializeWebGPU();
                 break;
@@ -81,8 +83,10 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::InitializeVulkan()
     {
+#if defined(BEE_COMPILE_VULKAN)
         m_Instance = CreateScope<VulkanInstance>(m_Title, WindowHandlerAPI::SDL);
         m_GraphicsDevice = CreateScope<VulkanGraphicsDevice>(*(VulkanInstance*)m_Instance.get());
+#endif
     }
 
 

@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 24.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanRendererAPI.h"
 #include "SDL3/SDL_vulkan.h"
 #include "SDL3/SDL.h"
@@ -175,3 +175,4 @@ namespace BeeEngine::Internal
         vkCmdEndRenderPass(commandBuffer);
     }
 }
+#endif

@@ -1,7 +1,7 @@
 //
 // Created by alexl on 10.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanFence.h"
 
 
@@ -45,3 +45,4 @@ namespace BeeEngine::Internal
         return *this;
     }
 }
+#endif

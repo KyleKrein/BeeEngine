@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanSwapChain.h"
 #include "Core/Logging/Log.h"
 #include "shaderc/shaderc.hpp"
@@ -485,3 +485,4 @@ namespace BeeEngine::Internal
         return m_ResizeInProgress;
     }
 }
+#endif

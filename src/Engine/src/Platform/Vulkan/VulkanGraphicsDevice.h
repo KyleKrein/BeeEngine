@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #pragma once
 
 #include "vk_mem_alloc.h"
@@ -183,3 +183,4 @@ namespace BeeEngine::Internal
         return VulkanGraphicsDevice::s_Instance->m_DeviceHandle.allocator;
     }
 }
+#endif

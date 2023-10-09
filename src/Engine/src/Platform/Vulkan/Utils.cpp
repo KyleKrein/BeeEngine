@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 26.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "Utils.h"
 
 namespace BeeEngine::Internal
@@ -65,3 +65,4 @@ namespace BeeEngine::Internal
         return info;
     }
 }
+#endif

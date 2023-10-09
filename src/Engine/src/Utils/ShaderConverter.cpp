@@ -2,7 +2,7 @@
 #include "glslang/Public/ShaderLang.h"
 #include "Core/Logging/Log.h"
 #include "SPIRV/GlslangToSpv.h"
-#include <spirv_cross/spirv_cross.hpp>
+//#include <spirv_cross/spirv_cross.hpp>
 #if defined(BEE_COMPILE_WEBGPU)
 #include "src/tint/writer/wgsl/generator_impl.h"
 #include "Renderer/ShaderTypes.h"

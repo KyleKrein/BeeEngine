@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_VULKAN)
 
 #include "Renderer/CommandPool.h"
 #include "vulkan/vulkan.hpp"
@@ -30,3 +31,4 @@ namespace BeeEngine::Internal
         std::vector<vk::CommandBuffer> m_CommandBuffers;
     };
 }
+#endif

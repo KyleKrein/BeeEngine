@@ -15,6 +15,11 @@ gsl::not_null<Application*> BeeEngine::CreateApplication(const ApplicationArgs& 
     auto result = RUN_ALL_TESTS();
     BeeInfo("Tests finished with code: {}", result);
     app->Close();
+    if(result != 0)
+    {
+        BeeError("Tests failed");
+        throw std::runtime_error("Tests failed");
+    }
     return app;
 }
 

@@ -10,7 +10,7 @@
 #include "Renderer/InstancedBuffer.h"
 #include "Renderer/AssetManager.h"
 #include "Renderer/UniformBuffer.h"
-
+#if 0
 class WebGPUTestLayer: public BeeEngine::Layer
 {
 public:
@@ -57,3 +57,4 @@ public:
 
     BeeEngine::Ref<BeeEngine::FrameBuffer> m_FrameBuffer;
 };
+#endif

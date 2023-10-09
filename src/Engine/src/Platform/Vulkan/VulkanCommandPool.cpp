@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanCommandPool.h"
 #include "VulkanSwapChain.h"
 #include "Core/Logging/Log.h"
@@ -50,3 +50,4 @@ namespace BeeEngine::Internal
         return {commandBuffer, framebuffer};
     }
 }
+#endif

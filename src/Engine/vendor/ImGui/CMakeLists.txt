@@ -20,12 +20,16 @@ set(ImGui_SOURCES
         ${ImGui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
         ${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
         ${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
-        ${ImGui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
-        ${ImGui_SOURCE_DIR}/backends/imgui_impl_vulkan.h
         ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.h
         ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
         ${ImGui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
         )
+if(BEE_COMPILE_VULKAN)
+    list(APPEND ImGui_SOURCES
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_vulkan.h
+            )
+endif()
 if(IOS)
     # Covers iOS implementation
 elseif(APPLE)
@@ -128,7 +132,7 @@ target_include_directories(${LIB_NAME}
 
 # Find GLFW
 #find_package(glfw3 REQUIRED)
-if(NOT IOS)
+if(NOT IOS AND BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
     target_link_libraries(${LIB_NAME} PRIVATE Vulkan::Vulkan)
 endif()

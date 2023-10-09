@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "vk_mem_alloc.h"
 
 namespace BeeEngine::Internal
@@ -15,3 +15,4 @@ namespace BeeEngine::Internal
         static VkPipelineDepthStencilStateCreateInfo DepthStencilCreateInfo(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp);
     };
 }
+#endif

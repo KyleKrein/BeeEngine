@@ -204,7 +204,14 @@ add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
 
-find_package(Vulkan REQUIRED)
+if(BEE_COMPILE_VULKAN)
+    find_package(Vulkan REQUIRED)
+    add_compile_definitions(BEE_COMPILE_VULKAN)
+    target_include_directories(BeeEngine
+            PUBLIC vendor/VulkanMemoryAllocator
+            )
+    target_link_libraries(BeeEngine PUBLIC Vulkan::Vulkan)
+endif ()
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
         PUBLIC src
@@ -220,7 +227,6 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/yaml-cpp/include
         PUBLIC ${ImGuizmo_SOURCE_DIR}
         PUBLIC vendor/glslang
-        PUBLIC vendor/VulkanMemoryAllocator
         PUBLIC vendor/tinyobjloader
         PUBLIC vendor/sdl/include
         PUBLIC vendor/magic_enum/include
@@ -238,7 +244,6 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC EnTT
         PUBLIC yaml-cpp
         PUBLIC ImGuizmo
-        PUBLIC Vulkan::Vulkan
         PUBLIC SPIRV
         PUBLIC glslang
         PUBLIC tinyobjloader

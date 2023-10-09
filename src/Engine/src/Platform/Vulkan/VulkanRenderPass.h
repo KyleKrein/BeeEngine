@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_VULKAN)
 #include "vulkan/vulkan.hpp"
 
 namespace BeeEngine::Internal
@@ -27,3 +28,4 @@ namespace BeeEngine::Internal
         vk::Device m_Device;
     };
 }
+#endif

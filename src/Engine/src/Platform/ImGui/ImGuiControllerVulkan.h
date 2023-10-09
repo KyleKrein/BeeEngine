@@ -1,7 +1,7 @@
 //
 // Created by alexl on 10.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #pragma once
 
 #include "ImGuiController.h"
@@ -78,3 +78,4 @@ namespace BeeEngine
         void FrameRender(VkCommandBuffer commandBuffer, ImDrawData *draw_data);
     };
 }
+#endif

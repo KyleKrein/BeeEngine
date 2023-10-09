@@ -1,3 +1,4 @@
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanModel.h"
 #include "vk_mem_alloc.h"
 
@@ -97,3 +98,4 @@ namespace BeeEngine::Internal
         m_GraphicsDevice.CopyToBuffer({(byte*)vertices.data(), bufferSize}, m_VertexBuffer);
     }
 }
+#endif

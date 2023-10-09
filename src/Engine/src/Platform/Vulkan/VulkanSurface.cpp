@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanSurface.h"
 #include "SDL3/SDL_vulkan.h"
 
@@ -45,3 +45,4 @@ namespace BeeEngine::Internal
         m_Instance.destroySurfaceKHR(m_Surface);
     }
 }
+#endif

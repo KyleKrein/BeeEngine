@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanShaderModule.h"
 #include "FileSystem/File.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
@@ -54,3 +54,4 @@ namespace BeeEngine::Internal
         CreateShaderModule(shaderCode);
     }
 }
+#endif

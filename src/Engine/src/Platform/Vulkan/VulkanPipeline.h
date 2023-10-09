@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "Core/TypeDefines.h"
 #include "Renderer/Shader.h"
 #include "vulkan/vulkan.hpp"
@@ -95,3 +95,4 @@ namespace BeeEngine::Internal
         std::vector<uint32_t> CompileShaderToSPRIV(const std::vector<char>& file, std::string_view newFilepath, ShaderStage shaderType);
     };
 }
+#endif

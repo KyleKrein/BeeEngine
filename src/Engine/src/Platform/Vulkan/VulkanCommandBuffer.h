@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_VULKAN)
 #include "vulkan/vulkan.hpp"
 #include "VulkanRenderPass.h"
 
@@ -23,3 +24,4 @@ namespace BeeEngine::Internal
         vk::Framebuffer m_Framebuffer;
     };
 }
+#endif

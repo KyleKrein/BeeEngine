@@ -18,6 +18,7 @@ STBIDEF stbi_uc *stbi_load(const wchar_t *filename, int *x, int *y, int *comp, i
     return result;
 }
 #endif
-
+#if defined(BEE_COMPILE_VULKAN)
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
+#endif

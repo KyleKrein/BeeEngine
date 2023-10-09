@@ -1,6 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanGraphicsDevice.h"
 #include "Renderer/QueueFamilyIndices.h"
 #include <set>
@@ -523,3 +524,4 @@ namespace BeeEngine::Internal
 
     }*/
 }
+#endif

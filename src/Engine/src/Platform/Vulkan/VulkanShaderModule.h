@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_VULKAN)
 #include <gsl/span>
 #include "vulkan/vulkan.hpp"
 
@@ -28,3 +28,4 @@ namespace BeeEngine::Internal
         void CreateShaderModule(gsl::span<std::byte> shaderCode);
     };
 }
+#endif

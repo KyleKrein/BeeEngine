@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 30.06.2023.
 //
-
+#if 0
 #include "WebGPUTestLayer.h"
 #include "Renderer/Vertex.h"
 #include "ext/matrix_transform.hpp"
@@ -119,3 +119,4 @@ void WebGPUTestLayer::OnGUIRendering()
     m_FpsCounter.Update();
     m_FpsCounter.Render();
 }
+#endif

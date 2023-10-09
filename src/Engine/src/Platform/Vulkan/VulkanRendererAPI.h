@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_VULKAN)
 #include "vulkan/vulkan.h"
 #include "Core/TypeDefines.h"
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
@@ -55,3 +56,4 @@ namespace BeeEngine::Internal
         VulkanGraphicsDevice& m_GraphicsDevice;
     };
 }
+#endif

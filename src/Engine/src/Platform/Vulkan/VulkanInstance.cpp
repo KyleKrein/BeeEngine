@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "VulkanInstance.h"
 #include "Core/Logging/Log.h"
 #include "Core/Application.h"
@@ -312,3 +312,4 @@ namespace BeeEngine::Internal
         }
     }
 }
+#endif
