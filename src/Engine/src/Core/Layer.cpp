@@ -20,12 +20,12 @@ namespace BeeEngine
         }
         switch (Renderer::GetAPI())
         {
-            case OpenGL:
+            //case OpenGL:
                 //s_Controller.reset(new ImGuiControllerOpenGL());
-                break;
-            case Vulkan:
-                s_Controller.reset(new ImGuiControllerVulkan());
-                break;
+              //  break;
+            //case Vulkan:
+                //s_Controller.reset(new ImGuiControllerVulkan());
+                //break;
             case WebGPU:
                 s_Controller.reset(new Internal::ImGuiControllerWebGPU());
                 break;
