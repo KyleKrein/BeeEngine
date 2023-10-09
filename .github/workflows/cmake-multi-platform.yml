@@ -46,9 +46,14 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
         
     - name: Run Setup.py
       run: python Setup.py
+
+    - name: Build C# Core Library
+      run: msbuild ${{ github.workspace }}/src/BeeEngineScripting/BeeEngineScripting.sln /t:Build /p:Configuration=${{ matrix.build_type }}
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.

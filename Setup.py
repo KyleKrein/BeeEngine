@@ -85,6 +85,8 @@ def install_dependencies():
         if not check_version_installed('ninja'):
             logging.info("Installing Ninja...")
             subprocess.run(["choco", "install", "ninja"], check=True)
+        if not check_version_installed("mono", "6.12"):
+            subprocess.run(['choco', 'install', 'mono'], check=True)
 
     elif os_name == 'Darwin':
         check_and_install_brew()
@@ -100,7 +102,9 @@ def install_dependencies():
             subprocess.run(["brew", "install", "ccache"], check=True)
         if not check_version_installed('ninja'):
             logging.info("Installing Ninja...")
-            subprocess.run(["sudo", "apt", "install", "-y", "ninja-build"], check=True)
+            subprocess.run(["brew", "install", "ninja"], check=True)
+        if not check_version_installed("mono", "6.12"):
+            subprocess.run(['brew', 'install', 'mono'], check=True)
 
     elif os_name == 'Linux':
         if not check_version_installed('git'):
@@ -119,6 +123,8 @@ def install_dependencies():
         if not check_version_installed('ninja'):
             logging.info("Installing Ninja...")
             subprocess.run(["sudo", "apt", "install", "-y", "ninja-build"], check=True)
+        if not check_version_installed("mono", "6.12"):
+            subprocess.run(['sudo', 'apt', 'install', '-y', 'mono-complete'], check=True)
 
 
 def init_git_submodules():
