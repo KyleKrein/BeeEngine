@@ -1,7 +1,7 @@
 //
 // Created by alexl on 05.06.2023.
 //
-#if defined(WINDOWS)
+#if !defined(WINDOWS)
 #include "Utils/FileDialogs.h"
 #include "WindowsString.h"
 
@@ -89,6 +89,16 @@ namespace BeeEngine
     std::string FileDialogs::GetFilter(void* filter)
     {
         return ((FileDialogs::Filter*)filter)->WindowsFilter();
+    }
+
+    Path FileDialogs::OpenFolder()
+    {
+
+    }
+
+    Path FileDialogs::SaveFolder()
+    {
+
     }
 }
 #endif

@@ -12,16 +12,19 @@ protected:
     {
 
     }
+#if defined(WINDOWS)
     std::string GetWindowsFilter(int index)
     {
         return m_Filter[index].WindowsFilter();
     }
+#endif
 
     BeeEngine::FileDialogs::Filter m_Filter[2] = {
             {"All Files", "*.*"},
             {"BeeEngine Scene", "*.beescene"}
     };;
 };
+#if defined(WINDOWS)
 TEST_F(TestFileDialogs, TestWindowsFilter)
 {
     std::string filter1 = std::move(GetWindowsFilter(0));
@@ -31,3 +34,4 @@ TEST_F(TestFileDialogs, TestWindowsFilter)
     bool filter2Equal = memcmp(filter2.c_str(), "BeeEngine Scene (*.beescene)\0*.beescene\0", 40) == 0;
     EXPECT_TRUE(filter2Equal);
 }
+#endif

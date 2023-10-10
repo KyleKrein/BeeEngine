@@ -143,19 +143,14 @@ namespace BeeEngine::Editor
             newProject:
             if(ImGui::Button("New project"))
             {
-                auto projectPath = FileDialogs::SaveFile({"BeeEngine Project", "*.beeproj"});
+                auto projectPath = FileDialogs::SaveFolder(/*{"BeeEngine Project", "*.beeproj"}*/);
                 if(projectPath.IsEmpty())
                 {
-                    BeeCoreError("Unable to open file");
+                    BeeCoreError("Unable to open folder");
                     goto end;
                 }
-                if(projectPath.GetExtension() != ".beeproj")
-                {
-                    projectPath.ReplaceExtension(".beeproj");
-                }
-                auto name = projectPath.GetFileNameWithoutExtension().AsUTF8();
-                String pathString = projectPath.RemoveFileName().AsUTF8();
-                m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &m_EditorAssetManager);
+                auto name = projectPath.GetFileName().AsUTF8();
+                m_ProjectFile = CreateScope<ProjectFile>(projectPath, name, &m_EditorAssetManager);
                 m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());

@@ -56,5 +56,37 @@ std::string BeeEngine::FileDialogs::GetFilter(void* filter)
 {
     return std::string(((FileDialogs::Filter*)filter)->filter + 2);
 }
+
+BeeEngine::Path BeeEngine::FileDialogs::OpenFolder()
+{
+    NSOpenPanel* openDlg = [NSOpenPanel openPanel];
+    [openDlg setCanChooseFiles:NO];
+    [openDlg setCanChooseDirectories:YES];
+    if ([openDlg runModal] == NSModalResponseOK) {
+        NSURL *nsurl = [[openDlg URLs] objectAtIndex:0];
+        // nsurl.path contains the NSString I want to return as std::string
+        NSString *path = [[nsurl absoluteURL] path];
+        std::string result = std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+        if(result.empty())
+            return {};
+        return result;
+    }
+    return {};
+}
+
+BeeEngine::Path BeeEngine::FileDialogs::SaveFolder()
+{
+    NSSavePanel *saveDlg = [NSSavePanel savePanel];
+    [saveDlg setCanCreateDirectories:YES];
+    if ([saveDlg runModal] == NSModalResponseOK) {
+        NSString *path = [[saveDlg URL] path];
+        // nsurl.path contains the NSString I want to return as std::string
+        std::string result = std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+        if(result.empty())
+            return {};
+        return result;
+    }
+    return {};
+}
 #pragma clang diagnostic pop
 #endif
