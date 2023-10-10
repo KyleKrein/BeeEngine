@@ -74,6 +74,11 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build/${{ matrix.build_type }}" >> "$GITHUB_OUTPUT"
 
+    - name: Restore Cache
+      uses: actions/cache/restore@v3
+      id: restore-cache
+      with:
+        key: cache-${{ hashFiles('**/lockfiles') }}
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
@@ -90,7 +95,12 @@ jobs:
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --target BeeEngineEditor
     - name: Build Tests for BeeEngine
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --target BeeEngine_Tests
-
+    - name: Cache Build folder
+      uses: actions/cache/save@v3
+      if: always()
+      with:
+        path: build/
+        key: ${{ steps.restore-cache.outputs.cache-primary-key }}
     - name: Test
       shell: bash
       run: |
