@@ -37,7 +37,7 @@ namespace BeeEngine
             return String(result.substr(lastSlash, count));
         }
 
-        inline constexpr static std::string GetDynamicLibraryName(const std::string& name, OSPlatform os)
+        inline static std::string GetDynamicLibraryName(const std::string& name, OSPlatform os)
         {
             std::string fullName;
             if(os == OSPlatform::Windows)
@@ -55,7 +55,7 @@ namespace BeeEngine
 
             return fullName;
         }
-        inline constexpr static std::string GetDynamicLibraryName(const std::string& name)
+        inline static std::string GetDynamicLibraryName(const std::string& name)
         {
             std::string fullName;
             if(Application::GetOsPlatform() == OSPlatform::Windows)
@@ -73,7 +73,7 @@ namespace BeeEngine
 
             return fullName;
         }
-        inline constexpr static std::string GetStaticLibraryName(const std::string& name, OSPlatform os)
+        inline static std::string GetStaticLibraryName(const std::string& name, OSPlatform os)
         {
             std::string fullName;
             if(os == OSPlatform::Windows)
@@ -91,7 +91,7 @@ namespace BeeEngine
 
             return fullName;
         }
-        inline constexpr static std::string GetStaticLibraryName(const std::string& name)
+        inline static std::string GetStaticLibraryName(const std::string& name)
         {
             std::string fullName;
             if(Application::GetOsPlatform() == OSPlatform::Windows)
