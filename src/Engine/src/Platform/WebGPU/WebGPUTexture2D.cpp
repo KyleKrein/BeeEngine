@@ -4,6 +4,9 @@
 
 #include "WebGPUTexture2D.h"
 #include "WebGPUGraphicsDevice.h"
+#include <version>
+#include <cmath>
+#include <bit>
 
 namespace BeeEngine::Internal
 {
@@ -37,6 +40,14 @@ namespace BeeEngine::Internal
         m_RendererID = reinterpret_cast<uintptr_t>(m_TextureView);
     }
 
+#if !defined(__cpp_lib_int_pow2)
+    template<typename T>
+    T bit_width(T value)
+    {
+        return value == 0? 0:log2(value) + 1;
+    }
+#endif
+
     void WebGPUTexture2D::CreateTextureAndSampler(int width, int height, WGPUDevice &device, WGPUTextureDescriptor &textureDesc)
     {
         device= WebGPUGraphicsDevice::GetInstance().GetDevice();
@@ -47,7 +58,11 @@ namespace BeeEngine::Internal
         textureDesc.format = WGPUTextureFormat_RGBA8Unorm; // by convention for bmp, png and jpg file. Be careful with other formats.
         textureDesc.sampleCount = 1;
         textureDesc.size = { (unsigned int)width, (unsigned int)height, 1 };
+#if !defined(__cpp_lib_int_pow2)
+        textureDesc.mipLevelCount = bit_width(std::max(textureDesc.size.width, textureDesc.size.height));
+#else
         textureDesc.mipLevelCount = std::bit_width(std::max(textureDesc.size.width, textureDesc.size.height));
+#endif
         textureDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
         textureDesc.viewFormatCount = 0;
         textureDesc.viewFormats = nullptr;
