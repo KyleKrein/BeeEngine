@@ -38,7 +38,6 @@ namespace BeeEngine
         static Path OpenFile(Filter filter);
         static Path SaveFile(Filter filter);
         static Path OpenFolder();
-        static Path SaveFolder();
     private:
         /*static void CheckFilter(Filter& filter)
         {

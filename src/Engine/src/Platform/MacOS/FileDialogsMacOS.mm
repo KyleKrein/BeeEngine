@@ -73,20 +73,5 @@ BeeEngine::Path BeeEngine::FileDialogs::OpenFolder()
     }
     return {};
 }
-
-BeeEngine::Path BeeEngine::FileDialogs::SaveFolder()
-{
-    NSSavePanel *saveDlg = [NSSavePanel savePanel];
-    [saveDlg setCanCreateDirectories:YES];
-    if ([saveDlg runModal] == NSModalResponseOK) {
-        NSString *path = [[saveDlg URL] path];
-        // nsurl.path contains the NSString I want to return as std::string
-        std::string result = std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
-        if(result.empty())
-            return {};
-        return result;
-    }
-    return {};
-}
 #pragma clang diagnostic pop
 #endif

@@ -143,7 +143,7 @@ namespace BeeEngine::Editor
             newProject:
             if(ImGui::Button("New project"))
             {
-                auto projectPath = FileDialogs::SaveFolder(/*{"BeeEngine Project", "*.beeproj"}*/);
+                auto projectPath = FileDialogs::OpenFolder(/*{"BeeEngine Project", "*.beeproj"}*/);
                 if(projectPath.IsEmpty())
                 {
                     BeeCoreError("Unable to open folder");
