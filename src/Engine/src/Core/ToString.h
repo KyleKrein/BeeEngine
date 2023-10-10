@@ -45,6 +45,11 @@ namespace BeeEngine
         return String(obj);
     }
 
+    CONSTEXPR_FUNC String ToString(char *obj)
+    {
+        return String(obj);
+    }
+
     template<typename T>
     requires std::is_enum_v<T>
     CONSTEXPR_FUNC String EnumToString(T obj);
