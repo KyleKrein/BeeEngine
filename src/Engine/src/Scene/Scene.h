@@ -29,7 +29,7 @@ namespace BeeEngine
         friend class BeeEngine::Editor::EditorLayer;
         friend class SceneSerializer;
     public:
-        static Ref<Scene> Copy(const Scene& scene);
+        static Ref<Scene> Copy(Scene& scene);
 
 
         Scene();
@@ -80,5 +80,7 @@ namespace BeeEngine
         void Update2DPhysics();
 
         void RenderScene();
+
+        Entity CopyEntity(Entity entity, Scene& targetScene, Entity parent, bool preserveUUID);
     };
 }

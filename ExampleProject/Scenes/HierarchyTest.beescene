@@ -1,0 +1,92 @@
+Scene: Untitled
+Entities:
+  - Entity: 1771005747277217277
+    TagComponent:
+      Tag: Javascript
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    HierarchyComponent:
+      []
+  - Entity: 761103685004837728
+    TagComponent:
+      Tag: Python
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    HierarchyComponent:
+      []
+  - Entity: 12194830859482939266
+    TagComponent:
+      Tag: Rust
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    HierarchyComponent:
+      []
+  - Entity: 15652669615274447721
+    TagComponent:
+      Tag: C
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    HierarchyComponent:
+      []
+  - Entity: 1606614062005115561
+    TagComponent:
+      Tag: Programming languages
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.WorkWithChildren
+    HierarchyComponent:
+      - 4892983956416335927
+      - 6673819261798284155
+  - Entity: 4892983956416335927
+    TagComponent:
+      Tag: Compiled
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    HierarchyComponent:
+      - 2487457104009874334
+      - 15652669615274447721
+      - 12194830859482939266
+  - Entity: 6673819261798284155
+    TagComponent:
+      Tag: Interpreted
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    HierarchyComponent:
+      - 16164692303602464022
+      - 1771005747277217277
+      - 761103685004837728
+  - Entity: 2487457104009874334
+    TagComponent:
+      Tag: C++
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.WorkWithParents
+    HierarchyComponent:
+      []
+  - Entity: 16164692303602464022
+    TagComponent:
+      Tag: C#
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    HierarchyComponent:
+      []

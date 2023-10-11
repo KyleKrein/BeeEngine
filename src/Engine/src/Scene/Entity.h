@@ -58,6 +58,13 @@ namespace BeeEngine
             m_Scene = Null.Scene;
         }
 
+        void RemoveParent();
+        void SetParent(Entity& parent);
+        bool HasChild(Entity& child);
+        Entity GetParent();
+        bool HasParent();
+        const std::vector<Entity>& GetChildren();
+
         operator bool() const { return m_ID.ID != entt::null; }
         operator EntityID() const { return m_ID; }
         operator uint32_t() const { return (uint32_t)m_ID.ID; }
@@ -78,5 +85,6 @@ namespace BeeEngine
     private:
         EntityID m_ID {};
         Scene* m_Scene = nullptr;
+        void SetParentWithoutChecks(Entity& parent);
     };
 }

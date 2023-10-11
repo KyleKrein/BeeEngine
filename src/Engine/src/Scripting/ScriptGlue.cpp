@@ -72,6 +72,14 @@ namespace BeeEngine
             BEE_INTERNAL_CALL(Entity_RemoveComponent);
             BEE_INTERNAL_CALL(Entity_FindEntityByName);
             BEE_INTERNAL_CALL(Entity_GetScriptInstance);
+            BEE_INTERNAL_CALL(Entity_GetParent);
+            BEE_INTERNAL_CALL(Entity_SetParent);
+            BEE_INTERNAL_CALL(Entity_GetNextChild);
+            BEE_INTERNAL_CALL(Entity_HasChild);
+            BEE_INTERNAL_CALL(Entity_AddChild);
+            BEE_INTERNAL_CALL(Entity_RemoveChild);
+            BEE_INTERNAL_CALL(Entity_GetName);
+            BEE_INTERNAL_CALL(Entity_SetName);
             BEE_INTERNAL_CALL(Entity_Destroy);
 
             BEE_INTERNAL_CALL(Entity_GetTransformComponent);
@@ -333,5 +341,98 @@ namespace BeeEngine
     bool ScriptGlue::Asset_IsValid(AssetHandle* handle)
     {
         return AssetManager::IsAssetLoaded(*handle);
+    }
+
+    uint64_t ScriptGlue::Entity_GetParent(uint64_t id)
+    {
+        auto entity = GetEntity(id);
+        auto parent = entity.GetParent();
+        if(parent)
+        {
+            return parent.GetUUID();
+        }
+        return 0;
+    }
+
+    void ScriptGlue::Entity_SetParent(uint64_t childId, uint64_t parentId)
+    {
+        auto child = GetEntity(childId);
+        if(parentId == 0)
+        {
+            child.RemoveParent();
+            return;
+        }
+        auto parent = GetEntity(parentId);
+        child.SetParent(parent);
+    }
+
+    uint64_t ScriptGlue::Entity_GetNextChild(uint64_t id, uint64_t prevChildId)
+    {
+        auto entity = GetEntity(id);
+        auto& children = entity.GetComponent<HierarchyComponent>().Children;
+        if(prevChildId == 0)
+        {
+            if(children.empty())
+                return 0;
+            return children.at(0).GetUUID();
+        }
+        for(size_t i = 0; i < children.size(); i++)
+        {
+            if(children.at(i).GetUUID() == prevChildId)
+            {
+                if(i + 1 < children.size())
+                    return children.at(i + 1).GetUUID();
+                return 0;
+            }
+        }
+    }
+
+    bool ScriptGlue::Entity_HasChild(uint64_t parentId, uint64_t childId)
+    {
+        auto parent = GetEntity(parentId);
+        auto child = GetEntity(childId);
+        return parent.HasChild(child);
+    }
+
+    void ScriptGlue::Entity_AddChild(uint64_t parentId, uint64_t childId)
+    {
+        auto parent = GetEntity(parentId);
+        auto child = GetEntity(childId);
+        child.SetParent(parent);
+    }
+
+    void ScriptGlue::Entity_RemoveChild(uint64_t parentId, uint64_t childId)
+    {
+        auto parent = GetEntity(parentId);
+        auto child = GetEntity(childId);
+        BeeCoreAssert(parent.HasChild(child), "Parent does not have child!");
+        child.RemoveParent();
+    }
+
+    MonoString *ScriptGlue::Entity_GetName(uint64_t id)
+    {
+        auto entity = GetEntity(id);
+        MonoString* string = mono_string_new(mono_domain_get(), entity.GetComponent<TagComponent>().Tag.c_str());
+        return string;
+    }
+
+    void ScriptGlue::Entity_SetName(uint64_t id, MonoString *name)
+    {
+        MonoError error {};
+        char* nameStr = mono_string_to_utf8_checked(name, &error);
+        if(error.error_code != MONO_ERROR_NONE)
+        {
+            BeeError("Could not convert MonoString to char*: {}", mono_error_get_message(&error));
+            return;
+        }
+        auto entity = GetEntity(id);
+        if(!entity)
+        {
+            BeeError("Could not find entity with id {}", id);
+            mono_free(nameStr);
+            return;
+        }
+        entity.GetComponent<TagComponent>().Tag = nameStr;
+        mono_free(nameStr);
     }
 }

@@ -105,6 +105,15 @@ namespace BeeEngine
     void Scene::DestroyEntity(Entity entity)
     {
         UUID uuid = entity.GetUUID();
+        auto& hierarchy = entity.GetComponent<HierarchyComponent>();
+        for (auto e: hierarchy.Children)
+        {
+            DestroyEntity(e);
+        }
+        if(hierarchy.Parent)
+        {
+            entity.RemoveParent();
+        }
         m_UUIDMap.erase(uuid);
         m_Registry.destroy(entity);
         if(m_IsRuntime)
@@ -169,29 +178,29 @@ namespace BeeEngine
 
     void Scene::RenderScene()
     {
-        auto spriteGroup = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-        for( auto entity : spriteGroup )
+        auto spriteView = m_Registry.view<SpriteRendererComponent>();
+        for( auto entity : spriteView )
         {
-            auto [transform, spriteComponent] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
-            SpriteInstanceBufferData data {transform.GetTransform(), spriteComponent.Color, spriteComponent.TilingFactor};
+            auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
+            SpriteInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), spriteComponent.Color, spriteComponent.TilingFactor};
             std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture()->GetBindingSet() : m_BlankTexture->GetBindingSet())};
             Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
         }
 
-        auto circleGroup = m_Registry.view<TransformComponent, CircleRendererComponent>();
+        auto circleGroup = m_Registry.view<CircleRendererComponent>();
         std::vector<BindingSet*> circleBindingSets {m_CameraBindingSet.get()};
         for( auto entity : circleGroup )
         {
-            auto [transform, circleComponent] = circleGroup.get<TransformComponent, CircleRendererComponent>(entity);
-            CircleInstanceBufferData data {transform.GetTransform(), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
+            auto& circleComponent = circleGroup.get<CircleRendererComponent>(entity);
+            CircleInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
             Renderer::SubmitInstance(*m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
         }
 
-        auto textGroup = m_Registry.view<TransformComponent, TextRendererComponent>();
+        auto textGroup = m_Registry.view<TextRendererComponent>();
         for( auto entity : textGroup )
         {
-            auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
-            Renderer::DrawString(textComponent.Text, textComponent.Font(), *m_CameraBindingSet, transform.GetTransform(), textComponent.Configuration);
+            auto& textComponent = textGroup.get<TextRendererComponent>(entity);
+            Renderer::DrawString(textComponent.Text, textComponent.Font(), *m_CameraBindingSet, Math::ToGlobalTransform(Entity{entity, this}), textComponent.Configuration);
         }
     }
 
@@ -239,6 +248,7 @@ namespace BeeEngine
         Entity entity(EntityID{m_Registry.create()}, this);
         entity.AddComponent<UUIDComponent>(uuid);
         entity.AddComponent<TransformComponent>();
+        entity.AddComponent<HierarchyComponent>();
         auto& tag = entity.AddComponent<TagComponent>();
         tag.Tag = name;
         m_UUIDMap[uuid] = entity;
@@ -359,6 +369,9 @@ namespace BeeEngine
         auto& component = src.get<Component>(srcEntity);
         dst.emplace_or_replace<Component>(dstEntity, component);
     }
+    template<>
+    static void CopyComponent<HierarchyComponent>(entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
+    {}
 
     template<typename ...Component>
     static void CopyComponents(TypeSequence<Component...>,entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
@@ -366,7 +379,7 @@ namespace BeeEngine
         (CopyComponent<Component>(dst, src, srcEntity, dstEntity), ...);
     }
 
-    Ref<Scene> Scene::Copy(const Scene &scene)
+    Ref<Scene> Scene::Copy(Scene &scene)
     {
         Ref<Scene> newScene = CreateRef<Scene>();
         newScene->m_CameraUniformBuffer = scene.m_CameraUniformBuffer;
@@ -376,25 +389,44 @@ namespace BeeEngine
 
         auto& srcRegistry = scene.m_Registry;
         auto& dstRegistry = newScene->m_Registry;
-        auto idView = srcRegistry.view<UUIDComponent>();
+        auto idView = srcRegistry.view<HierarchyComponent, UUIDComponent>();
         for (auto e : idView)
         {
+            if(idView.get<HierarchyComponent>(e).Parent)
+            {
+                continue;
+            }
             UUID uuid = idView.get<UUIDComponent>(e).ID;
             const auto& name = srcRegistry.get<TagComponent>(e).Tag;
-            Entity entity = newScene->CreateEntityWithUUID(uuid, name);
-            CopyComponents(AllComponents{}, dstRegistry, srcRegistry, e, (entt::entity)entity);
+            Entity entity = scene.CopyEntity({e, &scene}, *newScene, Entity::Null, true);
         }
         return newScene;
     }
 
     Entity Scene::DuplicateEntity(Entity entity)
     {
-        UUID uuid = {};
-        Entity newEntity = CreateEntityWithUUID(uuid, entity.GetComponent<TagComponent>().Tag);
-        CopyComponents(AllComponents{}, m_Registry, m_Registry, (entt::entity)entity, (entt::entity)newEntity);
-        auto& uuidComponent = newEntity.GetComponent<UUIDComponent>();
-        uuidComponent.ID = uuid;
-        BeeEnsures(entity.GetUUID() != newEntity.GetUUID());
+        return CopyEntity(entity, *this, entity.GetComponent<HierarchyComponent>().Parent, false);
+    }
+
+    Entity Scene::CopyEntity(Entity entity, Scene &targetScene, Entity parent, bool preserveUUID)
+    {
+        Entity newEntity = targetScene.CreateEntityWithUUID(entity.GetUUID(), entity.GetComponent<TagComponent>().Tag);
+        CopyComponents(AllComponents{}, targetScene.m_Registry, m_Registry, (entt::entity)entity, (entt::entity)newEntity);
+        if(!preserveUUID)
+        {
+            auto& uuidComponent = newEntity.GetComponent<UUIDComponent>();
+            uuidComponent.ID = {};
+        }
+        //Copy Hierarchies
+        auto& hierarchy = entity.GetComponent<HierarchyComponent>();
+        BeeCoreAssert(!(parent == Entity::Null && hierarchy.Parent), "Entity has parent but parent is null");
+        newEntity.SetParent(parent);
+        for (auto child : hierarchy.Children)
+        {
+            auto newChild = CopyEntity(child, targetScene, newEntity, preserveUUID);
+            newChild.GetComponent<HierarchyComponent>().Parent = newEntity;
+        }
+        BeeEnsures(entity.GetUUID() != newEntity.GetUUID() || preserveUUID);
         return newEntity;
     }
 }

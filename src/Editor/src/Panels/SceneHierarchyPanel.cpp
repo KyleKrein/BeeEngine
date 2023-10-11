@@ -22,11 +22,27 @@ namespace BeeEngine::Editor
     void SceneHierarchyPanel::OnGUIRender() noexcept
     {
         ImGui::Begin("Scene Hierarchy");
-        m_Context->m_Registry.each([&](auto entityID)
+        ImGui::Button("Top level");
+        if(ImGui::BeginDragDropTarget())
         {
-            Entity entity {EntityID{entityID}, m_Context.get()};
-            DrawEntityNode(entity);
-        });
+            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_ID");
+            if(payload)
+            {
+                Entity droppedEntity = {*(const entt::entity*)payload->Data, m_Context.get()};
+                //BeeCoreTrace("DragDropTarget Child entt id: {}, UUID: {}, Tag: {}", (entt::entity)droppedEntity, droppedEntity.GetUUID().operator uint64_t(), droppedEntity.GetComponent<TagComponent>().Tag);
+                droppedEntity.RemoveParent();
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        m_Context->m_Registry.view<HierarchyComponent>()
+                .each([&](auto entityID, auto& hierarchy)
+                     {
+                         if (hierarchy.Parent == Entity::Null) // Только для "главных" сущностей
+                         {
+                             DrawEntityNode({entityID, m_Context.get()});
+                         }
+                     });
 
         if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
         {
@@ -49,16 +65,49 @@ namespace BeeEngine::Editor
         ImGui::End();
     }
 
+    std::optional<Entity> IfEntityPresentInChildren(Entity who, Entity where)
+    {
+        auto& hierarchy = where.GetComponent<HierarchyComponent>();
+        for (auto child : hierarchy.Children)
+        {
+            if(child == who)
+                return child;
+            auto r = IfEntityPresentInChildren(who, child);
+            if(r.has_value())
+                return r;
+        }
+        return std::nullopt;
+    }
+
     void SceneHierarchyPanel::DrawEntityNode(Entity entity) noexcept
     {
         auto& tag = entity.GetComponent<TagComponent>().Tag;
+        auto& hierarchy = entity.GetComponent<HierarchyComponent>(); // Предположим, что у всех есть этот компонент
 
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
-                ((m_SelectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0) |
-                ImGuiTreeNodeFlags_SpanAvailWidth;
+                                   ((m_SelectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0) |
+                                   ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 
         bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
-
+        if(ImGui::BeginDragDropSource())
+        {
+            entt::entity entityID = entity;
+            //BeeCoreTrace("DragDropSource entt id: {}, UUID: {}, Tag: {}", (entt::entity)entity, entity.GetUUID().operator uint64_t(), entity.GetComponent<TagComponent>().Tag);
+            ImGui::SetDragDropPayload("ENTITY_ID", &entityID, sizeof(entt::entity));
+            ImGui::EndDragDropSource();
+        }
+        if(ImGui::BeginDragDropTarget())
+        {
+            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_ID");
+            if(payload)
+            {
+                Entity droppedEntity = {*(const entt::entity*)payload->Data, m_Context.get()};
+                //BeeCoreTrace("DragDropTarget Child entt id: {}, UUID: {}, Tag: {}", (entt::entity)droppedEntity, droppedEntity.GetUUID().operator uint64_t(), droppedEntity.GetComponent<TagComponent>().Tag);
+                //BeeCoreTrace("DragDropTarget Parent entt id: {}, UUID: {}, Tag: {}", (entt::entity)entity, entity.GetUUID().operator uint64_t(), entity.GetComponent<TagComponent>().Tag);
+                droppedEntity.SetParent(entity);
+            }
+            ImGui::EndDragDropTarget();
+        }
         if (ImGui::IsItemClicked())
         {
             m_SelectedEntity = entity;
@@ -80,16 +129,23 @@ namespace BeeEngine::Editor
 
         if(opened)
         {
+            for(auto child : hierarchy.Children)
+            {
+                DrawEntityNode(child); // Рекурсивный вызов
+            }
             ImGui::TreePop();
         }
 
         if(entityDeleted)
         {
-            m_Context->DestroyEntity(entity);
-            if(m_SelectedEntity == entity)
+            DeletionQueue::Frame().PushFunction([this, entityToDelete = entity]() mutable
             {
-                m_SelectedEntity = Entity::Null;
-            }
+                if(m_SelectedEntity == entityToDelete || entityToDelete.HasChild(m_SelectedEntity))
+                {
+                    m_SelectedEntity = Entity::Null;
+                }
+                m_Context->DestroyEntity(entityToDelete);
+            });
         }
     }
 

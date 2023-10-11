@@ -254,6 +254,7 @@ namespace BeeEngine
         auto entities = data["Entities"];
         if (entities)
         {
+            std::unordered_map<UUID, std::vector<UUID>> childrenMap;
             for (auto entity : entities)
             {
                 uint64_t uuid = entity["Entity"].as<uint64_t>();
@@ -406,6 +407,26 @@ namespace BeeEngine
                     boxCollider.Restitution = boxCollider2DComponent["Restitution"].as<float>();
                     boxCollider.RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
                 }
+                auto hierarchyComponent = entity["HierarchyComponent"];
+                if(hierarchyComponent)
+                {
+                    for (auto child : hierarchyComponent)
+                    {
+                        childrenMap[uuid].emplace_back(child.as<uint64_t>());
+                    }
+                }
+            }
+            for (auto& [parent, children] : childrenMap)
+            {
+                for (auto& child : children)
+                {
+                    Entity parentEntity = m_Scene->GetEntityByUUID(parent);
+                    Entity childEntity = m_Scene->GetEntityByUUID(child);
+                    if (parentEntity && childEntity)
+                    {
+                        childEntity.SetParent(parentEntity);
+                    }
+                }
             }
         }
     }
@@ -463,10 +484,10 @@ namespace BeeEngine
         {
             out << YAML::Key << "TransformComponent";
             out << YAML::BeginMap;
-            auto& transform = entity.GetComponent<TransformComponent>();
-            out << YAML::Key << "Translation" << YAML::Value << transform.Translation;
-            out << YAML::Key << "Rotation" << YAML::Value << transform.Rotation;
-            out << YAML::Key << "Scale" << YAML::Value << transform.Scale;
+            auto [translation, rotation, scale] = Math::DecomposeTransform(Math::ToGlobalTransform(entity));
+            out << YAML::Key << "Translation" << YAML::Value << translation;
+            out << YAML::Key << "Rotation" << YAML::Value << rotation;
+            out << YAML::Key << "Scale" << YAML::Value << scale;
             out << YAML::EndMap;
         }
 
@@ -608,6 +629,17 @@ namespace BeeEngine
             out << YAML::Key << "Restitution" << YAML::Value << boxCollider2dComponent.Restitution;
             out << YAML::Key << "RestitutionThreshold" << YAML::Value << boxCollider2dComponent.RestitutionThreshold;
             out << YAML::EndMap;
+        }
+        if(entity.HasComponent<HierarchyComponent>())
+        {
+            out << YAML::Key << "HierarchyComponent";
+            out << YAML::BeginSeq;
+            auto& hierarchyComponent = entity.GetComponent<HierarchyComponent>();
+            for(auto& child : hierarchyComponent.Children)
+            {
+                out << YAML::Value << (uint64_t)child.GetUUID();
+            }
+            out << YAML::EndSeq;
         }
 
         out << YAML::EndMap; //Entity

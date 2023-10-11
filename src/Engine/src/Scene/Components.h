@@ -60,7 +60,7 @@ namespace BeeEngine
             return glm::translate(glm::mat4(1.0f), Translation) * rotation * glm::scale(glm::mat4(1.0f), Scale);
         }
 
-        void SetTransform(glm::mat4 &transform) noexcept
+        void SetTransform(const glm::mat4 &transform) noexcept
         {
             auto [translation, rotation, scale] = Math::DecomposeTransform(transform);
             Translation = translation;
@@ -231,8 +231,14 @@ namespace BeeEngine
         void* RuntimeFixture = nullptr;
     };
 
+    struct HierarchyComponent
+    {
+        Entity Parent = Entity::Null;
+        std::vector<Entity> Children;
+    };
+
     using AllComponents =
             TypeSequence<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
             SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
-            RigidBody2DComponent, BoxCollider2DComponent>;
+            RigidBody2DComponent, BoxCollider2DComponent, HierarchyComponent>;
 }

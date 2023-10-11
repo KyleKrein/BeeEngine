@@ -87,8 +87,9 @@ namespace BeeEngine
             || name.contains(compilerGenerated) || name.contains(enumerator)
             || name.contains(keyHolder))
                 continue;
-            const char* ns = mono_metadata_string_heap(m_MonoImage, cols[MONO_TYPEDEF_NAMESPACE]);
-
+            std::string ns = mono_metadata_string_heap(m_MonoImage, cols[MONO_TYPEDEF_NAMESPACE]);
+            if(ns.empty())
+                continue;
             m_Classes.emplace_back(CreateRef<MClass>(name, ns, m_MonoImage));
         }
     }

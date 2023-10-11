@@ -7,6 +7,7 @@
 #include "ext/scalar_constants.hpp"
 #include "gtc/epsilon.hpp"
 #include "gtx/matrix_decompose.inl"
+#include "Scene/Components.h"
 
 namespace BeeEngine::Math
 {
@@ -92,5 +93,32 @@ namespace BeeEngine::Math
         }
 
         return {translation, rotation, scale};
+    }
+
+    glm::mat4 ToLocalTransform(Entity child)
+    {
+        glm::mat4 localMatrix = child.GetComponent<TransformComponent>().GetTransform();
+        auto currentEntity = child;
+        while(currentEntity.HasParent())
+        {
+            currentEntity = currentEntity.GetParent();
+            auto inverseMatrix = glm::inverse(currentEntity.GetComponent<TransformComponent>().GetTransform());
+            localMatrix = inverseMatrix * localMatrix;
+        }
+        return localMatrix;
+    }
+
+    glm::mat4 ToGlobalTransform(Entity child)
+    {
+        glm::mat4 globalMatrix(1.0f);
+        auto currentEntity = child;
+        globalMatrix = globalMatrix * child.GetComponent<TransformComponent>().GetTransform();
+        while(currentEntity.HasParent())
+        {
+            currentEntity = currentEntity.GetParent();
+            auto matrix = currentEntity.GetComponent<TransformComponent>().GetTransform();
+            globalMatrix = matrix * globalMatrix;
+        }
+        return globalMatrix;
     }
 }

@@ -22,6 +22,22 @@ namespace BeeEngine
             ID = id;
         }
 
+        public string Name
+        {
+            get
+            {
+                ThrowIfDestroyed();
+                return InternalCalls.Entity_GetName(ID);
+            }
+            set
+            {
+                ThrowIfDestroyed();
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                InternalCalls.Entity_SetName(ID, value);
+            }
+        }
+
         internal void SetBehaviour(Behaviour behaviour)
         {
             ThrowIfDestroyed();
@@ -139,6 +155,65 @@ namespace BeeEngine
                 component.Value.Destroyed = true;
             }
             m_ComponentCache.Clear();
+        }
+
+        public Entity Parent
+        {
+            get
+            {
+                ThrowIfDestroyed();
+                ulong id = InternalCalls.Entity_GetParent(ID);
+                if (id == 0)
+                {
+                    return null;
+                }
+
+                return LifeTimeManager.GetEntity(id);
+            }
+            set
+            {
+                ThrowIfDestroyed();
+                ulong parentID = value == null ? 0 : value.ID;
+                InternalCalls.Entity_SetParent(ID, parentID);
+            }
+        }
+
+        public IEnumerable<Entity> Children
+        {
+            get
+            {
+                ThrowIfDestroyed();
+                ulong childID = 0;
+                while ((childID = InternalCalls.Entity_GetNextChild(ID, childID))!= 0)
+                {
+                    ThrowIfDestroyed();
+                    yield return LifeTimeManager.GetEntity(childID);
+                }
+            }
+        }
+
+        public void AddChild(Entity child)
+        {
+            ThrowIfDestroyed();
+            if (child is null)
+                throw new ArgumentException("Child can't be null");
+            InternalCalls.Entity_AddChild(ID, child.ID);
+        }
+
+        public void RemoveChild(Entity child)
+        {
+            ThrowIfDestroyed();
+            if (child is null)
+                throw new ArgumentException("Child can't be null");
+            InternalCalls.Entity_RemoveChild(ID, child.ID);
+        }
+
+        public bool HasChild(Entity child)
+        {
+            ThrowIfDestroyed();
+            if (child is null)
+                throw new ArgumentException("Child can't be null");
+            return InternalCalls.Entity_HasChild(ID, child.ID);
         }
 
         internal unsafe void Invalidate()

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "glm.hpp"
+#include <Scene/Entity.h>
 
 namespace BeeEngine::Math
 {
@@ -16,4 +17,7 @@ namespace BeeEngine::Math
     };
 
     DecomposedTransform DecomposeTransform(const glm::mat4& transform);
+    // Пример функции для перевода локальных координат в глобальные
+    glm::mat4 ToGlobalTransform(Entity child);
+    glm::mat4 ToLocalTransform(Entity child);
 }

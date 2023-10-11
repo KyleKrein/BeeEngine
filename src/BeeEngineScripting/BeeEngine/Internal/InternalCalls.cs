@@ -45,6 +45,22 @@ namespace BeeEngine.Internal
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern ulong Entity_FindEntityByName(string name);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern ulong Entity_GetParent(ulong id);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Entity_SetParent(ulong child, ulong parent);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern ulong Entity_GetNextChild(ulong parent, ulong prevChild);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern bool Entity_HasChild(ulong parent, ulong child);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Entity_AddChild(ulong parent, ulong child);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Entity_RemoveChild(ulong parent, ulong child);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern string Entity_GetName(ulong id);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Entity_SetName(ulong id, string name);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern object Entity_GetScriptInstance(ulong id);

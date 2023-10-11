@@ -34,6 +34,14 @@ namespace BeeEngine
         static void* Entity_GetComponent(uint64_t id, MonoReflectionType* reflectionType);
         static void Entity_GetTranslation(uint64_t id, glm::vec3* outTranslation);
         static void Entity_SetTranslation(uint64_t id, glm::vec3* inTranslation);
+        static uint64_t Entity_GetParent(uint64_t id);
+        static void Entity_SetParent(uint64_t childId, uint64_t parentId);
+        static uint64_t Entity_GetNextChild(uint64_t id, uint64_t prevChildId);
+        static bool Entity_HasChild(uint64_t parentId, uint64_t childId);
+        static void Entity_AddChild(uint64_t parentId, uint64_t childId);
+        static void Entity_RemoveChild(uint64_t parentId, uint64_t childId);
+        static MonoString* Entity_GetName(uint64_t id);
+        static void Entity_SetName(uint64_t id, MonoString* name);
         static void Entity_Destroy(uint64_t id);
         static MonoString * TextRendererComponent_GetText(uint64_t id);
         static void TextRendererComponent_SetText(uint64_t id, MonoString* text);
