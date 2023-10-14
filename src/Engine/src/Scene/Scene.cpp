@@ -420,7 +420,12 @@ namespace BeeEngine
         //Copy Hierarchies
         auto& hierarchy = entity.GetComponent<HierarchyComponent>();
         BeeCoreAssert(!(parent == Entity::Null && hierarchy.Parent), "Entity has parent but parent is null");
-        newEntity.SetParent(parent);
+        if(parent != Entity::Null)
+        {
+            auto& parentHierarchy = parent.GetComponent<HierarchyComponent>();
+            parentHierarchy.Children.push_back(newEntity);
+            newEntity.GetComponent<HierarchyComponent>().Parent = parent;
+        }
         for (auto child : hierarchy.Children)
         {
             auto newChild = CopyEntity(child, targetScene, newEntity, preserveUUID);
