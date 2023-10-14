@@ -5,7 +5,9 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
         src/AssetScanner.cpp
         src/AssetScanner.h
         src/Panels/AssetPanel.cpp
-        src/Panels/AssetPanel.h)
+        src/Panels/AssetPanel.h
+        src/Panels/ImGuiOutputConsole.cpp
+        src/Panels/ImGuiOutputConsole.h)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 

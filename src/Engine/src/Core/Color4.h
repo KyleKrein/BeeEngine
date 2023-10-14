@@ -71,10 +71,6 @@ namespace BeeEngine
         {
             return {m_R, m_G, m_B, m_A};
         }
-        constexpr inline operator const ImVec4() const
-        {
-            return {m_R, m_G, m_B, m_A};
-        }
 #endif
         constexpr bool operator == (const Color4& other) const
         {
@@ -94,10 +90,6 @@ namespace BeeEngine
             }
 #if __has_include(<imgui.h>)
             constexpr operator ImVec4() const
-            {
-                return {R, G, B, A};
-            }
-            constexpr operator const ImVec4() const
             {
                 return {R, G, B, A};
             }

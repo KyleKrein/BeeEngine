@@ -56,6 +56,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/Format.cpp
         src/Core/Format.h
         src/Platform/Windows/WindowsUTF8ConsoleOutput.h
+        src/Core/Logging/ConsoleOutput.h
+        src/Core/Logging/ConsoleOutput.cpp
 )
 
 function(DesktopPlatformsOnly)

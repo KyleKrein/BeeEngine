@@ -23,6 +23,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnAttach() noexcept
     {
+        ConsoleOutput::SetOutputProvider(&m_Console);
         SetUpMenuBar();
         m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture);
         m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture);
@@ -39,6 +40,7 @@ namespace BeeEngine::Editor
         {
             ScriptingEngine::Shutdown();
         }
+        ConsoleOutput::SetOutputProvider(nullptr);
     }
     void EditorLayer::OnUpdate() noexcept
     {
@@ -98,6 +100,7 @@ namespace BeeEngine::Editor
             m_ContentBrowserPanel.OnGUIRender();
             m_AssetPanel.Render();
             m_FpsCounter.Render();
+            m_Console.RenderGUI();
         }
         else
         {
@@ -233,6 +236,12 @@ namespace BeeEngine::Editor
             ReloadAssembly();
         }});
         m_MenuBar.AddElement(BuildMenu);
+
+        MenuBarElement ViewMenu = {"View"};
+        ViewMenu.AddChild({"Output Console", [this](){
+            m_Console.Toggle();
+        }});
+        m_MenuBar.AddElement(ViewMenu);
     }
 
     void EditorLayer::ReloadAssembly()

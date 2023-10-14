@@ -11,6 +11,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "Core/ToString.h"
 #include "Core/Format.h"
+#include "Core/Logging/ConsoleOutput.h"
 
 #if defined(__cpp_lib_source_location)
 #include <source_location>
@@ -61,19 +62,25 @@ namespace BeeEngine{
     std::string final = std::string(message) + " at {1}: {2}";
     ::BeeEngine::Log::GetCoreLogger()->error(final, location.file_name(), location.line());
 }*/
-#define BeeCoreFatalError(...)  ::BeeEngine::Log::GetCoreLogger()->critical(::BeeEngine::FormatString(__VA_ARGS__)); throw std::runtime_error(__VA_ARGS__)
+#define BeeCoreFatalError(...)  ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Error, ::BeeEngine::ConsoleOutput::Input::Engine); throw std::runtime_error(__VA_ARGS__)
+#define BeeCoreError(...)  ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Error, ::BeeEngine::ConsoleOutput::Input::Engine)
+#define BeeCoreWarn(...)   ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Warning, ::BeeEngine::ConsoleOutput::Input::Engine)
+#define BeeCoreInfo(...)   ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Information, ::BeeEngine::ConsoleOutput::Input::Engine)
+#define BeeCoreTrace(...)  ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Trace, ::BeeEngine::ConsoleOutput::Input::Engine)
+#define BeeCoreAssert(x, ...) if(!(x)) {::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Error, ::BeeEngine::ConsoleOutput::Input::Engine); debug_break();} \
+/*#define BeeCoreFatalError(...)  ::BeeEngine::Log::GetCoreLogger()->critical(::BeeEngine::FormatString(__VA_ARGS__)); throw std::runtime_error(__VA_ARGS__)
 #define BeeCoreError(...)  ::BeeEngine::Log::GetCoreLogger()->error(::BeeEngine::FormatString(__VA_ARGS__))
 #define BeeCoreWarn(...)   ::BeeEngine::Log::GetCoreLogger()->warn(::BeeEngine::FormatString(__VA_ARGS__))
 #define BeeCoreInfo(...)   ::BeeEngine::Log::GetCoreLogger()->info(::BeeEngine::FormatString(__VA_ARGS__))
 #define BeeCoreTrace(...)  ::BeeEngine::Log::GetCoreLogger()->trace(::BeeEngine::FormatString(__VA_ARGS__))
-#define BeeCoreAssert(x, ...) if(!(x)) {::BeeEngine::Log::GetCoreLogger()->error(::BeeEngine::FormatString(__VA_ARGS__)); debug_break();}
+#define BeeCoreAssert(x, ...) if(!(x)) {::BeeEngine::Log::GetCoreLogger()->error(::BeeEngine::FormatString(__VA_ARGS__)); debug_break();}*/
 
 
 
 
 //Client log
-#define BeeError(...)  ::BeeEngine::Log::GetClientLogger()->error(::BeeEngine::FormatString(__VA_ARGS__))
-#define BeeWarn(...)   ::BeeEngine::Log::GetClientLogger()->warn(::BeeEngine::FormatString(__VA_ARGS__))
-#define BeeInfo(...)   ::BeeEngine::Log::GetClientLogger()->info(::BeeEngine::FormatString(__VA_ARGS__))
-#define BeeTrace(...)  ::BeeEngine::Log::GetClientLogger()->trace(::BeeEngine::FormatString(__VA_ARGS__))
-#define BeeAssert(x, ...) if(!(x)) ::BeeEngine::Log::GetClientLogger()->error(__VA_ARGS__); debug_break()
+#define BeeError(...)  ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Error, ::BeeEngine::ConsoleOutput::Input::App)
+#define BeeWarn(...)   ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Warning, ::BeeEngine::ConsoleOutput::Input::App)
+#define BeeInfo(...)   ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Information, ::BeeEngine::ConsoleOutput::Input::App)
+#define BeeTrace(...)  ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__), ::BeeEngine::ConsoleOutput::Level::Trace, ::BeeEngine::ConsoleOutput::Input::App)
+//#define BeeAssert(x, ...) if(!(x)) ::BeeEngine::Log::GetClientLogger()->error(__VA_ARGS__); debug_break()
