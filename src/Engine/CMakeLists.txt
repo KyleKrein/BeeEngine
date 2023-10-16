@@ -58,6 +58,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Platform/Windows/WindowsUTF8ConsoleOutput.h
         src/Core/Logging/ConsoleOutput.h
         src/Core/Logging/ConsoleOutput.cpp
+        src/Renderer/SceneTreeRenderer.cpp
+        src/Renderer/SceneTreeRenderer.h
 )
 
 function(DesktopPlatformsOnly)

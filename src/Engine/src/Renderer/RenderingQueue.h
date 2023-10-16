@@ -62,10 +62,15 @@ namespace std
         }
     };
 }
+namespace BeeEngine
+{
+    class SceneTreeRenderer;
+}
 namespace BeeEngine::Internal
 {
     class RenderingQueue final
     {
+        friend BeeEngine::SceneTreeRenderer;
     public:
         static void Initialize();
         static void SubmitInstance(RenderInstance&& instance, gsl::span<byte> instanceData)

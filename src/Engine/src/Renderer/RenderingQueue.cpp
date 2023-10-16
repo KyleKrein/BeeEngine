@@ -46,7 +46,7 @@ namespace BeeEngine::Internal
         //renderData.Data[renderData.Offset] = *instanceData.data();
         renderData.Offset += instanceData.size();
         renderData.InstanceCount++;
-        m_Statistics.InstanceCount++;
+        m_Statistics.TotalInstanceCount++;
     }
 
     void RenderingQueue::FlushImpl()
@@ -98,7 +98,9 @@ namespace BeeEngine::Internal
 
     void RenderingQueue::ResetStatisticsImpl()
     {
-        m_Statistics.InstanceCount = 0;
+        m_Statistics.TotalInstanceCount = 0;
+        m_Statistics.TransparentInstanceCount = 0;
+        m_Statistics.OpaqueInstanceCount = 0;
         m_Statistics.DrawCallCount = 0;
         m_Statistics.VertexCount = 0;
         m_Statistics.IndexCount = 0;
@@ -109,10 +111,10 @@ namespace BeeEngine::Internal
         glm::vec2 TexCoord1;
         glm::vec2 TexCoord2;
         glm::vec2 TexCoord3;
-        glm::vec2 PositionOffset0;
-        glm::vec2 PositionOffset1;
-        glm::vec2 PositionOffset2;
-        glm::vec2 PositionOffset3;
+        glm::vec3 PositionOffset0;
+        glm::vec3 PositionOffset1;
+        glm::vec3 PositionOffset2;
+        glm::vec3 PositionOffset3;
         Color4 ForegroundColor;
         Color4 BackgroundColor;
     };

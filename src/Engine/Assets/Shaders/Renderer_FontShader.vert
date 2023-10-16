@@ -5,10 +5,10 @@ layout (instanced location = 1) in vec2 vTexCoord0;
 layout (instanced location = 2) in vec2 vTexCoord1;
 layout (instanced location = 3) in vec2 vTexCoord2;
 layout (instanced location = 4) in vec2 vTexCoord3;
-layout (instanced location = 5) in vec2 vPositionOffset0;
-layout (instanced location = 6) in vec2 vPositionOffset1;
-layout (instanced location = 7) in vec2 vPositionOffset2;
-layout (instanced location = 8) in vec2 vPositionOffset3;
+layout (instanced location = 5) in vec3 vPositionOffset0;
+layout (instanced location = 6) in vec3 vPositionOffset1;
+layout (instanced location = 7) in vec3 vPositionOffset2;
+layout (instanced location = 8) in vec3 vPositionOffset3;
 layout (instanced location = 9) in vec4 vForegroundColor;
 layout (instanced location = 10) in vec4 vBackgroundColor;
 //layout (instanced location = 10) in int vEntityID;
@@ -27,7 +27,7 @@ void main()
 {
     outForegroundColor = vForegroundColor;
     outBackgroundColor = vBackgroundColor;
-    vec2 offset = vec2(0.0);
+    vec3 offset = vec3(0.0);
     switch(gl_VertexIndex)
     {
         case 0:
@@ -52,5 +52,5 @@ void main()
         break;
     }
 
-    gl_Position = camera.projView * vec4(offset, 0.0, 1.0);
+    gl_Position = camera.projView * vec4(offset, 1.0);
 }

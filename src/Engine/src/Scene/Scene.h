@@ -9,6 +9,7 @@
 #include "Renderer/UniformBuffer.h"
 #include "Renderer/Model.h"
 #include "Renderer/Texture.h"
+#include "Renderer/SceneTreeRenderer.h"
 
 class b2World;
 
@@ -79,7 +80,7 @@ namespace BeeEngine
 
         void Update2DPhysics();
 
-        void RenderScene();
+        void RenderScene(SceneTreeRenderer& renderer);
 
         Entity CopyEntity(Entity entity, Scene& targetScene, Entity parent, bool preserveUUID);
     };

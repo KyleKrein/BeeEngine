@@ -8,7 +8,9 @@ namespace BeeEngine
 {
     struct RendererStatistics
     {
-        size_t InstanceCount {0};
+        size_t TotalInstanceCount {0};
+        size_t TransparentInstanceCount {0};
+        size_t OpaqueInstanceCount {0};
         size_t DrawCallCount {0};
         size_t VertexCount {0};
         size_t IndexCount {0};

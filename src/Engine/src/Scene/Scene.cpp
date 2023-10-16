@@ -162,8 +162,8 @@ namespace BeeEngine
         {
             auto cameraViewProj = mainCamera->GetProjectionMatrix() * glm::inverse(cameraTransform);
             m_CameraUniformBuffer->SetData(&cameraViewProj, sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
-
-            RenderScene();
+            SceneTreeRenderer renderer(cameraViewProj, m_CameraBindingSet.get());
+            RenderScene(renderer);
 
         }
     }
@@ -172,19 +172,20 @@ namespace BeeEngine
     {
         auto cameraViewProj = camera.GetViewProjection();
         m_CameraUniformBuffer->SetData(glm::value_ptr(cameraViewProj), sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
-
-        RenderScene();
+        SceneTreeRenderer renderer(cameraViewProj, m_CameraBindingSet.get());
+        RenderScene(renderer);
     }
 
-    void Scene::RenderScene()
+    void Scene::RenderScene(SceneTreeRenderer& renderer)
     {
+        constexpr static float epsilon = 1e-6;
         auto spriteView = m_Registry.view<SpriteRendererComponent>();
         for( auto entity : spriteView )
         {
             auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
             SpriteInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), spriteComponent.Color, spriteComponent.TilingFactor};
             std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture()->GetBindingSet() : m_BlankTexture->GetBindingSet())};
-            Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
+            renderer.AddEntity(data.Model, data.Color.A() < 0.95f || spriteComponent.HasTexture, *m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
         }
 
         auto circleGroup = m_Registry.view<CircleRendererComponent>();
@@ -193,15 +194,16 @@ namespace BeeEngine
         {
             auto& circleComponent = circleGroup.get<CircleRendererComponent>(entity);
             CircleInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
-            Renderer::SubmitInstance(*m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
+            renderer.AddEntity(data.Model, true, *m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
         }
 
         auto textGroup = m_Registry.view<TextRendererComponent>();
         for( auto entity : textGroup )
         {
             auto& textComponent = textGroup.get<TextRendererComponent>(entity);
-            Renderer::DrawString(textComponent.Text, textComponent.Font(), *m_CameraBindingSet, Math::ToGlobalTransform(Entity{entity, this}), textComponent.Configuration);
+            renderer.AddText(textComponent.Text, &textComponent.Font(), Math::ToGlobalTransform(Entity{entity, this}), textComponent.Configuration);
         }
+        renderer.Render();
     }
 
     void Scene::StartRuntime()

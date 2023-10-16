@@ -121,4 +121,42 @@ namespace BeeEngine::Math
         }
         return globalMatrix;
     }
+
+    bool RayIntersectsTriangle(const glm::vec3 &rayOrigin, const glm::vec3 &rayVector, const glm::vec3 &vertex0,
+                               const glm::vec3 &vertex1, const glm::vec3 &vertex2)
+    {
+        // Compute vectors
+        glm::vec3 edge1 = vertex1 - vertex0;
+        glm::vec3 edge2 = vertex2 - vertex0;
+
+        // Compute determinant
+        glm::vec3 h = glm::cross(rayVector, edge2);
+        float a = glm::dot(edge1, h);
+
+        // Parallel
+        if (a > -0.00001f && a < 0.00001f)
+            return false;
+
+        float f = 1.0f / a;
+        glm::vec3 s = rayOrigin - vertex0;
+        float u = f * glm::dot(s, h);
+
+        if (u < 0.0f || u > 1.0f)
+            return false;
+
+        glm::vec3 q = glm::cross(s, edge1);
+        float v = f * glm::dot(rayVector, q);
+
+        if (v < 0.0f || u + v > 1.0f)
+            return false;
+
+        // At this stage we can compute t to find out where the intersection point is on the line.
+        float t = f * glm::dot(edge2, q);
+
+        if (t > 0.00001f) // ray intersection
+            return true;
+
+        else // This means that there is a line intersection but not a ray intersection.
+            return false;
+    }
 }
