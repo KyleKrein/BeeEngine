@@ -8,6 +8,7 @@
 #include "MSDFData.h"
 #include "FrameBuffer.h"
 #include "RenderingQueue.h"
+#include <ranges>
 
 namespace BeeEngine
 {
@@ -35,7 +36,7 @@ namespace BeeEngine
 
     void SceneTreeRenderer::Render()
     {
-        std::sort(m_Transparent.begin(), m_Transparent.end(), [this](const Entity& a, const Entity& b)
+        std::ranges::sort(m_Transparent, [this](const Entity& a, const Entity& b)
         {
             auto aDistance = glm::distance(a.Transform[3], m_CameraTransform[3]);
             auto bDistance = glm::distance(b.Transform[3], m_CameraTransform[3]);
@@ -51,9 +52,9 @@ namespace BeeEngine
             Renderer::SubmitInstance(*entity.Model,entity.BindingSets, entity.InstancedData);
         }
         Renderer::Flush();
-        auto& queue = Internal::RenderingQueue::GetInstance();
-        queue.m_Statistics.OpaqueInstanceCount += m_NotTransparent.size();
-        queue.m_Statistics.TransparentInstanceCount += m_Transparent.size();
+        auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
+        statistics.OpaqueInstanceCount += m_NotTransparent.size();
+        statistics.TransparentInstanceCount += m_Transparent.size();
     }
     struct TextInstancedData
     {

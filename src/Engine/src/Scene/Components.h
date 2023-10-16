@@ -24,12 +24,15 @@
 #include "Renderer/Font.h"
 #include "Core/TypeSequence.h"
 #include "Core/AssetManagement/AssetManager.h"
+#include "Core/Reflection.h"
 
 namespace BeeEngine
 {
     struct UUIDComponent
     {
         UUID ID;
+    private:
+        REFLECT()
     };
     struct TagComponent
     {
@@ -42,6 +45,8 @@ namespace BeeEngine
 
         operator String&() { return Tag; }
         operator const String&() const { return Tag; }
+    private:
+        REFLECT()
     };
 
     struct TransformComponent
@@ -67,6 +72,8 @@ namespace BeeEngine
             Rotation += rotation - Rotation;
             Scale = scale;
         }
+    private:
+        REFLECT()
     };
 
     struct CameraComponent
@@ -81,6 +88,8 @@ namespace BeeEngine
 
         operator class Camera&() { return Camera; }
         operator const class Camera&() const { return Camera; }
+    private:
+        REFLECT()
     };
 
     struct SpriteRendererComponent

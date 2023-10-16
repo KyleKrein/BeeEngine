@@ -5,6 +5,7 @@
 #include "LayerStack.h"
 #include "Application.h"
 #include "Renderer/Renderer.h"
+#include <ranges>
 
 
 namespace BeeEngine{
@@ -71,10 +72,11 @@ namespace BeeEngine{
 
     void LayerStack::OnEvent(EventDispatcher &dispatcher)
     {
+        using std::views::reverse;
         BEE_PROFILE_FUNCTION();
-        for (auto layer = m_layers.rbegin(); layer < m_layers.rend(); ++layer)
+        for (auto& layer : m_layers | reverse)
         {
-            (*layer)->OnEvent(dispatcher);
+            layer->OnEvent(dispatcher);
             if(dispatcher.IsHandled())
             {
                 break;

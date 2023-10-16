@@ -60,6 +60,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/Logging/ConsoleOutput.cpp
         src/Renderer/SceneTreeRenderer.cpp
         src/Renderer/SceneTreeRenderer.h
+        src/Core/Reflection.cpp
+        src/Core/Reflection.h
 )
 
 function(DesktopPlatformsOnly)

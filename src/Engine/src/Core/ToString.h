@@ -4,6 +4,7 @@
 
 #pragma once
 #include <string>
+#include <ranges>
 #include <vector>
 #include <array>
 #include <unordered_map>
@@ -343,9 +344,9 @@ constexpr String ToString<char*>(const char*& obj)
     {
         return std::to_string(static_cast<int>(obj));
     }
-
-    template<typename T>
-    CONSTEXPR_FUNC String ToString(const std::vector<T> &collection)
+    template<std::ranges::range T>
+    requires (!std::is_convertible_v<T, String>)
+    CONSTEXPR_FUNC String ToString(const T& collection)
     {
         String result = "[";
         for (auto &item: collection)
@@ -355,29 +356,10 @@ constexpr String ToString<char*>(const char*& obj)
         result.replace(result.size() - 2, 2, "]");
         return result;
     }
-
-    template<typename T, size_t numberOfElements>
-    CONSTEXPR_FUNC String ToString(const std::array<T, numberOfElements> &collection)
+    template<typename P1, typename P2>
+    CONSTEXPR_FUNC String ToString(const std::pair<P1, P2> &obj)
     {
-        String result = "[";
-        for (auto &item: collection)
-        {
-            result += ToString(item) + ", ";
-        }
-        result.replace(result.size() - 2, 2, "]");
-        return result;
-    }
-
-    template<typename Key, typename Value>
-    CONSTEXPR_FUNC String ToString(const std::unordered_map<Key, Value> &collection)
-    {
-        String result = "[";
-        for (auto &item: collection)
-        {
-            result += "[" + ToString(item.first) + " : " + ToString(item.second) + "]" ", ";
-        }
-        result.replace(result.size() - 2, 2, "]");
-        return result;
+        return "[" + ToString(obj.first) + " : " + ToString(obj.second) + "]";
     }
 }
 #undef CONSTEXPR_FUNC

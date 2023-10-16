@@ -5,12 +5,14 @@
 #pragma once
 
 #include "Core/Cameras/Camera.h"
+#include "Core/Reflection.h"
 
 namespace BeeEngine
 {
 
     class SceneCamera: public Camera
     {
+        REFLECT()
     public:
         enum class CameraType
         {
