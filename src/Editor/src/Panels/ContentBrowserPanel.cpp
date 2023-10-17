@@ -9,6 +9,7 @@
 #include "FileSystem/File.h"
 #include "Scene/SceneSerializer.h"
 #include "Core/AssetManagement//PrefabImporter.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 
 
 namespace BeeEngine::Editor
@@ -56,22 +57,15 @@ namespace BeeEngine::Editor
             }
             DragAndDropFileToFolder(m_CurrentDirectory.GetParent());
         }
-        if(m_DragAndDropEntity->load())
+        if(ImGui::IsDragAndDropPayloadInProcess("ENTITY_ID"))
         {
             auto width = ImGui::GetContentRegionAvail().x;
             ImGui::Button("Export prefab", {width, 0});
-            if(ImGui::BeginDragDropTarget())
-            {
-                const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_ID");
-                if(payload)
-                {
-                    Entity droppedEntity = {*(const entt::entity*)payload->Data, m_Context.get()};
-                    BeeExpects(droppedEntity);
-                    m_DragAndDropEntity->store(false);
-                    PrefabImporter::GeneratePrefab(droppedEntity, m_CurrentDirectory / (droppedEntity.GetComponent<TagComponent>().Tag + ".beeprefab"), {m_Project->GetAssetRegistryID()});
-                }
-                ImGui::EndDragDropTarget();
-            }
+            ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this](const auto& e){
+                Entity droppedEntity = {e, m_Context.get()};
+                BeeExpects(droppedEntity);
+                PrefabImporter::GeneratePrefab(droppedEntity, m_CurrentDirectory / (droppedEntity.GetComponent<TagComponent>().Tag + ".beeprefab"), {m_Project->GetAssetRegistryID()});
+            });
         }
 
         static float padding = 16.0f;
@@ -109,12 +103,7 @@ namespace BeeEngine::Editor
             //ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
             ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 
-            if (ImGui::BeginDragDropSource())
-            {
-                const auto& itemPath = relativePath.AsUTF8();
-                ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath.c_str(), itemPath.size() + 1);
-                ImGui::EndDragDropSource();
-            }
+            ImGui::StartDragAndDrop("CONTENT_BROWSER_ITEM", (void *) relativePath.AsCString(), relativePath.AsUTF8().size() + 1);
 
             if(File::IsDirectory(path))
             {
@@ -226,10 +215,9 @@ namespace BeeEngine::Editor
         }
     }
 
-    ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory, std::atomic<bool>& dragAndDropEntity) noexcept
+    ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory) noexcept
             : m_WorkingDirectory(workingDirectory)
             , m_CurrentDirectory(workingDirectory)
-            , m_DragAndDropEntity(&dragAndDropEntity)
     {
         m_DirectoryIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture);
         m_FileIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::FileTexture);

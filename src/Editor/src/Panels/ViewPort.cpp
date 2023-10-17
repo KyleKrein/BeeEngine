@@ -88,19 +88,32 @@ namespace BeeEngine::Editor
     void ViewPort::RenderImGuizmo(EditorCamera& camera)
     {
         //BeeCoreTrace("RenderImGuizmo. Mode: {}", m_GuizmoOperation == GuizmoOperation::None ? "None" : m_GuizmoOperation == GuizmoOperation::Translate ? "Translate" : m_GuizmoOperation == GuizmoOperation::Rotate ? "Rotate" : "Scale");
+
+        const glm::mat4* cameraProjection = nullptr;
+        glm::mat4 cameraView;
+        if(m_Scene->IsRuntime())
+        {
+            Entity mainCamera = m_Scene->GetPrimaryCameraEntity();
+            if(!mainCamera)
+                return;
+            auto& cameraComponent = mainCamera.GetComponent<CameraComponent>();
+            cameraProjection = &cameraComponent.Camera.GetProjectionMatrix();
+            cameraView = glm::inverse(mainCamera.GetComponent<TransformComponent>().GetTransform());
+        }
+        else
+        {
+            cameraProjection = &camera.GetProjectionMatrix();
+            cameraView = camera.GetViewMatrix();
+        }
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::SetDrawlist();
 
         ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
 
-
-        const glm::mat4& cameraProjection = camera.GetProjectionMatrix();
-        glm::mat4 cameraView = camera.GetViewMatrix();
-
         auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
 
-        glm::mat4 transform = transformComponent.GetTransform();
+        glm::mat4 transform = Math::ToGlobalTransform(m_SelectedEntity);
 
         //Snapping
         const float snapValue = m_GuizmoOperation == GuizmoOperation::Rotate ? 45.0f : 0.5f;
@@ -108,7 +121,7 @@ namespace BeeEngine::Editor
         float snapValues[3] = {snapValue, snapValue, snapValue};
 
         ImGuizmo::Manipulate(glm::value_ptr(cameraView),
-                             glm::value_ptr(cameraProjection),
+                             glm::value_ptr(*cameraProjection),
                              static_cast<ImGuizmo::OPERATION>(m_GuizmoOperation),
                              ImGuizmo::LOCAL,
                              glm::value_ptr(transform),
@@ -116,7 +129,7 @@ namespace BeeEngine::Editor
                              m_GuizmoSnap ? snapValues : nullptr);
         if (ImGuizmo::IsUsing())
         {
-            transformComponent.SetTransform(transform);
+            transformComponent.SetTransform(Math::ToLocalTransform(m_SelectedEntity, transform));
         }
     }
 

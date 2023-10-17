@@ -98,6 +98,10 @@ namespace BeeEngine::Math
     glm::mat4 ToLocalTransform(Entity child)
     {
         glm::mat4 localMatrix = child.GetComponent<TransformComponent>().GetTransform();
+        return ToLocalTransform(child, localMatrix);
+    }
+    glm::mat4 ToLocalTransform(Entity child, glm::mat4 localMatrix)
+    {
         auto currentEntity = child;
         while(currentEntity.HasParent())
         {

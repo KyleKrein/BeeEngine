@@ -4,10 +4,6 @@ Assets:
     Type: AssetType::Texture2D
     Handle: 7772243033513047726
     FilePath: Assets/pc.png
-  - Name: Face
-    Type: AssetType::Prefab
-    Handle: 8154209086672931478
-    FilePath: Face.beeprefab
   - Name: google_logo
     Type: AssetType::Texture2D
     Handle: 13987028760561915515

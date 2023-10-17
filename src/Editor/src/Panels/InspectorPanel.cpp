@@ -12,7 +12,9 @@
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Scripting/GameScript.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 #include <misc/cpp/imgui_stdlib.h>
+#include <ranges>
 
 namespace BeeEngine::Editor
 {
@@ -201,42 +203,27 @@ namespace BeeEngine::Editor
             {
                 ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
             }
-            if (ImGui::BeginDragDropTarget())
-            {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+            ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &sprite](void* data, size_t size){
+                Path texturePath = m_WorkingDirectory / static_cast<const char*>(data);
+                if (!ResourceManager::IsTexture2DExtension(texturePath.GetExtension()))
+                    return;
+                auto name = texturePath.GetFileNameWithoutExtension().AsUTF8();
+                auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                if(!handlePtr)
                 {
-                    Path texturePath = m_WorkingDirectory / (const char*)payload->Data;
-                    if(ResourceManager::IsTexture2DExtension(texturePath.GetExtension()))
-                    {
-                        auto name = texturePath.GetFileNameWithoutExtension().AsUTF8();
-                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                        if(!handlePtr)
-                        {
-                            m_AssetManager->LoadAsset(texturePath, {m_ProjectAssetRegistryID});
-                            handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                        }
-                        BeeCoreAssert(handlePtr, "Failed to load texture from path: {0}", texturePath.AsUTF8());
-                        sprite.HasTexture = true;
-                        sprite.TextureHandle = *handlePtr;
-                    }
+                    m_AssetManager->LoadAsset(texturePath, {m_ProjectAssetRegistryID});
+                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
                 }
-                ImGui::EndDragDropTarget();
-            }
+                BeeCoreAssert(handlePtr, "Failed to load texture from path: {0}", texturePath.AsUTF8());
+                sprite.HasTexture = true;
+                sprite.TextureHandle = *handlePtr;
+            });
 
-            if (ImGui::BeginDragDropTarget())
-            {
-                if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
-                {
-                    auto* handlePtr = (AssetHandle*)payload->Data;
-                    BeeExpects(handlePtr);
-                    BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                    sprite.HasTexture = true;
-                    sprite.TextureHandle = *handlePtr;
-                }
-                ImGui::EndDragDropTarget();
-            }
-
-
+            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_TEXTURE2D_ITEM", [this, &sprite](const auto& handle){
+                BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                sprite.HasTexture = true;
+                sprite.TextureHandle = handle;
+            });
 
             ImGui::DragFloat("Tiling Factor", &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
         });
@@ -253,37 +240,25 @@ namespace BeeEngine::Editor
            {
                component.FontHandle = EngineAssetRegistry::OpenSansRegular;
            }
-           if (ImGui::BeginDragDropTarget())
-           {
-               if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+           ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &component](void* data, size_t size){
+               Path fontPath = m_WorkingDirectory / static_cast<const char*>(data);
+               if(ResourceManager::IsFontExtension(fontPath.GetExtension()))
                {
-                   Path fontPath = m_WorkingDirectory / (const char*)payload->Data;
-                   if(ResourceManager::IsFontExtension(fontPath.GetExtension()))
+                   auto name = fontPath.GetFileNameWithoutExtension().AsUTF8();
+                   auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                   if(!handlePtr)
                    {
-                       auto name = fontPath.GetFileNameWithoutExtension().AsUTF8();
-                       auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                       if(!handlePtr)
-                       {
-                           m_AssetManager->LoadAsset(fontPath, {m_ProjectAssetRegistryID});
-                           handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                       }
-                       BeeCoreAssert(handlePtr, "Failed to load font from path: {0}", fontPath.AsUTF8());
-                       component.FontHandle = *handlePtr;
+                       m_AssetManager->LoadAsset(fontPath, {m_ProjectAssetRegistryID});
+                       handlePtr = m_AssetManager->GetAssetHandleByName(name);
                    }
-               }
-               ImGui::EndDragDropTarget();
-           }
-           if (ImGui::BeginDragDropTarget())
-           {
-               if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
-               {
-                   auto* handlePtr = (AssetHandle*)payload->Data;
-                   BeeExpects(handlePtr);
-                   BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                   BeeCoreAssert(handlePtr, "Failed to load font from path: {0}", fontPath.AsUTF8());
                    component.FontHandle = *handlePtr;
                }
-               ImGui::EndDragDropTarget();
-           }
+           });
+           ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_FONT_ITEM", [this, &component](const auto& handle){
+               BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+               component.FontHandle = handle;
+           });
            ImGui::ColorEdit4("Foreground", component.Configuration.ForegroundColor.ValuePtr());
            ImGui::ColorEdit4("Background", component.Configuration.BackgroundColor.ValuePtr());
            ImGui::DragFloat("Kerning offset", &component.Configuration.KerningOffset, 0.025f);
@@ -295,10 +270,9 @@ namespace BeeEngine::Editor
             auto& scripts = ScriptingEngine::GetGameScripts();
             scriptNames.reserve(scripts.size() + 1);
             scriptNames.push_back("##");
-            for(auto& script : scripts)
-            {
-                scriptNames.push_back(script.second->GetFullName().c_str());
-            }
+            std::ranges::transform(scripts, std::back_inserter(scriptNames), [](auto& script){
+                return script.second->GetFullName().c_str();
+            });
             const char* currentScriptName = script.Class != nullptr ? script.Class->GetFullName().c_str() : "##";
             if(ImGui::BeginCombo("Class", currentScriptName))
             {
@@ -468,30 +442,16 @@ namespace BeeEngine::Editor
                             }
                             ImGui::EndDragDropTarget();
                         }
-                        if (ImGui::BeginDragDropTarget())
-                        {
-                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
-                            {
-                                auto* handlePtr = (AssetHandle*)payload->Data;
-                                BeeExpects(handlePtr);
-                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                                value = *handlePtr;
-                                SetFieldData(mField, &value, mObject, field);
-                            }
-                            ImGui::EndDragDropTarget();
-                        }
-                        if (ImGui::BeginDragDropTarget())
-                        {
-                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
-                            {
-                                auto* handlePtr = (AssetHandle*)payload->Data;
-                                BeeExpects(handlePtr);
-                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                                value = *handlePtr;
-                                SetFieldData(mField, &value, mObject, field);
-                            }
-                            ImGui::EndDragDropTarget();
-                        }
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_FONT_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_TEXTURE2D_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
                         break;
                     }
                     case MType::Texture2D:
@@ -538,18 +498,11 @@ namespace BeeEngine::Editor
                             }
                             ImGui::EndDragDropTarget();
                         }
-                        if (ImGui::BeginDragDropTarget())
-                        {
-                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
-                            {
-                                auto* handlePtr = (AssetHandle*)payload->Data;
-                                BeeExpects(handlePtr);
-                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                                value = *handlePtr;
-                                SetFieldData(mField, &value, mObject, field);
-                            }
-                            ImGui::EndDragDropTarget();
-                        }
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_TEXTURE2D_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
                         break;
                     }
                     case MType::Font:
@@ -596,18 +549,11 @@ namespace BeeEngine::Editor
                             }
                             ImGui::EndDragDropTarget();
                         }
-                        if (ImGui::BeginDragDropTarget())
-                        {
-                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
-                            {
-                                auto* handlePtr = (AssetHandle*)payload->Data;
-                                BeeExpects(handlePtr);
-                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                                value = *handlePtr;
-                                SetFieldData(mField, &value, mObject, field);
-                            }
-                            ImGui::EndDragDropTarget();
-                        }
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_FONT_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
                         break;
                     }
                 }

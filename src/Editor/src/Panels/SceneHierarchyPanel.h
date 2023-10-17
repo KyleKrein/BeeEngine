@@ -12,8 +12,7 @@ namespace BeeEngine::Editor
     class SceneHierarchyPanel
     {
     public:
-        SceneHierarchyPanel(std::atomic<bool>& dragAndDropEntity): m_DragAndDropEntity(&dragAndDropEntity)
-        {};
+        SceneHierarchyPanel() = default;
         explicit SceneHierarchyPanel(const Ref<Scene>& context);
 
         void SetContext(const Ref<Scene>& context);
@@ -33,6 +32,5 @@ namespace BeeEngine::Editor
 
         Ref<Scene> m_Context;
         Entity m_SelectedEntity;
-        std::atomic<bool>* m_DragAndDropEntity;
     };
 }

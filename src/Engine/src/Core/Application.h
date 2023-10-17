@@ -36,6 +36,19 @@ namespace BeeEngine{
             return OSPlatform::None;
 #endif
         }
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        static consteval bool IsLittleEndian() { return true; }
+#elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        static consteval bool IsLittleEndian() { return false; }
+#else
+        static bool IsLittleEndian()
+        {
+            int32_t num = 1;
+            return (*(char*)&num == 1);
+        }
+#endif
+
+
         static Application& GetInstance()
         {
             return *s_Instance;

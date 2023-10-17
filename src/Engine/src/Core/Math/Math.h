@@ -20,6 +20,7 @@ namespace BeeEngine::Math
     // Пример функции для перевода локальных координат в глобальные
     glm::mat4 ToGlobalTransform(Entity child);
     glm::mat4 ToLocalTransform(Entity child);
+    glm::mat4 ToLocalTransform(Entity child, glm::mat4 transform);
     bool RayIntersectsTriangle(const glm::vec3& rayOrigin, const glm::vec3& rayVector,
                                const glm::vec3& vertex0, const glm::vec3& vertex1, const glm::vec3& vertex2);
 }

@@ -3,6 +3,7 @@
 //
 #include "Core/String.h"
 #include <vector>
+#include <cstddef>
 #pragma once
 namespace BeeEngine::Reflection
 {

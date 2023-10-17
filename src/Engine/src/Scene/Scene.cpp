@@ -445,4 +445,18 @@ namespace BeeEngine
         }
         return newEntity;
     }
+
+    Entity Scene::GetPrimaryCameraEntity()
+    {
+        auto view = m_Registry.view<CameraComponent>();
+        for (auto entity:view)
+        {
+            auto& cameraComponent = view.get<CameraComponent>(entity);
+            if (cameraComponent.Primary)
+            {
+                return {EntityID{entity}, this};
+            }
+        }
+        return Entity::Null;
+    }
 }

@@ -66,6 +66,9 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Scene/Prefab.h
         src/Core/AssetManagement/PrefabImporter.cpp
         src/Core/AssetManagement/PrefabImporter.h
+        src/Gui/ImGui/ImGuiExtension.h
+        src/Core/Hash.cpp
+        src/Core/Hash.h
 )
 
 function(DesktopPlatformsOnly)

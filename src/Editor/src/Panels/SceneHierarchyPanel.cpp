@@ -7,6 +7,7 @@
 #include "Core/DeletionQueue.h"
 #include "Scene/Prefab.h"
 #include "Core/Input.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 
 
 namespace BeeEngine::Editor
@@ -25,28 +26,19 @@ namespace BeeEngine::Editor
     void SceneHierarchyPanel::OnGUIRender() noexcept
     {
         ImGui::Begin("Scene Hierarchy");
-        ImGui::Button("Top level");
-        if(ImGui::BeginDragDropTarget())
+        if(ImGui::IsDragAndDropPayloadInProcess("ENTITY_ID") ||
+        ImGui::IsDragAndDropPayloadInProcess("ASSET_BROWSER_PREFAB_ITEM"))
         {
-            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_ID");
-            if(payload)
-            {
-                Entity droppedEntity = {*(const entt::entity*)payload->Data, m_Context.get()};
-                m_DragAndDropEntity->store(false);
-                //BeeCoreTrace("DragDropTarget Child entt id: {}, UUID: {}, Tag: {}", (entt::entity)droppedEntity, droppedEntity.GetUUID().operator uint64_t(), droppedEntity.GetComponent<TagComponent>().Tag);
+            auto width = ImGui::GetContentRegionAvail().x;
+            ImGui::Button("To Top Level", {width, 0});
+            ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this](auto& e)mutable {
+                Entity droppedEntity = {e, m_Context.get()};
                 droppedEntity.RemoveParent();
-            }
-            ImGui::EndDragDropTarget();
-        }
-        if(ImGui::BeginDragDropTarget())
-        {
-            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_PREFAB_ITEM");
-            if(payload)
-            {
-                Prefab& prefab = AssetManager::GetAsset<Prefab>(*(const AssetHandle*)payload->Data);
+            });
+            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM", [this](auto& e)mutable {
+                Prefab& prefab = AssetManager::GetAsset<Prefab>(e);
                 m_Context->InstantiatePrefab(prefab, Entity::Null);
-            }
-            ImGui::EndDragDropTarget();
+            });
         }
 
         m_Context->m_Registry.view<HierarchyComponent>()
@@ -103,44 +95,16 @@ namespace BeeEngine::Editor
                                    ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 
         bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
-        if(ImGui::BeginDragDropSource())
-        {
-            entt::entity entityID = entity;
-            //BeeCoreTrace("DragDropSource entt id: {}, UUID: {}, Tag: {}", (entt::entity)entity, entity.GetUUID().operator uint64_t(), entity.GetComponent<TagComponent>().Tag);
-            ImGui::SetDragDropPayload("ENTITY_ID", &entityID, sizeof(entt::entity));
-            m_DragAndDropEntity->store(true);
-            ImGui::EndDragDropSource();
-        }
-        Application::SubmitToMainThread([this]() mutable
-           {
-                if(m_DragAndDropEntity->load() && !Input::MouseKeyPressed(MouseButton::Left))
-                {
-                     m_DragAndDropEntity->store(false);
-                }
-           });
-        if(ImGui::BeginDragDropTarget())
-        {
-            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_ID");
-            if(payload)
-            {
-                Entity droppedEntity = {*(const entt::entity*)payload->Data, m_Context.get()};
-                m_DragAndDropEntity->store(false);
-                //BeeCoreTrace("DragDropTarget Child entt id: {}, UUID: {}, Tag: {}", (entt::entity)droppedEntity, droppedEntity.GetUUID().operator uint64_t(), droppedEntity.GetComponent<TagComponent>().Tag);
-                //BeeCoreTrace("DragDropTarget Parent entt id: {}, UUID: {}, Tag: {}", (entt::entity)entity, entity.GetUUID().operator uint64_t(), entity.GetComponent<TagComponent>().Tag);
-                droppedEntity.SetParent(entity);
-            }
-            ImGui::EndDragDropTarget();
-        }
-        if(ImGui::BeginDragDropTarget())
-        {
-            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_PREFAB_ITEM");
-            if(payload)
-            {
-                Prefab& prefab = AssetManager::GetAsset<Prefab>(*(const AssetHandle*)payload->Data);
-                m_Context->InstantiatePrefab(prefab, entity);
-            }
-            ImGui::EndDragDropTarget();
-        }
+        entt::entity entityID = entity;
+        ImGui::StartDragAndDrop("ENTITY_ID", entityID);
+        ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this, currentEntity = entity](auto& e)mutable {
+            Entity droppedEntity = {e, m_Context.get()};
+            droppedEntity.SetParent(currentEntity);
+        });
+        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM", [this, currentEntity = entity](auto& e)mutable {
+            Prefab& prefab = AssetManager::GetAsset<Prefab>(e);
+            m_Context->InstantiatePrefab(prefab, currentEntity);
+        });
         if (ImGui::IsItemClicked())
         {
             m_SelectedEntity = entity;

@@ -8,7 +8,8 @@ add_executable(BeeEngine_Tests tests_main.cpp GeneralPurposeAllocatorTest.cpp St
         ThreadPoolTest.cpp
         TypeDefinesTests.cpp
         FormatStringTest.cpp
-        TransformTests.cpp)
+        TransformTests.cpp
+        HashTests.cpp)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 

@@ -51,6 +51,7 @@ namespace BeeEngine
 
         Entity GetEntityByUUID(struct UUID uuid);
         Entity GetEntityByName(std::string_view name);
+        Entity GetPrimaryCameraEntity();
 
         [[nodiscard]] bool IsRuntime() const noexcept { return m_IsRuntime; }
 

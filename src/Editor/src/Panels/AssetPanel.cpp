@@ -11,6 +11,7 @@
 #include "Core/Application.h"
 #include "Core/ResourceManager.h"
 #include "Core/Path.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 
 
 namespace BeeEngine::Editor
@@ -30,22 +31,23 @@ namespace BeeEngine::Editor
     void AssetPanel::Render()
     {
         ImGui::Begin("Assets");
-        if (ImGui::BeginDragDropTarget())
+        if(ImGui::IsDragAndDropPayloadInProcess("CONTENT_BROWSER_ITEM"))
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-            {
-                Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
-                if(ResourceManager::IsAssetExtension(assetPath.GetExtension()))
+            auto width = ImGui::GetContentRegionAvail().x;
+            ImGui::Button("Drop here to load asset", {width, 0});
+            ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this](void* data, size_t size)
                 {
-                    auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
-                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                    if(!handlePtr)
+                    Path assetPath = m_Project->GetProjectPath() / (const char*)data;
+                    if(ResourceManager::IsAssetExtension(assetPath.GetExtension()))
                     {
-                        m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
+                        auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
+                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                        if(!handlePtr)
+                        {
+                            m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
+                        }
                     }
-                }
-            }
-            ImGui::EndDragDropTarget();
+                });
         }
 
         auto& registry = m_AssetManager->GetAssetRegistry();
@@ -110,13 +112,7 @@ namespace BeeEngine::Editor
                     }
                 }
 
-                if (ImGui::BeginDragDropSource())
-                {
-                    const char* name = GetDragAndDropTypeName(metadata.Type);
-                    ImGui::SetDragDropPayload(name, &handle, sizeof(AssetHandle));
-
-                    ImGui::EndDragDropSource();
-                }
+                ImGui::StartDragAndDrop(GetDragAndDropTypeName(metadata.Type), handle);
 
                 ImGui::PopStyleColor();
 

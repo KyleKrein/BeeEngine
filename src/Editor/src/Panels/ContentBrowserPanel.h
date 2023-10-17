@@ -14,7 +14,7 @@ namespace BeeEngine::Editor
     class ContentBrowserPanel
     {
     public:
-        ContentBrowserPanel(const Path& workingDirectory, std::atomic<bool>& dragAndDropEntity) noexcept;
+        ContentBrowserPanel(const Path& workingDirectory) noexcept;
         void SetContext(const Ref<Scene>& context) noexcept
         {
             m_Context = context;
@@ -50,8 +50,6 @@ namespace BeeEngine::Editor
         Ref<Texture2D> m_DirectoryIcon;
         Ref<Texture2D> m_FileIcon;
         bool m_NeedToRegenerateSolution = false;
-
-        std::atomic<bool>* m_DragAndDropEntity;
 
         void DragAndDropFileToFolder(const Path &path);
     };
