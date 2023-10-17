@@ -5,6 +5,7 @@
 #include "AssetImporter.h"
 #include "TextureImporter.h"
 #include "FontImporter.h"
+#include "PrefabImporter.h"
 #include <map>
 
 namespace BeeEngine
@@ -12,7 +13,8 @@ namespace BeeEngine
     using AssetImportFunction = std::function<Ref<Asset>(AssetHandle, const AssetMetadata&)>;
     static std::map<AssetType, AssetImportFunction> s_AssetImportFunctions = {
             { AssetType::Texture2D, TextureImporter::ImportTexture2D },
-            {AssetType::Font, FontImporter::ImportFont}
+            {AssetType::Font, FontImporter::ImportFont},
+            {AssetType::Prefab, PrefabImporter::ImportPrefab}
     };
 
     Ref<Asset> AssetImporter::ImportAsset(AssetHandle handle, const AssetMetadata& metadata)

@@ -4,6 +4,7 @@
 
 #pragma once
 #include <type_traits>
+#include <utility>
 #include "Asset.h"
 #include "Core/TypeDefines.h"
 #include "IAssetManager.h"
@@ -44,6 +45,16 @@ namespace BeeEngine
         {
             BeeExpects(s_AssetManager);
             s_AssetManager->UnloadAsset(handle);
+        }
+        static void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type)
+        {
+            BeeExpects(s_AssetManager);
+            s_AssetManager->LoadAsset(data, std::move(handle), name, type);
+        }
+        static void LoadAsset(const Path& path, AssetHandle handle)
+        {
+            BeeExpects(s_AssetManager);
+            s_AssetManager->LoadAsset(path, std::move(handle));
         }
 
     private:

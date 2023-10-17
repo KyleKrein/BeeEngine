@@ -35,14 +35,15 @@ namespace BeeEngine::Editor
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
+        std::atomic<bool> m_DragAndDropEntity = false;
         ImGuiOutputConsole m_Console {};
         EditorAssetManager m_EditorAssetManager {};
         EditorCamera m_EditorCamera = {};
         DockSpace m_DockSpace {};
         MenuBar m_MenuBar {};
         AssetPanel m_AssetPanel {&m_EditorAssetManager};
-        ContentBrowserPanel m_ContentBrowserPanel {std::filesystem::current_path()};
-        SceneHierarchyPanel m_SceneHierarchyPanel {};
+        ContentBrowserPanel m_ContentBrowserPanel {std::filesystem::current_path(), m_DragAndDropEntity};
+        SceneHierarchyPanel m_SceneHierarchyPanel {m_DragAndDropEntity};
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         Path m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};

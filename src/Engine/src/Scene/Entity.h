@@ -14,6 +14,7 @@ namespace BeeEngine
 {
     class Entity
     {
+        friend class PrefabImporter;
     public:
         constexpr Entity() = default;
         constexpr Entity(EntityID id, Scene* scene)

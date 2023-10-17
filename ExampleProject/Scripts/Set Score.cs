@@ -29,7 +29,7 @@ namespace Example
 
         private void Camera_PositionChanged(object sender, TransformComponent e)
         {
-            m_Transform.Translation = e.Translation + Offset;
+            m_Transform.Translation.Xy = e.Translation.Xy + Offset.Xy;
         }
 
         public void IncreaseScore()

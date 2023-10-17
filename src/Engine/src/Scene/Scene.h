@@ -22,6 +22,7 @@ namespace BeeEngine
         class EditorLayer;
     }
     class Entity;
+    class Prefab;
     class Scene
     {
         friend class Entity;
@@ -29,6 +30,7 @@ namespace BeeEngine
         friend class BeeEngine::Editor::InspectorPanel;
         friend class BeeEngine::Editor::EditorLayer;
         friend class SceneSerializer;
+        friend class PrefabImporter;
     public:
         static Ref<Scene> Copy(Scene& scene);
 
@@ -41,6 +43,8 @@ namespace BeeEngine
         Entity CreateEntity(const std::string& name = "Entity");
         void DestroyEntity(Entity entity);
         Entity DuplicateEntity(Entity entity);
+
+        Entity InstantiatePrefab(Prefab& prefab, Entity parent);
 
         void StartRuntime();
         void StopRuntime();

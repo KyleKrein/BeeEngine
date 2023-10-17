@@ -7,6 +7,8 @@
 #include "BeeEngine.h"
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
+#include "Scene/SceneSerializer.h"
+#include "Core/AssetManagement//PrefabImporter.h"
 
 
 namespace BeeEngine::Editor
@@ -20,13 +22,13 @@ namespace BeeEngine::Editor
 
         if (ImGui::BeginPopup(name))
         {
-            static char buffer[256] = { 0 };
+            static std::array<char, 256> buffer;
             ImGui::Text("Name");
-            ImGui::InputText("##Name", buffer, sizeof(buffer));
+            ImGui::InputText("##Name", buffer.data(), buffer.size());
 
             if (ImGui::Button("Create", { 120, 0 }))
             {
-                onCreate(buffer);
+                onCreate(buffer.data());
                 ImGui::CloseCurrentPopup();
                 buffer[0] = '\0';
             }
@@ -53,6 +55,23 @@ namespace BeeEngine::Editor
                 m_CurrentDirectory = m_CurrentDirectory.GetParent();
             }
             DragAndDropFileToFolder(m_CurrentDirectory.GetParent());
+        }
+        if(m_DragAndDropEntity->load())
+        {
+            auto width = ImGui::GetContentRegionAvail().x;
+            ImGui::Button("Export prefab", {width, 0});
+            if(ImGui::BeginDragDropTarget())
+            {
+                const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_ID");
+                if(payload)
+                {
+                    Entity droppedEntity = {*(const entt::entity*)payload->Data, m_Context.get()};
+                    BeeExpects(droppedEntity);
+                    m_DragAndDropEntity->store(false);
+                    PrefabImporter::GeneratePrefab(droppedEntity, m_CurrentDirectory / (droppedEntity.GetComponent<TagComponent>().Tag + ".beeprefab"), {m_Project->GetAssetRegistryID()});
+                }
+                ImGui::EndDragDropTarget();
+            }
         }
 
         static float padding = 16.0f;
@@ -171,7 +190,9 @@ namespace BeeEngine::Editor
         });
         OpenCreatePopup("Create Scene", createScenePopupOpen, [&](const char* name)
         {
-
+            Ref<Scene> scene = CreateRef<Scene>();
+            SceneSerializer serializer(scene);
+            serializer.Serialize(m_CurrentDirectory / (String(name) + ".beescene"));
         });
 
         ImGui::End();
@@ -205,9 +226,10 @@ namespace BeeEngine::Editor
         }
     }
 
-    ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory) noexcept
+    ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory, std::atomic<bool>& dragAndDropEntity) noexcept
             : m_WorkingDirectory(workingDirectory)
             , m_CurrentDirectory(workingDirectory)
+            , m_DragAndDropEntity(&dragAndDropEntity)
     {
         m_DirectoryIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture);
         m_FileIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::FileTexture);

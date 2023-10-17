@@ -51,10 +51,10 @@ namespace BeeEngine
         std::ifstream ifs(path.ToStdPath());
         if(!ifs)
             throw std::runtime_error(path.AsUTF8() + ": " + std::strerror(errno));
-        std::string content;
-        ifs>>content;
+        std::stringstream content;
+        content << ifs.rdbuf();
         ifs.close();
-        return content;
+        return content.str();
     }
 
     void File::WriteFile(const Path& path, std::string_view content)

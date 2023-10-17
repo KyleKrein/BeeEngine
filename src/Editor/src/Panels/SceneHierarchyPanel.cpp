@@ -4,6 +4,9 @@
 
 #include "SceneHierarchyPanel.h"
 #include "Scene/Components.h"
+#include "Core/DeletionQueue.h"
+#include "Scene/Prefab.h"
+#include "Core/Input.h"
 
 
 namespace BeeEngine::Editor
@@ -29,8 +32,19 @@ namespace BeeEngine::Editor
             if(payload)
             {
                 Entity droppedEntity = {*(const entt::entity*)payload->Data, m_Context.get()};
+                m_DragAndDropEntity->store(false);
                 //BeeCoreTrace("DragDropTarget Child entt id: {}, UUID: {}, Tag: {}", (entt::entity)droppedEntity, droppedEntity.GetUUID().operator uint64_t(), droppedEntity.GetComponent<TagComponent>().Tag);
                 droppedEntity.RemoveParent();
+            }
+            ImGui::EndDragDropTarget();
+        }
+        if(ImGui::BeginDragDropTarget())
+        {
+            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_PREFAB_ITEM");
+            if(payload)
+            {
+                Prefab& prefab = AssetManager::GetAsset<Prefab>(*(const AssetHandle*)payload->Data);
+                m_Context->InstantiatePrefab(prefab, Entity::Null);
             }
             ImGui::EndDragDropTarget();
         }
@@ -94,17 +108,36 @@ namespace BeeEngine::Editor
             entt::entity entityID = entity;
             //BeeCoreTrace("DragDropSource entt id: {}, UUID: {}, Tag: {}", (entt::entity)entity, entity.GetUUID().operator uint64_t(), entity.GetComponent<TagComponent>().Tag);
             ImGui::SetDragDropPayload("ENTITY_ID", &entityID, sizeof(entt::entity));
+            m_DragAndDropEntity->store(true);
             ImGui::EndDragDropSource();
         }
+        Application::SubmitToMainThread([this]() mutable
+           {
+                if(m_DragAndDropEntity->load() && !Input::MouseKeyPressed(MouseButton::Left))
+                {
+                     m_DragAndDropEntity->store(false);
+                }
+           });
         if(ImGui::BeginDragDropTarget())
         {
             const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_ID");
             if(payload)
             {
                 Entity droppedEntity = {*(const entt::entity*)payload->Data, m_Context.get()};
+                m_DragAndDropEntity->store(false);
                 //BeeCoreTrace("DragDropTarget Child entt id: {}, UUID: {}, Tag: {}", (entt::entity)droppedEntity, droppedEntity.GetUUID().operator uint64_t(), droppedEntity.GetComponent<TagComponent>().Tag);
                 //BeeCoreTrace("DragDropTarget Parent entt id: {}, UUID: {}, Tag: {}", (entt::entity)entity, entity.GetUUID().operator uint64_t(), entity.GetComponent<TagComponent>().Tag);
                 droppedEntity.SetParent(entity);
+            }
+            ImGui::EndDragDropTarget();
+        }
+        if(ImGui::BeginDragDropTarget())
+        {
+            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_PREFAB_ITEM");
+            if(payload)
+            {
+                Prefab& prefab = AssetManager::GetAsset<Prefab>(*(const AssetHandle*)payload->Data);
+                m_Context->InstantiatePrefab(prefab, entity);
             }
             ImGui::EndDragDropTarget();
         }
@@ -113,16 +146,25 @@ namespace BeeEngine::Editor
             m_SelectedEntity = entity;
         }
 
-        bool entityDeleted = false;
         if(ImGui::BeginPopupContextItem())
         {
             if(ImGui::MenuItem("Delete Entity"))
             {
-                entityDeleted = true;
+                DeletionQueue::Frame().PushFunction([this, entityToDelete = entity]() mutable
+                    {
+                        if(m_SelectedEntity == entityToDelete || entityToDelete.HasChild(m_SelectedEntity))
+                        {
+                            m_SelectedEntity = Entity::Null;
+                        }
+                        m_Context->DestroyEntity(entityToDelete);
+                    });
             }
             if(ImGui::MenuItem("Duplicate Entity"))
             {
-                m_Context->DuplicateEntity(entity);
+                DeletionQueue::Frame().PushFunction([this, entityToDublicate = entity]() mutable
+                    {
+                        m_Context->DuplicateEntity(entityToDublicate);
+                    });
             }
             ImGui::EndPopup();
         }
@@ -134,18 +176,6 @@ namespace BeeEngine::Editor
                 DrawEntityNode(child); // Рекурсивный вызов
             }
             ImGui::TreePop();
-        }
-
-        if(entityDeleted)
-        {
-            DeletionQueue::Frame().PushFunction([this, entityToDelete = entity]() mutable
-            {
-                if(m_SelectedEntity == entityToDelete || entityToDelete.HasChild(m_SelectedEntity))
-                {
-                    m_SelectedEntity = Entity::Null;
-                }
-                m_Context->DestroyEntity(entityToDelete);
-            });
         }
     }
 

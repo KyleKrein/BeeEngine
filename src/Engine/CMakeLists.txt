@@ -62,6 +62,10 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Renderer/SceneTreeRenderer.h
         src/Core/Reflection.cpp
         src/Core/Reflection.h
+        src/Scene/Prefab.cpp
+        src/Scene/Prefab.h
+        src/Core/AssetManagement/PrefabImporter.cpp
+        src/Core/AssetManagement/PrefabImporter.h
 )
 
 function(DesktopPlatformsOnly)

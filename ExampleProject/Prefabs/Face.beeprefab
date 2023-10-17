@@ -1,0 +1,72 @@
+Entities:
+  - Entity: 4120067915880791781
+    TagComponent:
+      Tag: Face
+    TransformComponent:
+      Translation: [0.725465655, 1.49011612e-08, 0]
+      Rotation: [0, -0, 0.0122173037]
+      Scale: [1.29999995, 1.29999995, 1]
+    HierarchyComponent:
+      - 16070399662391962124
+      - 10872013310181255983
+  - Entity: 16070399662391962124
+    TagComponent:
+      Tag: Eyes
+    TransformComponent:
+      Translation: [0.387382567, 0.0047330074, 0]
+      Rotation: [0, -0, 6.51925491e-09]
+      Scale: [1.00000048, 1.00000048, 1]
+    HierarchyComponent:
+      - 9124001626095622978
+      - 15326073620974699607
+  - Entity: 9124001626095622978
+    TagComponent:
+      Tag: Right
+    TransformComponent:
+      Translation: [4.4039526, 1.8471216, 0]
+      Rotation: [0, -0, 0.0122172963]
+      Scale: [1.30000055, 1.30000055, 1]
+    ScriptComponent:
+      FullName: Example.RandomColor
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Has Texture: false
+      Texture: [2489073825959763519, 2965822266508661732]
+      Tiling Factor: 1
+    HierarchyComponent:
+      []
+  - Entity: 15326073620974699607
+    TagComponent:
+      Tag: Left
+    TransformComponent:
+      Translation: [-3.05347061, 1.68959606, 0]
+      Rotation: [0, -0, 0.0122172963]
+      Scale: [1.30000055, 1.30000055, 1]
+    ScriptComponent:
+      FullName: Example.Helper
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Thickness: 1
+      Fade: 0.00499999989
+    HierarchyComponent:
+      []
+  - Entity: 10872013310181255983
+    TagComponent:
+      Tag: Mouth
+    TransformComponent:
+      Translation: [-1.93069685, -1.46980274, 0]
+      Rotation: [0, -0, 0.0122173019]
+      Scale: [1.30000007, 1.30000007, 1]
+    ScriptComponent:
+      FullName: Example.Rotation
+      Fields:
+        - Name: Speed
+          Type: float
+          Data: 0.150000006
+    SpriteRendererComponent:
+      Color: [0.835616469, 0.49450177, 0.49450177, 1]
+      Has Texture: false
+      Texture: [911171833705554805, 5433295639066028698]
+      Tiling Factor: 1
+    HierarchyComponent:
+      []

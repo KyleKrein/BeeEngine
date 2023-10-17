@@ -13,6 +13,7 @@
 #include "NativeScriptFactory.h"
 #include "Core/UUID.h"
 #include "Scripting/ScriptingEngine.h"
+#include "Prefab.h"
 
 #include <box2d/box2d.h>
 #include <box2d/b2_body.h>
@@ -374,6 +375,9 @@ namespace BeeEngine
     template<>
     static void CopyComponent<HierarchyComponent>(entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
     {}
+    template<>
+    static void CopyComponent<UUIDComponent>(entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
+    {}
 
     template<typename ...Component>
     static void CopyComponents(TypeSequence<Component...>,entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
@@ -412,13 +416,8 @@ namespace BeeEngine
 
     Entity Scene::CopyEntity(Entity entity, Scene &targetScene, Entity parent, bool preserveUUID)
     {
-        Entity newEntity = targetScene.CreateEntityWithUUID(entity.GetUUID(), entity.GetComponent<TagComponent>().Tag);
+        Entity newEntity = targetScene.CreateEntityWithUUID(preserveUUID ? entity.GetUUID() : UUID{}, entity.GetComponent<TagComponent>().Tag);
         CopyComponents(AllComponents{}, targetScene.m_Registry, m_Registry, (entt::entity)entity, (entt::entity)newEntity);
-        if(!preserveUUID)
-        {
-            auto& uuidComponent = newEntity.GetComponent<UUIDComponent>();
-            uuidComponent.ID = {};
-        }
         //Copy Hierarchies
         auto& hierarchy = entity.GetComponent<HierarchyComponent>();
         BeeCoreAssert(!(parent == Entity::Null && hierarchy.Parent), "Entity has parent but parent is null");
@@ -434,6 +433,16 @@ namespace BeeEngine
             newChild.GetComponent<HierarchyComponent>().Parent = newEntity;
         }
         BeeEnsures(entity.GetUUID() != newEntity.GetUUID() || preserveUUID);
+        return newEntity;
+    }
+
+    Entity Scene::InstantiatePrefab(Prefab &prefab, Entity parent)
+    {
+        Entity newEntity = Prefab::GetPrefabScene()->CopyEntity(prefab.m_RootEntity, *this, Entity::Null, false);
+        if(parent)
+        {
+            newEntity.SetParent(parent);
+        }
         return newEntity;
     }
 }

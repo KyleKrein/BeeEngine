@@ -147,9 +147,14 @@ namespace BeeEngine
             return extension == ".ttf";
         }
 
+        static bool IsPrefabExtension(const Path &extension) noexcept
+        {
+            return extension == ".beeprefab";
+        }
+
         static bool IsAssetExtension(const Path &extension) noexcept
         {
-            return IsTexture2DExtension(extension) || IsFontExtension(extension);
+            return IsTexture2DExtension(extension) || IsFontExtension(extension) || IsPrefabExtension(extension);
         }
 
         static AssetType GetAssetTypeFromExtension(const Path &extension)
@@ -161,6 +166,10 @@ namespace BeeEngine
             if(IsFontExtension(extension))
             {
                 return AssetType::Font;
+            }
+            if(IsPrefabExtension(extension))
+            {
+                return AssetType::Prefab;
             }
             return AssetType::None;
         }

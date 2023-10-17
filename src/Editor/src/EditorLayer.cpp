@@ -30,6 +30,7 @@ namespace BeeEngine::Editor
 
         m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
+        m_ContentBrowserPanel.SetContext(m_ViewPort.GetScene());
         m_InspectorPanel.SetContext(m_ViewPort.GetScene());
         m_ActiveScene = m_ViewPort.GetScene();
     }
@@ -133,6 +134,7 @@ namespace BeeEngine::Editor
                 m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
                 m_InspectorPanel.SetProject(m_ProjectFile.get());
                 m_AssetPanel.SetProject(m_ProjectFile.get());
+                m_ContentBrowserPanel.SetProject(m_ProjectFile.get());
                 m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
                     DeleteAsset(handle);
                 });
@@ -161,6 +163,7 @@ namespace BeeEngine::Editor
 
                 m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
                 m_InspectorPanel.SetProject(m_ProjectFile.get());
+                m_ContentBrowserPanel.SetProject(m_ProjectFile.get());
 
                 m_AssetPanel.SetProject(m_ProjectFile.get());
                 m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
@@ -384,6 +387,7 @@ namespace BeeEngine::Editor
         m_SceneHierarchyPanel.ClearSelection();
         m_ViewPort.SetScene(sharedPtr);
         m_SceneHierarchyPanel.SetContext(sharedPtr);
+        m_ContentBrowserPanel.SetContext(sharedPtr);
         m_InspectorPanel.SetContext(sharedPtr);
     }
 
