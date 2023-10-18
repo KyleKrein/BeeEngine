@@ -6,6 +6,7 @@
 
 #include "Core/Cameras/Camera.h"
 #include "Core/Reflection.h"
+#include "Serialization/ISerializer.h"
 
 namespace BeeEngine
 {
@@ -47,6 +48,17 @@ namespace BeeEngine
         void SetAspectRatio(float d);
 
         float GetAspectRatio();
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key("Projection Type") & Serialization::Value(m_Type);
+            serializer & Serialization::Key("Orthographic Size") & Serialization::Value(m_OrthographicSize);
+            serializer & Serialization::Key("Orthographic Near") & Serialization::Value(m_OrthographicNear);
+            serializer & Serialization::Key("Orthographic Far") & Serialization::Value(m_OrthographicFar);
+            serializer & Serialization::Key("Vertical FOV") & Serialization::Value(m_VerticalFOV);
+            serializer & Serialization::Key("Perspective Near") & Serialization::Value(m_PerspectiveNear);
+            serializer & Serialization::Key("Perspective Far") & Serialization::Value(m_PerspectiveFar);
+        }
 
     private:
         void RecalculateProjectionMatrix();

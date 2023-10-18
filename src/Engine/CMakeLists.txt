@@ -69,6 +69,10 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Gui/ImGui/ImGuiExtension.h
         src/Core/Hash.cpp
         src/Core/Hash.h
+        src/Serialization/ISerializer.h
+        src/Serialization/Serializable.h
+        src/Serialization/YAMLSerializer.cpp
+        src/Serialization/YAMLSerializer.h
 )
 
 function(DesktopPlatformsOnly)

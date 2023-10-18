@@ -5,6 +5,8 @@
 #pragma once
 #include <string>
 #include "Core/Reflection.h"
+#include "Serialization/ISerializer.h"
+
 namespace BeeEngine
 {
     class UUID
@@ -18,6 +20,11 @@ namespace BeeEngine
         UUID(const UUID&) = default;
 
         operator uint64_t() const { return m_UUID; }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & m_UUID;
+        }
     private:
         uint64_t m_UUID;
     };

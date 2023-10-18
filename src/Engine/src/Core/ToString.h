@@ -53,7 +53,7 @@ namespace BeeEngine
 
     template<typename T>
     requires std::is_enum_v<T>
-    CONSTEXPR_FUNC String EnumToString(T obj);
+    constexpr String EnumToString(T obj);
 
     template<typename T>
     CONSTEXPR_FUNC String TypeName(const T &obj)
@@ -103,16 +103,30 @@ namespace BeeEngine
 
     template<typename T>
     requires std::is_enum_v<T>
-    CONSTEXPR_FUNC String EnumToString(T obj)
+    constexpr String EnumToString(T obj)
     {
-//String name = String(magic_enum::enum_type_name<T>()) + "::" + String(magic_enum::enum_name(obj));
         auto name = magic_enum::enum_name(obj);
         if (name.empty())
         {
             return String{magic_enum::enum_type_name<T>()} + "::" +
                    String{std::to_string(static_cast<std::underlying_type_t<T>>(obj))};
         } else
-            return String{magic_enum::enum_name(obj)};
+            return String{name};
+    }
+
+    template<typename T>
+    requires std::is_enum_v<T>
+    constexpr T StringToEnum(const String& str)
+    {
+        if(str.contains("::"))
+        {
+            auto parts = SplitString(str, "::");
+            return static_cast<T>(std::stoi(parts[1].data()));
+        }
+        else
+        {
+            return magic_enum::enum_cast<T>(str).value();
+        }
     }
 
 #if defined(BEE_COMPILE_WEBGPU)

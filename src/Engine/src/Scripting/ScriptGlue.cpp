@@ -28,11 +28,11 @@ namespace BeeEngine
         ([](){
             auto typeName = TypeName<Component>();
             size_t pos = typeName.find_last_of(':');
-            std::string managedTypeName = fmt::format("BeeEngine.{}", typeName.substr(pos + 1));
+            std::string managedTypeName = FormatString("BeeEngine.{}", typeName.substr(pos + 1));
             MonoType* managedType = mono_reflection_type_from_name((char*)managedTypeName.c_str(), ScriptingEngine::GetCoreAssembly().m_MonoImage);
             if(!managedType)
             {
-                BeeCoreError("Could not find C# component type {}", managedTypeName);
+                BeeCoreTrace("Could not find C# component type {}", managedTypeName);
                 return;
             }                                            \
             s_CreateComponentFunctions[managedType] = [](Entity entity) {return &entity.AddComponent<Component>();};

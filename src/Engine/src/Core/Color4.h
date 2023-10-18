@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Serialization/ISerializer.h"
 #if __has_include(<vec4.hpp>)
 #include <vec4.hpp>
 #endif
@@ -255,6 +256,14 @@ namespace BeeEngine
         static constexpr Color4Init const Brass = {0.98f, 0.90f, 0.59f, 1.0f};
         static constexpr Color4Init const Copper = {0.97f, 0.74f, 0.62f, 1.0f};
 
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & m_R;
+            serializer & m_G;
+            serializer & m_B;
+            serializer & m_A;
+        }
     private:
         float m_R;
         float m_G;

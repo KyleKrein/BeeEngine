@@ -81,6 +81,12 @@ namespace BeeEngine
             constexpr operator Entity() const { return Entity(ID, Scene); }
         };
 
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & GetUUID();
+        }
+
         constexpr static EntityInit const Null{};
 
     private:

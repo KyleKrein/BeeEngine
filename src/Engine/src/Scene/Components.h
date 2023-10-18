@@ -25,12 +25,19 @@
 #include "Core/TypeSequence.h"
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/Reflection.h"
+#include "Serialization/ISerializer.h"
 
 namespace BeeEngine
 {
     struct UUIDComponent
     {
         UUID ID;
+
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"UUID"} & Serialization::Value{ID};
+        }
     private:
         REFLECT()
     };
@@ -45,6 +52,11 @@ namespace BeeEngine
 
         operator String&() { return Tag; }
         operator const String&() const { return Tag; }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Tag;
+        }
     private:
         REFLECT()
     };
@@ -72,6 +84,14 @@ namespace BeeEngine
             Rotation += rotation - Rotation;
             Scale = scale;
         }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            using Serialization::Marker;
+            serializer & Serialization::Key{"Translation"} & Serialization::Value{Translation};
+            serializer & Serialization::Key{"Rotation"} & Serialization::Value{Rotation};
+            serializer & Serialization::Key{"Scale"} & Serialization::Value{Scale};
+        }
     private:
         REFLECT()
     };
@@ -88,6 +108,13 @@ namespace BeeEngine
 
         operator class Camera&() { return Camera; }
         operator const class Camera&() const { return Camera; }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Camera;
+            serializer & Serialization::Key{"Primary"} & Serialization::Value{Primary};
+            serializer & Serialization::Key{"Fixed Aspect Ratio"} & Serialization::Value{FixedAspectRatio};
+        }
     private:
         REFLECT()
     };
@@ -111,6 +138,15 @@ namespace BeeEngine
 
         operator Texture2D&() { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
         operator Texture2D&() const { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
+
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Color"} & Serialization::Value{Color};
+            serializer & Serialization::Key{"Texture Handle"} & Serialization::Value{TextureHandle};
+            serializer & Serialization::Key{"Tiling Factor"} & Serialization::Value{TilingFactor};
+            serializer & Serialization::Key{"Has Texture"} & Serialization::Value{HasTexture};
+        }
     };
 
     struct CircleRendererComponent
@@ -118,6 +154,13 @@ namespace BeeEngine
         Color4 Color = Color4::White;
         float Thickness = 1.0f;
         float Fade = 0.005f;
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Color"} & Serialization::Value{Color};
+            serializer & Serialization::Key{"Thickness"} & Serialization::Value{Thickness};
+            serializer & Serialization::Key{"Fade"} & Serialization::Value{Fade};
+        }
     };
 
     struct TextRendererComponent
@@ -129,6 +172,13 @@ namespace BeeEngine
         Font& Font() const
         {
             return AssetManager::GetAsset<BeeEngine::Font>(FontHandle);
+        }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Configuration"} & Serialization::Value{Configuration};
+            serializer & Serialization::Key{"Font Handle"} & Serialization::Value{FontHandle};
+            serializer & Serialization::Key{"Text"} & Serialization::Value{Text};
         }
     };
 
@@ -153,6 +203,12 @@ namespace BeeEngine
         class MClass* Class = nullptr;
         std::vector<GameScriptField> EditableFields;
         void SetClass(class MClass* mClass) noexcept;
+        /*template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            //serializer & Serialization::Key{"Class"} & Serialization::Value{Class};
+            //serializer & Serialization::Key{"Editable Fields"} & Serialization::Value{EditableFields};
+        }*/
     };
 
     struct NativeScriptComponent
@@ -206,6 +262,12 @@ namespace BeeEngine
         bool FixedRotation = false;
 
         void* RuntimeBody = nullptr;
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Type"} & Serialization::Value{Type};
+            serializer & Serialization::Key{"Fixed Rotation"} & Serialization::Value{FixedRotation};
+        }
         /*float Mass = 1.0f;
         float Friction = 0.5f;
         float Restitution = 0.5f;
@@ -238,12 +300,27 @@ namespace BeeEngine
         float RestitutionThreshold = 0.5f;
 
         void* RuntimeFixture = nullptr;
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Type"} & Serialization::Value{Type};
+            serializer & Serialization::Key{"Offset"} & Serialization::Value{Offset};
+            serializer & Serialization::Key{"Size"} & Serialization::Value{Size};
+            serializer & Serialization::Key{"Density"} & Serialization::Value{Density};
+            serializer & Serialization::Key{"Friction"} & Serialization::Value{Friction};
+            serializer & Serialization::Key{"Restitution"} & Serialization::Value{Restitution};
+            serializer & Serialization::Key{"Restitution Threshold"} & Serialization::Value{RestitutionThreshold};
+        }
     };
 
     struct HierarchyComponent
     {
         Entity Parent = Entity::Null;
         std::vector<Entity> Children;
+        /*void Serialize(Serialization::ISerializer& serializer)
+        {
+            serializer & Children;
+        }*/
     };
 
     using AllComponents =

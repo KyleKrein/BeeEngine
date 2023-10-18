@@ -68,4 +68,23 @@ namespace BeeEngine
         // or
         return std::wstring::traits_type::length(s);
     }
+
+    constexpr std::vector<std::string_view> SplitString(std::string_view str, std::string_view delimiters) {
+        std::vector<std::string_view> output;
+        size_t first = 0;
+
+        while (first < str.size()) {
+            const auto second = str.find_first_of(delimiters, first);
+
+            if (first != second)
+                output.emplace_back(str.substr(first, second-first));
+
+            if (second == std::string_view::npos)
+                break;
+
+            first = second + 1;
+        }
+
+        return output;
+    }
 }

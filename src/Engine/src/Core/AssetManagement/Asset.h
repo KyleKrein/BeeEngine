@@ -46,6 +46,12 @@ namespace BeeEngine
         {
             return RegistryID == other.RegistryID && AssetID == other.AssetID;
         }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & RegistryID;
+            serializer & AssetID;
+        }
     };
     enum class AssetType: uint16_t
     {
