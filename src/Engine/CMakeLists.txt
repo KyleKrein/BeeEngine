@@ -73,6 +73,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Serialization/Serializable.h
         src/Serialization/YAMLSerializer.cpp
         src/Serialization/YAMLSerializer.h
+        src/Locale/Locale.h
+        src/Locale/Locale.cpp
 )
 
 function(DesktopPlatformsOnly)

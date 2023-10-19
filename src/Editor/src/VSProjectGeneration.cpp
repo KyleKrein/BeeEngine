@@ -71,19 +71,20 @@ namespace BeeEngine
                                                          const std::string& projectName)
     {
         BeeExpects(IsValidString(String(projectName)));
-        static constexpr unsigned char bom[] = { 0xEF,0xBB,0xBF };
+        static constexpr unsigned char bom[] = {0xEF, 0xBB, 0xBF};
 
         std::ostringstream csproj;
         csproj << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
         csproj << "<Project ToolsVersion=\"15.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n";
-        csproj << "  <Import Project=\"$(MSBuildExtensionsPath)\\$(MSBuildToolsVersion)\\Microsoft.Common.props\" Condition=\"Exists('$(MSBuildExtensionsPath)\\$(MSBuildToolsVersion)\\Microsoft.Common.props')\" />\n";
+        csproj
+                << "  <Import Project=\"$(MSBuildExtensionsPath)\\$(MSBuildToolsVersion)\\Microsoft.Common.props\" Condition=\"Exists('$(MSBuildExtensionsPath)\\$(MSBuildToolsVersion)\\Microsoft.Common.props')\" />\n";
         csproj << "  <PropertyGroup>\n";
         csproj << "    <Configuration Condition=\" '$(Configuration)' == '' \">Debug</Configuration>\n";
         csproj << "    <Platform Condition=\" '$(Platform)' == '' \">AnyCPU</Platform>\n";
         csproj << "    <OutputType>Library</OutputType>\n";
         csproj << "    <IntermediateOutputPath>.beeengine\\obj\\</IntermediateOutputPath>\n";
         csproj << "    <BaseIntermediateOutputPath>.beeengine\\obj\\</BaseIntermediateOutputPath>\n";
-        csproj << "   <RootNamespace>" << projectName <<"</RootNamespace>";
+        csproj << "   <RootNamespace>" << projectName << "</RootNamespace>";
         csproj << "    <AssemblyName>" << "GameLibrary" << "</AssemblyName>\n";
         csproj << "    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>\n";
         csproj << "    <FileAlignment>512</FileAlignment>\n";
@@ -118,13 +119,29 @@ namespace BeeEngine
         csproj << "  </ItemGroup>\n";
         csproj << "  <ItemGroup>\n";
         auto stdpath = path.ToStdPath();
-        for (const auto &sourcePath : sources)
+        for (const auto &sourcePath: sources)
         {
             auto source = sourcePath.ToStdPath();
-            if(source.is_absolute())
+            if (source.is_absolute())
+            {
+#if defined(WINDOWS)
+                String sourcePathString = Path{source.lexically_relative(stdpath)}.AsUTF8();
+                std::replace(sourcePathString.begin(), sourcePathString.end(), '/', '\\');
+                csproj << "    <Compile Include=\"" << sourcePathString << "\"/>\n";
+#else
                 csproj << "    <Compile Include=\"" << Path{source.lexically_relative(stdpath)}.AsUTF8() << "\"/>\n";
+#endif
+            }
             else
-                csproj << "    <Compile Include=\"" << sourcePath.AsUTF8() << "\"/>\n";
+            {
+#if defined(WINDOWS)
+                String sourcePathString = sourcePath.AsUTF8();
+                std::replace(sourcePathString.begin(), sourcePathString.end(), '/', '\\');
+                csproj << "    <Compile Include=\"" << sourcePathString << "\"/>\n";
+#else
+                csproj << "    <Compile Include=\"" << sourcePath.AsUTF8() << "\"/>\n"; }
+#endif
+            }
         }
         csproj << "  </ItemGroup>\n";
         csproj << "  <Import Project=\"$(MSBuildToolsPath)\\Microsoft.CSharp.targets\" />\n";

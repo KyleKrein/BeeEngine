@@ -49,9 +49,6 @@ namespace BeeEngine{
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
-#ifdef DEBUG
-        m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
-#endif
         m_AssetManager.LoadStandardAssets();
 
         //ScriptingEngine::Init();
