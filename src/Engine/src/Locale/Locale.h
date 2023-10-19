@@ -16,6 +16,8 @@ namespace BeeEngine::Locale
     UTF8String GetSystemLocale();
     class Domain
     {
+        friend class LocalizationGenerator;
+        friend class ImGuiLocalizationPanel;
         using Locale = UTF8String;
         using ValueVariationsMap = std::unordered_map<UTF8String, UTF8String>;
         using KeyMap = std::unordered_map<UTF8String, ValueVariationsMap>;
@@ -62,6 +64,7 @@ namespace BeeEngine::Locale
         void RecalculateHash();
         void RebuildFontAtlases();
         void LoadKeysFromSources();
+        void LoadKeysFromSource(const Locale& locale, const Path& path);
         uint64_t m_Hash = 0;
         UTF8String m_Name;
         std::unordered_map<Locale, std::vector<Path>> m_LocalizationSources;

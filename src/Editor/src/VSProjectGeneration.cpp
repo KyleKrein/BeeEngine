@@ -139,7 +139,7 @@ namespace BeeEngine
                 std::replace(sourcePathString.begin(), sourcePathString.end(), '/', '\\');
                 csproj << "    <Compile Include=\"" << sourcePathString << "\"/>\n";
 #else
-                csproj << "    <Compile Include=\"" << sourcePath.AsUTF8() << "\"/>\n"; }
+                csproj << "    <Compile Include=\"" << sourcePath.AsUTF8() << "\"/>\n";
 #endif
             }
         }

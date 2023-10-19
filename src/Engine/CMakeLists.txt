@@ -75,6 +75,10 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Serialization/YAMLSerializer.h
         src/Locale/Locale.h
         src/Locale/Locale.cpp
+        src/Locale/LocalizationGenerator.cpp
+        src/Locale/LocalizationGenerator.h
+        src/Locale/ImGuiLocalizationPanel.cpp
+        src/Locale/ImGuiLocalizationPanel.h
 )
 
 function(DesktopPlatformsOnly)

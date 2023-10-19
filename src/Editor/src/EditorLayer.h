@@ -21,6 +21,8 @@
 #include "Panels/AssetPanel.h"
 #include "Core/Logging/ConsoleOutput.h"
 #include "Panels/ImGuiOutputConsole.h"
+#include "Locale/Locale.h"
+#include "Locale/ImGuiLocalizationPanel.h"
 
 namespace BeeEngine::Editor
 {
@@ -35,6 +37,7 @@ namespace BeeEngine::Editor
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
+        Locale::Domain m_EditorLocaleDomain {"Editor"};
         ImGuiOutputConsole m_Console {};
         EditorAssetManager m_EditorAssetManager {};
         EditorCamera m_EditorCamera = {};
@@ -48,6 +51,7 @@ namespace BeeEngine::Editor
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
         InspectorPanel m_InspectorPanel {&m_EditorAssetManager};
         Scope<ProjectFile> m_ProjectFile = nullptr;
+        Scope<Locale::ImGuiLocalizationPanel> m_LocalizationPanel = nullptr;
 
         Ref<Scene> m_ActiveScene = nullptr;
         Ref<Scene> m_EditorScene = nullptr;

@@ -6,6 +6,7 @@
 #include <cstring>
 #include <filesystem>
 #include "File.h"
+#include <sstream>
 
 
 #pragma clang diagnostic push

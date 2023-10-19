@@ -23,6 +23,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnAttach() noexcept
     {
+        m_EditorLocaleDomain.SetLocale(Locale::GetSystemLocale());
         ConsoleOutput::SetOutputProvider(&m_Console);
         SetUpMenuBar();
         m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture);
@@ -102,6 +103,7 @@ namespace BeeEngine::Editor
             m_AssetPanel.Render();
             m_FpsCounter.Render();
             m_Console.RenderGUI();
+            m_LocalizationPanel->Render();
         }
         else
         {
@@ -138,6 +140,7 @@ namespace BeeEngine::Editor
                 m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
                     DeleteAsset(handle);
                 });
+                m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(m_EditorLocaleDomain, m_ProjectFile->GetProjectPath());
 
                 auto scenePath = m_ProjectFile->GetLastUsedScenePath();
                 if(!scenePath.IsEmpty())
@@ -171,6 +174,7 @@ namespace BeeEngine::Editor
                 });
 
                 SetupGameLibrary();
+                m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(m_EditorLocaleDomain, m_ProjectFile->GetProjectPath());
             }
             end:
             ImGui::End();
@@ -192,8 +196,8 @@ namespace BeeEngine::Editor
 
     void EditorLayer::SetUpMenuBar()
     {
-        MenuBarElement fileMenu = {"File"};
-        fileMenu.AddChild({"New Scene", [this](){
+        MenuBarElement fileMenu = {m_EditorLocaleDomain.Translate("menubar.file")};
+        fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.newScene"), [this](){
             m_SceneHierarchyPanel.ClearSelection();
             m_ViewPort.GetScene()->Clear();
             m_ScenePath.Clear();
@@ -243,6 +247,9 @@ namespace BeeEngine::Editor
         MenuBarElement ViewMenu = {"View"};
         ViewMenu.AddChild({"Output Console", [this](){
             m_Console.Toggle();
+        }});
+        ViewMenu.AddChild({"Localization", [this](){
+            m_LocalizationPanel->SwitchOpened();
         }});
         m_MenuBar.AddElement(ViewMenu);
     }
