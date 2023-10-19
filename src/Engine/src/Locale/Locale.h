@@ -26,12 +26,14 @@ namespace BeeEngine::Locale
         Domain(const UTF8String& name)
         : m_Name(name)
         {
-            BeeCoreTrace("Domain {} was created", name);
+            SetLocale(GetSystemLocale());
+            BeeCoreTrace("Domain {} was created with default locale {}", name, m_Locale);
         }
         Domain(UTF8String&& name)
         : m_Name(std::move(name))
         {
-            BeeCoreTrace("Domain {} was created", m_Name);
+            SetLocale(GetSystemLocale());
+            BeeCoreTrace("Domain {} was created with default locale {}", m_Name, m_Locale);
         }
         void AddLocale(const Locale& locale)
         {
@@ -63,8 +65,6 @@ namespace BeeEngine::Locale
     private:
         void RecalculateHash();
         void RebuildFontAtlases();
-        void LoadKeysFromSources();
-        void LoadKeysFromSource(const Locale& locale, const Path& path);
         uint64_t m_Hash = 0;
         UTF8String m_Name;
         std::unordered_map<Locale, std::vector<Path>> m_LocalizationSources;

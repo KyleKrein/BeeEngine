@@ -8,6 +8,7 @@
 #include "Core/UUID.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "FileSystem/FileWatcher.h"
+#include "Locale/Locale.h"
 
 namespace BeeEngine::Editor
 {
@@ -53,9 +54,16 @@ namespace BeeEngine::Editor
 
         void Update() noexcept;
 
+        Locale::Domain& GetProjectLocaleDomain() noexcept
+        {
+            return m_ProjectLocaleDomain;
+        }
+
     private:
         void OnAppAssemblyFileSystemEvent(const Path& path, FileWatcher::Event changeType);
         void OnAssetFileSystemEvent(const Path& path, FileWatcher::Event changeType);
+
+        void LoadLocalizationFiles();
 
         Path m_ProjectPath;
         std::string m_ProjectName;
@@ -66,6 +74,7 @@ namespace BeeEngine::Editor
         mutable bool m_AssemblyReloadPending = false;
         Path m_AppAssemblyPath;
         BeeEngine::UUID m_AssetRegistryID;
+        Locale::Domain m_ProjectLocaleDomain;
 
         Scope<FileWatcher> m_AssetFileWatcher = nullptr;
         EditorAssetManager* m_AssetManager;

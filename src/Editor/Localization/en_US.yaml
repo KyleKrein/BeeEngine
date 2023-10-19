@@ -1,0 +1,12 @@
+menubar.file: File
+menubar.file.openScene: Open Scene
+menubar.file.newScene: New Scene
+menubar.build.reloadScripts: Reload Scripts
+menubar.file.saveSceneAs: Save Scene As...
+menubar.file.saveScene: Save Scene
+menubar.build: Build
+menubar.file.exit: Exit
+menubar.build.regenerateVSSolution: Regenerate VS Solution
+menubar.view: View
+menubar.view.outputConsole: Output Console
+menubar.view.localization: Localization

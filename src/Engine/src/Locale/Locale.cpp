@@ -54,7 +54,6 @@ namespace BeeEngine::Locale
         {
             RebuildFontAtlases();
         }
-        LoadKeysFromSources();
     }
 
     void Domain::RecalculateHash()
@@ -78,17 +77,6 @@ namespace BeeEngine::Locale
 
     }
 
-    void Domain::LoadKeysFromSources()
-    {
-        for (auto& [locale, paths] : m_LocalizationSources)
-        {
-            for(auto& path : paths)
-            {
-                LoadKeysFromSource(locale, path);
-            }
-        }
-    }
-
     UTF8String Domain::Translate(const char *key)
     {
         if(m_Languages.contains(m_Locale) &&
@@ -98,25 +86,5 @@ namespace BeeEngine::Locale
             return m_Languages[m_Locale][key]["default"];
         }
         return key;
-    }
-
-    void Domain::LoadKeysFromSource(const Domain::Locale &locale, const Path &path)
-    {
-        auto content = File::ReadFile(path);
-        YAML::Node node = YAML::Load(content);
-        for(auto key : node)
-        {
-            if(key.second.IsScalar())
-            {
-                AddLocaleKey(locale, key.first.as<std::string>(), key.second.as<std::string>());
-            }
-            else if(key.second.IsMap())
-            {
-                for(auto variation : key.second)
-                {
-                    AddLocaleKey(locale, key.first.as<std::string>(), variation.second.as<std::string>(), variation.first.as<std::string>());
-                }
-            }
-        }
     }
 }

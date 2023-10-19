@@ -17,6 +17,7 @@
 #include "Core/AssetManagement/EngineAssetRegistry.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
 #include "FileSystem/File.h"
+#include "Locale/LocalizationGenerator.h"
 
 namespace BeeEngine::Editor
 {
@@ -24,6 +25,9 @@ namespace BeeEngine::Editor
     void EditorLayer::OnAttach() noexcept
     {
         m_EditorLocaleDomain.SetLocale(Locale::GetSystemLocale());
+        auto localizationFilesPaths = Locale::LocalizationGenerator::GetLocalizationFiles(std::filesystem::current_path() / "Localization");
+        Locale::LocalizationGenerator::ProcessLocalizationFiles(m_EditorLocaleDomain, localizationFilesPaths);
+        m_EditorLocaleDomain.Build();
         ConsoleOutput::SetOutputProvider(&m_Console);
         SetUpMenuBar();
         m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture);
@@ -140,8 +144,7 @@ namespace BeeEngine::Editor
                 m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
                     DeleteAsset(handle);
                 });
-                m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(m_EditorLocaleDomain, m_ProjectFile->GetProjectPath());
-
+                m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
                 auto scenePath = m_ProjectFile->GetLastUsedScenePath();
                 if(!scenePath.IsEmpty())
                 {
@@ -174,7 +177,7 @@ namespace BeeEngine::Editor
                 });
 
                 SetupGameLibrary();
-                m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(m_EditorLocaleDomain, m_ProjectFile->GetProjectPath());
+                m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
             }
             end:
             ImGui::End();
@@ -202,7 +205,7 @@ namespace BeeEngine::Editor
             m_ViewPort.GetScene()->Clear();
             m_ScenePath.Clear();
         }});
-        fileMenu.AddChild({"Open Scene", [this](){
+        fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.openScene"), [this](){
             auto filepath = BeeEngine::FileDialogs::OpenFile({"BeeEngine Scene", "*.beescene"});
             if(filepath.IsEmpty())
             {
@@ -211,10 +214,10 @@ namespace BeeEngine::Editor
             }
             LoadScene(filepath);
         }});
-        fileMenu.AddChild({"Save Scene", [this](){
+        fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.saveScene"), [this](){
             SaveScene();
         }});
-        fileMenu.AddChild({"Save Scene As...", [this](){
+        fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.saveSceneAs"), [this](){
             auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
             if(filepath.IsEmpty())
             {
@@ -227,11 +230,11 @@ namespace BeeEngine::Editor
             SceneSerializer serializer(m_ActiveScene);
             serializer.Serialize(m_ScenePath);
         }});
-        fileMenu.AddChild({"Exit", [](){BeeEngine::Application::GetInstance().Close();}});
+        fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.exit"), [](){BeeEngine::Application::GetInstance().Close();}});
         m_MenuBar.AddElement(fileMenu);
 
-        MenuBarElement BuildMenu = {"Build"};
-        BuildMenu.AddChild({"Regenerate VS Solution", [this](){
+        MenuBarElement BuildMenu = {m_EditorLocaleDomain.Translate("menubar.build")};
+        BuildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.regenerateVSSolution"), [this](){
             if(!m_ProjectFile)
             {
                 BeeCoreError("No project loaded");
@@ -239,16 +242,16 @@ namespace BeeEngine::Editor
             }
             m_ProjectFile->RegenerateSolution();
         }});
-        BuildMenu.AddChild({"Reload Scripts", [this](){
+        BuildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.reloadScripts"), [this](){
             ReloadAssembly();
         }});
         m_MenuBar.AddElement(BuildMenu);
 
-        MenuBarElement ViewMenu = {"View"};
-        ViewMenu.AddChild({"Output Console", [this](){
+        MenuBarElement ViewMenu = {m_EditorLocaleDomain.Translate("menubar.view")};
+        ViewMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.view.outputConsole"), [this](){
             m_Console.Toggle();
         }});
-        ViewMenu.AddChild({"Localization", [this](){
+        ViewMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.view.localization"), [this](){
             m_LocalizationPanel->SwitchOpened();
         }});
         m_MenuBar.AddElement(ViewMenu);

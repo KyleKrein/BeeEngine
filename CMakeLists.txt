@@ -22,6 +22,7 @@ add_subdirectory(src/Engine)
 add_subdirectory(src/Sandbox2D)
 add_subdirectory(src/tests)
 add_subdirectory(src/Editor)
+add_subdirectory(src/LocalizationTool)
 
 #[[target_include_directories( ${PROJECT_NAME}
         PUBLIC Engine/src

@@ -22,8 +22,8 @@ namespace BeeEngine::Locale
         ImGuiLocalizationPanel(Domain& domain, const Path& path);
         void Render();
         void SwitchOpened() { m_IsOpened = !m_IsOpened; }
-    private:
         void UpdateLocaleKeys();
+    private:
         Domain* m_Domain;
         Path m_WorkingDirectory;
         String m_SelectedLocale;

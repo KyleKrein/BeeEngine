@@ -55,4 +55,48 @@ namespace BeeEngine::Locale
     {
         CreateLocalizationFile(path, GenerateLocalization(domain, locale));
     }
+
+    std::vector<Path> LocalizationGenerator::GetLocalizationFiles(const Path &path)
+    {
+        std::vector<Path> result;
+        for (const auto& file : std::filesystem::recursive_directory_iterator(path.ToStdPath()))
+        {
+            if (file.path().extension() == ".yaml")
+            {
+                result.emplace_back(file.path());
+            }
+        }
+        return result;
+    }
+
+    void LocalizationGenerator::ProcessLocalizationFile(Domain &domain, const Path &path)
+    {
+        String locale = path.GetFileNameWithoutExtension();
+        domain.AddLocale(locale);
+        domain.AddLocalizationSource(locale, path);
+        auto content = File::ReadFile(path);
+        YAML::Node node = YAML::Load(content);
+        for(auto key : node)
+        {
+            if(key.second.IsScalar())
+            {
+                domain.AddLocaleKey(locale, key.first.as<std::string>(), key.second.as<std::string>());
+            }
+            else if(key.second.IsMap())
+            {
+                for(auto variation : key.second)
+                {
+                    domain.AddLocaleKey(locale, key.first.as<std::string>(), variation.second.as<std::string>(), variation.first.as<std::string>());
+                }
+            }
+        }
+    }
+
+    void LocalizationGenerator::ProcessLocalizationFiles(Domain &domain, const std::vector<Path> &paths)
+    {
+        for(const auto& path : paths)
+        {
+            ProcessLocalizationFile(domain, path);
+        }
+    }
 }

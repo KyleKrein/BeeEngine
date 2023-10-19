@@ -37,8 +37,14 @@ namespace BeeEngine::Locale
             }
             ImGui::EndCombo();
         }
+
         ImGui::SameLine();
+        static bool addLocalePopup = false;
         if(ImGui::Button("+"))
+        {
+            addLocalePopup = true;
+        }
+        if(addLocalePopup)
         {
             ImGui::OpenPopup("Add Locale");
             ImGui::Text("Name");
@@ -48,14 +54,25 @@ namespace BeeEngine::Locale
             if(ImGui::Button("Add"))
             {
                 m_LocaleKeys.insert({newLocale.data(), {}});
+                auto& newLocaleKeys = m_LocaleKeys[newLocale.data()];
+                for(auto& [key, values] : m_LocaleKeys[m_SelectedLocale])
+                {
+                    newLocaleKeys.emplace_back(key, decltype(values){});
+                }
                 newLocale.fill('\0');
+                addLocalePopup = false;
                 ImGui::CloseCurrentPopup();
             }
         }
         if(locales.size() > 1)
         {
             ImGui::SameLine();
+            static bool removeLocalePopup = false;
             if(ImGui::Button("-"))
+            {
+                removeLocalePopup = true;
+            }
+            if(removeLocalePopup)
             {
                 ImGui::OpenPopup("Remove Locale");
                 ImGui::Text("Are you sure, that you want to delete locale %s?", m_SelectedLocale.c_str());
@@ -73,86 +90,99 @@ namespace BeeEngine::Locale
                         ImGui::CloseCurrentPopup();
                     }
                 }
+                removeLocalePopup = false;
             }
         }
         bool removeValue = false;
         bool removeKey = false;
         // Отображение текущих ключей и их локализаций
         ImGui::Text("Localization Keys:");
-        for (auto& [locale, keys] : m_LocaleKeys)
         {
+            auto &locale = m_SelectedLocale;
+            auto &keys = m_LocaleKeys[locale];
             ImGui::Text("Locale: %s", locale.c_str());
+            size_t i = 0;
+            static bool addVariationPopup = false;
+            static std::vector<VariantToValuePair>* valuesPtr = nullptr;
             for (auto& [key, values] : keys)
             {
                 ImGui::Text("  Key: ");
                 ImGui::SameLine();
-                ImGui::InputText("##Key", &key);
+                ImGui::InputText(FormatString("##Key {}", i).c_str(), &key);
                 ImGui::SameLine();
-                if(ImGui::Button("-"))
+                if (ImGui::Button("-"))
                 {
                     ImGui::OpenPopup("Remove Key");
                     ImGui::Text("Are you sure, that you want to delete key %s?", key.c_str());
-                    if(ImGui::Button("Yes"))
+                    if (ImGui::Button("Yes"))
                     {
                         m_KeyToRemove = {locale, key};
                         removeKey = true;
                         ImGui::CloseCurrentPopup();
-                    }
-                    else
+                    } else
                     {
                         ImGui::SameLine();
-                        if(ImGui::Button("No"))
+                        if (ImGui::Button("No"))
                         {
                             ImGui::CloseCurrentPopup();
                         }
                     }
                 }
-                for (auto& [variation, value] : values)
+                size_t j = i;
+                i++;
+                for (auto &[variation, value]: values)
                 {
                     ImGui::Text("    [");
                     ImGui::SameLine();
-                    ImGui::InputText("##Variation", &variation);
+                    ImGui::InputText(FormatString("##Variation {}", j).c_str(), &variation);
                     ImGui::SameLine();
                     ImGui::Text("]: ");
                     ImGui::SameLine();
-                    ImGui::InputText("##Value", &value);
-                    if(values.size() > 1)
+                    ImGui::InputText(FormatString("##Value {}", j).c_str(), &value);
+                    if (values.size() > 1)
                     {
                         ImGui::SameLine();
-                        if(ImGui::Button("-"))
+                        if (ImGui::Button("-"))
                         {
                             ImGui::OpenPopup("Remove Variation");
                             ImGui::Text("Are you sure, that you want to delete variation %s?", variation.c_str());
-                            if(ImGui::Button("Yes"))
+                            if (ImGui::Button("Yes"))
                             {
                                 m_ValueToRemove = {locale, key, variation};
                                 removeValue = true;
                                 ImGui::CloseCurrentPopup();
-                            }
-                            else
+                            } else
                             {
                                 ImGui::SameLine();
-                                if(ImGui::Button("No"))
+                                if (ImGui::Button("No"))
                                 {
                                     ImGui::CloseCurrentPopup();
                                 }
                             }
                         }
                     }
+                    j++;
                 }
-                if(ImGui::Button("+"))
+
+                if (ImGui::Button("+"))
                 {
-                    ImGui::OpenPopup("Add Variation");
-                    ImGui::Text("Name");
-                    ImGui::SameLine();
-                    static std::array<char, 128> newVariation{'\0'};
-                    ImGui::InputText("##New Variation", newVariation.data(), newVariation.size());
-                    if(ImGui::Button("Add"))
-                    {
-                        values.emplace_back(newVariation.data(), "");
-                        newVariation.fill('\0');
-                        ImGui::CloseCurrentPopup();
-                    }
+                    addVariationPopup = true;
+                    valuesPtr = &values;
+                }
+            }
+            if(addVariationPopup)
+            {
+                ImGui::OpenPopup("Add Variation");
+                ImGui::Text("Name");
+                ImGui::SameLine();
+                static std::array<char, 128> newVariation{'\0'};
+                ImGui::InputText("##New Variation", newVariation.data(), newVariation.size());
+                if (ImGui::Button("Add"))
+                {
+                    valuesPtr->emplace_back(newVariation.data(), "");
+                    newVariation.fill('\0');
+                    addVariationPopup = false;
+                    ImGui::CloseCurrentPopup();
                 }
             }
         }
@@ -175,11 +205,13 @@ namespace BeeEngine::Locale
         if(removeKey)
         {
             auto& [locale, key] = m_KeyToRemove;
-            auto& keys = m_LocaleKeys[locale];
-            auto it = std::find_if(keys.begin(), keys.end(), [&key](auto& pair){return pair.first == key;});
-            if(it != keys.end())
+            for(auto&[ localeStr, keys] : m_LocaleKeys)
             {
-                keys.erase(it);
+                auto it = std::find_if(keys.begin(), keys.end(), [&key](auto& pair){return pair.first == key;});
+                if(it != keys.end())
+                {
+                    keys.erase(it);
+                }
             }
             removeKey = false;
         }
@@ -198,7 +230,10 @@ namespace BeeEngine::Locale
             ImGui::InputText("##New Key", newKey.data(), newKey.size());
             if(ImGui::Button("Add"))
             {
-                m_LocaleKeys[m_SelectedLocale].emplace_back(newKey.data(), std::vector<std::pair<String, String>>{{"default", ""}});
+                for(auto& [locale, keys] : m_LocaleKeys)
+                {
+                    keys.emplace_back(newKey.data(), std::vector<std::pair<String, String>>{{"default", ""}});
+                }
                 newKey.fill('\0');
                 ImGui::CloseCurrentPopup();
                 addKeyPopup = false;
@@ -217,7 +252,7 @@ namespace BeeEngine::Locale
                     }
                 }
                 //Create all folders recursively if not created yet
-                auto path = m_WorkingDirectory / "Localization" / (locale + ".yaml");
+                auto path = m_WorkingDirectory / (locale + ".yaml");
                 if(!std::filesystem::exists(path.GetParent().ToStdPath()))
                 {
                     std::filesystem::create_directories(path.GetParent().ToStdPath());

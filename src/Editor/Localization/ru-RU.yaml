@@ -1,0 +1,12 @@
+menubar.file: Файл
+menubar.file.openScene: Открыть сцену
+menubar.file.newScene: Новая сцена
+menubar.build.reloadScripts: Перезагрузить скрипты
+menubar.file.saveSceneAs: Сохранить сцену как...
+menubar.file.saveScene: Сохранить сцену
+menubar.build: Сборка
+menubar.file.exit: Выход
+menubar.build.regenerateVSSolution: Пересоздать решение VS
+menubar.view: Вид
+menubar.view.outputConsole: Консоль вывода
+menubar.view.localization: Локализация

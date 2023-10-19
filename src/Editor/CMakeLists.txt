@@ -9,7 +9,7 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
         src/Panels/ImGuiOutputConsole.cpp
         src/Panels/ImGuiOutputConsole.h)
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 
 target_include_directories(BeeEngineEditor
         PUBLIC ../Engine/include/
@@ -39,3 +39,4 @@ endif ()
 
 #file(COPY ../Engine/vendor/mono/dotnet-libs/4.5 DESTINATION ../lib/mono)
 configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/BeeEngine.Core.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.Core.dll COPYONLY)
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/Localization/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Localization)

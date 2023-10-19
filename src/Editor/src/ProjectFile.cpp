@@ -11,14 +11,16 @@
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 #include <filesystem>
+#include "Locale/LocalizationGenerator.h"
 namespace BeeEngine::Editor
 {
 
     ProjectFile::ProjectFile(const Path &projectPath, const std::string &projectName, EditorAssetManager* assetManager) noexcept
-    : m_ProjectName(projectName), m_ProjectPath(projectPath), m_AssetManager(assetManager)
+    : m_ProjectName(projectName), m_ProjectPath(projectPath), m_AssetManager(assetManager), m_ProjectLocaleDomain(projectName)
     {
         BeeCoreTrace("ProjectName: {0}", m_ProjectName);
         BeeCoreTrace("ProjectPath: {0}", m_ProjectPath.AsUTF8());
+        LoadLocalizationFiles();
         if(!File::Exists(m_ProjectPath / ".beeengine"))
         {
             File::CreateDirectory(m_ProjectPath / ".beeengine");
@@ -227,5 +229,12 @@ namespace BeeEngine::Editor
                                             });
 
         }
+    }
+
+    void ProjectFile::LoadLocalizationFiles()
+    {
+        auto paths = Locale::LocalizationGenerator::GetLocalizationFiles(m_ProjectPath);
+        Locale::LocalizationGenerator::ProcessLocalizationFiles(m_ProjectLocaleDomain, paths);
+        m_ProjectLocaleDomain.Build();
     }
 }
