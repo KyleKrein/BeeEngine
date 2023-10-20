@@ -7,6 +7,7 @@
 #include "Gui/ImGui/ImGuiExtension.h"
 #include "Locale.h"
 #include <array>
+#include <imgui_internal.h>
 namespace BeeEngine::Locale
 {
     ImGuiLocalizationPanel::ImGuiLocalizationPanel(Domain& domain, const Path& path)
@@ -14,178 +15,23 @@ namespace BeeEngine::Locale
     {
         UpdateLocaleKeys();
     }
-    void ImGuiLocalizationPanel::Render()
+    void ImGuiLocalizationPanel::Render(ImGuiWindowFlags flags, bool canBeClosed)
     {
-        if(!m_IsOpened)
-            return;
-        ImGui::Begin("Localization", &m_IsOpened);
-        auto& locales = m_LocaleKeys;
-        // Верхний переключатель локализаций
-        if (ImGui::BeginCombo("Locales", m_SelectedLocale.c_str()))
+        if(canBeClosed)
         {
-            for(auto& [locale, keys] : locales)
-            {
-                bool isSelected = (m_SelectedLocale == locale);
-                if (ImGui::Selectable(locale.c_str(), isSelected))
-                {
-                    m_SelectedLocale = locale;
-                }
-                if (isSelected)
-                {
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
+            if(!m_IsOpened)
+                return;
+            ImGui::Begin("Localization", &m_IsOpened, flags);
         }
+        else
+        {
+            ImGui::Begin("Localization", nullptr, flags);
+        }
+        RenderUpperPanel();
 
-        ImGui::SameLine();
-        static bool addLocalePopup = false;
-        if(ImGui::Button("+"))
-        {
-            addLocalePopup = true;
-        }
-        if(addLocalePopup)
-        {
-            ImGui::OpenPopup("Add Locale");
-            ImGui::Text("Name");
-            ImGui::SameLine();
-            static std::array<char, 128> newLocale{'\0'};
-            ImGui::InputText("##New Locale", newLocale.data(), newLocale.size());
-            if(ImGui::Button("Add"))
-            {
-                m_LocaleKeys.insert({newLocale.data(), {}});
-                auto& newLocaleKeys = m_LocaleKeys[newLocale.data()];
-                for(auto& [key, values] : m_LocaleKeys[m_SelectedLocale])
-                {
-                    newLocaleKeys.emplace_back(key, decltype(values){});
-                }
-                newLocale.fill('\0');
-                addLocalePopup = false;
-                ImGui::CloseCurrentPopup();
-            }
-        }
-        if(locales.size() > 1)
-        {
-            ImGui::SameLine();
-            static bool removeLocalePopup = false;
-            if(ImGui::Button("-"))
-            {
-                removeLocalePopup = true;
-            }
-            if(removeLocalePopup)
-            {
-                ImGui::OpenPopup("Remove Locale");
-                ImGui::Text("Are you sure, that you want to delete locale %s?", m_SelectedLocale.c_str());
-                if(ImGui::Button("Yes"))
-                {
-                    m_LocaleKeys.erase(m_SelectedLocale);
-                    m_SelectedLocale = m_LocaleKeys.begin()->first;
-                    ImGui::CloseCurrentPopup();
-                }
-                else
-                {
-                    ImGui::SameLine();
-                    if(ImGui::Button("No"))
-                    {
-                        ImGui::CloseCurrentPopup();
-                    }
-                }
-                removeLocalePopup = false;
-            }
-        }
         bool removeValue = false;
         bool removeKey = false;
-        // Отображение текущих ключей и их локализаций
-        ImGui::Text("Localization Keys:");
-        {
-            auto &locale = m_SelectedLocale;
-            auto &keys = m_LocaleKeys[locale];
-            ImGui::Text("Locale: %s", locale.c_str());
-            size_t i = 0;
-            static bool addVariationPopup = false;
-            static std::vector<VariantToValuePair>* valuesPtr = nullptr;
-            for (auto& [key, values] : keys)
-            {
-                ImGui::Text("  Key: ");
-                ImGui::SameLine();
-                ImGui::InputText(FormatString("##Key {}", i).c_str(), &key);
-                ImGui::SameLine();
-                if (ImGui::Button("-"))
-                {
-                    ImGui::OpenPopup("Remove Key");
-                    ImGui::Text("Are you sure, that you want to delete key %s?", key.c_str());
-                    if (ImGui::Button("Yes"))
-                    {
-                        m_KeyToRemove = {locale, key};
-                        removeKey = true;
-                        ImGui::CloseCurrentPopup();
-                    } else
-                    {
-                        ImGui::SameLine();
-                        if (ImGui::Button("No"))
-                        {
-                            ImGui::CloseCurrentPopup();
-                        }
-                    }
-                }
-                size_t j = i;
-                i++;
-                for (auto &[variation, value]: values)
-                {
-                    ImGui::Text("    [");
-                    ImGui::SameLine();
-                    ImGui::InputText(FormatString("##Variation {}", j).c_str(), &variation);
-                    ImGui::SameLine();
-                    ImGui::Text("]: ");
-                    ImGui::SameLine();
-                    ImGui::InputText(FormatString("##Value {}", j).c_str(), &value);
-                    if (values.size() > 1)
-                    {
-                        ImGui::SameLine();
-                        if (ImGui::Button("-"))
-                        {
-                            ImGui::OpenPopup("Remove Variation");
-                            ImGui::Text("Are you sure, that you want to delete variation %s?", variation.c_str());
-                            if (ImGui::Button("Yes"))
-                            {
-                                m_ValueToRemove = {locale, key, variation};
-                                removeValue = true;
-                                ImGui::CloseCurrentPopup();
-                            } else
-                            {
-                                ImGui::SameLine();
-                                if (ImGui::Button("No"))
-                                {
-                                    ImGui::CloseCurrentPopup();
-                                }
-                            }
-                        }
-                    }
-                    j++;
-                }
-
-                if (ImGui::Button("+"))
-                {
-                    addVariationPopup = true;
-                    valuesPtr = &values;
-                }
-            }
-            if(addVariationPopup)
-            {
-                ImGui::OpenPopup("Add Variation");
-                ImGui::Text("Name");
-                ImGui::SameLine();
-                static std::array<char, 128> newVariation{'\0'};
-                ImGui::InputText("##New Variation", newVariation.data(), newVariation.size());
-                if (ImGui::Button("Add"))
-                {
-                    valuesPtr->emplace_back(newVariation.data(), "");
-                    newVariation.fill('\0');
-                    addVariationPopup = false;
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-        }
+        RenderKeysAndValues(removeValue, removeKey);
         if(removeValue)
         {
             auto& [locale, key, variation] = m_ValueToRemove;
@@ -215,15 +61,13 @@ namespace BeeEngine::Locale
             }
             removeKey = false;
         }
-        static bool addKeyPopup = false;
         // Добавление новых ключей и их локализаций
         if(ImGui::Button("Add Key"))
         {
-            addKeyPopup = true;
-        }
-        if(addKeyPopup)
-        {
             ImGui::OpenPopup("Add Key");
+        }
+        if(ImGui::BeginPopup("Add Key"))
+        {
             ImGui::Text("Name");
             ImGui::SameLine();
             static std::array<char, 128> newKey{'\0'};
@@ -236,8 +80,8 @@ namespace BeeEngine::Locale
                 }
                 newKey.fill('\0');
                 ImGui::CloseCurrentPopup();
-                addKeyPopup = false;
             }
+            ImGui::EndPopup();
         }
         ImGui::SameLine();
         if(ImGui::Button("Save changes"))
@@ -266,6 +110,214 @@ namespace BeeEngine::Locale
             m_Domain->Build();
         }
         ImGui::End();
+    }
+
+    void ImGuiLocalizationPanel::RenderKeysAndValues(bool &removeValue, bool &removeKey)
+    {// Отображение текущих ключей и их локализаций
+        ImGui::BeginChild("##Lower", {-1, ImGui::GetContentRegionAvail().y - 60}, false);
+        {
+            auto &locale = m_SelectedLocale;
+            auto &keys = m_LocaleKeys[locale];
+            size_t i = 0;
+            size_t j = 0;
+            static std::__1::vector<VariantToValuePair> *valuesPtr = nullptr;
+            static size_t variationIndex = 0;
+            ImGui::BeginTable("localization_table", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders);
+            ImGui::TableSetupColumn("Keys");
+            ImGui::TableSetupColumn("Variations");
+            ImGui::TableSetupColumn("Values");
+            ImGui::TableHeadersRow();
+            for (auto &[key, values]: keys)
+            {
+                float buttonWidth = ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.x * 2.0f;
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                float columnWidth = ImGui::GetColumnWidth();
+                ImGui::PushItemWidth(columnWidth - buttonWidth - ImGui::GetStyle().ItemSpacing.x);
+                ImGui::InputText(FormatString("##Key {}", i).c_str(), &key);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                if (ImGui::Button(/*"-"*/FormatString("-## {}", i).c_str(), {buttonWidth, buttonWidth}))
+                {
+                    ImGui::OpenPopup(FormatString("Remove Key {}", i).c_str());
+                }
+                if (ImGui::BeginPopup(FormatString("Remove Key {}", i).c_str()))
+                {
+                    ImGui::Text("Are you sure, that you want to delete key %s?", key.c_str());
+                    if (ImGui::Button("Delete"))
+                    {
+                        m_KeyToRemove = {locale, key};
+                        removeKey = true;
+                        ImGui::CloseCurrentPopup();
+                    } else
+                    {
+                        ImGui::SameLine();
+                        if (ImGui::Button("Cancel"))
+                        {
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                    ImGui::EndPopup();
+                }
+                size_t defaultVariationIndex = j;
+                for (auto &[variation, value]: values)
+                {
+                    if (j != defaultVariationIndex) ImGui::TableNextRow(); // Создаем новую строку для каждой следующей пары "вариация-значение"\
+
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::PushItemWidth(-1);
+                    ImGui::InputText(FormatString("##Variation {}", j).c_str(), &variation);
+                    ImGui::PopItemWidth();
+                    ImGui::TableSetColumnIndex(2);
+                    columnWidth = ImGui::GetColumnWidth();
+                    ImGui::PushItemWidth(columnWidth -
+                                         (buttonWidth + ImGui::GetStyle().ItemSpacing.x) * (values.size() > 1 ? 2 : 1));
+                    ImGui::InputText(FormatString("##Value {}", j).c_str(), &value);
+                    ImGui::PopItemWidth();
+                    if (values.size() > 1)
+                    {
+                        ImGui::SameLine();
+                        if (ImGui::Button(FormatString("-##{}", j).c_str(), {buttonWidth, buttonWidth}))
+                        {
+                            ImGui::OpenPopup(FormatString("Remove Variation {}", j).c_str());
+                        }
+                        if (ImGui::BeginPopup(FormatString("Remove Variation {}", j).c_str()))
+                        {
+                            ImGui::Text("Are you sure, that you want to delete variation %s?", variation.c_str());
+                            if (ImGui::Button("Delete"))
+                            {
+                                m_ValueToRemove = {locale, key, variation};
+                                removeValue = true;
+                                ImGui::CloseCurrentPopup();
+                            } else
+                            {
+                                ImGui::SameLine();
+                                if (ImGui::Button("Cancel"))
+                                {
+                                    ImGui::CloseCurrentPopup();
+                                }
+                            }
+                            ImGui::EndPopup();
+                        }
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button(FormatString("+##{}", j).c_str(), {buttonWidth, buttonWidth}))
+                    {
+                        ImGui::OpenPopup(FormatString("Add Variation {}", j).c_str());
+                        valuesPtr = &values;
+                        variationIndex = j;
+                    }
+                    if (ImGui::BeginPopup(FormatString("Add Variation {}", j).c_str()))
+                    {
+                        ImGui::Text("Variation");
+                        ImGui::SameLine();
+                        static std::array<char, 128> newVariation{'\0'};
+                        ImGui::InputText("##New Variation", newVariation.data(), newVariation.size());
+                        ImGui::Text("Value");
+                        ImGui::SameLine();
+                        static std::array<char, 128> newValue{'\0'};
+                        ImGui::InputText("##New Value", newValue.data(), newValue.size());
+                        if (ImGui::Button("Add"))
+                        {
+                            valuesPtr->emplace_back(newVariation.data(), newValue.data());
+                            newVariation.fill('\0');
+                            newValue.fill('\0');
+                            ImGui::CloseCurrentPopup();
+                        } else
+                        {
+                            ImGui::SameLine();
+                            if (ImGui::Button("Cancel"))
+                            {
+                                newVariation.fill('\0');
+                                ImGui::CloseCurrentPopup();
+                            }
+                        }
+                        ImGui::EndPopup();
+                    }
+                    j++;
+                }
+                i++;
+            }
+            ImGui::EndTable();
+            ImGui::EndChild();
+        }
+    }
+
+    void ImGuiLocalizationPanel::RenderUpperPanel()
+    {
+        ImVec2 fixedUpperChildSize = {-1, ImGui::GetFontSize() * 3};
+        ImGui::BeginChild("##Upper", fixedUpperChildSize, false);
+        auto& locales = m_LocaleKeys;
+        // Верхний переключатель локализаций
+        if (ImGui::BeginCombo("Locales", m_SelectedLocale.c_str()))
+        {
+            for(auto& [locale, keys] : locales)
+            {
+                bool isSelected = (m_SelectedLocale == locale);
+                if (ImGui::Selectable(locale.c_str(), isSelected))
+                {
+                    m_SelectedLocale = locale;
+                }
+                if (isSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::SameLine();
+        if(ImGui::Button("+"))
+        {
+            ImGui::OpenPopup("Add Locale");
+        }
+        if(ImGui::BeginPopup("Add Locale", ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Name");
+            ImGui::SameLine();
+            static std::array<char, 128> newLocale{'\0'};
+            ImGui::InputText("##New Locale", newLocale.data(), newLocale.size());
+            if(ImGui::Button("Add"))
+            {
+                m_LocaleKeys.insert({newLocale.data(), {}});
+                auto& newLocaleKeys = m_LocaleKeys[newLocale.data()];
+                for(auto& [key, values] : m_LocaleKeys[m_SelectedLocale])
+                {
+                    newLocaleKeys.emplace_back(key, decltype(values){});
+                }
+                newLocale.fill('\0');
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+        if(locales.size() > 1)
+        {
+            ImGui::SameLine();
+            if(ImGui::Button("-"))
+            {
+                ImGui::OpenPopup("Remove Locale");
+            }
+            if(ImGui::BeginPopup("Remove Locale"))
+            {
+                ImGui::Text("Are you sure, that you want to delete locale %s?", m_SelectedLocale.c_str());
+                if(ImGui::Button("Yes"))
+                {
+                    m_LocaleKeys.erase(m_SelectedLocale);
+                    m_SelectedLocale = m_LocaleKeys.begin()->first;
+                    ImGui::CloseCurrentPopup();
+                }
+                else
+                {
+                    ImGui::SameLine();
+                    if(ImGui::Button("No"))
+                    {
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+                ImGui::EndPopup();
+            }
+        }
+        ImGui::EndChild();
     }
 
     void ImGuiLocalizationPanel::UpdateLocaleKeys()

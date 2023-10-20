@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 CPMAddPackage(
         NAME ImGui
         GITHUB_REPOSITORY ocornut/imgui
-        GIT_TAG 8566fec661801a026e56f06cd53f5dac25c2595b
+        GIT_TAG 2a6d7b1eaa1851e5b53d8c7a361a8d54f5a9ae8c
         DOWNLOAD_ONLY YES
 )
 set(ImGui_INCLUDE_DIR ${ImGui_SOURCE_DIR})
@@ -42,8 +42,8 @@ elseif(APPLE)
     endif()
     if(BEE_COMPILE_WEBGPU)
         list(APPEND ImGui_SOURCES
-                backends/imgui_impl_wgpu.cpp
-                backends/imgui_impl_wgpu.h
+                ${ImGui_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp
+                ${ImGui_SOURCE_DIR}/backends/imgui_impl_wgpu.h
                 )
     endif()
 elseif(ANDROID)

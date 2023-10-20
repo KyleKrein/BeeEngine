@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 #include <utility>
+#include <Gui/ImGui/ImGuiExtension.h>
 
 namespace BeeEngine::Locale
 {
@@ -20,7 +21,7 @@ namespace BeeEngine::Locale
         using LocaleToKeyMap = std::unordered_map<String, std::vector<KeyToVariantsPair>>;
     public:
         ImGuiLocalizationPanel(Domain& domain, const Path& path);
-        void Render();
+        void Render(ImGuiWindowFlags flags = ImGuiWindowFlags_None, bool canBeClosed = true);
         void SwitchOpened() { m_IsOpened = !m_IsOpened; }
         void UpdateLocaleKeys();
     private:
@@ -31,5 +32,9 @@ namespace BeeEngine::Locale
         std::tuple<String, String, String> m_ValueToRemove;
         std::pair<String, String> m_KeyToRemove;
         bool m_IsOpened = false;
+
+        void RenderUpperPanel();
+
+        void RenderKeysAndValues(bool &removeValue, bool &removeKey);
     };
 }
