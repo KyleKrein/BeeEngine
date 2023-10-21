@@ -14,7 +14,7 @@
 
 namespace BeeEngine::Editor
 {
-    static void OpenCreatePopup(const char* name, bool open, const std::function<void(const char*)>& onCreate) noexcept
+    static void OpenCreatePopup(const char* name, bool open, Locale::Domain* domain, const std::function<void(const char*)>& onCreate) noexcept
     {
         if (open)
         {
@@ -24,10 +24,10 @@ namespace BeeEngine::Editor
         if (ImGui::BeginPopup(name))
         {
             static std::array<char, 256> buffer;
-            ImGui::Text("Name");
+            ImGui::Text(domain->Translate("name").c_str());
             ImGui::InputText("##Name", buffer.data(), buffer.size());
 
-            if (ImGui::Button("Create", { 120, 0 }))
+            if (ImGui::Button(domain->Translate("create").c_str(), { 120, 0 }))
             {
                 onCreate(buffer.data());
                 ImGui::CloseCurrentPopup();
@@ -35,7 +35,7 @@ namespace BeeEngine::Editor
             }
 
             ImGui::SameLine();
-            if (ImGui::Button("Cancel", { 120, 0 }))
+            if (ImGui::Button(domain->Translate("cancel").c_str(), { 120, 0 }))
             {
                 ImGui::CloseCurrentPopup();
                 buffer[0] = '\0';
@@ -47,7 +47,7 @@ namespace BeeEngine::Editor
 
     void ContentBrowserPanel::OnGUIRender() noexcept
     {
-        ImGui::Begin("Content Browser");
+        ImGui::Begin(m_EditorDomain->Translate("contentBrowserPanel").c_str());
 
         if (m_CurrentDirectory != m_WorkingDirectory)
         {
@@ -60,7 +60,7 @@ namespace BeeEngine::Editor
         if(ImGui::IsDragAndDropPayloadInProcess("ENTITY_ID"))
         {
             auto width = ImGui::GetContentRegionAvail().x;
-            ImGui::Button("Export prefab", {width, 0});
+            ImGui::Button(m_EditorDomain->Translate("contentBrowserPanel.exportPrefab").c_str(), {width, 0});
             ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this](const auto& e){
                 Entity droppedEntity = {e, m_Context.get()};
                 BeeExpects(droppedEntity);
@@ -148,26 +148,26 @@ namespace BeeEngine::Editor
         bool createFolderPopupOpen = false;
         if (ImGui::BeginPopupContextWindow("##CreateMenu", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
         {
-            if(ImGui::MenuItem("Create Folder"))
+            if(ImGui::MenuItem(m_EditorDomain->Translate("createFolder").c_str()))
             {
                 createFolderPopupOpen = true;
             }
-            if (ImGui::MenuItem("Create Script"))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("createScript").c_str()))
             {
                 createScriptPopupOpen = true;
             }
-            if (ImGui::MenuItem("Create Scene"))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("createScene").c_str()))
             {
                 createScenePopupOpen = true;
             }
             ImGui::EndPopup();
         }
-        OpenCreatePopup("Create Folder", createFolderPopupOpen, [&](const char* name)
+        OpenCreatePopup(m_EditorDomain->Translate("createFolder").c_str(), createFolderPopupOpen, m_EditorDomain, [&](const char* name)
         {
             auto path = m_CurrentDirectory / name;
             File::CreateDirectory(path);
         });
-        OpenCreatePopup("Create Script", createScriptPopupOpen, [&](const char* name)
+        OpenCreatePopup(m_EditorDomain->Translate("createScript").c_str(), createScriptPopupOpen, m_EditorDomain, [&](const char* name)
         {
             std::string scriptName = name;
             if (scriptName.empty())
@@ -177,7 +177,7 @@ namespace BeeEngine::Editor
             File::WriteFile(scriptPath, templ);
             m_NeedToRegenerateSolution = true;
         });
-        OpenCreatePopup("Create Scene", createScenePopupOpen, [&](const char* name)
+        OpenCreatePopup(m_EditorDomain->Translate("createScene").c_str(), createScenePopupOpen, m_EditorDomain, [&](const char* name)
         {
             Ref<Scene> scene = CreateRef<Scene>();
             SceneSerializer serializer(scene);
@@ -215,9 +215,10 @@ namespace BeeEngine::Editor
         }
     }
 
-    ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory) noexcept
+    ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory, Locale::Domain& editorDomain) noexcept
             : m_WorkingDirectory(workingDirectory)
             , m_CurrentDirectory(workingDirectory)
+            , m_EditorDomain(&editorDomain)
     {
         m_DirectoryIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture);
         m_FileIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::FileTexture);

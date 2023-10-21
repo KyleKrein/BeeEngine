@@ -1,12 +1,29 @@
 menubar.file: Файл
-menubar.file.openScene: Открыть сцену
 menubar.file.newScene: Новая сцена
+menubar.file.openScene: Открыть сцену
+menubar.file.saveScene: Сохранить сцену
+sceneHierarchyPanel.duplicateEntity: Дублировать
+sceneHierarchyPanel.createEmptyEntity: Создать сущность
+sceneHierarchyPanel.toTopLevel: На верхний уровень
 menubar.build.reloadScripts: Перезагрузить скрипты
 menubar.file.saveSceneAs: Сохранить сцену как...
-menubar.file.saveScene: Сохранить сцену
-menubar.build: Сборка
 menubar.file.exit: Выход
+menubar.build: Сборка
 menubar.build.regenerateVSSolution: Пересоздать решение VS
 menubar.view: Вид
 menubar.view.outputConsole: Консоль вывода
+create: Создать
 menubar.view.localization: Локализация
+contentBrowserPanel: Файлы проекта
+sceneHierarchyPanel: Сцена
+sceneHierarchyPanel.createCamera: Создать камеру
+sceneHierarchyPanel.deleteEntity: Удалить
+assetPanel: Ресурсы игры
+assetPanel.dropAssetsButton: Импортировать ассет
+assetPanel.deleteAsset: Удалить
+name: Название
+cancel: Отмена
+contentBrowserPanel.exportPrefab: Экспортировать префаб
+createFolder: Создать папку
+createScript: Создать скрипт
+createScene: Создать сцену

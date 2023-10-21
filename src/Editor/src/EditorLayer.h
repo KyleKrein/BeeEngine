@@ -43,9 +43,9 @@ namespace BeeEngine::Editor
         EditorCamera m_EditorCamera = {};
         DockSpace m_DockSpace {};
         MenuBar m_MenuBar {};
-        AssetPanel m_AssetPanel {&m_EditorAssetManager};
-        ContentBrowserPanel m_ContentBrowserPanel {std::filesystem::current_path()};
-        SceneHierarchyPanel m_SceneHierarchyPanel {};
+        AssetPanel m_AssetPanel {&m_EditorAssetManager, m_EditorLocaleDomain};
+        ContentBrowserPanel m_ContentBrowserPanel {std::filesystem::current_path(), m_EditorLocaleDomain};
+        SceneHierarchyPanel m_SceneHierarchyPanel {m_EditorLocaleDomain};
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         Path m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};

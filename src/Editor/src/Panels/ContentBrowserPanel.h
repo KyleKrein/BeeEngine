@@ -14,7 +14,7 @@ namespace BeeEngine::Editor
     class ContentBrowserPanel
     {
     public:
-        ContentBrowserPanel(const Path& workingDirectory) noexcept;
+        ContentBrowserPanel(const Path& workingDirectory, Locale::Domain& editorDomain) noexcept;
         void SetContext(const Ref<Scene>& context) noexcept
         {
             m_Context = context;
@@ -46,6 +46,7 @@ namespace BeeEngine::Editor
         Path m_CurrentDirectory;
         Ref<Scene> m_Context;
         ProjectFile* m_Project;
+        Locale::Domain* m_EditorDomain = nullptr;
 
         Ref<Texture2D> m_DirectoryIcon;
         Ref<Texture2D> m_FileIcon;

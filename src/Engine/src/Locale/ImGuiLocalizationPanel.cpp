@@ -120,7 +120,7 @@ namespace BeeEngine::Locale
             auto &keys = m_LocaleKeys[locale];
             size_t i = 0;
             size_t j = 0;
-            static std::__1::vector<VariantToValuePair> *valuesPtr = nullptr;
+            static std::vector<VariantToValuePair> *valuesPtr = nullptr;
             static size_t variationIndex = 0;
             ImGui::BeginTable("localization_table", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders);
             ImGui::TableSetupColumn("Keys");

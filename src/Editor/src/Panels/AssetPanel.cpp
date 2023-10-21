@@ -17,8 +17,8 @@
 namespace BeeEngine::Editor
 {
 
-    AssetPanel::AssetPanel(EditorAssetManager *assetManager)
-    : m_AssetManager(assetManager)
+    AssetPanel::AssetPanel(EditorAssetManager *assetManager, Locale::Domain& domain)
+    : m_AssetManager(assetManager), m_EditorDomain(&domain)
     {
 
     }
@@ -30,11 +30,11 @@ namespace BeeEngine::Editor
 
     void AssetPanel::Render()
     {
-        ImGui::Begin("Assets");
+        ImGui::Begin(m_EditorDomain->Translate("assetPanel").c_str());
         if(ImGui::IsDragAndDropPayloadInProcess("CONTENT_BROWSER_ITEM"))
         {
             auto width = ImGui::GetContentRegionAvail().x;
-            ImGui::Button("Drop here to load asset", {width, 0});
+            ImGui::Button(m_EditorDomain->Translate("assetPanel.dropAssetsButton").c_str(), {width, 0});
             ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this](void* data, size_t size)
                 {
                     Path assetPath = m_Project->GetProjectPath() / (const char*)data;
@@ -101,7 +101,7 @@ namespace BeeEngine::Editor
                 {
                     if(ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonRight))
                     {
-                        if(ImGui::MenuItem("Delete Asset"))
+                        if(ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.deleteAsset").c_str()))
                         {
                             Application::SubmitToMainThread([this, handle]()
                                                             {

@@ -25,12 +25,12 @@ namespace BeeEngine::Editor
 
     void SceneHierarchyPanel::OnGUIRender() noexcept
     {
-        ImGui::Begin("Scene Hierarchy");
+        ImGui::Begin(m_EditorDomain->Translate("sceneHierarchyPanel").c_str());
         if(ImGui::IsDragAndDropPayloadInProcess("ENTITY_ID") ||
         ImGui::IsDragAndDropPayloadInProcess("ASSET_BROWSER_PREFAB_ITEM"))
         {
             auto width = ImGui::GetContentRegionAvail().x;
-            ImGui::Button("To Top Level", {width, 0});
+            ImGui::Button(m_EditorDomain->Translate("sceneHierarchyPanel.toTopLevel").c_str(), {width, 0});
             ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this](auto& e)mutable {
                 Entity droppedEntity = {e, m_Context.get()};
                 droppedEntity.RemoveParent();
@@ -57,11 +57,11 @@ namespace BeeEngine::Editor
 
         if (ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
         {
-            if (ImGui::MenuItem("Create Empty Entity"))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.createEmptyEntity").c_str()))
             {
                 m_Context->CreateEntity();
             }
-            if (ImGui::MenuItem("Create Camera"))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.createCamera").c_str()))
             {
                 auto newCamera = m_Context->CreateEntity("Camera");
                 newCamera.AddComponent<CameraComponent>();
@@ -112,7 +112,7 @@ namespace BeeEngine::Editor
 
         if(ImGui::BeginPopupContextItem())
         {
-            if(ImGui::MenuItem("Delete Entity"))
+            if(ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.deleteEntity").c_str()))
             {
                 DeletionQueue::Frame().PushFunction([this, entityToDelete = entity]() mutable
                     {
@@ -123,7 +123,7 @@ namespace BeeEngine::Editor
                         m_Context->DestroyEntity(entityToDelete);
                     });
             }
-            if(ImGui::MenuItem("Duplicate Entity"))
+            if(ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.duplicateEntity").c_str()))
             {
                 DeletionQueue::Frame().PushFunction([this, entityToDublicate = entity]() mutable
                     {
