@@ -1,5 +1,9 @@
 Registry ID: 3753192931707503016
 Assets:
+  - Name: bee-png
+    Type: AssetType::Texture2D
+    Handle: 2492935997162504003
+    FilePath: Assets/bee-png.png
   - Name: pc
     Type: AssetType::Texture2D
     Handle: 7772243033513047726

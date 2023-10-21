@@ -70,15 +70,15 @@ namespace BeeEngine::Locale
         {
             ImGui::Text("Name");
             ImGui::SameLine();
-            static std::array<char, 128> newKey{'\0'};
-            ImGui::InputText("##New Key", newKey.data(), newKey.size());
+            static std::string newKey;
+            ImGui::InputText("##New Key 123", &newKey);
             if(ImGui::Button("Add"))
             {
                 for(auto& [locale, keys] : m_LocaleKeys)
                 {
                     keys.emplace_back(newKey.data(), std::vector<std::pair<String, String>>{{"default", ""}});
                 }
-                newKey.fill('\0');
+                newKey = "";
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();

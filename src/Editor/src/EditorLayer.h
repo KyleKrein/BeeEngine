@@ -49,7 +49,7 @@ namespace BeeEngine::Editor
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         Path m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
-        InspectorPanel m_InspectorPanel {&m_EditorAssetManager};
+        InspectorPanel m_InspectorPanel {&m_EditorAssetManager, m_EditorLocaleDomain};
         Scope<ProjectFile> m_ProjectFile = nullptr;
         Scope<Locale::ImGuiLocalizationPanel> m_LocalizationPanel = nullptr;
 

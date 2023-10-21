@@ -32,7 +32,7 @@ namespace BeeEngine::Editor
 
     void InspectorPanel::OnGUIRender(Entity selectedEntity) noexcept
     {
-        ImGui::Begin("Inspector");
+        ImGui::Begin(m_EditorDomain->Translate("inspector").c_str());
 
         if(selectedEntity == Entity::Null)
         {

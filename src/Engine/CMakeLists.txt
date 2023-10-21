@@ -226,6 +226,7 @@ add_subdirectory(vendor/sdl)
 add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
+add_subdirectory(vendor/ICU)
 
 if(BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
@@ -274,6 +275,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC magic_enum
         PUBLIC Box2D
         PUBLIC MSDFGEN
+        PUBLIC ICU
         )
 
 target_compile_definitions(BeeEngine

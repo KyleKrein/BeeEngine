@@ -251,7 +251,8 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_TEXT_INPUT:
                 {
-                    UTF8StringView text(sdlEvent.text.text);
+                    UTF8String string = sdlEvent.text.text;
+                    UTF8StringView text(string);
                     for (char32_t c : text)
                     {
                         auto event = CreateScope<CharTypedEvent>(c);

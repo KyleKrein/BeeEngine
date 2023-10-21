@@ -7,9 +7,15 @@
 #include <utility>
 
 #include "Core/String.h"
+#include "Core/ToString.h"
 #include "Core/Logging/Log.h"
 #include "Core/Path.h"
 #include <unordered_map>
+
+#include <unicode/msgfmt.h>
+#include <unicode/unistr.h>
+#include <unicode/locid.h>
+#include <unicode/ustream.h>
 
 namespace BeeEngine::Locale
 {
@@ -62,7 +68,81 @@ namespace BeeEngine::Locale
         }
         void Build();
         UTF8String Translate(const char* key);
+
+
+        template<typename... Args>
+        UTF8String Translate(const char *key, Args&&... args)
+        {
+            static_assert(sizeof...(args) % 2 == 0, "Translate() requires an even number of arguments for key-value pairs.");
+            AreKeysStrings<Args...>(std::index_sequence_for<Args...>{});
+
+            auto localeData = m_Languages.find(m_Locale);
+            if (localeData == m_Languages.end())
+            {
+                return key;
+            }
+
+            auto keyData = localeData->second.find(key);
+            if (keyData == localeData->second.end() || !keyData->second.contains("default"))
+            {
+                return key;
+            }
+
+            UTF8String pattern = keyData->second["default"];
+            UErrorCode status = U_ZERO_ERROR;
+            icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.c_str()), status);
+
+            if(!U_SUCCESS(status))
+            {
+                BeeCoreError("ICU error: {}", u_errorName(status));
+                return key;
+            }
+
+            // Разбиваем пары ключ-значение на два массива
+            std::array<icu::UnicodeString, sizeof...(args) / 2> keys;
+            std::array<icu::Formattable, sizeof...(args) / 2> values;
+
+            auto fill_arrays = [&](auto&&... kv)
+            {
+                size_t index = 0;
+                ([&index, &keys, &values](auto&& arg)
+                {
+                    if(index % 2 == 0)
+                    {
+                        keys[index++/2] = icu::UnicodeString::fromUTF8(ToString(arg));
+                    }
+                    else
+                    {
+                        values[index++/2] = icu::Formattable(arg);
+                    }
+                }(kv), ...);
+                //(((index % 2 == 0 ? keys : values)[index++ / 2] = icu::Formattable(icu::UnicodeString::fromUTF8(ToString(kv)))), ...);
+            };
+
+            fill_arrays(std::forward<Args>(args)...);
+
+            icu::UnicodeString icuResult;
+            msgFmt.format(keys.data(), values.data(), keys.size(), icuResult, status);
+
+            if(!U_SUCCESS(status))
+            {
+                BeeCoreError("ICU error: {}", u_errorName(status));
+                return key;
+            }
+
+            std::string icuOutput;
+            icuResult.toUTF8String(icuOutput);
+
+            return icuOutput;
+        }
+
     private:
+        template <typename... Args, size_t... Indices>
+        inline void AreKeysStrings(std::index_sequence<Indices...>)
+        {
+            static_assert(((Indices % 2 != 0 || std::is_convertible_v<std::tuple_element_t<Indices, std::tuple<Args...>>, String>) && ...),
+                          "Translate() requires key-value pairs, where key is convertible to String.");
+        }
         void RecalculateHash();
         void RebuildFontAtlases();
         uint64_t m_Hash = 0;

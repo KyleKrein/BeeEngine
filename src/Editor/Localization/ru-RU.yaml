@@ -1,29 +1,30 @@
-menubar.file: Файл
+inspector: Инспектор
+cancel: Отмена
+assetPanel.deleteAsset: Удалить
+sceneHierarchyPanel.deleteEntity: Удалить
+sceneHierarchyPanel: Сцена
+assetPanel.dropAssetsButton: Импортировать ассет
+sceneHierarchyPanel.createCamera: Создать камеру
+contentBrowserPanel: Файлы проекта
+menubar.file.saveSceneAs: Сохранить сцену как...
+menubar.view.localization: Локализация
+menubar.view.outputConsole: Консоль вывода
+menubar.build.regenerateVSSolution: Пересоздать решение VS
+name: Название
+menubar.file.exit: Выход
+sceneHierarchyPanel.toTopLevel: На верхний уровень
+createScript: Создать скрипт
+sceneHierarchyPanel.duplicateEntity: Дублировать
+menubar.build: Сборка
+sceneHierarchyPanel.createEmptyEntity: Создать сущность
+assetPanel: Ресурсы игры
+create: Создать
+createScene: Создать сцену
+menubar.file.saveScene: Сохранить сцену
+menubar.build.reloadScripts: Перезагрузить скрипты
+contentBrowserPanel.exportPrefab: Экспортировать префаб
 menubar.file.newScene: Новая сцена
 menubar.file.openScene: Открыть сцену
-menubar.file.saveScene: Сохранить сцену
-sceneHierarchyPanel.duplicateEntity: Дублировать
-sceneHierarchyPanel.createEmptyEntity: Создать сущность
-sceneHierarchyPanel.toTopLevel: На верхний уровень
-menubar.build.reloadScripts: Перезагрузить скрипты
-menubar.file.saveSceneAs: Сохранить сцену как...
-menubar.file.exit: Выход
-menubar.build: Сборка
-menubar.build.regenerateVSSolution: Пересоздать решение VS
-menubar.view: Вид
-menubar.view.outputConsole: Консоль вывода
-create: Создать
-menubar.view.localization: Локализация
-contentBrowserPanel: Файлы проекта
-sceneHierarchyPanel: Сцена
-sceneHierarchyPanel.createCamera: Создать камеру
-sceneHierarchyPanel.deleteEntity: Удалить
-assetPanel: Ресурсы игры
-assetPanel.dropAssetsButton: Импортировать ассет
-assetPanel.deleteAsset: Удалить
-name: Название
-cancel: Отмена
-contentBrowserPanel.exportPrefab: Экспортировать префаб
 createFolder: Создать папку
-createScript: Создать скрипт
-createScene: Создать сцену
+menubar.view: Вид
+menubar.file: Файл
