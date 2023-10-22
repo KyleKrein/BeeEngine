@@ -1,30 +1,54 @@
-inspector: Inspector
-cancel: Cancel
-assetPanel.deleteAsset: Delete Asset
-sceneHierarchyPanel.deleteEntity: Delete Entity
-sceneHierarchyPanel: Scene Hierarchy
+inspector.textRenderer.foreground: Foreground
+text: Text
+inspector.circleRenderer.fade: Fade
+inspector.textRenderer: Text Renderer
+inspector.circleRenderer.thickness: Thickness
+primary: Primary
+texture: Texture
+sceneHierarchyPanel.toTopLevel: To Top Level
+sceneHierarchyPanel.createEmptyEntity: Create Empty Entity
+size: Size
+camera.nearClip: Near Clip
+camera.farClip: Far Clip
+camera.fov: FOV
+camera.projection: Projection
+camera.projection.perspective: Perspective
+camera: Camera
+transform.rotation: Rotation
+createFolder: Create Folder
+transform: Transform
+camera.projection.orthographic: Orthographic
+menubar.file: File
+menubar.view: View
+color: Color
+menubar.file.openScene: Open Scene
+camera.fixedAspectRatio: Fixed Aspect Ratio
+inspector.circleRenderer: Circle Renderer
 assetPanel.dropAssetsButton: Drop here to load asset
+menubar.file.newScene: New Scene
+contentBrowserPanel.exportPrefab: Export Prefab
+sprite: Sprite
+sprite.tilingFactor: Tiling Factor
+menubar.build.reloadScripts: Reload Scripts
+transform.scale: Scale
+menubar.file.saveSceneAs: Save Scene As...
+menubar.file.saveScene: Save Scene
+createScene: Create Scene
+sceneHierarchyPanel.duplicateEntity: Duplicate Entity
+assetPanel: Assets
+createScript: Create Script
+menubar.build: Build
+assetPanel.deleteAsset: Delete Asset
+create: Create
+menubar.file.exit: Exit
+name: Name
+menubar.build.regenerateVSSolution: Regenerate VS Solution
+transform.translation: Translation
+cancel: Cancel
+menubar.view.outputConsole: Output Console
+menubar.view.localization: Localization
 sceneHierarchyPanel.createCamera: Create Camera
 contentBrowserPanel: Content Browser
-menubar.file.saveSceneAs: Save Scene As...
-menubar.view.localization: Localization
-menubar.view.outputConsole: Output Console
-menubar.build.regenerateVSSolution: Regenerate VS Solution
-name: Name
-menubar.file.exit: Exit
-sceneHierarchyPanel.toTopLevel: To Top Level
-createScript: Create Script
-sceneHierarchyPanel.duplicateEntity: Duplicate Entity
-menubar.build: Build
-sceneHierarchyPanel.createEmptyEntity: Create Empty Entity
-assetPanel: Assets
-create: Create
-createScene: Create Scene
-menubar.file.saveScene: Save Scene
-menubar.build.reloadScripts: Reload Scripts
-contentBrowserPanel.exportPrefab: Export Prefab
-menubar.file.newScene: New Scene
-menubar.file.openScene: Open Scene
-createFolder: Create Folder
-menubar.view: View
-menubar.file: File
+sceneHierarchyPanel.deleteEntity: Delete Entity
+sceneHierarchyPanel: Scene Hierarchy
+inspector: Inspector

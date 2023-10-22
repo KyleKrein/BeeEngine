@@ -1,30 +1,54 @@
-inspector: Инспектор
-cancel: Отмена
-assetPanel.deleteAsset: Удалить
-sceneHierarchyPanel.deleteEntity: Удалить
-sceneHierarchyPanel: Сцена
+inspector.textRenderer.foreground: Передний план
+text: Текст
+inspector.circleRenderer.fade: Дымка
+inspector.textRenderer: Текст
+inspector.circleRenderer.thickness: Толщина
+primary: "{gender, select, male{Главный} female{Главная} other{Главное}}"
+texture: Текстура
+sceneHierarchyPanel.toTopLevel: На верхний уровень
+sceneHierarchyPanel.createEmptyEntity: Создать сущность
+size: Размер
+camera.nearClip: Near Clip
+camera.farClip: Far Clip
+camera.fov: FOV
+camera.projection: Проекция
+camera.projection.perspective: Перспективная
+camera: Камера
+transform.rotation: Rotation
+createFolder: Создать папку
+transform: Transform
+camera.projection.orthographic: Ортографическая
+menubar.file: Файл
+menubar.view: Вид
+color: Цвет
+menubar.file.openScene: Открыть сцену
+camera.fixedAspectRatio: Фиксированное соотношение сторон
+inspector.circleRenderer: Круг
 assetPanel.dropAssetsButton: Импортировать ассет
+menubar.file.newScene: Новая сцена
+contentBrowserPanel.exportPrefab: Экспортировать префаб
+sprite: Спрайт
+sprite.tilingFactor: Tiling Factor
+menubar.build.reloadScripts: Перезагрузить скрипты
+transform.scale: Scale
+menubar.file.saveSceneAs: Сохранить сцену как...
+menubar.file.saveScene: Сохранить сцену
+createScene: Создать сцену
+sceneHierarchyPanel.duplicateEntity: Дублировать
+assetPanel: Ресурсы игры
+createScript: Создать скрипт
+menubar.build: Сборка
+assetPanel.deleteAsset: Удалить
+create: Создать
+menubar.file.exit: Выход
+name: Название
+menubar.build.regenerateVSSolution: Пересоздать решение VS
+transform.translation: Translation
+cancel: Отмена
+menubar.view.outputConsole: Консоль вывода
+menubar.view.localization: Локализация
 sceneHierarchyPanel.createCamera: Создать камеру
 contentBrowserPanel: Файлы проекта
-menubar.file.saveSceneAs: Сохранить сцену как...
-menubar.view.localization: Локализация
-menubar.view.outputConsole: Консоль вывода
-menubar.build.regenerateVSSolution: Пересоздать решение VS
-name: Название
-menubar.file.exit: Выход
-sceneHierarchyPanel.toTopLevel: На верхний уровень
-createScript: Создать скрипт
-sceneHierarchyPanel.duplicateEntity: Дублировать
-menubar.build: Сборка
-sceneHierarchyPanel.createEmptyEntity: Создать сущность
-assetPanel: Ресурсы игры
-create: Создать
-createScene: Создать сцену
-menubar.file.saveScene: Сохранить сцену
-menubar.build.reloadScripts: Перезагрузить скрипты
-contentBrowserPanel.exportPrefab: Экспортировать префаб
-menubar.file.newScene: Новая сцена
-menubar.file.openScene: Открыть сцену
-createFolder: Создать папку
-menubar.view: Вид
-menubar.file: Файл
+sceneHierarchyPanel.deleteEntity: Удалить
+sceneHierarchyPanel: Сцена
+inspector: Инспектор

@@ -69,18 +69,7 @@ namespace BeeEngine::Editor
     {
 
         auto& tag = entity.GetComponent<TagComponent>().Tag;
-        char buffer[256];
-        memset(buffer, 0, sizeof(buffer));
-#ifdef WINDOWS
-        strcpy_s(buffer, sizeof(buffer), tag.c_str());
-#else
-        strcpy(buffer, tag.c_str());
-#endif
-        if(ImGui::InputText("##Tag", buffer, sizeof(buffer)))
-        {
-            tag = std::string(buffer);
-        }
-
+        ImGui::InputText("##Tag", &tag);
         ImGui::SameLine();
         ImGui::PushItemWidth(-1);
 
@@ -104,26 +93,26 @@ namespace BeeEngine::Editor
         ImGui::PopItemWidth();
 
 
-        DrawConsistentComponentUI<TransformComponent>("Transform", entity, [this](TransformComponent& transform)
+        DrawConsistentComponentUI<TransformComponent>(m_EditorDomain->Translate("transform"), entity, [this](TransformComponent& transform)
         {
-            DrawVec3ComponentUI("Translation", transform.Translation);
+            DrawVec3ComponentUI(m_EditorDomain->Translate("transform.translation"), transform.Translation);
             glm::vec3 rotation = glm::degrees(transform.Rotation);
-            DrawVec3ComponentUI("Rotation", rotation);
+            DrawVec3ComponentUI(m_EditorDomain->Translate("transform.rotation"), rotation);
             transform.Rotation = glm::radians(rotation);
-            DrawVec3ComponentUI("Scale", transform.Scale, 1.0f);
+            DrawVec3ComponentUI(m_EditorDomain->Translate("transform.scale"), transform.Scale, 1.0f);
         });
 
-        DrawComponentUI<CameraComponent>("Camera", entity, [this](CameraComponent& camera)
+        DrawComponentUI<CameraComponent>(m_EditorDomain->Translate("camera"), entity, [this](CameraComponent& camera)
         {
-            constexpr static const char* projectionTypeStrings[] = {"Perspective", "Orthographic"};
+            static String projectionTypeStrings[] = {m_EditorDomain->Translate("camera.projection.perspective"), m_EditorDomain->Translate("camera.projection.orthographic")};
             SceneCamera::CameraType currentProjectionType = camera.Camera.GetProjectionType();
-            const char* currentProjectionTypeString = projectionTypeStrings[static_cast<int>(currentProjectionType)];
-            if(ImGui::BeginCombo("Projection", currentProjectionTypeString))
+            String& currentProjectionTypeString = projectionTypeStrings[static_cast<int>(currentProjectionType)];
+            if(ImGui::BeginCombo(m_EditorDomain->Translate("camera.projection").c_str(), currentProjectionTypeString.c_str()))
             {
                 for(int i = 0; i < 2; ++i)
                 {
                     bool isSelected = currentProjectionTypeString == projectionTypeStrings[i];
-                    if(ImGui::Selectable(projectionTypeStrings[i], isSelected))
+                    if(ImGui::Selectable(projectionTypeStrings[i].c_str(), isSelected))
                     {
                         currentProjectionTypeString = projectionTypeStrings[i];
                         camera.Camera.SetProjectionType(static_cast<SceneCamera::CameraType>(i));
@@ -139,17 +128,17 @@ namespace BeeEngine::Editor
             if(currentProjectionType == SceneCamera::CameraType::Perspective)
             {
                 float fov = glm::degrees(camera.Camera.GetPerspectiveVerticalFOV());
-                if(ImGui::DragFloat("FOV", &fov, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.fov").c_str(), &fov, 0.1f))
                 {
                     camera.Camera.SetPerspectiveVerticalFOV(glm::radians(fov));
                 }
                 float nearClip = camera.Camera.GetPerspectiveNearClip();
-                if(ImGui::DragFloat("Near Clip", &nearClip, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.nearClip").c_str(), &nearClip, 0.1f))
                 {
                     camera.Camera.SetPerspectiveNearClip(nearClip);
                 }
                 float farClip = camera.Camera.GetPerspectiveFarClip();
-                if(ImGui::DragFloat("Far Clip", &farClip, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.farClip").c_str(), &farClip, 0.1f))
                 {
                     camera.Camera.SetPerspectiveFarClip(farClip);
                 }
@@ -157,24 +146,24 @@ namespace BeeEngine::Editor
             else if(camera.Camera.GetProjectionType() == SceneCamera::CameraType::Orthographic)
             {
                 float size = camera.Camera.GetOrthographicSize();
-                if(ImGui::DragFloat("Size", &size, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("size").c_str(), &size, 0.1f))
                 {
                     camera.Camera.SetOrthographicSize(size);
                 }
                 float nearClip = camera.Camera.GetOrthographicNearClip();
-                if(ImGui::DragFloat("Near Clip", &nearClip, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.nearClip").c_str(), &nearClip, 0.1f))
                 {
                     camera.Camera.SetOrthographicNearClip(nearClip);
                 }
                 float farClip = camera.Camera.GetOrthographicFarClip();
-                if(ImGui::DragFloat("Far Clip", &farClip, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.farClip").c_str(), &farClip, 0.1f))
                 {
                     camera.Camera.SetOrthographicFarClip(farClip);
                 }
             }
-            ImGui::Checkbox("Fixed Aspect Ratio", &camera.FixedAspectRatio);
+            ImGui::Checkbox(m_EditorDomain->Translate("camera.fixedAspectRatio").c_str(), &camera.FixedAspectRatio);
             bool oldPrimary = camera.Primary;
-            ImGui::Checkbox("Primary", &camera.Primary);
+            ImGui::Checkbox(m_EditorDomain->Translate("primary", "gender", "female").c_str(), &camera.Primary);
             if(camera.Primary != oldPrimary && camera.Primary)
             {
                 auto cameras = m_Context->m_Registry.view<CameraComponent>();
@@ -186,9 +175,9 @@ namespace BeeEngine::Editor
             }
         });
 
-        DrawComponentUI<SpriteRendererComponent>("Sprite", entity, [this](SpriteRendererComponent& sprite)
+        DrawComponentUI<SpriteRendererComponent>(m_EditorDomain->Translate("sprite"), entity, [this](SpriteRendererComponent& sprite)
         {
-            ImGui::ColorEdit4("Color", sprite.Color.ValuePtr());
+            ImGui::ColorEdit4(m_EditorDomain->Translate("color").c_str(), sprite.Color.ValuePtr());
 
             if(sprite.HasTexture)
             {
@@ -201,7 +190,7 @@ namespace BeeEngine::Editor
             }
             else
             {
-                ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
+                ImGui::Button(m_EditorDomain->Translate("texture").c_str(), ImVec2(100.0f, 0.0f));
             }
             ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &sprite](void* data, size_t size){
                 Path texturePath = m_WorkingDirectory / static_cast<const char*>(data);
@@ -225,17 +214,17 @@ namespace BeeEngine::Editor
                 sprite.TextureHandle = handle;
             });
 
-            ImGui::DragFloat("Tiling Factor", &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
+            ImGui::DragFloat(m_EditorDomain->Translate("sprite.tilingFactor").c_str(), &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
         });
 
-        DrawComponentUI<CircleRendererComponent>("Circle Renderer", entity, [this](CircleRendererComponent& circle)
+        DrawComponentUI<CircleRendererComponent>(m_EditorDomain->Translate("inspector.circleRenderer"), entity, [this](CircleRendererComponent& circle)
         {
-            ImGui::ColorEdit4("Color", circle.Color.ValuePtr());
-            ImGui::DragFloat("Thickness", &circle.Thickness, 0.025f, 0.0f, 1.0f);
-            ImGui::DragFloat("Fade", &circle.Fade, 0.0025f, 0.005f, 1.0f);
+            ImGui::ColorEdit4(m_EditorDomain->Translate("color").c_str(), circle.Color.ValuePtr());
+            ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.thickness").c_str(), &circle.Thickness, 0.025f, 0.0f, 1.0f);
+            ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.fade").c_str(), &circle.Fade, 0.0025f, 0.005f, 1.0f);
         });
-        DrawComponentUI<TextRendererComponent>("Text Renderer", entity, [this](TextRendererComponent& component){
-           ImGui::InputTextMultiline("Text", &component.Text);
+        DrawComponentUI<TextRendererComponent>(m_EditorDomain->Translate("inspector.textRenderer"), entity, [this](TextRendererComponent& component){
+           ImGui::InputTextMultiline(m_EditorDomain->Translate("text").c_str(), &component.Text);
            if(ImGui::Button(component.Font().Name.data(), ImVec2(0.0f, 0.0f)))
            {
                component.FontHandle = EngineAssetRegistry::OpenSansRegular;
@@ -259,8 +248,8 @@ namespace BeeEngine::Editor
                BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
                component.FontHandle = handle;
            });
-           ImGui::ColorEdit4("Foreground", component.Configuration.ForegroundColor.ValuePtr());
-           ImGui::ColorEdit4("Background", component.Configuration.BackgroundColor.ValuePtr());
+           ImGui::ColorEdit4(m_EditorDomain->Translate("inspector.textRenderer.foreground").c_str(), component.Configuration.ForegroundColor.ValuePtr());
+           //ImGui::ColorEdit4("Background", component.Configuration.BackgroundColor.ValuePtr());
            ImGui::DragFloat("Kerning offset", &component.Configuration.KerningOffset, 0.025f);
            ImGui::DragFloat("Line spacing", &component.Configuration.LineSpacing, 0.025f);
         });
