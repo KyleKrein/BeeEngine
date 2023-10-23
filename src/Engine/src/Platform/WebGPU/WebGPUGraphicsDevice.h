@@ -43,6 +43,10 @@ namespace BeeEngine::Internal
         {
             return *m_SwapChain;
         }
+        WGPUQueue GetQueue() const
+        {
+            return m_Queue;
+        }
 
         WGPUBuffer CreateBuffer(WGPUBufferUsageFlags usage, uint32_t size);
         [[nodiscard("To avoid gpu memory leaks. Don't forget to call ReleaseBuffer()")]]
@@ -115,6 +119,11 @@ namespace BeeEngine::Internal
             wgpuTextureViewRelease(textureView);
         }
 
+        const WGPUSupportedLimits& GetSupportedLimits() const noexcept
+        {
+            return m_SupportedLimits;
+        }
+
     private:
         static WebGPUGraphicsDevice* s_Instance;
         static WGPUAdapter RequestAdapter(WGPUInstance instance, WGPURequestAdapterOptions const * options);
@@ -126,6 +135,7 @@ namespace BeeEngine::Internal
         WGPUDevice m_Device;
         Scope<WebGPUBufferPool> m_BufferPool;
         Scope<WebGPUSwapChain> m_SwapChain;
+        WGPUSupportedLimits m_SupportedLimits;
 
         bool m_SwapChainRequiresRebuild = false;
 

@@ -20,7 +20,7 @@ namespace BeeEngine
         SceneTreeRenderer(glm::mat4 cameraTransform, BindingSet* textBindingSet);
 
         void AddEntity(glm::mat4 transform, bool isTransparent, Model& model, const std::vector<BindingSet*>& bindingSets, gsl::span<byte> instancedData);
-        void AddText(const UTF8String& text, Font* font, const glm::mat4& transform, const TextRenderingConfiguration& configuration);
+        void AddText(const UTF8String& text, Font* font, const glm::mat4& transform, const TextRenderingConfiguration& configuration, int32_t entityID);
         void Render();
     private:
         struct Entity

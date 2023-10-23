@@ -124,7 +124,6 @@ namespace BeeEngine::Internal
             colorAttachment.storeOp = WGPUStoreOp_Store;
             colorAttachment.view = m_ColorAttachmentsTextureViews[i];
             colorAttachment.clearValue = m_ColorAttachmentSpecification[i].ClearColor;
-
             colorAttachments.push_back(colorAttachment);
         }
 
@@ -233,14 +232,24 @@ namespace BeeEngine::Internal
 
     }
 */
+    static uint32_t calculate_buffer_dimensions(uint32_t width, uint32_t alignment)
+    {
+        const uint32_t bytes_per_pixel        = sizeof(uint8_t) * 4;
+        const uint32_t unpadded_bytes_per_row = width * bytes_per_pixel;
+        const uint32_t align = alignment;
+        const uint32_t padded_bytes_per_row_padding
+                = (align - unpadded_bytes_per_row % align) % align;
+        const uint32_t padded_bytes_per_row
+                = unpadded_bytes_per_row + padded_bytes_per_row_padding;
+        return padded_bytes_per_row;
+    }
     int WebGPUFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) const
     {
-        return -1;
         BeeExpects(attachmentIndex < m_ColorAttachmentsTextureViews.size());
         if(m_WaitingForReadPixel)
             return static_cast<int>(m_ReadPixelValue);
         if(!m_EntityIDBuffer)
-            m_EntityIDBuffer = m_GraphicsDevice.CreateBuffer(WGPUBufferUsage_MapRead | WGPUBufferUsage_CopyDst, sizeof (int));
+            m_EntityIDBuffer = m_GraphicsDevice.CreateBuffer(WGPUBufferUsage_MapRead | WGPUBufferUsage_CopyDst, sizeof (float));
         if(!m_BufferCopyEncoder)
             m_BufferCopyEncoder = m_GraphicsDevice.CreateCommandBuffer();
         auto texture = m_ColorAttachmentsTextures[attachmentIndex];
@@ -256,39 +265,46 @@ namespace BeeEngine::Internal
         bufferCopy.buffer = m_EntityIDBuffer;
         bufferCopy.layout.nextInChain = nullptr;
         bufferCopy.layout.offset = 0;
-        bufferCopy.layout.bytesPerRow = std::max(m_Preferences.Width, m_Preferences.Height) * sizeof(int) + 256 - (std::max(m_Preferences.Width, m_Preferences.Height) * sizeof(int) % 256);
-        bufferCopy.layout.rowsPerImage = 0;
+        bufferCopy.layout.bytesPerRow = calculate_buffer_dimensions(m_Preferences.Width, 256);//std::max(m_Preferences.Width, m_Preferences.Height) * sizeof(float) + 256 - (std::max(m_Preferences.Width, m_Preferences.Height) * sizeof(float) % 256);
+        bufferCopy.layout.rowsPerImage = m_Preferences.Height;//1;//std::min(m_Preferences.Width, m_Preferences.Height);
 
-        WGPUExtent3D extent{0,0,0};
+        WGPUExtent3D extent{1,1,1};
         wgpuCommandEncoderCopyTextureToBuffer(((WebGPUCommandBuffer*)&m_BufferCopyEncoder)->GetHandle(), &textureCopy, &bufferCopy, &extent);
-        Renderer::SubmitCommandBuffer(m_BufferCopyEncoder);
+        m_GraphicsDevice.SubmitCommandBuffers(&m_BufferCopyEncoder, 1);
         m_WaitingForReadPixel = true;
-
-        DeletionQueue::Frame().PushFunction([this]()
+        //BeeExpects(wgpuDeviceGetQueue(m_GraphicsDevice.GetDevice()) == m_GraphicsDevice.GetQueue());
+        wgpuQueueOnSubmittedWorkDone(wgpuDeviceGetQueue(m_GraphicsDevice.GetDevice()),0, [](WGPUQueueWorkDoneStatus status, void* userdata)
         {
+            auto* bufferPtr = (BufferContext*)userdata;
+            if(status != WGPUQueueWorkDoneStatus_Success)
+            {
+                BeeCoreWarn("Failed to read pixel: {}", ToString(status));
+                return ;
+            }
             auto OnBufferMapped = [](WGPUBufferMapAsyncStatus status, void* userdata)
             {
                 BufferContext* context = (BufferContext*)userdata;
                 if(status != WGPUBufferMapAsyncStatus_Success)
                 {
                     BeeCoreWarn("Failed to map buffer: {}", ToString(status));
+                    *context->Waiting = false;
                     return ;
                 }
-                float* bufferData = (float*)wgpuBufferGetMappedRange(*context->Buffer, 0, sizeof(int));
-                if(bufferData == nullptr)
+                float* bufferData = (float*)wgpuBufferGetConstMappedRange(*context->Buffer, 0, sizeof(float));
+                if(bufferData != nullptr)
+                {
+                    memcpy(context->Data, bufferData, sizeof(float));
+                }
+                else
                 {
                     BeeCoreWarn("Failed to map buffer");
-                    return ;
                 }
-                memcpy(context->Data, bufferData, sizeof(int));
 
                 wgpuBufferUnmap(*context->Buffer);
+                *context->Waiting = false;
             };
-
-            wgpuBufferMapAsync(m_EntityIDBuffer, WGPUMapMode_Read, 0, sizeof(int), OnBufferMapped, &m_EntityIDBufferContext);
-            m_WaitingForReadPixel = false;
-        });
-
+            wgpuBufferMapAsync(*(bufferPtr->Buffer), WGPUMapMode_Read, 0, sizeof(float), OnBufferMapped, userdata);
+        }, &m_EntityIDBufferContext);
         m_BufferCopyEncoder = nullptr;
         return static_cast<int>(m_ReadPixelValue);
     }

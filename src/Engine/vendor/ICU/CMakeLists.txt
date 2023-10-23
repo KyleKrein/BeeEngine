@@ -17,8 +17,8 @@ function(link_icu_data target)
         set(ICU_LIB "${CMAKE_BINARY_DIR}/_deps/icu-build/icu_host-build/stubdata/libicudata.a")
     endif()
 
-    find_library(ICU_DATA NAMES ${ICU_LIB} REQUIRED)
-    target_link_libraries(${target} INTERFACE ${ICU_DATA})
+    #find_library(ICU_DATA NAMES ${ICU_LIB} REQUIRED)
+    #target_link_libraries(${target} INTERFACE ${ICU_DATA})
 endfunction()
 
 add_library(ICU INTERFACE)

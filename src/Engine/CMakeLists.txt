@@ -83,6 +83,7 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/AssetManagement/LocalizedAsset.h
 )
 
+
 function(DesktopPlatformsOnly)
     add_compile_definitions(DESKTOP_PLATFORM)
 endfunction(DesktopPlatformsOnly)
@@ -228,7 +229,7 @@ add_subdirectory(vendor/sdl)
 add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
-add_subdirectory(vendor/ICU)
+find_package(ICU REQUIRED COMPONENTS data uc in io)
 
 if(BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
@@ -258,6 +259,7 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/magic_enum/include
 
         PUBLIC vendor/utfcpp/include
+        PUBLIC ${ICU_INCLUDE_DIR}
         )
 target_link_libraries( ${PROJECT_NAME}
         #PRIVATE project_warnings
@@ -277,7 +279,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC magic_enum
         PUBLIC Box2D
         PUBLIC MSDFGEN
-        PUBLIC ICU
+        PUBLIC ${ICU_LIBRARIES}
         )
 
 target_compile_definitions(BeeEngine

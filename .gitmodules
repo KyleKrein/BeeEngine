@@ -37,3 +37,6 @@
 [submodule "src/Engine/vendor/magic_enum"]
 	path = src/Engine/vendor/magic_enum
 	url = https://github.com/Neargye/magic_enum.git
+[submodule "src/Engine/vendor/vcpkg"]
+	path = src/Engine/vendor/vcpkg
+	url = https://github.com/Microsoft/vcpkg.git

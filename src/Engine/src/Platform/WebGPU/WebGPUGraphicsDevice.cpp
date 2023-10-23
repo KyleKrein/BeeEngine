@@ -47,8 +47,7 @@ namespace BeeEngine::Internal
         WGPUSupportedLimits supportedLimits;
 
         wgpuAdapterGetLimits(m_Adapter, &supportedLimits);
-        BeeCoreTrace("adapter.maxVertexAttributes: {}", supportedLimits.limits.maxVertexAttributes);
-
+        m_SupportedLimits = supportedLimits;
         WGPUChainedStruct dawnTogglesChained = {};
         dawnTogglesChained.sType = WGPUSType_DawnTogglesDescriptor;
         dawnTogglesChained.next = nullptr;
@@ -121,12 +120,6 @@ namespace BeeEngine::Internal
         });
 
         m_Queue = wgpuDeviceGetQueue(m_Device);
-
-        auto onQueueWorkDone = [](WGPUQueueWorkDoneStatus status, void* /* pUserData */) {
-            BeeCoreTrace("Queued work finished with status: {}", ToString(status));
-        };
-        wgpuQueueOnSubmittedWorkDone(m_Queue, 0, onQueueWorkDone, nullptr /* pUserData */);//signal value ???
-
         m_BufferPool = CreateScope<WebGPUBufferPool>();
 
         m_SwapChain = CreateScope<WebGPUSwapChain>(*this);
@@ -136,6 +129,8 @@ namespace BeeEngine::Internal
     {
         m_BufferPool.reset();
         m_SwapChain.reset();
+        wgpuQueueRelease(m_Queue);
+        wgpuDeviceDestroy(m_Device);
         wgpuDeviceRelease(m_Device);
         wgpuAdapterRelease(m_Adapter);
         wgpuSurfaceRelease(m_Surface);

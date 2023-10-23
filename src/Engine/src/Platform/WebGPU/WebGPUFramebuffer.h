@@ -64,12 +64,11 @@ namespace BeeEngine::Internal
         {
             void* Data;
             WGPUBuffer* Buffer;
+            bool* Waiting;
         };
-        mutable BufferContext m_EntityIDBufferContext {&m_ReadPixelValue, &m_EntityIDBuffer};
-
         mutable CommandBuffer m_BufferCopyEncoder {nullptr};
 
-        mutable bool m_PixelDataReady {false};
         mutable bool m_WaitingForReadPixel {false};
+        mutable BufferContext m_EntityIDBufferContext {&m_ReadPixelValue, &m_EntityIDBuffer, &m_WaitingForReadPixel};
     };
 }

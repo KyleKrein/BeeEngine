@@ -8,6 +8,79 @@
 
 
 #include "Core/TypeDefines.h"
+#include "AllocatorStatistics.h"
+
+namespace BeeEngine::Internal
+{
+    class MemoryTracker {
+        struct AllocationRecord
+        {
+            void* Ptr = nullptr;
+            std::size_t Size = 0;
+        };
+    public:
+        // Функция для аллокации памяти
+        static void alloc(void* ptr, std::size_t size) noexcept{
+            ensureCapacity();
+            // Поиск первой свободной ячейки
+            for (std::size_t i = 0; i < capacity; ++i) {
+                if (!records[i].Ptr) {
+                    new (&records[i]) AllocationRecord{ptr, size};  // Placement new
+                    BeeEnsures(records[i].Ptr == ptr);
+                    BeeEnsures(records[i].Size == size);
+                    ++recordCount;
+                    break;
+                }
+            }
+            AllocatorStatistics::GetStatistics().allocatedMemory += size;
+            AllocatorStatistics::GetStatistics().totalAllocatedMemory += size;
+        }
+
+        // Функция для освобождения памяти
+        static void free(void* ptr) {
+            for (std::size_t i = 0; i < capacity; ++i) {
+                if (records[i].Ptr == ptr) {
+                    AllocatorStatistics::GetStatistics().allocatedMemory -= records[i].Size;
+                    AllocatorStatistics::GetStatistics().totalAllocatedMemory -= records[i].Size;
+                    records[i].~AllocationRecord();  // Вызов деструктора
+                    --recordCount;
+                    break;
+                }
+            }
+            debug_break();
+        }
+
+    private:
+        static AllocationRecord* records;
+        static std::size_t recordCount;
+        static std::size_t capacity;
+
+        // Функция для увеличения размера массива records при необходимости
+        static void ensureCapacity() noexcept {
+            if(capacity == 0)
+            {
+                capacity = 100;
+                records = (AllocationRecord*)malloc(capacity * sizeof(AllocationRecord));
+                memset(records, 0, capacity * sizeof(AllocationRecord));
+                //if (!records) throw std::bad_alloc();
+                return;
+            }
+            if (recordCount == capacity) {
+                std::size_t newCapacity = capacity * 2 + 1;
+                AllocationRecord* newRecords = (AllocationRecord*)malloc(newCapacity * sizeof(AllocationRecord));
+                memset(records, 0, capacity * sizeof(AllocationRecord));
+                //if (!newRecords) throw std::bad_alloc();
+                for (std::size_t i = 0; i < capacity; ++i) {
+                    new (&newRecords[i]) AllocationRecord(std::move(records[i]));  // Placement new
+                    records[i].~AllocationRecord();  // Вызов деструктора
+                }
+                free(records);  // Освобождение старого массива
+                records = newRecords;
+                capacity = newCapacity;
+            }
+        }
+    };
+}
 #define USE_CUSTOM_ALLOCATOR 0
 
 #if USE_CUSTOM_ALLOCATOR
@@ -184,9 +257,142 @@ inline void operator delete[] (void* ptr, std::align_val_t alignment) noexcept
 #endif
 #endif
 
-namespace BeeEngine
+inline void* operator new(std::size_t size, std::align_val_t alignment)
 {
+    void* ptr = malloc(size);
+    if(!ptr)
+    {
+        throw std::bad_alloc();
+    }
+    BeeEngine::Internal::MemoryTracker::alloc(ptr, size);
+    return ptr;
+}
 
 
+inline void* operator new(std::size_t size)
+{
+    void* ptr = malloc(size);
+    if(!ptr)
+    {
+        throw std::bad_alloc();
+    }
+    BeeEngine::Internal::MemoryTracker::alloc(ptr, size);
+    return ptr;
+}
+
+inline void* operator new(std::size_t size, const std::nothrow_t&) noexcept
+{
+    void* ptr = malloc(size);
+    if(!ptr)
+    {
+        return nullptr;
+    }
+    BeeEngine::Internal::MemoryTracker::alloc(ptr, size);
+    return ptr;
+}
+
+inline void* operator new(std::size_t size, std::align_val_t alignment, const std::nothrow_t&) noexcept
+{
+    void* ptr = malloc(size);
+    if(!ptr)
+    {
+        return nullptr;
+    }
+    BeeEngine::Internal::MemoryTracker::alloc(ptr, size);
+    return ptr;
+}
+
+inline void operator delete(void* ptr, const std::nothrow_t&) noexcept
+{
+    if(ptr == nullptr)
+    {
+        return;
+    }
+
+    free(ptr);
+    BeeEngine::Internal::MemoryTracker::free(ptr);
+}
+
+inline void operator delete(void* ptr, std::size_t size, std::align_val_t alignment, const std::nothrow_t&) noexcept
+{
+    if(ptr == nullptr)
+    {
+        return;
+    }
+
+    free(ptr);
+    BeeEngine::Internal::MemoryTracker::free(ptr);
+}
+
+
+inline void operator delete(void* ptr, size_t size) noexcept
+{
+    if(ptr == nullptr)
+    {
+        return;
+    }
+
+    free(ptr);
+    BeeEngine::Internal::MemoryTracker::free(ptr);
+}
+
+inline void operator delete (void* ptr, std::align_val_t alignment) noexcept
+{
+    if(ptr == nullptr)
+    {
+        return;
+    }
+    free(ptr);
+    BeeEngine::Internal::MemoryTracker::free(ptr);
+}
+
+inline void operator delete(void* ptr) noexcept
+{
+    if(ptr == nullptr)
+    {
+        return;
+    }
+
+    free(ptr);
+    BeeEngine::Internal::MemoryTracker::free(ptr);
+}
+
+inline void* operator new[](size_t size)
+{
+    void* ptr = malloc(size);
+    if (!ptr) {
+        throw std::bad_alloc();
+    }
+    BeeEngine::Internal::MemoryTracker::alloc(ptr, size);
+    return ptr;
+}
+
+inline void operator delete[](void* ptr, size_t size) noexcept
+{
+    if(ptr == nullptr)
+    {
+        return;
+    }
+
+    free(ptr);
+    BeeEngine::Internal::MemoryTracker::free(ptr);
+}
+inline void* operator new[](std::size_t size, std::align_val_t alignment)
+{
+    void* ptr = malloc(size);
+    if (!ptr) {
+        throw std::bad_alloc();
+    }
+    BeeEngine::Internal::MemoryTracker::alloc(ptr, size);
+    return ptr;
+}
+inline void operator delete[] (void* ptr, std::align_val_t alignment) noexcept
+{
+    if(ptr == nullptr)
+    {
+        return;
+    }
+    free(ptr);
+    BeeEngine::Internal::MemoryTracker::free(ptr);
 }
 

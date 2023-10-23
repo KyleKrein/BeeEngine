@@ -384,9 +384,11 @@ namespace BeeEngine
     void ScriptingEngine::UpdateAllocatorStatistics()
     {
         auto& stats = BeeEngine::Internal::AllocatorStatistics::GetStatistics();
+        stats.totalAllocatedMemory -= stats.gcHeapSize;
+        stats.gcUsedMemory.store(mono_gc_get_used_size());
         stats.gcGenerations.store(mono_gc_max_generation());
         stats.gcHeapSize.store(mono_gc_get_heap_size());
-        stats.gcUsedMemory.store(mono_gc_get_used_size());
+        stats.totalAllocatedMemory += stats.gcHeapSize;
     }
 
     void ScriptingEngine::SetAssetHandle(MObject& obj, MField& field, AssetHandle& handle, MType type)

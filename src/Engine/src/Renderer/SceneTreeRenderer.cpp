@@ -68,9 +68,10 @@ namespace BeeEngine
         glm::vec3 PositionOffset3;
         Color4 ForegroundColor;
         Color4 BackgroundColor;
+        int32_t EntityID;
     };
     void SceneTreeRenderer::AddText(const UTF8String &text, Font *font, const glm::mat4& transform,
-                                    const TextRenderingConfiguration& config)
+                                    const TextRenderingConfiguration& config, int32_t entityID)
     {
         BeeExpects(IsValidString(text));
         auto& textModel = Application::GetInstance().GetAssetManager().GetModel("Renderer_Font");
@@ -176,6 +177,7 @@ namespace BeeEngine
                     .PositionOffset3 = transform * glm::vec4{quadMax.x, quadMin.y, 0.0f, 1.0f},
                     .ForegroundColor = config.ForegroundColor,
                     .BackgroundColor = config.BackgroundColor,
+                    .EntityID = entityID
             };
             std::vector<byte> instancedData(sizeof(TextInstancedData));
             memcpy(instancedData.data(), &data, sizeof(TextInstancedData));

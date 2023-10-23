@@ -64,6 +64,7 @@ namespace BeeEngine::Internal
     WebGPUSwapChain::~WebGPUSwapChain()
     {
         wgpuTextureViewRelease(m_DepthTextureView);
+        wgpuTextureDestroy(m_DepthTexture);
         wgpuTextureRelease(m_DepthTexture);
         wgpuSwapChainRelease(m_SwapChain);
     }

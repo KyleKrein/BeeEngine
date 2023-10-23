@@ -130,7 +130,7 @@ namespace BeeEngine
         glm::mat4 Model {1.0f};
         BeeEngine::Color4 Color {BeeEngine::Color4::White};
         float TilingFactor = 1.0f;
-        //int32_t EntityID = -1;
+        int32_t EntityID = -1;
     };
     struct CircleInstanceBufferData
     {
@@ -138,6 +138,7 @@ namespace BeeEngine
         BeeEngine::Color4 Color {BeeEngine::Color4::White};
         float Thickness = 1.0f;
         float Fade = 0.005f;
+        int32_t EntityID = -1;
     };
     void Scene::UpdateRuntime(const String& locale)
     {
@@ -184,7 +185,8 @@ namespace BeeEngine
         for( auto entity : spriteView )
         {
             auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
-            SpriteInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), spriteComponent.Color, spriteComponent.TilingFactor};
+            SpriteInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), spriteComponent.Color, spriteComponent.TilingFactor,
+                                           static_cast<int32_t>(entity)+1};
             std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture(locale)->GetBindingSet() : m_BlankTexture->GetBindingSet())};
             renderer.AddEntity(data.Model, data.Color.A() < 0.95f || spriteComponent.HasTexture, *m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
         }
@@ -194,7 +196,8 @@ namespace BeeEngine
         for( auto entity : circleGroup )
         {
             auto& circleComponent = circleGroup.get<CircleRendererComponent>(entity);
-            CircleInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
+            CircleInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade,
+                                           static_cast<int32_t>(entity)+1};
             renderer.AddEntity(data.Model, true, *m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
         }
 
@@ -202,7 +205,8 @@ namespace BeeEngine
         for( auto entity : textGroup )
         {
             auto& textComponent = textGroup.get<TextRendererComponent>(entity);
-            renderer.AddText(textComponent.Text, &textComponent.Font(locale), Math::ToGlobalTransform(Entity{entity, this}), textComponent.Configuration);
+            renderer.AddText(textComponent.Text, &textComponent.Font(locale), Math::ToGlobalTransform(Entity{entity, this}), textComponent.Configuration,
+                             static_cast<int32_t>(entity)+1);
         }
         renderer.Render();
     }
