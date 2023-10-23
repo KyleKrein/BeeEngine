@@ -61,6 +61,8 @@ namespace BeeEngine
 
         Path GameAssemblyPath = "";
         Path CoreAssemblyPath = "";
+
+        String Locale = Locale::GetSystemLocale();
     };
     ScriptingEngineData ScriptingEngine::s_Data = {};
     void ScriptingEngine::Init()
@@ -255,7 +257,7 @@ namespace BeeEngine
         {
             return;
         }
-        auto script = CreateRef<GameScript>(*pClass, entity);
+        auto script = CreateRef<GameScript>(*pClass, entity, s_Data.Locale);
         s_Data.EntityObjects[uuid] = script;
         //
         {
@@ -423,5 +425,13 @@ namespace BeeEngine
             return;
         mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTime);
         mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTime);
+    }
+    void ScriptingEngine::SetLocale(const BeeEngine::String &locale)
+    {
+        s_Data.Locale = locale;
+    }
+    const String& ScriptingEngine::GetScriptingLocale()
+    {
+        return s_Data.Locale;
     }
 }

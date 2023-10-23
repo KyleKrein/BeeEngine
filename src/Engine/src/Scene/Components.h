@@ -126,18 +126,15 @@ namespace BeeEngine
         float TilingFactor = 1.0f;
         bool HasTexture = false;
 
-        Texture2D* Texture() const
+        Texture2D* Texture(const String& locale) const
         {
             BeeExpects(HasTexture);
             BeeExpects(AssetManager::IsAssetHandleValid(TextureHandle));
-            return &AssetManager::GetAsset<Texture2D>(TextureHandle);
+            return &AssetManager::GetAsset<Texture2D>(TextureHandle, locale);
         }
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
-
-        operator Texture2D&() { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
-        operator Texture2D&() const { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
 
         template<typename Archive>
         void Serialize(Archive& serializer)
@@ -169,9 +166,9 @@ namespace BeeEngine
         AssetHandle FontHandle = EngineAssetRegistry::OpenSansRegular;
         std::string Text;
 
-        Font& Font() const
+        Font& Font(const String& locale) const
         {
-            return AssetManager::GetAsset<BeeEngine::Font>(FontHandle);
+            return AssetManager::GetAsset<BeeEngine::Font>(FontHandle, locale);
         }
         template<typename Archive>
         void Serialize(Archive& serializer)

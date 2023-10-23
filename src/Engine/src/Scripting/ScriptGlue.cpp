@@ -325,7 +325,7 @@ namespace BeeEngine
 
     void ScriptGlue::Asset_Load(AssetHandle* handle)
     {
-        AssetManager::GetAsset<Asset>(*handle);
+        AssetManager::GetAsset<Asset>(*handle, ScriptingEngine::GetScriptingLocale());
     }
 
     void ScriptGlue::Asset_Unload(AssetHandle* handle)

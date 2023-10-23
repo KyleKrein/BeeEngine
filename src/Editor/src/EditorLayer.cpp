@@ -30,8 +30,8 @@ namespace BeeEngine::Editor
         m_EditorLocaleDomain.Build();
         ConsoleOutput::SetOutputProvider(&m_Console);
         SetUpMenuBar();
-        m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture);
-        m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture);
+        m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture, "en_US");
+        m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture, "en_US");
 
         m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
@@ -126,6 +126,7 @@ namespace BeeEngine::Editor
                 m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &m_EditorAssetManager);
                 m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 
@@ -164,6 +165,7 @@ namespace BeeEngine::Editor
                 m_ProjectFile = CreateScope<ProjectFile>(projectPath, name, &m_EditorAssetManager);
                 m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
                 m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                 ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 

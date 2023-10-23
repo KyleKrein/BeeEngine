@@ -8,6 +8,7 @@
 #include "Core/UUID.h"
 #include "Core/AssetManagement/Asset.h"
 #include "MTypes.h"
+#include "Locale/Locale.h"
 
 namespace BeeEngine
 {
@@ -19,7 +20,8 @@ namespace BeeEngine
     public:
         static void Init();
         static void Shutdown();
-
+        static void SetLocale(const String& locale);
+        static const String& GetScriptingLocale();
         static void EnableDebugging();
 
         static void LoadGameAssembly(const Path& path);

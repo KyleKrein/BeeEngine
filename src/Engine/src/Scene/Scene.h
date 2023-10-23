@@ -36,8 +36,8 @@ namespace BeeEngine
 
 
         Scene();
-        void UpdateRuntime();
-        void UpdateEditor(EditorCamera& camera);
+        void UpdateRuntime(const String& locale);
+        void UpdateEditor(EditorCamera& camera, const String& locale);
         void OnViewPortResize(uint32_t width, uint32_t height);
 
         Entity CreateEntity(const std::string& name = "Entity");
@@ -85,7 +85,7 @@ namespace BeeEngine
 
         void Update2DPhysics();
 
-        void RenderScene(SceneTreeRenderer& renderer);
+        void RenderScene(SceneTreeRenderer& renderer, const String& locale);
 
         Entity CopyEntity(Entity entity, Scene& targetScene, Entity parent, bool preserveUUID);
     };

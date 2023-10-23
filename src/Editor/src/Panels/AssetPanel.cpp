@@ -74,17 +74,17 @@ namespace BeeEngine::Editor
                 {
                     case AssetType::Texture2D:
                     {
-                        icon = &AssetManager::GetAsset<Texture2D>(handle);
+                        icon = &AssetManager::GetAsset<Texture2D>(handle, m_Project->GetProjectLocaleDomain().GetLocale());
                         break;
                     }
                     case AssetType::Font:
                     {
-                        icon = &AssetManager::GetAsset<Font>(handle).GetAtlasTexture();
+                        icon = &AssetManager::GetAsset<Font>(handle, m_Project->GetProjectLocaleDomain().GetLocale()).GetAtlasTexture();
                         break;
                     }
                     default:
                     {
-                        icon = &AssetManager::GetAsset<Texture2D>(EngineAssetRegistry::FileTexture);
+                        icon = &AssetManager::GetAsset<Texture2D>(EngineAssetRegistry::FileTexture, "en_US");
                         break;
                     }
                 }

@@ -9,6 +9,7 @@
 #include "Scene/SceneCamera.h"
 #include "Scene/Entity.h"
 #include <ImGuizmo.h>
+#include "Locale/Locale.h"
 
 namespace BeeEngine::Editor
 {
@@ -29,6 +30,7 @@ namespace BeeEngine::Editor
         void Render(EditorCamera& camera) noexcept;
         Ref<Scene>& GetScene() noexcept { return m_Scene; }
         void SetScene(const Ref<Scene>& scene) noexcept { m_Scene.reset(); m_Scene = scene; }
+        void SetDomain(const Locale::Domain* domain) noexcept { m_GameDomain = domain; }
 
         [[nodiscard]] uint32_t GetHeight() const
         {
@@ -64,6 +66,7 @@ namespace BeeEngine::Editor
         bool m_IsHovered;
         Ref<Scene> m_Scene;
         Entity& m_SelectedEntity;
+        const Locale::Domain* m_GameDomain = nullptr;
         GuizmoOperation m_GuizmoOperation = GuizmoOperation::Translate;
         bool m_GuizmoSnap = false;
 

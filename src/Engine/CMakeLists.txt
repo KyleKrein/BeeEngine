@@ -79,6 +79,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Locale/LocalizationGenerator.h
         src/Locale/ImGuiLocalizationPanel.cpp
         src/Locale/ImGuiLocalizationPanel.h
+        src/Core/AssetManagement/LocalizedAsset.cpp
+        src/Core/AssetManagement/LocalizedAsset.h
 )
 
 function(DesktopPlatformsOnly)

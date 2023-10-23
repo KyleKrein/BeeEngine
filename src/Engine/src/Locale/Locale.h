@@ -66,6 +66,10 @@ namespace BeeEngine::Locale
             }
             BeeCoreTrace("For Domain {} locale {} was set", m_Name, locale);
         }
+        const Locale& GetLocale() const
+        {
+            return m_Locale;
+        }
         void Build();
         UTF8String Translate(const char* key);
 

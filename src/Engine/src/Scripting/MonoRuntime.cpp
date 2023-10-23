@@ -275,7 +275,7 @@ namespace BeeEngine
 
     }
 
-    GameScript::GameScript(MClass& mClass, Entity entity)
+    GameScript::GameScript(MClass& mClass, Entity entity, const String& locale)
     : m_Instance(mClass.Instantiate())
     {
         //auto& constructor = ScriptingEngine::GetEntityClass().GetMethod(".ctor", 1);
@@ -295,7 +295,7 @@ namespace BeeEngine
         if(entity.HasComponent<ScriptComponent>())
         {
             auto& sc = entity.GetComponent<ScriptComponent>();
-            CopyFieldsData(sc.EditableFields);
+            CopyFieldsData(sc.EditableFields, locale);
         }
     }
 
@@ -358,7 +358,7 @@ namespace BeeEngine
         }
     }
 
-    void GameScript::CopyFieldsData(std::vector<GameScriptField> &aClass)
+    void GameScript::CopyFieldsData(std::vector<GameScriptField> &aClass, const String& locale)
     {
         for(auto& field : aClass)
         {
@@ -370,7 +370,7 @@ namespace BeeEngine
                 if(AssetManager::IsAssetHandleValid(handle))
                 {
                     if(type == MType::Asset)
-                        type = AssetTypeToMType(AssetManager::GetAsset<Asset>(handle).GetType());
+                        type = AssetTypeToMType(AssetManager::GetAsset<Asset>(handle, locale).GetType());
                     ScriptingEngine::SetAssetHandle(m_Instance, mField, handle, type);
                 }
                 continue;

@@ -51,7 +51,7 @@ namespace BeeEngine::Editor
         Renderer::Clear();
         m_FrameBuffer->Bind();
 
-        m_Scene->UpdateRuntime();
+        m_Scene->UpdateRuntime(m_GameDomain->GetLocale());
 
         m_FrameBuffer->Unbind();
     }
@@ -59,7 +59,7 @@ namespace BeeEngine::Editor
     {
         m_FrameBuffer->Bind();
 
-        m_Scene->UpdateEditor(camera);
+        m_Scene->UpdateEditor(camera, m_GameDomain->GetLocale());
 
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;

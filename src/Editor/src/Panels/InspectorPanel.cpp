@@ -181,12 +181,23 @@ namespace BeeEngine::Editor
 
             if(sprite.HasTexture)
             {
-                auto* texture = sprite.Texture();
+                auto* texture = sprite.Texture(m_Project->GetProjectLocaleDomain().GetLocale());
                 float aspectRatio = (float)texture->GetWidth() / (float)texture->GetHeight();
                 if(ImGui::ImageButton((void*)texture->GetRendererID(), ImVec2(100.0f * aspectRatio, 100.0f * aspectRatio), { 0, 1 }, { 1, 0 }))
                 {
                     sprite.HasTexture = false;
                 }
+                auto& textureAsset = AssetManager::GetAsset<Asset>(sprite.TextureHandle);
+                String textureLabel;
+                if(textureAsset.GetType() == AssetType::Localized)
+                {
+                    textureLabel = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                }
+                else
+                {
+                    textureLabel = textureAsset.Name;
+                }
+                ImGui::Text(textureLabel.c_str());
             }
             else
             {
@@ -225,7 +236,17 @@ namespace BeeEngine::Editor
         });
         DrawComponentUI<TextRendererComponent>(m_EditorDomain->Translate("inspector.textRenderer"), entity, [this](TextRendererComponent& component){
            ImGui::InputTextMultiline(m_EditorDomain->Translate("text").c_str(), &component.Text);
-           if(ImGui::Button(component.Font().Name.data(), ImVec2(0.0f, 0.0f)))
+           auto& fontAsset = AssetManager::GetAsset<Asset>(component.FontHandle);
+           String fontLabel;
+           if(fontAsset.GetType() == AssetType::Localized)
+           {
+               fontLabel = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+           }
+           else
+           {
+               fontLabel = fontAsset.Name;
+           }
+           if(ImGui::Button(fontLabel.c_str(), ImVec2(0.0f, 0.0f)))
            {
                component.FontHandle = EngineAssetRegistry::OpenSansRegular;
            }
@@ -459,7 +480,24 @@ namespace BeeEngine::Editor
                             value = field.GetData<AssetHandle>();
                         }
                         bool isValid = AssetManager::IsAssetHandleValid(value);
-                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Texture2D>(value).Name.data() : "null"))
+                        String textureName;
+                        if(isValid)
+                        {
+                            auto& textureAsset = AssetManager::GetAsset<Asset>(value);
+                            if(textureAsset.GetType() == AssetType::Localized)
+                            {
+                                textureName = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                            }
+                            else
+                            {
+                                textureName = textureAsset.Name;
+                            }
+                        }
+                        else
+                        {
+                            textureName = "null";
+                        }
+                        if(ImGui::Button(textureName.c_str()))
                         {
                             value = {0,0};
                             if(!m_Context->IsRuntime())
@@ -510,7 +548,24 @@ namespace BeeEngine::Editor
                             value = field.GetData<AssetHandle>();
                         }
                         bool isValid = AssetManager::IsAssetHandleValid(value);
-                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Font>(value).Name.data() : "null"))
+                        String fontName;
+                        if(isValid)
+                        {
+                            auto& fontAsset = AssetManager::GetAsset<Asset>(value);
+                            if(fontAsset.GetType() == AssetType::Localized)
+                            {
+                                fontName = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                            }
+                            else
+                            {
+                                fontName = fontAsset.Name;
+                            }
+                        }
+                        else
+                        {
+                            fontName = "null";
+                        }
+                        if(ImGui::Button(fontName.c_str()))
                         {
                             value = {0,0};
                             if(!m_Context->IsRuntime())

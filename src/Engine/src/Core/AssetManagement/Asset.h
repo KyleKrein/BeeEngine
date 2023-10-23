@@ -60,10 +60,12 @@ namespace BeeEngine
         Font = 2,
         Prefab = 3,
         Scene = 4,
+
         /*Shader = 3,
         Mesh = 4,
         Material = 5,
         Model = 6,*/
+        Localized = 100,
     };
     enum class AssetLocation: uint16_t
     {

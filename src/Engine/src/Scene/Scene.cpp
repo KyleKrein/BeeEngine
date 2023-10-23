@@ -139,7 +139,7 @@ namespace BeeEngine
         float Thickness = 1.0f;
         float Fade = 0.005f;
     };
-    void Scene::UpdateRuntime()
+    void Scene::UpdateRuntime(const String& locale)
     {
         UpdateScripts();
         Update2DPhysics();
@@ -164,20 +164,20 @@ namespace BeeEngine
             auto cameraViewProj = mainCamera->GetProjectionMatrix() * glm::inverse(cameraTransform);
             m_CameraUniformBuffer->SetData(&cameraViewProj, sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
             SceneTreeRenderer renderer(cameraViewProj, m_CameraBindingSet.get());
-            RenderScene(renderer);
+            RenderScene(renderer, locale);
 
         }
     }
 
-    void Scene::UpdateEditor(EditorCamera& camera)
+    void Scene::UpdateEditor(EditorCamera& camera, const String& locale)
     {
         auto cameraViewProj = camera.GetViewProjection();
         m_CameraUniformBuffer->SetData(glm::value_ptr(cameraViewProj), sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
         SceneTreeRenderer renderer(cameraViewProj, m_CameraBindingSet.get());
-        RenderScene(renderer);
+        RenderScene(renderer, locale);
     }
 
-    void Scene::RenderScene(SceneTreeRenderer& renderer)
+    void Scene::RenderScene(SceneTreeRenderer& renderer, const String& locale)
     {
         constexpr static float epsilon = 1e-6;
         auto spriteView = m_Registry.view<SpriteRendererComponent>();
@@ -185,7 +185,7 @@ namespace BeeEngine
         {
             auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
             SpriteInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), spriteComponent.Color, spriteComponent.TilingFactor};
-            std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture()->GetBindingSet() : m_BlankTexture->GetBindingSet())};
+            std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture(locale)->GetBindingSet() : m_BlankTexture->GetBindingSet())};
             renderer.AddEntity(data.Model, data.Color.A() < 0.95f || spriteComponent.HasTexture, *m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
         }
 
@@ -202,7 +202,7 @@ namespace BeeEngine
         for( auto entity : textGroup )
         {
             auto& textComponent = textGroup.get<TextRendererComponent>(entity);
-            renderer.AddText(textComponent.Text, &textComponent.Font(), Math::ToGlobalTransform(Entity{entity, this}), textComponent.Configuration);
+            renderer.AddText(textComponent.Text, &textComponent.Font(locale), Math::ToGlobalTransform(Entity{entity, this}), textComponent.Configuration);
         }
         renderer.Render();
     }
