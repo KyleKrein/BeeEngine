@@ -229,7 +229,7 @@ add_subdirectory(vendor/sdl)
 add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
-find_package(ICU REQUIRED COMPONENTS data uc in io)
+find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)
 
 if(BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
@@ -239,6 +239,13 @@ if(BEE_COMPILE_VULKAN)
             )
     target_link_libraries(BeeEngine PUBLIC Vulkan::Vulkan)
 endif ()
+function(extract_vcpkg_path ICU_LIB_LIST RESULT_VAR)
+    list(GET ICU_LIB_LIST 0 ICU_LIB_PATH)
+    string(REGEX REPLACE "(.*/vcpkg_installed/[^/]+).*$" "\\1" EXTRACTED_PATH ${ICU_LIB_PATH})
+    set(${RESULT_VAR} ${EXTRACTED_PATH} PARENT_SCOPE)
+endfunction()
+
+extract_vcpkg_path("${ICU_LIBRARIES}" ICU_VCPKG_PATH)
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
         PUBLIC src
@@ -259,7 +266,7 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/magic_enum/include
 
         PUBLIC vendor/utfcpp/include
-        PUBLIC ${ICU_INCLUDE_DIR}
+        PUBLIC ${ICU_VCPKG_PATH}/include
         )
 target_link_libraries( ${PROJECT_NAME}
         #PRIVATE project_warnings
