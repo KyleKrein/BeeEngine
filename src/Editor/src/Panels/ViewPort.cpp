@@ -226,7 +226,7 @@ namespace BeeEngine::Editor
     {
         if(event->GetButton() == MouseButton::Left)
         {
-            if(m_IsHovered && !ImGuizmo::IsOver() && !Input::KeyPressed(Key::LeftAlt))
+            if(!m_Scene->IsRuntime() && m_IsHovered && !ImGuizmo::IsOver() && !Input::KeyPressed(Key::LeftAlt))
             {
                 m_SelectedEntity = m_HoveredEntity;
             }

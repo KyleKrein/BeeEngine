@@ -267,6 +267,7 @@ target_include_directories( ${PROJECT_NAME}
 
         PUBLIC vendor/utfcpp/include
         PUBLIC ${ICU_VCPKG_PATH}/include
+        PUBLIC ${ICU_INCLUDE_DIR}
         )
 target_link_libraries( ${PROJECT_NAME}
         #PRIVATE project_warnings
