@@ -16,6 +16,7 @@ namespace BeeEngine
 {
     class SceneTreeRenderer
     {
+        friend class SceneRenderer;
     public:
         SceneTreeRenderer(glm::mat4 cameraTransform, BindingSet* textBindingSet);
 

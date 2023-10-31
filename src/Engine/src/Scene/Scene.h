@@ -31,13 +31,13 @@ namespace BeeEngine
         friend class BeeEngine::Editor::EditorLayer;
         friend class SceneSerializer;
         friend class PrefabImporter;
+        friend class SceneRenderer;
     public:
         static Ref<Scene> Copy(Scene& scene);
 
 
         Scene();
-        void UpdateRuntime(const String& locale);
-        void UpdateEditor(EditorCamera& camera, const String& locale);
+        void UpdateRuntime();
         void OnViewPortResize(uint32_t width, uint32_t height);
 
         Entity CreateEntity(const std::string& name = "Entity");
@@ -65,12 +65,6 @@ namespace BeeEngine
 
         void UpdateScripts();
 
-        Model* m_RectModel = nullptr;
-        Model* m_CircleModel = nullptr;
-        Texture2D* m_BlankTexture = nullptr;
-        Ref<BindingSet> m_CameraBindingSet;
-        Ref<UniformBuffer> m_CameraUniformBuffer;
-
         std::unordered_map<uint64_t , entt::entity> m_UUIDMap;
 
         const std::vector<struct NativeScriptInfo>* m_NativeScripts = nullptr;
@@ -84,8 +78,6 @@ namespace BeeEngine
         void StopPhysicsWorld();
 
         void Update2DPhysics();
-
-        void RenderScene(SceneTreeRenderer& renderer, const String& locale);
 
         Entity CopyEntity(Entity entity, Scene& targetScene, Entity parent, bool preserveUUID);
     };

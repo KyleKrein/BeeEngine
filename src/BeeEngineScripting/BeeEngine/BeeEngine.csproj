@@ -43,6 +43,7 @@
     <Compile Include="Assets\AssetHandle.cs" />
     <Compile Include="Assets\Font.cs" />
     <Compile Include="Assets\Asset.cs" />
+    <Compile Include="Assets\Prefab.cs" />
     <Compile Include="Assets\Texture2D.cs" />
     <Compile Include="Collections\Weak\WeakCollection.cs" />
     <Compile Include="Collections\Weak\WeakDictionary.cs" />

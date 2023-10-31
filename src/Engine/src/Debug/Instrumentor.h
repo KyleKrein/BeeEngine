@@ -20,7 +20,7 @@
 //
 #include "version"
 
-#ifdef DEBUG
+#ifdef BEE_ENABLE_PROFILING
 #ifdef __cpp_lib_source_location
 #include "source_location"
 #else

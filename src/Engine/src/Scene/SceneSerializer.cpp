@@ -366,6 +366,7 @@ namespace BeeEngine
                         WRITE_SCRIPT_FIELD(Asset, AssetHandle);
                         WRITE_SCRIPT_FIELD(Texture2D, AssetHandle);
                         WRITE_SCRIPT_FIELD(Font, AssetHandle);
+                        WRITE_SCRIPT_FIELD(Prefab, AssetHandle);
                         //WRITE_SCRIPT_FIELD(Entity, UUID);
                     }
                     out << YAML::EndMap;
@@ -584,6 +585,7 @@ namespace BeeEngine
                             READ_SCRIPT_FIELD(Asset, AssetHandle);
                             READ_SCRIPT_FIELD(Texture2D, AssetHandle);
                             READ_SCRIPT_FIELD(Font, AssetHandle);
+                            READ_SCRIPT_FIELD(Prefab, AssetHandle);
                         }
                     }
                 }

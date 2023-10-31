@@ -1,7 +1,7 @@
 //
 // Created by alexl on 26.05.2023.
 //
-
+#include "Debug/Instrumentor.h"
 #include "EditorLayer.h"
 #include "Scene/Entity.h"
 #include "Scene/Components.h"
@@ -50,6 +50,7 @@ namespace BeeEngine::Editor
     }
     void EditorLayer::OnUpdate() noexcept
     {
+        BEE_PROFILE_FUNCTION();
         if(m_ProjectFile == nullptr)
             return;
         m_ProjectFile->Update();

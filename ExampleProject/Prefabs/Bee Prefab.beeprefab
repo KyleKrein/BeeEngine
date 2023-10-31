@@ -1,0 +1,15 @@
+Entities:
+  - Entity: 2485341485061375317
+    TagComponent:
+      Tag: Bee Prefab
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Has Texture: true
+      Texture: [3753192931707503016, 2492935997162504003]
+      Tiling Factor: 1
+    HierarchyComponent:
+      []

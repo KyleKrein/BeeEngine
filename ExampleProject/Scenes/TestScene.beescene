@@ -1,70 +1,5 @@
 Scene: Untitled
 Entities:
-  - Entity: 12919446828236504033
-    TagComponent:
-      Tag: Destroyer
-    TransformComponent:
-      Translation: [4.17750216, -2.65548205, 0]
-      Rotation: [0, -0, 0]
-      Scale: [1, 1, 1]
-    ScriptComponent:
-      FullName: Example.Destroyer
-    SpriteRendererComponent:
-      Color: [0.719782054, 0.454666883, 0.906849325, 1]
-      Has Texture: false
-      Texture: [15501000637026691080, 16170045827897803605]
-      Tiling Factor: 1
-    HierarchyComponent:
-      []
-  - Entity: 14059197146731187119
-    TagComponent:
-      Tag: Score
-    TransformComponent:
-      Translation: [-5.78294468, 2.94235897, -0.300000012]
-      Rotation: [0, -0, 0]
-      Scale: [1, 1, 1]
-    ScriptComponent:
-      FullName: Example.SetScore
-      Fields:
-        - Name: Offset
-          Type: Vector3
-          Data: [-4, 2, 0]
-    TextRendererComponent:
-      Text: "Score: 0"
-      Font: [0, 328465234592345234]
-      Foreground Color: [0, 0, 0, 1]
-      Background Color: [0, 0, 0, 0]
-      Kerning: 0
-      Line Spacing: 0
-    HierarchyComponent:
-      []
-  - Entity: 8997853163735663429
-    TagComponent:
-      Tag: Camera
-    TransformComponent:
-      Translation: [1.28982222, 0.184730828, -6.89484358]
-      Rotation: [0, -0, 0]
-      Scale: [1, 1, 1]
-    CameraComponent:
-      Camera:
-        ProjectionType: 0
-        PerspectiveVerticalFOV: 0.785398185
-        PerspectiveNearClip: 0.00999999978
-        PerspectiveFarClip: 1000
-        OrthographicSize: 10
-        OrthographicNearClip: -1
-        OrthographicFarClip: 1
-        AspectRatio: 2.12698412
-      Primary: true
-      FixedAspectRatio: false
-    ScriptComponent:
-      FullName: Example.Camera
-      Fields:
-        - Name: Speed
-          Type: float
-          Data: 1
-    HierarchyComponent:
-      []
   - Entity: 1822372434052717332
     TagComponent:
       Tag: Face
@@ -80,8 +15,8 @@ Entities:
       Tag: Eyes
     TransformComponent:
       Translation: [0.387382567, 0.0047330074, 0]
-      Rotation: [0, -0, 6.51925491e-09]
-      Scale: [1.00000048, 1.00000048, 1]
+      Rotation: [0, -0, 1.1175862e-08]
+      Scale: [1.00000083, 1.00000083, 1]
     HierarchyComponent:
       - 7134635448999013620
       - 11146239361119753478
@@ -89,9 +24,9 @@ Entities:
     TagComponent:
       Tag: Right
     TransformComponent:
-      Translation: [4.4039526, 1.8471216, 0]
-      Rotation: [0, -0, 0.0122172963]
-      Scale: [1.30000055, 1.30000055, 1]
+      Translation: [4.23637676, 1.77724612, -9.53674771e-07]
+      Rotation: [0, -0, 0.012217286]
+      Scale: [1.30000103, 1.30000103, 0.99999994]
     ScriptComponent:
       FullName: Example.RandomColor
     SpriteRendererComponent:
@@ -105,9 +40,9 @@ Entities:
     TagComponent:
       Tag: Left
     TransformComponent:
-      Translation: [-3.05347061, 1.68959606, 0]
-      Rotation: [0, -0, 0.0122172963]
-      Scale: [1.30000055, 1.30000055, 1]
+      Translation: [-2.69597769, 1.70852757, 0]
+      Rotation: [0, -0, 0.012217286]
+      Scale: [1.30000103, 1.30000103, 0.99999994]
     ScriptComponent:
       FullName: Example.Helper
     CircleRendererComponent:
@@ -133,6 +68,85 @@ Entities:
       Color: [0.835616469, 0.49450177, 0.49450177, 1]
       Has Texture: false
       Texture: [911171833705554805, 5433295639066028698]
+      Tiling Factor: 1
+    HierarchyComponent:
+      []
+  - Entity: 8997853163735663429
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [1.28982222, 0.184730828, -6.89484358]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveVerticalFOV: 0.785398185
+        PerspectiveNearClip: 0.00999999978
+        PerspectiveFarClip: 1000
+        OrthographicSize: 10
+        OrthographicNearClip: -1
+        OrthographicFarClip: 1
+        AspectRatio: 2.31704092
+      Primary: true
+      FixedAspectRatio: false
+    ScriptComponent:
+      FullName: Example.Camera
+      Fields:
+        - Name: Speed
+          Type: float
+          Data: 1
+    HierarchyComponent:
+      []
+  - Entity: 14059197146731187119
+    TagComponent:
+      Tag: Score
+    TransformComponent:
+      Translation: [-5.78294468, 2.94235897, -0.300000012]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.SetScore
+      Fields:
+        - Name: Offset
+          Type: Vector3
+          Data: [-4, 2, 0]
+    TextRendererComponent:
+      Text: "Score: 0"
+      Font: [0, 328465234592345234]
+      Foreground Color: [0, 0, 0, 1]
+      Background Color: [0, 0, 0, 0]
+      Kerning: 0
+      Line Spacing: 0
+    HierarchyComponent:
+      []
+  - Entity: 12919446828236504033
+    TagComponent:
+      Tag: Destroyer
+    TransformComponent:
+      Translation: [4.17750216, -2.65548205, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.Destroyer
+    SpriteRendererComponent:
+      Color: [0.719782054, 0.454666883, 0.906849325, 1]
+      Has Texture: false
+      Texture: [15501000637026691080, 16170045827897803605]
+      Tiling Factor: 1
+    HierarchyComponent:
+      []
+  - Entity: 13123074333998272116
+    TagComponent:
+      Tag: Bee
+    TransformComponent:
+      Translation: [-6.01117039, -0.0301062465, 0]
+      Rotation: [0, -0, 0]
+      Scale: [2, 2, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Has Texture: true
+      Texture: [3753192931707503016, 2492935997162504003]
       Tiling Factor: 1
     HierarchyComponent:
       []

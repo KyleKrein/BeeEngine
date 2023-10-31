@@ -52,9 +52,9 @@ namespace BeeEngine
             Renderer::SubmitInstance(*entity.Model,entity.BindingSets, entity.InstancedData);
         }
         Renderer::Flush();
-        auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
-        statistics.OpaqueInstanceCount += m_NotTransparent.size();
-        statistics.TransparentInstanceCount += m_Transparent.size();
+        //auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
+        //statistics.OpaqueInstanceCount += m_NotTransparent.size();
+        //statistics.TransparentInstanceCount += m_Transparent.size();
     }
     struct TextInstancedData
     {

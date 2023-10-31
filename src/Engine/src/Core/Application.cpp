@@ -9,6 +9,7 @@
 #include "Renderer/Renderer.h"
 #include "DeletionQueue.h"
 #include "Scripting/ScriptingEngine.h"
+#include "Renderer/SceneRenderer.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -50,6 +51,7 @@ namespace BeeEngine{
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
         m_AssetManager.LoadStandardAssets();
+        SceneRenderer::Init();
 
         //ScriptingEngine::Init();
     }

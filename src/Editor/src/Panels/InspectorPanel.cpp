@@ -600,6 +600,74 @@ namespace BeeEngine::Editor
                         });
                         break;
                     }
+                    case MType::Prefab:
+                    {
+                        AssetHandle value;
+                        ImGui::Text(name);
+                        ImGui::SameLine();
+                        if(mObject)
+                        {
+                            MonoObject* monoObject;
+                            mObject->GetFieldValue(mField, &monoObject);
+                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                        }
+                        else
+                        {
+                            value = field.GetData<AssetHandle>();
+                        }
+                        bool isValid = AssetManager::IsAssetHandleValid(value);
+                        String prefabName;
+                        if(isValid)
+                        {
+                            auto& prefabAsset = AssetManager::GetAsset<Asset>(value);
+                            if(prefabAsset.GetType() == AssetType::Localized)
+                            {
+                                prefabName = String(prefabAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(prefabAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                            }
+                            else
+                            {
+                                prefabName = prefabAsset.Name;
+                            }
+                        }
+                        else
+                        {
+                            prefabName = "null";
+                        }
+                        if(ImGui::Button(prefabName.c_str()))
+                        {
+                            value = {0,0};
+                            if(!m_Context->IsRuntime())
+                                SetFieldData(mField, &value, mObject, field);
+                        }
+                        if(m_Context->IsRuntime())
+                            break;
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                            {
+                                Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
+                                if(ResourceManager::IsPrefabExtension(assetPath.GetExtension()))
+                                {
+                                    auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
+                                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    if(!handlePtr)
+                                    {
+                                        m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
+                                    }
+                                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    value = *handlePtr;
+                                    SetFieldData(mField, &value, mObject, field);
+                                }
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
+                        break;
+                    }
                 }
             }
         });

@@ -125,90 +125,11 @@ namespace BeeEngine
     {
         m_Registry.clear();
     }
-    struct SpriteInstanceBufferData
-    {
-        glm::mat4 Model {1.0f};
-        BeeEngine::Color4 Color {BeeEngine::Color4::White};
-        float TilingFactor = 1.0f;
-        int32_t EntityID = -1;
-    };
-    struct CircleInstanceBufferData
-    {
-        glm::mat4 Model {1.0f};
-        BeeEngine::Color4 Color {BeeEngine::Color4::White};
-        float Thickness = 1.0f;
-        float Fade = 0.005f;
-        int32_t EntityID = -1;
-    };
-    void Scene::UpdateRuntime(const String& locale)
+
+    void Scene::UpdateRuntime()
     {
         UpdateScripts();
         Update2DPhysics();
-
-        SceneCamera* mainCamera = nullptr;
-        glm::mat4 cameraTransform;
-
-        auto camerasGroup = m_Registry.group<CameraComponent>(entt::get<TransformComponent>);
-        for (auto entity:camerasGroup)
-        {
-            auto [transform, camera] = camerasGroup.get<TransformComponent, CameraComponent>(entity);
-            if(camera.Primary)
-            {
-                mainCamera = &camera.Camera;
-                cameraTransform = transform.GetTransform();
-                break;
-            }
-        }
-
-        if(mainCamera)
-        {
-            auto cameraViewProj = mainCamera->GetProjectionMatrix() * glm::inverse(cameraTransform);
-            m_CameraUniformBuffer->SetData(&cameraViewProj, sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
-            SceneTreeRenderer renderer(cameraViewProj, m_CameraBindingSet.get());
-            RenderScene(renderer, locale);
-
-        }
-    }
-
-    void Scene::UpdateEditor(EditorCamera& camera, const String& locale)
-    {
-        auto cameraViewProj = camera.GetViewProjection();
-        m_CameraUniformBuffer->SetData(glm::value_ptr(cameraViewProj), sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
-        SceneTreeRenderer renderer(cameraViewProj, m_CameraBindingSet.get());
-        RenderScene(renderer, locale);
-    }
-
-    void Scene::RenderScene(SceneTreeRenderer& renderer, const String& locale)
-    {
-        constexpr static float epsilon = 1e-6;
-        auto spriteView = m_Registry.view<SpriteRendererComponent>();
-        for( auto entity : spriteView )
-        {
-            auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
-            SpriteInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), spriteComponent.Color, spriteComponent.TilingFactor,
-                                           static_cast<int32_t>(entity)+1};
-            std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture(locale)->GetBindingSet() : m_BlankTexture->GetBindingSet())};
-            renderer.AddEntity(data.Model, data.Color.A() < 0.95f || spriteComponent.HasTexture, *m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
-        }
-
-        auto circleGroup = m_Registry.view<CircleRendererComponent>();
-        std::vector<BindingSet*> circleBindingSets {m_CameraBindingSet.get()};
-        for( auto entity : circleGroup )
-        {
-            auto& circleComponent = circleGroup.get<CircleRendererComponent>(entity);
-            CircleInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, this}), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade,
-                                           static_cast<int32_t>(entity)+1};
-            renderer.AddEntity(data.Model, true, *m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
-        }
-
-        auto textGroup = m_Registry.view<TextRendererComponent>();
-        for( auto entity : textGroup )
-        {
-            auto& textComponent = textGroup.get<TextRendererComponent>(entity);
-            renderer.AddText(textComponent.Text, &textComponent.Font(locale), Math::ToGlobalTransform(Entity{entity, this}), textComponent.Configuration,
-                             static_cast<int32_t>(entity)+1);
-        }
-        renderer.Render();
     }
 
     void Scene::StartRuntime()
@@ -230,11 +151,7 @@ namespace BeeEngine
         //DestroyScripts();
     }
 
-    Scene::Scene()
-    : m_CameraUniformBuffer(UniformBuffer::Create(sizeof(glm::mat4))), m_RectModel(&Application::GetInstance().GetAssetManager().GetModel("Renderer2D_Rectangle")), m_CircleModel(&Application::GetInstance().GetAssetManager().GetModel("Renderer2D_Circle")), m_BlankTexture(&Application::GetInstance().GetAssetManager().GetTexture("Blank"))
-    {
-        m_CameraBindingSet = BindingSet::Create({{0,*m_CameraUniformBuffer}});
-    }
+    Scene::Scene() = default;
 
     void Scene::DestroyScripts()
     {
@@ -392,10 +309,6 @@ namespace BeeEngine
     Ref<Scene> Scene::Copy(Scene &scene)
     {
         Ref<Scene> newScene = CreateRef<Scene>();
-        newScene->m_CameraUniformBuffer = scene.m_CameraUniformBuffer;
-        newScene->m_CameraBindingSet = scene.m_CameraBindingSet;
-        newScene->m_RectModel = scene.m_RectModel;
-        newScene->m_BlankTexture = scene.m_BlankTexture;
 
         auto& srcRegistry = scene.m_Registry;
         auto& dstRegistry = newScene->m_Registry;

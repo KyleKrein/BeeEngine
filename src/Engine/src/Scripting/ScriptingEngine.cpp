@@ -54,6 +54,7 @@ namespace BeeEngine
         MField* AssetHandleField = nullptr;
         MClass* Texture2DClass = nullptr;
         MClass* FontClass = nullptr;
+        MClass* PrefabClass = nullptr;
 
         MonoVTable* TimeVTable = nullptr;
         MonoClassField * DeltaTimeField = nullptr;
@@ -212,6 +213,11 @@ namespace BeeEngine
                 s_Data.FontClass = mClass.get();
                 continue;
             }
+            if(mClass->GetName() == "Prefab")
+            {
+                s_Data.PrefabClass = mClass.get();
+                continue;
+            }
             if(mClass->GetName() == "Time")
             {
                 s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
@@ -221,7 +227,7 @@ namespace BeeEngine
             }
 
             if(s_Data.EntityBaseClass && s_Data.AssetHandleField &&
-            s_Data.Texture2DClass && s_Data.FontClass &&
+            s_Data.Texture2DClass && s_Data.FontClass && s_Data.PrefabClass &&
             s_Data.TotalTimeField && s_Data.DeltaTimeField && s_Data.TimeVTable)
             {
                 break;
@@ -395,7 +401,8 @@ namespace BeeEngine
     {
         BeeExpects(
                 type == MType::Texture2D ||
-                        type == MType::Font
+                        type == MType::Font ||
+                        type == MType::Prefab
         );
         if(type == MType::Texture2D)
         {
@@ -408,6 +415,14 @@ namespace BeeEngine
         if(type == MType::Font)
         {
             MObject assetObj = s_Data.FontClass->Instantiate();
+            auto* assetMonoObj = assetObj.GetMonoObject();
+            assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
+            obj.SetFieldValue(field, assetMonoObj);
+            return;
+        }
+        if(type == MType::Prefab)
+        {
+            MObject assetObj = s_Data.PrefabClass->Instantiate();
             auto* assetMonoObj = assetObj.GetMonoObject();
             assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
             obj.SetFieldValue(field, assetMonoObj);

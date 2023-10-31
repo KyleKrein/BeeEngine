@@ -71,20 +71,6 @@ namespace BeeEngine::Editor
         ImGui::End();
     }
 
-    std::optional<Entity> IfEntityPresentInChildren(Entity who, Entity where)
-    {
-        auto& hierarchy = where.GetComponent<HierarchyComponent>();
-        for (auto child : hierarchy.Children)
-        {
-            if(child == who)
-                return child;
-            auto r = IfEntityPresentInChildren(who, child);
-            if(r.has_value())
-                return r;
-        }
-        return std::nullopt;
-    }
-
     void SceneHierarchyPanel::DrawEntityNode(Entity entity) noexcept
     {
         auto& tag = entity.GetComponent<TagComponent>().Tag;

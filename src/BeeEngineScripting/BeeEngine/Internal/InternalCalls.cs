@@ -73,6 +73,10 @@ namespace BeeEngine.Internal
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Entity_Destroy(ulong id);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern ulong Entity_Duplicate(ulong id);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern ulong Entity_InstantiatePrefab(ref AssetHandle handle, ulong parentId);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Input_IsKeyDown(Key key);

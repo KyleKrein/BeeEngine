@@ -50,6 +50,7 @@ namespace BeeEngine
         Asset = 0x26,
         Texture2D = 0x27,
         Font = 0x28,
+        Prefab = 0x29,
         /*I1 = 0x04,
         U1 = 0x05,
         I2 = 0x06,

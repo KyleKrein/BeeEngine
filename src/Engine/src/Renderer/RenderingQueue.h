@@ -64,13 +64,13 @@ namespace std
 }
 namespace BeeEngine
 {
-    class SceneTreeRenderer;
+    class SceneRenderer;
 }
 namespace BeeEngine::Internal
 {
     class RenderingQueue final
     {
-        friend BeeEngine::SceneTreeRenderer;
+        friend BeeEngine::SceneRenderer;
     public:
         static void Initialize();
         static void SubmitInstance(RenderInstance&& instance, gsl::span<byte> instanceData)

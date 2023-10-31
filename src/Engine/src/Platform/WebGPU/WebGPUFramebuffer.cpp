@@ -167,6 +167,10 @@ namespace BeeEngine::Internal
         //wgpuRenderPassEncoderSetViewport((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle(), 0, 0, m_Preferences.Width, m_Preferences.Height, 0, 1);
         // Apply scissor/clipping rectangle, Draw
         //wgpuRenderPassEncoderSetScissorRect((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle(), 0, 0, m_Preferences.Width, m_Preferences.Height);
+        /*while(!m_Flushed)
+        {
+            wgpuDeviceTick(m_GraphicsDevice.GetDevice());
+        }*/
         Renderer::Flush();
         wgpuRenderPassEncoderEnd((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle());
         Renderer::SubmitCommandBuffer(m_CurrentCommandBuffer);
@@ -339,5 +343,41 @@ namespace BeeEngine::Internal
             default:
                 return false;
         }
+    }
+
+    void WebGPUFrameBuffer::Flush(const std::function<void()> &callback)
+    {
+        BEE_PROFILE_FUNCTION();
+        //wgpuRenderPassEncoderSetViewport((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle(), 0, 0, m_Preferences.Width, m_Preferences.Height, 0, 1);
+        // Apply scissor/clipping rectangle, Draw
+        //wgpuRenderPassEncoderSetScissorRect((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle(), 0, 0, m_Preferences.Width, m_Preferences.Height);
+        while(!m_Flushed)
+        {
+            wgpuDeviceTick(m_GraphicsDevice.GetDevice());
+        }
+        m_FlushCallback = callback;
+        /*Renderer::Flush();
+        wgpuRenderPassEncoderEnd((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle());
+        m_GraphicsDevice.SubmitCommandBuffers(&m_CurrentCommandBuffer, 1);
+        wgpuRenderPassEncoderRelease((WGPURenderPassEncoder)m_CurrentRenderPass.GetHandle());
+        //m_GraphicsDevice.SubmitCommandBuffers(&m_CurrentCommandBuffer, 1);
+        Renderer::ResetCurrentRenderPass();
+        m_CurrentRenderPass = {nullptr};*/
+        Unbind();
+        Bind();
+        wgpuQueueOnSubmittedWorkDone(m_GraphicsDevice.GetQueue(), 0, [](WGPUQueueWorkDoneStatus status, void* userdata)
+        {
+            auto* callback = (FlushCallbackData*)userdata;
+            if(status != WGPUQueueWorkDoneStatus_Success)
+            {
+                BeeCoreWarn("Failed to flush framebuffer: {}", status);
+                return ;
+            }
+            (*callback->Callback)();
+            *(callback->Flushed) = true;
+            BeeCoreTrace("Flushed framebuffer");
+        }, (void*)&m_FlushCallbackData);
+        //Renderer::SubmitCommandBuffer(m_CurrentCommandBuffer);
+
     }
 }

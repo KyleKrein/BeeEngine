@@ -81,6 +81,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Locale/ImGuiLocalizationPanel.h
         src/Core/AssetManagement/LocalizedAsset.cpp
         src/Core/AssetManagement/LocalizedAsset.h
+        src/Renderer/SceneRenderer.cpp
+        src/Renderer/SceneRenderer.h
 )
 
 
@@ -308,6 +310,9 @@ add_compile_definitions($<$<CONFIG:Debug>:BEE_ENABLE_CHECKS>)
 
 add_compile_definitions($<$<CONFIG:Debug>:BEE_ENABLE_ASSERTS>)
 add_compile_definitions($<$<CONFIG:Release>:BEE_ENABLE_ASSERTS>)
+
+add_compile_definitions($<$<CONFIG:Debug>:BEE_ENABLE_PROFILING>)
+add_compile_definitions($<$<CONFIG:Release>:BEE_ENABLE_PROFILING>)
 
 # Включаем валидацию слоев Vulkan только для debug configuration
 add_compile_definitions($<$<CONFIG:Debug>:BEE_VULKAN_ENABLE_VALIDATION_LAYERS>)

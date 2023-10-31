@@ -4,6 +4,10 @@ Assets:
     Type: AssetType::Texture2D
     Handle: 2492935997162504003
     FilePath: Assets/bee-png.png
+  - Name: Bee Prefab
+    Type: AssetType::Prefab
+    Handle: 3914033094796980827
+    FilePath: Prefabs/Bee Prefab.beeprefab
   - Name: pc
     Type: AssetType::Texture2D
     Handle: 7772243033513047726

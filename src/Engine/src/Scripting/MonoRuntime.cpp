@@ -364,7 +364,7 @@ namespace BeeEngine
         {
             auto& mField = field.GetMField();
             auto type = mField.GetType();
-            if(type == MType::Asset || type == MType::Texture2D || type == MType::Font)
+            if(type == MType::Asset || type == MType::Texture2D || type == MType::Font || type == MType::Prefab)
             {
                 AssetHandle handle = field.GetData<AssetHandle>();
                 if(AssetManager::IsAssetHandleValid(handle))

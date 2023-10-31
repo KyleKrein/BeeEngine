@@ -43,6 +43,8 @@ namespace BeeEngine
         static MonoString* Entity_GetName(uint64_t id);
         static void Entity_SetName(uint64_t id, MonoString* name);
         static void Entity_Destroy(uint64_t id);
+        static uint64_t Entity_Duplicate(uint64_t id);
+        static uint64_t Entity_InstantiatePrefab(AssetHandle* handle, uint64_t parentId);
         static MonoString * TextRendererComponent_GetText(uint64_t id);
         static void TextRendererComponent_SetText(uint64_t id, MonoString* text);
         static uint64_t Entity_FindEntityByName(MonoString* name);

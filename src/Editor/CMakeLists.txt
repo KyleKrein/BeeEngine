@@ -25,6 +25,8 @@ target_link_libraries(BeeEngineEditor PUBLIC BeeEngine)
 #endif ()
 copy_mono_dlls(BeeEngineEditor)
 add_compile_definitions(BEE_ENABLE_CHECKS)
+add_compile_definitions($<$<CONFIG:Debug>:BEE_ENABLE_PROFILING>)
+add_compile_definitions($<$<CONFIG:Release>:BEE_ENABLE_PROFILING>)
 #file(COPY Assets DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 #file(COPY ../Engine/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/EngineInclude) #this is for NativeScripting

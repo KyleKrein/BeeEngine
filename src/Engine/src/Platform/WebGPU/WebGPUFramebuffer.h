@@ -16,6 +16,7 @@ namespace BeeEngine::Internal
         ~WebGPUFrameBuffer() override;
         void Bind() override;
         void Unbind() override;
+        void Flush(const std::function<void()>& callback) override;
         void Resize(uint32_t width, uint32_t height) override;
         void Invalidate() override;
         [[nodiscard]] uintptr_t GetColorAttachmentRendererID(uint32_t index) const override
@@ -70,5 +71,13 @@ namespace BeeEngine::Internal
 
         mutable bool m_WaitingForReadPixel {false};
         mutable BufferContext m_EntityIDBufferContext {&m_ReadPixelValue, &m_EntityIDBuffer, &m_WaitingForReadPixel};
+        std::function<void()> m_FlushCallback;
+        bool m_Flushed {true};
+        struct FlushCallbackData
+        {
+            std::function<void()>* Callback;
+            bool* Flushed;
+        };
+        FlushCallbackData m_FlushCallbackData {&m_FlushCallback, &m_Flushed};
     };
 }

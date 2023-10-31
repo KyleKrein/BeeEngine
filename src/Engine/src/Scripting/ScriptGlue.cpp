@@ -7,6 +7,7 @@
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
 #include "Scene/Components.h"
+#include "Scene/Prefab.h"
 #include "Core/Input.h"
 #include "MAssembly.h"
 #include "Core/Logging/GameLogger.h"
@@ -81,6 +82,8 @@ namespace BeeEngine
             BEE_INTERNAL_CALL(Entity_GetName);
             BEE_INTERNAL_CALL(Entity_SetName);
             BEE_INTERNAL_CALL(Entity_Destroy);
+            BEE_INTERNAL_CALL(Entity_Duplicate);
+            BEE_INTERNAL_CALL(Entity_InstantiatePrefab);
 
             BEE_INTERNAL_CALL(Entity_GetTransformComponent);
             BEE_INTERNAL_CALL(Entity_GetTranslation);
@@ -385,6 +388,7 @@ namespace BeeEngine
                 return 0;
             }
         }
+        return 0;
     }
 
     bool ScriptGlue::Entity_HasChild(uint64_t parentId, uint64_t childId)
@@ -434,5 +438,22 @@ namespace BeeEngine
         }
         entity.GetComponent<TagComponent>().Tag = nameStr;
         mono_free(nameStr);
+    }
+
+    uint64_t ScriptGlue::Entity_Duplicate(uint64_t id)
+    {
+        auto* scene = ScriptingEngine::GetSceneContext();
+        auto entity = scene->GetEntityByUUID(id);
+        auto newEntity = scene->DuplicateEntity(entity);
+        return newEntity.GetUUID();
+    }
+
+    uint64_t ScriptGlue::Entity_InstantiatePrefab(AssetHandle *handlePtr, uint64_t parentId)
+    {
+        auto* scene = ScriptingEngine::GetSceneContext();
+        auto parentEntity = parentId == 0 ? Entity::Null : scene->GetEntityByUUID(parentId);
+        auto& prefab = AssetManager::GetAsset<Prefab>(*handlePtr);
+        auto entity = scene->InstantiatePrefab(prefab, parentEntity);
+        return entity.GetUUID();
     }
 }

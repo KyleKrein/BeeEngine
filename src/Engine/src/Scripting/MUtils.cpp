@@ -46,6 +46,7 @@ namespace BeeEngine
                 {"BeeEngine.Asset", MType::Asset},
                 {"BeeEngine.Texture2D", MType::Texture2D},
                 {"BeeEngine.Font", MType::Font},
+                {"BeeEngine.Prefab", MType::Prefab},
         };
         if(MTypeMap.contains(name))
             return MTypeMap.at(name);
@@ -91,6 +92,7 @@ namespace BeeEngine
                 {"Asset", MType::Asset},
                 {"Texture2D", MType::Texture2D},
                 {"Font", MType::Font},
+                {"Prefab", MType::Prefab},
         };
         if(MTypeMap.contains(name))
             return MTypeMap.at(name);
@@ -170,6 +172,8 @@ namespace BeeEngine
                 return "Texture2D";
             case MType::Font:
                 return "Font";
+            case MType::Prefab:
+                return "Prefab";
 
             case MType::None:
                 break;
@@ -271,6 +275,7 @@ namespace BeeEngine
             case MType::Asset:
             case MType::Texture2D:
             case MType::Font:
+            case MType::Prefab:
                 return sizeof (AssetHandle);
 
             case MType::None:

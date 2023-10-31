@@ -3,12 +3,14 @@
 //
 
 #include "ViewPort.h"
+#include "Debug/Instrumentor.h"
 #include "Scene/Entity.h"
 #include "Scene/Components.h"
 #include "gtc/type_ptr.hpp"
 #include "Core/Events/Event.h"
 #include "Scene/SceneSerializer.h"
 #include "Core/ResourceManager.h"
+#include "Renderer/SceneRenderer.h"
 
 
 namespace BeeEngine::Editor
@@ -48,18 +50,21 @@ namespace BeeEngine::Editor
 
     void ViewPort::UpdateRuntime() noexcept
     {
+        BEE_PROFILE_FUNCTION();
         Renderer::Clear();
         m_FrameBuffer->Bind();
 
-        m_Scene->UpdateRuntime(m_GameDomain->GetLocale());
+        m_Scene->UpdateRuntime();
+        SceneRenderer::RenderScene(*m_Scene, *m_FrameBuffer, m_GameDomain->GetLocale());
 
         m_FrameBuffer->Unbind();
     }
     void ViewPort::UpdateEditor(EditorCamera& camera) noexcept
     {
+        BEE_PROFILE_FUNCTION();
         m_FrameBuffer->Bind();
 
-        m_Scene->UpdateEditor(camera, m_GameDomain->GetLocale());
+        SceneRenderer::RenderScene(*m_Scene, *m_FrameBuffer, m_GameDomain->GetLocale(), camera.GetViewProjection());
 
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;

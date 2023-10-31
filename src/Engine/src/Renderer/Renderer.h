@@ -73,6 +73,8 @@ namespace BeeEngine
             s_RendererAPI->SubmitCommandBuffer(commandBuffer);
         }
 
+        static void OnSubmittedWorkDone(const std::function<void()>& callback);
+
         static void SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, gsl::span<byte> instanceData);
         static void Flush();
         //static void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount)

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace BeeEngine.Internal
 {
@@ -19,6 +20,14 @@ namespace BeeEngine.Internal
         public static bool operator !=(AssetHandle left, AssetHandle right)
         {
             return !(left == right);
+        }
+        public override string ToString()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.Append(RegisterID);
+            stringBuilder.Append(':');
+            stringBuilder.Append(AssetID);
+            return stringBuilder.ToString();
         }
     }
 }
