@@ -1,0 +1,147 @@
+Scene: Untitled
+Entities:
+  - Entity: 1654174597457221855
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [-0.281981111, 0.059363842, -31.8999996]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveVerticalFOV: 0.790634155
+        PerspectiveNearClip: 0.00999999978
+        PerspectiveFarClip: 102
+        OrthographicSize: 10
+        OrthographicNearClip: -1
+        OrthographicFarClip: 1
+        AspectRatio: 1.79742765
+      Primary: true
+      FixedAspectRatio: false
+    HierarchyComponent:
+      []
+  - Entity: 6543990828666799110
+    TagComponent:
+      Tag: Body
+    TransformComponent:
+      Translation: [0.430391908, 5.13500071, 0]
+      Rotation: [0, -0, 0]
+      Scale: [0.400000006, 0.5, 1]
+    CircleRendererComponent:
+      Color: [1, 1, 1, 1]
+      Thickness: 1
+      Fade: 0.00499999989
+    RigidBody2DComponent:
+      Type: Dynamic
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Type: Circle
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    HierarchyComponent:
+      []
+  - Entity: 11359134172777469541
+    TagComponent:
+      Tag: Block
+    TransformComponent:
+      Translation: [-2.00128102, -2.6412127, 0]
+      Rotation: [0, -0, -0.606620371]
+      Scale: [4.49999809, 0.200000003, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Has Texture: false
+      Texture: [13069520837414249315, 14444588957280459588]
+      Tiling Factor: 1
+    RigidBody2DComponent:
+      Type: Static
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Type: Box
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    HierarchyComponent:
+      []
+  - Entity: 5417189029863670035
+    TagComponent:
+      Tag: Block
+    TransformComponent:
+      Translation: [1.68683898, 3.01090622, 0]
+      Rotation: [0, -0, 0.525639653]
+      Scale: [4.49999857, 0.199999958, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Has Texture: false
+      Texture: [13069520837414249315, 14444588957280459588]
+      Tiling Factor: 1
+    RigidBody2DComponent:
+      Type: Static
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Type: Box
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    HierarchyComponent:
+      []
+  - Entity: 173097153514845159
+    TagComponent:
+      Tag: Block
+    TransformComponent:
+      Translation: [1.16981804, -0.488869965, 0]
+      Rotation: [0, -0, 0.520170331]
+      Scale: [4.49999619, 0.199999943, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Has Texture: false
+      Texture: [13069520837414249315, 14444588957280459588]
+      Tiling Factor: 1
+    RigidBody2DComponent:
+      Type: Static
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Type: Box
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    HierarchyComponent:
+      []
+  - Entity: 9888282184518981468
+    TagComponent:
+      Tag: Block
+    TransformComponent:
+      Translation: [-1.85008109, 1.68683314, 0]
+      Rotation: [0, -0, -0.588461697]
+      Scale: [4.49999809, 0.200000003, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Has Texture: false
+      Texture: [13069520837414249315, 14444588957280459588]
+      Tiling Factor: 1
+    RigidBody2DComponent:
+      Type: Static
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Type: Box
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    HierarchyComponent:
+      []

@@ -8,6 +8,9 @@
 #include "Renderer.h"
 #include "MSDFData.h"
 #include "Core/Application.h"
+#include "ext/matrix_transform.hpp"
+#include "gtx/quaternion.hpp"
+#include "Core/Math/Math.h"
 
 namespace BeeEngine::Internal
 {
@@ -238,4 +241,29 @@ namespace BeeEngine::Internal
             }
         }
     }
+
+    void RenderingQueue::SubmitLineImpl(const glm::vec3 &start, const glm::vec3 &end, const Color4 &color, BindingSet &cameraBindingSet, float lineWidth)
+    {
+        auto& lineModel = Application::GetInstance().GetAssetManager().GetModel("Renderer_Line");
+        struct LineInstancedData
+        {
+            Color4 Color;
+            glm::vec3 PositionOffset0;
+            glm::vec3 PositionOffset1;
+            glm::vec3 PositionOffset2;
+            glm::vec3 PositionOffset3;
+        };
+        glm::mat4 transform = Math::GetTransformFromTo(start, end, lineWidth);
+        LineInstancedData data{
+            .Color = color,
+            .PositionOffset0 = transform * glm::vec4(-0.5f, -0.5f, 0.0f, 1.0f),
+            .PositionOffset1 = transform * glm::vec4(-0.5f, 0.5f, 0.0f, 1.0f),
+            .PositionOffset2 = transform * glm::vec4(0.5f, 0.5f, 0.0f, 1.0f),
+            .PositionOffset3 = transform * glm::vec4(0.5f, -0.5f, 0.0f, 1.0f),
+        };
+
+        SubmitInstanceImpl({.Model = &lineModel, .BindingSets = {&cameraBindingSet}}, {(byte*)&data, sizeof(LineInstancedData)});
+    }
+
+
 }

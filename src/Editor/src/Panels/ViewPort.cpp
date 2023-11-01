@@ -48,7 +48,7 @@ namespace BeeEngine::Editor
         //m_CameraController.OnEvent(event);
     }
 
-    void ViewPort::UpdateRuntime() noexcept
+    void ViewPort::UpdateRuntime(bool renderPhysicsColliders) noexcept
     {
         BEE_PROFILE_FUNCTION();
         Renderer::Clear();
@@ -57,15 +57,31 @@ namespace BeeEngine::Editor
         m_Scene->UpdateRuntime();
         SceneRenderer::RenderScene(*m_Scene, *m_FrameBuffer, m_GameDomain->GetLocale());
 
+        auto primaryCameraEntity = m_Scene->GetPrimaryCameraEntity();
+        if(primaryCameraEntity)
+        {
+            auto& cameraComponent = primaryCameraEntity.GetComponent<CameraComponent>();
+            auto& camera = cameraComponent.Camera;
+            auto viewMatrix = glm::inverse(Math::ToGlobalTransform(primaryCameraEntity));
+            auto viewProjection = camera.GetProjectionMatrix() * viewMatrix;
+            m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjection)), sizeof(glm::mat4));
+            RenderSelectedEntityOutline();
+            if(renderPhysicsColliders)
+                SceneRenderer::RenderPhysicsColliders(*m_Scene, *m_FrameBuffer, *m_CameraBindingSet);
+        }
         m_FrameBuffer->Unbind();
     }
-    void ViewPort::UpdateEditor(EditorCamera& camera) noexcept
+    void ViewPort::UpdateEditor(EditorCamera& camera, bool renderPhysicsColliders) noexcept
     {
         BEE_PROFILE_FUNCTION();
         m_FrameBuffer->Bind();
-
-        SceneRenderer::RenderScene(*m_Scene, *m_FrameBuffer, m_GameDomain->GetLocale(), camera.GetViewProjection());
-
+        m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(camera.GetViewProjection())), sizeof(glm::mat4));
+        if(m_SelectedEntity && m_SelectedEntity.HasComponent<CameraComponent>())
+            RenderCameraFrustum();
+        SceneRenderer::RenderScene(*m_Scene, *m_FrameBuffer, m_GameDomain->GetLocale(), camera, camera.GetViewProjection(), camera.GetPosition(), camera.GetForwardDirection(), camera.GetUpDirection(), camera.GetRightDirection());
+        RenderSelectedEntityOutline();
+        if(renderPhysicsColliders)
+            SceneRenderer::RenderPhysicsColliders(*m_Scene, *m_FrameBuffer, *m_CameraBindingSet);
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
@@ -244,5 +260,74 @@ namespace BeeEngine::Editor
         BeeCoreTrace("Opening scene {0}", path.AsUTF8());
         m_NewSceneWasLoaded = true;
         m_ScenePath = path.AsUTF8();
+    }
+
+    void ViewPort::RenderCameraFrustum()
+    {
+        auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
+        auto& cameraComponent = m_SelectedEntity.GetComponent<CameraComponent>();
+        auto& camera = cameraComponent.Camera;
+        auto transform = Math::ToGlobalTransform(m_SelectedEntity);
+        float aspectRatio = camera.GetAspectRatio();
+        float fovY = camera.GetVerticalFOV();
+        float zNear = camera.GetNearClip();
+        float zFar = camera.GetFarClip();
+        Color4 color = Color4::Green;
+
+        // Вычисление ширины и высоты ближних и дальних плоскостей фрустума
+        float nearHeight = tan(glm::radians(fovY) / 2.0f) * zNear * 2.0f;
+        float nearWidth = nearHeight * aspectRatio;
+        float farHeight = tan(glm::radians(fovY) / 2.0f) * zFar * 2.0f;
+        float farWidth = farHeight * aspectRatio;
+
+        // Вычисление вершин фрустума в локальных координатах камеры
+        glm::vec3 ntl = glm::vec3(-nearWidth / 2.0f, nearHeight / 2.0f, zNear); //TODO: must be -zNear and -zFar everywhere
+        glm::vec3 ntr = glm::vec3(nearWidth / 2.0f, nearHeight / 2.0f, zNear);
+        glm::vec3 nbl = glm::vec3(-nearWidth / 2.0f, -nearHeight / 2.0f, zNear);
+        glm::vec3 nbr = glm::vec3(nearWidth / 2.0f, -nearHeight / 2.0f, zNear);
+
+        glm::vec3 ftl = glm::vec3(-farWidth / 2.0f, farHeight / 2.0f, zFar);
+        glm::vec3 ftr = glm::vec3(farWidth / 2.0f, farHeight / 2.0f, zFar);
+        glm::vec3 fbl = glm::vec3(-farWidth / 2.0f, -farHeight / 2.0f, zFar);
+        glm::vec3 fbr = glm::vec3(farWidth / 2.0f, -farHeight / 2.0f, zFar);
+
+        // Преобразование вершин в мировые координаты
+        ntl = glm::vec3(transform * glm::vec4(ntl, 1.0f));
+        ntr = glm::vec3(transform * glm::vec4(ntr, 1.0f));
+        nbl = glm::vec3(transform * glm::vec4(nbl, 1.0f));
+        nbr = glm::vec3(transform * glm::vec4(nbr, 1.0f));
+
+        ftl = glm::vec3(transform * glm::vec4(ftl, 1.0f));
+        ftr = glm::vec3(transform * glm::vec4(ftr, 1.0f));
+        fbl = glm::vec3(transform * glm::vec4(fbl, 1.0f));
+        fbr = glm::vec3(transform * glm::vec4(fbr, 1.0f));
+
+        // Отрисовка линий фрустума
+        // Верхняя грань
+        Renderer::SubmitLine(ntl, ntr, *m_CameraBindingSet, color, 0.1f);
+        Renderer::SubmitLine(ntr, ftr, *m_CameraBindingSet, color, 0.1f);
+        Renderer::SubmitLine(ftr, ftl, *m_CameraBindingSet, color, 0.1f);
+        Renderer::SubmitLine(ftl, ntl, *m_CameraBindingSet, color, 0.1f);
+
+        // Нижняя грань
+        Renderer::SubmitLine(nbl, nbr, *m_CameraBindingSet, color, 0.1f);
+        Renderer::SubmitLine(nbr, fbr, *m_CameraBindingSet, color, 0.1f);
+        Renderer::SubmitLine(fbr, fbl, *m_CameraBindingSet, color, 0.1f);
+        Renderer::SubmitLine(fbl, nbl, *m_CameraBindingSet, color, 0.1f);
+
+        // Боковые грани
+        Renderer::SubmitLine(ntl, nbl, *m_CameraBindingSet, color, 0.1f);
+        Renderer::SubmitLine(ntr, nbr, *m_CameraBindingSet, color, 0.1f);
+        Renderer::SubmitLine(ftl, fbl, *m_CameraBindingSet, color, 0.1f);
+        Renderer::SubmitLine(ftr, fbr, *m_CameraBindingSet, color, 0.1f);
+    }
+
+    void ViewPort::RenderSelectedEntityOutline()
+    {
+        if(m_SelectedEntity && (m_SelectedEntity.HasComponent<SpriteRendererComponent>() || m_SelectedEntity.HasComponent<CircleRendererComponent>()))
+        {
+            auto transform = Math::ToGlobalTransform(m_SelectedEntity);
+            Renderer::DrawRect(transform, Color4::DarkOrange, *m_CameraBindingSet, 0.05f);
+        }
     }
 }

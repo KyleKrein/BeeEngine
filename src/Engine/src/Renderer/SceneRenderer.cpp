@@ -12,6 +12,8 @@
 #include "Core/Application.h"
 #include "gtc/type_ptr.hpp"
 #include "Debug/Instrumentor.h"
+#include <cmath>
+#include <glm/glm.hpp>
 
 namespace BeeEngine
 {
@@ -34,23 +36,30 @@ namespace BeeEngine
         int32_t EntityID = -1;
     };
 
-    void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix)
+    void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix, const Math::Cameras::Frustum& frustum)
     {
         BEE_PROFILE_FUNCTION();
         Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
         Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
         cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
-#if 1 //use SceneTreeRenderer
         SceneTreeRenderer sceneTreeRenderer(viewProjectionMatrix, cameraBindingSet.get());
 
         {
             BEE_PROFILE_SCOPE("SceneTreeRenderer::AddEntities");
-            constexpr static float epsilon = 1e-6;
             auto spriteView = scene.m_Registry.view<SpriteRendererComponent>();
             for( auto entity : spriteView )
             {
+                Entity e = {entity, &scene};
+                auto& transformComponent = e.GetComponent<TransformComponent>();
+                Math::Cameras::Sphere sphere{};
+                sphere.radius = 0.5f * transformComponent.Scale.x;
+                glm::mat4 transform = Math::ToGlobalTransform(e);
+                if(!sphere.IsOnFrustum(frustum, transform))
+                {
+                    //continue;
+                }
                 auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
-                SpriteInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, &scene}), spriteComponent.Color, spriteComponent.TilingFactor,
+                SpriteInstanceBufferData data {transform, spriteComponent.Color, spriteComponent.TilingFactor,
                                                static_cast<int32_t>(entity)+1};
                 std::vector<BindingSet*> bindingSets {cameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture(locale)->GetBindingSet() : s_BlankTexture->GetBindingSet())};
                 sceneTreeRenderer.AddEntity(data.Model, data.Color.A() < 0.95f || spriteComponent.HasTexture, *s_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
@@ -60,8 +69,17 @@ namespace BeeEngine
             std::vector<BindingSet*> circleBindingSets {cameraBindingSet.get()};
             for( auto entity : circleGroup )
             {
+                Entity e = {entity, &scene};
+                auto& transformComponent = e.GetComponent<TransformComponent>();
+                Math::Cameras::Sphere sphere{};
+                sphere.radius = 0.5f * transformComponent.Scale.x;
+                glm::mat4 transform = Math::ToGlobalTransform(e);
+                if(!sphere.IsOnFrustum(frustum, transform))
+                {
+                    //continue;
+                }
                 auto& circleComponent = circleGroup.get<CircleRendererComponent>(entity);
-                CircleInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, &scene}), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade,
+                CircleInstanceBufferData data {transform, circleComponent.Color, circleComponent.Thickness, circleComponent.Fade,
                                                static_cast<int32_t>(entity)+1};
                 sceneTreeRenderer.AddEntity(data.Model, true, *s_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
             }
@@ -109,43 +127,13 @@ namespace BeeEngine
             }
             Renderer::Flush();
         }
-#else
-        auto spriteView = scene.m_Registry.view<SpriteRendererComponent>();
-        for( auto entity : spriteView )
-        {
-            auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
-            SpriteInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, &scene}), spriteComponent.Color, spriteComponent.TilingFactor,
-                                           static_cast<int32_t>(entity)+1};
-            std::vector<BindingSet*> bindingSets {cameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture(locale)->GetBindingSet() : s_BlankTexture->GetBindingSet())};
-            Renderer::SubmitInstance(*s_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
-        }
-
-        auto circleGroup = scene.m_Registry.view<CircleRendererComponent>();
-        std::vector<BindingSet*> circleBindingSets {cameraBindingSet.get()};
-        for( auto entity : circleGroup )
-        {
-            auto& circleComponent = circleGroup.get<CircleRendererComponent>(entity);
-            CircleInstanceBufferData data {Math::ToGlobalTransform(Entity{entity, &scene}), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade,
-                                           static_cast<int32_t>(entity)+1};
-            Renderer::SubmitInstance(*s_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
-        }
-
-        auto textGroup = scene.m_Registry.view<TextRendererComponent>();
-        SceneTreeRenderer sceneTreeRenderer(viewProjectionMatrix, cameraBindingSet.get());
-        for( auto entity : textGroup )
-        {
-            auto& textComponent = textGroup.get<TextRendererComponent>(entity);
-            sceneTreeRenderer.AddText(textComponent.Text, &textComponent.Font(locale), Math::ToGlobalTransform(Entity{entity, &scene}), textComponent.Configuration,
-                                      static_cast<int32_t>(entity)+1);
-        }
-        sceneTreeRenderer.Render();
-#endif
     }
 
     void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale)
     {
         SceneCamera* mainCamera = nullptr;
         glm::mat4 cameraTransform;
+        glm::vec3 cameraPosition;
 
         auto camerasGroup = scene.m_Registry.group<CameraComponent>(entt::get<TransformComponent>);
         for (auto entity:camerasGroup)
@@ -154,15 +142,21 @@ namespace BeeEngine
             if(camera.Primary)
             {
                 mainCamera = &camera.Camera;
-                cameraTransform = transform.GetTransform();
+                cameraTransform = Math::ToGlobalTransform(Entity{entity, &scene});
+                auto[translation, rotation, scale] = Math::DecomposeTransform(cameraTransform);
+                cameraPosition = translation;
                 break;
             }
         }
 
         if(mainCamera)
         {
-            auto cameraViewProj = mainCamera->GetProjectionMatrix() * glm::inverse(cameraTransform);
-            RenderScene(scene, frameBuffer, locale, cameraViewProj);
+            auto cameraViewMatrix = glm::inverse(cameraTransform);
+            auto cameraViewProj = mainCamera->GetProjectionMatrix() * cameraViewMatrix;
+            glm::vec3 forward = -glm::vec3(cameraViewMatrix[0][2], cameraViewMatrix[1][2], cameraViewMatrix[2][2]);
+            glm::vec3 right = glm::vec3(cameraViewMatrix[0][0], cameraViewMatrix[1][0], cameraViewMatrix[2][0]);
+            glm::vec3 up = glm::vec3(cameraViewMatrix[0][1], cameraViewMatrix[1][1], cameraViewMatrix[2][1]);
+            RenderScene(scene, frameBuffer, locale, *mainCamera, cameraViewProj, cameraPosition, forward, up, right);
         }
     }
 
@@ -171,5 +165,50 @@ namespace BeeEngine
         s_RectModel = {&Application::GetInstance().GetAssetManager().GetModel("Renderer2D_Rectangle")};
         s_CircleModel = {&Application::GetInstance().GetAssetManager().GetModel("Renderer2D_Circle")};
         s_BlankTexture = {&Application::GetInstance().GetAssetManager().GetTexture("Blank")};
+    }
+
+    void
+    SceneRenderer::RenderPhysicsColliders(Scene &scene, FrameBuffer &frameBuffer, const glm::mat4 &viewProjectionMatrix)
+    {
+        Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
+        Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
+        cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
+        RenderPhysicsColliders(scene, frameBuffer, *cameraBindingSet);
+    }
+
+    void SceneRenderer::RenderPhysicsColliders(Scene &scene, FrameBuffer &frameBuffer, BindingSet &cameraBindingSet)
+    {
+        auto& registry = scene.m_Registry;
+        auto view = registry.view<BoxCollider2DComponent>();
+        {
+            for (auto entity : view)
+            {
+                auto bc2d = view.get<BoxCollider2DComponent>(entity);
+                auto[translation, rotation, scale] = Math::DecomposeTransform(Math::ToGlobalTransform(Entity{entity, &scene}));
+                if(bc2d.Type == BoxCollider2DComponent::ColliderType::Box)
+                {
+                    translation = translation + glm::vec3(bc2d.Offset, 0.001f);
+                    scale = scale * glm::vec3(bc2d.Size * 2.0f, 1.0f);
+
+                    glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
+                                          * glm::rotate(glm::mat4(1.0f), rotation.z, glm::vec3(0.0f, 0.0f, 1.0f))
+                                          * glm::translate(glm::mat4(1.0f), glm::vec3(bc2d.Offset, 0.001f))
+                                          * glm::scale(glm::mat4(1.0f), scale);
+
+                    Renderer::DrawRect(transform, Color4::DarkGreen, cameraBindingSet, 0.1f);
+                }
+                else if(bc2d.Type == BoxCollider2DComponent::ColliderType::Circle)
+                {
+                    translation = translation + glm::vec3(bc2d.Offset, -0.001f);
+                    //scale = scale * glm::vec3(bc2d.Radius * 2.0f);
+
+                    glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation)
+                                          * glm::scale(glm::mat4(1.0f), scale);
+                    std::vector<BindingSet*> bindingSets {&cameraBindingSet};
+                    CircleInstanceBufferData data {transform, Color4::DarkGreen, 0.05f, 0.005f, static_cast<int32_t>(entity)+1};
+                    Renderer::SubmitInstance(*s_CircleModel, bindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
+                }
+            }
+        }
     }
 } // BeeEngine

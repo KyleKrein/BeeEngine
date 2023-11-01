@@ -83,6 +83,11 @@ namespace BeeEngine::Internal
             GetInstance().SubmitTextImpl(text, font, cameraBindingSet, transform, config);
         }
 
+        static void SubmitLine(const glm::vec3& start, const glm::vec3& end, const Color4& color, BindingSet& cameraBindingSet, float lineWidth)
+        {
+            GetInstance().SubmitLineImpl(start, end, color, cameraBindingSet, lineWidth);
+        }
+
         static void Flush()
         {
             GetInstance().FlushImpl();
@@ -108,6 +113,7 @@ namespace BeeEngine::Internal
             return instance;
         }
         void SubmitInstanceImpl(RenderInstance&& instance, gsl::span<byte> instanceData);
+        void SubmitLineImpl(const glm::vec3& start, const glm::vec3& end, const Color4& color, BindingSet& cameraBindingSet, float lineWidth);
         void FlushImpl();
         void FinishFrameImpl();
 

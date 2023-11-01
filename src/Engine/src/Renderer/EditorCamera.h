@@ -40,7 +40,10 @@ namespace BeeEngine
         float GetPitch() const noexcept { return m_Pitch; }
         float GetYaw() const noexcept { return m_Yaw; }
         glm::mat4 GetViewProjection() const noexcept { return m_ProjectionMatrix * m_ViewMatrix; }
-
+        float GetAspectRatio() const noexcept { return m_AspectRatio; }
+        float GetVerticalFOV() const noexcept { return m_Fov; }
+        float GetNearClip() const noexcept { return m_NearClip; }
+        float GetFarClip() const noexcept { return m_FarClip; }
     private:
         void UpdateProjection() noexcept;
         void UpdateView() noexcept;

@@ -163,4 +163,102 @@ namespace BeeEngine::Math
         else // This means that there is a line intersection but not a ray intersection.
             return false;
     }
+
+    glm::vec3 GetScaleFromMatrix(const glm::mat4 &mat)
+    {
+        glm::vec3 globalScale;
+        globalScale.x = glm::length(mat[0]); // Длина первой колонны
+        globalScale.y = glm::length(mat[1]); // Длина второй колонны
+        globalScale.z = glm::length(mat[2]); // Длина третьей колонны
+        return globalScale;
+    }
+
+    glm::mat4 GetTransformFromTo(const glm::vec3 &start, const glm::vec3 &end, float lineWidth)
+    {
+        // Вычислить вектор направления и его длину
+        glm::vec3 direction = glm::normalize(end - start);
+        float length = glm::length(end - start);
+
+        // Вычислить вектор направления для начальной позиции линии (например, вдоль оси Z)
+        glm::vec3 initialDirection(0.0f, 1.0f, 0.0f);
+
+        // Вычислить кватернион вращения между начальным направлением и желаемым направлением
+        glm::quat rotation = glm::rotation(initialDirection, direction);
+        glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
+
+        // Вычислить среднюю точку между start и end для правильного позиционирования
+        glm::vec3 midpoint = (start + end) / 2.0f;
+
+        // Создать матрицу трансформации
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), midpoint);  // Переместить к середине линии
+        transform *= rotationMatrix;  // Применить вращение
+        transform = glm::scale(transform, glm::vec3(lineWidth, length, lineWidth));  // Применить масштабирование
+
+        return transform;
+    }
+    Cameras::Frustum
+    Cameras::CreateFrustumFromCamera(const glm::vec3 &position, const glm::vec3 &front, const glm::vec3 &right,
+                                           const glm::vec3 &up, float aspect, float fovY, float zNear, float zFar)
+    {
+        Cameras::Frustum frustum;
+        float tangent = tan(glm::radians(fovY) / 2.0f);
+        float nh = zNear * tangent;
+        float nw = nh * aspect;
+        float fh = zFar * tangent;
+        float fw = fh * aspect;
+
+        glm::vec3 nc = position + front * zNear;
+        glm::vec3 fc = position + front * zFar;
+
+        glm::vec3 ntl = nc + up * nh - right * nw;
+        glm::vec3 ntr = nc + up * nh + right * nw;
+        glm::vec3 nbl = nc - up * nh - right * nw;
+        glm::vec3 nbr = nc - up * nh + right * nw;
+
+        glm::vec3 ftl = fc + up * fh - right * fw;
+        glm::vec3 ftr = fc + up * fh + right * fw;
+        glm::vec3 fbl = fc - up * fh - right * fw;
+        glm::vec3 fbr = fc - up * fh + right * fw;
+
+        frustum.NearFace.Normal = glm::normalize(nc - position);
+        frustum.FarFace.Normal = glm::normalize(fc - position);
+        frustum.LeftFace.Normal = glm::normalize(glm::cross(up, nbl - ntl));
+        frustum.RightFace.Normal = glm::normalize(glm::cross(up, ntr - nbr));
+        frustum.TopFace.Normal = glm::normalize(glm::cross(right, ntr - ntl));
+        frustum.BottomFace.Normal = glm::normalize(glm::cross(right, nbr - nbl));
+
+        frustum.NearFace.Distance = glm::dot(frustum.NearFace.Normal, ntl);
+        frustum.FarFace.Distance = glm::dot(frustum.FarFace.Normal, ftl);
+        frustum.LeftFace.Distance = glm::dot(frustum.LeftFace.Normal, ntl);
+        frustum.RightFace.Distance = glm::dot(frustum.RightFace.Normal, ntr);
+        frustum.TopFace.Distance = glm::dot(frustum.TopFace.Normal, ntl);
+        frustum.BottomFace.Distance = glm::dot(frustum.BottomFace.Normal, nbl);
+
+        return frustum;
+    }
+
+    bool Cameras::Sphere::IsOnFrustum(const Cameras::Frustum &camFrustum, const glm::mat4 &transform) const
+    {
+        //Get global scale is computed by doing the magnitude of
+        //X, Y and Z model matrix's column.
+        const glm::vec3 globalScale = Math::GetScaleFromMatrix(transform);
+
+        //Get our global center with process it with the global model matrix of our transform
+        const glm::vec3 globalCenter{ transform * glm::vec4(center, 1.f) };
+
+        //To wrap correctly our shape, we need the maximum scale scalar.
+        const float maxScale = std::max(std::max(globalScale.x, globalScale.y), globalScale.z);
+
+        //Max scale is assuming for the diameter. So, we need the half to apply it to our radius
+        Cameras::Sphere globalSphere{globalCenter, radius * (maxScale * 0.5f)};
+
+        //Check Firstly the result that have the most chance
+        //to faillure to avoid to call all functions.
+        return (globalSphere.IsOnOrForwardPlane(camFrustum.LeftFace) &&
+                globalSphere.IsOnOrForwardPlane(camFrustum.RightFace) &&
+                globalSphere.IsOnOrForwardPlane(camFrustum.FarFace) &&
+                globalSphere.IsOnOrForwardPlane(camFrustum.NearFace) &&
+                globalSphere.IsOnOrForwardPlane(camFrustum.TopFace) &&
+                globalSphere.IsOnOrForwardPlane(camFrustum.BottomFace));
+    }
 }

@@ -25,8 +25,8 @@ namespace BeeEngine::Editor
     public:
         ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity, const Color4& clearColor = Color4::CornflowerBlue) noexcept;
         void OnEvent(EventDispatcher& event) noexcept;
-        void UpdateRuntime() noexcept;
-        void UpdateEditor(EditorCamera& camera) noexcept;
+        void UpdateRuntime(bool renderPhysicsColliders) noexcept;
+        void UpdateEditor(EditorCamera& camera, bool renderPhysicsColliders) noexcept;
         void Render(EditorCamera& camera) noexcept;
         Ref<Scene>& GetScene() noexcept { return m_Scene; }
         void SetScene(const Ref<Scene>& scene) noexcept { m_Scene.reset(); m_Scene = scene; }
@@ -83,10 +83,17 @@ namespace BeeEngine::Editor
 
         std::string m_ScenePath;
 
+        Ref<UniformBuffer> m_CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
+        Ref<BindingSet> m_CameraBindingSet = BindingSet::Create({{0, *m_CameraUniformBuffer}});
+
 
         bool OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept;
         bool OnKeyButtonPressed(KeyPressedEvent* event) noexcept;
         void RenderImGuizmo(EditorCamera& camera);
         void OpenScene(const Path& path);
+
+        void RenderCameraFrustum();
+
+        void RenderSelectedEntityOutline();
     };
 }

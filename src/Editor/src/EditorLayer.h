@@ -53,6 +53,8 @@ namespace BeeEngine::Editor
         Scope<ProjectFile> m_ProjectFile = nullptr;
         Scope<Locale::ImGuiLocalizationPanel> m_LocalizationPanel = nullptr;
 
+        bool m_RenderPhysicsColliders = false;
+
         Ref<Scene> m_ActiveScene = nullptr;
         Ref<Scene> m_EditorScene = nullptr;
 

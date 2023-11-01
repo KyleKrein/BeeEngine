@@ -38,6 +38,24 @@ namespace BeeEngine
         void SetOrthographicFarClip(float farClip) noexcept;
 
         float GetPerspectiveVerticalFOV() const noexcept { return m_VerticalFOV; }
+        float GetVerticalFOV() const noexcept
+        {
+            if(m_Type == CameraType::Perspective)
+                return GetPerspectiveVerticalFOV();
+            return GetOrthographicSize();
+        }
+        float GetFarClip() const noexcept
+        {
+            if(m_Type == CameraType::Perspective)
+                return GetPerspectiveFarClip();
+            return GetOrthographicFarClip();
+        }
+        float GetNearClip() const noexcept
+        {
+            if(m_Type == CameraType::Perspective)
+                return GetPerspectiveNearClip();
+            return GetOrthographicNearClip();
+        }
         void SetPerspectiveVerticalFOV(float verticalFOV) noexcept;
         float GetPerspectiveNearClip() const noexcept { return m_PerspectiveNear; }
         void SetPerspectiveNearClip(float nearClip) noexcept;
@@ -47,7 +65,7 @@ namespace BeeEngine
 
         void SetAspectRatio(float d);
 
-        float GetAspectRatio();
+        float GetAspectRatio() const noexcept;
         template<typename Archive>
         void Serialize(Archive& serializer)
         {

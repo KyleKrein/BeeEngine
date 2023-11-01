@@ -148,3 +148,43 @@ TEST(TransformComponentTest, IdempotentOperation) {
         }
     }
 }
+
+bool AreMatricesEqual(const glm::mat4& a, const glm::mat4& b, float epsilon = 0.001f) {
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (fabs(a[i][j] - b[i][j]) > epsilon) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+TEST(GetTransformFromToTest, IdentityTransformation) {
+    glm::vec3 start(0.0f, 0.0f, 0.0f);
+    glm::vec3 end(0.0f, 0.0f, 1.0f);
+    float lineWidth = 1.0f;
+
+    glm::mat4 expected = glm::mat4(1.0f);
+    expected = glm::scale(expected, glm::vec3(lineWidth, lineWidth, 0.5f));
+
+    glm::mat4 result = Math::GetTransformFromTo(start, end, lineWidth);
+
+    EXPECT_TRUE(AreMatricesEqual(expected, result));
+}
+
+TEST(GetTransformFromToTest, SimpleTransformation) {
+    glm::vec3 start(0.0f, 0.0f, 0.0f);
+    glm::vec3 end(1.0f, 0.0f, 0.0f);
+    float lineWidth = 1.0f;
+
+    glm::mat4 expected = glm::mat4(1.0f);
+    expected = glm::translate(expected, glm::vec3(0.5f, 0.0f, 0.0f));  // Наконец, примените перевод
+    expected = glm::rotate(expected, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));  // Затем примените вращение
+    expected = glm::scale(expected, glm::vec3(lineWidth, lineWidth, 0.5f));  // Примените масштабирование первым
+
+    glm::mat4 result = Math::GetTransformFromTo(start, end, lineWidth);
+
+    EXPECT_TRUE(AreMatricesEqual(expected, result));
+}
+

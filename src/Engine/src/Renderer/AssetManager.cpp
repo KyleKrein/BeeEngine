@@ -196,5 +196,17 @@ void BeeEngine::InternalAssetManager::LoadStandardAssets()
     auto& fontMesh = LoadMesh<glm::vec2>("Renderer_FontMesh", fontVertexBuffer, indexBuffer);
     auto& fontModel = LoadModel("Renderer_Font", fontMaterial, fontMesh);
 
+    auto& lineMaterial = LoadMaterial("Renderer_LineMaterial", "Shaders/Renderer_LineShader.vert", "Shaders/Renderer_LineShader.frag");
+    const float halfLineWidth = 0.5f;
+    std::vector<glm::vec3> lineVertexBuffer = {
+            {-0.5f, -halfLineWidth, 0.0f},
+            {0.5f,  -halfLineWidth, 0.0f},
+            {0.5f,  halfLineWidth, 0.0f},
+            {-0.5f, halfLineWidth, 0.0f},
+    };
+    auto& lineMesh = LoadMesh<glm::vec3>("Renderer_LineMesh", lineVertexBuffer, indexBuffer);
+
+    auto& lineModel = LoadModel("Renderer_Line", lineMaterial, lineMesh);
+
     auto& openSansRegularFont = LoadFont("OpenSansRegular", Internal::GetEmbeddedResource(EmbeddedResource::OpenSansRegular));
 }

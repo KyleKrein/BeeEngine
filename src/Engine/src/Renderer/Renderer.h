@@ -73,9 +73,12 @@ namespace BeeEngine
             s_RendererAPI->SubmitCommandBuffer(commandBuffer);
         }
 
+        static void DrawRect(const glm::mat4& transform, const Color4& color, BindingSet& cameraBindingSet, float lineWidth);
+
         static void OnSubmittedWorkDone(const std::function<void()>& callback);
 
         static void SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, gsl::span<byte> instanceData);
+        static void SubmitLine(const glm::vec3& start, const glm::vec3& end, BindingSet& cameraBindingSet, const Color4& color = Color4::Black, float lineWidth = 0.1f);
         static void Flush();
         //static void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount)
         //{

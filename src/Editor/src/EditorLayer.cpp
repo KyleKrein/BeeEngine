@@ -64,13 +64,13 @@ namespace BeeEngine::Editor
                     m_ProjectFile->RegenerateSolution();
                 if(m_ProjectFile->IsAssemblyReloadPending())
                     ReloadAssembly();
-                m_ViewPort.UpdateEditor(m_EditorCamera);
+                m_ViewPort.UpdateEditor(m_EditorCamera, m_RenderPhysicsColliders);
                 //m_GameBuilder->UpdateAndCompile();
                 break;
             }
             case SceneState::Play:
             {
-                m_ViewPort.UpdateRuntime();
+                m_ViewPort.UpdateRuntime(m_RenderPhysicsColliders);
                 break;
             }
             case SceneState::Pause:
@@ -109,6 +109,9 @@ namespace BeeEngine::Editor
             m_FpsCounter.Render();
             m_Console.RenderGUI();
             m_LocalizationPanel->Render();
+            ImGui::Begin("Settings");
+            ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
+            ImGui::End();
         }
         else
         {
