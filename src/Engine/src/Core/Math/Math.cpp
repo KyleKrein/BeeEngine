@@ -202,26 +202,24 @@ namespace BeeEngine::Math
     {
         Cameras::Frustum frustum;
         float tangent = tan(glm::radians(fovY) / 2.0f);
-        float nh = zNear * tangent;
-        float nw = nh * aspect;
-        float fh = zFar * tangent;
-        float fw = fh * aspect;
+        float nearHeight = zNear * tangent;
+        float nearWidth = nearHeight * aspect;
+        float farHeight = zFar * tangent;
+        float farWidth = farHeight * aspect;
 
-        glm::vec3 nc = position + front * zNear;
-        glm::vec3 fc = position + front * zFar;
+        // Вычисление вершин фрустума в локальных координатах камеры
+        glm::vec3 ntl = glm::vec3(-nearWidth, nearHeight, -zNear); //TODO: must be -zNear and -zFar everywhere
+        glm::vec3 ntr = glm::vec3(nearWidth, nearHeight, -zNear);
+        glm::vec3 nbl = glm::vec3(-nearWidth, -nearHeight, -zNear);
+        glm::vec3 nbr = glm::vec3(nearWidth, -nearHeight, -zNear);
 
-        glm::vec3 ntl = nc + up * nh - right * nw;
-        glm::vec3 ntr = nc + up * nh + right * nw;
-        glm::vec3 nbl = nc - up * nh - right * nw;
-        glm::vec3 nbr = nc - up * nh + right * nw;
+        glm::vec3 ftl = glm::vec3(-farWidth, farHeight, -zFar);
+        glm::vec3 ftr = glm::vec3(farWidth, farHeight, -zFar);
+        glm::vec3 fbl = glm::vec3(-farWidth, -farHeight, -zFar);
+        glm::vec3 fbr = glm::vec3(farWidth, -farHeight, -zFar);
 
-        glm::vec3 ftl = fc + up * fh - right * fw;
-        glm::vec3 ftr = fc + up * fh + right * fw;
-        glm::vec3 fbl = fc - up * fh - right * fw;
-        glm::vec3 fbr = fc - up * fh + right * fw;
-
-        frustum.NearFace.Normal = glm::normalize(nc - position);
-        frustum.FarFace.Normal = glm::normalize(fc - position);
+        frustum.NearFace.Normal = glm::normalize(front * zNear);
+        frustum.FarFace.Normal = glm::normalize(front * zFar);
         frustum.LeftFace.Normal = glm::normalize(glm::cross(up, nbl - ntl));
         frustum.RightFace.Normal = glm::normalize(glm::cross(up, ntr - nbr));
         frustum.TopFace.Normal = glm::normalize(glm::cross(right, ntr - ntl));

@@ -17,6 +17,128 @@
 
 namespace BeeEngine
 {
+    std::vector<glm::vec4> GetFrustumPlanes(const glm::mat4& viewProj)
+    {
+        // x, y, z, and w represent A, B, C and D in the plane equation
+        // where ABC are the xyz of the planes normal, and D is the plane constant
+        std::vector<glm::vec4> tempFrustumPlane(6);
+
+        // Left Frustum Plane
+        // Add first column of the matrix to the fourth column
+        tempFrustumPlane[0].x = viewProj[0][3] + viewProj[0][0];
+        tempFrustumPlane[0].y = viewProj[1][3] + viewProj[1][0];
+        tempFrustumPlane[0].z = viewProj[2][3] + viewProj[2][0];
+        tempFrustumPlane[0].w = viewProj[3][3] + viewProj[3][0];
+
+        // Right Frustum Plane
+        // Subtract first column of matrix from the fourth column
+        tempFrustumPlane[1].x = viewProj[0][3] - viewProj[0][0];
+        tempFrustumPlane[1].y = viewProj[1][3] - viewProj[1][0];
+        tempFrustumPlane[1].z = viewProj[2][3] - viewProj[2][0];
+        tempFrustumPlane[1].w = viewProj[3][3] - viewProj[3][0];
+
+        // Top Frustum Plane
+        // Subtract second column of matrix from the fourth column
+        tempFrustumPlane[2].x = viewProj[0][3] - viewProj[0][1];
+        tempFrustumPlane[2].y = viewProj[1][3] - viewProj[1][1];
+        tempFrustumPlane[2].z = viewProj[2][3] - viewProj[2][1];
+        tempFrustumPlane[2].w = viewProj[3][3] - viewProj[3][1];
+
+        // Bottom Frustum Plane
+        // Add second column of the matrix to the fourth column
+        tempFrustumPlane[3].x = viewProj[0][3] + viewProj[0][1];
+        tempFrustumPlane[3].y = viewProj[1][3] + viewProj[1][1];
+        tempFrustumPlane[3].z = viewProj[2][3] + viewProj[2][1];
+        tempFrustumPlane[3].w = viewProj[3][3] + viewProj[3][1];
+
+        // Near Frustum Plane
+        // We could add the third column to the fourth column to get the near plane,
+        // but we don't have to do this because the third column IS the near plane
+        tempFrustumPlane[4].x = viewProj[0][2];
+        tempFrustumPlane[4].y = viewProj[1][2];
+        tempFrustumPlane[4].z = viewProj[2][2];
+        tempFrustumPlane[4].w = viewProj[3][2];
+
+        // Far Frustum Plane
+        // Subtract third column of matrix from the fourth column
+        tempFrustumPlane[5].x = viewProj[0][3] - viewProj[0][2];
+        tempFrustumPlane[5].y = viewProj[1][3] - viewProj[1][2];
+        tempFrustumPlane[5].z = viewProj[2][3] - viewProj[2][2];
+        tempFrustumPlane[5].w = viewProj[3][3] - viewProj[3][2];
+
+        // Normalize plane normals (A, B and C (xyz))
+        // Also take note that planes face inward
+        for(int i = 0; i < 6; ++i)
+        {
+            //float length = sqrt((tempFrustumPlane[i].x * tempFrustumPlane[i].x) + (tempFrustumPlane[i].y * tempFrustumPlane[i].y) + (tempFrustumPlane[i].z * tempFrustumPlane[i].z));
+            tempFrustumPlane[i] = glm::normalize(tempFrustumPlane[i]);///= length;
+            /*tempFrustumPlane[i].y /= length;
+            tempFrustumPlane[i].z /= length;
+            tempFrustumPlane[i].w /= length;*/
+        }
+
+        return tempFrustumPlane;
+    }
+
+    struct AABB
+    {
+        glm::vec3 min = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+        glm::vec3 max = glm::vec3(FLT_MIN, FLT_MIN, FLT_MIN);
+    };
+    bool IsInFrustum(const std::vector<glm::vec4> &frustumPlanes, const AABB& boundingBox)
+    {
+        // Loop through each frustum plane
+        for(int planeID = 0; planeID < 6; ++planeID)
+        {
+            auto planeNormal = glm::vec3(frustumPlanes[planeID]);
+            float planeConstant = frustumPlanes[planeID].w;
+            // Check each axis (x,y,z) to get the AABB vertex furthest away from the direction the plane is facing (plane normal)
+            glm::vec3 axisVert;
+            // x-axis
+            if(frustumPlanes[planeID].x < 0.0f)	// Which AABB vertex is furthest down (plane normals direction) the x axis
+                axisVert.x = boundingBox.min.x; // min x plus tree positions x
+            else
+                axisVert.x = boundingBox.max.x; // max x plus tree positions x// y-axis
+            if(frustumPlanes[planeID].y < 0.0f)	// Which AABB vertex is furthest down (plane normals direction) the y axis
+                axisVert.y = boundingBox.min.y; // min y plus tree positions y
+            else
+                axisVert.y = boundingBox.max.y; // max y plus tree positions y// z-axis
+            if(frustumPlanes[planeID].z < 0.0f)	// Which AABB vertex is furthest down (plane normals direction) the z axis
+                axisVert.z = boundingBox.min.z; // min z plus tree positions z
+            else
+                axisVert.z = boundingBox.max.z; // max z plus tree positions z// Now we get the signed distance from the AABB vertex that's furthest down the frustum planes normal,// and if the signed distance is negative, then the entire bounding box is behind the frustum plane, which means// that it should be culled
+            if(glm::dot(planeNormal, axisVert) + planeConstant < 0.0f)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    AABB CreateAABB(const std::vector<glm::vec3> &vertPosArray)
+    {
+        AABB boundingBox;
+        auto& minVertex = boundingBox.min;
+        auto& maxVertex = boundingBox.max;
+        for(size_t i = 0; i < vertPosArray.size(); i++)
+        {
+            // The minVertex and maxVertex will most likely not be actual vertices in the model, but vertices
+            // that use the smallest and largest x, y, and z values from the model to be sure ALL vertices are
+            // covered by the bounding volume
+
+            //Get the smallest vertex
+            minVertex.x = std::min(minVertex.x, vertPosArray[i].x);	// Find smallest x value in model
+            minVertex.y = std::min(minVertex.y, vertPosArray[i].y);	// Find smallest y value in model
+            minVertex.z = std::min(minVertex.z, vertPosArray[i].z);	// Find smallest z value in model
+
+            //Get the largest vertex
+            maxVertex.x = std::max(maxVertex.x, vertPosArray[i].x);	// Find largest x value in model
+            maxVertex.y = std::max(maxVertex.y, vertPosArray[i].y);	// Find largest y value in model
+            maxVertex.z = std::max(maxVertex.z, vertPosArray[i].z);	// Find largest z value in model
+        }
+
+        return boundingBox;
+    }
     Model* SceneRenderer::s_RectModel = nullptr;
     Model* SceneRenderer::s_CircleModel = nullptr;
     Texture2D* SceneRenderer::s_BlankTexture = nullptr;
@@ -35,8 +157,27 @@ namespace BeeEngine
         float Fade = 0.005f;
         int32_t EntityID = -1;
     };
-
-    void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix, const Math::Cameras::Frustum& frustum)
+    bool IsSphereInFrustum(const Math::Cameras::Sphere& sphere, const Math::Cameras::Frustum& frustum) {
+        Math::Cameras::Plane planes[6] = {
+                frustum.NearFace,
+                frustum.FarFace,
+                frustum.BottomFace,
+                frustum.TopFace,
+                frustum.RightFace,
+                frustum.LeftFace
+        };
+        for (int i = 0; i < 6; ++i) {
+            const Math::Cameras::Plane& plane = planes[i];
+            float distance = glm::dot(plane.Normal, sphere.center) - plane.Distance;
+            if (distance < -sphere.radius) {
+                // Сфера полностью за плоскостью, следовательно, вне фрустума
+                return false;
+            }
+        }
+        // Сфера пересекает все плоскости фрустума или полностью внутри фрустума
+        return true;
+    }
+    void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix,const std::vector<glm::vec4>& frustumPlanes/* const Math::Cameras::Frustum& frustum*/)
     {
         BEE_PROFILE_FUNCTION();
         Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
@@ -44,19 +185,29 @@ namespace BeeEngine
         cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
         SceneTreeRenderer sceneTreeRenderer(viewProjectionMatrix, cameraBindingSet.get());
 
+        //auto frustumPlanes = GetFrustumPlanes(viewProjectionMatrix);
         {
             BEE_PROFILE_SCOPE("SceneTreeRenderer::AddEntities");
             auto spriteView = scene.m_Registry.view<SpriteRendererComponent>();
             for( auto entity : spriteView )
             {
                 Entity e = {entity, &scene};
-                auto& transformComponent = e.GetComponent<TransformComponent>();
-                Math::Cameras::Sphere sphere{};
-                sphere.radius = 0.5f * transformComponent.Scale.x;
+                //Math::Cameras::Sphere sphere{};
+                //sphere.center = glm::vec3{0.0f};
                 glm::mat4 transform = Math::ToGlobalTransform(e);
-                if(!sphere.IsOnFrustum(frustum, transform))
+                //auto[translation, rotation, scale] = Math::DecomposeTransform(transform);
+                //sphere.radius = 1.f * std::max(std::max(scale.x, scale.y), scale.z);
+                //sphere.center = translation;
+                auto mvp = viewProjectionMatrix * transform;
+                const std::vector<glm::vec3> vertices = {
+                        glm::vec3{mvp * glm::vec4{-0.5f, -0.5f, 0.0f, 1.0f}},
+                        glm::vec3{mvp * glm::vec4{0.5f, -0.5f, 0.0f, 1.0f}},
+                        glm::vec3{mvp * glm::vec4{0.5f, 0.5f, 0.0f, 1.0f}},
+                        glm::vec3{mvp * glm::vec4{-0.5f, 0.5f, 0.0f, 1.0f}}
+                };
+                if(!IsInFrustum(frustumPlanes, CreateAABB(vertices))/*!IsSphereInFrustum(sphere, frustum)*/)
                 {
-                    //continue;
+                    continue;
                 }
                 auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
                 SpriteInstanceBufferData data {transform, spriteComponent.Color, spriteComponent.TilingFactor,
@@ -74,10 +225,10 @@ namespace BeeEngine
                 Math::Cameras::Sphere sphere{};
                 sphere.radius = 0.5f * transformComponent.Scale.x;
                 glm::mat4 transform = Math::ToGlobalTransform(e);
-                if(!sphere.IsOnFrustum(frustum, transform))
-                {
-                    //continue;
-                }
+                //if(!sphere.IsOnFrustum(frustum, transform))
+                //{
+                //    continue;
+                //}
                 auto& circleComponent = circleGroup.get<CircleRendererComponent>(entity);
                 CircleInstanceBufferData data {transform, circleComponent.Color, circleComponent.Thickness, circleComponent.Fade,
                                                static_cast<int32_t>(entity)+1};
@@ -153,10 +304,12 @@ namespace BeeEngine
         {
             auto cameraViewMatrix = glm::inverse(cameraTransform);
             auto cameraViewProj = mainCamera->GetProjectionMatrix() * cameraViewMatrix;
-            glm::vec3 forward = -glm::vec3(cameraViewMatrix[0][2], cameraViewMatrix[1][2], cameraViewMatrix[2][2]);
-            glm::vec3 right = glm::vec3(cameraViewMatrix[0][0], cameraViewMatrix[1][0], cameraViewMatrix[2][0]);
-            glm::vec3 up = glm::vec3(cameraViewMatrix[0][1], cameraViewMatrix[1][1], cameraViewMatrix[2][1]);
-            RenderScene(scene, frameBuffer, locale, *mainCamera, cameraViewProj, cameraPosition, forward, up, right);
+           /* glm::vec3 forward = -glm::normalize(glm::vec3(cameraViewMatrix[0][2], cameraViewMatrix[1][2], cameraViewMatrix[2][2]));
+            glm::vec3 right = glm::normalize(glm::vec3(cameraViewMatrix[0][0], cameraViewMatrix[1][0], cameraViewMatrix[2][0]));
+            glm::vec3 up = glm::normalize(glm::vec3(cameraViewMatrix[0][1], cameraViewMatrix[1][1], cameraViewMatrix[2][1]));
+            auto frustum = Math::Cameras::CreateFrustumFromCamera(cameraPosition, forward, right, up, mainCamera->GetAspectRatio(), glm::degrees(mainCamera->GetVerticalFOV()), mainCamera->GetNearClip(), mainCamera->GetFarClip());*/
+           auto frustumPlanes = GetFrustumPlanes(cameraViewProj);
+           RenderScene(scene, frameBuffer, locale, cameraViewProj, frustumPlanes);
         }
     }
 

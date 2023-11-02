@@ -9,6 +9,7 @@
 #include "Core/Math/Math.h"
 namespace BeeEngine
 {
+    std::vector<glm::vec4> GetFrustumPlanes(const glm::mat4& viewProj);
     template<typename T>
     concept CameraClass = requires(T a)
     {
@@ -25,7 +26,7 @@ namespace BeeEngine
         static Texture2D* s_BlankTexture;
     public:
         static void Init();
-        static void RenderScene(Scene& scene, FrameBuffer& frameBuffer, const String& locale, const glm::mat4& viewProjectionMatrix, const Math::Cameras::Frustum& frustum);
+        static void RenderScene(Scene& scene, FrameBuffer& frameBuffer, const String& locale, const glm::mat4& viewProjectionMatrix, const std::vector<glm::vec4>& frustumPlanes/*const Math::Cameras::Frustum& frustum*/);
         static void RenderScene(Scene& scene, FrameBuffer& frameBuffer, const String& locale);
 
         static void RenderPhysicsColliders(Scene& scene, FrameBuffer& frameBuffer, const glm::mat4& viewProjectionMatrix);
@@ -37,7 +38,7 @@ namespace BeeEngine
                                                       rightDirection, upDirection,
                                                       camera.GetAspectRatio(), camera.GetVerticalFOV(),
                                                       camera.GetNearClip(), camera.GetFarClip());
-            RenderScene(scene, frameBuffer, locale, viewProjectionMatrix, frustum);
+            RenderScene(scene, frameBuffer, locale, viewProjectionMatrix, GetFrustumPlanes(viewProjectionMatrix));
         }
     };
 

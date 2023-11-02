@@ -82,7 +82,7 @@ namespace BeeEngine
         void RecalculateProjectionMatrix();
         CameraType m_Type = CameraType::Orthographic;
         float m_OrthographicSize = 10.0f;
-        float m_OrthographicNear = -1.0f;
+        float m_OrthographicNear = 1.0f;
         float m_OrthographicFar = 1.0f;
 
         float m_AspectRatio = 0.0f;

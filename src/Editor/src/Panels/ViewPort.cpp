@@ -275,9 +275,9 @@ namespace BeeEngine::Editor
         Color4 color = Color4::Green;
 
         // Вычисление ширины и высоты ближних и дальних плоскостей фрустума
-        float nearHeight = tan(glm::radians(fovY) / 2.0f) * zNear * 2.0f;
+        float nearHeight = tan(fovY) / 2.0f * zNear * 2.0f;
         float nearWidth = nearHeight * aspectRatio;
-        float farHeight = tan(glm::radians(fovY) / 2.0f) * zFar * 2.0f;
+        float farHeight = tan(fovY / 2.0f) * zFar * 2.0f;
         float farWidth = farHeight * aspectRatio;
 
         // Вычисление вершин фрустума в локальных координатах камеры
