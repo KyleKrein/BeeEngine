@@ -10,6 +10,7 @@
 #include "ToString.h"
 
 #include "String.h"
+#include "Numbers.h"
 
 namespace BeeEngine
 {

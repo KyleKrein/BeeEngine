@@ -1,0 +1,50 @@
+Scene: Untitled
+Entities:
+  - Entity: 6587270111004798404
+    TagComponent:
+      Tag: EntityGenerator
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.EntityGenerator
+      Fields:
+        - Name: EntityPrefab
+          Type: Prefab
+          Data: [3753192931707503016, 13275030511268767488]
+        - Name: X
+          Type: int
+          Data: 5
+        - Name: Y
+          Type: int
+          Data: 5
+    HierarchyComponent:
+      []
+  - Entity: 10356354568537169474
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0, 0, -10.8000002]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveVerticalFOV: 0.785398185
+        PerspectiveNearClip: 0.00999999978
+        PerspectiveFarClip: 40.4000015
+        OrthographicSize: 10
+        OrthographicNearClip: 1
+        OrthographicFarClip: 1
+        AspectRatio: 2.31704092
+      Primary: true
+      FixedAspectRatio: false
+    ScriptComponent:
+      FullName: Example.Camera
+      Fields:
+        - Name: Speed
+          Type: float
+          Data: 1
+    HierarchyComponent:
+      []

@@ -6,9 +6,14 @@
 
 #include "glm.hpp"
 #include <Scene/Entity.h>
+#include <cmath>
 
 namespace BeeEngine::Math
 {
+    consteval float32_t PI()
+    {
+        return 3.141592653589793238462643383279502884197169399375105820974944592307816406286f;
+    }
     struct DecomposedTransform
     {
         glm::vec3 Translation;
@@ -73,6 +78,58 @@ namespace BeeEngine::Math
                                 float zNear, float zFar);
 
     }
+    class Radians; // Предварительное объявление, чтобы класс Degrees "знал" о существовании класса Radians
+
+    class Degrees
+    {
+    public:
+        explicit Degrees(float32_t deg = 0.0f) : degrees(deg) {}
+        Degrees(const Radians& rad);
+        Degrees& operator=(const Radians& rad);
+        Degrees& operator=(float32_t deg);
+
+        float32_t ToRadians() const {
+            return degrees * ( PI() / 180.0f);
+        }
+
+        String ToString() const
+        {
+            return ::BeeEngine::ToString(degrees) + "°";
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const Degrees& deg) {
+            os << deg.ToString();
+            return os;
+        }
+
+    private:
+        float32_t degrees;
+    };
+
+    class Radians {
+    public:
+        explicit Radians(float32_t rad = 0.0f) : radians(rad) {}
+        Radians(const Degrees& deg);
+        Radians& operator=(const Degrees& deg);
+        Radians& operator=(float32_t rad);
+
+        float32_t ToDegrees() const {
+            return radians * (180.0 / PI());
+        }
+
+        String ToString() const
+        {
+            return ::BeeEngine::ToString(radians) + "rad";
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const Radians& rad) {
+            os << rad.ToString();
+            return os;
+        }
+
+    private:
+        float32_t radians;
+    };
     DecomposedTransform DecomposeTransform(const glm::mat4& transform);
     // Пример функции для перевода локальных координат в глобальные
     glm::mat4 ToGlobalTransform(Entity child);

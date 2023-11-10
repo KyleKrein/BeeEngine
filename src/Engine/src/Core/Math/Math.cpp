@@ -259,4 +259,39 @@ namespace BeeEngine::Math
                 globalSphere.IsOnOrForwardPlane(camFrustum.TopFace) &&
                 globalSphere.IsOnOrForwardPlane(camFrustum.BottomFace));
     }
+
+    Degrees::Degrees(const Radians &rad)
+    : degrees(rad.ToDegrees())
+    {
+
+    }
+
+    Degrees &Degrees::operator=(const Radians &rad)
+    {
+        degrees = rad.ToDegrees();
+        return *this;
+    }
+
+    Degrees &Degrees::operator=(float32_t deg)
+    {
+        degrees = deg;
+        return *this;
+    }
+
+    Radians::Radians(const Degrees &deg)
+    {
+        radians = deg.ToRadians();
+    }
+
+    Radians &Radians::operator=(const Degrees &deg)
+    {
+        radians = deg.ToRadians();
+        return *this;
+    }
+
+    Radians &Radians::operator=(float32_t rad)
+    {
+        radians = rad;
+        return *this;
+    }
 }

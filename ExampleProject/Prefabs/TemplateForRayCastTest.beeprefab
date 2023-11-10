@@ -1,0 +1,47 @@
+Entities:
+  - Entity: 3037205884822131852
+    TagComponent:
+      Tag: TemplateForRayCastTest
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.RandomTexture
+      Fields:
+        - Name: Texture1
+          Type: Texture2D
+          Data: [3753192931707503016, 2492935997162504003]
+        - Name: Texture2
+          Type: Texture2D
+          Data: [3753192931707503016, 13987028760561915515]
+        - Name: Texture3
+          Type: Texture2D
+          Data: [3753192931707503016, 7772243033513047726]
+        - Name: Texture4
+          Type: Texture2D
+          Data: [3753192931707503016, 2492935997162504003]
+        - Name: Texture5
+          Type: Texture2D
+          Data: [3753192931707503016, 7772243033513047726]
+        - Name: Sprite
+          Type: Texture2D
+          Data: [0, 0]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Has Texture: true
+      Texture: [3753192931707503016, 7772243033513047726]
+      Tiling Factor: 1
+    RigidBody2DComponent:
+      Type: Static
+      FixedRotation: false
+    BoxCollider2DComponent:
+      Type: Box
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    HierarchyComponent:
+      []

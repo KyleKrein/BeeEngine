@@ -94,11 +94,15 @@ namespace BeeEngine
 
             BEE_INTERNAL_CALL(Input_IsKeyDown);
             BEE_INTERNAL_CALL(Input_IsMouseButtonDown);
+            BEE_INTERNAL_CALL(Input_GetMousePosition);
+            BEE_INTERNAL_CALL(Input_GetMousePositionInWorldSpace);
 
             BEE_INTERNAL_CALL(Asset_Load);
             BEE_INTERNAL_CALL(Asset_Unload);
             BEE_INTERNAL_CALL(Asset_IsValid);
             BEE_INTERNAL_CALL(Asset_IsLoaded);
+
+            BEE_INTERNAL_CALL(Physics2D_CastRay);
         }
     }
 
@@ -455,5 +459,38 @@ namespace BeeEngine
         auto& prefab = AssetManager::GetAsset<Prefab>(*handlePtr);
         auto entity = scene->InstantiatePrefab(prefab, parentEntity);
         return entity.GetUUID();
+    }
+
+    uint64_t ScriptGlue::Physics2D_CastRay(glm::vec2 *start, glm::vec2 *end)
+    {
+        auto* scene = ScriptingEngine::GetSceneContext();
+        auto result = scene->RayCast2D(*start, *end);
+        if(!result)
+            return 0;
+        return result.GetUUID();
+    }
+
+    void ScriptGlue::Input_GetMousePosition(glm::vec2 *outPosition)
+    {
+        *outPosition = ScriptingEngine::GetMousePosition();
+    }
+
+    void ScriptGlue::Input_GetMousePositionInWorldSpace(uint64_t id, glm::vec2 *outPosition)
+    {
+        auto* scene = ScriptingEngine::GetSceneContext();
+        auto entity = scene->GetEntityByUUID(id);
+        auto& transform = entity.GetComponent<TransformComponent>();
+        auto& camera = entity.GetComponent<CameraComponent>();
+        auto mousePos = ScriptingEngine::GetMousePosition();
+        auto viewportSize = ScriptingEngine::GetViewportSize();
+        float normalizedMouseX = (2.0f * mousePos.x) / viewportSize.x - 1.0f;
+        float normalizedMouseY = 1.0f - (2.0f * mousePos.y) / viewportSize.y;
+        glm::mat4 invProj = glm::inverse(camera.Camera.GetProjectionMatrix());
+        glm::vec4 clipCoords{normalizedMouseX, normalizedMouseY, 1.0f, 1.0f};
+        glm::vec4 eyeCoords = invProj * clipCoords;
+        eyeCoords = eyeCoords / eyeCoords.w; // Перспективное деление
+        glm::mat4 invView = glm::inverse(transform.GetTransform());
+        glm::vec4 worldCoords = invView * glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
+        *outPosition = {worldCoords.x, worldCoords.y};
     }
 }

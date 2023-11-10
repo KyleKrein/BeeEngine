@@ -51,9 +51,12 @@ namespace BeeEngine
         static MonoObject * Entity_GetScriptInstance(uint64_t id);
         static bool Input_IsKeyDown(Key key);
         static bool Input_IsMouseButtonDown(MouseButton button);
+        static void Input_GetMousePosition(glm::vec2* outPosition);
+        static void Input_GetMousePositionInWorldSpace(uint64_t id, glm::vec2* outPosition);
         static void Asset_Load(AssetHandle* handle);
         static void Asset_Unload(AssetHandle* handle);
         static bool Asset_IsLoaded(AssetHandle* handle);
         static bool Asset_IsValid(AssetHandle* handle);
+        static uint64_t Physics2D_CastRay(glm::vec2* start, glm::vec2* end);
     };
 }

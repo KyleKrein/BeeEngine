@@ -54,6 +54,26 @@ namespace BeeEngine::Editor
         Renderer::Clear();
         m_FrameBuffer->Bind();
 
+        auto [mx, my] = ImGui::GetMousePos();
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        const glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+
+        if(Renderer::GetAPI() == RenderAPI::OpenGL)
+        {
+            my = viewportSize.y - my;
+        }
+
+        int mouseX = static_cast<int>(mx);
+        int mouseY = static_cast<int>(my);
+
+        if(mouseX >= 0 && mouseY >= 0
+           && gsl::narrow_cast<float>(mouseX) < viewportSize.x
+           && gsl::narrow_cast<float>(mouseY) < viewportSize.y)
+        {
+            ScriptingEngine::SetMousePosition(mouseX, mouseY);
+        }
+
         m_Scene->UpdateRuntime();
         SceneRenderer::RenderScene(*m_Scene, *m_FrameBuffer, m_GameDomain->GetLocale());
 
@@ -99,6 +119,7 @@ namespace BeeEngine::Editor
         && gsl::narrow_cast<float>(mouseX) < viewportSize.x
         && gsl::narrow_cast<float>(mouseY) < viewportSize.y)
         {
+            ScriptingEngine::SetMousePosition(mouseX, mouseY);
             int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
             pixelData--; //I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I need to make invalid number -1 too, so in scene I make + 1
             //BeeCoreTrace("Coords: {}, {}. Pixel data: {}", mouseX, mouseY, pixelData);
@@ -181,6 +202,7 @@ namespace BeeEngine::Editor
             m_FrameBuffer->Resize(m_Width, m_Height);
             m_Scene->OnViewPortResize(m_Width, m_Height);
             camera.SetViewportSize(m_Width, m_Height);
+            ScriptingEngine::SetViewportSize(m_Width, m_Height);
         }
         auto textureID = m_FrameBuffer->GetColorAttachmentRendererID(0);
         BeeExpects(textureID != 0);

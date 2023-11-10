@@ -9,6 +9,7 @@
 #include "Core/AssetManagement/Asset.h"
 #include "MTypes.h"
 #include "Locale/Locale.h"
+#include <glm/glm.hpp>
 
 namespace BeeEngine
 {
@@ -57,6 +58,12 @@ namespace BeeEngine
         static void GetAssetHandle(void* monoObject, AssetHandle &handle);
 
         static void UpdateTime(double deltaTime, double totalTime);
+
+        static void SetMousePosition(int x, int y);
+        static glm::vec2 GetMousePosition();
+
+        static glm::vec2 GetViewportSize();
+        static void SetViewportSize(float width, float height);
 
     private:
 

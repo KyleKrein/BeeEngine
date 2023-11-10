@@ -83,7 +83,12 @@ namespace BeeEngine.Internal
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Input_IsMouseButtonDown(MouseButton button);
-        
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Input_GetMousePosition(ref Vector2 mouseCoords);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Input_GetMousePositionInWorldSpace(ulong id, ref Vector2 mouseCoords);
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern void Asset_Load(ref AssetHandle handle);
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -92,5 +97,8 @@ namespace BeeEngine.Internal
         internal static extern bool Asset_IsValid(ref AssetHandle handle);
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern bool Asset_IsLoaded(ref AssetHandle handle);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern ulong Physics2D_CastRay(ref Vector2 start, ref Vector2 end);
     }
 }

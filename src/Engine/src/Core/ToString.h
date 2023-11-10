@@ -36,7 +36,7 @@ namespace BeeEngine
     };
 
     template<ToStringAble T>
-    CONSTEXPR_FUNC std::string ToString(const T &obj)
+    CONSTEXPR_FUNC String ToString(const T &obj)
     {
         return obj.ToString();
     }
@@ -359,7 +359,7 @@ constexpr String ToString<char*>(const char*& obj)
         return std::to_string(static_cast<int>(obj));
     }
     template<std::ranges::range T>
-    requires (!std::is_convertible_v<T, String>)
+    requires (!std::is_convertible_v<T, String> && !ToStringAble<T>)
     CONSTEXPR_FUNC String ToString(const T& collection)
     {
         String result = "[";

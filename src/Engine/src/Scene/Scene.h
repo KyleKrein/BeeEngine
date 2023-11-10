@@ -12,6 +12,8 @@
 #include "Renderer/SceneTreeRenderer.h"
 
 class b2World;
+class b2Body;
+class b2Fixture;
 
 namespace BeeEngine
 {
@@ -45,6 +47,8 @@ namespace BeeEngine
         Entity DuplicateEntity(Entity entity);
 
         Entity InstantiatePrefab(Prefab& prefab, Entity parent);
+
+        Entity RayCast2D(glm::vec2 start, glm::vec2 end);
 
         void StartRuntime();
         void StopRuntime();
@@ -80,5 +84,12 @@ namespace BeeEngine
         void Update2DPhysics();
 
         Entity CopyEntity(Entity entity, Scene& targetScene, Entity parent, bool preserveUUID);
+
+        void *
+        CreateRuntimeRigidBody2D(class RigidBody2DComponent &rigidBody,
+                                 const class TransformComponent &transform);
+
+        void CreateRuntimeBoxCollider2DFixture(const class TransformComponent &transform, b2Body *body,
+                                               class BoxCollider2DComponent &boxCollider) const;
     };
 }

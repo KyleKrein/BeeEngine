@@ -64,6 +64,10 @@ namespace BeeEngine
         Path CoreAssemblyPath = "";
 
         String Locale = Locale::GetSystemLocale();
+
+        int MouseX = 0;
+        int MouseY = 0;
+        glm::vec2 ViewportSize = {-1, -1};
     };
     ScriptingEngineData ScriptingEngine::s_Data = {};
     void ScriptingEngine::Init()
@@ -301,7 +305,11 @@ namespace BeeEngine
     void ScriptingEngine::OnEntityUpdate(BeeEngine::Entity entity)
     {
         UUID uuid = entity.GetUUID();
-        BeeCoreAssert(s_Data.EntityObjects.contains(uuid), "Entity does not have a script attached!");
+        if(!s_Data.EntityObjects.contains(uuid))
+        {
+            return;
+        }
+        //BeeCoreAssert(s_Data.EntityObjects.contains(uuid), "Entity does not have a script attached!");
         auto& script = s_Data.EntityObjects.at(uuid);
         script->InvokeOnUpdate();
     }
@@ -450,5 +458,31 @@ namespace BeeEngine
     const String& ScriptingEngine::GetScriptingLocale()
     {
         return s_Data.Locale;
+    }
+
+    void ScriptingEngine::SetMousePosition(int x, int y)
+    {
+        s_Data.MouseX = x;
+        s_Data.MouseY = y;
+    }
+
+    glm::vec2 ScriptingEngine::GetMousePosition()
+    {
+        return {s_Data.MouseX, s_Data.MouseY};
+    }
+
+    glm::vec2 ScriptingEngine::GetViewportSize()
+    {
+        if(s_Data.ViewportSize.x == -1 || s_Data.ViewportSize.y == -1)
+        {
+            auto& app = Application::GetInstance();
+            return {app.GetWidth(), app.GetHeight()};
+        }
+        return s_Data.ViewportSize;
+    }
+
+    void ScriptingEngine::SetViewportSize(float width, float height)
+    {
+        s_Data.ViewportSize = {width, height};
     }
 }

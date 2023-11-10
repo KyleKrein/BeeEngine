@@ -207,7 +207,7 @@ namespace BeeEngine
                 };
                 if(!IsInFrustum(frustumPlanes, CreateAABB(vertices))/*!IsSphereInFrustum(sphere, frustum)*/)
                 {
-                    continue;
+                    //continue;
                 }
                 auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
                 SpriteInstanceBufferData data {transform, spriteComponent.Color, spriteComponent.TilingFactor,

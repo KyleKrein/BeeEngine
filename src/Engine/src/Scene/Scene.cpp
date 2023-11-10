@@ -209,14 +209,7 @@ namespace BeeEngine
             Entity entity{EntityID{e}, this};
             auto& rigidBody = entity.GetComponent<RigidBody2DComponent>();
             auto& transform = entity.GetComponent<TransformComponent>();
-            b2BodyDef bodyDef;
-            bodyDef.type = ConvertRigidBodyTypeToBox2D(rigidBody.Type);
-            bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
-            bodyDef.angle = transform.Rotation.z;
-
-            b2Body* body = m_2DPhysicsWorld->CreateBody(&bodyDef);
-            body->SetFixedRotation(rigidBody.FixedRotation);
-            rigidBody.RuntimeBody = body;
+            b2Body *body = (b2Body*)CreateRuntimeRigidBody2D(rigidBody, transform);
 
 
             if(!entity.HasComponent<BoxCollider2DComponent>())
@@ -225,21 +218,28 @@ namespace BeeEngine
             }
             auto& boxCollider = entity.GetComponent<BoxCollider2DComponent>();
 
-            if(boxCollider.Type == BoxCollider2DComponent::ColliderType::Box)
-            {
-                b2PolygonShape boxShape;
-                boxShape.SetAsBox(boxCollider.Size.x * transform.Scale.x, boxCollider.Size.y * transform.Scale.y, b2Vec2(boxCollider.Offset.x, boxCollider.Offset.y), 0.0f);
+            CreateRuntimeBoxCollider2DFixture(transform, body, boxCollider);
+        }
+    }
 
-                b2FixtureDef fixtureDef;
-                fixtureDef.shape = &boxShape;
-                fixtureDef.density = boxCollider.Density;
-                fixtureDef.friction = boxCollider.Friction;
-                fixtureDef.restitution = boxCollider.Restitution;
-                fixtureDef.restitutionThreshold = boxCollider.RestitutionThreshold;
-                body->CreateFixture(&fixtureDef);
-                continue;
-            }
+    void Scene::CreateRuntimeBoxCollider2DFixture(const TransformComponent &transform, b2Body *body,
+                                                  BoxCollider2DComponent &boxCollider) const
+    {
+        if(boxCollider.Type == BoxCollider2DComponent::ColliderType::Box)
+        {
+            b2PolygonShape boxShape;
+            boxShape.SetAsBox(boxCollider.Size.x * transform.Scale.x, boxCollider.Size.y * transform.Scale.y, b2Vec2(boxCollider.Offset.x, boxCollider.Offset.y), 0.0f);
 
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &boxShape;
+            fixtureDef.density = boxCollider.Density;
+            fixtureDef.friction = boxCollider.Friction;
+            fixtureDef.restitution = boxCollider.Restitution;
+            fixtureDef.restitutionThreshold = boxCollider.RestitutionThreshold;
+            boxCollider.RuntimeFixture = static_cast<void*>(body->CreateFixture(&fixtureDef));
+        }
+        else if(boxCollider.Type == BoxCollider2DComponent::ColliderType::Circle)
+        {
             b2CircleShape circleShape;
             circleShape.m_radius = boxCollider.Size.x * transform.Scale.x;
             circleShape.m_p.Set(boxCollider.Offset.x * transform.Scale.x, boxCollider.Offset.y * transform.Scale.y);
@@ -250,8 +250,21 @@ namespace BeeEngine
             fixtureDef.friction = boxCollider.Friction;
             fixtureDef.restitution = boxCollider.Restitution;
             fixtureDef.restitutionThreshold = boxCollider.RestitutionThreshold;
-            body->CreateFixture(&fixtureDef);
+            boxCollider.RuntimeFixture = static_cast<void*>(body->CreateFixture(&fixtureDef));
         }
+    }
+
+    void* Scene::CreateRuntimeRigidBody2D(RigidBody2DComponent &rigidBody, const TransformComponent &transform)
+    {
+        b2BodyDef bodyDef;
+        bodyDef.type = ConvertRigidBodyTypeToBox2D(rigidBody.Type);
+        bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
+        bodyDef.angle = transform.Rotation.z;
+
+        b2Body* body = m_2DPhysicsWorld->CreateBody(&bodyDef);
+        body->SetFixedRotation(rigidBody.FixedRotation);
+        rigidBody.RuntimeBody = body;
+        return body;
     }
 
     void Scene::StopPhysicsWorld()
@@ -275,7 +288,15 @@ namespace BeeEngine
             b2Body* body = (b2Body*)rigidBody.RuntimeBody;
             if(body == nullptr)
             {
-                continue;
+                body = (b2Body*)CreateRuntimeRigidBody2D(rigidBody, transform);
+            }
+            if(entity.HasComponent<BoxCollider2DComponent>())
+            {
+                auto& boxCollider = entity.GetComponent<BoxCollider2DComponent>();
+                if(!boxCollider.RuntimeFixture)
+                {
+                    CreateRuntimeBoxCollider2DFixture(transform, body, boxCollider);
+                }
             }
             const auto& position = body->GetPosition();
             transform.Translation = {position.x, position.y, transform.Translation.z};
@@ -372,6 +393,59 @@ namespace BeeEngine
             if (cameraComponent.Primary)
             {
                 return {EntityID{entity}, this};
+            }
+        }
+        return Entity::Null;
+    }
+    class RayCast2DCallback : public b2RayCastCallback
+    {
+    public:
+        float ReportFixture(b2Fixture *fixture, const b2Vec2 &point, const b2Vec2 &normal, float fraction) override
+        {
+            m_Fixture = fixture;
+            m_Point = point;
+            m_Normal = normal;
+            m_Fraction = fraction;
+            return fraction;
+        }
+        b2Fixture* GetFixture() const
+        {
+            return m_Fixture;
+        }
+        b2Vec2 GetPoint() const
+        {
+            return m_Point;
+        }
+        b2Vec2 GetNormal() const
+        {
+            return m_Normal;
+        }
+        float GetFraction() const
+        {
+            return m_Fraction;
+        }
+    private:
+        b2Fixture* m_Fixture = nullptr;
+        b2Vec2 m_Point;
+        b2Vec2 m_Normal;
+        float m_Fraction;
+    };
+
+    Entity Scene::RayCast2D(glm::vec2 start, glm::vec2 end)
+    {
+        RayCast2DCallback callback;
+        m_2DPhysicsWorld->RayCast(&callback, {start.x, start.y}, {end.x, end.y});
+        if(auto fixture = callback.GetFixture())
+        {
+            auto view = m_Registry.view<BoxCollider2DComponent>();
+            auto it = std::ranges::find_if(view, [fixture, &view](auto entity)
+            {
+                auto& boxCollider = view.get<BoxCollider2DComponent>(entity);
+                return boxCollider.RuntimeFixture == fixture;
+            });
+            if(it != view.end())
+            {
+                return {EntityID{*it}, this};
             }
         }
         return Entity::Null;

@@ -101,6 +101,8 @@ namespace BeeEngine
         }
     private:
         UTF8String m_Path;
+
+        void RefactorApplyAndCheck(UTF8String&& utf8);
     };
 }
 namespace std

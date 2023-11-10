@@ -12,6 +12,10 @@ Assets:
     Type: AssetType::Texture2D
     Handle: 7772243033513047726
     FilePath: Assets/pc.png
+  - Name: TemplateForRayCastTest
+    Type: AssetType::Prefab
+    Handle: 13275030511268767488
+    FilePath: Prefabs/TemplateForRayCastTest.beeprefab
   - Name: google_logo
     Type: AssetType::Texture2D
     Handle: 13987028760561915515

@@ -6,32 +6,24 @@
 #include "Core/Logging/Log.h"
 #include "version"
 
-#ifdef __cpp_lib_source_location
-#include "source_location"
-#else
-#include "source_location.h"
-#endif
+#include "StackTrace.h"
 
-constexpr inline void BeeExpects(bool x, std::source_location location = std::source_location::current())
+inline void BeeExpects(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
 {
-    if (x) [[likely]]
-        return;
-    [[unlikely]]
-    BeeCoreError("Expected result is incorrect at {0}: {1}", location.file_name(), location.line());
+    BeeCoreError("Expected result {0} is incorrect\nStacktrace:\n{1}", expr, stackTrace);
     debug_break();
 }
-constexpr inline void BeeEnsures(bool x, std::source_location location = std::source_location::current())
+inline void BeeEnsures(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
 {
-    if (x) [[likely]]
-        return;
-    [[unlikely]]
-    BeeCoreError("Expectations failed at {0}: {1}", location.file_name(), location.line());
+    BeeCoreError("Expectations {0} failed\nStacktrace:\n{1}", expr, stackTrace);
     debug_break();
 }
 
 #if defined(BEE_ENABLE_CHECKS)
-    #define BeeExpects(x) BeeExpects(x)
-    #define BeeEnsures(x) BeeEnsures(x)
+#define BEE_STRINGIFY(x) #x
+    #define BeeExpects(x) if(!(x)) [[unlikely]] BeeExpects(BEE_STRINGIFY(x))
+    #define BeeEnsures(x) if(!(x)) [[unlikely]] BeeEnsures(BEE_STRINGIFY(x))
+//#undef STRINGIFY
 #else
     #define BeeExpects(x)
     #define BeeEnsures(x)

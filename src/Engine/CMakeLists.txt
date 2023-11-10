@@ -83,6 +83,10 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/AssetManagement/LocalizedAsset.h
         src/Renderer/SceneRenderer.cpp
         src/Renderer/SceneRenderer.h
+        src/Core/Numbers.h
+        src/Core/Inlining.h
+        src/StackTrace.cpp
+        src/StackTrace.h
 )
 
 
