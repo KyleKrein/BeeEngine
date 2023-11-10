@@ -21,7 +21,8 @@ namespace BeeEngine
     public:
         static void Init();
         static void Shutdown();
-        static void SetLocale(const String& locale);
+        static void SetLocaleDomain(Locale::Domain& domain);
+        static Locale::Domain& GetLocaleDomain();
         static const String& GetScriptingLocale();
         static void EnableDebugging();
 

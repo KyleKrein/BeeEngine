@@ -20,6 +20,21 @@ namespace Example
             m_Camera = cameraEntity.GetBehaviour<Camera>();
             m_Camera.PositionChanged += Camera_PositionChanged;
             Camera_PositionChanged(m_Camera, cameraEntity.GetComponent<TransformComponent>());
+            SetTextScore();
+        }
+
+        void OnUpdate()
+        {
+            if(Input.IsKeyDown(Key.KeyPadSubtract))
+            {
+                --m_Score;
+                SetTextScore();
+            }
+            if (Input.IsKeyDown(Key.KeyPadAdd))
+            {
+                ++m_Score;
+                SetTextScore();
+            }
         }
 
         private void OnDestroy()
@@ -34,7 +49,12 @@ namespace Example
 
         public void IncreaseScore()
         {
-            m_Text.Text = $"Score: {++m_Score}";
+            ++m_Score;
+            SetTextScore();
+        }
+        private void SetTextScore()
+        {
+            m_Text.Text = Localization.Translate("test_scene.score", "score", m_Score);
         }
     }
 }

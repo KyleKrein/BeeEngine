@@ -63,7 +63,7 @@ namespace BeeEngine
         Path GameAssemblyPath = "";
         Path CoreAssemblyPath = "";
 
-        String Locale = Locale::GetSystemLocale();
+        Locale::Domain* LocaleDomain = nullptr;
 
         int MouseX = 0;
         int MouseY = 0;
@@ -267,7 +267,7 @@ namespace BeeEngine
         {
             return;
         }
-        auto script = CreateRef<GameScript>(*pClass, entity, s_Data.Locale);
+        auto script = CreateRef<GameScript>(*pClass, entity, GetScriptingLocale());
         s_Data.EntityObjects[uuid] = script;
         //
         {
@@ -451,13 +451,9 @@ namespace BeeEngine
         mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTime);
         mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTime);
     }
-    void ScriptingEngine::SetLocale(const BeeEngine::String &locale)
-    {
-        s_Data.Locale = locale;
-    }
     const String& ScriptingEngine::GetScriptingLocale()
     {
-        return s_Data.Locale;
+        return s_Data.LocaleDomain->GetLocale();
     }
 
     void ScriptingEngine::SetMousePosition(int x, int y)
@@ -484,5 +480,15 @@ namespace BeeEngine
     void ScriptingEngine::SetViewportSize(float width, float height)
     {
         s_Data.ViewportSize = {width, height};
+    }
+
+    void ScriptingEngine::SetLocaleDomain(Locale::Domain &domain)
+    {
+        s_Data.LocaleDomain = &domain;
+    }
+
+    Locale::Domain &ScriptingEngine::GetLocaleDomain()
+    {
+        return *s_Data.LocaleDomain;
     }
 }

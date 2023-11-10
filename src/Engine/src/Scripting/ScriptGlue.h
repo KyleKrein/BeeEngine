@@ -58,5 +58,9 @@ namespace BeeEngine
         static bool Asset_IsLoaded(AssetHandle* handle);
         static bool Asset_IsValid(AssetHandle* handle);
         static uint64_t Physics2D_CastRay(glm::vec2* start, glm::vec2* end);
+        static MonoString * Locale_GetLocale();
+        static void Locale_SetLocale(MonoString* locale);
+        static MonoString * Locale_TranslateStatic(MonoString* key);
+        static MonoString * Locale_TranslateDynamic(MonoString* key, MonoArray* args);
     };
 }

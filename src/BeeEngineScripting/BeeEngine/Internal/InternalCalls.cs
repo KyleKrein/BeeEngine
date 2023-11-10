@@ -100,5 +100,14 @@ namespace BeeEngine.Internal
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern ulong Physics2D_CastRay(ref Vector2 start, ref Vector2 end);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern string Locale_GetLocale();
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern void Locale_SetLocale(string locale);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern string Locale_TranslateStatic(string key);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal static extern string Locale_TranslateDynamic(string key, object[] args);
     }
 }

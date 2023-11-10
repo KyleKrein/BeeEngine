@@ -17,6 +17,19 @@
 
 namespace BeeEngine
 {
+    static UTF8String ConvertMonoStringToString(MonoString* str)
+    {
+        MonoError error {};
+        char* strPtr = mono_string_to_utf8_checked(str, &error);
+        if(error.error_code != MONO_ERROR_NONE)
+        {
+            BeeError("Could not convert MonoString to char*: {}", mono_error_get_message(&error));
+            return {};
+        }
+        UTF8String result = strPtr;
+        mono_free(strPtr);
+        return result;
+    }
 
     std::unordered_map<MonoType*, std::function<void*(Entity)>> s_CreateComponentFunctions;
     std::unordered_map<MonoType*, std::function<void*(Entity)>> s_GetComponentFunctions;
@@ -103,35 +116,36 @@ namespace BeeEngine
             BEE_INTERNAL_CALL(Asset_IsLoaded);
 
             BEE_INTERNAL_CALL(Physics2D_CastRay);
+
+            BEE_INTERNAL_CALL(Locale_GetLocale);
+            BEE_INTERNAL_CALL(Locale_SetLocale);
+            BEE_INTERNAL_CALL(Locale_TranslateStatic);
+            BEE_INTERNAL_CALL(Locale_TranslateDynamic);
         }
     }
 
     void ScriptGlue::Log_Warn(MonoString *message)
     {
-        char* msg = mono_string_to_utf8(message);
+        auto msg = ConvertMonoStringToString(message);
         BeeWarn(msg);
-        mono_free(msg);
     }
 
     void ScriptGlue::Log_Info(MonoString *message)
     {
-        char* msg = mono_string_to_utf8(message);
+        auto msg = ConvertMonoStringToString(message);
         BeeInfo(msg);
-        mono_free(msg);
     }
 
     void ScriptGlue::Log_Error(MonoString *message)
     {
-        char* msg = mono_string_to_utf8(message);
+        auto msg = ConvertMonoStringToString(message);
         BeeError(msg);
-        mono_free(msg);
     }
 
     void ScriptGlue::Log_Trace(MonoString *message)
     {
-        char* msg = mono_string_to_utf8(message);
-        BeeTrace(msg);
-        mono_free(msg);
+        auto msg = ConvertMonoStringToString(message);
+        BeeCoreTrace(msg);
     }
 
     void ScriptGlue::Entity_GetTranslation(uint64_t id, glm::vec3 *outTranslation)
@@ -267,23 +281,16 @@ namespace BeeEngine
     uint64_t ScriptGlue::Entity_FindEntityByName(MonoString *name)
     {
         MonoError error {};
-        char* nameStr = mono_string_to_utf8_checked(name, &error);
-        if(error.error_code != MONO_ERROR_NONE)
-        {
-            BeeError("Could not convert MonoString to char*: {}", mono_error_get_message(&error));
-            return 0;
-        }
+        auto nameStr = ConvertMonoStringToString(name);
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByName(nameStr);
         if(!entity)
         {
             BeeCoreTrace("Could not find entity with name {}", nameStr);
-            mono_free(nameStr);
             return 0;
         }
         UUID uuid = entity.GetUUID();
         BeeCoreTrace("Found entity with name {} and id {}", nameStr, uuid);
-        mono_free(nameStr);
         return uuid;
     }
 
@@ -313,18 +320,11 @@ namespace BeeEngine
 
     void ScriptGlue::TextRendererComponent_SetText(uint64_t id, MonoString *text)
     {
-        MonoError error {};
-        char* textStr = mono_string_to_utf8_checked(text, &error);
-        if(error.error_code != MONO_ERROR_NONE)
-        {
-            BeeError("Could not convert MonoString to char*: {}", mono_error_get_message(&error));
-            return;
-        }
+        auto textStr = ConvertMonoStringToString(text);
         auto entity = GetEntity(id);
         if(!entity)
         {
             BeeError("Could not find entity with id {}", id);
-            mono_free(textStr);
             return;
         }
         entity.GetComponent<TextRendererComponent>().Text = textStr;
@@ -426,22 +426,14 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_SetName(uint64_t id, MonoString *name)
     {
-        MonoError error {};
-        char* nameStr = mono_string_to_utf8_checked(name, &error);
-        if(error.error_code != MONO_ERROR_NONE)
-        {
-            BeeError("Could not convert MonoString to char*: {}", mono_error_get_message(&error));
-            return;
-        }
+        auto nameStr = ConvertMonoStringToString(name);
         auto entity = GetEntity(id);
         if(!entity)
         {
             BeeError("Could not find entity with id {}", id);
-            mono_free(nameStr);
             return;
         }
         entity.GetComponent<TagComponent>().Tag = nameStr;
-        mono_free(nameStr);
     }
 
     uint64_t ScriptGlue::Entity_Duplicate(uint64_t id)
@@ -492,5 +484,107 @@ namespace BeeEngine
         glm::mat4 invView = glm::inverse(transform.GetTransform());
         glm::vec4 worldCoords = invView * glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
         *outPosition = {worldCoords.x, worldCoords.y};
+    }
+
+    MonoString *ScriptGlue::Locale_GetLocale()
+    {
+        return mono_string_new(mono_domain_get(), ScriptingEngine::GetScriptingLocale().c_str());
+    }
+
+    void ScriptGlue::Locale_SetLocale(MonoString *locale)
+    {
+        auto localeStr = ConvertMonoStringToString(locale);
+        ScriptingEngine::GetLocaleDomain().SetLocale(localeStr);
+    }
+
+    MonoString *ScriptGlue::Locale_TranslateStatic(MonoString *key)
+    {
+        auto keyStr = ConvertMonoStringToString(key);
+        return mono_string_new(mono_domain_get(), ScriptingEngine::GetLocaleDomain().Translate(keyStr.c_str()).c_str());
+    }
+    using VariantType = std::variant<String, bool, int32_t, int16_t, int64_t, uint32_t, uint16_t, uint64_t, float32_t, float64_t>;
+    VariantType ProcessArrayElement(MonoObject* obj)
+    {
+        MonoClass* klass = mono_object_get_class(obj);
+        MonoType* type = mono_class_get_type(klass);
+        switch (mono_type_get_type(type))
+        {
+            case MONO_TYPE_BOOLEAN:
+            {
+                bool* value = (bool*)mono_object_unbox(obj);
+                return *value;
+            }
+            case MONO_TYPE_I4:
+            {
+                int32_t* value = (int32_t*)mono_object_unbox(obj);
+                return *value;
+            }
+            case MONO_TYPE_I2:
+            {
+                int16_t* value = (int16_t*)mono_object_unbox(obj);
+                return *value;
+            }
+            case MONO_TYPE_I8:
+            {
+                int64_t* value = (int64_t*)mono_object_unbox(obj);
+                return *value;
+            }
+            case MONO_TYPE_U4:
+            {
+                uint32_t* value = (uint32_t*)mono_object_unbox(obj);
+                return *value;
+            }
+            case MONO_TYPE_U2:
+            {
+                uint16_t* value = (uint16_t*)mono_object_unbox(obj);
+                return *value;
+            }
+            case MONO_TYPE_U8:
+            {
+                uint64_t* value = (uint64_t*)mono_object_unbox(obj);
+                return *value;
+            }
+            case MONO_TYPE_R4:
+            {
+                float32_t* value = (float32_t*)mono_object_unbox(obj);
+                return *value;
+            }
+            case MONO_TYPE_R8:
+            {
+                float64_t* value = (float64_t*)mono_object_unbox(obj);
+                return *value;
+            }
+            case MONO_TYPE_STRING:
+            {
+                return ConvertMonoStringToString((MonoString*)obj);
+            }
+            default:
+            {
+                MonoObject* ex;
+                MonoString* str = mono_object_to_string(obj, &ex);
+                if(ex)
+                {
+                    MonoString * message = mono_object_to_string(ex, nullptr);
+                    BeeCoreError("Could not convert object to string: {}", ConvertMonoStringToString(message));
+                    return {};
+                }
+                return ConvertMonoStringToString(str);
+            }
+        }
+    }
+
+    MonoString *ScriptGlue::Locale_TranslateDynamic(MonoString *keyMono, MonoArray *argsMono)
+    {
+        auto key = ConvertMonoStringToString(keyMono);
+        std::vector<VariantType> args;
+        size_t length = mono_array_length(argsMono);
+        args.reserve(length);
+        for(size_t i = 0; i < length; i++)
+        {
+            MonoObject* obj = mono_array_get(argsMono, MonoObject*, i);
+            args.push_back(ProcessArrayElement(obj));
+        }
+        auto translated = ScriptingEngine::GetLocaleDomain().TranslateRuntime(key.c_str(), args);
+        return mono_string_new(mono_domain_get(), translated.c_str());
     }
 }

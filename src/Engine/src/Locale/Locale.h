@@ -5,6 +5,7 @@
 #pragma once
 
 #include <utility>
+#include <variant>
 
 #include "Core/String.h"
 #include "Core/ToString.h"
@@ -24,6 +25,7 @@ namespace BeeEngine::Locale
     {
         friend class LocalizationGenerator;
         friend class ImGuiLocalizationPanel;
+        friend class ScriptGlue;
         using Locale = UTF8String;
         using ValueVariationsMap = std::unordered_map<UTF8String, UTF8String>;
         using KeyMap = std::unordered_map<UTF8String, ValueVariationsMap>;
@@ -139,8 +141,75 @@ namespace BeeEngine::Locale
 
             return icuOutput;
         }
-
     private:
+        template<typename... Args>
+        UTF8String TranslateRuntime(const char *key, std::vector<std::variant<Args...>>& args)
+        {
+            //static_assert(sizeof...(args) % 2 == 0, "Translate() requires an even number of arguments for key-value pairs.");
+            //AreKeysStrings<Args...>(std::index_sequence_for<Args...>{});
+
+            auto localeData = m_Languages.find(m_Locale);
+            if (localeData == m_Languages.end())
+            {
+                return key;
+            }
+
+            auto keyData = localeData->second.find(key);
+            if (keyData == localeData->second.end() || !keyData->second.contains("default"))
+            {
+                return key;
+            }
+
+            UTF8String pattern = keyData->second["default"];
+            UErrorCode status = U_ZERO_ERROR;
+            icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.c_str()), status);
+
+            if(!U_SUCCESS(status))
+            {
+                BeeCoreError("ICU error: {}", u_errorName(status));
+                return key;
+            }
+
+            // Разбиваем пары ключ-значение на два массива
+            std::vector<icu::UnicodeString> keys;
+            keys.reserve(args.size() / 2);
+            std::vector<icu::Formattable> values;
+            values.reserve(args.size() / 2);
+            for (auto& v : args)
+            {
+                std::visit([&keys, &values](auto&& arg){
+                    using T = std::decay_t<decltype(arg)>;
+                    if constexpr (std::is_same_v<T, UTF8String>)
+                    {
+                        keys.push_back(icu::UnicodeString::fromUTF8(arg));
+                    }
+                    else if constexpr (std::is_same_v<T, uint32_t> || std::is_same_v<T, uint64_t>)
+                    {
+                        values.push_back(icu::Formattable((int64_t)arg));
+                    }
+                    else
+                    {
+                        values.push_back(icu::Formattable(arg));
+                    }
+                }, v);
+            }
+
+            icu::UnicodeString icuResult;
+            msgFmt.format(keys.data(), values.data(), keys.size(), icuResult, status);
+
+            if(!U_SUCCESS(status))
+            {
+                BeeCoreError("ICU error: {}", u_errorName(status));
+                return key;
+            }
+
+            std::string icuOutput;
+            icuResult.toUTF8String(icuOutput);
+
+            return icuOutput;
+        }
+
+
         template <typename... Args, size_t... Indices>
         inline void AreKeysStrings(std::index_sequence<Indices...>)
         {

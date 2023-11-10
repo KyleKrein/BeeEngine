@@ -1,0 +1,1 @@
+test_scene.score: "{score, plural, one{Очко: #} few{Очка: #} many{Очков: #} other{Очков: #}}"

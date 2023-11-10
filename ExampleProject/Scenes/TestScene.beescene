@@ -15,8 +15,8 @@ Entities:
       Tag: Eyes
     TransformComponent:
       Translation: [0.387382567, 0.0047330074, 0]
-      Rotation: [0, -0, 1.1175862e-08]
-      Scale: [1.00000083, 1.00000083, 1]
+      Rotation: [0, -0, 1.39698235e-08]
+      Scale: [1.00000107, 1.00000107, 1]
     HierarchyComponent:
       - 7134635448999013620
       - 11146239361119753478
@@ -24,9 +24,9 @@ Entities:
     TagComponent:
       Tag: Right
     TransformComponent:
-      Translation: [4.23637676, 1.77724612, -9.53674771e-07]
-      Rotation: [0, -0, 0.012217286]
-      Scale: [1.30000103, 1.30000103, 0.99999994]
+      Translation: [4.41512346, 1.78671193, -9.53674771e-07]
+      Rotation: [0, -0, 0.0122172805]
+      Scale: [1.30000114, 1.30000114, 0.99999994]
     ScriptComponent:
       FullName: Example.RandomColor
     SpriteRendererComponent:
@@ -40,9 +40,9 @@ Entities:
     TagComponent:
       Tag: Left
     TransformComponent:
-      Translation: [-2.69597769, 1.70852757, 0]
-      Rotation: [0, -0, 0.012217286]
-      Scale: [1.30000103, 1.30000103, 0.99999994]
+      Translation: [-2.51723146, 1.71799386, 0]
+      Rotation: [0, -0, 0.0122172805]
+      Scale: [1.30000114, 1.30000114, 0.99999994]
     ScriptComponent:
       FullName: Example.Helper
     CircleRendererComponent:

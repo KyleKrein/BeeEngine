@@ -287,6 +287,7 @@ namespace BeeEngine::Editor
         ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
         ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "build"/ "GameLibrary.dll");
         ScriptGlue::Register();
+        ScriptingEngine::SetLocaleDomain(m_ProjectFile->GetProjectLocaleDomain());
         //auto& gameAssembly = ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "GameLibrary.dll");
         /*if(m_GameLibrary)
         {
