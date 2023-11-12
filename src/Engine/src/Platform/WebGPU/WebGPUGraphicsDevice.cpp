@@ -9,7 +9,7 @@
 #include "Core/TypeDefines.h"
 #include "Renderer/Vertex.h"
 #include "Core/DeletionQueue.h"
-
+#include <Core/Coroutines/Co_Promise.h>
 namespace BeeEngine::Internal
 {
     WebGPUGraphicsDevice* WebGPUGraphicsDevice::s_Instance = nullptr;
@@ -369,4 +369,15 @@ namespace BeeEngine::Internal
         wgpuQueueWriteBuffer(m_Queue, buffer, 0, data.data(), data.size());
     }
 
+    Task<> WebGPUGraphicsDevice::WaitForQueueIdle()
+    {
+        Co_Promise<void> promise;
+        auto future = promise.get_future();
+        wgpuQueueOnSubmittedWorkDone(m_Queue, 0, [](WGPUQueueWorkDoneStatus status, void* userdata)
+        {
+            auto* p = (std::promise<void>*)userdata;
+            p->set_value();
+        }, &promise);
+        co_await future;
+    }
 }

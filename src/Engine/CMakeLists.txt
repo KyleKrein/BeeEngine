@@ -87,6 +87,11 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/Inlining.h
         src/StackTrace.cpp
         src/StackTrace.h
+        src/Utils/Commands.h
+        src/Core/Coroutines/Task.h
+        src/Core/Coroutines/Awaiters.h
+        src/Core/Coroutines/Generator.h
+        src/Core/Coroutines/Co_Promise.h
 )
 
 
@@ -129,6 +134,7 @@ elseif(WIN32)
     list(APPEND SOURCE_FILES "src/Platform/Windows/FileDialogsWindows.cpp")
     list(APPEND SOURCE_FILES "src/Platform/Windows/WindowsString.cpp")
     list(APPEND SOURCE_FILES "src/Platform/Windows/WindowsString.h")
+    list(APPEND SOURCE_FILES "src/Platform/Windows/WindowsCommands.cpp")
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
 elseif (UNIX AND NOT APPLE)

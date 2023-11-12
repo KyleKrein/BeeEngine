@@ -61,6 +61,7 @@ namespace BeeEngine::Editor
     private:
         uint32_t m_Width;
         uint32_t m_Height;
+        glm::vec2 m_MousePosition;
         Scope<FrameBuffer> m_FrameBuffer;
         bool m_IsFocused;
         bool m_IsHovered;
@@ -69,6 +70,9 @@ namespace BeeEngine::Editor
         const Locale::Domain* m_GameDomain = nullptr;
         GuizmoOperation m_GuizmoOperation = GuizmoOperation::Translate;
         bool m_GuizmoSnap = false;
+
+        Task<int> m_ReadPixelTask {{}};
+        bool m_IsReadPixelTaskRunning = false;
 
         mutable bool m_NewSceneWasLoaded = false;
         glm::vec2 m_ViewportBounds[2]
@@ -95,5 +99,9 @@ namespace BeeEngine::Editor
         void RenderCameraFrustum();
 
         void RenderSelectedEntityOutline();
+
+        void HandleReadPixelTask();
+
+        bool IsMouseInViewport();
     };
 }

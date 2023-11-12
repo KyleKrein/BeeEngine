@@ -78,5 +78,11 @@ namespace BeeEngine::Editor
 
         Scope<FileWatcher> m_AssetFileWatcher = nullptr;
         EditorAssetManager* m_AssetManager;
+
+        void HandleChangedScriptFile(const Path &path, FileWatcher::Event event);
+
+        bool m_MustReload;
+
+        void ReloadAndRebuild();
     };
 }

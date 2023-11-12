@@ -5,6 +5,7 @@
 #pragma once
 #include "Core/TypeDefines.h"
 #include "Core/Color4.h"
+#include "Core/Coroutines/Task.h"
 
 namespace BeeEngine
 {
@@ -84,7 +85,7 @@ namespace BeeEngine
         [[nodiscard]] virtual uintptr_t GetColorAttachmentRendererID(uint32_t index) const = 0;
         [[nodiscard]] virtual uintptr_t GetDepthAttachmentRendererID() const = 0;
         [[nodiscard]] virtual uint32_t GetRendererID() const = 0;
-        virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const = 0;
+        [[nodiscard]] virtual Task<int> ReadPixel(uint32_t attachmentIndex, int x, int y) const = 0;
         virtual void ClearColorAttachment(uint32_t attachmentIndex, int value) = 0;
         static Scope<FrameBuffer> Create(const FrameBufferPreferences& preferences);
         static Scope<FrameBuffer> Create(FrameBufferPreferences&& preferences);

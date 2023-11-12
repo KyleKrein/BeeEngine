@@ -7,6 +7,7 @@
 #include "ProjectFile.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Locale/Locale.h"
+#include "AssetEditPanel.h"
 
 namespace BeeEngine::Editor
 {
@@ -23,6 +24,7 @@ namespace BeeEngine::Editor
 
         void Render();
     private:
+        Scope<AssetEditPanel> m_AssetEditPanel;
         EditorAssetManager* m_AssetManager;
         Locale::Domain* m_EditorDomain;
         ProjectFile* m_Project;

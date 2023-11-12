@@ -10,6 +10,7 @@
 #include "WebGPUCommandBuffer.h"
 #include "gsl/gsl"
 #include "WebGPUBufferPool.h"
+#include "Core/Coroutines/Task.h"
 
 namespace BeeEngine::Internal
 {
@@ -123,6 +124,8 @@ namespace BeeEngine::Internal
         {
             return m_SupportedLimits;
         }
+
+        Task<> WaitForQueueIdle();
 
     private:
         static WebGPUGraphicsDevice* s_Instance;

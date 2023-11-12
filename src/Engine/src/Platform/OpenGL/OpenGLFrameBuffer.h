@@ -22,7 +22,7 @@ namespace BeeEngine
                 return m_ColorAttachments[index];
             }
             uintptr_t GetDepthAttachmentRendererID() const override { return m_DepthAttachment; }
-            virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
+            virtual Task<int> ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
             void ClearColorAttachment(uint32_t attachmentIndex, int value) override;
             uint32_t GetRendererID() const override { return m_RendererID; }
             void Bind() override;

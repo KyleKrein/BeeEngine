@@ -88,6 +88,11 @@ namespace BeeEngine{
             return m_AssetManager;
         }
 
+        bool IsFocused()
+        {
+            return m_IsFocused;
+        }
+
     protected:
         virtual void Update() {};
         virtual void OnEvent(EventDispatcher& dispatcher)
@@ -123,6 +128,7 @@ namespace BeeEngine{
         std::mutex m_MainThreadQueueMutex;
         static Application* s_Instance;
         bool m_IsMinimized;
+        bool m_IsFocused;
         Scope<WindowHandler> m_Window;
         LayerStack m_Layers;
         EventQueue m_EventQueue;

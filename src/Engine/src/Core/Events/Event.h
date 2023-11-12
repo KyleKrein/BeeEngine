@@ -23,18 +23,17 @@ namespace BeeEngine
         WindowClose = 1,
         WindowResize = 2,
         WindowFocus = 3,
-        WindowLostFocus = 4,
-        WindowMoved = 5,
-        AppTick = 6,
-        AppUpdate = 7,
-        AppRender = 8,
-        KeyPressed = 9,
-        KeyReleased = 10,
-        KeyTyped = 11,
-        MouseButtonPressed = 12,
-        MouseButtonReleased = 13,
-        MouseMoved = 14,
-        MouseScrolled = 15
+        WindowMoved = 4,
+        AppTick = 5,
+        AppUpdate = 6,
+        AppRender = 7,
+        KeyPressed = 8,
+        KeyReleased = 9,
+        KeyTyped = 10,
+        MouseButtonPressed = 11,
+        MouseButtonReleased = 12,
+        MouseMoved = 13,
+        MouseScrolled = 14
     };
     class Event
     {

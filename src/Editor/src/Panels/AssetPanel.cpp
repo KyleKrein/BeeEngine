@@ -12,6 +12,7 @@
 #include "Core/ResourceManager.h"
 #include "Core/Path.h"
 #include "Gui/ImGui/ImGuiExtension.h"
+#include "FileSystem/File.h"
 
 
 namespace BeeEngine::Editor
@@ -30,6 +31,12 @@ namespace BeeEngine::Editor
 
     void AssetPanel::Render()
     {
+        if(m_AssetEditPanel)
+        {
+            m_AssetEditPanel->Render();
+            if(!m_AssetEditPanel->IsOpened())
+                m_AssetEditPanel.reset();
+        }
         ImGui::Begin(m_EditorDomain->Translate("assetPanel").c_str());
         if(ImGui::IsDragAndDropPayloadInProcess("CONTENT_BROWSER_ITEM"))
         {
@@ -99,8 +106,12 @@ namespace BeeEngine::Editor
 
                 if(handle.RegistryID == m_Project->GetAssetRegistryID())
                 {
-                    if(ImGui::BeginPopupContextItem(0, ImGuiPopupFlags_MouseButtonRight))
+                    if(ImGui::BeginPopupContextItem("AssetPanelPopupMenu", ImGuiPopupFlags_MouseButtonRight))
                     {
+                        if(ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.editAsset").c_str()))
+                        {
+                            m_AssetEditPanel = CreateScope<AssetEditPanel>(m_Project->GetProjectLocaleDomain(), handle);
+                        }
                         if(ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.deleteAsset").c_str()))
                         {
                             Application::SubmitToMainThread([this, handle]()
@@ -126,6 +137,37 @@ namespace BeeEngine::Editor
         }
 
         ImGui::Columns(1);
+
+        if (ImGui::BeginPopupContextWindow("AssetPanelPopupMenu", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
+        {
+            if (ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.createLocalizedAsset").c_str()))
+            {
+                ImGui::OpenPopup("CreateLocalizedAssetPopup");
+            }
+            ImGui::EndPopup();
+        }
+        if(ImGui::BeginPopup("CreateLocalizedAssetPopup"))
+        {
+            static String assetName;
+            ImGui::InputText(m_EditorDomain->Translate("name").c_str(), &assetName, 256);
+            if(ImGui::Button(m_EditorDomain->Translate("create").c_str()))
+            {
+                AssetHandle handle = {};
+                std::unordered_map<String, AssetHandle> handles;
+                for(auto& locale : m_Project->GetProjectLocaleDomain().GetLocales())
+                {
+                    handles[locale] = {0,0};
+                }
+                LocalizedAsset localizedAsset {std::move(handles)};
+                String serialized = LocalizedAssetSerializer::Serialize(localizedAsset);
+                Path assetPath = m_Project->GetProjectPath() / (assetName + ".beelocalizedasset");
+                File::WriteFile(assetPath, serialized);
+                m_AssetEditPanel = CreateScope<AssetEditPanel>(m_Project->GetProjectLocaleDomain(), handle);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+
         ImGui::End();
     }
 

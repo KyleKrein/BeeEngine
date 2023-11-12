@@ -173,5 +173,10 @@ namespace BeeEngine
             }
             return AssetType::None;
         }
+
+        static bool IsScriptExtension(const Path& extension)
+        {
+            return extension == ".cs";
+        }
     };
 }

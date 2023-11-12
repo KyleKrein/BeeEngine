@@ -17,6 +17,8 @@
 #include <unicode/unistr.h>
 #include <unicode/locid.h>
 #include <unicode/ustream.h>
+#include <coroutine>
+#include "Core/Coroutines/Generator.h"
 
 namespace BeeEngine::Locale
 {
@@ -42,6 +44,13 @@ namespace BeeEngine::Locale
         {
             SetLocale(GetSystemLocale());
             BeeCoreTrace("Domain {} was created with default locale {}", m_Name, m_Locale);
+        }
+        Generator<const String&> GetLocales()
+        {
+            for (auto& [locale, _] : m_Languages)
+            {
+                co_yield locale;
+            }
         }
         void AddLocale(const Locale& locale)
         {
