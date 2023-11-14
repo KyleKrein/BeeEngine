@@ -375,9 +375,13 @@ namespace BeeEngine::Internal
         auto future = promise.get_future();
         wgpuQueueOnSubmittedWorkDone(m_Queue, 0, [](WGPUQueueWorkDoneStatus status, void* userdata)
         {
-            auto* p = (std::promise<void>*)userdata;
+            auto* p = (Co_Promise<void>*)userdata;
             p->set_value();
         }, &promise);
-        co_await future;
+        while (!future.await_ready())
+        {
+            wgpuDeviceTick(m_Device);
+        }
+        co_return;
     }
 }

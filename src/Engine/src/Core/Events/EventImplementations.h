@@ -184,4 +184,21 @@ namespace BeeEngine
     private:
         bool m_IsFocused;
     };
+
+    struct FileDropEvent: public Event
+    {
+    public:
+        FileDropEvent(Path&& path)
+        : m_Path(std::move(path))
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::FileDrop;
+        }
+        [[nodiscard]] const Path& GetPath() const
+        {
+            return m_Path;
+        }
+    private:
+        Path m_Path;
+    };
 }

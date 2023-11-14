@@ -33,7 +33,8 @@ namespace BeeEngine
         MouseButtonPressed = 11,
         MouseButtonReleased = 12,
         MouseMoved = 13,
-        MouseScrolled = 14
+        MouseScrolled = 14,
+        FileDrop = 15
     };
     class Event
     {

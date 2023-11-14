@@ -97,7 +97,6 @@ namespace BeeEngine::Editor
     {
         BEE_PROFILE_FUNCTION();
         m_FrameBuffer->Bind();
-        HandleReadPixelTask();
         m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(camera.GetViewProjection())), sizeof(glm::mat4));
         if(m_SelectedEntity && m_SelectedEntity.HasComponent<CameraComponent>())
             RenderCameraFrustum();
@@ -124,8 +123,11 @@ namespace BeeEngine::Editor
         && gsl::narrow_cast<float>(mouseY) < viewportSize.y)
         {
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
+            int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
+            pixelData--; //I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I need to make invalid number -1 too, so in scene I make + 1
+            //BeeCoreTrace("Coords: {}, {}. Pixel data: {}", mouseX, mouseY, pixelData);
+            m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
         }
-
         m_FrameBuffer->Unbind();
     }
 
@@ -267,12 +269,19 @@ namespace BeeEngine::Editor
 
     bool ViewPort::OnMouseButtonPressed(MouseButtonPressedEvent *event) noexcept
     {
-        if(event->GetButton() == MouseButton::Left && !m_Scene->IsRuntime()
+        /*if(event->GetButton() == MouseButton::Left && !m_Scene->IsRuntime()
         && IsMouseInViewport() && !m_IsReadPixelTaskRunning && !ImGuizmo::IsOver()
         && !Input::KeyPressed(Key::LeftAlt))
         {
             m_ReadPixelTask = m_FrameBuffer->ReadPixel(1, m_MousePosition.x, m_MousePosition.y);
             m_IsReadPixelTaskRunning = true;
+        }*/
+        if(event->GetButton() == MouseButton::Left)
+        {
+            if(!m_Scene->IsRuntime() && m_IsHovered && !ImGuizmo::IsOver() && !Input::KeyPressed(Key::LeftAlt))
+            {
+                m_SelectedEntity = m_HoveredEntity;
+            }
         }
         return false;
     }
@@ -353,18 +362,12 @@ namespace BeeEngine::Editor
         }
     }
 
-    Generator<int> ReadPixel(auto& task)
-    {
-        co_yield co_await task;
-    }
-
     void ViewPort::HandleReadPixelTask()
     {
-        if(!m_IsReadPixelTaskRunning)
+        /*if(!m_IsReadPixelTaskRunning)
         {
             return;
         }
-
         int pixelData = sync_await(std::move(m_ReadPixelTask));//m_ReadPixelTask.get();
         m_IsReadPixelTaskRunning = false;
         pixelData--; //I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I need to make invalid number -1 too, so in scene I make + 1
@@ -372,7 +375,7 @@ namespace BeeEngine::Editor
         if(hovered)
         {
             m_SelectedEntity = hovered;
-        }
+        }*/
     }
 
     bool ViewPort::IsMouseInViewport()

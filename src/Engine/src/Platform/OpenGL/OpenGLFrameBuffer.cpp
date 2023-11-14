@@ -215,14 +215,14 @@ namespace BeeEngine::Internal
         //BeeEnsures(m_RendererID != 0 && m_ColorAttachment != 0 && m_DepthAttachment != 0);
     }
 
-    Task<int> OpenGLFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) const
+    int OpenGLFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) const
     {
         BEE_PROFILE_FUNCTION();
         BeeExpects(attachmentIndex < m_ColorAttachments.size());
         glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
         int pixelData;
         glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
-        co_return pixelData;
+        return pixelData;
     }
 
     void OpenGLFrameBuffer::ClearColorAttachment(uint32_t attachmentIndex, int value)

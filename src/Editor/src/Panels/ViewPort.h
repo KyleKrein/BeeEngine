@@ -71,9 +71,6 @@ namespace BeeEngine::Editor
         GuizmoOperation m_GuizmoOperation = GuizmoOperation::Translate;
         bool m_GuizmoSnap = false;
 
-        Task<int> m_ReadPixelTask {{}};
-        bool m_IsReadPixelTaskRunning = false;
-
         mutable bool m_NewSceneWasLoaded = false;
         glm::vec2 m_ViewportBounds[2]
                 {

@@ -32,7 +32,7 @@ namespace BeeEngine::Internal
             return (uintptr_t)m_DepthAttachmentTextureView;
         }
         [[nodiscard]] uint32_t GetRendererID() const override;
-        Task<int> ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
+        int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
         void ClearColorAttachment(uint32_t attachmentIndex, int value) override;
 
     private:
@@ -57,6 +57,20 @@ namespace BeeEngine::Internal
 
         static WGPUTextureFormat ConvertToWebGPUTextureFormat(FrameBufferTextureFormat format);
         static bool IsDepthFormat(FrameBufferTextureFormat format);
+
+        mutable float m_ReadPixelValue {-1.0f};
+        mutable WGPUBuffer m_EntityIDBuffer {nullptr};
+
+        struct BufferContext
+        {
+            void* Data;
+            WGPUBuffer* Buffer;
+            bool* Waiting;
+        };
+        mutable CommandBuffer m_BufferCopyEncoder {nullptr};
+
+        mutable bool m_WaitingForReadPixel {false};
+        mutable BufferContext m_EntityIDBufferContext {&m_ReadPixelValue, &m_EntityIDBuffer, &m_WaitingForReadPixel};
 
         std::function<void()> m_FlushCallback;
         bool m_Flushed {true};

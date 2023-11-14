@@ -288,6 +288,35 @@ namespace BeeEngine::Internal
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
+                case SDL_EVENT_DROP_BEGIN:
+                {
+                    break;
+                }
+                case SDL_EVENT_DROP_COMPLETE:
+                {
+                    break;
+                }
+                case SDL_EVENT_DROP_FILE:
+                {
+                    char* path = sdlEvent.drop.file;
+                    //float32_t x = sdlEvent.drop.x;
+                    //float32_t y = sdlEvent.drop.y;
+                    Path filePath(path);
+                    auto event = CreateScope<FileDropEvent>(std::move(filePath));
+                    m_Events.AddEvent(std::move(event));
+                    SDL_free(path);
+                    break;
+                }
+                case SDL_EVENT_DROP_TEXT:
+                {
+                    debug_break();
+                    break;
+                }
+                case SDL_EVENT_DROP_POSITION:
+                {
+                    debug_break();
+                    break;
+                }
                 case SDL_EVENT_JOYSTICK_AXIS_MOTION:
                 {
                     break;
@@ -349,22 +378,6 @@ namespace BeeEngine::Internal
                     break;
                 }
                 case SDL_EVENT_CLIPBOARD_UPDATE:
-                {
-                    break;
-                }
-                case SDL_EVENT_DROP_FILE:
-                {
-                    break;
-                }
-                case SDL_EVENT_DROP_TEXT:
-                {
-                    break;
-                }
-                case SDL_EVENT_DROP_BEGIN:
-                {
-                    break;
-                }
-                case SDL_EVENT_DROP_COMPLETE:
                 {
                     break;
                 }
