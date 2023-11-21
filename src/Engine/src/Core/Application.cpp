@@ -17,7 +17,7 @@ namespace BeeEngine{
     Application* Application::s_Instance = nullptr;
     void Application::Run()
     {
-        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
+        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight(), m_Window->GetWidthInPixels(), m_Window->GetHeightInPixels()));
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
@@ -105,7 +105,7 @@ namespace BeeEngine{
     bool Application::OnWindowResize(WindowResizeEvent *event)
     {
         //m_Window->GetGraphicsDevice().WindowResized(event->GetWidth(), event->GetHeight());
-        if(event->GetWidth() == 0 || event->GetHeight() == 0)
+        if(event->GetWidthInPoints() == 0 || event->GetWidthInPoints() == 0)
         {
             m_IsMinimized = true;
             return false;

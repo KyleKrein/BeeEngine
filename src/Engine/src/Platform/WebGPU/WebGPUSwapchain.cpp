@@ -15,8 +15,8 @@ namespace BeeEngine::Internal
         WGPUSwapChainDescriptor swapChainDesc = {};
         swapChainDesc.nextInChain = nullptr;
 
-        swapChainDesc.width = WindowHandler::GetInstance()->GetWidth();
-        swapChainDesc.height = WindowHandler::GetInstance()->GetHeight();
+        swapChainDesc.width = WindowHandler::GetInstance()->GetWidthInPixels();
+        swapChainDesc.height = WindowHandler::GetInstance()->GetHeightInPixels();
         BeeCoreTrace("Creating swapchain with size: {}x{}", swapChainDesc.width, swapChainDesc.height);
         m_Width = swapChainDesc.width;
         m_Height = swapChainDesc.height;

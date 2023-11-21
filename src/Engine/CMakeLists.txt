@@ -93,6 +93,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/Coroutines/Awaiters.h
         src/Core/Coroutines/Generator.h
         src/Core/Coroutines/Co_Promise.h
+        src/Core/Memory/AllocatorPrimitives.h
+        src/Core/Memory/Allocators.h
 )
 if(${BEE_ENABLE_SCRIPTING})
     message("Scripting enabled")

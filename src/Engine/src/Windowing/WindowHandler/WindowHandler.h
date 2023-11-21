@@ -30,6 +30,18 @@ namespace BeeEngine
         {
             return m_Height;
         }
+        uint16_t GetWidthInPixels() const
+        {
+            return m_WidthInPixels;
+        }
+        uint16_t GetHeightInPixels() const
+        {
+            return m_HeightInPixels;
+        }
+        float GetScaleFactor() const
+        {
+            return m_ScaleFactor;
+        }
         virtual void SetWidth(uint16_t width) = 0;
         virtual void SetHeight(uint16_t height) = 0;
         static gsl::not_null<WindowHandler*> GetInstance()
@@ -80,6 +92,9 @@ namespace BeeEngine
         }
         uint16_t m_Width;
         uint16_t m_Height;
+        uint16_t m_WidthInPixels;
+        uint16_t m_HeightInPixels;
+        float m_ScaleFactor;
         const char *m_Title;
         VSync m_vsync;
         EventQueue& m_Events;

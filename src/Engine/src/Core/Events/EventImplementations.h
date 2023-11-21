@@ -151,22 +151,30 @@ namespace BeeEngine
     struct WindowResizeEvent: public Event
     {
     public:
-        WindowResizeEvent(uint16_t width, uint16_t height) noexcept
-        : m_Width(width), m_Height(height)
+        WindowResizeEvent(uint16_t width, uint16_t height, uint16_t pixelwidth, uint16_t pixelheight) noexcept
+        : m_Width(width), m_Height(height), m_WidthInPixels(pixelwidth), m_HeightInPixels(pixelheight)
         {
             Category = EventCategory::App;
             m_Type = EventType::WindowResize;
         }
-        [[nodiscard]] uint16_t GetWidth() const
+        [[nodiscard]] inline uint16_t GetWidthInPoints() const
         {
             return m_Width;
         }
-        [[nodiscard]] uint16_t GetHeight() const
+        [[nodiscard]] inline uint16_t GetHeightInPoints() const
         {
             return m_Height;
         }
+        [[nodiscard]] inline uint16_t GetWidthInPixels() const
+        {
+            return m_WidthInPixels;
+        }
+        [[nodiscard]] inline uint16_t GetHeightInPixels() const
+        {
+            return m_HeightInPixels;
+        }
     private:
-        uint16_t m_Width, m_Height;
+        uint16_t m_Width, m_Height, m_WidthInPixels, m_HeightInPixels;
     };
 
     struct WindowFocusedEvent: public Event

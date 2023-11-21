@@ -57,10 +57,11 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to create SDL3 window! {}", SDL_GetError());
         }
-        int width, height;
-        SDL_GetWindowSizeInPixels(m_Window, &width, &height);
-        m_Width = width;
-        m_Height = height;
+        int widthInPixels, heightInPixels;
+        SDL_GetWindowSizeInPixels(m_Window, &widthInPixels, &heightInPixels);
+        m_WidthInPixels = widthInPixels;
+        m_HeightInPixels = heightInPixels;
+        m_ScaleFactor = (float32_t)m_WidthInPixels / (float32_t)m_Width;
         switch (properties.PreferredRenderAPI)
         {
 #if defined(BEE_COMPILE_VULKAN)
@@ -169,22 +170,15 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_RESIZED:
                 {
-                    /*if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
-                    {
-                        m_Width = sdlEvent.window.data1;
-                        m_Height = sdlEvent.window.data2;
-                    }
-                    else
-                    {
-                        m_Width = sdlEvent.window.data1;
-                        m_Height = sdlEvent.window.data2;
-                    }*/
+                    m_Width = sdlEvent.window.data1;
+                    m_Height = sdlEvent.window.data2;
                     int width, height;
                     SDL_GetWindowSizeInPixels(m_Window, &width, &height);
-                    m_Width = width;
-                    m_Height = height;
+                    m_WidthInPixels = width;
+                    m_HeightInPixels = height;
+                    m_ScaleFactor = (float32_t)m_WidthInPixels / (float32_t)m_Width;
                     m_GraphicsDevice->RequestSwapChainRebuild();
-                    auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height);
+                    auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height, m_WidthInPixels, m_HeightInPixels);
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
@@ -304,7 +298,6 @@ namespace BeeEngine::Internal
                     Path filePath(path);
                     auto event = CreateScope<FileDropEvent>(std::move(filePath));
                     m_Events.AddEvent(std::move(event));
-                    SDL_free(path);
                     break;
                 }
                 case SDL_EVENT_DROP_TEXT:
@@ -398,10 +391,6 @@ namespace BeeEngine::Internal
                     break;
                 }
                 case SDL_EVENT_USER:
-                {
-                    break;
-                }
-                case SDL_EVENT_LAST:
                 {
                     break;
                 }
