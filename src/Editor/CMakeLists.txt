@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(BeeEngineEditor)
 
-add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApplication.h src/ConfigFile.cpp src/ConfigFile.h src/EditorLayer.cpp src/EditorLayer.h src/Panels/ViewPort.cpp src/Panels/ViewPort.h src/Panels/DockSpace.cpp src/Panels/DockSpace.h ../Engine/src/Gui/ImGui/IImGuiElement.h src/Panels/SceneHierarchyPanel.cpp src/Panels/SceneHierarchyPanel.h src/Panels/InspectorPanel.cpp src/Panels/InspectorPanel.h src/Panels/MenuBar.cpp src/Panels/MenuBar.h src/Panels/ContentBrowserPanel.cpp src/Panels/ContentBrowserPanel.h src/ProjectFile.cpp src/ProjectFile.h src/NativeScripting/ScriptParser.cpp src/NativeScripting/ScriptParser.h src/NativeScripting/ScriptScanner.cpp src/NativeScripting/ScriptScanner.h src/NativeScripting/CodeGenerators.cpp src/NativeScripting/CodeGenerators.h src/NativeScripting/GameBuilder.cpp src/NativeScripting/GameBuilder.h src/NativeScripting/StdioLogSystem.cpp src/VSProjectGeneration.cpp src/VSProjectGeneration.h
+add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApplication.h src/ConfigFile.cpp src/ConfigFile.h src/EditorLayer.cpp src/EditorLayer.h src/Panels/ViewPort.cpp src/Panels/ViewPort.h src/Panels/DockSpace.cpp src/Panels/DockSpace.h ../Engine/src/Gui/ImGui/IImGuiElement.h src/Panels/SceneHierarchyPanel.cpp src/Panels/SceneHierarchyPanel.h src/Panels/InspectorPanel.cpp src/Panels/InspectorPanel.h src/Panels/MenuBar.cpp src/Panels/MenuBar.h src/Panels/ContentBrowserPanel.cpp src/Panels/ContentBrowserPanel.h src/ProjectFile.cpp src/ProjectFile.h src/VSProjectGeneration.cpp src/VSProjectGeneration.h
         src/AssetScanner.cpp
         src/AssetScanner.h
         src/Panels/AssetPanel.cpp
@@ -10,7 +10,7 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
         src/Panels/ImGuiOutputConsole.h
         src/Panels/AssetEditPanel.cpp
         src/Panels/AssetEditPanel.h)
-
+# files for native scripting: src/NativeScripting/ScriptParser.cpp src/NativeScripting/ScriptParser.h src/NativeScripting/ScriptScanner.cpp src/NativeScripting/ScriptScanner.h src/NativeScripting/CodeGenerators.cpp src/NativeScripting/CodeGenerators.h src/NativeScripting/GameBuilder.cpp src/NativeScripting/GameBuilder.h src/NativeScripting/StdioLogSystem.cpp
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 
 target_include_directories(BeeEngineEditor

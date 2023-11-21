@@ -1,0 +1,5 @@
+module BeeEngineModule
+{
+    header "../../Utils/FileDialogs.h"
+    export *
+}

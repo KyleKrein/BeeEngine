@@ -72,7 +72,7 @@ namespace BeeEngine
 
             scriptComponent.Instance->OnUpdate();
         }
-
+#if defined(BEE_ENABLE_SCRIPTING)
         auto view = m_Registry.view<ScriptComponent>();
         for (auto e : view)
         {
@@ -101,6 +101,7 @@ namespace BeeEngine
                 ScriptingEngine::OnEntityUpdate(entity);
             }
         }
+#endif
     }
 
     void Scene::DestroyEntity(Entity entity)
@@ -117,8 +118,10 @@ namespace BeeEngine
         }
         m_UUIDMap.erase(uuid);
         m_Registry.destroy(entity);
+#if defined(BEE_ENABLE_SCRIPTING)
         if(m_IsRuntime)
             ScriptingEngine::OnEntityDestroyed(uuid);
+#endif
     }
 
     void Scene::Clear()
@@ -140,13 +143,17 @@ namespace BeeEngine
         }*/
         m_IsRuntime = true;
         StartPhysicsWorld();
+#if defined(BEE_ENABLE_SCRIPTING)
         ScriptingEngine::OnRuntimeStart(this);
+#endif
     }
 
     void Scene::StopRuntime()
     {
         m_IsRuntime = false;
+#if defined(BEE_ENABLE_SCRIPTING)
         ScriptingEngine::OnRuntimeStop();
+#endif
         StopPhysicsWorld();
         //DestroyScripts();
     }

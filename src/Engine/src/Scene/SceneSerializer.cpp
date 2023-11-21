@@ -318,7 +318,7 @@ namespace BeeEngine
             out << YAML::Key << "FixedAspectRatio" << YAML::Value << camera.FixedAspectRatio;
             out << YAML::EndMap;
         }
-
+#if defined(BEE_ENABLE_SCRIPTING)
         if(entity.HasComponent<ScriptComponent>())
         {
             out << YAML::Key << "ScriptComponent";
@@ -376,7 +376,7 @@ namespace BeeEngine
 
             out << YAML::EndMap;
         }
-
+#endif
         if(entity.HasComponent<SpriteRendererComponent>())
         {
             out << YAML::Key << "SpriteRendererComponent";
@@ -534,7 +534,7 @@ namespace BeeEngine
                 camera.Primary = cameraComponent["Primary"].as<bool>();
                 camera.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
             }
-
+#if defined(BEE_ENABLE_SCRIPTING)
             auto scriptComponent = entity["ScriptComponent"];
             if(scriptComponent)
             {
@@ -590,7 +590,7 @@ namespace BeeEngine
                     }
                 }
             }
-
+#endif
             auto spriteRendererComponent = entity["SpriteRendererComponent"];
             if(spriteRendererComponent)
             {

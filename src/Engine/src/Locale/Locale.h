@@ -19,7 +19,10 @@
 #include <unicode/ustream.h>
 #include <coroutine>
 #include "Core/Coroutines/Generator.h"
-
+namespace BeeEngine
+{
+    class ScriptGlue;
+}
 namespace BeeEngine::Locale
 {
     UTF8String GetSystemLocale();
@@ -27,7 +30,8 @@ namespace BeeEngine::Locale
     {
         friend class LocalizationGenerator;
         friend class ImGuiLocalizationPanel;
-        friend class ScriptGlue;
+        friend BeeEngine::ScriptGlue;
+
         using Locale = UTF8String;
         using ValueVariationsMap = std::unordered_map<UTF8String, UTF8String>;
         using KeyMap = std::unordered_map<UTF8String, ValueVariationsMap>;

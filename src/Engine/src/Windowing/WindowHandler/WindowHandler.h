@@ -74,7 +74,9 @@ namespace BeeEngine
         void SetDeltaTime(double deltaTime, double totalTime)
         {
             Time::Set(deltaTime, totalTime);
+#if defined(BEE_ENABLE_SCRIPTING)
             ScriptingEngine::UpdateTime(deltaTime, totalTime);
+#endif
         }
         uint16_t m_Width;
         uint16_t m_Height;

@@ -5,6 +5,7 @@
 #pragma once
 #include "Core/Events/Event.h"
 #include "KeyCodes.h"
+#include "Core/Path.h"
 
 namespace BeeEngine
 {

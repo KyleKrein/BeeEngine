@@ -5,11 +5,10 @@
 #include <version>
 #if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L
 #include <stacktrace>
-#include "Core/String.h"
-
 #endif
 #include <vector>
 #include "source_location.h"
+#include "Core/String.h"
 #include <sstream>
 namespace BeeEngine
 {
@@ -23,9 +22,13 @@ namespace BeeEngine
             const size_t LineNumber;
             Entry(String&& description, String&& fileName, size_t lineNumber) noexcept
                 : Description(std::move(description)), FileName(std::move(fileName)), LineNumber(lineNumber) {}
+            Entry(const String& description, const String& fileName, size_t lineNumber) noexcept
+                : Description(description), FileName(fileName), LineNumber(lineNumber) {}
         };
 #if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L
         StackTrace(const std::stacktrace& stacktrace = std::stacktrace::current());
+#elif defined(MACOS)
+        StackTrace();
 #else
         StackTrace(std::source_location location = std::source_location::current())
         {
