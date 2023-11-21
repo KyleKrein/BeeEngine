@@ -27,8 +27,8 @@ namespace BeeEngine::Editor
         m_ClearColor(clearColor)
     {
         FrameBufferPreferences preferences;
-        preferences.Width = m_Width;
-        preferences.Height = m_Height;
+        preferences.Width = m_Width * WindowHandler::GetInstance()->GetScaleFactor();
+        preferences.Height = m_Height * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
@@ -201,7 +201,7 @@ namespace BeeEngine::Editor
         {
             m_Width = gsl::narrow_cast<uint32_t>(size.x);
             m_Height = gsl::narrow_cast<uint32_t>(size.y);
-            m_FrameBuffer->Resize(m_Width, m_Height);
+            m_FrameBuffer->Resize(m_Width * WindowHandler::GetInstance()->GetScaleFactor(), m_Height * WindowHandler::GetInstance()->GetScaleFactor());
             m_Scene->OnViewPortResize(m_Width, m_Height);
             camera.SetViewportSize(m_Width, m_Height);
             ScriptingEngine::SetViewportSize(m_Width, m_Height);

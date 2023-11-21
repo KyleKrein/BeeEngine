@@ -5,6 +5,8 @@
 #include "imgui.h"
 #include "../../../Assets/EmbeddedResources.h"
 #include "../../Core/Color4.h"
+#include "Windowing/WindowHandler/WindowHandler.h"
+
 namespace BeeEngine
 {
 
@@ -27,12 +29,16 @@ namespace BeeEngine
 
         ImFontConfig config {};
         //config.MergeMode = true;
+        auto scale = WindowHandler::GetInstance()->GetScaleFactor();
+        config.SizePixels = fontSize * scale;
 
         io.FontDefault = io.Fonts->AddFontFromMemoryTTF((void *) OpenSansRegularFont.data(), OpenSansRegularFont.size_bytes(), fontSize, &config, icons_ranges);
         io.Fonts->AddFontFromMemoryTTF((void *) OpenSansBoldFont.data(), OpenSansBoldFont.size_bytes(), fontSize, &config, icons_ranges);
         //io.Fonts->GetGlyphRangesCyrillic();
-        style.WindowMinSize.x = 370.0f;
+        //io.FontGlobalScale = 1.0f/scale; //TODO: uncomment this when dynamic font change is implemented
 
+        style.WindowMinSize.x = 370.0f;
+        io.Fonts->Build();
 
         style.FrameRounding = 4.0f;
         style.WindowRounding = 4.0f;
