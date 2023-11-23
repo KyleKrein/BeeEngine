@@ -284,7 +284,7 @@ namespace BeeEngine
     {
         static constexpr int32_t velocityIterations = 6;
         static constexpr int32_t positionIterations = 2; //TODO: expose to editor
-        m_2DPhysicsWorld->Step(gsl::narrow_cast<float>(Time::DeltaTime()), velocityIterations, positionIterations);
+        m_2DPhysicsWorld->Step(gsl::narrow_cast<float>(Time::secondsD(Time::DeltaTime()).count()), velocityIterations, positionIterations);
 
         auto view = m_Registry.view<RigidBody2DComponent>();
         for (auto e:view)

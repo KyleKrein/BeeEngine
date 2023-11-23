@@ -63,9 +63,6 @@ namespace BeeEngine
         virtual void DisableCursor() = 0;
         virtual void ShowCursor() = 0;
         virtual void ProcessEvents() = 0;
-        virtual void SwapBuffers() = 0;
-        virtual void MakeContextCurrent() = 0;
-        virtual void MakeContextNonCurrent() = 0;
         [[nodiscard]] virtual bool IsRunning() const = 0;
         virtual void UpdateTime() = 0;
         virtual void Close() = 0;
@@ -79,11 +76,11 @@ namespace BeeEngine
         WindowHandler() = delete;
         WindowHandler(EventQueue& eventQueue): m_Width(0), m_Height(0), m_Events(eventQueue) {};
 
-        void UpdateDeltaTime(double currentTime)
+        void UpdateDeltaTime(Time::secondsD currentTime)
         {
             Time::Update(currentTime);
         }
-        void SetDeltaTime(double deltaTime, double totalTime)
+        void SetDeltaTime(Time::secondsD deltaTime, Time::secondsD totalTime)
         {
             Time::Set(deltaTime, totalTime);
 #if defined(BEE_ENABLE_SCRIPTING)

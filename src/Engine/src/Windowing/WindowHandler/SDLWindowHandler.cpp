@@ -402,21 +402,6 @@ namespace BeeEngine::Internal
         }
     }
 
-    void SDLWindowHandler::SwapBuffers()
-    {
-
-    }
-
-    void SDLWindowHandler::MakeContextCurrent()
-    {
-
-    }
-
-    void SDLWindowHandler::MakeContextNonCurrent()
-    {
-
-    }
-
     bool SDLWindowHandler::IsRunning() const
     {
         if(m_IsClosing) [[unlikely]]
@@ -435,7 +420,7 @@ namespace BeeEngine::Internal
         lastTime = currentTime;
         currentTime = SDL_GetPerformanceCounter();
         auto deltatime = ((double)(currentTime - lastTime)) / (double)SDL_GetPerformanceFrequency();
-        SetDeltaTime(deltatime, ((double)currentTime)/(double)SDL_GetPerformanceFrequency());
+        SetDeltaTime(Time::secondsD(deltatime), Time::secondsD(((double)currentTime)/(double)SDL_GetPerformanceFrequency()));
         //UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetPerformanceCounter()));
     }
 

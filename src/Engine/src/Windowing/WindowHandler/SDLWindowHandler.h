@@ -30,9 +30,6 @@ namespace BeeEngine::Internal
         void DisableCursor() override;
         void ShowCursor() override;
         void ProcessEvents() override;
-        void SwapBuffers() override;
-        void MakeContextCurrent() override;
-        void MakeContextNonCurrent() override;
         [[nodiscard]] bool IsRunning() const override;
         void UpdateTime() override;
         void Close() override;

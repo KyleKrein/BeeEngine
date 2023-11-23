@@ -444,12 +444,14 @@ namespace BeeEngine
         obj.GetFieldValue(*s_Data.AssetHandleField, &handle);
     }
 
-    void ScriptingEngine::UpdateTime(double deltaTime, double totalTime)
+    void ScriptingEngine::UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime)
     {
         if(!s_Data.DeltaTimeField)
             return;
-        mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTime);
-        mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTime);
+        double deltaTimeDouble = deltaTime.count();
+        double totalTimeDouble = totalTime.count();
+        mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTimeDouble);
+        mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTimeDouble);
     }
     const String& ScriptingEngine::GetScriptingLocale()
     {

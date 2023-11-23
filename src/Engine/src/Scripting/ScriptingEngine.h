@@ -10,6 +10,7 @@
 #include "MTypes.h"
 #include "Locale/Locale.h"
 #include <glm/glm.hpp>
+#include "Core/Time.h"
 
 namespace BeeEngine
 {
@@ -58,7 +59,7 @@ namespace BeeEngine
 
         static void GetAssetHandle(void* monoObject, AssetHandle &handle);
 
-        static void UpdateTime(double deltaTime, double totalTime);
+        static void UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime);
 
         static void SetMousePosition(int x, int y);
         static glm::vec2 GetMousePosition();

@@ -12,6 +12,7 @@ namespace BeeEngine
 
         public static TimeSpan TotalTimeSpan => TimeSpan.FromSeconds(m_TotalTime);
 
+        //Both are in seconds
         private static double m_DeltaTime = 1d / 60d;
         private static double m_TotalTime = 0d;
     }

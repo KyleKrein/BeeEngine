@@ -4,14 +4,14 @@
 
 #include "FpsCounter.h"
 
-
+using namespace std::chrono_literals;
 namespace BeeEngine::Internal
 {
 
     void FpsCounter::Update()
     {
         auto now = Time::TotalTime();
-        if(now - m_LastTime >= 1.0f)
+        if(now - m_LastTime >= 1s)
         {
             m_CurrentFps = m_Fps;
             m_LastTime = now;
