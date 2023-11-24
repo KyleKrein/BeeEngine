@@ -136,7 +136,10 @@ namespace BeeEngine::Editor
 
     void SceneHierarchyPanel::OnEvent(EventDispatcher &e) noexcept
     {
-        DISPATCH_EVENT(e, KeyPressedEvent, EventType::KeyPressed, OnKeyPressedEvent);
+        e.Dispatch<KeyPressedEvent>([this](auto& e) -> bool
+        {
+            return OnKeyPressedEvent(&e);
+        });
     }
 
     bool SceneHierarchyPanel::OnKeyPressedEvent(KeyPressedEvent *e) noexcept

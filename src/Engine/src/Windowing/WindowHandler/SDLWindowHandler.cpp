@@ -11,6 +11,10 @@
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 #include "Hardware.h"
 
+#if defined(WINDOWS)
+#include "Platform/Windows/WindowsDropSource.h"
+#endif
+
 namespace BeeEngine::Internal
 {
 
@@ -63,6 +67,7 @@ namespace BeeEngine::Internal
         m_WidthInPixels = widthInPixels;
         m_HeightInPixels = heightInPixels;
         m_ScaleFactor = (float32_t)m_WidthInPixels / (float32_t)m_Width;
+        InitializeDragDropOnWindows();
         switch (properties.PreferredRenderAPI)
         {
 #if defined(BEE_COMPILE_VULKAN)
@@ -223,6 +228,14 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_TAKE_FOCUS:
                 {
+                    break;
+                }
+                case SDL_EVENT_WINDOW_MOVED:
+                {
+                    m_XPosition = sdlEvent.window.data1;
+                    m_YPosition = sdlEvent.window.data2;
+                    auto event = CreateScope<WindowMovedEvent>(m_XPosition, m_YPosition);
+                    m_Events.AddEvent(std::move(event));
                     break;
                 }
                 case SDL_EVENT_WINDOW_HIT_TEST:
@@ -1212,6 +1225,21 @@ namespace BeeEngine::Internal
         info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.android.window", NULL);
 #endif
         return info;
+    }
+
+    void SDLWindowHandler::InitializeDragDropOnWindows()
+    {
+#if defined(WINDOWS)
+        HWND hwnd = (HWND)GetNativeInfo().window;
+        if (FAILED(OleInitialize(NULL)))
+        {
+            BeeCoreError("Failed to initialize OLE");
+        }
+        if (FAILED(RegisterDragDrop(hwnd, static_cast<LPDROPTARGET>(new WindowsDropTarget()))))
+        {
+            BeeCoreError("Failed to register drop source");
+        }
+#endif
     }
 
 }

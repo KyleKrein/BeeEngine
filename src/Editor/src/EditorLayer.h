@@ -23,6 +23,7 @@
 #include "Panels/ImGuiOutputConsole.h"
 #include "Locale/Locale.h"
 #include "Locale/ImGuiLocalizationPanel.h"
+#include "ImGuiNativeDragAndDrop.h"
 
 namespace BeeEngine::Editor
 {
@@ -37,6 +38,7 @@ namespace BeeEngine::Editor
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
+        ImGuiNativeDragAndDrop m_DragAndDrop {};
         Locale::Domain m_EditorLocaleDomain {"Editor"};
         ImGuiOutputConsole m_Console {};
         EditorAssetManager m_EditorAssetManager {};

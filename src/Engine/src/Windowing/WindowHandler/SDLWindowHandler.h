@@ -67,5 +67,7 @@ namespace BeeEngine::Internal
         Scope<GraphicsDevice> m_GraphicsDevice;
         mutable bool m_IsRunning = false;
         mutable bool m_IsClosing = false;
+
+        void InitializeDragDropOnWindows();
     };
 }

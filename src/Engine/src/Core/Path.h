@@ -58,6 +58,11 @@ namespace BeeEngine
             return ConvertUTF8ToUTF16(m_Path);
         }
 
+        String ToString() const
+        {
+            return m_Path;
+        }
+
         std::filesystem::path ToStdPath() const;
 
         operator UTF8String&()

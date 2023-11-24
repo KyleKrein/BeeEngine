@@ -17,18 +17,11 @@ namespace BeeEngine
     };
     struct WindowNativeInfo
     {
-#if defined(WINDOWS)
         void* window = nullptr;
+#if defined(WINDOWS)
         void* instance = nullptr;
 #elif defined(LINUX)
         void *display = nullptr;
-        void *window = nullptr;
-#elif defined(MACOS)
-        void *window = nullptr;
-#elif defined(IOS)
-        void *window = nullptr;
-#elif defined(ANDROID)
-        void *window = nullptr;
 #endif
     };
     class WindowHandler
@@ -45,6 +38,14 @@ namespace BeeEngine
         uint16_t GetHeight() const
         {
             return m_Height;
+        }
+        int32_t GetXPosition() const
+        {
+            return m_XPosition;
+        }
+        int32_t GetYPosition() const
+        {
+            return m_YPosition;
         }
         uint16_t GetWidthInPixels() const
         {
@@ -108,6 +109,8 @@ namespace BeeEngine
         uint16_t m_Height;
         uint16_t m_WidthInPixels;
         uint16_t m_HeightInPixels;
+        int32_t m_XPosition;
+        int32_t m_YPosition;
         float m_ScaleFactor;
         const char *m_Title;
         VSync m_vsync;

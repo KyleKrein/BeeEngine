@@ -63,9 +63,12 @@ namespace BeeEngine{
 
     void Application::Dispatch(EventDispatcher &dispatcher)
     {
-        DISPATCH_EVENT(dispatcher, WindowResizeEvent, EventType::WindowResize, OnWindowResize);
-        DISPATCH_EVENT(dispatcher, WindowFocusedEvent, EventType::WindowFocus, [this](WindowFocusedEvent* event){
-            m_IsFocused = event->IsFocused();
+        dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
+        {
+            return OnWindowResize(&event);
+        });
+        dispatcher.Dispatch<WindowFocusedEvent>([this](auto& event){
+            m_IsFocused = event.IsFocused();
             return false;
         });
 

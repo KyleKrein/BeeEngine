@@ -43,8 +43,14 @@ namespace BeeEngine::Editor
         {
             return;
         }
-        DISPATCH_EVENT(event,MouseButtonPressedEvent ,EventType::MouseButtonPressed, OnMouseButtonPressed);
-        DISPATCH_EVENT(event,KeyPressedEvent,EventType::KeyPressed, OnKeyButtonPressed);
+        event.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& event) -> bool
+        {
+            return OnMouseButtonPressed(&event);
+        });
+        event.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) -> bool
+        {
+            return OnKeyButtonPressed(&event);
+        });
         //m_CameraController.OnEvent(event);
     }
 

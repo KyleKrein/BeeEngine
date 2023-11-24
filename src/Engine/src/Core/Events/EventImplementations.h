@@ -13,6 +13,10 @@ namespace BeeEngine
     struct WindowCloseEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::WindowClose;
+        }
         WindowCloseEvent() noexcept
         {
             Category = EventCategory::App;
@@ -22,6 +26,10 @@ namespace BeeEngine
     struct KeyPressedEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::KeyPressed;
+        }
         explicit KeyPressedEvent(Key key, int repeat = 0) noexcept
         {
             Category = static_cast<EventCategory>(EventCategory::Keyboard | EventCategory::Input);
@@ -40,6 +48,10 @@ namespace BeeEngine
     struct KeyReleasedEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::KeyReleased;
+        }
         explicit KeyReleasedEvent(Key key) noexcept
         {
             Category = static_cast<EventCategory>(EventCategory::Keyboard & EventCategory::Input);
@@ -57,6 +69,10 @@ namespace BeeEngine
     struct CharTypedEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::KeyTyped;
+        }
         explicit CharTypedEvent(char32_t character) noexcept
         {
             Category = static_cast<EventCategory>(EventCategory::Keyboard & EventCategory::Input);
@@ -74,6 +90,10 @@ namespace BeeEngine
     struct MouseButtonPressedEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::MouseButtonPressed;
+        }
         explicit MouseButtonPressedEvent(MouseButton button) noexcept
         {
             Category = static_cast<EventCategory>(EventCategory::Mouse & EventCategory::Input);
@@ -91,6 +111,10 @@ namespace BeeEngine
     struct MouseButtonReleasedEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::MouseButtonReleased;
+        }
         explicit MouseButtonReleasedEvent(MouseButton button) noexcept
         : m_Button(button)
         {
@@ -108,6 +132,10 @@ namespace BeeEngine
     struct MouseMovedEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::MouseMoved;
+        }
         MouseMovedEvent(float x, float y) noexcept
         {
             Category = static_cast<EventCategory>(EventCategory::Mouse & EventCategory::Input);
@@ -130,6 +158,10 @@ namespace BeeEngine
     struct MouseScrolledEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::MouseScrolled;
+        }
         MouseScrolledEvent(float xOffset, float yOffset) noexcept
         {
             Category = static_cast<EventCategory>(EventCategory::Mouse & EventCategory::Input);
@@ -152,6 +184,10 @@ namespace BeeEngine
     struct WindowResizeEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::WindowResize;
+        }
         WindowResizeEvent(uint16_t width, uint16_t height, uint16_t pixelwidth, uint16_t pixelheight) noexcept
         : m_Width(width), m_Height(height), m_WidthInPixels(pixelwidth), m_HeightInPixels(pixelheight)
         {
@@ -181,6 +217,10 @@ namespace BeeEngine
     struct WindowFocusedEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::WindowFocus;
+        }
         WindowFocusedEvent(bool isFocused) noexcept
         : m_IsFocused(isFocused)
         {
@@ -197,12 +237,23 @@ namespace BeeEngine
     namespace Internal
     {
         class SDLWindowHandler;
+#if defined(WINDOWS)
+        class WindowsDropTarget;
+#endif
     }
 
     struct FileDropEvent: public Event
     {
         friend Internal::SDLWindowHandler;
+#if defined(WINDOWS)
+        friend Internal::WindowsDropTarget;
+#endif
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::FileDrop;
+        }
+
         FileDropEvent()
         {
             Category = EventCategory::App;
@@ -221,12 +272,20 @@ namespace BeeEngine
         {
             m_Paths.emplace_back(path);
         }
+        void AddFile(String&& path)
+        {
+            m_Paths.emplace_back(std::move(path));
+        }
         std::vector<Path> m_Paths;
     };
 
     struct FileDragEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::FileDrag;
+        }
         FileDragEvent(int32_t x, int32_t y)
         : m_X(x), m_Y(y)
         {
@@ -249,6 +308,26 @@ namespace BeeEngine
         bool IsInAppWindow() const
         {
             return m_X >= 0 && m_X <= WindowHandler::GetInstance()->GetWidth() && m_Y >= 0 && m_Y <= WindowHandler::GetInstance()->GetHeight();
+        }
+    private:
+        int32_t m_X, m_Y;
+    };
+    struct WindowMovedEvent: public Event
+    {
+    public:
+        WindowMovedEvent(int32_t x, int32_t y)
+        : m_X(x), m_Y(y)
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::WindowMoved;
+        }
+        [[nodiscard]] int32_t GetX() const
+        {
+            return m_X;
+        }
+        [[nodiscard]] int32_t GetY() const
+        {
+            return m_Y;
         }
     private:
         int32_t m_X, m_Y;

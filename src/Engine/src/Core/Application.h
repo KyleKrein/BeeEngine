@@ -63,6 +63,10 @@ namespace BeeEngine{
         {
             return m_IsMinimized;
         }
+        void AddEvent(Scope<Event> event)
+        {
+            m_EventQueue.AddEvent(std::move(event));
+        }
         [[nodiscard]] uint16_t GetWidth() const
         {
             return m_Window->GetWidth();
@@ -97,7 +101,10 @@ namespace BeeEngine{
         virtual void Update() {};
         virtual void OnEvent(EventDispatcher& dispatcher)
         {
-            DISPATCH_EVENT(dispatcher, WindowResizeEvent, EventType::WindowResize, OnWindowResize);
+            dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
+            {
+                return OnWindowResize(&event);
+            });
         };
 
         inline void PushLayer(Ref<Layer> layer)

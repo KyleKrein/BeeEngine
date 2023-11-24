@@ -53,5 +53,7 @@ namespace BeeEngine::Editor
         bool m_NeedToRegenerateSolution = false;
 
         void DragAndDropFileToFolder(const Path &path);
+
+        void AcceptExternFilesAndCopy(const Path& folder) const;
     };
 }

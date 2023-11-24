@@ -9,7 +9,8 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
         src/Panels/ImGuiOutputConsole.cpp
         src/Panels/ImGuiOutputConsole.h
         src/Panels/AssetEditPanel.cpp
-        src/Panels/AssetEditPanel.h)
+        src/Panels/AssetEditPanel.h
+        src/ImGuiNativeDragAndDrop.h)
 # files for native scripting: src/NativeScripting/ScriptParser.cpp src/NativeScripting/ScriptParser.h src/NativeScripting/ScriptScanner.cpp src/NativeScripting/ScriptScanner.h src/NativeScripting/CodeGenerators.cpp src/NativeScripting/CodeGenerators.h src/NativeScripting/GameBuilder.cpp src/NativeScripting/GameBuilder.h src/NativeScripting/StdioLogSystem.cpp
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 
@@ -19,7 +20,7 @@ target_include_directories(BeeEngineEditor
         PRIVATE vendor/FileWatcher
         PUBLIC src
         )
-target_link_libraries(BeeEngineEditor PUBLIC BeeEngine)
+target_link_libraries(BeeEngineEditor PUBLIC BeeEngine::WithScripting)
 #if(PROJECT_IS_TOP_LEVEL)
         set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Engine/vendor/mono/libs/)
         configureMono(${MONO_DIRECTORY})

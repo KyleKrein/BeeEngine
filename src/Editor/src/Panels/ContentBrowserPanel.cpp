@@ -10,6 +10,7 @@
 #include "Scene/SceneSerializer.h"
 #include "Core/AssetManagement//PrefabImporter.h"
 #include "Gui/ImGui/ImGuiExtension.h"
+#include "ImGuiNativeDragAndDrop.h"
 
 
 namespace BeeEngine::Editor
@@ -66,6 +67,12 @@ namespace BeeEngine::Editor
                 BeeExpects(droppedEntity);
                 PrefabImporter::GeneratePrefab(droppedEntity, m_CurrentDirectory / (droppedEntity.GetComponent<TagComponent>().Tag + ".beeprefab"), {m_Project->GetAssetRegistryID()});
             });
+        }
+        if(ImGui::IsDragAndDropPayloadInProcess("EXTERN_DRAG_AND_DROP"))
+        {
+            auto width = ImGui::GetContentRegionAvail().x;
+            ImGui::Button(m_EditorDomain->Translate("contentBrowserPanel.copyFiles").c_str(), {width, 0});
+            AcceptExternFilesAndCopy(m_CurrentDirectory);
         }
 
         static float padding = 16.0f;
@@ -213,6 +220,21 @@ namespace BeeEngine::Editor
             }
             ImGui::EndDragDropTarget();
         }
+        AcceptExternFilesAndCopy(path);
+    }
+
+    void ContentBrowserPanel::AcceptExternFilesAndCopy(const Path& folder) const
+    {
+        ImGui::AcceptDragAndDrop<std::vector<Path>*>("EXTERN_DRAG_AND_DROP", [&folder,this](const auto& payload){
+            auto files = *payload;
+            for(auto& path : files)
+            {
+                std::error_code error;
+                std::filesystem::copy_file(path.ToStdPath(), (folder / path.GetFileName()).ToStdPath(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error);
+                if(error)
+                    BeeCoreError("Failed to copy file: {0}", error.message());
+            }
+        });
     }
 
     ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory, Locale::Domain& editorDomain) noexcept

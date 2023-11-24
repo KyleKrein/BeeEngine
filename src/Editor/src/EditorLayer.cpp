@@ -109,6 +109,7 @@ namespace BeeEngine::Editor
             m_FpsCounter.Render();
             m_Console.RenderGUI();
             m_LocalizationPanel->Render();
+            m_DragAndDrop.ImGuiRender();
             ImGui::Begin("Settings");
             ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
             ImGui::End();
@@ -200,7 +201,12 @@ namespace BeeEngine::Editor
         m_EditorCamera.OnEvent(event);
         m_ViewPort.OnEvent(event);
         m_SceneHierarchyPanel.OnEvent(event);
-        DISPATCH_EVENT(event, KeyPressedEvent, EventType::KeyPressed, OnKeyPressed);
+        m_DragAndDrop.OnEvent(event);
+
+        event.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) -> bool
+        {
+            return OnKeyPressed(&event);
+        });
     }
 
     void EditorLayer::SetUpMenuBar()

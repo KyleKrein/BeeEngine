@@ -90,45 +90,19 @@ namespace BeeEngine
             return m_event->GetType();
         }
 
-        template<class T, EventType T1>
-        inline bool Dispatch(bool (*func) (T& event))
+        template<typename EventType, typename Pred>
+        requires std::is_base_of_v<Event, EventType> && std::is_invocable_r_v<bool, Pred, EventType&>
+        inline bool Dispatch(Pred func)
         {
-            BeeCoreAssert(func, "Func is null");
-            if(m_event->GetType() != T1)
+            if(m_event->GetType() != EventType::GetStaticType())
                 return false;
-            if(func(static_cast<T>(*m_event)))
-            {
-                m_event->Handle();
-            }
-            return true;
-        }
-
-        template<typename Event, EventType Type>
-        bool Dispatch(std::function<bool(Event*)> func)
-        {
-            if(m_event->GetType() != Type)
-                return false;
-            bool result = func(static_cast<Event*>(m_event));
+            bool result = func(*static_cast<EventType*>(m_event));
             if(result)
             {
                 m_event->Handle();
             }
             return true;
         }
-
-
-        /*template<class T, EventType T1>
-        inline bool Dispatch(bool (*func) (T& event, void* ptr), void* ptr)
-        {
-            BeeCoreAssert(func, "Func is null");
-            if(m_event->GetType() != T1)
-                return false;
-            if(func((T)m_event, ptr))
-            {
-                m_event->Handle();
-            }
-            return true;
-        }*/
         [[nodiscard]] inline bool IsHandled() const
         {
             return m_event->IsHandled();
@@ -136,10 +110,4 @@ namespace BeeEngine
     private:
         Event* m_event;
     };
-
-#define DISPATCH_EVENT(dispatcher, Event, Type, Func) \
-dispatcher.Dispatch<Event, Type>([this](Event* event) -> bool\
-        {\
-            return Func(reinterpret_cast<Event*>(event));\
-        })
 }
