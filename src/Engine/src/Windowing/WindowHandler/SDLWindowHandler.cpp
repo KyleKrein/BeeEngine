@@ -67,6 +67,10 @@ namespace BeeEngine::Internal
         m_WidthInPixels = widthInPixels;
         m_HeightInPixels = heightInPixels;
         m_ScaleFactor = (float32_t)m_WidthInPixels / (float32_t)m_Width;
+        int posX, posY;
+        SDL_GetWindowPosition(m_Window, &posX, &posY);
+        m_XPosition = posX;
+        m_YPosition = posY;
         InitializeDragDropOnWindows();
         switch (properties.PreferredRenderAPI)
         {
