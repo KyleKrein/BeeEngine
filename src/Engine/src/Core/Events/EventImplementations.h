@@ -6,6 +6,7 @@
 #include "Core/Events/Event.h"
 #include "KeyCodes.h"
 #include "Core/Path.h"
+#include "Windowing/WindowHandler/WindowHandler.h"
 
 namespace BeeEngine
 {
@@ -221,5 +222,35 @@ namespace BeeEngine
             m_Paths.emplace_back(path);
         }
         std::vector<Path> m_Paths;
+    };
+
+    struct FileDragEvent: public Event
+    {
+    public:
+        FileDragEvent(int32_t x, int32_t y)
+        : m_X(x), m_Y(y)
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::FileDrag;
+        }
+        [[nodiscard]] int32_t GetX() const
+        {
+            return m_X;
+        }
+        [[nodiscard]] int32_t GetY() const
+        {
+            return m_Y;
+        }
+        //In Local to window coords
+        bool IsInRect(int32_t x, int32_t y, int32_t width, int32_t height) const
+        {
+            return m_X >= x && m_X <= x + width && m_Y >= y && m_Y <= y + height;
+        }
+        bool IsInAppWindow() const
+        {
+            return m_X >= 0 && m_X <= WindowHandler::GetInstance()->GetWidth() && m_Y >= 0 && m_Y <= WindowHandler::GetInstance()->GetHeight();
+        }
+    private:
+        int32_t m_X, m_Y;
     };
 }

@@ -306,7 +306,8 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_DROP_POSITION:
                 {
-                    BeeCoreTrace("Drop position: {} {}", sdlEvent.drop.x, sdlEvent.drop.y);
+                    auto event = CreateScope<FileDragEvent>(sdlEvent.drop.x, sdlEvent.drop.y);
+                    m_Events.AddEvent(std::move(event));
                     break;
                 }
                 case SDL_EVENT_JOYSTICK_AXIS_MOTION:
