@@ -14,7 +14,6 @@
 #include "GLFW/glfw3native.h"
 #else
 #include "SDL3/SDL.h"
-#include "SDL3/SDL_syswm.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #endif
 
@@ -36,9 +35,8 @@ namespace BeeEngine
 #if defined(BEE_COMPILE_GLFW)
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
 #else
-        SDL_SysWMinfo wmInfo;
-        SDL_GetWindowWMInfo((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &wmInfo, SDL_SYSWM_CURRENT_VERSION);
-        ofn.hwndOwner = wmInfo.info.win.window;
+        auto nativeInfo = WindowHandler::GetInstance()->GetNativeInfo();
+        ofn.hwndOwner = (HWND)nativeInfo.window;
 #endif
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
@@ -74,10 +72,8 @@ namespace BeeEngine
 #if defined(BEE_COMPILE_GLFW)
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
 #else
-        SDL_SysWMinfo wmInfo;
-        SDL_GetWindowWMInfo((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &wmInfo, SDL_SYSWM_CURRENT_VERSION);
-
-        ofn.hwndOwner = wmInfo.info.win.window;
+        auto nativeInfo = WindowHandler::GetInstance()->GetNativeInfo();
+        ofn.hwndOwner = (HWND)nativeInfo.window;
 #endif
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);

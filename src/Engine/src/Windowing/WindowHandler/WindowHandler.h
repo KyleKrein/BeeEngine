@@ -15,6 +15,22 @@ namespace BeeEngine
         //GLFW = 0,
         SDL = 1
     };
+    struct WindowNativeInfo
+    {
+#if defined(WINDOWS)
+        void* window = nullptr;
+        void* instance = nullptr;
+#elif defined(LINUX)
+        void *display = nullptr;
+        void *window = nullptr;
+#elif defined(MACOS)
+        void *window = nullptr;
+#elif defined(IOS)
+        void *window = nullptr;
+#elif defined(ANDROID)
+        void *window = nullptr;
+#endif
+    };
     class WindowHandler
     {
     public:
@@ -42,6 +58,7 @@ namespace BeeEngine
         {
             return m_ScaleFactor;
         }
+        virtual WindowNativeInfo GetNativeInfo() = 0;
         virtual void SetWidth(uint16_t width) = 0;
         virtual void SetHeight(uint16_t height) = 0;
         static gsl::not_null<WindowHandler*> GetInstance()

@@ -4,7 +4,6 @@
 
 #include "WebGPUGraphicsDevice.h"
 #include "SDL3/SDL.h"
-#include "SDL3/SDL_syswm.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Core/TypeDefines.h"
 #include "Renderer/Vertex.h"
@@ -190,32 +189,23 @@ namespace BeeEngine::Internal
     WGPUSurface WebGPUGraphicsDevice::CreateSurface(WGPUInstance instance)
     {
         //Code taken from https://github.com/gecko0307/wgpu-dlang/blob/master/src/dgpu/core/gpu.d
-        SDL_SysWMinfo wmInfo;
-        SDL_GetWindowWMInfo((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &wmInfo, SDL_SYSWM_CURRENT_VERSION);
-
         WGPUSurface surface;
+        SDL_Window* window = (SDL_Window*)WindowHandler::GetInstance()->GetWindow();
 #if defined(WINDOWS)
-        if (wmInfo.subsystem == SDL_SYSWM_WINDOWS)
-        {
-            auto win_hwnd = wmInfo.info.win.window;
-            auto win_hinstance = wmInfo.info.win.hinstance;
-            WGPUSurfaceDescriptorFromWindowsHWND sfdHwnd = {
-                    .chain =  {
-                            .next =  nullptr,
-                            .sType =  WGPUSType_SurfaceDescriptorFromWindowsHWND
-                    },
-                    .hinstance =  win_hinstance,
-                    .hwnd =  win_hwnd
-            };
-            WGPUSurfaceDescriptor sfd = {
-                    .nextInChain =  (WGPUChainedStruct*)&sfdHwnd,
-                    .label =  "SDL Window"
-            };
-            surface = wgpuInstanceCreateSurface(instance, &sfd);
-        } else
-        {
-            BeeCoreError("Unsupported platform");
-        }
+        auto nativeInfo = WindowHandler::GetInstance()->GetNativeInfo();
+        WGPUSurfaceDescriptorFromWindowsHWND sfdHwnd = {
+                .chain =  {
+                        .next =  nullptr,
+                        .sType =  WGPUSType_SurfaceDescriptorFromWindowsHWND
+                },
+                .hinstance =  nativeInfo.instance,
+                .hwnd =  nativeInfo.window
+        };
+        WGPUSurfaceDescriptor sfd = {
+                .nextInChain =  (WGPUChainedStruct*)&sfdHwnd,
+                .label =  "SDL Window"
+        };
+        surface = wgpuInstanceCreateSurface(instance, &sfd);
 #endif
 #if defined(LINUX)
         // Needs test!
@@ -244,7 +234,7 @@ namespace BeeEngine::Internal
 #endif
 #if defined(MACOS)
         // Needs test!
-        SDL_Renderer* renderer = SDL_CreateRenderer((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), "metal",/* WindowHandler::GetInstance()->GetVSync() == VSync::On ? SDL_RENDERER_PRESENTVSYNC : */0);
+        SDL_Renderer* renderer = SDL_CreateRenderer(window, "metal",/* WindowHandler::GetInstance()->GetVSync() == VSync::On ? SDL_RENDERER_PRESENTVSYNC : */0);
         if(renderer == nullptr)
             BeeCoreError("Could not create renderer: {}", SDL_GetError());
         auto metalLayer = SDL_GetRenderMetalLayer(renderer);

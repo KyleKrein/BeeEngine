@@ -193,21 +193,33 @@ namespace BeeEngine
     private:
         bool m_IsFocused;
     };
+    namespace Internal
+    {
+        class SDLWindowHandler;
+    }
 
     struct FileDropEvent: public Event
     {
+        friend Internal::SDLWindowHandler;
     public:
-        FileDropEvent(Path&& path)
-        : m_Path(std::move(path))
+        FileDropEvent()
         {
             Category = EventCategory::App;
             m_Type = EventType::FileDrop;
         }
-        [[nodiscard]] const Path& GetPath() const
+        [[nodiscard]] const std::vector<Path>& GetPaths() const
         {
-            return m_Path;
+            return m_Paths;
+        }
+        [[nodiscard]] std::vector<Path>&& GetPathsMove() noexcept
+        {
+            return std::move(m_Paths);
         }
     private:
-        Path m_Path;
+        void AddFile(const char* path)
+        {
+            m_Paths.emplace_back(path);
+        }
+        std::vector<Path> m_Paths;
     };
 }

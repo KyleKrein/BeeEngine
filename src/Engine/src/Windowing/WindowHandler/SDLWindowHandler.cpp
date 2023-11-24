@@ -9,6 +9,7 @@
 #include "backends/imgui_impl_sdl3.h"
 #include "Platform/WebGPU/WebGPUInstance.h"
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
+#include "Hardware.h"
 
 namespace BeeEngine::Internal
 {
@@ -158,6 +159,7 @@ namespace BeeEngine::Internal
     void SDLWindowHandler::ProcessEvents()
     {
         SDL_Event sdlEvent;
+        Scope<FileDropEvent> fileDropEvent = nullptr;
         while (SDL_PollEvent(&sdlEvent))
         {
             ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
@@ -284,30 +286,27 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_DROP_BEGIN:
                 {
-                    break;
-                }
-                case SDL_EVENT_DROP_COMPLETE:
-                {
+                    fileDropEvent = CreateScope<FileDropEvent>();
                     break;
                 }
                 case SDL_EVENT_DROP_FILE:
                 {
-                    char* path = sdlEvent.drop.file;
-                    //float32_t x = sdlEvent.drop.x;
-                    //float32_t y = sdlEvent.drop.y;
-                    Path filePath(path);
-                    auto event = CreateScope<FileDropEvent>(std::move(filePath));
-                    m_Events.AddEvent(std::move(event));
+                    char* path = sdlEvent.drop.data;
+                    fileDropEvent->AddFile(path);
+                    break;
+                }
+                case SDL_EVENT_DROP_COMPLETE:
+                {
+                    m_Events.AddEvent(std::move(fileDropEvent));
                     break;
                 }
                 case SDL_EVENT_DROP_TEXT:
                 {
-                    debug_break();
                     break;
                 }
                 case SDL_EVENT_DROP_POSITION:
                 {
-                    debug_break();
+                    BeeCoreTrace("Drop position: {} {}", sdlEvent.drop.x, sdlEvent.drop.y);
                     break;
                 }
                 case SDL_EVENT_JOYSTICK_AXIS_MOTION:
@@ -379,14 +378,6 @@ namespace BeeEngine::Internal
                     break;
                 }
                 case SDL_EVENT_AUDIO_DEVICE_REMOVED:
-                {
-                    break;
-                }
-                case SDL_EVENT_RENDER_TARGETS_RESET:
-                {
-                    break;
-                }
-                case SDL_EVENT_RENDER_DEVICE_RESET:
                 {
                     break;
                 }
@@ -1201,5 +1192,44 @@ namespace BeeEngine::Internal
             default:
                 return MouseButton::Last;
         }
+    }
+
+    WindowNativeInfo SDLWindowHandler::GetNativeInfo()
+    {
+        WindowNativeInfo info;
+#if defined(WINDOWS)
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.win32.hwnd", NULL);
+        info.instance = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.win32.hinstance", NULL);
+#elif defined(LINUX)
+        info.display = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.display", NULL);
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.window", NULL);
+#elif defined(APPLE)
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.cocoa.window", NULL);
+#elif defined(IOS)
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.uikit.window", NULL);
+#elif defined(ANDROID)
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.android.window", NULL);
+#endif
+        return info;
+    }
+
+}
+uint32_t BeeEngine::Hardware::GetSystemRAM()
+{
+    return SDL_GetSystemRAM();
+}
+
+BeeEngine::Hardware::SystemTheme BeeEngine::Hardware::GetSystemTheme()
+{
+    using enum BeeEngine::Hardware::SystemTheme;
+    auto theme = SDL_GetSystemTheme();
+    switch (theme)
+    {
+        case SDL_SYSTEM_THEME_LIGHT:
+            return SystemTheme::Light;
+        case SDL_SYSTEM_THEME_DARK:
+            return SystemTheme::Dark;
+        default:
+            return SystemTheme::Unknown;
     }
 }

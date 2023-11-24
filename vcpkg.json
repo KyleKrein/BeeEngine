@@ -1,6 +1,7 @@
 {
   "dependencies":
   [
-    "icu"
+    "icu",
+    "boost-context"
   ]
 }

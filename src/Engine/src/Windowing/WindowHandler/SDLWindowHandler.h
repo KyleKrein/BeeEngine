@@ -43,6 +43,8 @@ namespace BeeEngine::Internal
             return *m_Instance;
         }
 
+        WindowNativeInfo GetNativeInfo() override;
+
     private:
         static Key ConvertKeyCode(SDL_Scancode key);
         static MouseButton ConvertMouseButton(uint8_t button);

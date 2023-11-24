@@ -95,6 +95,9 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/Coroutines/Co_Promise.h
         src/Core/Memory/AllocatorPrimitives.h
         src/Core/Memory/Allocators.h
+        src/Hardware.h
+        src/JobSystem/JobScheduler.cpp
+        src/JobSystem/JobScheduler.h
 )
 if(${BEE_ENABLE_SCRIPTING})
     message("Scripting enabled")
@@ -288,6 +291,7 @@ add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
 find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)
+find_package(Boost REQUIRED COMPONENTS context)
 
 if(BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
@@ -345,6 +349,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC Box2D
         PUBLIC MSDFGEN
         PUBLIC ${ICU_LIBRARIES}
+        PRIVATE Boost::context
         )
 
 target_compile_definitions(BeeEngine

@@ -25,6 +25,8 @@ namespace BeeEngine
                 return  Color4::Green;
             case ConsoleOutput::Level::Trace:
                 return Color4::Gray;
+            default:
+                return Color4::White;
         }
 
     }
