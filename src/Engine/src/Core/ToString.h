@@ -22,6 +22,7 @@
 #include <webgpu/webgpu.h>
 #endif
 #include "spdlog/spdlog.h"
+#include <glm/glm.hpp>
 namespace BeeEngine
 {
     template<typename T>
@@ -264,6 +265,24 @@ constexpr String ToString<char*>(const char*& obj)
     CONSTEXPR_FUNC String ToString<long long>(const long long &obj)
     {
         return std::to_string(obj);
+    }
+
+    template<>
+    CONSTEXPR_FUNC String ToString<glm::vec2>(const glm::vec2 &obj)
+    {
+        return fmt::format("({:f}, {:f})", obj.x, obj.y);
+    }
+
+    template<>
+    CONSTEXPR_FUNC String ToString<glm::vec3>(const glm::vec3 &obj)
+    {
+        return fmt::format("({:f}, {:f}, {:f})", obj.x, obj.y, obj.z);
+    }
+
+    template<>
+    CONSTEXPR_FUNC String ToString<glm::vec4>(const glm::vec4 &obj)
+    {
+        return fmt::format("({:f}, {:f}, {:f}, {:f})", obj.x, obj.y, obj.z, obj.w);
     }
 
     template<>

@@ -25,10 +25,32 @@ namespace BeeEngine
                     ImGui::EndDragDropSource();
                 }
             }
-            m_Dragging = false;
+            //m_Dragging = false;
         }
         void OnEvent(EventDispatcher& dispatcher)
         {
+            dispatcher.Dispatch<FileDragEnterEvent>([this](FileDragEnterEvent& event) -> bool
+            {
+                m_Dragging = true;
+                auto& io = ImGui::GetIO();
+                io.AddMouseButtonEvent(ImGuiMouseButton_Left, true);
+                //io.MousePos = ImVec2(pEvent.GetX(), pEvent.GetY());
+                return false;
+            });
+            dispatcher.Dispatch<FileDragEndEvent>([this](auto& event) -> bool
+            {
+                m_Dragging = false;
+                auto& io = ImGui::GetIO();
+                io.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
+                return false;
+            });
+            dispatcher.Dispatch<FileDragLeaveEvent>([this](auto& event) -> bool
+            {
+                m_Dragging = false;
+                auto& io = ImGui::GetIO();
+                io.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
+                return false;
+            });
             dispatcher.Dispatch<FileDragEvent>([this](FileDragEvent& event) -> bool
             {
                 return OnFileDragEvent(event);
@@ -44,6 +66,8 @@ namespace BeeEngine
         bool OnFileDropEvent(FileDropEvent& pEvent)
         {
             m_Files.clear();
+            auto& io = ImGui::GetIO();
+            io.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
             for(auto& path : pEvent.GetPaths())
             {
                 m_Files.push_back(path);
@@ -52,7 +76,8 @@ namespace BeeEngine
         }
         bool OnFileDragEvent(FileDragEvent& pEvent)
         {
-            m_Dragging = true;
+            auto& io = ImGui::GetIO();
+            io.MousePos = ImVec2(pEvent.GetX(), pEvent.GetY());
             return false;
         }
         bool m_Dragging = false;

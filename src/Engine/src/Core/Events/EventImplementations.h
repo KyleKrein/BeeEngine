@@ -245,6 +245,7 @@ namespace BeeEngine
     struct FileDropEvent: public Event
     {
         friend Internal::SDLWindowHandler;
+        friend void __internal_bee_add_file_to_drop_event(FileDropEvent* event, String&& path);
 #if defined(WINDOWS)
         friend Internal::WindowsDropTarget;
 #endif
@@ -311,6 +312,81 @@ namespace BeeEngine
         }
     private:
         int32_t m_X, m_Y;
+    };
+    struct FileDragEnterEvent: public Event
+    {
+    public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::FileDragEnter;
+        }
+        FileDragEnterEvent(int32_t x, int32_t y)
+        : m_X(x), m_Y(y)
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::FileDragEnter;
+        }
+        [[nodiscard]] int32_t GetX() const
+        {
+            return m_X;
+        }
+        [[nodiscard]] int32_t GetY() const
+        {
+            return m_Y;
+        }
+    private:
+        int32_t m_X, m_Y;
+    };
+    struct FileDragLeaveEvent: public Event
+    {
+    public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::FileDragLeave;
+        }
+        FileDragLeaveEvent(int32_t x, int32_t y)
+        : m_X(x), m_Y(y)
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::FileDragLeave;
+        }
+        [[nodiscard]] int32_t GetX() const
+        {
+            return m_X;
+        }
+        [[nodiscard]] int32_t GetY() const
+        {
+            return m_Y;
+        }
+    private:
+        int32_t m_X, m_Y;
+    };
+    struct FileDragStartEvent : public Event
+    {
+    public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::FileDragStart;
+        }
+        FileDragStartEvent()
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::FileDragStart;
+        }
+    private:
+    };
+    struct FileDragEndEvent : public Event
+    {
+    public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::FileDragEnd;
+        }
+        FileDragEndEvent()
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::FileDragEnd;
+        }
     };
     struct WindowMovedEvent: public Event
     {

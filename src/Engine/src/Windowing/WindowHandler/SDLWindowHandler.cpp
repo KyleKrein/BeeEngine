@@ -15,6 +15,10 @@
 #include "Platform/Windows/WindowsDropSource.h"
 #endif
 
+#if defined(MACOS)
+#include "Platform/MacOS/MacOSDragDrop.h"
+#endif
+
 namespace BeeEngine::Internal
 {
 
@@ -72,6 +76,9 @@ namespace BeeEngine::Internal
         m_XPosition = posX;
         m_YPosition = posY;
         InitializeDragDropOnWindows();
+#if defined(MACOS)
+        IntegrateDragAndDropSDL();
+#endif
         switch (properties.PreferredRenderAPI)
         {
 #if defined(BEE_COMPILE_VULKAN)
@@ -88,7 +95,6 @@ namespace BeeEngine::Internal
             default:
                 BeeCoreFatalError("Invalid Renderer API chosen for SDL");
         }
-
         m_IsRunning = true;
     }
 
@@ -168,7 +174,7 @@ namespace BeeEngine::Internal
     void SDLWindowHandler::ProcessEvents()
     {
         SDL_Event sdlEvent;
-        Scope<FileDropEvent> fileDropEvent = nullptr;
+        static Scope<FileDropEvent> fileDropEvent = nullptr;
         while (SDL_PollEvent(&sdlEvent))
         {
             ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
@@ -207,10 +213,12 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_MOUSE_ENTER:
                 {
+                    //BeeCoreTrace("Mouse entered window");
                     break;
                 }
                 case SDL_EVENT_WINDOW_MOUSE_LEAVE:
                 {
+                    //BeeCoreTrace("Mouse left window");
                     break;
                 }
                 case SDL_EVENT_WINDOW_FOCUS_GAINED:
@@ -301,6 +309,7 @@ namespace BeeEngine::Internal
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
+#if !defined(MACOS)
                 case SDL_EVENT_DROP_BEGIN:
                 {
                     fileDropEvent = CreateScope<FileDropEvent>();
@@ -327,6 +336,7 @@ namespace BeeEngine::Internal
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
+#endif
                 case SDL_EVENT_JOYSTICK_AXIS_MOTION:
                 {
                     break;
@@ -1221,7 +1231,7 @@ namespace BeeEngine::Internal
 #elif defined(LINUX)
         info.display = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.display", NULL);
         info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.window", NULL);
-#elif defined(APPLE)
+#elif defined(MACOS)
         info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.cocoa.window", NULL);
 #elif defined(IOS)
         info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.uikit.window", NULL);
@@ -1244,6 +1254,19 @@ namespace BeeEngine::Internal
             BeeCoreError("Failed to register drop source");
         }
 #endif
+    }
+
+    GlobalMouseState SDLWindowHandler::GetGlobalMouseState() const
+    {
+        GlobalMouseState state;
+        float x, y;
+        uint32_t buttons = SDL_GetGlobalMouseState(&x, &y);
+        state.x = x;
+        state.y = y;
+        state.left = (buttons & SDL_BUTTON_LMASK) != 0;
+        state.right = (buttons & SDL_BUTTON_RMASK) != 0;
+        state.middle = (buttons & SDL_BUTTON_MMASK) != 0;
+        return state;
     }
 
 }

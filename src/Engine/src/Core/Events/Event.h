@@ -36,6 +36,10 @@ namespace BeeEngine
         MouseScrolled = 14,
         FileDrop = 15,
         FileDrag = 16,
+        FileDragEnter = 17,
+        FileDragLeave = 18,
+        FileDragStart = 19,
+        FileDragEnd = 20,
     };
     class Event
     {

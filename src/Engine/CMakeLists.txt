@@ -126,7 +126,11 @@ if(IOS)
 elseif(APPLE)
     # Covers macOS implementation
     enable_language(Swift OBJCXX OBJC)
-    list(APPEND SOURCE_FILES src/Platform/MacOS/FileDialogsMacOS.mm)
+    set(MACOS_SOURCE_FILES
+            src/Platform/MacOS/FileDialogsMacOS.mm
+            src/Platform/MacOS/MacOSDragDrop.h
+            src/Platform/MacOS/MacOSDragDrop.mm)
+    list(APPEND SOURCE_FILES ${MACOS_SOURCE_FILES})
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
 elseif(ANDROID)

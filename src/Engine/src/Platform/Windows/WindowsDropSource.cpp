@@ -112,6 +112,7 @@ namespace BeeEngine
         {
             auto& io = ImGui::GetIO();
             io.AddMouseButtonEvent(ImGuiMouseButton_Left, true);
+            Application::GetInstance().AddEvent(CreateScope<FileDragEnterEvent>(pt.x, pt.y));
             return S_OK;
         }
 
@@ -126,12 +127,14 @@ namespace BeeEngine
             bool isFocused = Application::GetInstance().IsFocused();
             io.MousePos.x = isFocused ? pt.x : x;
             io.MousePos.y = isFocused ? pt.y : y;
-            Application::GetInstance().AddEvent(CreateScope<FileDragEvent>(x, y));
+            Application::GetInstance().AddEvent(CreateScope<FileDragEvent>(io.MousePos.x, io.MousePos.y));
+            //Application::GetInstance().AddEvent(CreateScope<FileDragEvent>(x, y));
             return S_OK;
         }
 
         HRESULT WindowsDropTarget::DragLeave(void)
         {
+            Application::GetInstance().AddEvent(CreateScope<FileDragLeaveEvent>(0, 0));//position is unknown
             return S_OK;
         }
 

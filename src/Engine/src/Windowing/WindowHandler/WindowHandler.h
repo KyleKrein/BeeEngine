@@ -24,6 +24,15 @@ namespace BeeEngine
         void *display = nullptr;
 #endif
     };
+
+    struct GlobalMouseState
+    {
+        int32_t x;
+        int32_t y;
+        bool left;
+        bool right;
+        bool middle;
+    };
     class WindowHandler
     {
     public:
@@ -59,6 +68,7 @@ namespace BeeEngine
         {
             return m_ScaleFactor;
         }
+        virtual GlobalMouseState GetGlobalMouseState() const = 0;
         virtual WindowNativeInfo GetNativeInfo() = 0;
         virtual void SetWidth(uint16_t width) = 0;
         virtual void SetHeight(uint16_t height) = 0;
