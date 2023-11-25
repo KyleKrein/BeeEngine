@@ -110,6 +110,7 @@ namespace BeeEngine
 
         HRESULT WindowsDropTarget::DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
         {
+            HandleStartDrag();
             auto& io = ImGui::GetIO();
             io.AddMouseButtonEvent(ImGuiMouseButton_Left, true);
             Application::GetInstance().AddEvent(CreateScope<FileDragEnterEvent>(pt.x, pt.y));
@@ -118,23 +119,23 @@ namespace BeeEngine
 
         HRESULT WindowsDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
         {
-            auto& io = ImGui::GetIO();
-            io.AppAcceptingEvents = true;
-            io.AppFocusLost = false;
+            HandleStartDrag();
             int32_t x = pt.x, y = pt.y;
-            x-= WindowHandler::GetInstance()->GetXPosition();
-            y-= WindowHandler::GetInstance()->GetYPosition();
             bool isFocused = Application::GetInstance().IsFocused();
-            io.MousePos.x = isFocused ? pt.x : x;
-            io.MousePos.y = isFocused ? pt.y : y;
-            Application::GetInstance().AddEvent(CreateScope<FileDragEvent>(io.MousePos.x, io.MousePos.y));
-            //Application::GetInstance().AddEvent(CreateScope<FileDragEvent>(x, y));
+            if(!isFocused)
+            {
+                x-= WindowHandler::GetInstance()->GetXPosition();
+                y-= WindowHandler::GetInstance()->GetYPosition();
+            }
+            Application::GetInstance().AddEvent(CreateScope<FileDragEvent>(x, y));
             return S_OK;
         }
 
         HRESULT WindowsDropTarget::DragLeave(void)
         {
+            //HandleStartDrag();
             Application::GetInstance().AddEvent(CreateScope<FileDragLeaveEvent>(0, 0));//position is unknown
+            FinishDragEvent();
             return S_OK;
         }
 
@@ -161,12 +162,20 @@ namespace BeeEngine
                 }
             }
             Application::GetInstance().AddEvent(std::move(event));
+            FinishDragEvent();
             GlobalUnlock(stgmed.hGlobal);
             ReleaseStgMedium(&stgmed);
 
             auto& io = ImGui::GetIO();
             io.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
             return S_OK;
+        }
+
+        void WindowsDropTarget::FinishDragEvent()
+        {
+            BeeExpects(m_StartedDrag);
+            Application::GetInstance().AddEvent(CreateScope<FileDragEndEvent>());
+            m_StartedDrag = false;
         }
 
         HRESULT WindowsDropTarget::QueryInterface(const IID &riid, void **ppvObject)
@@ -208,6 +217,14 @@ namespace BeeEngine
         WindowsDropTarget::WindowsDropTarget()
         {
 
+        }
+
+        void WindowsDropTarget::HandleStartDrag()
+        {
+            if(m_StartedDrag)
+                return;
+            m_StartedDrag = true;
+            Application::GetInstance().AddEvent(CreateScope<FileDragStartEvent>());
         }
     } // BeeEngine
 } // Internal

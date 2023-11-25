@@ -51,7 +51,11 @@ namespace BeeEngine::Internal
 
         ULONG Release(void) override;
     private:
+        void HandleStartDrag();
         ULONG m_nRefCount = 0;
+        bool m_StartedDrag = false;
+
+        void FinishDragEvent();
     };
 
     IDataObject *GetFileDataObject(const TCHAR *pszFile, REFIID riid);

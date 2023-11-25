@@ -241,7 +241,9 @@ namespace BeeEngine
         class WindowsDropTarget;
 #endif
     }
-
+    /*
+     * Fires when user drops file(s) on the window.
+     */
     struct FileDropEvent: public Event
     {
         friend Internal::SDLWindowHandler;
@@ -279,7 +281,11 @@ namespace BeeEngine
         }
         std::vector<Path> m_Paths;
     };
-
+    /*
+     * Fires when mouse was over the window and then moved over it
+     * while dragging something from outside of the app.
+     * Format of coordinates is not standardised. It's platform specific.
+     */
     struct FileDragEvent: public Event
     {
     public:
@@ -313,6 +319,11 @@ namespace BeeEngine
     private:
         int32_t m_X, m_Y;
     };
+    /*
+     * Fires when mouse was outside of the window and then moved over it
+     * while dragging something from outside of the app.
+     * Format of coordinates is not standardised. It's platform specific.
+     */
     struct FileDragEnterEvent: public Event
     {
     public:
@@ -337,6 +348,11 @@ namespace BeeEngine
     private:
         int32_t m_X, m_Y;
     };
+    /*
+     * Fires when mouse was over the window and then moved out of it
+     * while dragging something from outside of the app.
+     * Format of coordinates is not standardised. It's platform specific.
+     */
     struct FileDragLeaveEvent: public Event
     {
     public:
@@ -361,6 +377,10 @@ namespace BeeEngine
     private:
         int32_t m_X, m_Y;
     };
+    /* Fires before any other DragAndDrop event.
+     * When fired, it means that User is dragging something from outside of the app.
+     * This event is fired only once per drag and drop session.
+    */
     struct FileDragStartEvent : public Event
     {
     public:
@@ -375,6 +395,13 @@ namespace BeeEngine
         }
     private:
     };
+    /*
+     * Fires after FileDragStartEvent at the end of drag and drop session.
+     * This event is fired only once per drag and drop session.
+     * It means that one way or another drag and drop session has ended.
+     * And no more FileDragEnterEvent, FileDragEvent, FileDragLeaveEvent will be fired
+     * until the next FileDragStartEvent.
+     */
     struct FileDragEndEvent : public Event
     {
     public:
