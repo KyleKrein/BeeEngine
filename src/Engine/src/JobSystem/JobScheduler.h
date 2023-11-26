@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Core/TypeDefines.h"
 #include <utility>
 #include <vector>
 #include <thread>
@@ -10,7 +11,6 @@
 #include <functional>
 #include <mutex>
 #include "Hardware.h"
-#include "Core/TypeDefines.h"
 #include <boost/context/continuation.hpp>
 #include <atomic>
 namespace BeeEngine
@@ -88,7 +88,7 @@ namespace BeeEngine
                 {
                     // Возобновление
                     m_IsCompleted = true;
-                    m_Continuation.resume();
+                    m_Continuation = m_Continuation.resume();
                 }
             }
 
@@ -117,6 +117,7 @@ namespace BeeEngine
             std::atomic<bool> m_IsCompleted = false;
             JobCounter *m_Counter = nullptr;
         };
+        void ThreadSetAffinity(std::thread& thread, uint32_t core);
     } // Internal
     class JobScheduler
     {
@@ -137,23 +138,22 @@ namespace BeeEngine
         {
             for (uint32_t i = 0; i < numberOfThreads; ++i)
             {
-                m_Threads.emplace_back([this] { WorkerThread(); });
+                auto& thread = m_Threads.emplace_back([this] { WorkerThread(); });
+                Internal::ThreadSetAffinity(thread, i);
             }
+        }
+        ~JobScheduler()
+        {
+            if(!m_Done)
+                Stop();
         }
         void Schedule(JobFunc job, Priority priority = Priority::Normal)
         {
             Ref<Internal::Fiber> fiber = CreateRef<Internal::Fiber>(std::move(job));
             {
-                std::lock_guard<std::mutex> lock(m_QueueMutex);
-                GetQueue(priority).emplace(std::move(fiber));
-            }
-            m_ConditionVariable.notify_one();
-        }
-        void Schedule(Internal::Fiber&& fiber, Priority priority = Priority::Normal)
-        {
-            {
-                std::lock_guard<std::mutex> lock(m_QueueMutex);
-                GetQueue(priority).emplace(std::move(fiber));
+                std::unique_lock<std::mutex> lock(m_QueueMutex);
+                auto& queue = GetQueue(priority);
+                queue.push(std::move(fiber));
             }
             m_ConditionVariable.notify_one();
         }
@@ -161,18 +161,23 @@ namespace BeeEngine
         {
             Ref<Internal::Fiber> fiber = CreateRef<Internal::Fiber>(std::move(job), &counter);
             {
-                std::lock_guard<std::mutex> lock(m_QueueMutex);
-                GetQueue(priority).emplace(std::move(fiber));
+                std::unique_lock<std::mutex> lock(m_QueueMutex);
+                auto& queue = GetQueue(priority);
+                queue.push(std::move(fiber));
             }
             m_ConditionVariable.notify_one();
         }
         void Stop()
         {
             {
-                std::lock_guard<std::mutex> lock(m_QueueMutex);
+                std::unique_lock<std::mutex> lock(m_QueueMutex);
                 m_Done = true;
             }
             m_ConditionVariable.notify_all();
+            for (auto &thread : m_Threads)
+            {
+                thread.join();
+            }
         }
         void WaitForJobsToComplete(JobCounter& counter)
         {
@@ -180,14 +185,25 @@ namespace BeeEngine
             {
                 return;
             }
-            s_CurrentFiber->MarkIncomplete();
+            GetCurrentFiber()->MarkIncomplete();
             {
-                std::lock_guard<std::mutex> lock(m_WaitingJobsMutex);
-                m_WaitingJobs.emplace_back(s_CurrentFiber, &counter);
+                std::unique_lock<std::mutex> lock(m_WaitingJobsMutex);
+                m_WaitingJobs.emplace_back(GetCurrentFiber(), &counter);
             }
-            boost::context::swap(s_CurrentFiber->GetContext(), s_MainContext);
+            m_ConditionVariable.notify_one();
+            GetCurrentFiber()->GetContext() = std::move(GetCurrentFiber()->GetContext().resume());
+            //GetMainContext() = GetMainContext().resume();
         }
     private:
+        void Schedule(Ref<Internal::Fiber>&& fiber, Priority priority = Priority::Normal)
+        {
+            {
+                std::lock_guard<std::mutex> lock(m_QueueMutex);
+                auto& queue = GetQueue(priority);
+                queue.push(std::move(fiber));
+            }
+            m_ConditionVariable.notify_one();
+        }
 
         std::queue<Ref<Internal::Fiber>>& GetQueue(Priority priority)
         {
@@ -200,32 +216,34 @@ namespace BeeEngine
         }
 
         void WorkerThread() {
-            s_MainContext = boost::context::callcc([](boost::context::continuation &&c)
+            GetMainContext() = boost::context::callcc([this](boost::context::continuation &&c)
                 {
-                    return std::move(c);
+                    GetMainContext() = std::move(c);
+                    while (!m_Done)
+                    {
+                        {
+                            std::unique_lock<std::mutex> lock(m_QueueMutex);
+                            m_ConditionVariable.wait(lock, [this] { return !AllQueuesEmpty() || m_Done; });
+
+                            if (AllQueuesEmpty() && m_WaitingJobs.empty())
+                            {
+                                break;
+                            }
+
+                            if (!GetNextFiber(GetCurrentFiber()))
+                            {
+                                continue;
+                            }
+                        }
+                        GetCurrentFiber()->Resume(GetMainContext());
+                    }
+                    return std::move(GetMainContext());
                 });
-            while (true)
-            {
-                {
-                    std::unique_lock<std::mutex> lock(m_QueueMutex);
-                    m_ConditionVariable.wait(lock, [this] { return !AllQueuesEmpty() || m_Done; });
-
-                    if (m_Done && AllQueuesEmpty() && m_WaitingJobs.empty())
-                    {
-                        break;
-                    }
-
-                    if (!GetNextFiber(s_CurrentFiber))
-                    {
-                        continue;
-                    }
-                }
-                s_CurrentFiber->Resume(s_MainContext);
-            }
         }
         bool AllQueuesEmpty() const
         {
-            return m_HighPriorityJobs.empty() && m_MediumPriorityJobs.empty() && m_LowPriorityJobs.empty();
+            return m_HighPriorityJobs.empty() && m_MediumPriorityJobs.empty() && m_LowPriorityJobs.empty() &&
+                   m_WaitingJobs.empty();
         }
         bool GetNextFiber(Ref<Internal::Fiber>& fiber)
         {
@@ -242,7 +260,6 @@ namespace BeeEngine
                         return true;
                     }
                 }
-                return false;
             }
             if (!m_HighPriorityJobs.empty())
             {
@@ -276,6 +293,8 @@ namespace BeeEngine
         std::mutex m_WaitingJobsMutex;
         std::condition_variable m_ConditionVariable;
         bool m_Done = false;
+        Ref<Internal::Fiber>& GetCurrentFiber();
+        boost::context::continuation& GetMainContext();
         thread_local static Ref<Internal::Fiber> s_CurrentFiber;
         thread_local static boost::context::continuation s_MainContext;
     };

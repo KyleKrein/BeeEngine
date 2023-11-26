@@ -129,7 +129,8 @@ elseif(APPLE)
     set(MACOS_SOURCE_FILES
             src/Platform/MacOS/FileDialogsMacOS.mm
             src/Platform/MacOS/MacOSDragDrop.h
-            src/Platform/MacOS/MacOSDragDrop.mm)
+            src/Platform/MacOS/MacOSDragDrop.mm
+            src/Platform/MacOS/MacOSThreads.cpp)
     list(APPEND SOURCE_FILES ${MACOS_SOURCE_FILES})
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
@@ -146,13 +147,17 @@ elseif(WIN32)
             src/Platform/Windows/FileDialogsWindows.cpp
             src/Platform/Windows/WindowsString.cpp
             src/Platform/Windows/WindowsString.h
-            src/Platform/Windows/WindowsCommands.cpp)
+            src/Platform/Windows/WindowsCommands.cpp
+            src/Platform/Windows/WindowsThreads.cpp)
     list(APPEND SOURCE_FILES ${WINDOWS_SOURCE_FILES})
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
 elseif (UNIX AND NOT APPLE)
     # Covers Linux implementation
-    list(APPEND SOURCE_FILES "src/Platform/Linux/FileDialogsLinux.cpp")
+    set(LINUX_SOURCE_FILES
+            src/Platform/Linux/FileDialogsLinux.cpp
+            src/Platform/Linux/LinuxThreads.cpp)
+    list(APPEND SOURCE_FILES ${LINUX_SOURCE_FILES})
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
 endif()

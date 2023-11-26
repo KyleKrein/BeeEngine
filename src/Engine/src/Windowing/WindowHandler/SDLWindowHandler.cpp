@@ -123,28 +123,17 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::SetWidth(uint16_t width)
     {
-        if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
-        {
-            m_Width = width;
-        }
-        else
-        {
-            m_Width = width;
-        }
+        if(width == m_Width)
+            return;
+        m_Width = width;
         SDL_SetWindowSize(m_Window, m_Width, m_Height);
-        //m_GraphicsDevice->WindowResized(m_Width, m_Height);
     }
 
     void SDLWindowHandler::SetHeight(uint16_t height)
     {
-        if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
-        {
-            m_Height = height;
-        }
-        else
-        {
-            m_Height = height;
-        }
+        if(height == m_Height)
+            return;
+        m_Height = height;
         SDL_SetWindowSize(m_Window, m_Width, m_Height);
     }
 
