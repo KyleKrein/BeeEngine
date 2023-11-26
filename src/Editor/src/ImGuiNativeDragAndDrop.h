@@ -16,35 +16,25 @@ namespace BeeEngine
     public:
         void ImGuiRender()
         {
-            if(m_Dragging)
+            if (!m_Dragging)
+                return;
+            if(ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern))
             {
-                if(ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern))
-                {
-                    static auto ptr = &m_Files;
-                    ImGui::SetDragDropPayload("EXTERN_DRAG_AND_DROP", &ptr, sizeof(void*));
-                    ImGui::EndDragDropSource();
-                }
+                static auto ptr = &m_Files;
+                ImGui::SetDragDropPayload("EXTERN_DRAG_AND_DROP", &ptr, sizeof(void*));
+                ImGui::EndDragDropSource();
             }
-            //m_Dragging = false;
         }
         void OnEvent(EventDispatcher& dispatcher)
         {
-            dispatcher.Dispatch<FileDragEnterEvent>([this](FileDragEnterEvent& event) -> bool
+            dispatcher.Dispatch<FileDragStartEvent>([this](FileDragStartEvent& event) -> bool
             {
                 m_Dragging = true;
                 auto& io = ImGui::GetIO();
                 io.AddMouseButtonEvent(ImGuiMouseButton_Left, true);
-                //io.MousePos = ImVec2(pEvent.GetX(), pEvent.GetY());
                 return false;
             });
             dispatcher.Dispatch<FileDragEndEvent>([this](auto& event) -> bool
-            {
-                m_Dragging = false;
-                auto& io = ImGui::GetIO();
-                io.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
-                return false;
-            });
-            dispatcher.Dispatch<FileDragLeaveEvent>([this](auto& event) -> bool
             {
                 m_Dragging = false;
                 auto& io = ImGui::GetIO();
