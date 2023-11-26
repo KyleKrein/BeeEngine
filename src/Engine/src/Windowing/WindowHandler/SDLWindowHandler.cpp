@@ -37,18 +37,15 @@ namespace BeeEngine::Internal
 
         switch (properties.PreferredRenderAPI)
         {
-            case Vulkan:
-                windowFlags |= SDL_WINDOW_VULKAN;
-                break;
+            //case Vulkan:
+            //    windowFlags |= SDL_WINDOW_VULKAN;
+            //    break;
             case WebGPU:
                 if constexpr (Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
                 {
                     windowFlags |= SDL_WINDOW_METAL;
                 }
                 break;
-            case OpenGL:
-            case Metal:
-            case DirectX:
             default:
             BeeCoreFatalError("Invalid Renderer API chosen for SDL");
         }
@@ -89,9 +86,6 @@ namespace BeeEngine::Internal
             case WebGPU:
                 InitializeWebGPU();
                 break;
-            case OpenGL:
-            case Metal:
-            case DirectX:
             default:
                 BeeCoreFatalError("Invalid Renderer API chosen for SDL");
         }

@@ -17,10 +17,6 @@ namespace BeeEngine
         {
             case WebGPU:
                 return CreateRef<Internal::WebGPUPipeline>(vertexShader, fragmentShader);
-            case Vulkan:
-            case OpenGL:
-            case Metal:
-            case DirectX:
             case NotAvailable:
             default:
                 BeeCoreError("Unknown renderer API");

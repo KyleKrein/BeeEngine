@@ -56,12 +56,6 @@ namespace BeeEngine
             BeeExpects(width > 0 && height > 0);
             s_RendererAPI->SetViewport(x, y, width, height);
         }
-        static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
-        {
-            BEE_PROFILE_FUNCTION();
-            vertexArray->Bind();
-            s_RendererAPI->DrawIndexed(vertexArray, indexCount);
-        }
         static void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
         {
             BEE_PROFILE_FUNCTION();

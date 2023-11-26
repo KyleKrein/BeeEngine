@@ -17,10 +17,6 @@ namespace BeeEngine
         {
             case WebGPU:
                 return CreateRef<Internal::WebGPUBindingSet>(elements);
-            case OpenGL:
-            case Metal:
-            case DirectX:
-            case Vulkan:
             case NotAvailable:
                 BeeCoreError("BindingSet::Create: API not available!");
                 return nullptr;
@@ -35,10 +31,6 @@ namespace BeeEngine
             case WebGPU:
                 //return CreateFrameScope<Internal::WebGPUBindingSet>(elements);
                 return FramePtr<Internal::WebGPUBindingSet>(new Internal::WebGPUBindingSet(elements));
-            case OpenGL:
-            case Metal:
-            case DirectX:
-            case Vulkan:
             case NotAvailable:
                 BeeCoreError("BindingSet::Create: API not available!");
                 return nullptr;

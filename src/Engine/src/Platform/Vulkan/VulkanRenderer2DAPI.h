@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_VULKAN)
 #include "Renderer/Renderer2DAPI.h"
 
 namespace BeeEngine::Internal
@@ -35,3 +35,4 @@ namespace BeeEngine::Internal
 
     };
 }
+#endif
