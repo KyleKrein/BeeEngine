@@ -9,7 +9,7 @@
 #include "Platform/Windows/WindowsUTF8ConsoleOutput.h"
 
 //AllocatorInitializer AllocatorInitializer::instance = AllocatorInitializer();
-
+#include "JobSystem/JobScheduler.h"
 namespace BeeEngine
 {
     static bool g_Initialized = false;
@@ -46,6 +46,7 @@ namespace BeeEngine
         {
             g_Restart = false;
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
+            Job::Initialize();
             Internal::InitEngine();
             Internal::WindowsUTF8ConsoleOutput consoleOutput;
             Application* application = CreateApplication({argc, argv});
@@ -54,6 +55,7 @@ namespace BeeEngine
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineShutdown", "shutdown.json");
             delete application;
             Internal::ShutDownEngine();
+            Job::Shutdown();
             BEE_DEBUG_END_PROFILING_SESSION();
         }
         return 0;

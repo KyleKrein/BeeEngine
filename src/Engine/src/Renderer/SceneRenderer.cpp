@@ -180,8 +180,8 @@ namespace BeeEngine
     void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix,const std::vector<glm::vec4>& frustumPlanes/* const Math::Cameras::Frustum& frustum*/)
     {
         BEE_PROFILE_FUNCTION();
-        Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
-        Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
+        static Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
+        static Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
         cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
         SceneTreeRenderer sceneTreeRenderer(viewProjectionMatrix, cameraBindingSet.get());
 
