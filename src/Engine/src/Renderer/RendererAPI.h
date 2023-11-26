@@ -6,7 +6,6 @@
 
 #include <glm/glm.hpp>
 #include "Core/TypeDefines.h"
-#include "VertexArray.h"
 #include "Core/Color4.h"
 #include "CommandBuffer.h"
 #include "RenderPass.h"
@@ -34,8 +33,6 @@ namespace BeeEngine
         virtual void Clear() = 0;
 
         virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
-
-        virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount) = 0;
 
         virtual void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount) = 0;
         virtual void SubmitCommandBuffer(const CommandBuffer& commandBuffer) = 0;

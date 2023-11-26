@@ -2,7 +2,6 @@
 
 #include "Core/Events/Event.h"
 #include "Platform/ImGui/ImGuiController.h"
-#include "Renderer/Shader.h"
 #include "Debug/Instrumentor.h"
 #include "Core/AssetManagement/IAssetManager.h"
 #include "Core/AssetManagement/AssetManager.h"

@@ -31,10 +31,6 @@ namespace BeeEngine
 
         switch (Renderer::GetAPI())
         {
-            case Vulkan:
-            case OpenGL:
-            case Metal:
-            case DirectX:
             case WebGPU:
             case NotAvailable:
             default:

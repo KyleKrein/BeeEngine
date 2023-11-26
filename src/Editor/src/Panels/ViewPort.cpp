@@ -65,11 +65,6 @@ namespace BeeEngine::Editor
         my -= m_ViewportBounds[0].y;
         const glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 
-        if(Renderer::GetAPI() == RenderAPI::OpenGL)
-        {
-            my = viewportSize.y - my;
-        }
-
         int mouseX = static_cast<int>(mx);
         int mouseY = static_cast<int>(my);
 
@@ -114,11 +109,6 @@ namespace BeeEngine::Editor
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         const glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-
-        if(Renderer::GetAPI() == RenderAPI::OpenGL)
-        {
-            my = viewportSize.y - my;
-        }
 
         int mouseX = static_cast<int>(mx);
         int mouseY = static_cast<int>(my);

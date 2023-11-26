@@ -31,7 +31,6 @@ namespace BeeEngine::Internal
 
         void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 
-        void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount) override;
         void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount) override;
 
         void SubmitCommandBuffer(const CommandBuffer& commandBuffer) override

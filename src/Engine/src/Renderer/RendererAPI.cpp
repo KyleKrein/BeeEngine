@@ -3,7 +3,6 @@
 //
 
 #include "RendererAPI.h"
-#include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Renderer.h"
 #include "Platform/WebGPU/WebGPURendererAPI.h"
 
@@ -14,8 +13,6 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
-            case RenderAPI::OpenGL:
-                return nullptr;//CreateRef<Internal::OpenGLRendererAPI>();
             case RenderAPI::WebGPU:
                 return CreateRef<Internal::WebGPURendererAPI>();
             default:

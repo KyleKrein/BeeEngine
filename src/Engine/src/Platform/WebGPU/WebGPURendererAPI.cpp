@@ -111,12 +111,6 @@ namespace BeeEngine::Internal
 
     }
 
-    void WebGPURendererAPI::DrawIndexed(const BeeEngine::Ref<BeeEngine::VertexArray> &vertexArray,
-                                                             uint32_t indexCount)
-    {
-
-    }
-
     BeeEngine::Color4 WebGPURendererAPI::ReadPixel(uint32_t x, uint32_t y)
     {
         return BeeEngine::Color4();

@@ -4,7 +4,6 @@
 
 #include "FrameBuffer.h"
 #include "Renderer.h"
-#include "Platform/OpenGL/OpenGLFrameBuffer.h"
 #include "Platform/WebGPU/WebGPUFramebuffer.h"
 
 
@@ -19,8 +18,6 @@ namespace BeeEngine
         {
             case RenderAPI::WebGPU:
                 return CreateScope<Internal::WebGPUFrameBuffer>(preferences);
-            case RenderAPI::OpenGL:
-                //return CreateScope<Internal::OpenGLFrameBuffer>(preferences);
             default:
                 BeeCoreFatalError("Unknown RenderAPI");
         }

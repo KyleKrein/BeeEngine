@@ -92,14 +92,10 @@ namespace BeeEngine{
         {
             case RenderAPI::WebGPU:
                 return;
-            case RenderAPI::Vulkan:
-                return;
-            case RenderAPI::DirectX:
-            case RenderAPI::OpenGL:
-            case RenderAPI::Metal:
             default:
                 BeeCoreWarn("Unable to use {} as render API", ToString(properties.PreferredRenderAPI));
-                //properties.PreferredRenderAPI = RenderAPI::OpenGL;
+                //properties.PreferredRenderAPI = RenderAPI::WebGPU;
+                throw std::exception();
                 return;
         }
 

@@ -5,7 +5,6 @@
 #include "Texture.h"
 #include "Core/Logging/Log.h"
 #include "Renderer.h"
-#include "Platform/OpenGL/OpenGLTexture2D.h"
 #include "Platform/WebGPU/WebGPUTexture2D.h"
 
 
@@ -19,8 +18,6 @@ namespace BeeEngine
         {
             case RenderAPI::WebGPU:
                 return CreateRef<Internal::WebGPUTexture2D>(width, height, data, numberOfChannels);
-            case RenderAPI::OpenGL:
-                //return CreateRef<Internal::OpenGLTexture2D>(width, height);
             default:
                 BeeCoreError("Unknown RenderAPI");
                 throw std::exception();
