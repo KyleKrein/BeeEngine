@@ -97,6 +97,11 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Hardware.h
         src/JobSystem/JobScheduler.cpp
         src/JobSystem/JobScheduler.h
+        src/JobSystem/SpinLock.h
+        src/JobSystem/AdaptiveMutex.h
+        src/JobSystem/JobSchedulerAdditional.cpp
+        src/JobSystem/Mutex.h
+        src/FileSystem/FileSystem.h
 )
 
 

@@ -15,29 +15,67 @@
 #include <atomic>
 namespace BeeEngine
 {
-    class JobCounter
+    namespace Jobs
+    {
+        namespace this_job
+        {
+            inline void yield();
+        };
+
+        class Counter
+        {
+        public:
+            void Increment()
+            {
+                ++m_Counter;
+            }
+
+            void Decrement()
+            {
+                --m_Counter;
+            }
+
+            bool IsZero() const
+            {
+                return m_Counter == 0;
+            }
+
+        private:
+            std::atomic<uint32_t> m_Counter = 0;
+        };
+        enum class Priority
+        {
+            Low,
+            Normal,
+            High
+        };
+    } // Jobs
+    namespace Internal
+    {
+        class JobScheduler;
+        class Fiber;
+    }
+    class Job final
     {
     public:
-        void Increment()
-        {
-            ++m_Counter;
-        }
-        void Decrement()
-        {
-            --m_Counter;
-        }
-        bool IsZero() const
-        {
-            return m_Counter == 0;
-        }
+        //Data for job
+        using Func = void(*)(void*);
+        Func Function;
+        void* Data = nullptr;
+        Jobs::Counter* Counter = nullptr;
+        Jobs::Priority Priority = Jobs::Priority::Normal;
+        size_t StackSize = 64 * 1024;
+    public:
+        //static functions
+        static void Schedule(Job& job);
+        static void ScheduleAll(std::ranges::range auto& jobs);
+        static void WaitForJobsToComplete(Jobs::Counter& counter);
     private:
-        std::atomic<uint32_t> m_Counter = 0;
-    };
-    enum class JobPriority
-    {
-        Low,
-        Normal,
-        High
+        friend void Jobs::this_job::yield();
+        friend int Main(int argc, char *argv[]);
+        static void Initialize(uint32_t numberOfThreads = Hardware::GetNumberOfCores());
+        static void Shutdown();
+        static Internal::JobScheduler* s_Instance;
     };
     namespace Internal
     {
@@ -46,57 +84,25 @@ namespace BeeEngine
         public:
             Fiber() = default;
 
-            Fiber(std::function<void()>&& func, JobCounter *counter = nullptr)
-                    : m_Func(std::move(func)), m_IsCompleted(false), m_Counter(counter)
-            {
-                if (m_Counter)
-                {
-                    m_Counter->Increment();
-                }
-            }
+            Fiber(Job* job);
 
             Fiber(Fiber &&other) noexcept
-                    : m_Func(std::move(other.m_Func)), m_Continuation(std::move(other.m_Continuation)),
-                      m_IsCompleted(other.m_IsCompleted.load()), m_Counter(other.m_Counter)
+                    : m_Continuation(std::move(other.m_Continuation)),
+                      m_IsCompleted(other.m_IsCompleted.load())
             {
-                other.m_Counter = nullptr;
+                std::swap(m_Job, other.m_Job);
             }
 
             Fiber &operator=(Fiber &&other) noexcept
             {
-                m_Func = std::move(other.m_Func);
+                std::swap(m_Job, other.m_Job);
                 m_Continuation = std::move(other.m_Continuation);
                 m_IsCompleted = other.m_IsCompleted.load();
-                m_Counter = other.m_Counter;
-                other.m_Counter = nullptr;
                 return *this;
             }
 
             // Запускает или возобновляет выполнение файбера
-            void Resume(boost::context::continuation& mainContext)
-            {
-                if (!m_Continuation)
-                {
-                    // Первый запуск
-                    m_Continuation = boost::context::callcc([this](boost::context::continuation &&c)
-                        {
-                            m_Continuation = std::move(c);
-                            m_IsCompleted = true;
-                            m_Func();
-                            if (m_Counter && m_IsCompleted)
-                            {
-                                m_Counter->Decrement();
-                            }
-                            return std::move(m_Continuation);
-                        });
-                }
-                else
-                {
-                    // Возобновление
-                    m_IsCompleted = true;
-                    m_Continuation = m_Continuation.resume();
-                }
-            }
+            void Resume();
 
             bool isCompleted() const
             {
@@ -112,27 +118,31 @@ namespace BeeEngine
                 m_IsCompleted = true;
             }
 
+            Job* GetJob()
+            {
+                return m_Job;
+            }
+
             boost::context::continuation &GetContext()
             {
                 return m_Continuation;
             }
 
         private:
-            std::function<void()> m_Func;
+            Job* m_Job = nullptr;
             boost::context::continuation m_Continuation;
             std::atomic<bool> m_IsCompleted = false;
-            JobCounter *m_Counter = nullptr;
         };
         void ThreadSetAffinity(std::thread& thread, uint32_t core);
         class JobScheduler
         {
+            friend void BeeEngine::Jobs::this_job::yield();
             struct WaitingContext
             {
                 Ref<Internal::Fiber> fiber;
-                JobCounter* counter;
+                Jobs::Counter* counter;
             };
         public:
-            using JobFunc = std::function<void()>;
             JobScheduler(uint32_t numberOfThreads = Hardware::GetNumberOfCores())
             {
                 for (uint32_t i = 0; i < numberOfThreads; ++i)
@@ -146,25 +156,15 @@ namespace BeeEngine
                 if(!m_Done)
                     Stop();
             }
-            void Schedule(JobFunc&& job, JobPriority priority = JobPriority::Normal)
+            void Schedule(Job* job);
+            void ScheduleAll(std::ranges::range auto& jobs)
             {
-                Ref<Internal::Fiber> fiber = CreateRef<Internal::Fiber>(std::move(job));
+                std::unique_lock lock(m_QueueMutex);
+                for (auto& job : jobs)
                 {
-                    std::unique_lock<std::mutex> lock(m_QueueMutex);
-                    auto& queue = GetQueue(priority);
-                    queue.push(std::move(fiber));
+                    auto& queue = GetQueue(job->Priority);
+                    queue.push(job);
                 }
-                m_ConditionVariable.notify_one();
-            }
-            void Schedule(JobFunc&& job, JobCounter& counter, JobPriority priority = JobPriority::Normal)
-            {
-                Ref<Internal::Fiber> fiber = CreateRef<Internal::Fiber>(std::move(job), &counter);
-                {
-                    std::unique_lock<std::mutex> lock(m_QueueMutex);
-                    auto& queue = GetQueue(priority);
-                    queue.push(std::move(fiber));
-                }
-                m_ConditionVariable.notify_one();
             }
             void Stop()
             {
@@ -178,7 +178,7 @@ namespace BeeEngine
                     thread.join();
                 }
             }
-            void WaitForJobsToComplete(JobCounter& counter)
+            void WaitForJobsToComplete(Jobs::Counter& counter)
             {
                 if(counter.IsZero())
                 {
@@ -194,52 +194,20 @@ namespace BeeEngine
                 //GetMainContext() = GetMainContext().resume();
             }
         private:
-            void Schedule(Ref<Internal::Fiber>&& fiber, JobPriority priority = JobPriority::Normal)
-            {
-                {
-                    std::lock_guard<std::mutex> lock(m_QueueMutex);
-                    auto& queue = GetQueue(priority);
-                    queue.push(std::move(fiber));
-                }
-                m_ConditionVariable.notify_one();
-            }
+            //void Schedule(Ref<Internal::Fiber>&& fiber);
 
-            std::queue<Ref<Internal::Fiber>>& GetQueue(JobPriority priority)
+            std::queue<Job*>& GetQueue(Jobs::Priority priority)
             {
                 switch (priority)
                 {
-                    case JobPriority::High: return m_HighPriorityJobs;
-                    case JobPriority::Low: return m_LowPriorityJobs;
+                    case Jobs::Priority::High: return m_HighPriorityJobs;
+                    case Jobs::Priority::Low: return m_LowPriorityJobs;
                     default: return m_MediumPriorityJobs;
                 }
             }
 
-            void WorkerThread() {
-                GetMainContext() = boost::context::callcc([this](boost::context::continuation &&c)
-                                                          {
-                                                              GetMainContext() = std::move(c);
-                                                              while (!m_Done)
-                                                              {
-                                                                  {
-                                                                      std::unique_lock<std::mutex> lock(m_QueueMutex);
-                                                                      m_ConditionVariable.wait(lock, [this] { return !AllQueuesEmpty() || m_Done; });
-
-                                                                      if (AllQueuesEmpty() && m_WaitingJobs.empty())
-                                                                      {
-                                                                          break;
-                                                                      }
-
-                                                                      if (!GetNextFiber(GetCurrentFiber()))
-                                                                      {
-                                                                          continue;
-                                                                      }
-                                                                  }
-                                                                  GetCurrentFiber()->Resume(GetMainContext());
-                                                              }
-                                                              return std::move(GetMainContext());
-                                                          });
-            }
-            bool AllQueuesEmpty() const
+            void WorkerThread();
+            inline bool AllQueuesEmpty() const
             {
                 return m_HighPriorityJobs.empty() && m_MediumPriorityJobs.empty() && m_LowPriorityJobs.empty() &&
                        m_WaitingJobs.empty();
@@ -252,7 +220,7 @@ namespace BeeEngine
                     for (auto it = m_WaitingJobs.begin(); it != m_WaitingJobs.end(); ++it)
                     {
                         auto& f = *it;
-                        if(f.counter->IsZero())
+                        if(!f.counter || f.counter->IsZero())
                         {
                             fiber = std::move(f.fiber);
                             m_WaitingJobs.erase(it);
@@ -277,16 +245,11 @@ namespace BeeEngine
                 }
                 return false;
             }
-            Ref<Internal::Fiber> PopJob(std::queue<Ref<Internal::Fiber>>& queue)
-            {
-                auto job = std::move(queue.front());
-                queue.pop();
-                return job;
-            }
+            Ref<Internal::Fiber> PopJob(std::queue<Job*>& queue);
             std::vector<std::thread> m_Threads;
-            std::queue<Ref<Internal::Fiber>> m_LowPriorityJobs;
-            std::queue<Ref<Internal::Fiber>> m_MediumPriorityJobs;
-            std::queue<Ref<Internal::Fiber>> m_HighPriorityJobs;
+            std::queue<Job*> m_LowPriorityJobs;
+            std::queue<Job*> m_MediumPriorityJobs;
+            std::queue<Job*> m_HighPriorityJobs;
             std::mutex m_QueueMutex;
             std::vector<WaitingContext> m_WaitingJobs;
             std::mutex m_WaitingJobsMutex;
@@ -298,77 +261,19 @@ namespace BeeEngine
             thread_local static boost::context::continuation s_MainContext;
         };
     } // Internal
-    class Job final
+    void Job::ScheduleAll(std::ranges::range auto& jobs)
     {
-    public:
-        template<typename Func>
-        requires std::is_invocable_v<Func> && std::is_copy_constructible_v<Func>&&
-                std::is_convertible_v<std::invoke_result_t<Func>, void>
-        static void Schedule(Func&& job, JobPriority priority = JobPriority::Normal)
+        s_Instance->ScheduleAll(jobs);
+    }
+    void Jobs::this_job::yield()
+    {
+        auto ptr = Job::s_Instance->GetCurrentFiber();
+        auto& ref = Job::s_Instance->GetCurrentFiber();
         {
-            s_Instance->Schedule(std::move(job), priority);
+            auto* counter = ref->GetJob()->Counter;
+            std::unique_lock lock(Job::s_Instance->m_WaitingJobsMutex);
+            Job::s_Instance->m_WaitingJobs.emplace_back(std::move(ptr), counter);
         }
-        template<typename Func>
-        requires std::is_invocable_v<Func> && std::is_copy_constructible_v<Func>&&
-                 std::is_convertible_v<std::invoke_result_t<Func>, void>
-        static void Schedule(Func&& job, JobCounter& counter, JobPriority priority = JobPriority::Normal)
-        {
-            s_Instance->Schedule(std::move(job), counter, priority);
-        }
-
-        template<typename Func>
-        requires std::is_invocable_v<Func> && (!std::is_copy_constructible_v<Func>)&&
-                 std::is_convertible_v<std::invoke_result_t<Func>, void>
-        static void Schedule(Func&& job, JobCounter& counter, JobPriority priority = JobPriority::Normal)
-        {
-            Ref<Func> func = CreateRef<Func>(std::move(job));
-            s_Instance->Schedule([func]() { (*func)(); }, counter, priority);
-        }
-        template<typename Func>
-        requires std::is_invocable_v<Func> && (!std::is_copy_constructible_v<Func>)&&
-                 std::is_convertible_v<std::invoke_result_t<Func>, void>
-        static void Schedule(Func&& job, JobPriority priority = JobPriority::Normal)
-        {
-            Ref<Func> func = CreateRef<Func>(std::move(job));
-            s_Instance->Schedule([func]() { (*func)(); }, priority);
-        }
-
-        template<std::ranges::range Container, typename Func>
-        static void ForEach(Container& c, Func f, JobPriority priority = JobPriority::Normal)
-        {
-            for (auto& item : c)
-            {
-                Job::Schedule([&item, &f]()
-                {
-                    f(item);
-                }, priority);
-            }
-        }
-        template<std::ranges::range Container, typename Func>
-        static void ForEach(Container& c, Func f, JobCounter& counter, JobPriority priority = JobPriority::Normal)
-        {
-            for (auto& item : c)
-            {
-                Job::Schedule([&item, &f]()
-                              {
-                                  f(item);
-                              }, counter, priority);
-            }
-        }
-        static void WaitForJobsToComplete(JobCounter& counter)
-        {
-            s_Instance->WaitForJobsToComplete(counter);
-        }
-    private:
-        friend int Main(int argc, char *argv[]);
-        static void Initialize(uint32_t numberOfThreads = Hardware::GetNumberOfCores())
-        {
-            s_Instance = new Internal::JobScheduler(numberOfThreads);
-        }
-        static void Shutdown()
-        {
-            delete s_Instance;
-        }
-        static Internal::JobScheduler* s_Instance;
-    };
+        ref->GetContext() = std::move(ref->GetContext().resume());
+    }
 } // BeeEngine
