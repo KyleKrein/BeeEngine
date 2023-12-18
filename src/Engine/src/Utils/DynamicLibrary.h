@@ -4,6 +4,7 @@
 
 #pragma once
 #include <filesystem>
+#include "Core/Path.h"
 
 
 namespace BeeEngine
@@ -11,7 +12,8 @@ namespace BeeEngine
     class DynamicLibrary
     {
     public:
-        DynamicLibrary(const std::filesystem::path& path, const std::string& name);
+        DynamicLibrary(const Path& path, const std::string& name);
+        DynamicLibrary(const Path& path);
         ~DynamicLibrary();
         bool IsLoaded()
         {
@@ -22,6 +24,6 @@ namespace BeeEngine
         void Unload();
     private:
         void* m_Handle;
-        std::filesystem::path m_Path;
+        Path m_Path;
     };
 }

@@ -10,6 +10,7 @@
 #include "DeletionQueue.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Renderer/SceneRenderer.h"
+#include "JobSystem/JobScheduler.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -18,26 +19,43 @@ namespace BeeEngine{
     void Application::Run()
     {
         m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight(), m_Window->GetWidthInPixels(), m_Window->GetHeightInPixels()));
+        std::condition_variable cv;
+        std::mutex mutex;
+        struct FrameJobInfo
+        {
+            std::condition_variable* cv;
+            Application* self;
+        } frameJobInfo = {&cv, this};
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
             ExecuteMainThreadQueue();
             m_Window->ProcessEvents();
-            m_EventQueue.Dispatch();
-            m_Window->UpdateTime();
-            auto cmd = Renderer::BeginFrame();//Internal::VulkanRendererAPI::GetInstance().BeginFrame();
-            Renderer::StartMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
-            m_Layers.Update();
-            Update();
-            //m_Window->SwapBuffers();
-            Renderer::EndMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
-            Renderer::EndFrame();//Internal::VulkanRendererAPI::GetInstance().EndFrame();
-            DeletionQueue::Frame().Flush();
+            std::unique_lock lock(mutex);
+            Job frameJob{[](void* data){
+                auto& frameJobInfo = *reinterpret_cast<FrameJobInfo*>(data);
+                auto& self = *frameJobInfo.self;
+
+                self.m_EventQueue.Dispatch();
+                self.m_Window->UpdateTime();
+                auto cmd = Renderer::BeginFrame();//Internal::VulkanRendererAPI::GetInstance().BeginFrame();
+                Renderer::StartMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
+                self.m_Layers.Update();
+                self.Update();
+                //m_Window->SwapBuffers();
+                Renderer::EndMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
+                Renderer::EndFrame();//Internal::VulkanRendererAPI::GetInstance().EndFrame();
+                DeletionQueue::Frame().Flush();
+
+                frameJobInfo.cv->notify_one();
+            }, &frameJobInfo, nullptr,Jobs::Priority::High, 1024*1024};
+            Job::Schedule(frameJob);
+            cv.wait(lock);
         }
     }
 
     Application::Application(const WindowProperties& properties)
-    : m_IsMinimized(false), m_Layers(LayerStack()), m_EventQueue(EventQueue(m_Layers))
+    : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers)
     {
         BEE_PROFILE_FUNCTION();
         BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");

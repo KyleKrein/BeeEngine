@@ -13,6 +13,7 @@
 #include "vec4.hpp"
 #include "Core/Color4.h"
 #include "Core/AssetManagement/Asset.h"
+#include "mono/metadata/threads.h"
 
 namespace BeeEngine
 {

@@ -41,10 +41,11 @@ namespace BeeEngine{
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
         static consteval bool IsLittleEndian() { return false; }
 #else
-        static bool IsLittleEndian()
+        inline static bool IsLittleEndian()
         {
-            int32_t num = 1;
-            return (*(char*)&num == 1);
+            static int32_t num = 1;
+            static bool isLittleEndian = (*(char*)&num == 1);
+            return isLittleEndian;
         }
 #endif
 

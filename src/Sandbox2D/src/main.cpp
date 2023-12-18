@@ -24,13 +24,13 @@ public:
             m_Scheduler.Schedule([i, this]()
                                  {
                                      //BeeInfo("Hello from job {}!", i);
-                                     JobCounter counter;
+                                     Counter counter;
                                      for (int j = 0; j < 1; ++j)
                                      {
                                          m_Scheduler.Schedule([i, j, this]()
                                                               {
                                                                   uint32_t a = 0;
-                                                                  JobCounter counter;
+                                                                  Counter counter;
                                                                   //BeeInfo("Hello from job {} {}!", i, j);
                                                                   for(int k = 0; k < 10; ++k)
                                                                   {

@@ -158,7 +158,7 @@ namespace BeeEngine::Internal
     {
         SDL_Event sdlEvent;
         static Scope<FileDropEvent> fileDropEvent = nullptr;
-        while (SDL_PollEvent(&sdlEvent))
+        while (SDL_PollEvent(&sdlEvent) != 0)
         {
             ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
             switch (sdlEvent.type)

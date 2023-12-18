@@ -16,7 +16,7 @@
 namespace BeeEngine
 {
 
-    DynamicLibrary::DynamicLibrary(const std::filesystem::path &path, const std::string &name)
+    DynamicLibrary::DynamicLibrary(const Path &path, const std::string &name)
     : m_Handle(nullptr)
     {
         std::string fullName;
@@ -26,6 +26,12 @@ namespace BeeEngine
         static_assert(false, "Unsupported platform");
 #endif
         m_Path = path / fullName;
+        Reload();
+    }
+
+    DynamicLibrary::DynamicLibrary(const Path& path)
+        :m_Path(path)
+    {
         Reload();
     }
 

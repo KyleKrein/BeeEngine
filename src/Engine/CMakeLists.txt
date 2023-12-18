@@ -315,6 +315,7 @@ extract_vcpkg_path("${ICU_LIBRARIES}" ICU_VCPKG_PATH)
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
         PUBLIC src
+        PUBLIC vendor
         PUBLIC vendor/spdlog/include
         PUBLIC vendor/debugbreak
         PUBLIC vendor/glm/glm
@@ -416,16 +417,6 @@ target_link_libraries(BeeEngine PRIVATE file_embed)
 # for embedding assets
 add_compile_definitions(ASSETS_PATH="${PROJECT_SOURCE_DIR}/Assets/")
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/LinkMono.cmake)
-
-#add_library(BeeEngine_with_scripting STATIC ${SCRIPTING_SOURCE_FILES})
-#target_link_libraries(BeeEngine_with_scripting PUBLIC BeeEngine)
-
 add_library(BeeEngine::BeeEngine ALIAS BeeEngine)
-add_library(BeeEngine::WithScripting ALIAS BeeEngine)#BeeEngine_with_scripting)
-set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/vendor/mono/libs/)
-#if(PROJECT_IS_TOP_LEVEL)
-configureMono(${MONO_DIRECTORY})
-#endif ()
-enable_mono(BeeEngine)
+add_library(BeeEngine::WithScripting ALIAS BeeEngine)
 target_compile_definitions(BeeEngine PRIVATE BEE_ENABLE_SCRIPTING)

@@ -49,7 +49,7 @@ namespace BeeEngine
     }
     MAssembly::~MAssembly()
     {
-        //UnloadAssembly();
+        UnloadAssembly();
     }
     void MAssembly::LoadAssembly()
     {
@@ -98,7 +98,7 @@ namespace BeeEngine
     {
         if(m_MonoImage)
         {
-            mono_image_close(m_MonoImage);
+            //mono_image_close(m_MonoImage);
             m_MonoImage = nullptr;
         }
         if(m_MonoAssembly)
@@ -136,6 +136,7 @@ namespace BeeEngine
 
     MObject::MObject(MClass &object)
     {
+        MUtils::RegisterThread();
         m_Class = &object;
         MonoObject* instance = mono_object_new(mono_domain_get(), m_Class->m_MonoClass);
         mono_runtime_object_init(instance);

@@ -32,7 +32,3 @@ target_include_directories( Sandbox2D PRIVATE ${CMAKE_BINARY_DIR}/_deps/webgpu_d
 
 file(COPY Assets DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
-
-set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Engine/vendor/mono/libs/)
-configureMono(${MONO_DIRECTORY})
-copy_mono_dlls(Sandbox2D)

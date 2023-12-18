@@ -11,6 +11,7 @@
 #include "Locale/Locale.h"
 #include <glm/glm.hpp>
 #include "Core/Time.h"
+#include "MUtils.h"
 
 namespace BeeEngine
 {
@@ -68,7 +69,9 @@ namespace BeeEngine
         static void SetViewportSize(float width, float height);
 
     private:
-
+        static void InitDotNetHost();
+        static bool init_hostfxr(const Path&);
+        friend void MUtils::RegisterThread();
         static class MAssembly& LoadAssembly(const Path& path);
         static void InitMono();
         static bool IsGameScript(const MClass& klass);

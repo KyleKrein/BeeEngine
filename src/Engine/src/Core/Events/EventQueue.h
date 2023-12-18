@@ -1,5 +1,7 @@
 #pragma once
 #include "Core/LayerStack.h"
+#include "JobSystem/SpinLock.h"
+
 namespace BeeEngine{
     class EventQueue
     {
@@ -13,5 +15,6 @@ namespace BeeEngine{
     private:
         std::vector<Scope<Event>> m_Events;
         LayerStack& m_LayerStack;
+        Jobs::SpinLock m_Lock;
     };
 }

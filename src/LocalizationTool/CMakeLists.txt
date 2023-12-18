@@ -12,10 +12,6 @@ set_property(TARGET BeeLocalization PROPERTY CXX_STANDARD 23)
 target_include_directories(BeeLocalization PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src)
 target_link_libraries(BeeLocalization PUBLIC BeeEngine)
 
-set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Engine/vendor/mono/libs/)
-configureMono(${MONO_DIRECTORY})
-
-copy_mono_dlls(BeeLocalization)
 add_compile_definitions(BEE_ENABLE_CHECKS)
 
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

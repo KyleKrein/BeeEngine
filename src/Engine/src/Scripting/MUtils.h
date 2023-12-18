@@ -25,5 +25,6 @@ namespace BeeEngine
         static MVisibility MonoMethodFlagsToVisibility(uint32_t flags);
 
         static size_t SizeOfMType(MType type);
+        static void RegisterThread();
     };
 }

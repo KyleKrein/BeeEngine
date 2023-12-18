@@ -3,9 +3,6 @@
 //
 
 #include "ScriptingEngine.h"
-#include <mono/jit/jit.h>
-#include "mono/metadata/assembly.h"
-#include <mono/metadata/mono-config.h>
 #include "Core/Logging/Log.h"
 #include <filesystem>
 #include "Core/ResourceManager.h"
@@ -19,11 +16,13 @@
 #include "GameScript.h"
 #include "MUtils.h"
 #include "AllocatorStatistics.h"
-#include <mono/metadata/mono-debug.h>
-#include <mono/metadata/threads.h>
-#include <mono/metadata/mono-gc.h>
 #include "MTypes.h"
 #include "FileSystem/File.h"
+#include <dotnethost/nethost.h>
+#include <dotnethost/coreclr_delegates.h>
+#include <dotnethost/hostfxr.h>
+
+#include "Utils/DynamicLibrary.h"
 
 namespace BeeEngine
 {
@@ -31,8 +30,12 @@ namespace BeeEngine
     typedef void(__stdcall *EntityWasRemoved)(uint64_t id, MonoException ** exception);
     struct ScriptingEngineData
     {
-        MonoDomain* RootDomain = nullptr;
-        MonoDomain* AppDomain = nullptr;
+        DynamicLibrary HostFxrLibrary;
+        hostfxr_initialize_for_dotnet_command_line_fn init_for_cmd_line_fptr = nullptr;
+        hostfxr_initialize_for_runtime_config_fn init_for_config_fptr = nullptr;
+        hostfxr_get_runtime_delegate_fn get_delegate_fptr = nullptr;
+        hostfxr_run_app_fn run_app_fptr = nullptr;
+        hostfxr_close_fn close_fptr = nullptr;
 
         AddEntityScript AddEntityScriptMethod = nullptr;
         EntityWasRemoved EntityWasRemovedMethod = nullptr;
@@ -70,9 +73,61 @@ namespace BeeEngine
         glm::vec2 ViewportSize = {-1, -1};
     };
     ScriptingEngineData ScriptingEngine::s_Data = {};
+    // Using the nethost library, discover the location of hostfxr and get exports
+    bool ScriptingEngine::init_hostfxr(const Path& assembly_path)
+    {
+        std::filesystem::path path;
+        path = assembly_path.ToStdPath();
+        get_hostfxr_parameters params = {sizeof(get_hostfxr_parameters), path.c_str(), nullptr};
+        // Pre-allocate a large buffer for the path to hostfxr
+        char_t buffer[256];
+        size_t buffer_size = sizeof(buffer) / sizeof(char_t);
+        const int rc = get_hostfxr_path(buffer, &buffer_size, &params);
+        if (rc != 0)
+            return false;
+
+        // Load hostfxr and get desired exports
+        BeeEngine::DynamicLibrary lib(std::filesystem::path{buffer});
+        s_Data.init_for_cmd_line_fptr = (hostfxr_initialize_for_dotnet_command_line_fn)lib.GetFunction("hostfxr_initialize_for_dotnet_command_line");
+        s_Data.init_for_config_fptr = (hostfxr_initialize_for_runtime_config_fn)lib.GetFunction("hostfxr_initialize_for_runtime_config");
+        s_Data.get_delegate_fptr = (hostfxr_get_runtime_delegate_fn)lib.GetFunction("hostfxr_get_runtime_delegate");
+        s_Data.run_app_fptr = (hostfxr_run_app_fn)lib.GetFunction("hostfxr_run_app");
+        s_Data.close_fptr = (hostfxr_close_fn)lib.GetFunction("hostfxr_close");
+
+        return (s_Data.init_for_config_fptr && s_Data.get_delegate_fptr && s_Data.close_fptr);
+    }
+    // Load and initialize .NET Core and get desired function pointer for scenario
+    load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const BeeEngine::Path& config_path, ScriptingEngineData& data)
+    {
+        // Load .NET Core
+        auto path = config_path.ToStdPath();
+        void *load_assembly_and_get_function_pointer = nullptr;
+        hostfxr_handle cxt = nullptr;
+        int rc = data.init_for_config_fptr(path.c_str(), nullptr, &cxt);
+        if (rc != 0 || cxt == nullptr)
+        {
+            BeeCoreError("Init failed: {0}", rc);
+            //std::cerr << "Init failed: " << std::hex << std::showbase << rc << std::endl;
+            data.close_fptr(cxt);
+            return nullptr;
+        }
+
+        // Get the load assembly function pointer
+        rc = data.get_delegate_fptr(
+            cxt,
+            hdt_load_assembly_and_get_function_pointer,
+            &load_assembly_and_get_function_pointer);
+        if (rc != 0 || load_assembly_and_get_function_pointer == nullptr)
+            BeeCoreError("Get delegate failed: {0}", rc);
+            //std::cerr << "Get delegate failed: " << std::hex << std::showbase << rc << std::endl;
+
+        data.close_fptr(cxt);
+        return (load_assembly_and_get_function_pointer_fn)load_assembly_and_get_function_pointer;
+    }
     void ScriptingEngine::Init()
     {
-        InitMono();
+        //InitMono();
+        InitDotNetHost();
     }
 
     void ScriptingEngine::Shutdown()
@@ -126,6 +181,7 @@ namespace BeeEngine
     void ScriptingEngine::CreateAppDomain()
     {
         s_Data.AppDomain = mono_domain_create_appdomain((char *)"BeeEngineAppDomain", nullptr);
+        BeeEnsures(s_Data.AppDomain);
         mono_domain_set(s_Data.AppDomain, true);
     }
 
@@ -139,6 +195,7 @@ namespace BeeEngine
 
     void ScriptingEngine::MonoShutdown()
     {
+        MUtils::RegisterThread();
         mono_domain_set(mono_get_root_domain(), false);
         mono_domain_unload(s_Data.AppDomain);
         mono_jit_cleanup(s_Data.RootDomain);
@@ -267,6 +324,7 @@ namespace BeeEngine
         {
             return;
         }
+        MUtils::RegisterThread();
         auto script = CreateRef<GameScript>(*pClass, entity, GetScriptingLocale());
         s_Data.EntityObjects[uuid] = script;
         //
@@ -361,9 +419,25 @@ namespace BeeEngine
     {
         return s_Data.GameScripts;
     }
-
+    void MUtils::RegisterThread()
+    {
+        //thread_local static bool registered = false;
+        //if(registered) [[likely]]
+        //    return;
+        mono_thread_attach(mono_get_root_domain());
+        if(ScriptingEngine::s_Data.AppDomain)
+        {
+            if (!mono_domain_get())
+            {
+                mono_domain_set(ScriptingEngine::s_Data.AppDomain, true);
+            }
+            mono_thread_attach(mono_domain_get());
+        }
+        //registered = true;
+    }
     void ScriptingEngine::ReloadAssemblies()
     {
+        MUtils::RegisterThread();
         s_Data.GameScripts.clear();
         s_Data.EntityObjects.clear();
         s_Data.EditableFieldsDefaults.clear();
@@ -378,10 +452,24 @@ namespace BeeEngine
         s_Data.TotalTimeField = nullptr;
         s_Data.DeltaTimeField = nullptr;
 
-        mono_domain_set(mono_get_root_domain(), false);
-        mono_domain_unload(s_Data.AppDomain);
+        mono_domain_set(s_Data.RootDomain, true);
 
+        MonoObject *exc = nullptr;
+        //mono_gc_collect(mono_gc_max_generation());
+        //mono_domain_finalize(s_Data.AppDomain, 1000);
+        //mono_thread_attach(s_Data.AppDomain);
+#if 0
+        mono_domain_try_unload(mono_domain_get(), &exc);
+        if (exc)
+        {
+            MonoString *msg = mono_object_to_string(reinterpret_cast<MonoObject *>(exc), nullptr);
+            char *message = mono_string_to_utf8(msg);
+            BeeCoreError("Exception while unloading app domain: {}", message);
+            mono_free(message);
+        }
         CreateAppDomain();
+#endif
+        mono_domain_set(s_Data.AppDomain, true);
 
         LoadCoreAssembly(s_Data.CoreAssemblyPath);
         LoadGameAssembly(s_Data.GameAssemblyPath);
@@ -482,6 +570,29 @@ namespace BeeEngine
     void ScriptingEngine::SetViewportSize(float width, float height)
     {
         s_Data.ViewportSize = {width, height};
+    }
+
+    void ScriptingEngine::InitDotNetHost()
+    {
+        Path rootPath = std::filesystem::current_path();
+        //
+        // STEP 1: Load HostFxr and get exported hosting functions
+        //
+        if(!init_hostfxr(nullptr))
+        {
+            BeeCoreError("Unable to initialize .NET Host!");
+        }
+        //
+        // STEP 2: Initialize and start the .NET Core runtime
+        //
+        const auto configPath = rootPath / "DotNetLib.runtimeconfig.json";
+        load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer = get_dotnet_load_assembly(configPath, s_Data);
+        if(!load_assembly_and_get_function_pointer)
+        {
+            BeeCoreError("Unable to load .NET Core runtime!");
+        }
+
+
     }
 
     void ScriptingEngine::SetLocaleDomain(Locale::Domain &domain)

@@ -21,12 +21,6 @@ target_include_directories(BeeEngineEditor
         PUBLIC src
         )
 target_link_libraries(BeeEngineEditor PUBLIC BeeEngine::WithScripting)
-#if(PROJECT_IS_TOP_LEVEL)
-        set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Engine/vendor/mono/libs/)
-        configureMono(${MONO_DIRECTORY})
-        #enable_mono(BeeEngineEditor)
-#endif ()
-copy_mono_dlls(BeeEngineEditor)
 add_compile_definitions(BEE_ENABLE_CHECKS)
 add_compile_definitions($<$<CONFIG:Debug>:BEE_ENABLE_PROFILING>)
 add_compile_definitions($<$<CONFIG:Release>:BEE_ENABLE_PROFILING>)
@@ -34,13 +28,6 @@ add_compile_definitions($<$<CONFIG:Release>:BEE_ENABLE_PROFILING>)
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 #file(COPY ../Engine/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/EngineInclude) #this is for NativeScripting
 #file(COPY libs DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) #this is for NativeScripting
-if(APPLE)
-        file(COPY ../Engine/vendor/mono/dotnet-libs/MacOS/4.5 DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/mono/lib/mono)
-elseif (WIN32)
-        file(COPY ../Engine/vendor/mono/dotnet-libs/4.5 DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/mono/lib/mono)
-else ()
-        message(FATAL_ERROR "Unsupported platform")
-endif ()
 
 #file(COPY ../Engine/vendor/mono/dotnet-libs/4.5 DESTINATION ../lib/mono)
 configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/BeeEngine.Core.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.Core.dll COPYONLY)

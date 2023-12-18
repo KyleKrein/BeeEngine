@@ -36,7 +36,7 @@ namespace BeeEngine
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
 #else
         auto nativeInfo = WindowHandler::GetInstance()->GetNativeInfo();
-        ofn.hwndOwner = (HWND)nativeInfo.window;
+        ofn.hwndOwner = nullptr;//(HWND)nativeInfo.window; //TODO make this async and uncomment
 #endif
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
@@ -73,7 +73,7 @@ namespace BeeEngine
         ofn.hwndOwner = glfwGetWin32Window(glfwGetCurrentContext());
 #else
         auto nativeInfo = WindowHandler::GetInstance()->GetNativeInfo();
-        ofn.hwndOwner = (HWND)nativeInfo.window;
+        ofn.hwndOwner = nullptr;//(HWND)nativeInfo.window; //TODO make this async and uncomment
 #endif
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
