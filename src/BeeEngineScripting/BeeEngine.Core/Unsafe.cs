@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BeeEngine.Internal
 {
-    public static class Unsafe
+    public static class UnsafeMethods
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe ref T AsRef<T>(void* source) where T: unmanaged

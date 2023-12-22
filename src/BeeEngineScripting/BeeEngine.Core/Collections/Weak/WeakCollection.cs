@@ -63,6 +63,8 @@ namespace BeeEngine.Collections.Weak
                 for (var index = 0; index < this.Count; index++)
                 {
                     var element = this[index];
+                    if(element is null)
+                        continue;
                     array[arrayIndex++] = element;
                 }
             }
@@ -74,7 +76,7 @@ namespace BeeEngine.Collections.Weak
             {
                 for (int i = 0; i < m_List.Count; i++)
                 {
-                    if (!m_List[i].TryGetTarget(out T target))
+                    if (!m_List[i].TryGetTarget(out T? target))
                         continue;
                     if (Equals(target, item))
                     {
@@ -101,7 +103,7 @@ namespace BeeEngine.Collections.Weak
             {
                 for (int i = m_List.Count - 1; i >= 0; i--)
                 {
-                    if (!m_List[i].TryGetTarget(out T element))
+                    if (!m_List[i].TryGetTarget(out T? element))
                     {
                         m_List.RemoveAt(i);
                         continue;
@@ -116,13 +118,13 @@ namespace BeeEngine.Collections.Weak
             return GetEnumerator();
         }
 
-        public T this[int index]
+        public T? this[int index]
         {
             get
             {
                 lock (m_Locker)
                 {
-                    m_List[index].TryGetTarget(out T result);
+                    m_List[index].TryGetTarget(out T? result);
                     return result;
                 }
             }
@@ -130,7 +132,8 @@ namespace BeeEngine.Collections.Weak
             {
                 lock (m_Locker)
                 {
-                    m_List[index].SetTarget(value);
+                    DebugLog.AssertAndThrow(value is not null, "Value is null");
+                    m_List[index].SetTarget(value!);
                 }
             }
         }

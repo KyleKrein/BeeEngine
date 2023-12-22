@@ -83,7 +83,7 @@ namespace BeeEngine
             }
         }
 
-        public unsafe Texture2D Texture
+        public unsafe Texture2D? Texture
         {
             get
             {
@@ -337,8 +337,8 @@ namespace BeeEngine
             set
             {
                 CheckIfDestroyed();
-                Log.AssertAndThrow(value != null, "Font in TextRendererComponent can't be null");
-                Log.AssertAndThrow(value.IsValid(), "Font asset is invalid");
+                Log.AssertAndThrow(value is not null, "Font in TextRendererComponent can't be null");
+                Log.AssertAndThrow(value!.IsValid(), "Font asset is invalid");
                 *m_AssetHandle = value.m_Handle;
             }
         }

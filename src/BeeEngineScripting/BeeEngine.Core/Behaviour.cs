@@ -20,7 +20,7 @@ namespace BeeEngine
             internal set => m_Entity = value;
         }
 
-        public Entity FindEntityByName(string name)
+        public Entity? FindEntityByName(string name)
         {
             Log.Debug("Searching for entity {0}", name);
             ulong entityID = InternalCalls.Entity_FindEntityByName(name);
@@ -54,7 +54,7 @@ namespace BeeEngine
             return LifeTimeManager.GetEntity(newEntityId);
         }
 
-        protected Entity Instantiate(Prefab prefab, Entity parent = null)
+        protected Entity Instantiate(Prefab prefab, Entity? parent = null)
         {
             if (prefab == null)
                 throw new ArgumentNullException(nameof(prefab));

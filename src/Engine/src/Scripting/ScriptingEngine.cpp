@@ -59,7 +59,6 @@ namespace BeeEngine
         MClass* FontClass = nullptr;
         MClass* PrefabClass = nullptr;
 
-        MonoVTable* TimeVTable = nullptr;
         MonoClassField * DeltaTimeField = nullptr;
         MonoClassField* TotalTimeField = nullptr;
 
@@ -147,7 +146,7 @@ namespace BeeEngine
 
     void ScriptingEngine::InitMono()
     {
-        mono_set_assemblies_path("mono/lib");
+        /*mono_set_assemblies_path("mono/lib");
         if(s_Data.EnableDebugging)
         {
             const char* argv[2] = {
@@ -175,14 +174,16 @@ namespace BeeEngine
 
         CreateAppDomain();
 
-        BeeCoreInfo("Mono JIT initialized successfully!");
+        BeeCoreInfo("Mono JIT initialized successfully!");*/
     }
 
     void ScriptingEngine::CreateAppDomain()
     {
+        /*
         s_Data.AppDomain = mono_domain_create_appdomain((char *)"BeeEngineAppDomain", nullptr);
         BeeEnsures(s_Data.AppDomain);
         mono_domain_set(s_Data.AppDomain, true);
+        */
     }
 
     MAssembly& ScriptingEngine::LoadAssembly(const Path &path)
@@ -195,6 +196,7 @@ namespace BeeEngine
 
     void ScriptingEngine::MonoShutdown()
     {
+        /*
         MUtils::RegisterThread();
         mono_domain_set(mono_get_root_domain(), false);
         mono_domain_unload(s_Data.AppDomain);
@@ -203,6 +205,7 @@ namespace BeeEngine
         s_Data.RootDomain = nullptr;
         s_Data.AppDomain = nullptr;
         BeeCoreInfo("Mono JIT shutdown successfully!");
+        */
     }
     bool ScriptingEngine::IsGameScript(const MClass& klass)
     {
@@ -281,7 +284,7 @@ namespace BeeEngine
             }
             if(mClass->GetName() == "Time")
             {
-                s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
+                //s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
                 s_Data.DeltaTimeField = mClass->GetField("m_DeltaTime");
                 s_Data.TotalTimeField = mClass->GetField("m_TotalTime");
                 continue;
@@ -289,7 +292,7 @@ namespace BeeEngine
 
             if(s_Data.EntityBaseClass && s_Data.AssetHandleField &&
             s_Data.Texture2DClass && s_Data.FontClass && s_Data.PrefabClass &&
-            s_Data.TotalTimeField && s_Data.DeltaTimeField && s_Data.TimeVTable)
+            s_Data.TotalTimeField && s_Data.DeltaTimeField /*&& s_Data.TimeVTable*/)
             {
                 break;
             }
@@ -591,8 +594,6 @@ namespace BeeEngine
         {
             BeeCoreError("Unable to load .NET Core runtime!");
         }
-
-
     }
 
     void ScriptingEngine::SetLocaleDomain(Locale::Domain &domain)

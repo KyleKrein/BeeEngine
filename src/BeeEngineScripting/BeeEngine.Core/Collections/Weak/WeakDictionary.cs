@@ -286,7 +286,7 @@ namespace BeeEngine.Collections.Weak
     {
         public static ObjectReferenceEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
 
-        public bool Equals(T x, T y)
+        public bool Equals(T? x, T? y)
         {
             return ReferenceEquals(x, y);
         }

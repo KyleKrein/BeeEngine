@@ -6,7 +6,7 @@ namespace BeeEngine
 {
     public static class Localization
     {
-        private static string s_CachedLocale = null;
+        private static string? s_CachedLocale = null;
         private static Dictionary<string, string> s_CachedStaticKeys = new Dictionary<string, string>();
         private static Dictionary<int, string> s_CachedDynamicKeys = new Dictionary<int, string>();
         public static string Locale

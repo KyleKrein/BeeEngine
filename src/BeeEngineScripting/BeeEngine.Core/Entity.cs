@@ -11,7 +11,7 @@ namespace BeeEngine
     public sealed class Entity
     {
         internal readonly ulong ID;
-        private Behaviour m_Behaviour = null;
+        private Behaviour? m_Behaviour = null;
 
         private bool m_Destroyed = false;
 
@@ -48,11 +48,11 @@ namespace BeeEngine
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetBehaviour<T>() where T : Behaviour
+        public T? GetBehaviour<T>() where T : Behaviour
         {
             ThrowIfDestroyed();
             if (HasBehaviour<T>())
-                return (T)m_Behaviour;
+                return (T?)m_Behaviour;
             return null;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,14 +73,14 @@ namespace BeeEngine
             ThrowIfDestroyed();
             Type type = typeof(T);
             if (HasComponent(type))
-                return GetComponent<T>();
+                return GetComponent<T>()!;
             void* componentPtr = InternalCalls.Entity_CreateComponent(ID, type);
             T component = new T { EntityID = ID, ComponentHandle = componentPtr };
             m_ComponentCache.Add(type, component);
             return component;
         }
 
-        public unsafe T GetComponent<T>() where T : Component, new()
+        public unsafe T? GetComponent<T>() where T : Component, new()
         {
             ThrowIfDestroyed();
             Type componentType = typeof(T);
@@ -95,7 +95,7 @@ namespace BeeEngine
             {
                 m_ComponentCache.TryGetValue(componentType, out var component);
                 DebugLog.AssertAndThrow(component != null, "Component {0} is null in dictionary", componentType.Name);
-                return (T)component;
+                return (T?)component;
             }
             void* componentPtr = InternalCalls.Entity_GetComponent(ID, componentType);
             DebugLog.AssertAndThrow(componentPtr != (void*)0, "Component {0} is nullptr", componentType.Name);
