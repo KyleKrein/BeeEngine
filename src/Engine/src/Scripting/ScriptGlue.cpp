@@ -17,6 +17,7 @@
 
 namespace BeeEngine
 {
+    /*
     static UTF8String ConvertMonoStringToString(MonoString* str)
     {
         MonoError error {};
@@ -62,8 +63,10 @@ namespace BeeEngine
     {
         RegisterComponent<Component...>();
     }
+    */
     void ScriptGlue::Register()
     {
+        /*
         if(!s_CreateComponentFunctions.empty())
         {
             s_CreateComponentFunctions.clear();
@@ -122,8 +125,9 @@ namespace BeeEngine
             BEE_INTERNAL_CALL(Locale_TranslateStatic);
             BEE_INTERNAL_CALL(Locale_TranslateDynamic);
         }
+        */
     }
-
+/*
     void ScriptGlue::Log_Warn(MonoString *message)
     {
         auto msg = ConvertMonoStringToString(message);
@@ -296,16 +300,6 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_Destroy(uint64_t id)
     {
-        /*DeletionQueue::Frame().PushFunction([id]()
-        {
-            auto* scene = ScriptingEngine::GetSceneContext();
-            if(!scene)
-                return;
-            auto entity = scene->GetEntityByUUID(id);
-            if(!entity)
-                return;
-            scene->DestroyEntity(entity);
-        });*/
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByUUID(id);
         scene->DestroyEntity(entity);
@@ -587,4 +581,5 @@ namespace BeeEngine
         auto translated = ScriptingEngine::GetLocaleDomain().TranslateRuntime(key.c_str(), args);
         return mono_string_new(mono_domain_get(), translated.c_str());
     }
+*/
 }

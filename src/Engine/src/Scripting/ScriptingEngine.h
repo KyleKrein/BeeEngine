@@ -70,7 +70,6 @@ namespace BeeEngine
 
     private:
         static void InitDotNetHost();
-        static bool init_hostfxr(const Path&);
         friend void MUtils::RegisterThread();
         static class MAssembly& LoadAssembly(const Path& path);
         static void InitMono();

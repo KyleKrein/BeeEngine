@@ -17,32 +17,19 @@
 #include "MUtils.h"
 #include "AllocatorStatistics.h"
 #include "MTypes.h"
+#include "NativeToManaged.h"
 #include "FileSystem/File.h"
-#include <dotnethost/nethost.h>
-#include <dotnethost/coreclr_delegates.h>
-#include <dotnethost/hostfxr.h>
-
-#include "Utils/DynamicLibrary.h"
 
 namespace BeeEngine
 {
-    typedef void(__stdcall *AddEntityScript)(uint64_t id, MonoObject* behaviour, MonoException** exception);
-    typedef void(__stdcall *EntityWasRemoved)(uint64_t id, MonoException ** exception);
+    //typedef void(__stdcall *AddEntityScript)(uint64_t id, MonoObject* behaviour, MonoException** exception);
+    //typedef void(__stdcall *EntityWasRemoved)(uint64_t id, MonoException ** exception);
     struct ScriptingEngineData
     {
-        DynamicLibrary HostFxrLibrary;
-        hostfxr_initialize_for_dotnet_command_line_fn init_for_cmd_line_fptr = nullptr;
-        hostfxr_initialize_for_runtime_config_fn init_for_config_fptr = nullptr;
-        hostfxr_get_runtime_delegate_fn get_delegate_fptr = nullptr;
-        hostfxr_run_app_fn run_app_fptr = nullptr;
-        hostfxr_close_fn close_fptr = nullptr;
-
-        AddEntityScript AddEntityScriptMethod = nullptr;
-        EntityWasRemoved EntityWasRemovedMethod = nullptr;
+        //AddEntityScript AddEntityScriptMethod = nullptr;
+        //EntityWasRemoved EntityWasRemovedMethod = nullptr;
 
         void(*EndSceneMethod)() = nullptr;
-
-        MonoClass* ulongClass = nullptr;
 
         bool EnableDebugging = false;
 
@@ -59,8 +46,10 @@ namespace BeeEngine
         MClass* FontClass = nullptr;
         MClass* PrefabClass = nullptr;
 
-        MonoClassField * DeltaTimeField = nullptr;
-        MonoClassField* TotalTimeField = nullptr;
+        //MonoClassField * DeltaTimeField = nullptr;
+        //MonoClassField* TotalTimeField = nullptr;
+
+        ManagedAssemblyContextID AppDomain = 0;
 
         Path GameAssemblyPath = "";
         Path CoreAssemblyPath = "";
@@ -72,57 +61,7 @@ namespace BeeEngine
         glm::vec2 ViewportSize = {-1, -1};
     };
     ScriptingEngineData ScriptingEngine::s_Data = {};
-    // Using the nethost library, discover the location of hostfxr and get exports
-    bool ScriptingEngine::init_hostfxr(const Path& assembly_path)
-    {
-        std::filesystem::path path;
-        path = assembly_path.ToStdPath();
-        get_hostfxr_parameters params = {sizeof(get_hostfxr_parameters), path.c_str(), nullptr};
-        // Pre-allocate a large buffer for the path to hostfxr
-        char_t buffer[256];
-        size_t buffer_size = sizeof(buffer) / sizeof(char_t);
-        const int rc = get_hostfxr_path(buffer, &buffer_size, &params);
-        if (rc != 0)
-            return false;
 
-        // Load hostfxr and get desired exports
-        BeeEngine::DynamicLibrary lib(std::filesystem::path{buffer});
-        s_Data.init_for_cmd_line_fptr = (hostfxr_initialize_for_dotnet_command_line_fn)lib.GetFunction("hostfxr_initialize_for_dotnet_command_line");
-        s_Data.init_for_config_fptr = (hostfxr_initialize_for_runtime_config_fn)lib.GetFunction("hostfxr_initialize_for_runtime_config");
-        s_Data.get_delegate_fptr = (hostfxr_get_runtime_delegate_fn)lib.GetFunction("hostfxr_get_runtime_delegate");
-        s_Data.run_app_fptr = (hostfxr_run_app_fn)lib.GetFunction("hostfxr_run_app");
-        s_Data.close_fptr = (hostfxr_close_fn)lib.GetFunction("hostfxr_close");
-
-        return (s_Data.init_for_config_fptr && s_Data.get_delegate_fptr && s_Data.close_fptr);
-    }
-    // Load and initialize .NET Core and get desired function pointer for scenario
-    load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const BeeEngine::Path& config_path, ScriptingEngineData& data)
-    {
-        // Load .NET Core
-        auto path = config_path.ToStdPath();
-        void *load_assembly_and_get_function_pointer = nullptr;
-        hostfxr_handle cxt = nullptr;
-        int rc = data.init_for_config_fptr(path.c_str(), nullptr, &cxt);
-        if (rc != 0 || cxt == nullptr)
-        {
-            BeeCoreError("Init failed: {0}", rc);
-            //std::cerr << "Init failed: " << std::hex << std::showbase << rc << std::endl;
-            data.close_fptr(cxt);
-            return nullptr;
-        }
-
-        // Get the load assembly function pointer
-        rc = data.get_delegate_fptr(
-            cxt,
-            hdt_load_assembly_and_get_function_pointer,
-            &load_assembly_and_get_function_pointer);
-        if (rc != 0 || load_assembly_and_get_function_pointer == nullptr)
-            BeeCoreError("Get delegate failed: {0}", rc);
-            //std::cerr << "Get delegate failed: " << std::hex << std::showbase << rc << std::endl;
-
-        data.close_fptr(cxt);
-        return (load_assembly_and_get_function_pointer_fn)load_assembly_and_get_function_pointer;
-    }
     void ScriptingEngine::Init()
     {
         //InitMono();
@@ -137,9 +76,8 @@ namespace BeeEngine
         s_Data.Assemblies.clear();
         s_Data.CurrentScene = nullptr;
         s_Data.EntityBaseClass = nullptr;
-        s_Data.AddEntityScriptMethod = nullptr;
-        s_Data.EntityWasRemovedMethod = nullptr;
-        s_Data.ulongClass = nullptr;
+        //s_Data.AddEntityScriptMethod = nullptr;
+        //s_Data.EntityWasRemovedMethod = nullptr;
 
         MonoShutdown();
     }
@@ -179,18 +117,15 @@ namespace BeeEngine
 
     void ScriptingEngine::CreateAppDomain()
     {
-        /*
-        s_Data.AppDomain = mono_domain_create_appdomain((char *)"BeeEngineAppDomain", nullptr);
+        s_Data.AppDomain = NativeToManaged::CreateContext("BeeEngine", true);
         BeeEnsures(s_Data.AppDomain);
-        mono_domain_set(s_Data.AppDomain, true);
-        */
     }
 
     MAssembly& ScriptingEngine::LoadAssembly(const Path &path)
     {
         auto name = path.GetFileNameWithoutExtension().AsUTF8();
 
-        s_Data.Assemblies[name] = {path, s_Data.EnableDebugging};
+        s_Data.Assemblies[name] = {s_Data.AppDomain, path.IsAbsolute() ? path : path.GetAbsolutePath(), s_Data.EnableDebugging};
         return s_Data.Assemblies.at(name);
     }
 
@@ -285,18 +220,18 @@ namespace BeeEngine
             if(mClass->GetName() == "Time")
             {
                 //s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
-                s_Data.DeltaTimeField = mClass->GetField("m_DeltaTime");
-                s_Data.TotalTimeField = mClass->GetField("m_TotalTime");
+                /*s_Data.DeltaTimeField = mClass->GetField("m_DeltaTime");
+                s_Data.TotalTimeField = mClass->GetField("m_TotalTime");*/
                 continue;
             }
 
             if(s_Data.EntityBaseClass && s_Data.AssetHandleField &&
-            s_Data.Texture2DClass && s_Data.FontClass && s_Data.PrefabClass &&
-            s_Data.TotalTimeField && s_Data.DeltaTimeField /*&& s_Data.TimeVTable*/)
+            s_Data.Texture2DClass && s_Data.FontClass && s_Data.PrefabClass /*&&
+            s_Data.TotalTimeField && s_Data.DeltaTimeField*/ /*&& s_Data.TimeVTable*/)
             {
                 break;
             }
-        }
+        }/*
         MonoClass* lifeTimeManager = mono_class_from_name(assembly.m_MonoImage, "BeeEngine.Internal", "LifeTimeManager");
         MonoMethod* addEntityScriptMethod = mono_class_get_method_from_name(lifeTimeManager, "AddEntityScript", 2);
         MonoMethod* entityWasRemovedMethod = mono_class_get_method_from_name(lifeTimeManager, "EntityWasRemoved", 1);
@@ -305,6 +240,7 @@ namespace BeeEngine
         s_Data.EntityWasRemovedMethod = (EntityWasRemoved)mono_method_get_unmanaged_thunk(entityWasRemovedMethod);
         s_Data.EndSceneMethod = (void(*)())mono_method_get_unmanaged_thunk(endSceneMethod);
         s_Data.ulongClass = mono_class_from_name(mono_get_corlib(), "System", "UInt64");
+        */
 
     }
 
@@ -333,7 +269,7 @@ namespace BeeEngine
         //
         {
             //MonoObject *entityID = mono_value_box(s_Data.AppDomain, s_Data.ulongClass, &ulongUUID);
-            MonoException *exc = nullptr;
+            /*MonoException *exc = nullptr;
             MonoObject* instance = script->GetMObject().GetMonoObject();
             s_Data.AddEntityScriptMethod(uuid, instance, &exc);
             if(exc)
@@ -342,24 +278,24 @@ namespace BeeEngine
                 char* message = mono_string_to_utf8(msg);
                 BeeCoreError("Exception while adding script for entity {} in C#: {}", uuid, message);
                 mono_free(message);
-            }
+            }*/
         }
     }
     void ScriptingEngine::OnEntityDestroyed(UUID uuid)
     {
-        MonoException *exc = nullptr;
+        //MonoException *exc = nullptr;
         bool contains = s_Data.EntityObjects.contains(uuid);
         if(contains)
         {
             s_Data.EntityObjects.at(uuid)->InvokeOnDestroy();
         }
-        s_Data.EntityWasRemovedMethod(uuid, &exc);
-        if(exc)
+        //s_Data.EntityWasRemovedMethod(uuid, &exc);
+        //if(exc)
         {
-            MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
-            char* message = mono_string_to_utf8(msg);
-            BeeCoreError("Exception while removing entity {} from C#: {}", uuid, message);
-            mono_free(message);
+            //MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
+            //char* message = mono_string_to_utf8(msg);
+            //BeeCoreError("Exception while removing entity {} from C#: {}", uuid, message);
+            //mono_free(message);
         }
         s_Data.EntityObjects.erase(uuid);
     }
@@ -427,7 +363,7 @@ namespace BeeEngine
         //thread_local static bool registered = false;
         //if(registered) [[likely]]
         //    return;
-        mono_thread_attach(mono_get_root_domain());
+        /*mono_thread_attach(mono_get_root_domain());
         if(ScriptingEngine::s_Data.AppDomain)
         {
             if (!mono_domain_get())
@@ -435,7 +371,7 @@ namespace BeeEngine
                 mono_domain_set(ScriptingEngine::s_Data.AppDomain, true);
             }
             mono_thread_attach(mono_domain_get());
-        }
+        }*/
         //registered = true;
     }
     void ScriptingEngine::ReloadAssemblies()
@@ -451,13 +387,13 @@ namespace BeeEngine
         s_Data.Texture2DClass = nullptr;
         s_Data.FontClass = nullptr;
 
-        s_Data.TimeVTable = nullptr;
-        s_Data.TotalTimeField = nullptr;
-        s_Data.DeltaTimeField = nullptr;
+        //s_Data.TimeVTable = nullptr;
+        /*s_Data.TotalTimeField = nullptr;
+        s_Data.DeltaTimeField = nullptr;*/
 
-        mono_domain_set(s_Data.RootDomain, true);
+        //mono_domain_set(s_Data.RootDomain, true);
 
-        MonoObject *exc = nullptr;
+        //MonoObject *exc = nullptr;
         //mono_gc_collect(mono_gc_max_generation());
         //mono_domain_finalize(s_Data.AppDomain, 1000);
         //mono_thread_attach(s_Data.AppDomain);
@@ -472,7 +408,7 @@ namespace BeeEngine
         }
         CreateAppDomain();
 #endif
-        mono_domain_set(s_Data.AppDomain, true);
+        //mono_domain_set(s_Data.AppDomain, true);
 
         LoadCoreAssembly(s_Data.CoreAssemblyPath);
         LoadGameAssembly(s_Data.GameAssemblyPath);
@@ -482,7 +418,7 @@ namespace BeeEngine
 
     void ScriptingEngine::EnableDebugging()
     {
-        BeeCoreAssert(s_Data.RootDomain == nullptr, "Cannot enable debugging after the runtime has been initialized!");
+       // BeeCoreAssert(s_Data.RootDomain == nullptr, "Cannot enable debugging after the runtime has been initialized!");
         s_Data.EnableDebugging = true;
     }
 
@@ -490,9 +426,9 @@ namespace BeeEngine
     {
         auto& stats = BeeEngine::Internal::AllocatorStatistics::GetStatistics();
         stats.totalAllocatedMemory -= stats.gcHeapSize;
-        stats.gcUsedMemory.store(mono_gc_get_used_size());
-        stats.gcGenerations.store(mono_gc_max_generation());
-        stats.gcHeapSize.store(mono_gc_get_heap_size());
+        //stats.gcUsedMemory.store(mono_gc_get_used_size());
+        //stats.gcGenerations.store(mono_gc_max_generation());
+        //stats.gcHeapSize.store(mono_gc_get_heap_size());
         stats.totalAllocatedMemory += stats.gcHeapSize;
     }
 
@@ -506,43 +442,43 @@ namespace BeeEngine
         if(type == MType::Texture2D)
         {
             MObject assetObj = s_Data.Texture2DClass->Instantiate();
-            auto* assetMonoObj = assetObj.GetMonoObject();
+            //auto* assetMonoObj = assetObj.GetMonoObject();
             assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
-            obj.SetFieldValue(field, assetMonoObj);
+            //obj.SetFieldValue(field, assetMonoObj);
             return;
         }
         if(type == MType::Font)
         {
             MObject assetObj = s_Data.FontClass->Instantiate();
-            auto* assetMonoObj = assetObj.GetMonoObject();
+            //auto* assetMonoObj = assetObj.GetMonoObject();
             assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
-            obj.SetFieldValue(field, assetMonoObj);
+            //obj.SetFieldValue(field, assetMonoObj);
             return;
         }
         if(type == MType::Prefab)
         {
             MObject assetObj = s_Data.PrefabClass->Instantiate();
-            auto* assetMonoObj = assetObj.GetMonoObject();
+            //auto* assetMonoObj = assetObj.GetMonoObject();
             assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
-            obj.SetFieldValue(field, assetMonoObj);
+            //obj.SetFieldValue(field, assetMonoObj);
             return;
         }
     }
 
     void ScriptingEngine::GetAssetHandle(void* monoObject, AssetHandle &handle)
     {
-        MObject obj {(MonoObject*)monoObject};
-        obj.GetFieldValue(*s_Data.AssetHandleField, &handle);
+        //MObject obj {(MonoObject*)monoObject};
+        //obj.GetFieldValue(*s_Data.AssetHandleField, &handle);
     }
 
     void ScriptingEngine::UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime)
     {
-        if(!s_Data.DeltaTimeField)
+        //if(!s_Data.DeltaTimeField)
             return;
         double deltaTimeDouble = deltaTime.count();
         double totalTimeDouble = totalTime.count();
-        mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTimeDouble);
-        mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTimeDouble);
+        //mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTimeDouble);
+        //mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTimeDouble);
     }
     const String& ScriptingEngine::GetScriptingLocale()
     {
@@ -577,23 +513,9 @@ namespace BeeEngine
 
     void ScriptingEngine::InitDotNetHost()
     {
-        Path rootPath = std::filesystem::current_path();
-        //
-        // STEP 1: Load HostFxr and get exported hosting functions
-        //
-        if(!init_hostfxr(nullptr))
-        {
-            BeeCoreError("Unable to initialize .NET Host!");
-        }
-        //
-        // STEP 2: Initialize and start the .NET Core runtime
-        //
-        const auto configPath = rootPath / "DotNetLib.runtimeconfig.json";
-        load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer = get_dotnet_load_assembly(configPath, s_Data);
-        if(!load_assembly_and_get_function_pointer)
-        {
-            BeeCoreError("Unable to load .NET Core runtime!");
-        }
+        Path rootPath = std::filesystem::current_path() / "libs"/"BeeEngine.NativeBridge.dll";
+        NativeToManaged::Init(rootPath);
+        CreateAppDomain();
     }
 
     void ScriptingEngine::SetLocaleDomain(Locale::Domain &domain)

@@ -8,6 +8,8 @@ project(
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(BEEENGINE_DOTNET_VERSION "8.0")
+
 include(cmake/StandardProjectSettings.cmake)
 include(cmake/PackageInstaller.cmake)
 

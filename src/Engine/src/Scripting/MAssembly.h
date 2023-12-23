@@ -5,12 +5,6 @@
 #pragma once
 #include "Core/Path.h"
 #include "Core/TypeDefines.h"
-
-extern "C"
-{
-    typedef struct _MonoAssembly MonoAssembly;
-    typedef struct _MonoImage MonoImage;
-}
 namespace BeeEngine
 {
     class MAssembly
@@ -18,23 +12,22 @@ namespace BeeEngine
         friend class ScriptGlue;
         friend class ScriptingEngine;
     public:
-        MAssembly() = default;
-        MAssembly(const Path& path, bool debug);
+        MAssembly();
+        MAssembly(uint64_t contextID, const Path& path, bool debug);
         ~MAssembly();
-        MAssembly(const MAssembly&) = delete;
-        MAssembly& operator=(const MAssembly&) = delete;
+        MAssembly(const MAssembly&);
+        MAssembly& operator=(const MAssembly&);
         MAssembly(MAssembly&& other) noexcept;
         MAssembly& operator=(MAssembly&&other) noexcept;
         std::vector<Ref<class MClass>>& GetClasses();
 
     private:
-        MonoAssembly* m_MonoAssembly = nullptr;
-        MonoImage* m_MonoImage = nullptr;
         Path m_Path;
         std::vector<Ref<class MClass>> m_Classes;
+        uint64_t m_ContextID = 0;
+        uint64_t m_AssemblyID = 0;
 
         void LoadAssembly();
         void GetClassesFromAssembly();
-        void UnloadAssembly();
     };
 }

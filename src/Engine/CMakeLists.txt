@@ -102,6 +102,9 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/JobSystem/JobSchedulerAdditional.cpp
         src/JobSystem/Mutex.h
         src/FileSystem/FileSystem.h
+        src/Scripting/NativeToManaged.cpp
+        src/Scripting/NativeToManaged.h
+        src/Scripting/Runtime.cpp
 )
 
 
@@ -183,7 +186,7 @@ FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Textures/SimulateButton.png)
 FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Shaders/Standart2DFragment.glsl)
 FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Shaders/Standart2DVertex.glsl)
 
-set(SCRIPTING_SOURCE_FILES src/Scripting/ScriptingEngine.cpp src/Scripting/ScriptingEngine.h src/Scripting/MAssembly.h src/Scripting/MonoRuntime.cpp src/Scripting/MClass.h src/Scripting/ScriptGlue.cpp src/Scripting/ScriptGlue.h src/Scripting/MObject.h src/Scripting/MMethod.h src/Scripting/GameScript.h src/Scripting/MField.h src/Scripting/MTypes.h src/Scripting/MUtils.cpp src/Scripting/MUtils.h)
+set(SCRIPTING_SOURCE_FILES src/Scripting/ScriptingEngine.cpp src/Scripting/ScriptingEngine.h src/Scripting/MAssembly.h src/Scripting/MClass.h src/Scripting/ScriptGlue.cpp src/Scripting/ScriptGlue.h src/Scripting/MObject.h src/Scripting/MMethod.h src/Scripting/GameScript.h src/Scripting/MField.h src/Scripting/MTypes.h src/Scripting/MUtils.cpp src/Scripting/MUtils.h)
 list(APPEND SOURCE_FILES ${SCRIPTING_SOURCE_FILES})
 
 add_library(BeeEngine ${SOURCE_FILES})
@@ -296,6 +299,7 @@ add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
 find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)
 find_package(Boost REQUIRED COMPONENTS context)
+find_package(unofficial-nethost CONFIG REQUIRED)
 
 if(BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
@@ -353,6 +357,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC MSDFGEN
         PUBLIC ${ICU_LIBRARIES}
         PRIVATE Boost::context
+        PRIVATE unofficial::nethost::nethost
         )
 
 target_compile_definitions(BeeEngine

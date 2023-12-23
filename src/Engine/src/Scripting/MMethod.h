@@ -6,11 +6,6 @@
 
 #include "Core/TypeDefines.h"
 
-extern "C"
-{
-    typedef struct _MonoMethod MonoMethod;
-}
-
 namespace BeeEngine
 {
     class MClass;
@@ -21,11 +16,11 @@ namespace BeeEngine
         MMethod(MClass& mClass, const String& name, int paramCount);
         ~MMethod();
 
-        bool IsValid() const { return m_MonoMethod != nullptr; }
+        bool IsValid() const { return /*m_MonoMethod != nullptr;*/ false; }
 
-        operator MonoMethod*() const { return m_MonoMethod; }
+        //operator MonoMethod*() const { return m_MonoMethod; }
     private:
-        MonoMethod* m_MonoMethod = nullptr;
+        //MonoMethod* m_MonoMethod = nullptr;
         MClass* m_Class = nullptr;
         String m_Name;
         int m_ParamCount;

@@ -3,7 +3,6 @@
 //
 
 #pragma once
-#include "mono/metadata/appdomain.h"
 #include "vec3.hpp"
 #include "Core/UUID.h"
 #include "KeyCodes.h"
@@ -17,6 +16,7 @@ namespace BeeEngine
     public:
         static void Register();
     private:
+        /*
         static inline class Entity GetEntity(UUID id);
         template<typename ...Component>
         static void RegisterComponent();
@@ -62,5 +62,6 @@ namespace BeeEngine
         static void Locale_SetLocale(MonoString* locale);
         static MonoString * Locale_TranslateStatic(MonoString* key);
         static MonoString * Locale_TranslateDynamic(MonoString* key, MonoArray* args);
+*/
     };
 }

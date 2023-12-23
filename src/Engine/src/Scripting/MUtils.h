@@ -4,10 +4,6 @@
 
 #pragma once
 #include "MTypes.h"
-extern "C"
-{
-    typedef struct _MonoType MonoType;
-}
 namespace BeeEngine
 {
     class MUtils
@@ -15,7 +11,6 @@ namespace BeeEngine
     public:
         static MType ManagedNameToMType(const String& name);
         static MType StringToMType(const String& name);
-        static MType MonoTypeToMType(MonoType* monoType);
         static const char* MTypeToString(MType type);
 
         static MVisibility MonoFieldFlagsToVisibility(uint32_t flags);

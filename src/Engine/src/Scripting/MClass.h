@@ -5,12 +5,6 @@
 #pragma once
 #include "Core/TypeDefines.h"
 #include "MField.h"
-extern "C"
-{
-    typedef struct _MonoClass MonoClass;
-    typedef struct _MonoObject MonoObject;
-    typedef struct _MonoImage MonoImage;
-}
 
 namespace BeeEngine
 {
@@ -42,11 +36,11 @@ namespace BeeEngine
         bool IsDerivedFrom(MClass& other) const;
         bool IsEnum() const { return m_IsEnum; }
         bool IsValueType() const { return m_IsValueType; }
-        MClass(const String& name, const String& ns, MonoImage* image);
+        MClass(const String& name, const String& ns, uint64_t classId);
     private:
         String m_Name;
         String m_Namespace;
-        MonoClass* m_MonoClass = nullptr;
+        uint64_t m_ClassID;
         std::unordered_map<String, class MMethod> m_Methods;
         std::unordered_map<String, class MField> m_Fields;
         String m_FullName = m_Namespace + "." + m_Name;

@@ -4,31 +4,23 @@
 
 #pragma once
 
-extern "C"
-{
-    typedef struct _MonoObject MonoObject;
-}
-
 namespace BeeEngine
 {
     class MClass;
+    class MField;
 
     class MObject
     {
     public:
         MObject(MClass& object);
-        MObject(MonoObject* object);
+        //MObject(MonoObject* object);
         ~MObject();
         MClass& GetClass();
         void Invoke(class MMethod& method, void** params);
 
-        void SetFieldValue(class MField& field, void* value);
-
-        bool GetFieldValue(class MField& field, void* value);
-        String GetFieldStringValue(class MField& field);
-
-        MonoObject *GetMonoObject();
-
+        void SetFieldValue(MField& field, void* value);
+        bool GetFieldValue(MField& field, void* value);
+        String GetFieldStringValue(MField& field);
     private:
         //MonoObject* m_MonoObject = nullptr;
         uint32_t m_Handle = 0;

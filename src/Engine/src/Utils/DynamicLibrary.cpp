@@ -5,6 +5,7 @@
 #include "DynamicLibrary.h"
 #include "Core/Logging/Log.h"
 #include "Core/ResourceManager.h"
+#include "FileSystem/File.h"
 
 #if defined(WINDOWS)
     #include <Windows.h>
@@ -61,34 +62,34 @@ namespace BeeEngine
     void DynamicLibrary::Reload()
     {
         Unload();
-        BeeCoreTrace("Loading library {0}", m_Path.string());
-        if(!std::filesystem::exists(m_Path))
+        BeeCoreTrace("Loading library {0}", m_Path);
+        if(!File::Exists(m_Path))
         {
-            BeeCoreError("Failed to load library {}: File doesn't exist", m_Path.string());
+            BeeCoreError("Failed to load library {}: File doesn't exist", m_Path);
             return;
         }
 #if defined(WINDOWS)
-        m_Handle = LoadLibraryA(TEXT(m_Path.string().c_str()));
+        m_Handle = LoadLibraryA(TEXT(m_Path.AsCString()));
 #elif defined(MACOS) || defined(LINUX)
         m_Handle = dlopen(m_Path.string().c_str(), RTLD_LAZY);
 #endif
         if(!m_Handle)
         {
 #if defined(WINDOWS)
-            BeeCoreError("Failed to load library {0}", m_Path.string());
+            BeeCoreError("Failed to load library {0}", m_Path);
 #elif defined(MACOS) || defined(LINUX)
             BeeCoreError("Failed to load library {0}: {1}", m_Path.string(), dlerror());
 #endif
         }
         else
-            BeeCoreTrace("Library {0} was loaded successfully", m_Path.string());
+            BeeCoreTrace("Library {0} was loaded successfully", m_Path);
     }
 
     void DynamicLibrary::Unload()
     {
         if(!m_Handle)
             return;
-        BeeCoreTrace("Unloading library {0}", m_Path.string());
+        BeeCoreTrace("Unloading library {0}", m_Path);
 #if defined(WINDOWS)
         FreeLibrary((HMODULE)m_Handle);
 #elif defined(MACOS) || defined(LINUX)

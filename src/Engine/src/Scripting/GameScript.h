@@ -6,11 +6,6 @@
 #include "MObject.h"
 #include "MMethod.h"
 
-extern "C"
-{
-    typedef struct _MonoException MonoException;
-}
-
 namespace BeeEngine
 {
     class GameScriptField
@@ -51,7 +46,7 @@ namespace BeeEngine
     class GameScript
     {
     public:
-        using OnFunction = void(*)(MonoObject* self, MonoException** exc);
+        using OnFunction = void(*)();
 
         GameScript(MClass& mClass, class Entity entity, const String& locale);
         void InvokeOnCreate();

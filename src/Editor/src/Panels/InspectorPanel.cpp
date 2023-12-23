@@ -414,9 +414,9 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            //MonoObject* monoObject;
+                            //mObject->GetFieldValue(mField, &monoObject);
+                            //ScriptingEngine::GetAssetHandle(monoObject, value);
                         }
                         else
                         {
@@ -471,9 +471,9 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            //MonoObject* monoObject;
+                            //mObject->GetFieldValue(mField, &monoObject);
+                            //ScriptingEngine::GetAssetHandle(monoObject, value);
                         }
                         else
                         {
@@ -539,9 +539,9 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            //MonoObject* monoObject;
+                            //mObject->GetFieldValue(mField, &monoObject);
+                            //ScriptingEngine::GetAssetHandle(monoObject, value);
                         }
                         else
                         {
@@ -607,9 +607,9 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            //MonoObject* monoObject;
+                            //mObject->GetFieldValue(mField, &monoObject);
+                            //ScriptingEngine::GetAssetHandle(monoObject, value);
                         }
                         else
                         {

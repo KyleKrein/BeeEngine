@@ -23,7 +23,7 @@ namespace BeeEngine
         void Reload();
         void Unload();
     private:
-        void* m_Handle;
+        void* m_Handle = nullptr;
         Path m_Path;
     };
 }

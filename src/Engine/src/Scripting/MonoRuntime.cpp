@@ -4,25 +4,15 @@
 #include "MAssembly.h"
 #include "MClass.h"
 #include "FileSystem/File.h"
-#include "mono/metadata/assembly.h"
 #include "Core/Logging/Log.h"
-#include "mono/metadata/blob.h"
-#include "mono/metadata/row-indexes.h"
-#include "mono/metadata/metadata.h"
 #include "ScriptingEngine.h"
-#include "mono/metadata/loader.h"
 #include "MObject.h"
-#include "mono/metadata/appdomain.h"
 #include "MMethod.h"
 #include "GameScript.h"
-#include <mono/metadata/object.h>
 #include "Scene/Entity.h"
 #include "MField.h"
 #include "MUtils.h"
-#include "mono/metadata/tabledefs.h"
 #include "Scene/Components.h"
-#include "mono/metadata/threads.h"
-#include "mono/metadata/mono-debug.h"
 
 
 namespace BeeEngine

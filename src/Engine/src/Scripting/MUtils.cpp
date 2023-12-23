@@ -5,15 +5,12 @@
 #include "MUtils.h"
 #include "MTypes.h"
 #include "Core/TypeDefines.h"
-#include "mono/metadata/object.h"
-#include "mono/metadata/tabledefs.h"
 #include "MField.h"
 #include "vec2.hpp"
 #include "vec3.hpp"
 #include "vec4.hpp"
 #include "Core/Color4.h"
 #include "Core/AssetManagement/Asset.h"
-#include "mono/metadata/threads.h"
 
 namespace BeeEngine
 {
@@ -100,7 +97,7 @@ namespace BeeEngine
         return MType::None;
     }
 
-    MType MUtils::MonoTypeToMType(MonoType *monoType)
+    /*MType MUtils::MonoTypeToMType(MonoType *monoType)
     {
         char* typeName = mono_type_get_name(monoType);
         MType type = ManagedNameToMType(typeName);
@@ -110,7 +107,7 @@ namespace BeeEngine
         }
         mono_free(typeName);
         return type;
-    }
+    }*/
 
     const char *MUtils::MTypeToString(MType type)
     {
@@ -184,7 +181,7 @@ namespace BeeEngine
 
     MVisibility MUtils::MonoFieldFlagsToVisibility(uint32_t flags)
     {
-        if(flags & FIELD_ATTRIBUTE_PRIVATE)
+        /*if(flags & FIELD_ATTRIBUTE_PRIVATE)
             return MVisibility::Private;
         if(flags & FIELD_ATTRIBUTE_PUBLIC)
             return MVisibility::Public;
@@ -195,7 +192,7 @@ namespace BeeEngine
         if(flags & FIELD_ATTRIBUTE_FAM_AND_ASSEM)
             return MVisibility::ProtectedInternal;
         if(flags & FIELD_ATTRIBUTE_FAM_OR_ASSEM)
-            return MVisibility::ProtectedInternal;
+            return MVisibility::ProtectedInternal;*/
         return MVisibility::Private;
     }
 
@@ -210,7 +207,7 @@ namespace BeeEngine
 
     MVisibility MUtils::MonoMethodFlagsToVisibility(uint32_t flags)
     {
-        if(flags & METHOD_ATTRIBUTE_PRIVATE)
+        /*if(flags & METHOD_ATTRIBUTE_PRIVATE)
             return MVisibility::Private;
         if(flags & METHOD_ATTRIBUTE_PUBLIC)
             return MVisibility::Public;
@@ -221,7 +218,7 @@ namespace BeeEngine
         if(flags & METHOD_ATTRIBUTE_FAM_AND_ASSEM)
             return MVisibility::ProtectedInternal;
         if(flags & METHOD_ATTRIBUTE_FAM_OR_ASSEM)
-            return MVisibility::ProtectedInternal;
+            return MVisibility::ProtectedInternal;*/
         return MVisibility::Private;
     }
 
@@ -252,17 +249,17 @@ namespace BeeEngine
             case MType::Double:
                 return sizeof (double);
             case MType::String:
-                return sizeof (MonoString*);
+                return sizeof (uint64_t);
             case MType::Ptr:
                 return sizeof (void*);
             case MType::Dictionary:
-                return sizeof (MonoObject*);
+                return sizeof (uint64_t);
             case MType::Array:
-                return sizeof (MonoArray*);
+                return sizeof (uint64_t);
             case MType::List:
-                return sizeof (MonoObject*);
+                return sizeof (uint64_t);
             case MType::Object:
-                return sizeof (MonoObject*);
+                return sizeof (uint64_t);
             case MType::Vector2:
                 return sizeof (glm::vec2);
             case MType::Vector3:
@@ -272,7 +269,7 @@ namespace BeeEngine
             case MType::Color:
                 return sizeof (Color4);
             case MType::Entity:
-                return sizeof (MonoObject*);
+                return sizeof (uint64_t);
             case MType::Asset:
             case MType::Texture2D:
             case MType::Font:
