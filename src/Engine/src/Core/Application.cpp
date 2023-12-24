@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wunused-parameter"
 namespace BeeEngine{
     Application* Application::s_Instance = nullptr;
+    std::thread::id Application::s_MainThreadID = {};
     void Application::Run()
     {
         m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight(), m_Window->GetWidthInPixels(), m_Window->GetHeightInPixels()));
@@ -60,6 +61,7 @@ namespace BeeEngine{
         BEE_PROFILE_FUNCTION();
         BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");
         s_Instance = this;
+        s_MainThreadID = std::this_thread::get_id();
         auto appProperties = properties;
         CheckRendererAPIForCompatibility(appProperties);
 

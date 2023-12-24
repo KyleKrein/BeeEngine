@@ -17,9 +17,12 @@ namespace BeeEngine
 {
     namespace Jobs
     {
+        using ID = uint32_t;
         namespace this_job
         {
             inline void yield();
+            //inline Jobs::ID GetID();
+            inline bool IsInJob();
         };
 
         class Counter
@@ -57,6 +60,7 @@ namespace BeeEngine
     }
     class Job final
     {
+        friend bool BeeEngine::Jobs::this_job::IsInJob();
     public:
         //Data for job
         using Func = void(*)(void*);
@@ -137,10 +141,17 @@ namespace BeeEngine
         class JobScheduler
         {
             friend void BeeEngine::Jobs::this_job::yield();
+            friend bool BeeEngine::Jobs::this_job::IsInJob();
             struct WaitingContext
             {
                 Ref<Internal::Fiber> fiber;
                 Jobs::Counter* counter;
+                WaitingContext(Ref<Internal::Fiber>&& fiber, Jobs::Counter* counter)
+                        : fiber(std::move(fiber)), counter(counter)
+                {}
+                WaitingContext(const Ref<Internal::Fiber>& fiber, Jobs::Counter* counter)
+                        : fiber(fiber), counter(counter)
+                {}
             };
         public:
             JobScheduler(uint32_t numberOfThreads = Hardware::GetNumberOfCores())
@@ -275,5 +286,9 @@ namespace BeeEngine
             Job::s_Instance->m_WaitingJobs.emplace_back(std::move(ptr), counter);
         }
         ref->GetContext() = std::move(ref->GetContext().resume());
+    }
+    bool Jobs::this_job::IsInJob()
+    {
+        return Job::s_Instance->GetCurrentFiber() != nullptr;
     }
 } // BeeEngine

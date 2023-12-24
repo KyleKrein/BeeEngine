@@ -39,7 +39,7 @@ namespace BeeEngine
     }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
-    static int Main(int argc, char *argv[])
+    int Main(int argc, char *argv[])
     {
         g_Restart = true;
         while (g_Restart)

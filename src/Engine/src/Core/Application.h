@@ -55,6 +55,11 @@ namespace BeeEngine{
             return *s_Instance;
         }
 
+        static bool IsMainThread()
+        {
+            return std::this_thread::get_id() == s_MainThreadID;
+        }
+
         static void SubmitToMainThread(const std::function<void()>& func)
         {
             s_Instance->SubmitToMainThread_Impl(func);
@@ -140,6 +145,7 @@ namespace BeeEngine{
         Scope<WindowHandler> m_Window;
         LayerStack m_Layers;
         EventQueue m_EventQueue;
+        static std::thread::id s_MainThreadID;
 
         InternalAssetManager m_AssetManager;
     };

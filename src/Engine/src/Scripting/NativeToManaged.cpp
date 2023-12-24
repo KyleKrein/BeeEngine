@@ -34,6 +34,9 @@ namespace BeeEngine
 
     struct NativeToManaged::NativeToManagedData
     {
+        NativeToManagedData(Path pathToNativeBridgeDll)
+            :HostFxrLibrary(pathToNativeBridgeDll)
+        {}
         DynamicLibrary HostFxrLibrary;
         hostfxr_initialize_for_dotnet_command_line_fn init_for_cmd_line_fptr = nullptr;
         hostfxr_initialize_for_runtime_config_fn init_for_config_fptr = nullptr;
@@ -66,7 +69,7 @@ namespace BeeEngine
             return false;
 
         // Load hostfxr and get desired exports
-        s_Data = new NativeToManagedData({std::filesystem::path{buffer}});
+        s_Data = new NativeToManagedData(std::filesystem::path{buffer});
         auto& lib = s_Data->HostFxrLibrary;
         s_Data->init_for_cmd_line_fptr = (hostfxr_initialize_for_dotnet_command_line_fn)lib.GetFunction("hostfxr_initialize_for_dotnet_command_line");
         s_Data->init_for_config_fptr = (hostfxr_initialize_for_runtime_config_fn)lib.GetFunction("hostfxr_initialize_for_runtime_config");

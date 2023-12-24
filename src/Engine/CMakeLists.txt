@@ -285,7 +285,11 @@ function(add_sdl_subdirectory)
     file(WRITE vendor/sdl/CMakeLists.txt "${ORIGINAL_SDL_CMAKELISTS}")
 endfunction()
 add_sdl_subdirectory()
-add_subdirectory(vendor/spdlog)
+CPMAddPackage(
+        NAME spdlog
+        GITHUB_REPOSITORY gabime/spdlog
+        GIT_TAG ac55e60488032b9acde8940a5de099541c4515da
+)
 add_subdirectory(vendor/glm)
 add_subdirectory(vendor/ImGui) # Must be after DesktopPlatformsOnlyPostTarget
 add_subdirectory(vendor/gsl)

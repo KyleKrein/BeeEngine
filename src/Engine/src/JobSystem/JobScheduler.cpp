@@ -81,6 +81,7 @@ namespace BeeEngine
     {
         s_Instance = new Internal::JobScheduler(numberOfThreads);
     }
+
     void Job::Schedule(Job &job)
     {
         s_Instance->Schedule(&job);

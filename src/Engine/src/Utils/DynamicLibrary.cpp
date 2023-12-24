@@ -69,16 +69,16 @@ namespace BeeEngine
             return;
         }
 #if defined(WINDOWS)
-        m_Handle = LoadLibraryA(TEXT(m_Path.AsCString()));
+        m_Handle = LoadLibraryW(TEXT(m_Path.ToStdPath().c_str()));
 #elif defined(MACOS) || defined(LINUX)
-        m_Handle = dlopen(m_Path.string().c_str(), RTLD_LAZY);
+        m_Handle = dlopen(m_Path.AsCString(), RTLD_LAZY);
 #endif
         if(!m_Handle)
         {
 #if defined(WINDOWS)
             BeeCoreError("Failed to load library {0}", m_Path);
 #elif defined(MACOS) || defined(LINUX)
-            BeeCoreError("Failed to load library {0}: {1}", m_Path.string(), dlerror());
+            BeeCoreError("Failed to load library {0}: {1}", m_Path.AsCString(), dlerror());
 #endif
         }
         else
