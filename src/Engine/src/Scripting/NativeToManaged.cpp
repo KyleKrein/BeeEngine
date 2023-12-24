@@ -5,6 +5,8 @@
 #include "NativeToManaged.h"
 
 #include "Utils/DynamicLibrary.h"
+#include "Core/String.h"
+#include "MTypes.h"
 
 #include <nethost.h>
 #include <dotnethost/coreclr_delegates.h>
@@ -31,6 +33,10 @@ namespace BeeEngine
     using FreeIntPtrFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* ptr);
     using GetClassNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
     using GetClassNamespaceFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
+    using ClassIsValueTypeFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
+    using ClassIsEnumFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
+    using ClassIsDerivedFromFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextIdDerived, uint64_t assemblyIdDerived, uint64_t classIdDerived, uint64_t contextIdBase, uint64_t assemblyIdBase, uint64_t classIdBase);
+    using MethodGetByNameFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, void* name, int32_t bindingFlags);
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -52,6 +58,10 @@ namespace BeeEngine
         FreeIntPtrFunction FreeIntPtr = nullptr;
         GetClassNameFunction GetClassName = nullptr;
         GetClassNamespaceFunction GetClassNamespace = nullptr;
+        ClassIsValueTypeFunction ClassIsValueType = nullptr;
+        ClassIsEnumFunction ClassIsEnum = nullptr;
+        ClassIsDerivedFromFunction ClassIsDerivedFrom = nullptr;
+        MethodGetByNameFunction MethodGetByName = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -151,6 +161,10 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ObtainDelegate(FreeIntPtr);
         ObtainDelegate(GetClassName);
         ObtainDelegate(GetClassNamespace);
+        ObtainDelegate(ClassIsValueType);
+        ObtainDelegate(ClassIsEnum);
+        ObtainDelegate(ClassIsDerivedFrom);
+        ObtainDelegate(MethodGetByName);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -187,7 +201,7 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
 #if defined(WINDOWS)
         return Internal::WStringToUTF8(static_cast<wchar_t *>(ptr));
 #else
-        return String(static_cast<char*>(ptr));
+        return ConvertUTF16ToUTF8(static_cast<char16_t*>(ptr));
 #endif
     }
 
@@ -207,5 +221,30 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         String name = GetStringFromPtr(ptr);
         s_Data->FreeIntPtr(ptr);
         return name;
+    }
+
+    bool NativeToManaged::ClassIsValueType(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID)
+    {
+        return s_Data->ClassIsValueType(contextID, assemblyId, classID) != 0;
+    }
+
+    bool NativeToManaged::ClassIsEnum(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID)
+    {
+        return s_Data->ClassIsEnum(contextID, assemblyId, classID) != 0;
+    }
+
+    bool NativeToManaged::ClassIsDerivedFrom(ManagedAssemblyContextID contextIdDerived,
+        ManagedAssemblyID assemblyIdDerived, ManagedClassID classIdDerived, ManagedAssemblyContextID contextIdBase,
+        ManagedAssemblyID assemblyIdBase, ManagedClassID classIdBase)
+    {
+        return s_Data->ClassIsDerivedFrom(contextIdDerived, assemblyIdDerived, classIdDerived, contextIdBase, assemblyIdBase, classIdBase) != 0;
+    }
+
+    ManagedMethodID NativeToManaged::MethodGetByName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID, const String& methodName, ManagedBindingFlags flags)
+    {
+        return s_Data->MethodGetByName(contextID, assemblyId, classID, const_cast<char*>(methodName.c_str()), std::to_underlying(flags));
     }
 }

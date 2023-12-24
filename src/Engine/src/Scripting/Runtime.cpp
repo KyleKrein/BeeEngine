@@ -23,10 +23,10 @@ namespace BeeEngine
         return {*this};
     }
 
-    MMethod& MClass::GetMethod(const String& name, int paramCount)
+    MMethod& MClass::GetMethod(const String& name, ManagedBindingFlags flags)
     {
         if(!m_Methods.contains(name))
-            m_Methods.emplace(name, MMethod(*this, name, paramCount));
+            m_Methods.emplace(name, MMethod(*this, name, flags));
         return m_Methods.at(name);
     }
 
@@ -35,15 +35,17 @@ namespace BeeEngine
         return m_Fields.at(name);
     }
 
-    bool MClass::IsDerivedFrom(MClass& other) const
+    bool MClass::IsDerivedFrom(const MClass& other) const
     {
-        return false;
+        return NativeToManaged::ClassIsDerivedFrom(m_ContextID, m_AssemblyID, m_ClassID, other.m_ContextID, other.m_AssemblyID, other.m_ClassID);
     }
 
-    MClass::MClass(const String& name, const String& ns, uint64_t classId)
-    : m_Name(name), m_Namespace(ns), m_ClassID(classId)
+    MClass::MClass(const String& name, const String& ns, uint64_t contextId, uint64_t assemblyId, uint64_t classId)
+    : m_Name(name), m_Namespace(ns), m_ContextID(contextId), m_AssemblyID(assemblyId),m_ClassID(classId)
     {
         m_FullName = m_Namespace + "." + m_Name;
+        m_IsValueType = NativeToManaged::ClassIsValueType(m_ContextID, m_AssemblyID, m_ClassID);
+        m_IsEnum = NativeToManaged::ClassIsEnum(m_ContextID, m_AssemblyID, m_ClassID);
     }
 
     GameScript::GameScript(MClass& mClass, Entity entity, const String& locale)
@@ -147,12 +149,14 @@ namespace BeeEngine
             String ns = NativeToManaged::GetClassNamespace(m_ContextID, m_AssemblyID, classId);
             if(ns.empty())
                 continue;
-            m_Classes.emplace_back(CreateRef<MClass>(std::move(name), std::move(ns), classId));
+            m_Classes.emplace_back(CreateRef<MClass>(std::move(name), std::move(ns), m_ContextID, m_AssemblyID, classId));
         }
     }
 
-    MMethod::MMethod(MClass& mClass, const String& name, int paramCount)
+    MMethod::MMethod(MClass& mClass, const String& name, ManagedBindingFlags flags)
+        : m_Class(&mClass), m_Name(name)
     {
+        m_MethodID = NativeToManaged::MethodGetByName(m_Class->m_ContextID, m_Class->m_AssemblyID, m_Class->m_ClassID, m_Name, flags);
     }
 
     MMethod::~MMethod()
