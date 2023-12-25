@@ -22,6 +22,14 @@ namespace BeeEngine
     using ManagedClassID = uint64_t;
     using ManagedMethodID = uint64_t;
     using ManagedFieldID = uint64_t;
+    using GCHandle = void*;
+    enum class GCHandleType : int32_t
+    {
+        Weak = 0,
+        Normal = 1,
+        Pinned = 2
+    };
+
     class NativeToManaged
     {
     public:
@@ -42,6 +50,10 @@ namespace BeeEngine
         static String FieldGetName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID);
         static String FieldGetTypeName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID);
         static MFieldFlags FieldGetFlags(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID);
+        static GCHandle ObjectNewGCHandle(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, GCHandleType type);
+        static void ObjectFreeGCHandle(GCHandle handle);
+        static void* FieldGetData(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID, GCHandle objectHandle);
+        static void FieldSetData(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID, GCHandle objectHandle, void* data);
     private:
         static NativeToManagedData* s_Data;
 

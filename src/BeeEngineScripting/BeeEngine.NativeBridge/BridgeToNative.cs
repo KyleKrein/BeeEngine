@@ -756,6 +756,94 @@ internal static class BridgeToNative
         Debug.Print("Unable to get field from Class. Message: {0}", errorMessage);
         return IntPtr.Zero;
     }
+
+    [UnmanagedCallersOnly]
+    public static IntPtr FieldGetData(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId,
+        IntPtr instanceGcHandle)
+    {
+        GCHandle? handle = null;
+        if(instanceGcHandle != IntPtr.Zero)
+        {
+            handle = GCHandle.FromIntPtr(instanceGcHandle);
+        }
+        object? obj = handle?.Target;
+        string? errorMessage = null;
+        if (s_LoadContexts.TryGetValue(contextId, out var context))
+        {
+            errorMessage = "Context ID is invalid";
+            goto error;
+        }
+        if (context.AssemblyInfo.TryGetValue(assemblyId, out var assembly))
+        {
+            errorMessage = "Assembly ID is invalid";
+            goto error;
+        }
+        if (assembly.Types.TryGetValue(classId, out var type))
+        {
+            errorMessage = "Class ID is invalid";
+            goto error;
+        }
+        if (type.Fields.TryGetValue(fieldId, out var field))
+        {
+            errorMessage = "Field ID is invalid";
+            goto error;
+        }
+        if (field.FieldType.IsValueType)
+        {
+            int size = Marshal.SizeOf(field.FieldType);
+            IntPtr result = Marshal.AllocHGlobal(size);
+            Marshal.StructureToPtr(field.GetValue(obj), result, false);
+            return result;
+        }
+        GCHandle resultHandle = GCHandle.Alloc(field.GetValue(obj), GCHandleType.Normal);
+        IntPtr resultPtr = GCHandle.ToIntPtr(resultHandle);
+        return resultPtr;
+        error:
+        Debug.Print("Unable to get field data from Class. Message: {0}", errorMessage);
+        return IntPtr.Zero;
+    }
+    [UnmanagedCallersOnly]
+    public static void FieldSetData(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId,
+        IntPtr instanceGcHandle, IntPtr valuePtr)
+    {
+        GCHandle? handle = null;
+        if (instanceGcHandle != IntPtr.Zero)
+        {
+            handle = GCHandle.FromIntPtr(instanceGcHandle);
+        }
+        object? obj = handle?.Target;
+        string? errorMessage = null;
+        if (s_LoadContexts.TryGetValue(contextId, out var context))
+        {
+            errorMessage = "Context ID is invalid";
+            goto error;
+        }
+        if (context.AssemblyInfo.TryGetValue(assemblyId, out var assembly))
+        {
+            errorMessage = "Assembly ID is invalid";
+            goto error;
+        }
+        if (assembly.Types.TryGetValue(classId, out var type))
+        {
+            errorMessage = "Class ID is invalid";
+            goto error;
+        }
+        if (type.Fields.TryGetValue(fieldId, out var field))
+        {
+            errorMessage = "Field ID is invalid";
+            goto error;
+        }
+        if(field.FieldType.IsValueType)
+        {
+            field.SetValue(obj, Marshal.PtrToStructure(valuePtr, field.FieldType));
+            return;
+        }
+        GCHandle valueHandle = GCHandle.FromIntPtr(valuePtr);
+        field.SetValue(obj, valueHandle.Target);
+        return;
+        error:
+        Debug.Print("Unable to set field data from Class. Message: {0}", errorMessage);
+    }
     [UnmanagedCallersOnly]
     public static IntPtr ObjectNew(ulong contextId, ulong assemblyId, ulong classId)
     {
@@ -827,6 +915,13 @@ internal static class BridgeToNative
     {
         GCHandle handle = GCHandle.FromIntPtr(handlePtr);
         return AddressHelper.GetAddress(handle.Target);
+    }
+
+    [UnmanagedCallersOnly]
+    public static void InvokeMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId,
+        IntPtr instanceGcHandlePtr, IntPtr args)
+    {
+        
     }
     /*[UnmanagedCallersOnly]
     public static void InvokeMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId, object[] args)

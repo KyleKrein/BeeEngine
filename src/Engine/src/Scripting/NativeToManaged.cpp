@@ -41,6 +41,10 @@ namespace BeeEngine
     using FieldGetNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId);
     using FieldGetTypeNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId);
     using FieldGetFlagsFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId);
+    using ObjectNewGCHandleFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, int32_t type);
+    using ObjectFreeGCHandleFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* handle);
+    using FieldGetDataFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle);
+    using FieldSetDataFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle, void* data);
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -70,6 +74,10 @@ namespace BeeEngine
         FieldGetNameFunction FieldGetName = nullptr;
         FieldGetTypeNameFunction FieldGetTypeName = nullptr;
         FieldGetFlagsFunction FieldGetFlags = nullptr;
+        ObjectNewGCHandleFunction ObjectNewGCHandle = nullptr;
+        ObjectFreeGCHandleFunction ObjectFreeGCHandle = nullptr;
+        FieldGetDataFunction FieldGetData = nullptr;
+        FieldSetDataFunction FieldSetData = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -78,7 +86,7 @@ namespace BeeEngine
     {
         std::filesystem::path path;
         path = assembly_path.ToStdPath();
-        get_hostfxr_parameters params = {sizeof(get_hostfxr_parameters), path.c_str(), nullptr};
+        get_hostfxr_parameters params = {sizeof(get_hostfxr_parameters), assembly_path.IsEmpty() ? nullptr : path.c_str(), nullptr};
         // Pre-allocate a large buffer for the path to hostfxr
         char_t buffer[256];
         size_t buffer_size = sizeof(buffer) / sizeof(char_t);
@@ -113,7 +121,6 @@ namespace BeeEngine
             data.close_fptr(cxt);
             return nullptr;
         }
-
         // Get the load assembly function pointer
         rc = data.get_delegate_fptr(
             cxt,
@@ -177,6 +184,10 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ObtainDelegate(FieldGetName);
         ObtainDelegate(FieldGetTypeName);
         ObtainDelegate(FieldGetFlags);
+        ObtainDelegate(ObjectNewGCHandle);
+        ObtainDelegate(ObjectFreeGCHandle);
+        ObtainDelegate(FieldGetData);
+        ObtainDelegate(FieldSetData);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -293,5 +304,28 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ManagedClassID classID, ManagedFieldID fieldID)
     {
         return static_cast<MFieldFlags>(s_Data->FieldGetFlags(contextID, assemblyId, classID, fieldID));
+    }
+
+    GCHandle NativeToManaged::ObjectNewGCHandle(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID, GCHandleType type)
+    {
+        return s_Data->ObjectNewGCHandle(contextID, assemblyId, classID, std::to_underlying(type));
+    }
+
+    void NativeToManaged::ObjectFreeGCHandle(GCHandle handle)
+    {
+        s_Data->ObjectFreeGCHandle(handle);
+    }
+
+    void* NativeToManaged::FieldGetData(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID, ManagedFieldID fieldID, GCHandle objectHandle)
+    {
+        return s_Data->FieldGetData(contextID, assemblyId, classID, fieldID, objectHandle);
+    }
+
+    void NativeToManaged::FieldSetData(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID, ManagedFieldID fieldID, GCHandle objectHandle, void* data)
+    {
+        s_Data->FieldSetData(contextID, assemblyId, classID, fieldID, objectHandle, data);
     }
 }

@@ -54,7 +54,7 @@ namespace BeeEngine
             MFieldFlags fieldFlags = NativeToManaged::FieldGetFlags(m_ContextID, m_AssemblyID, m_ClassID, field);
             bool isStatic = (fieldFlags & MFieldFlags_Static) == MFieldFlags_Static;
             MVisibility visibility = ExtractMVisibility(fieldFlags);
-            m_Fields.emplace(fieldName, MField(*this, fieldName, fieldType, visibility, isStatic));
+            m_Fields.emplace(fieldName, MField(*this, fieldName, fieldType, visibility, isStatic, field));
         }
     }
 
@@ -173,12 +173,14 @@ namespace BeeEngine
     {
     }
 
-    MObject::MObject(MClass& object)
+    MObject::MObject(const MClass& object)
     {
+        m_Handle = NativeToManaged::ObjectNewGCHandle(object.m_ContextID, object.m_AssemblyID, object.m_ClassID, GCHandleType::Normal);
     }
 
     MObject::~MObject()
     {
+        NativeToManaged::ObjectFreeGCHandle(m_Handle);
     }
 
     MClass& MObject::GetClass()
@@ -192,11 +194,14 @@ namespace BeeEngine
 
     void MObject::SetFieldValue(MField& field, void* value)
     {
+        auto& mclass = field.GetClass();
+        NativeToManaged::FieldSetData(mclass.m_ContextID, mclass.m_AssemblyID, mclass.m_ClassID, field.m_FieldID, m_Handle, value);
     }
 
     bool MObject::GetFieldValue(MField& field, void* value)
     {
-        throw std::runtime_error("Not implemented");
+        auto& mclass = field.GetClass();
+        return NativeToManaged::FieldGetData(mclass.m_ContextID, mclass.m_AssemblyID, mclass.m_ClassID, field.m_FieldID, m_Handle);
     }
 
     String MObject::GetFieldStringValue(MField& field)

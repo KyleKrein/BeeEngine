@@ -5,18 +5,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-    <PropertyGroup>
-        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputPath>..\..\..\build\Debug\src\Engine</OutputPath>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputPath>..\..\..\build\Release\src\Engine</OutputPath>
         <DefineConstants>TRACE</DefineConstants>
+        <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     </PropertyGroup>
 </Project>

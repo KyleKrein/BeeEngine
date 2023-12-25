@@ -12,7 +12,7 @@ namespace BeeEngine
     class MObject
     {
     public:
-        MObject(MClass& object);
+        MObject(const MClass& object);
         //MObject(MonoObject* object);
         ~MObject();
         MClass& GetClass();
@@ -23,7 +23,7 @@ namespace BeeEngine
         String GetFieldStringValue(MField& field);
     private:
         //MonoObject* m_MonoObject = nullptr;
-        uint32_t m_Handle = 0;
+        void* m_Handle = nullptr;
         MClass* m_Class = nullptr;
     };
 }

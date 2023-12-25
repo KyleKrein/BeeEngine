@@ -14,7 +14,7 @@ namespace BeeEngine
         friend class MClass;
         friend class MObject;
     public:
-        MField(MClass& mClass, const String& name, MType type, MVisibility visibility, bool isStatic)
+        MField(MClass& mClass, const String& name, MType type, MVisibility visibility, bool isStatic, uint64_t fieldID)
             : m_Class(&mClass), m_Name(name), m_Type(type), m_Visibility(visibility), m_IsStatic(isStatic) {}
             bool IsStatic() const { return m_IsStatic; }
             MType GetType() const { return m_Type; }
@@ -24,6 +24,7 @@ namespace BeeEngine
             //operator MonoClassField*() const { return m_MonoField; }
     private:
         MClass* m_Class = nullptr;
+        uint64_t m_FieldID = 0;
         MType m_Type;
         MVisibility m_Visibility;
         //MonoClassField* m_MonoField = nullptr;
