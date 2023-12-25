@@ -22,9 +22,15 @@ namespace BeeEngine
     {
     public:
         UTF8StringView(const UTF8String& string);
-        class iterator: public std::iterator<std::bidirectional_iterator_tag, char32_t, std::string::difference_type, const char32_t*, const char32_t&>
+        class iterator
         {
         public:
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = char32_t;
+            using difference_type = std::string::difference_type;
+            using pointer = const char32_t*;
+            using reference = const char32_t&;
+
             iterator(std::string::const_iterator it);
             iterator(const iterator& source);
             iterator& operator=(const iterator& rhs);

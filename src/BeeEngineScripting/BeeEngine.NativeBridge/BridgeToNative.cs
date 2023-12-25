@@ -3,8 +3,62 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
+using System.Text;
 
 namespace BeeEngine.Internal;
+
+public static class AddressHelper
+{
+    private static object s_MutualObject;
+    private static ObjectReinterpreter s_Reinterpreter;
+
+    static AddressHelper()
+    {
+        AddressHelper.s_MutualObject = new object();
+        AddressHelper.s_Reinterpreter = new ObjectReinterpreter();
+        AddressHelper.s_Reinterpreter.AsObject = new ObjectWrapper();
+    }
+
+    public static IntPtr GetAddress(object obj)
+    {
+        lock (AddressHelper.s_MutualObject)
+        {
+            AddressHelper.s_Reinterpreter.AsObject.Object = obj;
+            IntPtr address = AddressHelper.s_Reinterpreter.AsIntPtr.Value;
+            AddressHelper.s_Reinterpreter.AsObject.Object = null;
+            return address;
+        }
+    }
+
+    public static T GetInstance<T>(IntPtr address)
+    {
+        lock (AddressHelper.s_MutualObject)
+        {
+            AddressHelper.s_Reinterpreter.AsIntPtr.Value = address;
+            T obj = (T)AddressHelper.s_Reinterpreter.AsObject.Object;
+            AddressHelper.s_Reinterpreter.AsObject.Object = null;
+            return obj;
+        }
+    }
+
+    // I bet you thought C# was type-safe.
+    [StructLayout(LayoutKind.Explicit)]
+    private struct ObjectReinterpreter
+    {
+        [FieldOffset(0)] public ObjectWrapper AsObject;
+        [FieldOffset(0)] public IntPtrWrapper AsIntPtr;
+    }
+
+    private class ObjectWrapper
+    {
+        public object Object;
+    }
+
+    private class IntPtrWrapper
+    {
+        public IntPtr Value;
+    }
+}
 
 internal static class BridgeToNative
 {
@@ -16,16 +70,17 @@ internal static class BridgeToNative
     }
     
     private record struct MethodTypeInfo(MethodInfo Method, Delegate Delegate);
-    private record struct FieldTypeInfo(FieldInfo Field);
-    private record struct TypeInfo(Type Type, Dictionary<ulong, MethodTypeInfo> Methods, Dictionary<ulong, FieldTypeInfo> Fields);
+    //private record struct FieldTypeInfo(FieldInfo Field);
+    private record struct TypeInfo(Type Type, Dictionary<ulong, MethodTypeInfo> Methods, Dictionary<ulong, FieldInfo> Fields);
     private record struct AssemblyInfo(Assembly Assembly, Dictionary<ulong, TypeInfo> Types);
-
+    
     private record struct AssemblyLoadContextInfo(
         AssemblyLoadContext Context,
         Dictionary<ulong, AssemblyInfo> AssemblyInfo,
         bool CanBeUnloaded);
     
     private static Dictionary<ulong, AssemblyLoadContextInfo> s_LoadContexts = new();
+    
     [UnmanagedCallersOnly]
     public static ulong CreateAssemblyContext(IntPtr namePtr, int canBeUnloaded)
     {
@@ -483,7 +538,7 @@ internal static class BridgeToNative
     }
     //User MUST free the pointer returned by this method using FreeIntPtr later
     [UnmanagedCallersOnly]
-    public static unsafe ArrayInfo ClassGetFields(ulong contextId, ulong assemblyId, ulong classId)
+    public static unsafe ArrayInfo ClassGetFields(ulong contextId, ulong assemblyId, ulong classId, int bindingFlags)
     {
         string? errorMessage = null;
         if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
@@ -503,12 +558,16 @@ internal static class BridgeToNative
             errorMessage = "Class ID is invalid";
             goto error;
         }
-        if(type.Fields.Count == 0)
+        //if(type.Fields.Count == 0)
         {
-            var fields = type.Type.GetFields();
+            var fields = type.Type.GetFields((BindingFlags)bindingFlags);
             foreach (var field in fields)
             {
-                type.Fields.Add(GetNewId(), new(field));
+                if(type.Fields.ContainsValue(field))
+                {
+                    continue;
+                }
+                type.Fields.Add(GetNewId(), field);
             }
         }
         var array = type.Fields.Keys.ToArray();
@@ -519,8 +578,96 @@ internal static class BridgeToNative
         Debug.Print("Unable to load fields from Class. Message: {0}", errorMessage);
         return new(0, 0);
     }
+    //User MUST free the pointer returned by this method using FreeIntPtr later
     [UnmanagedCallersOnly]
-    public static void ClassSetField(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId, IntPtr instancePtr, IntPtr valuePtr)
+    public static IntPtr FieldGetName(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId)
+    {
+        string? errorMessage = null;
+        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+        {
+            errorMessage = "Context ID is not valid";
+            goto error;
+        }
+        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
+        {
+            errorMessage = "Assembly ID is not valid";
+            goto error;
+        }
+        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
+        {
+            errorMessage = "Class ID is not valid";
+            goto error;
+        }
+        if (!type.Fields.TryGetValue(fieldId, out var field))
+        {
+            errorMessage = "Field ID is not valid";
+            goto error;
+        }
+        return Marshal.StringToHGlobalUni(field.Name);
+        error:
+        Debug.Print("Unable to load field name from Class. Message: {0}", errorMessage);
+        return 0;
+    }
+    [UnmanagedCallersOnly]
+    public static IntPtr FieldGetTypeName(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId)
+    {
+        string? errorMessage = null;
+        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+        {
+            errorMessage = "Context ID is not valid";
+            goto error;
+        }
+        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
+        {
+            errorMessage = "Assembly ID is not valid";
+            goto error;
+        }
+        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
+        {
+            errorMessage = "Class ID is not valid";
+            goto error;
+        }
+        if (!type.Fields.TryGetValue(fieldId, out var field))
+        {
+            errorMessage = "Field ID is not valid";
+            goto error;
+        }
+        return Marshal.StringToHGlobalUni(field.FieldType.Name);
+        error:
+        Debug.Print("Unable to load field type name from Class. Message: {0}", errorMessage);
+        return 0;
+    }
+    [UnmanagedCallersOnly]
+    public static int FieldGetFlags(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId)
+    {
+        string? errorMessage = null;
+        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+        {
+            errorMessage = "Context ID is not valid";
+            goto error;
+        }
+        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
+        {
+            errorMessage = "Assembly ID is not valid";
+            goto error;
+        }
+        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
+        {
+            errorMessage = "Class ID is not valid";
+            goto error;
+        }
+        if (!type.Fields.TryGetValue(fieldId, out var field))
+        {
+            errorMessage = "Field ID is not valid";
+            goto error;
+        }
+        return (int)field.Attributes;
+        error:
+        Debug.Print("Unable to load field type name from Class. Message: {0}", errorMessage);
+        return 0;
+    }
+    [UnmanagedCallersOnly]
+    public static void FieldSetValue(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId, IntPtr instancePtr, IntPtr valuePtr)
     {
         string? errorMessage = null;
         object? instance = null;
@@ -553,13 +700,13 @@ internal static class BridgeToNative
             errorMessage = "Field ID is invalid";
             goto error;
         }
-        field.Field.SetValue(instance, Marshal.PtrToStructure(valuePtr, field.Field.FieldType));
+        field.SetValue(instance, Marshal.PtrToStructure(valuePtr, field.FieldType));
         return;
         error:
         Debug.Print("Unable to set field from Class. Message: {0}", errorMessage);
     }
     [UnmanagedCallersOnly]
-    public static unsafe IntPtr ClassGetField(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId, IntPtr instancePtr)
+    public static unsafe IntPtr FieldGetValue(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId, IntPtr instancePtr)
     {
         string? errorMessage = null;
         object? instance = null;
@@ -588,25 +735,98 @@ internal static class BridgeToNative
             goto error;
         }
 
-        if (field.Field.FieldType.IsValueType)
+        if (field.FieldType.IsValueType)
         {
-            int size = Marshal.SizeOf(field.Field.FieldType);
+            int size = Marshal.SizeOf(field.FieldType);
             IntPtr result = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(field.Field.GetValue(instance), result, false);
+            Marshal.StructureToPtr(field.GetValue(instance), result, false);
         }
 
-        var value = field.Field.GetValue(instance);
+        var value = field.GetValue(instance);
         if(value == null)
         {
             return IntPtr.Zero;
         }
-        GCHandle handle = GCHandle.Alloc(value, GCHandleType.Weak);
-        IntPtr resultPtr = GCHandle.ToIntPtr(handle);
-        handle.Free();
+        //GCHandle handle = GCHandle.Alloc(value, GCHandleType.Weak);
+        //IntPtr resultPtr = GCHandle.ToIntPtr(handle);
+        //handle.Free();
+        IntPtr resultPtr = AddressHelper.GetAddress(value);
         return resultPtr;
         error:
         Debug.Print("Unable to get field from Class. Message: {0}", errorMessage);
         return IntPtr.Zero;
+    }
+    [UnmanagedCallersOnly]
+    public static IntPtr ObjectNew(ulong contextId, ulong assemblyId, ulong classId)
+    {
+        string? errorMessage = null;
+        object? instance = null;
+        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+        {
+            errorMessage = "Context ID is not valid";
+            goto error;
+        }
+        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
+        {
+            errorMessage = "Assembly ID is not valid";
+            goto error;
+        }
+        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
+        {
+            errorMessage = "Class ID is not valid";
+            goto error;
+        }
+        instance = Activator.CreateInstance(type.Type);
+        //GCHandle handle = GCHandle.Alloc(instance, GCHandleType.Weak);
+        //IntPtr resultPtr = GCHandle.ToIntPtr(handle);
+        //handle.Free();
+        IntPtr resultPtr = AddressHelper.GetAddress(instance);
+        return resultPtr;
+        error:
+        Debug.Print("Unable to create object from Class. Message: {0}", errorMessage);
+        return IntPtr.Zero;
+    }
+    //Handle types: 0 = weak, 1 = normal, 2 = pinned
+
+    [UnmanagedCallersOnly]
+    public static IntPtr ObjectNewGCHandle(ulong contextId, ulong assemblyId, ulong classId, int handleType)
+    {
+        string? errorMessage = null;
+        object? instance = null;
+        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+        {
+            errorMessage = "Context ID is not valid";
+            goto error;
+        }
+        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
+        {
+            errorMessage = "Assembly ID is not valid";
+            goto error;
+        }
+        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
+        {
+            errorMessage = "Class ID is not valid";
+            goto error;
+        }
+        instance = Activator.CreateInstance(type.Type);
+        GCHandle handle = GCHandle.Alloc(instance, handleType == 0 ? GCHandleType.Weak : handleType == 1 ? GCHandleType.Normal : GCHandleType.Pinned);
+        IntPtr resultPtr = GCHandle.ToIntPtr(handle);
+        //handle.Free();
+        return resultPtr;
+        error:
+        Debug.Print("Unable to create object from Class. Message: {0}", errorMessage);
+        return IntPtr.Zero;
+    }
+    [UnmanagedCallersOnly]
+    public static void ObjectFreeGCHandle(IntPtr handlePtr)
+    {
+        GCHandle handle = GCHandle.FromIntPtr(handlePtr);
+        handle.Free();
+    }
+    public static IntPtr ObjectGetAdressFromGCHandle(IntPtr handlePtr)
+    {
+        GCHandle handle = GCHandle.FromIntPtr(handlePtr);
+        return AddressHelper.GetAddress(handle.Target);
     }
     /*[UnmanagedCallersOnly]
     public static void InvokeMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId, object[] args)

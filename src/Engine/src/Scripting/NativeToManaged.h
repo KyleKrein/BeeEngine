@@ -7,6 +7,11 @@
 
 namespace BeeEngine
 {
+    enum MFieldFlags : int32_t;
+}
+
+namespace BeeEngine
+{
     enum ManagedBindingFlags : int32_t;
 }
 
@@ -16,6 +21,7 @@ namespace BeeEngine
     using ManagedAssemblyID = uint64_t;
     using ManagedClassID = uint64_t;
     using ManagedMethodID = uint64_t;
+    using ManagedFieldID = uint64_t;
     class NativeToManaged
     {
     public:
@@ -32,6 +38,10 @@ namespace BeeEngine
         static bool ClassIsEnum(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID);
         static bool ClassIsDerivedFrom(ManagedAssemblyContextID contextIdDerived, ManagedAssemblyID assemblyIdDerived, ManagedClassID classIdDerived, ManagedAssemblyContextID contextIdBase, ManagedAssemblyID assemblyIdBase, ManagedClassID classIdBase);
         static ManagedMethodID MethodGetByName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, const String& methodName, ManagedBindingFlags flags);
+        static std::vector<ManagedFieldID> ClassGetFields(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedBindingFlags flags);
+        static String FieldGetName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID);
+        static String FieldGetTypeName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID);
+        static MFieldFlags FieldGetFlags(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID);
     private:
         static NativeToManagedData* s_Data;
 

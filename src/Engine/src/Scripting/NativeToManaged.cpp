@@ -37,6 +37,10 @@ namespace BeeEngine
     using ClassIsEnumFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
     using ClassIsDerivedFromFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextIdDerived, uint64_t assemblyIdDerived, uint64_t classIdDerived, uint64_t contextIdBase, uint64_t assemblyIdBase, uint64_t classIdBase);
     using MethodGetByNameFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, void* name, int32_t bindingFlags);
+    using ClassGetFieldsFunction = ArrayInfo(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, int32_t bindingFlags);
+    using FieldGetNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId);
+    using FieldGetTypeNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId);
+    using FieldGetFlagsFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId);
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -62,6 +66,10 @@ namespace BeeEngine
         ClassIsEnumFunction ClassIsEnum = nullptr;
         ClassIsDerivedFromFunction ClassIsDerivedFrom = nullptr;
         MethodGetByNameFunction MethodGetByName = nullptr;
+        ClassGetFieldsFunction ClassGetFields = nullptr;
+        FieldGetNameFunction FieldGetName = nullptr;
+        FieldGetTypeNameFunction FieldGetTypeName = nullptr;
+        FieldGetFlagsFunction FieldGetFlags = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -165,6 +173,10 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ObtainDelegate(ClassIsEnum);
         ObtainDelegate(ClassIsDerivedFrom);
         ObtainDelegate(MethodGetByName);
+        ObtainDelegate(ClassGetFields);
+        ObtainDelegate(FieldGetName);
+        ObtainDelegate(FieldGetTypeName);
+        ObtainDelegate(FieldGetFlags);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -246,5 +258,40 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ManagedClassID classID, const String& methodName, ManagedBindingFlags flags)
     {
         return s_Data->MethodGetByName(contextID, assemblyId, classID, const_cast<char*>(methodName.c_str()), std::to_underlying(flags));
+    }
+
+    std::vector<ManagedFieldID> NativeToManaged::ClassGetFields(ManagedAssemblyContextID contextID,
+        ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedBindingFlags flags)
+    {
+        ArrayInfo info = s_Data->ClassGetFields(contextID, assemblyId, classID, std::to_underlying(flags));
+        std::vector<ManagedFieldID> result;
+        result.resize(info.Length);
+        memcpy(result.data(), info.Ptr, info.Length * sizeof(ManagedFieldID));
+        s_Data->FreeIntPtr(info.Ptr);
+        return result;
+    }
+
+    String NativeToManaged::FieldGetName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID, ManagedFieldID fieldID)
+    {
+        void* ptr = s_Data->FieldGetName(contextID, assemblyId, classID, fieldID);
+        String name = GetStringFromPtr(ptr);
+        s_Data->FreeIntPtr(ptr);
+        return name;
+    }
+
+    String NativeToManaged::FieldGetTypeName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID, ManagedFieldID fieldID)
+    {
+        void* ptr = s_Data->FieldGetTypeName(contextID, assemblyId, classID, fieldID);
+        String name = GetStringFromPtr(ptr);
+        s_Data->FreeIntPtr(ptr);
+        return name;
+    }
+
+    MFieldFlags NativeToManaged::FieldGetFlags(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID, ManagedFieldID fieldID)
+    {
+        return static_cast<MFieldFlags>(s_Data->FieldGetFlags(contextID, assemblyId, classID, fieldID));
     }
 }

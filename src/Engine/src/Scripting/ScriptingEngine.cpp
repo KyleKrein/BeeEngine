@@ -263,7 +263,6 @@ namespace BeeEngine
         {
             return;
         }
-        MUtils::RegisterThread();
         auto script = CreateRef<GameScript>(*pClass, entity, GetScriptingLocale());
         s_Data.EntityObjects[uuid] = script;
         //
@@ -358,25 +357,8 @@ namespace BeeEngine
     {
         return s_Data.GameScripts;
     }
-    void MUtils::RegisterThread()
-    {
-        //thread_local static bool registered = false;
-        //if(registered) [[likely]]
-        //    return;
-        /*mono_thread_attach(mono_get_root_domain());
-        if(ScriptingEngine::s_Data.AppDomain)
-        {
-            if (!mono_domain_get())
-            {
-                mono_domain_set(ScriptingEngine::s_Data.AppDomain, true);
-            }
-            mono_thread_attach(mono_domain_get());
-        }*/
-        //registered = true;
-    }
     void ScriptingEngine::ReloadAssemblies()
     {
-        MUtils::RegisterThread();
         s_Data.GameScripts.clear();
         s_Data.EntityObjects.clear();
         s_Data.EditableFieldsDefaults.clear();

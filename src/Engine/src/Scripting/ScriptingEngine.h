@@ -70,7 +70,6 @@ namespace BeeEngine
 
     private:
         static void InitDotNetHost();
-        friend void MUtils::RegisterThread();
         static class MAssembly& LoadAssembly(const Path& path);
         static void InitMono();
         static bool IsGameScript(const MClass& klass);

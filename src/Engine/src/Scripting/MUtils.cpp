@@ -60,22 +60,21 @@ namespace BeeEngine
     MType MUtils::StringToMType(const String& name)
     {
         static std::unordered_map<std::string_view, MType> MTypeMap = {
-                {"void", MType::Void},
-                {"bool", MType::Boolean},
-                {"char", MType::Char},
-                {"sbyte", MType::SByte},
-                {"byte", MType::Byte},
-                {"short", MType::Int16},
-                {"ushort", MType::UInt16},
-                {"int", MType::Int32},
-                {"uint", MType::UInt32},
-                {"long", MType::Int64},
-                {"ulong", MType::UInt64},
-                {"float", MType::Single},
-                {"double", MType::Double},
-                {"string", MType::String},
-                {"object", MType::Object},
-                {"void*", MType::Ptr},
+                {"Void", MType::Void},
+                {"Boolean", MType::Boolean},
+                {"Char", MType::Char},
+                {"SByte", MType::SByte},
+                {"Byte", MType::Byte},
+                {"Int16", MType::Int16},
+                {"UInt16", MType::UInt16},
+                {"Int32", MType::Int32},
+                {"UInt32", MType::UInt32},
+                {"Int64", MType::Int64},
+                {"UInt64", MType::UInt64},
+                {"Single", MType::Single},
+                {"Double", MType::Double},
+                {"String", MType::String},
+                {"Object", MType::Object},
                 {"Array", MType::Array},
                 {"Dictionary", MType::Dictionary},
                 {"List", MType::List},
@@ -94,6 +93,8 @@ namespace BeeEngine
         };
         if(MTypeMap.contains(name))
             return MTypeMap.at(name);
+        if(name.ends_with('*'))
+            return MType::Ptr;
         return MType::None;
     }
 
@@ -179,47 +180,13 @@ namespace BeeEngine
         return "unknown";
     }
 
-    MVisibility MUtils::MonoFieldFlagsToVisibility(uint32_t flags)
-    {
-        /*if(flags & FIELD_ATTRIBUTE_PRIVATE)
-            return MVisibility::Private;
-        if(flags & FIELD_ATTRIBUTE_PUBLIC)
-            return MVisibility::Public;
-        if(flags & FIELD_ATTRIBUTE_FAMILY)
-            return MVisibility::Protected;
-        if(flags & FIELD_ATTRIBUTE_ASSEMBLY)
-            return MVisibility::Internal;
-        if(flags & FIELD_ATTRIBUTE_FAM_AND_ASSEM)
-            return MVisibility::ProtectedInternal;
-        if(flags & FIELD_ATTRIBUTE_FAM_OR_ASSEM)
-            return MVisibility::ProtectedInternal;*/
-        return MVisibility::Private;
-    }
-
     bool MUtils::IsSutableForEdit(const MField& field)
     {
-        return field.GetVisibility() == MVisibility::Public &&
+        return field.GetVisibility() == MVisibility_Public &&
                !field.IsStatic() &&
                field.GetType() != MType::None &&
                field.GetType() != MType::Ptr &&
                field.GetType() != MType::Void;
-    }
-
-    MVisibility MUtils::MonoMethodFlagsToVisibility(uint32_t flags)
-    {
-        /*if(flags & METHOD_ATTRIBUTE_PRIVATE)
-            return MVisibility::Private;
-        if(flags & METHOD_ATTRIBUTE_PUBLIC)
-            return MVisibility::Public;
-        if(flags & METHOD_ATTRIBUTE_FAMILY)
-            return MVisibility::Protected;
-        if(flags & METHOD_ATTRIBUTE_ASSEM)
-            return MVisibility::Internal;
-        if(flags & METHOD_ATTRIBUTE_FAM_AND_ASSEM)
-            return MVisibility::ProtectedInternal;
-        if(flags & METHOD_ATTRIBUTE_FAM_OR_ASSEM)
-            return MVisibility::ProtectedInternal;*/
-        return MVisibility::Private;
     }
 
     size_t MUtils::SizeOfMType(MType type)

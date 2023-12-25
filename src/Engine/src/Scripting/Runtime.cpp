@@ -46,6 +46,16 @@ namespace BeeEngine
         m_FullName = m_Namespace + "." + m_Name;
         m_IsValueType = NativeToManaged::ClassIsValueType(m_ContextID, m_AssemblyID, m_ClassID);
         m_IsEnum = NativeToManaged::ClassIsEnum(m_ContextID, m_AssemblyID, m_ClassID);
+        auto fields = NativeToManaged::ClassGetFields(m_ContextID, m_AssemblyID, m_ClassID, static_cast<ManagedBindingFlags>(ManagedBindingFlags_Public | ManagedBindingFlags_NonPublic | ManagedBindingFlags_Instance | ManagedBindingFlags_Static));
+        for(auto field : fields)
+        {
+            String fieldName = NativeToManaged::FieldGetName(m_ContextID, m_AssemblyID, m_ClassID, field);
+            MType fieldType = MUtils::StringToMType(NativeToManaged::FieldGetTypeName(m_ContextID, m_AssemblyID, m_ClassID, field));
+            MFieldFlags fieldFlags = NativeToManaged::FieldGetFlags(m_ContextID, m_AssemblyID, m_ClassID, field);
+            bool isStatic = (fieldFlags & MFieldFlags_Static) == MFieldFlags_Static;
+            MVisibility visibility = ExtractMVisibility(fieldFlags);
+            m_Fields.emplace(fieldName, MField(*this, fieldName, fieldType, visibility, isStatic));
+        }
     }
 
     GameScript::GameScript(MClass& mClass, Entity entity, const String& locale)

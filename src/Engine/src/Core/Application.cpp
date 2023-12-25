@@ -115,7 +115,7 @@ namespace BeeEngine{
             default:
                 BeeCoreWarn("Unable to use {} as render API", ToString(properties.PreferredRenderAPI));
                 //properties.PreferredRenderAPI = RenderAPI::WebGPU;
-                throw std::exception();
+                debug_break();
                 return;
         }
 
