@@ -45,6 +45,8 @@ namespace BeeEngine
     using ObjectFreeGCHandleFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* handle);
     using FieldGetDataFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle);
     using FieldSetDataFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle, void* data);
+    using MethodInvokeFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t methodId, void* instanceGcHandle, void** args);
+
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -78,6 +80,7 @@ namespace BeeEngine
         ObjectFreeGCHandleFunction ObjectFreeGCHandle = nullptr;
         FieldGetDataFunction FieldGetData = nullptr;
         FieldSetDataFunction FieldSetData = nullptr;
+        MethodInvokeFunction MethodInvoke = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -106,7 +109,7 @@ namespace BeeEngine
         return (s_Data->init_for_config_fptr && s_Data->get_delegate_fptr && s_Data->close_fptr);
     }
     // Load and initialize .NET Core and get desired function pointer for scenario
-    load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const BeeEngine::Path& config_path, NativeToManaged::NativeToManagedData& data)
+    load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const BeeEngine::Path& config_path, const NativeToManaged::NativeToManagedData& data)
     {
         // Load .NET Core
         auto path = config_path.ToStdPath();
@@ -133,7 +136,7 @@ namespace BeeEngine
 
 
         data.close_fptr(cxt);
-        return (load_assembly_and_get_function_pointer_fn)load_assembly_and_get_function_pointer;
+        return static_cast<load_assembly_and_get_function_pointer_fn>(load_assembly_and_get_function_pointer);
     }
 #define ObtainDelegate(name) \
 {\
@@ -188,6 +191,7 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ObtainDelegate(ObjectFreeGCHandle);
         ObtainDelegate(FieldGetData);
         ObtainDelegate(FieldSetData);
+        ObtainDelegate(MethodInvoke);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -327,5 +331,11 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ManagedClassID classID, ManagedFieldID fieldID, GCHandle objectHandle, void* data)
     {
         s_Data->FieldSetData(contextID, assemblyId, classID, fieldID, objectHandle, data);
+    }
+
+    void* NativeToManaged::MethodInvoke(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
+        ManagedClassID classID, ManagedMethodID methodID, GCHandle objectHandle, void** args)
+    {
+        return s_Data->MethodInvoke(contextID, assemblyId, classID, methodID, objectHandle, args);
     }
 }

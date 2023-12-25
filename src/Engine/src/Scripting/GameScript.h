@@ -46,7 +46,7 @@ namespace BeeEngine
     class GameScript
     {
     public:
-        using OnFunction = void(*)();
+        //using OnFunction = void(*)();
 
         GameScript(MClass& mClass, class Entity entity, const String& locale);
         void InvokeOnCreate();
@@ -62,9 +62,9 @@ namespace BeeEngine
     private:
         MObject m_Instance;
 
-        OnFunction m_OnCreate = nullptr;
-        OnFunction m_OnDestroy = nullptr;
-        OnFunction m_OnUpdate = nullptr;
+        MMethod* m_OnCreate = nullptr;
+        MMethod* m_OnDestroy = nullptr;
+        MMethod* m_OnUpdate = nullptr;
 
         void CopyFieldsData(std::vector<GameScriptField> &aClass, const String& locale);
     };

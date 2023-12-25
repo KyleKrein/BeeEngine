@@ -61,22 +61,74 @@ namespace BeeEngine
     GameScript::GameScript(MClass& mClass, Entity entity, const String& locale)
         : m_Instance(mClass.Instantiate())
     {
+        constexpr static ManagedBindingFlags flags = static_cast<ManagedBindingFlags>(ManagedBindingFlags_Public | ManagedBindingFlags_NonPublic | ManagedBindingFlags_Instance);
+        auto& onCreate = mClass.GetMethod("OnCreate", flags);
+        if(onCreate.IsValid())
+            m_OnCreate = &onCreate;
+        auto& onDestroy = mClass.GetMethod("OnDestroy", flags);
+        if(onDestroy.IsValid())
+            m_OnDestroy = &onDestroy;
+        auto& onUpdate = mClass.GetMethod("OnUpdate", flags);
+        if(onUpdate.IsValid())
+            m_OnUpdate = &onUpdate;
+
+        if(entity.HasComponent<ScriptComponent>())
+        {
+            auto& sc = entity.GetComponent<ScriptComponent>();
+            CopyFieldsData(sc.EditableFields, locale);
+        }
     }
 
     void GameScript::InvokeOnCreate()
     {
+        if(m_OnCreate)
+            m_Instance.Invoke(*m_OnCreate, nullptr);
     }
 
     void GameScript::InvokeOnDestroy()
     {
+        if(m_OnCreate)
+            m_Instance.Invoke(*m_OnDestroy, nullptr);
     }
 
     void GameScript::InvokeOnUpdate()
     {
+        if(m_OnUpdate)
+            m_Instance.Invoke(*m_OnUpdate, nullptr);
+    }
+
+    static MType AssetTypeToMType(AssetType type)
+    {
+        switch(type)
+        {
+            case AssetType::Texture2D:
+                return MType::Texture2D;
+            case AssetType::Font:
+                return MType::Font;
+            default:
+                return MType::Asset;
+        }
     }
 
     void GameScript::CopyFieldsData(std::vector<GameScriptField>& aClass, const String& locale)
     {
+        for(auto& field : aClass)
+        {
+            auto& mField = field.GetMField();
+            auto type = mField.GetType();
+            if(type == MType::Asset || type == MType::Texture2D || type == MType::Font || type == MType::Prefab)
+            {
+                AssetHandle handle = field.GetData<AssetHandle>();
+                if(AssetManager::IsAssetHandleValid(handle))
+                {
+                    if(type == MType::Asset)
+                        type = AssetTypeToMType(AssetManager::GetAsset<Asset>(handle, locale).GetType());
+                    ScriptingEngine::SetAssetHandle(m_Instance, mField, handle, type);
+                }
+                continue;
+            }
+            m_Instance.SetFieldValue(mField, field.GetData());
+        }
     }
 
     MAssembly::MAssembly()
@@ -104,17 +156,6 @@ namespace BeeEngine
 
     MAssembly::~MAssembly()
     {
-    }
-
-    MAssembly::MAssembly(const MAssembly&)
-    {
-    }
-
-    MAssembly& MAssembly::operator=(const MAssembly& other)
-    {
-        m_Classes = other.m_Classes;
-        m_Path = other.m_Path;
-        return *this;
     }
 
     MAssembly::MAssembly(MAssembly&& other) noexcept
@@ -173,6 +214,17 @@ namespace BeeEngine
     {
     }
 
+    void* MMethod::InvokeStatic(void** params)
+    {
+        //TODO: check if method is static
+        return NativeToManaged::MethodInvoke(m_Class->m_ContextID, m_Class->m_AssemblyID, m_Class->m_ClassID, m_MethodID, nullptr, params);
+    }
+
+    MClass& MMethod::GetClass()
+    {
+        return *m_Class;
+    }
+
     MObject::MObject(const MClass& object)
     {
         m_Handle = NativeToManaged::ObjectNewGCHandle(object.m_ContextID, object.m_AssemblyID, object.m_ClassID, GCHandleType::Normal);
@@ -188,8 +240,10 @@ namespace BeeEngine
         return *m_Class;
     }
 
-    void MObject::Invoke(MMethod& method, void** params)
+    void* MObject::Invoke(MMethod& method, void** params)
     {
+        auto& mclass = method.GetClass();
+        return NativeToManaged::MethodInvoke(mclass.m_ContextID, mclass.m_AssemblyID, mclass.m_ClassID, method.m_MethodID, m_Handle, params);
     }
 
     void MObject::SetFieldValue(MField& field, void* value)
@@ -198,7 +252,7 @@ namespace BeeEngine
         NativeToManaged::FieldSetData(mclass.m_ContextID, mclass.m_AssemblyID, mclass.m_ClassID, field.m_FieldID, m_Handle, value);
     }
 
-    bool MObject::GetFieldValue(MField& field, void* value)
+    void* MObject::GetFieldValue(MField& field)
     {
         auto& mclass = field.GetClass();
         return NativeToManaged::FieldGetData(mclass.m_ContextID, mclass.m_AssemblyID, mclass.m_ClassID, field.m_FieldID, m_Handle);

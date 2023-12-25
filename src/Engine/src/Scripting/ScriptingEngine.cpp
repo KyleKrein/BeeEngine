@@ -26,10 +26,10 @@ namespace BeeEngine
     //typedef void(__stdcall *EntityWasRemoved)(uint64_t id, MonoException ** exception);
     struct ScriptingEngineData
     {
-        //AddEntityScript AddEntityScriptMethod = nullptr;
-        //EntityWasRemoved EntityWasRemovedMethod = nullptr;
+        MMethod* AddEntityScriptMethod = nullptr;
+        MMethod* EntityWasRemovedMethod = nullptr;
 
-        void(*EndSceneMethod)() = nullptr;
+        MMethod* EndSceneMethod = nullptr;
 
         bool EnableDebugging = false;
 
@@ -46,8 +46,8 @@ namespace BeeEngine
         MClass* FontClass = nullptr;
         MClass* PrefabClass = nullptr;
 
-        //MonoClassField * DeltaTimeField = nullptr;
-        //MonoClassField* TotalTimeField = nullptr;
+        MField* DeltaTimeField = nullptr;
+        MField* TotalTimeField = nullptr;
 
         ManagedAssemblyContextID AppDomain = 0;
 
@@ -80,6 +80,11 @@ namespace BeeEngine
         //s_Data.EntityWasRemovedMethod = nullptr;
 
         MonoShutdown();
+    }
+
+    bool ScriptingEngine::IsInitialized()
+    {
+        return s_Data.AppDomain != 0;
     }
 
     void ScriptingEngine::InitMono()
@@ -220,18 +225,27 @@ namespace BeeEngine
             if(mClass->GetName() == "Time")
             {
                 //s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
-                /*s_Data.DeltaTimeField = mClass->GetField("m_DeltaTime");
-                s_Data.TotalTimeField = mClass->GetField("m_TotalTime");*/
+                s_Data.DeltaTimeField = &mClass->GetField("m_DeltaTime");
+                s_Data.TotalTimeField = &mClass->GetField("m_TotalTime");
                 continue;
+            }
+            if(mClass->GetName() == "LifeTimeManager")
+            {
+                static constexpr auto flags = static_cast<ManagedBindingFlags>(ManagedBindingFlags_Public | ManagedBindingFlags_Static);
+                s_Data.AddEntityScriptMethod = &mClass->GetMethod("AddEntityScript", flags);
+                s_Data.EntityWasRemovedMethod = &mClass->GetMethod("EntityWasRemoved", flags);
+                s_Data.EndSceneMethod = &mClass->GetMethod("EndScene", flags);
             }
 
             if(s_Data.EntityBaseClass && s_Data.AssetHandleField &&
-            s_Data.Texture2DClass && s_Data.FontClass && s_Data.PrefabClass /*&&
-            s_Data.TotalTimeField && s_Data.DeltaTimeField*/ /*&& s_Data.TimeVTable*/)
+            s_Data.Texture2DClass && s_Data.FontClass && s_Data.PrefabClass &&
+            s_Data.TotalTimeField && s_Data.DeltaTimeField && s_Data.AddEntityScriptMethod &&
+            s_Data.EntityWasRemovedMethod && s_Data.EndSceneMethod)
             {
                 break;
             }
-        }/*
+        }
+        /*
         MonoClass* lifeTimeManager = mono_class_from_name(assembly.m_MonoImage, "BeeEngine.Internal", "LifeTimeManager");
         MonoMethod* addEntityScriptMethod = mono_class_get_method_from_name(lifeTimeManager, "AddEntityScript", 2);
         MonoMethod* entityWasRemovedMethod = mono_class_get_method_from_name(lifeTimeManager, "EntityWasRemoved", 1);
@@ -252,7 +266,7 @@ namespace BeeEngine
     void ScriptingEngine::OnRuntimeStop()
     {
         s_Data.CurrentScene = nullptr;
-        s_Data.EndSceneMethod();
+        s_Data.EndSceneMethod->InvokeStatic(nullptr);
         s_Data.EntityObjects.clear();
     }
 
@@ -268,10 +282,11 @@ namespace BeeEngine
         //
         {
             //MonoObject *entityID = mono_value_box(s_Data.AppDomain, s_Data.ulongClass, &ulongUUID);
-            /*MonoException *exc = nullptr;
-            MonoObject* instance = script->GetMObject().GetMonoObject();
-            s_Data.AddEntityScriptMethod(uuid, instance, &exc);
-            if(exc)
+            //MonoException *exc = nullptr;
+            auto instance = script->GetMObject().GetHandle();
+            void* params[] = {&uuid, &instance};
+            s_Data.AddEntityScriptMethod->InvokeStatic(params);
+            /*if(exc)
             {
                 MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
                 char* message = mono_string_to_utf8(msg);
@@ -288,6 +303,8 @@ namespace BeeEngine
         {
             s_Data.EntityObjects.at(uuid)->InvokeOnDestroy();
         }
+        void* params[] = {&uuid};
+        s_Data.EntityWasRemovedMethod->InvokeStatic(params);
         //s_Data.EntityWasRemovedMethod(uuid, &exc);
         //if(exc)
         {
@@ -370,28 +387,11 @@ namespace BeeEngine
         s_Data.FontClass = nullptr;
 
         //s_Data.TimeVTable = nullptr;
-        /*s_Data.TotalTimeField = nullptr;
-        s_Data.DeltaTimeField = nullptr;*/
+        s_Data.TotalTimeField = nullptr;
+        s_Data.DeltaTimeField = nullptr;
+        NativeToManaged::UnloadContext(s_Data.AppDomain);
 
-        //mono_domain_set(s_Data.RootDomain, true);
-
-        //MonoObject *exc = nullptr;
-        //mono_gc_collect(mono_gc_max_generation());
-        //mono_domain_finalize(s_Data.AppDomain, 1000);
-        //mono_thread_attach(s_Data.AppDomain);
-#if 0
-        mono_domain_try_unload(mono_domain_get(), &exc);
-        if (exc)
-        {
-            MonoString *msg = mono_object_to_string(reinterpret_cast<MonoObject *>(exc), nullptr);
-            char *message = mono_string_to_utf8(msg);
-            BeeCoreError("Exception while unloading app domain: {}", message);
-            mono_free(message);
-        }
         CreateAppDomain();
-#endif
-        //mono_domain_set(s_Data.AppDomain, true);
-
         LoadCoreAssembly(s_Data.CoreAssemblyPath);
         LoadGameAssembly(s_Data.GameAssemblyPath);
 
@@ -426,7 +426,7 @@ namespace BeeEngine
             MObject assetObj = s_Data.Texture2DClass->Instantiate();
             //auto* assetMonoObj = assetObj.GetMonoObject();
             assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
-            //obj.SetFieldValue(field, assetMonoObj);
+            obj.SetFieldValue(field, assetObj.GetHandle());
             return;
         }
         if(type == MType::Font)
@@ -434,7 +434,7 @@ namespace BeeEngine
             MObject assetObj = s_Data.FontClass->Instantiate();
             //auto* assetMonoObj = assetObj.GetMonoObject();
             assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
-            //obj.SetFieldValue(field, assetMonoObj);
+            obj.SetFieldValue(field, assetObj.GetHandle());
             return;
         }
         if(type == MType::Prefab)
@@ -442,23 +442,28 @@ namespace BeeEngine
             MObject assetObj = s_Data.PrefabClass->Instantiate();
             //auto* assetMonoObj = assetObj.GetMonoObject();
             assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
-            //obj.SetFieldValue(field, assetMonoObj);
+            obj.SetFieldValue(field, assetObj.GetHandle());
             return;
         }
     }
 
-    void ScriptingEngine::GetAssetHandle(void* monoObject, AssetHandle &handle)
+    void ScriptingEngine::GetAssetHandle(void* gchandle, AssetHandle &handle)
     {
-        //MObject obj {(MonoObject*)monoObject};
+        auto& field = *s_Data.AssetHandleField;
+        auto& mclass = field.GetClass();
+        handle = *static_cast<AssetHandle*>(NativeToManaged::FieldGetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), field.GetFieldID(), gchandle));
         //obj.GetFieldValue(*s_Data.AssetHandleField, &handle);
     }
 
     void ScriptingEngine::UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime)
     {
-        //if(!s_Data.DeltaTimeField)
+        if(!s_Data.DeltaTimeField)
             return;
         double deltaTimeDouble = deltaTime.count();
         double totalTimeDouble = totalTime.count();
+        auto& mclass = s_Data.DeltaTimeField->GetClass();
+        NativeToManaged::FieldSetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), s_Data.DeltaTimeField->GetFieldID(), nullptr,&deltaTimeDouble);
+        NativeToManaged::FieldSetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), s_Data.TotalTimeField->GetFieldID(), nullptr,&totalTimeDouble);
         //mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTimeDouble);
         //mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTimeDouble);
     }

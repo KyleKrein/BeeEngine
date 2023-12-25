@@ -414,9 +414,8 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            //MonoObject* monoObject;
-                            //mObject->GetFieldValue(mField, &monoObject);
-                            //ScriptingEngine::GetAssetHandle(monoObject, value);
+                            void* object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
@@ -471,9 +470,8 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            //MonoObject* monoObject;
-                            //mObject->GetFieldValue(mField, &monoObject);
-                            //ScriptingEngine::GetAssetHandle(monoObject, value);
+                            void* object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
@@ -539,9 +537,8 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            //MonoObject* monoObject;
-                            //mObject->GetFieldValue(mField, &monoObject);
-                            //ScriptingEngine::GetAssetHandle(monoObject, value);
+                            void* object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
@@ -607,9 +604,8 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            //MonoObject* monoObject;
-                            //mObject->GetFieldValue(mField, &monoObject);
-                            //ScriptingEngine::GetAssetHandle(monoObject, value);
+                            void* object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {

@@ -15,8 +15,8 @@ namespace BeeEngine
         MAssembly();
         MAssembly(uint64_t contextID, const Path& path, bool debug);
         ~MAssembly();
-        MAssembly(const MAssembly&);
-        MAssembly& operator=(const MAssembly&);
+        MAssembly(const MAssembly&) = delete;
+        MAssembly& operator=(const MAssembly&) = delete;
         MAssembly(MAssembly&& other) noexcept;
         MAssembly& operator=(MAssembly&&other) noexcept;
         std::vector<Ref<class MClass>>& GetClasses();

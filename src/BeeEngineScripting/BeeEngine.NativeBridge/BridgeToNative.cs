@@ -14,9 +14,9 @@ public static class AddressHelper
 
     static AddressHelper()
     {
-        AddressHelper.s_MutualObject = new object();
-        AddressHelper.s_Reinterpreter = new ObjectReinterpreter();
-        AddressHelper.s_Reinterpreter.AsObject = new ObjectWrapper();
+        s_MutualObject = new object();
+        s_Reinterpreter = new ObjectReinterpreter();
+        s_Reinterpreter.AsObject = new ObjectWrapper();
     }
 
     public static IntPtr GetAddress(object obj)
@@ -918,10 +918,78 @@ internal static class BridgeToNative
     }
 
     [UnmanagedCallersOnly]
-    public static void InvokeMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId,
-        IntPtr instanceGcHandlePtr, IntPtr args)
+    public static unsafe IntPtr MethodInvoke(ulong contextId, ulong assemblyId, ulong classId, ulong methodId,
+        IntPtr instanceGcHandlePtr, void** args)
     {
-        
+        GCHandle? instanceGcHandle = null;
+        if(instanceGcHandlePtr != IntPtr.Zero)
+        {
+            instanceGcHandle = GCHandle.FromIntPtr(instanceGcHandlePtr);
+        }
+        object? instance = instanceGcHandle?.Target;
+        string? errorMessage = null;
+        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+        {
+            errorMessage = "Context ID is not valid";
+            goto error;
+        }
+        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
+        {
+            errorMessage = "Assembly ID is not valid";
+            goto error;
+        }
+        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
+        {
+            errorMessage = "Class ID is not valid";
+            goto error;
+        }
+        if (!type.Methods.TryGetValue(methodId, out var method))
+        {
+            errorMessage = "Method ID is not valid";
+            goto error;
+        }
+
+        var parameters = method.Method.GetParameters();
+        var returnType = method.Method.ReturnType;
+        object? result = null;
+        if (parameters.Length == 0)
+        {
+            result = method.Method.Invoke(instance, null);
+            goto returnResult;
+        }
+        var argsArray = new object[parameters.Length];
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            var paramType = parameters[i].ParameterType;
+            if(paramType.IsValueType)
+                argsArray[i] = Marshal.PtrToStructure(new IntPtr(args[i]), parameters[i].ParameterType);
+            else
+            {
+                GCHandle handle = GCHandle.FromIntPtr(new IntPtr(args[i]));
+                argsArray[i] = handle.Target;
+            }
+        }
+        result = method.Method.Invoke(instance, argsArray);
+        returnResult:
+        if (result == null)
+        {
+            return IntPtr.Zero;
+        }
+
+        IntPtr resultPtr;
+        if (returnType.IsValueType)
+        {
+            int size = Marshal.SizeOf(returnType);
+            resultPtr = Marshal.AllocHGlobal(size);
+            Marshal.StructureToPtr(result, resultPtr, false);
+            return resultPtr;
+        }
+        GCHandle resultHandle = GCHandle.Alloc(result, GCHandleType.Normal);
+        resultPtr = GCHandle.ToIntPtr(resultHandle);
+        return resultPtr;
+        error:
+        Debug.Print("Unable to invoke method from Class. Message: {0}", errorMessage);
+        return IntPtr.Zero;
     }
     /*[UnmanagedCallersOnly]
     public static void InvokeMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId, object[] args)

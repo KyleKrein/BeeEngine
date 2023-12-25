@@ -37,6 +37,10 @@ namespace BeeEngine
         bool IsEnum() const { return m_IsEnum; }
         bool IsValueType() const { return m_IsValueType; }
         MClass(const String& name, const String& ns, uint64_t contextId, uint64_t assemblyId, uint64_t classId);
+
+        uint64_t GetContextID() const { return m_ContextID; }
+        uint64_t GetAssemblyID() const { return m_AssemblyID; }
+        uint64_t GetClassID() const { return m_ClassID; }
     private:
         String m_Name;
         String m_Namespace;

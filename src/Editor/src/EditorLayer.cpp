@@ -134,30 +134,40 @@ namespace BeeEngine::Editor
                     String pathString = projectPath.AsUTF8();
                     auto name = projectPath.GetFileNameWithoutExtension().AsUTF8();
                     pathString = projectPath.RemoveFileName().AsUTF8();
-                    std::unique_lock lock(self.m_BigLock);
-                    self.m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &self.m_EditorAssetManager);
-                    self.m_ContentBrowserPanel.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
-                    self.m_ViewPort.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
-                    self.m_ViewPort.SetDomain(&self.m_ProjectFile->GetProjectLocaleDomain());
-                    self.m_InspectorPanel.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
-                    ResourceManager::ProjectName = self.m_ProjectFile->GetProjectName();
-
-                    self.SetupGameLibrary();
-
-                    if(File::Exists(self.m_ProjectFile->GetProjectAssetRegistryPath()))
+                    Jobs::Counter counter;
                     {
-                        AssetRegistrySerializer assetRegistrySerializer(&self.m_EditorAssetManager, self.m_ProjectFile->GetProjectPath(), self.m_ProjectFile->GetAssetRegistryID());
-                        assetRegistrySerializer.Deserialize(self.m_ProjectFile->GetProjectAssetRegistryPath());
-                    }
+                        std::unique_lock lock(self.m_BigLock);
+                        self.m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &self.m_EditorAssetManager);
+                        self.m_ContentBrowserPanel.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
+                        self.m_ViewPort.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
+                        self.m_ViewPort.SetDomain(&self.m_ProjectFile->GetProjectLocaleDomain());
+                        self.m_InspectorPanel.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
+                        ResourceManager::ProjectName = self.m_ProjectFile->GetProjectName();
+                        counter.Increment();
+                        Application::SubmitToMainThread([data, &counter]()
+                        {
+                            auto& self = *static_cast<EditorLayer*>(data);
+                            self.SetupGameLibrary();
+                            counter.Decrement();
+                        });
 
-                    self.m_InspectorPanel.SetProjectAssetRegistryID(self.m_ProjectFile->GetAssetRegistryID());
-                    self.m_InspectorPanel.SetProject(self.m_ProjectFile.get());
-                    self.m_AssetPanel.SetProject(self.m_ProjectFile.get());
-                    self.m_ContentBrowserPanel.SetProject(self.m_ProjectFile.get());
-                    self.m_AssetPanel.SetAssetDeletedCallback([self = static_cast<EditorLayer*>(data)](AssetHandle handle){
-                        self->DeleteAsset(handle);
-                    });
-                    self.m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(self.m_ProjectFile->GetProjectLocaleDomain(), self.m_ProjectFile->GetProjectPath());
+
+                        if(File::Exists(self.m_ProjectFile->GetProjectAssetRegistryPath()))
+                        {
+                            AssetRegistrySerializer assetRegistrySerializer(&self.m_EditorAssetManager, self.m_ProjectFile->GetProjectPath(), self.m_ProjectFile->GetAssetRegistryID());
+                            assetRegistrySerializer.Deserialize(self.m_ProjectFile->GetProjectAssetRegistryPath());
+                        }
+
+                        self.m_InspectorPanel.SetProjectAssetRegistryID(self.m_ProjectFile->GetAssetRegistryID());
+                        self.m_InspectorPanel.SetProject(self.m_ProjectFile.get());
+                        self.m_AssetPanel.SetProject(self.m_ProjectFile.get());
+                        self.m_ContentBrowserPanel.SetProject(self.m_ProjectFile.get());
+                        self.m_AssetPanel.SetAssetDeletedCallback([self = static_cast<EditorLayer*>(data)](AssetHandle handle){
+                            self->DeleteAsset(handle);
+                        });
+                        self.m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(self.m_ProjectFile->GetProjectLocaleDomain(), self.m_ProjectFile->GetProjectPath());
+                    }
+                    Job::WaitForJobsToComplete(counter);
                     auto scenePath = self.m_ProjectFile->GetLastUsedScenePath();
                     if(!scenePath.IsEmpty())
                     {
@@ -169,9 +179,8 @@ namespace BeeEngine::Editor
             }
             if(ImGui::Button("New project"))
             {
-                static Job newProjectJob{[](void* data)
+                Application::SubmitToMainThread([this]()
                 {
-                    auto& self = *static_cast<EditorLayer*>(data);
                     auto projectPath = FileDialogs::OpenFolder(/*{"BeeEngine Project", "*.beeproj"}*/);
                     if(projectPath.IsEmpty())
                     {
@@ -179,28 +188,27 @@ namespace BeeEngine::Editor
                         return;
                     }
                     auto name = projectPath.GetFileName().AsUTF8();
-                    std::unique_lock lock(self.m_BigLock);
-                    self.m_ProjectFile = CreateScope<ProjectFile>(projectPath, name, &self.m_EditorAssetManager);
-                    self.m_ContentBrowserPanel.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
-                    self.m_ViewPort.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
-                    self.m_ViewPort.SetDomain(&self.m_ProjectFile->GetProjectLocaleDomain());
-                    self.m_InspectorPanel.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
-                    ResourceManager::ProjectName = self.m_ProjectFile->GetProjectName();
+                    {
+                        std::unique_lock lock(m_BigLock);
+                        m_ProjectFile = CreateScope<ProjectFile>(projectPath, name, &m_EditorAssetManager);
+                        m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                        m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                        m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
+                        m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                        ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 
-                    self.m_InspectorPanel.SetProjectAssetRegistryID(self.m_ProjectFile->GetAssetRegistryID());
-                    self.m_InspectorPanel.SetProject(self.m_ProjectFile.get());
-                    self.m_ContentBrowserPanel.SetProject(self.m_ProjectFile.get());
+                        m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
+                        m_InspectorPanel.SetProject(m_ProjectFile.get());
+                        m_ContentBrowserPanel.SetProject(m_ProjectFile.get());
 
-                    self.m_AssetPanel.SetProject(self.m_ProjectFile.get());
-                    self.m_AssetPanel.SetAssetDeletedCallback([self = static_cast<EditorLayer*>(data)](AssetHandle handle){
-                        self->DeleteAsset(handle);
-                    });
-
-                    self.SetupGameLibrary();
-                    self.m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(self.m_ProjectFile->GetProjectLocaleDomain(), self.m_ProjectFile->GetProjectPath());
-                }
-                , this};
-                Job::Schedule(newProjectJob);
+                        m_AssetPanel.SetProject(m_ProjectFile.get());
+                        m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
+                            DeleteAsset(handle);
+                        });
+                        SetupGameLibrary();
+                        m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
+                    }
+                });
             }
             ImGui::End();
         }
@@ -289,8 +297,8 @@ namespace BeeEngine::Editor
         const Path tempPath = m_ProjectFile->GetProjectPath() / ".beeengine" / "temp.beescene";
         SceneSerializer serializer(m_ActiveScene);
         serializer.Serialize(tempPath);
-
-        ScriptingEngine::ReloadAssemblies();
+        if(ScriptingEngine::IsInitialized())
+            ScriptingEngine::ReloadAssemblies();
         m_SceneHierarchyPanel.ClearSelection();
         m_ViewPort.GetScene()->Clear();
         serializer.Deserialize(tempPath);

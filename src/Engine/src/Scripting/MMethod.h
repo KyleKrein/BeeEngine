@@ -17,6 +17,9 @@ namespace BeeEngine
         ~MMethod();
 
         bool IsValid() const { return m_MethodID; }
+        void* InvokeStatic(void** params);
+
+        MClass& GetClass();
 
         //operator MonoMethod*() const { return m_MonoMethod; }
     private:

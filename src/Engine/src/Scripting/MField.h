@@ -22,6 +22,7 @@ namespace BeeEngine
             const String& GetName() const { return m_Name; }
             MClass& GetClass() const { return *m_Class; }
             //operator MonoClassField*() const { return m_MonoField; }
+        uint64_t GetFieldID() const { return m_FieldID; }
     private:
         MClass* m_Class = nullptr;
         uint64_t m_FieldID = 0;

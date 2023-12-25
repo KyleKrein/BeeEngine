@@ -16,11 +16,17 @@ namespace BeeEngine
         //MObject(MonoObject* object);
         ~MObject();
         MClass& GetClass();
-        void Invoke(class MMethod& method, void** params);
+        void* Invoke(class MMethod& method, void** params);
 
         void SetFieldValue(MField& field, void* value);
-        bool GetFieldValue(MField& field, void* value);
+        void* GetFieldValue(MField& field);
         String GetFieldStringValue(MField& field);
+
+        void* GetHandle()
+        {
+            return m_Handle;
+        }
+
     private:
         //MonoObject* m_MonoObject = nullptr;
         void* m_Handle = nullptr;
