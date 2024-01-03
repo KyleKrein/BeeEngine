@@ -19,7 +19,7 @@ add_library(project_warnings INTERFACE)
 include(cmake/CompilerWarnings.cmake)
 set_project_warnings(project_warnings)
 
-include_directories(src/Engine/src/Allocator)
+#include_directories(src/Engine/src/Allocator)
 
 add_subdirectory(src/Engine)
 add_subdirectory(src/Sandbox2D)

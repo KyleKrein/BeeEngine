@@ -15,7 +15,7 @@
 #include "MObject.h"
 #include "GameScript.h"
 #include "MUtils.h"
-#include "AllocatorStatistics.h"
+#include "Allocator/AllocatorStatistics.h"
 #include "MTypes.h"
 #include "NativeToManaged.h"
 #include "FileSystem/File.h"

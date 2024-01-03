@@ -2,7 +2,7 @@
 function(FileEmbedSetup)
 
     if (NOT EXISTS ${CMAKE_BINARY_DIR}/file_embed)
-        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}file_embed)
+        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/file_embed)
     endif ()
 
     if (NOT EXISTS ${CMAKE_BINARY_DIR}/file_embed/file_embed_empty.c)

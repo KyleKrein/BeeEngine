@@ -136,7 +136,7 @@ namespace BeeEngine
 
 
         data.close_fptr(cxt);
-        return static_cast<load_assembly_and_get_function_pointer_fn>(load_assembly_and_get_function_pointer);
+        return reinterpret_cast<load_assembly_and_get_function_pointer_fn>(load_assembly_and_get_function_pointer);
     }
 #define ObtainDelegate(name) \
 {\
