@@ -46,7 +46,7 @@ namespace BeeEngine
     using FieldGetDataFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle);
     using FieldSetDataFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle, void* data);
     using MethodInvokeFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t methodId, void* instanceGcHandle, void** args);
-
+    using UnmanagedMethodCreateDelegateAndSetToFieldFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* instanceGcHandle, void* functionPtr);
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -81,6 +81,7 @@ namespace BeeEngine
         FieldGetDataFunction FieldGetData = nullptr;
         FieldSetDataFunction FieldSetData = nullptr;
         MethodInvokeFunction MethodInvoke = nullptr;
+        UnmanagedMethodCreateDelegateAndSetToFieldFunction UnmanagedMethodCreateDelegateAndSetToField = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -192,6 +193,7 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ObtainDelegate(FieldGetData);
         ObtainDelegate(FieldSetData);
         ObtainDelegate(MethodInvoke);
+        ObtainDelegate(UnmanagedMethodCreateDelegateAndSetToField);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -201,6 +203,7 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
 
     void NativeToManaged::UnloadContext(ManagedAssemblyContextID contextID)
     {
+
     }
 
     void NativeToManaged::Shutdown()
@@ -337,5 +340,19 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ManagedClassID classID, ManagedMethodID methodID, GCHandle objectHandle, void** args)
     {
         return s_Data->MethodInvoke(contextID, assemblyId, classID, methodID, objectHandle, args);
+    }
+
+    void NativeToManaged::UnmanagedMethodCreateDelegateAndSetToField(ManagedAssemblyContextID contextID,
+        ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedMethodID methodID, GCHandle objectHandle,
+        void* functionPtr)
+    {
+        s_Data->UnmanagedMethodCreateDelegateAndSetToField(contextID, assemblyId, classID, methodID, objectHandle, functionPtr);
+    }
+
+    String NativeToManaged::StringGetFromManagedString(void* managedString)
+    {
+        String result = GetStringFromPtr(managedString);
+        s_Data->FreeIntPtr(managedString);
+        return result;
     }
 }

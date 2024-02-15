@@ -16,7 +16,7 @@
 
 namespace BeeEngine::Editor
 {
-
+    const String dotNetVersion = "net8.0";
     ProjectFile::ProjectFile(const Path &projectPath, const std::string &projectName, EditorAssetManager* assetManager) noexcept
     : m_ProjectName(projectName), m_ProjectPath(projectPath), m_AssetManager(assetManager), m_ProjectLocaleDomain(projectName)
     {
@@ -29,9 +29,13 @@ namespace BeeEngine::Editor
         }
         if(!File::Exists(m_ProjectPath / ".beeengine" /"build"))
         {
-            File::CreateDirectory(m_ProjectPath / ".beeengine" / "build");
+            m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
+            File::CreateDirectory(m_AppAssemblyPath);
+            m_AppAssemblyPath = m_AppAssemblyPath / dotNetVersion;
+            File::CreateDirectory(m_AppAssemblyPath);
         }
-        m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
+        else
+            m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build"/ dotNetVersion;
         if(File::Exists(m_AppAssemblyPath))
             m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath, [this](const Path & path, FileWatcher::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         m_AppAssemblyPath = m_AppAssemblyPath / "GameLibrary.dll";
@@ -72,7 +76,6 @@ namespace BeeEngine::Editor
             File::CreateDirectory(m_ProjectPath / "Assets");
             File::CreateDirectory(m_ProjectPath / "Scenes");
 
-            VSProjectGeneration::GenerateAssemblyInfoFile(m_ProjectPath, m_ProjectName);
             RegenerateSolution();
             m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath, [this](const Path & path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
             return;

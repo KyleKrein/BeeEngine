@@ -14,6 +14,14 @@ function(FileEmbedSetup)
 
 endfunction()
 
+function(FileEmbedUseGeneratedFiles)
+    file(GLOB_RECURSE EMBEDDED_FILES
+            ${CMAKE_BINARY_DIR}/file_embed/*.c
+    )
+    #add source files to file_embed
+    target_sources(file_embed PUBLIC ${EMBEDDED_FILES})
+endfunction()
+
 function(FileEmbedAdd file)
     FileEmbedGenerate(${file} var)
     target_sources(file_embed PUBLIC ${var})

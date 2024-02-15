@@ -314,7 +314,7 @@ namespace BeeEngine::Editor
         //ScriptingEngine::EnableDebugging(); //TODO: enable only in debug builds
         ScriptingEngine::Init();
         ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
-        ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "build"/ "GameLibrary.dll");
+        ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetAssemblyPath());
         ScriptGlue::Register();
         ScriptingEngine::SetLocaleDomain(m_ProjectFile->GetProjectLocaleDomain());
         //auto& gameAssembly = ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() / ".beeengine" / "GameLibrary.dll");

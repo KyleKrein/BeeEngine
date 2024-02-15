@@ -41,7 +41,7 @@ namespace BeeEngine
 
         static bool HasGameScript(const String& name);
         static const std::unordered_map<String, Ref<MClass>>& GetGameScripts();
-        static void RegisterInternalCall(const std::string& name, void* method);
+        static void RegisterNativeFunction(const String& name, void* function);
 
         static void OnEntityCreated(Entity entity, MClass *pClass);
 

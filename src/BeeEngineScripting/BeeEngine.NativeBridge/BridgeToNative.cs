@@ -991,6 +991,45 @@ internal static class BridgeToNative
         Debug.Print("Unable to invoke method from Class. Message: {0}", errorMessage);
         return IntPtr.Zero;
     }
+    [UnmanagedCallersOnly]
+    public static void UnmanagedMethodCreateDelegateAndSetToField(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId, IntPtr gcHandlePtr, IntPtr functionPtr)
+    {
+        string? errorMessage = null;
+        object? instance = null;
+        if (gcHandlePtr != IntPtr.Zero)
+        {
+            instance = GCHandle.FromIntPtr(gcHandlePtr).Target;
+        }
+        if (functionPtr == IntPtr.Zero)
+        {
+            errorMessage = "Function pointer is null";
+            goto error;
+        }
+        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+        {
+            errorMessage = "Context ID is not valid";
+            goto error;
+        }
+        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
+        {
+            errorMessage = "Assembly ID is not valid";
+            goto error;
+        }
+        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
+        {
+            errorMessage = "Class ID is not valid";
+            goto error;
+        }
+        if (!type.Fields.TryGetValue(fieldId, out var field))
+        {
+            errorMessage = "Field ID is not valid";
+            goto error;
+        }
+        field.SetValue(instance, /*Marshal.GetDelegateForFunctionPointer(*/functionPtr/*, field.FieldType)*/);
+        return;
+        error:
+        Debug.Print("Unable to set method from Class. Message: {0}", errorMessage);
+    }
     /*[UnmanagedCallersOnly]
     public static void InvokeMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId, object[] args)
     {

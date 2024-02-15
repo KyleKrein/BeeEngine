@@ -225,6 +225,10 @@ namespace BeeEngine
         return *m_Class;
     }
 
+    MFieldValue::~MFieldValue()
+    {
+    }
+
     MObject::MObject(const MClass& object)
     {
         m_Handle = NativeToManaged::ObjectNewGCHandle(object.m_ContextID, object.m_AssemblyID, object.m_ClassID, GCHandleType::Normal);
@@ -252,7 +256,12 @@ namespace BeeEngine
         NativeToManaged::FieldSetData(mclass.m_ContextID, mclass.m_AssemblyID, mclass.m_ClassID, field.m_FieldID, m_Handle, value);
     }
 
-    void* MObject::GetFieldValue(MField& field)
+    MFieldValue MObject::GetFieldValue(MField& field)
+    {
+        return {MUtils::ShouldFreeGCHandle(field), GetFieldValueUnsafe(field), field.GetType()};
+    }
+
+    void* MObject::GetFieldValueUnsafe(MField& field)
     {
         auto& mclass = field.GetClass();
         return NativeToManaged::FieldGetData(mclass.m_ContextID, mclass.m_AssemblyID, mclass.m_ClassID, field.m_FieldID, m_Handle);

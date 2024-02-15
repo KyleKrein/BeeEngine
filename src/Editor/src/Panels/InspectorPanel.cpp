@@ -16,6 +16,8 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <ranges>
 
+#include "Scripting/NativeToManaged.h"
+
 namespace BeeEngine::Editor
 {
 
@@ -49,7 +51,8 @@ namespace BeeEngine::Editor
     {
         if(mObject)
         {
-            mObject->GetFieldValue(field, value);
+            auto obj = mObject->GetFieldValue(field);
+            *value = *static_cast<T*>(obj.GetValue());
             return;
         }
         *value = gameScriptField.GetData<T>();
@@ -414,7 +417,7 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            void* object = mObject->GetFieldValue(mField);
+                            auto object = mObject->GetFieldValue(mField);
                             ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
@@ -470,7 +473,7 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            void* object = mObject->GetFieldValue(mField);
+                            auto object = mObject->GetFieldValue(mField);
                             ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
@@ -537,7 +540,7 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            void* object = mObject->GetFieldValue(mField);
+                            auto object = mObject->GetFieldValue(mField);
                             ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
@@ -604,7 +607,7 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            void* object = mObject->GetFieldValue(mField);
+                            auto object = mObject->GetFieldValue(mField);
                             ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else

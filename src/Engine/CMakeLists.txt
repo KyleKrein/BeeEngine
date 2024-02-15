@@ -187,6 +187,8 @@ if(NOT BEE_DONT_REGENERATE_EMBEDDED_FILES)
     FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Shaders/Standart2DFragment.glsl)
     FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Shaders/Standart2DVertex.glsl)
     set(BEE_DONT_REGENERATE_EMBEDDED_FILES ON CACHE BOOL "Don't regenerate embedded files" FORCE)
+else ()
+    FileEmbedUseGeneratedFiles()
 endif ()
 
 set(SCRIPTING_SOURCE_FILES src/Scripting/ScriptingEngine.cpp src/Scripting/ScriptingEngine.h src/Scripting/MAssembly.h src/Scripting/MClass.h src/Scripting/ScriptGlue.cpp src/Scripting/ScriptGlue.h src/Scripting/MObject.h src/Scripting/MMethod.h src/Scripting/GameScript.h src/Scripting/MField.h src/Scripting/MTypes.h src/Scripting/MUtils.cpp src/Scripting/MUtils.h)

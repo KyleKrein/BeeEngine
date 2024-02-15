@@ -46,6 +46,8 @@ namespace BeeEngine
         MClass* FontClass = nullptr;
         MClass* PrefabClass = nullptr;
 
+        MClass* InternalCallsClass = nullptr;
+
         MField* DeltaTimeField = nullptr;
         MField* TotalTimeField = nullptr;
 
@@ -176,10 +178,8 @@ namespace BeeEngine
                     if(MUtils::IsSutableForEdit(field))
                     {
                         auto& scriptField = fields.emplace_back(field);
-                        byte buffer[GameScriptField::MAX_FIELD_SIZE];
-                        memset(buffer, 0, GameScriptField::MAX_FIELD_SIZE);
-                        obj.GetFieldValue(field, buffer);
-                        scriptField.SetData(buffer);
+                        auto data = obj.GetFieldValue(field);
+                        scriptField.SetData(data);
                     }
                 }
             }
@@ -236,11 +236,15 @@ namespace BeeEngine
                 s_Data.EntityWasRemovedMethod = &mClass->GetMethod("EntityWasRemoved", flags);
                 s_Data.EndSceneMethod = &mClass->GetMethod("EndScene", flags);
             }
+            if(mClass->GetName() == "InternalCalls")
+            {
+                s_Data.InternalCallsClass = mClass.get();
+            }
 
             if(s_Data.EntityBaseClass && s_Data.AssetHandleField &&
             s_Data.Texture2DClass && s_Data.FontClass && s_Data.PrefabClass &&
             s_Data.TotalTimeField && s_Data.DeltaTimeField && s_Data.AddEntityScriptMethod &&
-            s_Data.EntityWasRemovedMethod && s_Data.EndSceneMethod)
+            s_Data.EntityWasRemovedMethod && s_Data.EndSceneMethod && s_Data.InternalCallsClass)
             {
                 break;
             }
@@ -374,6 +378,14 @@ namespace BeeEngine
     {
         return s_Data.GameScripts;
     }
+
+    void ScriptingEngine::RegisterNativeFunction(const String& name, void* function)
+    {
+        MField& field = s_Data.InternalCallsClass->GetField("s_" + name);
+        auto& mclass = field.GetClass();
+        NativeToManaged::UnmanagedMethodCreateDelegateAndSetToField(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), field.GetFieldID(), nullptr,function);
+    }
+
     void ScriptingEngine::ReloadAssemblies()
     {
         s_Data.GameScripts.clear();
@@ -385,6 +397,7 @@ namespace BeeEngine
         s_Data.AssetHandleField = nullptr;
         s_Data.Texture2DClass = nullptr;
         s_Data.FontClass = nullptr;
+        s_Data.InternalCallsClass = nullptr;
 
         //s_Data.TimeVTable = nullptr;
         s_Data.TotalTimeField = nullptr;

@@ -3,6 +3,10 @@
 //
 
 #pragma once
+#include <complex.h>
+
+#include "MAssembly.h"
+#include "MClass.h"
 #include "MTypes.h"
 namespace BeeEngine
 {
@@ -16,5 +20,7 @@ namespace BeeEngine
         static bool IsSutableForEdit(const class MField& field);
 
         static size_t SizeOfMType(MType type);
+
+        static bool ShouldFreeGCHandle(const MField& field);
     };
 }

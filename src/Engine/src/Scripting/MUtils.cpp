@@ -249,4 +249,18 @@ namespace BeeEngine
         }
         return 0;
     }
+
+    bool MUtils::ShouldFreeGCHandle(const MField& field)
+    {
+        MType type = field.GetType();
+        return type == MType::String ||
+               type == MType::Array ||
+               type == MType::Dictionary ||
+               type == MType::List ||
+               type == MType::Object ||
+               type == MType::Asset ||
+               type == MType::Texture2D ||
+               type == MType::Font ||
+               type == MType::Prefab;
+    }
 }
