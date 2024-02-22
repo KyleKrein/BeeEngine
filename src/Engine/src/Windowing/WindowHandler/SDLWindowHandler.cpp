@@ -37,9 +37,9 @@ namespace BeeEngine::Internal
 
         switch (properties.PreferredRenderAPI)
         {
-            //case Vulkan:
-            //    windowFlags |= SDL_WINDOW_VULKAN;
-            //    break;
+            case Vulkan:
+                windowFlags |= SDL_WINDOW_VULKAN;
+                break;
             case WebGPU:
                 if constexpr (Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
                 {

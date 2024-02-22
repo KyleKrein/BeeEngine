@@ -14,6 +14,11 @@ namespace BeeEngine{
         uint16_t Height;
         const char *Title;
         VSync Vsync;
-        const RenderAPI PreferredRenderAPI = RenderAPI::WebGPU;
+        const RenderAPI PreferredRenderAPI =
+#if defined(BEE_COMPILE_VULKAN)
+                RenderAPI::Vulkan;
+#else
+            RenderAPI::WebGPU;
+#endif
     };
 }

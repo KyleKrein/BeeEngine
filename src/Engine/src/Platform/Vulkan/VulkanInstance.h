@@ -7,7 +7,6 @@
 #include "Renderer/Instance.h"
 #include "vulkan/vulkan.hpp"
 #include "Windowing/WindowHandler/WindowHandler.h"
-#include "VulkanSurface.h"
 
 namespace BeeEngine::Internal
 {
@@ -19,8 +18,6 @@ namespace BeeEngine::Internal
 
         [[nodiscard]]const vk::Instance &GetHandle() const { return m_Instance; }
 
-        Ref<VulkanSurface> CreateSurface();
-
     private:
         vk::Instance m_Instance { nullptr };
         vk::DebugUtilsMessengerEXT m_DebugMessenger { nullptr };
@@ -31,8 +28,6 @@ namespace BeeEngine::Internal
         bool LayersSupported(const std::vector<const char *>& layers) const;
 
         void MakeDebugMessenger();
-
-        void ManageGLFW(vk::ApplicationInfo& appInfo);
 
         void ManageSDL(vk::ApplicationInfo &info);
     };

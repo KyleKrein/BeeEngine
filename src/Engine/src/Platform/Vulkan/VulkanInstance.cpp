@@ -77,7 +77,7 @@ namespace BeeEngine::Internal
         BeeCoreTrace("Supported Extensions: ");
         for (const vk::ExtensionProperties& extension : supportedExtensions)
         {
-            BeeCoreTrace("\t{0}", extension.extensionName);
+            BeeCoreTrace("\t{0}", extension.extensionName.data());
         }
 
         for(const char* extension : extensions)
@@ -85,7 +85,7 @@ namespace BeeEngine::Internal
             bool found = false;
             for(const vk::ExtensionProperties& supportedExtension : supportedExtensions)
             {
-                if(strcmp(extension, supportedExtension.extensionName) == 0)
+                if(strcmp(extension, supportedExtension.extensionName.data()) == 0)
                 {
                     found = true;
                     BeeCoreTrace("Extension {0} is supported", extension);
@@ -107,7 +107,7 @@ namespace BeeEngine::Internal
         BeeCoreTrace("Supported Layers: ");
         for (const vk::LayerProperties& layer : supportedLayers)
         {
-            BeeCoreTrace("\t{0}", layer.layerName);
+            BeeCoreTrace("\t{0}", layer.layerName.data());
         }
 
         for(const char* layer: layers)
@@ -152,94 +152,12 @@ namespace BeeEngine::Internal
         m_DebugMessenger = m_Instance.createDebugUtilsMessengerEXT(createInfo, nullptr, m_DynamicLoader);
     }
 
-    void VulkanInstance::ManageGLFW(vk::ApplicationInfo& appInfo)
-    {
-#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-        std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-        if(Application::GetOsPlatform() == OSPlatform::Mac)
-        {
-            extensions.push_back("VK_KHR_portability_enumeration");
-        }
-#if defined(DEBUG)
-        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-#endif
-
-        BeeCoreTrace("Extensions to be requested: ");
-        for (const char* extension : extensions)
-        {
-            BeeCoreTrace("\t{0}", extension);
-        }
-
-        std::vector<const char*> layers;
-#if defined(BEE_VULKAN_ENABLE_VALIDATION_LAYERS)
-        layers.push_back("VK_LAYER_KHRONOS_validation");
-        if(!LayersSupported(layers))
-        {
-            BeeCoreError("Required layers are not supported!");
-            layers.clear();
-        }
-#endif
-
-
-        if(!ExtensionsSupported(extensions))
-        {
-            BeeCoreError("Required extensions are not supported!");
-            m_Instance = nullptr;
-            return;
-        }
-
-        /*
-         * from vulkan_structs.hpp:
-         *
-         * VULKAN_HPP_CONSTEXPR InstanceCreateInfo( uint32_t flags_ = {},
-         *                                          const ApplicationInfo* pApplicationInfo_ = {},
-         *                                          uint32_t enabledLayerCount_ = {},
-         *                                          const char* const* ppEnabledLayerNames_ = {},
-         *                                          uint32_t enabledExtensionCount_ = {},
-         *                                          const char* const* ppEnabledExtensionNames_ = {} ) VULKAN_HPP_NOEXCEPT
-         */
-        vk::InstanceCreateInfo createInfo(vk::InstanceCreateFlags()
-                , &appInfo,
-                                          layers.size(),
-                                          layers.data(),
-                                          extensions.size(),
-                                          extensions.data());
-
-        createInfo.flags = vk::InstanceCreateFlags();
-        if(Application::GetOsPlatform() == OSPlatform::Mac)
-        {
-            createInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
-        }
-        createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledLayerCount = layers.size();
-        createInfo.ppEnabledLayerNames = layers.data();
-        createInfo.enabledExtensionCount = extensions.size();
-        createInfo.ppEnabledExtensionNames = extensions.data();
-        try
-        {
-            m_Instance = vk::createInstance(createInfo, nullptr);
-        }
-        catch (vk::SystemError& err)
-        {
-            BeeCoreError("Failed to create Vulkan Instance: {0}", err.what());
-            m_Instance = nullptr;
-        }
-#endif
-    }
-
-    Ref<VulkanSurface> VulkanInstance::CreateSurface()
-    {
-        return CreateRef<VulkanSurface>(m_WindowApi, m_Instance);
-    }
-
     void VulkanInstance::ManageSDL(vk::ApplicationInfo &appInfo)
     {
         uint32_t extensionCount = 0;
-        SDL_Vulkan_GetInstanceExtensions(&extensionCount, nullptr);
+        SDL_Vulkan_GetInstanceExtensions(&extensionCount);
         std::vector<const char*> extensions(extensionCount);
-        SDL_Vulkan_GetInstanceExtensions(&extensionCount, extensions.data());
+        memcpy(extensions.data(), SDL_Vulkan_GetInstanceExtensions(nullptr), sizeof(const char*) * extensionCount);
 
         if(Application::GetOsPlatform() == OSPlatform::Mac)
         {

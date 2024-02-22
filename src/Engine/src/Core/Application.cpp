@@ -110,8 +110,13 @@ namespace BeeEngine{
     {
         switch (properties.PreferredRenderAPI)
         {
+#if defined(BEE_COMPILE_VULKAN)
+            case RenderAPI::Vulkan:
+                return;
+#else
             case RenderAPI::WebGPU:
                 return;
+#endif
             default:
                 BeeCoreWarn("Unable to use {} as render API", ToString(properties.PreferredRenderAPI));
                 //properties.PreferredRenderAPI = RenderAPI::WebGPU;

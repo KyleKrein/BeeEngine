@@ -3,20 +3,20 @@
 //
 
 #pragma once
+#include "VulkanImage.h"
 #if defined(BEE_COMPILE_VULKAN)
 #include "vulkan/vulkan.hpp"
 #include "Renderer/QueueFamilyIndices.h"
 #include "Renderer/SwapChain.h"
-#include "VulkanImage.h"
 
 namespace BeeEngine::Internal
 {
     class VulkanGraphicsDevice;
     struct SwapChainSupportDetails
     {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
+        vk::SurfaceCapabilitiesKHR capabilities;
+        std::vector<vk::SurfaceFormatKHR> formats;
+        std::vector<vk::PresentModeKHR> presentModes;
     };
     struct SwapChainFrame
     {
@@ -39,23 +39,23 @@ namespace BeeEngine::Internal
         VulkanSwapChain(const VulkanSwapChain& other) = delete;
         VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;
 
-        VkSwapchainKHR& GetHandle()
+        vk::SwapchainKHR& GetHandle()
         {
             return m_SwapChain;
         }
-        VkFormat& GetFormat()
+        vk::Format& GetFormat()
         {
             return m_SurfaceFormat.format;
         }
-        VkExtent2D& GetExtent()
+        vk::Extent2D& GetExtent()
         {
             return m_Extent;
         }
-        VkSurfaceFormatKHR& GetSurfaceFormat()
+        vk::SurfaceFormatKHR& GetSurfaceFormat()
         {
             return m_SurfaceFormat;
         }
-        VkPresentModeKHR& GetPresentMode()
+        vk::PresentModeKHR& GetPresentMode()
         {
             return m_PresentMode;
         }
@@ -67,18 +67,18 @@ namespace BeeEngine::Internal
             return m_SwapChainFramebuffers[index];
         }
 
-        VkResult AcquireNextImage(uint32_t *imageIndex);
-        VkResult SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
+        vk::Result AcquireNextImage(uint32_t *imageIndex);
+        vk::Result SubmitCommandBuffers(const vk::CommandBuffer *buffers, uint32_t *imageIndex);
 
         bool ResizeInProgress();
 
     private:
         SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice& physicalDevice, vk::SurfaceKHR& surface);
 
-        void ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
-        void ChoosePresentMode(const std::vector<VkPresentModeKHR>& presentModes);
+        void ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& formats);
+        void ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes);
 
-        void ChooseExtent(VkSurfaceCapabilitiesKHR &capabilities);
+        void ChooseExtent(vk::SurfaceCapabilitiesKHR &capabilities);
 
         void CreateCommandBuffers();
         void CreateSwapChain();
@@ -90,12 +90,12 @@ namespace BeeEngine::Internal
         void Destroy();
 
     private:
-        VkSurfaceFormatKHR m_SurfaceFormat;
-        VkPresentModeKHR m_PresentMode;
-        VkExtent2D m_Extent;
+        vk::SurfaceFormatKHR m_SurfaceFormat;
+        vk::PresentModeKHR m_PresentMode;
+        vk::Extent2D m_Extent;
 
-        VkRenderPass m_RenderPass;
-        VkSwapchainKHR m_SwapChain;
+        vk::RenderPass m_RenderPass;
+        vk::SwapchainKHR m_SwapChain;
         //std::vector<SwapChainFrame> m_Frames;
         uint32_t m_MaxFrames;
         uint32_t m_CurrentFrame = 0;
@@ -103,20 +103,20 @@ namespace BeeEngine::Internal
         SwapChainSupportDetails m_SwapChainSupportDetails;
         VulkanGraphicsDevice& m_GraphicsDevice;
 
-        std::vector<VkSemaphore> m_ImageAvailableSemaphores;
-        std::vector<VkSemaphore> m_RenderFinishedSemaphores;
-        std::vector<VkFence> m_InFlightFences;
-        std::vector<VkFence> m_ImagesInFlight;
+        std::vector<vk::Semaphore> m_ImageAvailableSemaphores;
+        std::vector<vk::Semaphore> m_RenderFinishedSemaphores;
+        std::vector<vk::Fence> m_InFlightFences;
+        std::vector<vk::Fence> m_ImagesInFlight;
 
         std::vector<VulkanImage> m_DepthImages;
-        std::vector<VkImageView> m_DepthImageViews;
-        std::vector<VkImage> m_SwapChainImages;
-        std::vector<VkImageView> m_SwapChainImageViews;
-        std::vector<VkFramebuffer> m_SwapChainFramebuffers;
+        std::vector<vk::ImageView> m_DepthImageViews;
+        std::vector<vk::Image> m_SwapChainImages;
+        std::vector<vk::ImageView> m_SwapChainImageViews;
+        std::vector<vk::Framebuffer> m_SwapChainFramebuffers;
 
         bool m_ResizeInProgress = false;
 
-        VkFormat FindDepthFormat();
+        vk::Format FindDepthFormat();
     };
 }
 #endif

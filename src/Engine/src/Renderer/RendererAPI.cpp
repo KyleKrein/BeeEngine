@@ -15,6 +15,8 @@ namespace BeeEngine
         {
             case RenderAPI::WebGPU:
                 return CreateRef<Internal::WebGPURendererAPI>();
+            case RenderAPI::Vulkan:
+                return nullptr;
             default:
                 BeeCoreFatalError("Renderer API not supported!");
                 return nullptr;

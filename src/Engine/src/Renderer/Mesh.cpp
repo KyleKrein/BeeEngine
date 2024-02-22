@@ -2,7 +2,6 @@
 // Created by Александр Лебедев on 27.06.2023.
 //
 #include "Mesh.h"
-#include "Platform/Vulkan/VulkanModel.h"
 #include "Platform/WebGPU/WebGPUMesh.h"
 
 namespace BeeEngine

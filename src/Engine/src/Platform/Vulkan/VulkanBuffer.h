@@ -12,7 +12,7 @@ namespace BeeEngine::Internal
 {
     struct VulkanBuffer
     {
-        VkBuffer Buffer {VK_NULL_HANDLE};
+        vk::Buffer Buffer;
         VmaAllocation Memory {VK_NULL_HANDLE};
         //VulkanBuffer() = default;
 

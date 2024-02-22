@@ -9,13 +9,7 @@
 #include "vulkan/vulkan.hpp"
 #include "VulkanInstance.h"
 #include "Renderer/QueueFamilyIndices.h"
-#include "VulkanGraphicsQueue.h"
 #include "VulkanSwapChain.h"
-#include "VulkanPipeline.h"
-#include "VulkanCommandPool.h"
-#include "VulkanCommandBuffer.h"
-#include "VulkanFence.h"
-#include "VulkanSemaphore.h"
 #include "VulkanBuffer.h"
 
 namespace BeeEngine::Internal
@@ -24,6 +18,7 @@ namespace BeeEngine::Internal
     {
     public:
         VulkanGraphicsDevice(VulkanInstance& instance);
+
         ~VulkanGraphicsDevice() override;
 
         void WindowResized(uint32_t width, uint32_t height) override;
@@ -37,26 +32,32 @@ namespace BeeEngine::Internal
         {
             return m_PhysicalDevice;
         }
+
         QueueFamilyIndices& GetQueueFamilyIndices()
         {
             return m_QueueFamilyIndices;
         }
-        VulkanGraphicsQueue& GetGraphicsQueue()
+
+        vk::Queue GetGraphicsQueue()
         {
-            return *m_GraphicsQueue;
+            return m_GraphicsQueue;
         }
-        VulkanGraphicsQueue& GetPresentQueue()
+
+        vk::Queue GetPresentQueue()
         {
-            return *m_PresentQueue;
+            return m_PresentQueue;
         }
-        VulkanSurface& GetSurface()
+
+        vk::SurfaceKHR GetSurface()
         {
-            return *m_Surface;
+            return m_Surface;
         }
+
         VulkanSwapChain& GetSwapChain()
         {
             return *m_SwapChain;
         }
+
         /*VulkanPipeline& GetPipeline()
         {
             return *m_Pipeline;
@@ -67,9 +68,9 @@ namespace BeeEngine::Internal
             return m_SwapChainSupportDetails;
         }
 
-        VulkanCommandPool &GetCommandPool()
+        vk::CommandPool GetCommandPool()
         {
-            return *m_CommandPool;
+            return m_CommandPool;
         }
 
         void RequestSwapChainRebuild() override
@@ -77,48 +78,54 @@ namespace BeeEngine::Internal
             BeeCoreInfo("Swap chain rebuild requested");
             m_SwapChainRebuildRequested = true;
         }
+
         bool SwapChainRequiresRebuild() override
         {
             return m_SwapChainRebuildRequested;
         }
 
         // Buffer Helper Functions
-        void CreateBuffer(
-                VkDeviceSize size,
-                VkBufferUsageFlags usage,
-                VmaMemoryUsage memoryUsage,
-                out<VulkanBuffer> buffer) const;
 
-        void CopyToBuffer(gsl::span<byte> data, out<VulkanBuffer> buffer) const;
+        VulkanBuffer CreateBuffer(
+                vk::DeviceSize size,
+                vk::BufferUsageFlags usage,
+                VmaMemoryUsage memoryUsage) const;
+
+        void CopyToBuffer(gsl::span<byte> data, VulkanBuffer& outBuffer) const;
 
 
-        VkCommandBuffer BeginSingleTimeCommands();
+        vk::CommandBuffer BeginSingleTimeCommands();
 
-        void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+        void EndSingleTimeCommands(vk::CommandBuffer commandBuffer);
 
-        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, vk::DeviceSize size);
+        void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
 
         void CopyBufferToImage(
-                VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
+                vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height, uint32_t layerCount);
 
         void CreateImageWithInfo(
-                 in<VkImageCreateInfo> imageInfo,
-                 in<VkImageViewCreateInfo> imageViewInfo,
-                 in<VkMemoryPropertyFlags> memoryProperties,
-                 in<VmaMemoryUsage> memoryUsage,
-                 out<VulkanImage> image,
-                 out<VkImageView> imageView) const;
-        VkFormat FindSupportedFormat(
-                const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+                 const vk::ImageCreateInfo& imageInfo,
+                 const vk::ImageViewCreateInfo& imageViewInfo,
+                 vk::MemoryPropertyFlags memoryProperties,
+                 const VmaMemoryUsage& memoryUsage,
+                 VulkanImage& outImage,
+                 vk::ImageView& outImageView) const;
+
+        vk::Format FindSupportedFormat(
+        const std::vector<vk::Format> &candidates, vk::ImageTiling tiling,
+                                               vk::FormatFeatureFlags features);
 
         vk::PhysicalDeviceProperties properties;
 
         static VulkanGraphicsDevice &GetInstance();
 
     private:
+        void CreateCommandPool();
+
         static VulkanGraphicsDevice* s_Instance;
 
         uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+        void LoadKHRRayTracing();
         //
 
 
@@ -138,17 +145,18 @@ namespace BeeEngine::Internal
 
         void CreateSwapChainSupportDetails();
 
-        Ref<VulkanSurface> m_Surface;
+        vk::SurfaceKHR m_Surface;
         DeviceHandle m_DeviceHandle;
         Scope<VulkanSwapChain> m_SwapChain;
         vk::Device m_Device;
         vk::PhysicalDevice m_PhysicalDevice;
-        Ref<VulkanGraphicsQueue> m_GraphicsQueue;
-        Ref<VulkanGraphicsQueue> m_PresentQueue;
+        vk::Queue m_GraphicsQueue;
+        vk::Queue m_PresentQueue;
 
         //Ref<VulkanPipeline> m_Pipeline;
-        VulkanCommandBuffer m_MainCommandBuffer;
-        Ref<VulkanCommandPool> m_CommandPool;
+        vk::CommandBuffer m_MainCommandBuffer;
+        vk::CommandPool m_CommandPool;
+        vk::CommandBufferAllocateInfo m_CommandPoolAllocateInfo;
 
         struct DeletionQueueFlusher
         {
@@ -170,8 +178,9 @@ namespace BeeEngine::Internal
                                          const std::vector<const char *> &extensions) const;
 
         QueueFamilyIndices FindQueueFamilies();
-        void CreatePhysicalDevice(const VulkanInstance &instance);
+        void SelectPhysicalDevice(const VulkanInstance &instance);
         void CreateLogicalDevice();
+        void CreateSurface(VulkanInstance &instance);
         void InitializeVulkanMemoryAllocator(VulkanInstance &instance);
 
 

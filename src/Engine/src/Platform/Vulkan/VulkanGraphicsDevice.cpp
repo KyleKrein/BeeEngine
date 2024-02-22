@@ -1,17 +1,78 @@
 //
 // Created by alexl on 09.06.2023.
 //
+#include <SDL_vulkan.h>
 #if defined(BEE_COMPILE_VULKAN)
 #include "VulkanGraphicsDevice.h"
 #include "Renderer/QueueFamilyIndices.h"
 #include <set>
 #include "Core/Application.h"
 #include "Core/DeletionQueue.h"
-
+#include "Utils.h"
 
 namespace BeeEngine::Internal
 {
+    const static std::vector<const char *> requiredExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+        VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+        VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME
+};
     VulkanGraphicsDevice* VulkanGraphicsDevice::s_Instance = nullptr;
+    PFN_vkCmdTraceRaysKHR CmdTraceRaysKHR = nullptr;
+    PFN_vkDestroyAccelerationStructureKHR DestroyAccelerationStructureKHR = nullptr;
+    PFN_vkGetRayTracingShaderGroupHandlesKHR GetRayTracingShaderGroupHandlesKHR = nullptr;
+    PFN_vkCmdWriteAccelerationStructuresPropertiesKHR CmdWriteAccelerationStructuresPropertiesKHR =
+        nullptr;
+    PFN_vkCreateAccelerationStructureKHR CreateAccelerationStructureKHR = nullptr;
+    PFN_vkCmdBuildAccelerationStructuresKHR CmdBuildAccelerationStructuresKHR = nullptr;
+    PFN_vkCmdCopyAccelerationStructureKHR CmdCopyAccelerationStructureKHR = nullptr;
+    PFN_vkCreateRayTracingPipelinesKHR CreateRayTracingPipelinesKHR = nullptr;
+    PFN_vkGetAccelerationStructureDeviceAddressKHR GetAccelerationStructureDeviceAddressKHR =
+        nullptr;
+    PFN_vkGetAccelerationStructureBuildSizesKHR GetAccelerationStructureBuildSizesKHR = nullptr;
+
+    void VulkanGraphicsDevice::LoadKHRRayTracing()
+    {
+        VkDevice device = m_Device;
+        CmdTraceRaysKHR = reinterpret_cast<PFN_vkCmdTraceRaysKHR>(
+            vkGetDeviceProcAddr(device, "vkCmdTraceRaysKHR"));
+        DestroyAccelerationStructureKHR = reinterpret_cast<PFN_vkDestroyAccelerationStructureKHR>(
+            vkGetDeviceProcAddr(device, "vkDestroyAccelerationStructureKHR"));
+        GetRayTracingShaderGroupHandlesKHR =
+            reinterpret_cast<PFN_vkGetRayTracingShaderGroupHandlesKHR>(
+                vkGetDeviceProcAddr(device, "vkGetRayTracingShaderGroupHandlesKHR"));
+        CmdWriteAccelerationStructuresPropertiesKHR =
+            reinterpret_cast<PFN_vkCmdWriteAccelerationStructuresPropertiesKHR>(
+                vkGetDeviceProcAddr(device, "vkCmdWriteAccelerationStructuresPropertiesKHR"));
+        CreateAccelerationStructureKHR = reinterpret_cast<PFN_vkCreateAccelerationStructureKHR>(
+            vkGetDeviceProcAddr(device, "vkCreateAccelerationStructureKHR"));
+        CmdBuildAccelerationStructuresKHR =
+            reinterpret_cast<PFN_vkCmdBuildAccelerationStructuresKHR>(
+                vkGetDeviceProcAddr(device, "vkCmdBuildAccelerationStructuresKHR"));
+        CmdCopyAccelerationStructureKHR = reinterpret_cast<PFN_vkCmdCopyAccelerationStructureKHR>(
+            vkGetDeviceProcAddr(device, "vkCmdCopyAccelerationStructureKHR"));
+        CreateRayTracingPipelinesKHR = reinterpret_cast<PFN_vkCreateRayTracingPipelinesKHR>(
+            vkGetDeviceProcAddr(device, "vkCreateRayTracingPipelinesKHR"));
+        GetAccelerationStructureDeviceAddressKHR =
+            reinterpret_cast<PFN_vkGetAccelerationStructureDeviceAddressKHR>(
+                vkGetDeviceProcAddr(device, "vkGetAccelerationStructureDeviceAddressKHR"));
+        GetAccelerationStructureBuildSizesKHR =
+            reinterpret_cast<PFN_vkGetAccelerationStructureBuildSizesKHR>(
+                vkGetDeviceProcAddr(device, "vkGetAccelerationStructureBuildSizesKHR"));
+        if(!CmdTraceRaysKHR || !DestroyAccelerationStructureKHR || !GetRayTracingShaderGroupHandlesKHR
+           || !CmdWriteAccelerationStructuresPropertiesKHR || !CreateAccelerationStructureKHR
+           || !CmdBuildAccelerationStructuresKHR || !CmdCopyAccelerationStructureKHR
+           || !CreateRayTracingPipelinesKHR || !GetAccelerationStructureDeviceAddressKHR
+           || !GetAccelerationStructureBuildSizesKHR)
+        {
+            BeeCoreError("Failed to load KHR Ray Tracing functions");
+        }
+        else
+        {
+            BeeCoreTrace("Loaded KHR Ray Tracing functions");
+        }
+    }
     VulkanGraphicsDevice::VulkanGraphicsDevice(VulkanInstance &instance)
     {
         if(s_Instance != nullptr)
@@ -19,37 +80,22 @@ namespace BeeEngine::Internal
             BeeCoreFatalError("Can't create two graphics devices at once");
         }
         s_Instance = this;
-        m_Surface = instance.CreateSurface();
-        CreatePhysicalDevice(instance);
+        CreateSurface(instance);
+        SelectPhysicalDevice(instance);
         CreateLogicalDevice();
+
+        LoadKHRRayTracing();
+
         InitializeVulkanMemoryAllocator(instance);
-        m_GraphicsQueue->Initialize(m_PhysicalDevice, m_Device);
+
+        m_GraphicsQueue = m_Device.getQueue(m_QueueFamilyIndices.GraphicsFamily.value(), 0);
         if(m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
         {
-            m_PresentQueue->Initialize(m_PhysicalDevice, m_Device);
+            m_PresentQueue = m_Device.getQueue(m_QueueFamilyIndices.PresentFamily.value(), 0);
         }
         CreateSwapChainSupportDetails();
         m_SwapChain = CreateScope<VulkanSwapChain>(*this, WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight());
-        /*
-        GraphicsPipelineInBundle pipelineInBundle {m_SwapChain->GetExtent().width,
-                                                   m_SwapChain->GetExtent().height,
-                                                   m_SwapChain->GetFormat(),
-                                                   CreateRef<VulkanShaderModule>(m_Device, "TestVertex", "shaders/vertex.spv"),
-                                                   CreateRef<VulkanShaderModule>(m_Device, "TestFragment", "shaders/fragment.spv")};
-        */
-         //m_Pipeline = CreateRef<VulkanPipeline>(m_Device, pipelineInBundle);
-        //VulkanFramebuffer::CreateFramebuffers(m_Device, m_Pipeline->GetRenderPass().GetHandle(), m_SwapChain->GetExtent(), m_SwapChain->GetFrames());
-        m_CommandPool = CreateRef<VulkanCommandPool>(m_Device, m_QueueFamilyIndices);
-        //m_CommandPool->CreateCommandBuffers(m_SwapChain->GetFrames());
-        //m_MainCommandBuffer = m_CommandPool->CreateCommandBuffer();
-        /*
-        for(auto& frame : m_SwapChain->GetFrames())
-        {
-            frame.ImageAvailableSemaphore = VulkanSemaphore(m_Device);
-            frame.RenderFinishedSemaphore = VulkanSemaphore(m_Device);
-            frame.InFlightFence = VulkanFence(m_Device);
-        }
-         */
+        CreateCommandPool();
     }
 
     VulkanGraphicsDevice::~VulkanGraphicsDevice()
@@ -62,7 +108,7 @@ namespace BeeEngine::Internal
     {
         vk::PhysicalDeviceProperties deviceProperties = device.getProperties();
 
-        BeeCoreInfo("Device name: {}", deviceProperties.deviceName);
+        BeeCoreInfo("Device name: {}", deviceProperties.deviceName.data());
         BeeCoreInfo("Device type: {}", vk::to_string(deviceProperties.deviceType));
         BeeCoreInfo("Device driver version: {}", deviceProperties.driverVersion);
         BeeCoreInfo("Device API version: {}", deviceProperties.apiVersion);
@@ -72,17 +118,13 @@ namespace BeeEngine::Internal
 
     bool VulkanGraphicsDevice::IsSuitableDevice(const vk::PhysicalDevice &device) const
     {
-        const std::vector<const char *> requiredExtensions = {
-                VK_KHR_SWAPCHAIN_EXTENSION_NAME
-        };
-
         if(CheckDeviceExtensionSupport(device, requiredExtensions))
         {
-            BeeCoreInfo("Device {} supports all required extensions", device.getProperties().deviceName);
+            BeeCoreInfo("Device {} supports all required extensions", device.getProperties().deviceName.data());
         }
         else
         {
-            BeeCoreInfo("Device {} does not support all required extensions", device.getProperties().deviceName);
+            BeeCoreInfo("Device {} does not support all required extensions", device.getProperties().deviceName.data());
             return false;
         }
 
@@ -95,6 +137,12 @@ namespace BeeEngine::Internal
         std::vector<vk::ExtensionProperties> availableExtensions = device.enumerateDeviceExtensionProperties();
 
         std::set<std::string> requiredExtensions(extensions.begin(), extensions.end());
+
+        BeeCoreTrace("Required Extensions for Graphics Device:");
+        for (const auto& extension : requiredExtensions)
+        {
+            BeeCoreTrace("{}", extension);
+        }
 
         for (const auto& extension:availableExtensions)
         {
@@ -122,7 +170,7 @@ namespace BeeEngine::Internal
             }
             i++;
         }
-        if(m_PhysicalDevice.getSurfaceSupportKHR(indices.GraphicsFamily.value(), m_Surface->GetHandle()))
+        if(m_PhysicalDevice.getSurfaceSupportKHR(indices.GraphicsFamily.value(), m_Surface))
         {
             BeeCoreInfo("Queue family {} supports presentation", indices.GraphicsFamily.value());
             indices.PresentFamily = indices.GraphicsFamily;
@@ -135,7 +183,7 @@ namespace BeeEngine::Internal
         return indices;
     }
 
-    void VulkanGraphicsDevice::CreatePhysicalDevice(const VulkanInstance &instance)
+    void VulkanGraphicsDevice::SelectPhysicalDevice(const VulkanInstance &instance)
     {
         /*
          * Choose a suitable physical device from a list of available devices
@@ -171,13 +219,22 @@ namespace BeeEngine::Internal
         m_QueueFamilyIndices = FindQueueFamilies();
 
         float queuePriority[] {1.0f};
-        m_GraphicsQueue = CreateRef<VulkanGraphicsQueue>(m_QueueFamilyIndices.GraphicsFamily.value(), queuePriority);
+        vk::DeviceQueueCreateInfo graphicsQueueCreateInfo = {
+            vk::DeviceQueueCreateFlags(),
+            m_QueueFamilyIndices.GraphicsFamily.value(),
+            1,
+            queuePriority};
+        vk::DeviceQueueCreateInfo presentQueueCreateInfo = graphicsQueueCreateInfo;
 
         uint32_t numberOfQueuesToCreate = 1;
 
         if(m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
         {
-            m_PresentQueue = CreateRef<VulkanGraphicsQueue>(m_QueueFamilyIndices.PresentFamily.value(), queuePriority);
+            presentQueueCreateInfo = {
+                vk::DeviceQueueCreateFlags(),
+                m_QueueFamilyIndices.PresentFamily.value(),
+                1,
+                queuePriority};
             numberOfQueuesToCreate++;
         }
         else
@@ -185,9 +242,7 @@ namespace BeeEngine::Internal
             m_PresentQueue = m_GraphicsQueue;
         }
 
-        std::vector<const char*> deviceExtensions = {
-                VK_KHR_SWAPCHAIN_EXTENSION_NAME
-        };
+        std::vector<const char*> deviceExtensions = requiredExtensions;
 
         if(BeeEngine::Application::GetOsPlatform() == OSPlatform::Mac)
         {
@@ -202,10 +257,10 @@ namespace BeeEngine::Internal
         enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
         std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-        queueCreateInfos.push_back(m_GraphicsQueue->GetQueueCreateInfo());
+        queueCreateInfos.push_back(graphicsQueueCreateInfo);
         if(numberOfQueuesToCreate > 1)
         {
-            queueCreateInfos.push_back(m_PresentQueue->GetQueueCreateInfo());
+            queueCreateInfos.push_back(presentQueueCreateInfo);
         }
 
         vk::DeviceCreateInfo deviceInfo(
@@ -229,10 +284,21 @@ namespace BeeEngine::Internal
         }
     }
 
-    void VulkanGraphicsDevice::CreateBuffer(VkDeviceSize size,
-                                            VkBufferUsageFlags usage,
-                                            VmaMemoryUsage memoryUsage,
-                                            out<VulkanBuffer> buffer) const
+    void VulkanGraphicsDevice::CreateSurface(VulkanInstance& instance)
+    {
+        VkSurfaceKHR cSurface;
+        auto sdlWindow = (SDL_Window*)WindowHandler::GetInstance()->GetWindow();
+        auto result = SDL_Vulkan_CreateSurface(sdlWindow, instance.GetHandle(), nullptr, &cSurface);
+        if(result != SDL_TRUE)
+        {
+            BeeCoreFatalError("Failed to create Vulkan surface!");
+        }
+        m_Surface = vk::SurfaceKHR(cSurface);
+    }
+
+    VulkanBuffer VulkanGraphicsDevice::CreateBuffer(vk::DeviceSize size,
+                                            vk::BufferUsageFlags usage,
+                                            VmaMemoryUsage memoryUsage) const
     {
         //allocate vertex buffer
         VkBufferCreateInfo bufferInfo = {};
@@ -240,7 +306,7 @@ namespace BeeEngine::Internal
         //this is the total size, in bytes, of the buffer we are allocating
         bufferInfo.size = size;
         //this buffer is going to be used as a Vertex Buffer
-        bufferInfo.usage = usage;
+        bufferInfo.usage = (VkBufferUsageFlags)usage;
         //bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 
@@ -252,8 +318,9 @@ namespace BeeEngine::Internal
             vmaallocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
         }
         //allocate the buffer
+        VulkanBuffer buffer;
         auto result = vmaCreateBuffer(m_DeviceHandle.allocator, &bufferInfo, &vmaallocInfo,
-                                      &buffer.Buffer,
+                                      (VkBuffer*)&buffer.Buffer,
                                       &buffer.Memory,
                                       nullptr);
         if(result != VK_SUCCESS)
@@ -265,24 +332,25 @@ namespace BeeEngine::Internal
         DeletionQueue::Main().PushFunction([buffer]() {
             vmaDestroyBuffer(GetVulkanAllocator(), buffer.Buffer, buffer.Memory);
         });
+        return buffer;
     }
 
-    void VulkanGraphicsDevice::CopyToBuffer(gsl::span<byte> data, out<VulkanBuffer> buffer) const
+    void VulkanGraphicsDevice::CopyToBuffer(gsl::span<byte> data, VulkanBuffer& outBuffer) const
     {
         void* mappedData;
-        vmaMapMemory(m_DeviceHandle.allocator, buffer.Memory, &mappedData);
+        vmaMapMemory(m_DeviceHandle.allocator, outBuffer.Memory, &mappedData);
 
         memcpy(mappedData, data.data(), data.size());
 
-        vmaUnmapMemory(m_DeviceHandle.allocator, buffer.Memory);
+        vmaUnmapMemory(m_DeviceHandle.allocator, outBuffer.Memory);
     }
 
-    VkCommandBuffer VulkanGraphicsDevice::BeginSingleTimeCommands()
+    vk::CommandBuffer VulkanGraphicsDevice::BeginSingleTimeCommands()
     {
         vk::CommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = vk::StructureType::eCommandBufferAllocateInfo;
         allocInfo.level = vk::CommandBufferLevel::ePrimary;
-        allocInfo.commandPool = m_CommandPool->GetHandle();
+        allocInfo.commandPool = m_CommandPool;
         allocInfo.commandBufferCount = 1;
 
         vk::CommandBuffer commandBuffer;
@@ -296,35 +364,35 @@ namespace BeeEngine::Internal
         return commandBuffer;
     }
 
-    void VulkanGraphicsDevice::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+    void VulkanGraphicsDevice::EndSingleTimeCommands(vk::CommandBuffer commandBuffer)
     {
-        vkEndCommandBuffer(commandBuffer);
+        commandBuffer.end();
 
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        vk::SubmitInfo submitInfo{};
+        submitInfo.sType = vk::StructureType::eSubmitInfo;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        vkQueueSubmit(m_GraphicsQueue->GetQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(m_GraphicsQueue->GetQueue());
+        m_GraphicsQueue.submit(1, &submitInfo, nullptr);
+        m_GraphicsQueue.waitIdle();
 
-        vkFreeCommandBuffers(m_Device, m_CommandPool->GetHandle(), 1, &commandBuffer);
+        m_Device.freeCommandBuffers(m_CommandPool, 1, &commandBuffer);
     }
 
-    void VulkanGraphicsDevice::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    void VulkanGraphicsDevice::CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size)
     {
-        VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
+        vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
 
-        VkBufferCopy copyRegion{};
+        vk::BufferCopy copyRegion{};
         copyRegion.srcOffset = 0;  // Optional
         copyRegion.dstOffset = 0;  // Optional
         copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+        commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 
         EndSingleTimeCommands(commandBuffer);
     }
 
-    void VulkanGraphicsDevice::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height,
+    void VulkanGraphicsDevice::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height,
                                                  uint32_t layerCount)
     {
         vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
@@ -352,33 +420,31 @@ namespace BeeEngine::Internal
     }
 
     void
-    VulkanGraphicsDevice::CreateImageWithInfo(in<VkImageCreateInfo> imageInfo,
-                                              in<VkImageViewCreateInfo> imageViewInfo,
-                                              in<VkMemoryPropertyFlags> memoryProperties,
-                                              in<VmaMemoryUsage> memoryUsage,
-                                              out<VulkanImage> image,
-                                              out<VkImageView> imageView) const
+    VulkanGraphicsDevice::CreateImageWithInfo(const vk::ImageCreateInfo& imageInfo,
+                 const vk::ImageViewCreateInfo& imageViewInfo,
+                 vk::MemoryPropertyFlags memoryProperties,
+                 const VmaMemoryUsage& memoryUsage,
+                 VulkanImage& outImage,
+                 vk::ImageView& outImageView) const
     {
         VmaAllocationCreateInfo allocInfo = {};
         allocInfo.usage = memoryUsage;
-        allocInfo.requiredFlags = memoryProperties;
+        allocInfo.requiredFlags = (VkMemoryPropertyFlags)memoryProperties;
 
         //allocate and create the image
-        vmaCreateImage(m_DeviceHandle.allocator, &imageInfo, &allocInfo, &image.Image, &image.Memory, nullptr);
+        vmaCreateImage(m_DeviceHandle.allocator, (VkImageCreateInfo*)&imageInfo, &allocInfo, (VkImage*)&outImage.Image, &outImage.Memory, nullptr);
         auto copiedImageViewInfo = imageViewInfo;
-        copiedImageViewInfo.image = image.Image;
-        auto result = vkCreateImageView(m_Device, &copiedImageViewInfo, nullptr, &imageView);
+        copiedImageViewInfo.image = outImage.Image;
+        auto result = m_Device.createImageView(&copiedImageViewInfo, nullptr, &outImageView);
 
-        if(result != VK_SUCCESS)
+        if(result != vk::Result::eSuccess)
         {
             BeeCoreError("Failed to create image view!");
         }
-        auto device = m_Device;
-        auto allocator = m_DeviceHandle.allocator;
         //add to deletion queues
-        DeletionQueue::Main().PushFunction([=]() {
-            vkDestroyImageView(device, imageView, nullptr);
-            vmaDestroyImage(allocator, image.Image, image.Memory);
+        DeletionQueue::Main().PushFunction([device = m_Device, allocator = m_DeviceHandle.allocator, outImageView, outImage]() {
+            vkDestroyImageView(device, outImageView, nullptr);
+            vmaDestroyImage(allocator, outImage.Image, outImage.Memory);
         });
 
 
@@ -412,39 +478,35 @@ namespace BeeEngine::Internal
 
     void VulkanGraphicsDevice::CreateSwapChainSupportDetails()
     {
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, m_Surface->GetHandle(), &m_SwapChainSupportDetails.capabilities);
+        m_SwapChainSupportDetails.capabilities = m_PhysicalDevice.getSurfaceCapabilitiesKHR(m_Surface);
 
         uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface->GetHandle(), &formatCount, nullptr);
+        m_PhysicalDevice.getSurfaceFormatsKHR(m_Surface, &formatCount, nullptr);
 
         if (formatCount != 0) {
             m_SwapChainSupportDetails.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface->GetHandle(), &formatCount, m_SwapChainSupportDetails.formats.data());
+            m_PhysicalDevice.getSurfaceFormatsKHR(m_Surface, &formatCount, m_SwapChainSupportDetails.formats.data());
         }
 
         uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface->GetHandle(), &presentModeCount, nullptr);
+        m_PhysicalDevice.getSurfacePresentModesKHR(m_Surface, &presentModeCount, nullptr);
 
         if (presentModeCount != 0) {
             m_SwapChainSupportDetails.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(
-                    m_PhysicalDevice,
-                    m_Surface->GetHandle(),
-                    &presentModeCount,
-                    m_SwapChainSupportDetails.presentModes.data());
+            m_PhysicalDevice.getSurfacePresentModesKHR(m_Surface, &presentModeCount, m_SwapChainSupportDetails.presentModes.data());
         }
     }
 
-    VkFormat VulkanGraphicsDevice::FindSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling,
-                                                       VkFormatFeatureFlags features)
+    vk::Format VulkanGraphicsDevice::FindSupportedFormat(const std::vector<vk::Format> &candidates, vk::ImageTiling tiling,
+                                                       vk::FormatFeatureFlags features)
     {
-        for (VkFormat format : candidates) {
-            VkFormatProperties props;
-            vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &props);
+        for (vk::Format format : candidates) {
+            vk::FormatProperties props;
+            m_PhysicalDevice.getFormatProperties(format, &props);
 
-            if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+            if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
                 return format;
-            } else if (tiling == VK_IMAGE_TILING_OPTIMAL &&
+            } else if (tiling == vk::ImageTiling::eOptimal &&
                        (props.optimalTilingFeatures & features) == features) {
                 return format;
             }
@@ -481,6 +543,26 @@ namespace BeeEngine::Internal
     VulkanGraphicsDevice &VulkanGraphicsDevice::GetInstance()
     {
         return *s_Instance;
+    }
+
+    void VulkanGraphicsDevice::CreateCommandPool()
+    {
+        vk::CommandPoolCreateInfo commandPoolCreateInfo = {};
+        commandPoolCreateInfo.flags = vk::CommandPoolCreateFlags() | vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+        commandPoolCreateInfo.queueFamilyIndex = m_QueueFamilyIndices.GraphicsFamily.value();
+
+        try
+        {
+            m_CommandPool = m_Device.createCommandPool(commandPoolCreateInfo);
+        }
+        catch (vk::SystemError &e)
+        {
+            BeeCoreError("Failed to create command pool: {0}", e.what());
+        }
+
+        m_CommandPoolAllocateInfo.commandPool = m_CommandPool;
+        m_CommandPoolAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
+        m_CommandPoolAllocateInfo.commandBufferCount = 1;
     }
 
     /*void VulkanGraphicsDevice::UploadMesh(Mesh& mesh) const

@@ -9,7 +9,6 @@
 #include "backends/imgui_impl_glfw.h"
 #endif
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
-#include "Platform/Vulkan/VulkanRendererAPI.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "ImGuiControllerVulkan.h"
 
@@ -109,7 +108,7 @@ namespace BeeEngine
         init_info.Instance = ((Internal::VulkanInstance*)&WindowHandler::GetInstance()->GetAPIInstance())->GetHandle();
         init_info.PhysicalDevice = graphicsDevice.GetPhysicalDevice();
         init_info.Device = graphicsDevice.GetDevice();
-        init_info.Queue = graphicsDevice.GetGraphicsQueue().GetQueue();
+        init_info.Queue = graphicsDevice.GetGraphicsQueue();
         init_info.DescriptorPool = g_DescriptorPool;
         init_info.MinImageCount = 3;
         init_info.ImageCount = 3;
@@ -117,16 +116,14 @@ namespace BeeEngine
 
         ImGui_ImplVulkan_Init(&init_info, graphicsDevice.GetSwapChain().GetRenderPass());
 
-        auto cmd = graphicsDevice.BeginSingleTimeCommands();
-        ImGui_ImplVulkan_CreateFontsTexture(cmd);
-        graphicsDevice.EndSingleTimeCommands(cmd);
+        ImGui_ImplVulkan_CreateFontsTexture();
         //execute a gpu command to upload imgui font textures
         /*immediate_submit([&](VkCommandBuffer cmd) {
             ImGui_ImplVulkan_CreateFontsTexture(cmd);
         });*/
 
         //clear font textures from cpu data
-        ImGui_ImplVulkan_DestroyFontUploadObjects();
+        //ImGui_ImplVulkan_DestroyFontUploadObjects();
 
         //add the destroy the imgui created structures
         DeletionQueue::Main().PushFunction([=]() {
@@ -161,7 +158,7 @@ namespace BeeEngine
         auto& io = ImGui::GetIO();
         // Rendering
         ImGui::Render();
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Internal::VulkanRendererAPI::GetInstance().GetCurrentCommandBuffer());
+        //TODO: Uncomment this ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Internal::VulkanRendererAPI::GetInstance().GetCurrentCommandBuffer());
 
         // Update and Render additional Platform Windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -204,7 +201,7 @@ namespace BeeEngine
         g_Device = graphicsDevice.GetDevice();
         g_PhysicalDevice = graphicsDevice.GetPhysicalDevice();
         g_QueueFamily = graphicsDevice.GetQueueFamilyIndices().GraphicsFamily.value();
-        g_Queue = graphicsDevice.GetGraphicsQueue().GetQueue();
+        g_Queue = graphicsDevice.GetGraphicsQueue();
         g_Instance = ((Internal::VulkanInstance*)&WindowHandler::GetInstance()->GetAPIInstance())->GetHandle();
 
         // Create Descriptor Pool

@@ -5,12 +5,13 @@
 #pragma once
 #if defined(BEE_COMPILE_VULKAN)
 #include "vk_mem_alloc.h"
+#include <vulkan/vulkan.hpp>
 
 namespace BeeEngine::Internal
 {
     struct VulkanImage
     {
-        VkImage Image;
+        vk::Image Image;
         VmaAllocation Memory;
 
         void Destroy();
