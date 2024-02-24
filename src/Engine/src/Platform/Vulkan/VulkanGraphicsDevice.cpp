@@ -250,6 +250,7 @@ namespace BeeEngine::Internal
         }
 
         vk::PhysicalDeviceFeatures deviceFeatures = {};
+        deviceFeatures.samplerAnisotropy = vk::True;
 
         std::vector<const char*> enabledLayers;
 
@@ -296,9 +297,76 @@ namespace BeeEngine::Internal
         m_Surface = vk::SurfaceKHR(cSurface);
     }
 
+    void VulkanGraphicsDevice::TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout,
+        vk::ImageLayout newLayout)
+    {
+         vk::CommandBufferAllocateInfo allocInfo{};
+         allocInfo.level = vk::CommandBufferLevel::ePrimary;
+         allocInfo.commandPool = m_CommandPool;
+         allocInfo.commandBufferCount = 1;
+
+         vk::CommandBuffer commandBuffer;
+         m_Device.allocateCommandBuffers(&allocInfo, &commandBuffer);
+
+         vk::CommandBufferBeginInfo beginInfo{};
+         beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+
+         commandBuffer.begin(&beginInfo);
+
+         vk::ImageMemoryBarrier barrier{};
+         barrier.oldLayout = oldLayout;
+         barrier.newLayout = newLayout;
+         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+         barrier.image = image;
+         barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+         barrier.subresourceRange.baseMipLevel = 0;
+         barrier.subresourceRange.levelCount = 1;
+         barrier.subresourceRange.baseArrayLayer = 0;
+         barrier.subresourceRange.layerCount = 1;
+
+         vk::PipelineStageFlags sourceStage;
+         vk::PipelineStageFlags destinationStage;
+
+         if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal) {
+             barrier.srcAccessMask = vk::AccessFlagBits::eNoneKHR;
+             barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+
+             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+             destinationStage = vk::PipelineStageFlagBits::eTransfer;
+         } else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal) {
+             barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+             barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+             sourceStage = vk::PipelineStageFlagBits::eTransfer;
+             destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+         } else {
+             throw std::invalid_argument("unsupported layout transition!");
+         }
+
+         commandBuffer.pipelineBarrier(
+             sourceStage, destinationStage,
+             vk::DependencyFlags{},
+             0, nullptr, // Memory barriers
+             0, nullptr, // Buffer barriers
+             1, &barrier // Image barriers
+         );
+
+         commandBuffer.end();
+
+         vk::SubmitInfo submitInfo{};
+         submitInfo.commandBufferCount = 1;
+         submitInfo.pCommandBuffers = &commandBuffer;
+
+         m_GraphicsQueue.submit(submitInfo, vk::Fence(nullptr));
+         m_GraphicsQueue.waitIdle();
+
+         m_Device.freeCommandBuffers(m_CommandPool, commandBuffer);
+    }
+
     VulkanBuffer VulkanGraphicsDevice::CreateBuffer(vk::DeviceSize size,
-                                            vk::BufferUsageFlags usage,
-                                            VmaMemoryUsage memoryUsage) const
+                                                    vk::BufferUsageFlags usage,
+                                                    VmaMemoryUsage memoryUsage) const
     {
         //allocate vertex buffer
         VkBufferCreateInfo bufferInfo = {};

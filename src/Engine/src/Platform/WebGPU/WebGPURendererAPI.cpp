@@ -96,26 +96,6 @@ namespace BeeEngine::Internal
         wgpuRenderPassEncoderEnd(m_RenderPassEncoder);
     }
 
-    void WebGPURendererAPI::SetClearColor(const BeeEngine::Color4 &color)
-    {
-
-    }
-
-    void WebGPURendererAPI::Clear()
-    {
-
-    }
-
-    void WebGPURendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
-    {
-
-    }
-
-    BeeEngine::Color4 WebGPURendererAPI::ReadPixel(uint32_t x, uint32_t y)
-    {
-        return BeeEngine::Color4();
-    }
-
     RenderPass WebGPURendererAPI::GetMainRenderPass() const
     {
         return {m_RenderPassEncoder};

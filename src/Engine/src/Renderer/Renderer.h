@@ -35,26 +35,9 @@ namespace BeeEngine
             s_RendererAPI = RendererAPI::Create();
             s_RendererAPI->Init();
         }
-        static void SetClearColor(const Color4& color)
-        {
-            BEE_PROFILE_FUNCTION();
-            s_ClearColor = color;
-            s_RendererAPI->SetClearColor(color);
-        }
         static const Color4& GetClearColor()
         {
             return s_ClearColor;
-        }
-        static void Clear()
-        {
-            BEE_PROFILE_FUNCTION();
-            s_RendererAPI->Clear();
-        }
-        static void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
-        {
-            BEE_PROFILE_FUNCTION();
-            BeeExpects(width > 0 && height > 0);
-            s_RendererAPI->SetViewport(x, y, width, height);
         }
         static void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
         {
@@ -79,11 +62,6 @@ namespace BeeEngine
         //    BEE_PROFILE_FUNCTION();
         //    s_RendererAPI->DrawInstanced(model, instanceBuffer, instanceCount);
         //}
-        static Color4 ReadPixel(uint32_t x, uint32_t y)
-        {
-            BEE_PROFILE_FUNCTION();
-            return s_RendererAPI->ReadPixel(x, y);
-        }
 
         static CommandBuffer BeginFrame()
         {

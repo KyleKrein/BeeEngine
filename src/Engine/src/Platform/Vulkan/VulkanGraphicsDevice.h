@@ -57,6 +57,7 @@ namespace BeeEngine::Internal
         {
             return *m_SwapChain;
         }
+        void TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
         /*VulkanPipeline& GetPipeline()
         {

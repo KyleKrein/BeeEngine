@@ -68,8 +68,8 @@ namespace BeeEngine::Internal
         }
 
         vk::Result AcquireNextImage(uint32_t *imageIndex);
-        vk::Result SubmitCommandBuffers(const vk::CommandBuffer *buffers, uint32_t *imageIndex);
-
+        vk::Result SubmitCommandBuffers(const vk::CommandBuffer *buffers, size_t count, uint32_t *imageIndex);
+        vk::Result PresentImage(const uint32_t *imageIndex);
         bool ResizeInProgress();
 
     private:

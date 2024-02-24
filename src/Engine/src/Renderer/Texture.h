@@ -40,7 +40,7 @@ namespace BeeEngine
 
         virtual void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels = 4) = 0;
 
-        [[nodiscard]] constexpr AssetType GetType() const override
+        [[nodiscard]] constexpr AssetType GetType() const final
         {
             return AssetType::Texture2D;
         }

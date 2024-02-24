@@ -153,7 +153,7 @@ namespace BeeEngine::Internal
     }
 
     vk::Result VulkanSwapChain::SubmitCommandBuffers(
-            const vk::CommandBuffer *buffers, uint32_t *imageIndex) {
+            const vk::CommandBuffer *buffers, size_t count, uint32_t *imageIndex) {
         auto device = m_GraphicsDevice.GetDevice();
         if (m_ImagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
             device.waitForFences(1, &m_ImagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
@@ -169,7 +169,7 @@ namespace BeeEngine::Internal
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
 
-        submitInfo.commandBufferCount = 1;
+        submitInfo.commandBufferCount = count;
         submitInfo.pCommandBuffers = buffers;
 
         vk::Semaphore signalSemaphores[] = {m_RenderFinishedSemaphores[m_CurrentFrame]};
@@ -178,25 +178,7 @@ namespace BeeEngine::Internal
 
         device.resetFences(1, &m_InFlightFences[m_CurrentFrame]);
         auto queue = m_GraphicsDevice.GetGraphicsQueue();
-        queue.submit(1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
-
-        vk::PresentInfoKHR presentInfo = {};
-        presentInfo.sType = vk::StructureType::ePresentInfoKHR;
-
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
-
-        vk::SwapchainKHR swapChains[] = {m_SwapChain};
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = swapChains;
-
-        presentInfo.pImageIndices = imageIndex;
-
-        auto result = queue.presentKHR(&presentInfo);
-
-        m_CurrentFrame = (m_CurrentFrame + 1) % m_MaxFrames;
-
-        return result;
+        return queue.submit(1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
     }
 
     void VulkanSwapChain::CreateImageViews()
@@ -470,6 +452,29 @@ namespace BeeEngine::Internal
     vk::RenderPass VulkanSwapChain::GetRenderPass()
     {
         return m_RenderPass;
+    }
+
+    vk::Result VulkanSwapChain::PresentImage(const uint32_t* imageIndex)
+    {
+        vk::Semaphore signalSemaphores[] = {m_RenderFinishedSemaphores[m_CurrentFrame]};
+        vk::PresentInfoKHR presentInfo = {};
+        presentInfo.sType = vk::StructureType::ePresentInfoKHR;
+
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+
+        vk::SwapchainKHR swapChains[] = {m_SwapChain};
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+
+        presentInfo.pImageIndices = imageIndex;
+
+        auto queue = m_GraphicsDevice.GetPresentQueue();
+        auto result = queue.presentKHR(&presentInfo);
+
+        m_CurrentFrame = (m_CurrentFrame + 1) % m_MaxFrames;
+
+        return result;
     }
 
     bool VulkanSwapChain::ResizeInProgress()

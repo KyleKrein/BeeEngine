@@ -11,8 +11,8 @@ namespace BeeEngine::Internal
 {
     struct VulkanImage
     {
-        vk::Image Image;
-        VmaAllocation Memory;
+        vk::Image Image = nullptr;
+        VmaAllocation Memory = nullptr;
 
         void Destroy();
     };

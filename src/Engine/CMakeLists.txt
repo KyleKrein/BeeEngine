@@ -106,6 +106,10 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Scripting/NativeToManaged.h
         src/Scripting/Runtime.cpp
         src/Platform/Vulkan/VulkanImage.cpp
+        src/Platform/Vulkan/VulkanRendererAPI.cpp
+        src/Platform/Vulkan/VulkanRendererAPI.h
+        src/Platform/Vulkan/VulkanTexture2D.cpp
+        src/Platform/Vulkan/VulkanTexture2D.h
 )
 
 

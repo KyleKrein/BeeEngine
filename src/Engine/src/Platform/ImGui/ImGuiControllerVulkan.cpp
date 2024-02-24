@@ -12,26 +12,12 @@
 #include "backends/imgui_impl_vulkan.h"
 #include "ImGuiControllerVulkan.h"
 
-namespace BeeEngine
+namespace BeeEngine::Internal
 {
 
-    void BeeEngine::ImGuiControllerVulkan::Initialize(uint16_t width, uint16_t height, uint64_t glfwwindow)
+    void ImGuiControllerVulkan::Initialize(uint16_t width, uint16_t height, uint64_t glfwwindow)
     {
-        //return;
-#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
-        windowHandlerAPI = WindowHandler::GetAPI();
-        if(windowHandlerAPI == WindowHandlerAPI::GLFW)
-        {
-            m_GlfwWindow = reinterpret_cast<GLFWwindow *>(glfwwindow);
-        }
-        else
-        {
-#endif
-            m_SdlWindow = reinterpret_cast<SDL_Window *>(glfwwindow);
-#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
-        }
-#endif
-
+        m_SdlWindow = reinterpret_cast<SDL_Window *>(glfwwindow);
         Internal::VulkanGraphicsDevice& graphicsDevice = *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
 
         //1: create descriptor pool for IMGUI

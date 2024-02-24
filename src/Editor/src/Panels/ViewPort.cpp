@@ -57,7 +57,6 @@ namespace BeeEngine::Editor
     void ViewPort::UpdateRuntime(bool renderPhysicsColliders) noexcept
     {
         BEE_PROFILE_FUNCTION();
-        Renderer::Clear();
         m_FrameBuffer->Bind();
 
         auto [mx, my] = ImGui::GetMousePos();

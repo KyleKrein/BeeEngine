@@ -5,8 +5,8 @@
 #include "Texture.h"
 #include "Core/Logging/Log.h"
 #include "Renderer.h"
+#include "Platform/Vulkan/VulkanTexture2D.h"
 #include "Platform/WebGPU/WebGPUTexture2D.h"
-
 
 namespace BeeEngine
 {
@@ -16,6 +16,10 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
+#if defined(BEE_COMPILE_VULKAN)
+            case RenderAPI::Vulkan:
+                return CreateRef<Internal::VulkanTexture2D>(width, height, data, numberOfChannels);
+#endif
             case RenderAPI::WebGPU:
                 return CreateRef<Internal::WebGPUTexture2D>(width, height, data, numberOfChannels);
             default:
