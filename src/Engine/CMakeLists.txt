@@ -110,6 +110,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Platform/Vulkan/VulkanRendererAPI.h
         src/Platform/Vulkan/VulkanTexture2D.cpp
         src/Platform/Vulkan/VulkanTexture2D.h
+        src/Platform/Vulkan/VulkanMesh.cpp
+        src/Platform/Vulkan/VulkanMesh.h
 )
 
 
