@@ -39,13 +39,12 @@ namespace BeeEngine{
 
                 self.m_EventQueue.Dispatch();
                 self.m_Window->UpdateTime();
-                auto cmd = Renderer::BeginFrame();//Internal::VulkanRendererAPI::GetInstance().BeginFrame();
-                Renderer::StartMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
+                auto cmd = Renderer::BeginFrame();
+                Renderer::StartMainRenderPass(cmd);
                 self.m_Layers.Update();
                 self.Update();
-                //m_Window->SwapBuffers();
-                Renderer::EndMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
-                Renderer::EndFrame();//Internal::VulkanRendererAPI::GetInstance().EndFrame();
+                Renderer::EndMainRenderPass(cmd);
+                Renderer::EndFrame();
                 DeletionQueue::Frame().Flush();
 
                 frameJobInfo.cv->notify_one();
@@ -53,6 +52,7 @@ namespace BeeEngine{
             Job::Schedule(frameJob);
             cv.wait(lock);
         }
+        DeletionQueue::Main().Flush();
     }
 
     Application::Application(const WindowProperties& properties)
@@ -70,8 +70,8 @@ namespace BeeEngine{
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
-        m_AssetManager.LoadStandardAssets();
-        SceneRenderer::Init();
+        //m_AssetManager.LoadStandardAssets();
+        //SceneRenderer::Init();
 
         //ScriptingEngine::Init();
     }
@@ -152,6 +152,23 @@ namespace BeeEngine{
             function();
         }
         m_MainThreadQueue.clear();
+    }
+
+    RenderAPI GetPrefferedRenderAPI()
+    {
+        switch (Application::GetOsPlatform()) {
+            case OSPlatform::Windows:
+                return RenderAPI::Vulkan;
+            case OSPlatform::Linux:
+                return RenderAPI::Vulkan;
+            case OSPlatform::Mac:
+                return RenderAPI::WebGPU;
+            case OSPlatform::iOS:
+                return RenderAPI::WebGPU;
+            case OSPlatform::Android:
+                return RenderAPI::Vulkan;
+        }
+        return RenderAPI::NotAvailable;
     }
 }
 

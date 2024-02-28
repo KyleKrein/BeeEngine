@@ -19,6 +19,15 @@ namespace BeeEngine
         {
             return m_Handle != nullptr;
         }
+        void* GetHandle() const
+        {
+            return m_Handle;
+        }
+        template<typename T>
+        T GetHandleAs() const
+        {
+            return *reinterpret_cast<T const *>(&m_Handle);
+        }
     protected:
         void* m_Handle;
     };

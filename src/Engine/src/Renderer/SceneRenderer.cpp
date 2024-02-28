@@ -245,39 +245,10 @@ namespace BeeEngine
         }
 
         auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
-        statistics.OpaqueInstanceCount += sceneTreeRenderer.m_NotTransparent.size();
-        statistics.TransparentInstanceCount += sceneTreeRenderer.m_Transparent.size();
-
-        {
-            BEE_PROFILE_SCOPE("SceneTreeRenderer::Sort");
-            std::ranges::sort(sceneTreeRenderer.m_Transparent,
-                              [&viewProjectionMatrix](const SceneTreeRenderer::Entity &a,
-                                                      const SceneTreeRenderer::Entity &b)
-                              {
-                                  auto aDistance = glm::distance(a.Transform[3], viewProjectionMatrix[3]);
-                                  auto bDistance = glm::distance(b.Transform[3], viewProjectionMatrix[3]);
-                                  return aDistance > bDistance;
-                              });
-        }
-        {
-            BEE_PROFILE_SCOPE("SceneTreeRenderer::SubmitToRendering");
-            for (auto &entity: sceneTreeRenderer.m_NotTransparent)
-            {
-                Renderer::SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
-            }
-            Renderer::Flush();
-            /*frameBuffer.Flush([transparent = std::move(sceneTreeRenderer.m_Transparent), cameraBuffer = std::move(cameraUniformBuffer), cameraSet = std::move(cameraBindingSet)]()mutable {
-                for(auto& entity: transparent)
-                {
-                    Renderer::SubmitInstance(*entity.Model,entity.BindingSets, entity.InstancedData);
-                }
-            });*/
-            for (auto &entity: sceneTreeRenderer.m_Transparent)
-            {
-                Renderer::SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
-            }
-            Renderer::Flush();
-        }
+        //statistics.OpaqueInstanceCount += sceneTreeRenderer.m_NotTransparent.size();
+        //statistics.TransparentInstanceCount += sceneTreeRenderer.m_Transparent.size();
+        auto& tlas = scene.GetTLAS();
+        tlas.UpdateInstances(std::move(sceneTreeRenderer.GetAllEntities()));
     }
 
     void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale)

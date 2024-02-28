@@ -5,8 +5,6 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
 #include "vk_mem_alloc.h"
-#include "VulkanGraphicsDevice.h"
-#include "Core/DeletionQueue.h"
 
 namespace BeeEngine::Internal
 {

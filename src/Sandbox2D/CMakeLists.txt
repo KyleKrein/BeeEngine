@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
 project(Sandbox2D)
 set(SOURCE_FILES src/main.cpp
+        src/VulkanTestLayer.cpp
+        src/VulkanTestLayer.h
         #src/TestLayer.cpp
-        src/TestLayer.h src/WebGPUTestLayer.cpp src/WebGPUTestLayer.h)
+)
 #if(APPLE AND NOT IOS)
 #    add_executable(Sandbox2D MACOSX_BUNDLE ${SOURCE_FILES})
 #    file(COPY Assets DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME}/${PROJECT_NAME}.app/Contents/MacOS)

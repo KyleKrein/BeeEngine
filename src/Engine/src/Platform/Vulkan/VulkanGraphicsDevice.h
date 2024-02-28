@@ -50,7 +50,7 @@ namespace BeeEngine::Internal
 
         vk::SurfaceKHR GetSurface()
         {
-            return m_Surface;
+            return m_DeviceHandle.surface;
         }
 
         VulkanSwapChain& GetSwapChain()
@@ -87,10 +87,11 @@ namespace BeeEngine::Internal
 
         // Buffer Helper Functions
 
-        VulkanBuffer CreateBuffer(
+        [[nodiscard]] VulkanBuffer CreateBuffer(
                 vk::DeviceSize size,
                 vk::BufferUsageFlags usage,
                 VmaMemoryUsage memoryUsage) const;
+        void DestroyBuffer(VulkanBuffer& buffer) const;
 
         void CopyToBuffer(gsl::span<byte> data, VulkanBuffer& outBuffer) const;
 
@@ -134,11 +135,15 @@ namespace BeeEngine::Internal
         {
             vk::Device device;
             VmaAllocator allocator;
+            vk::SurfaceKHR surface;
+            vk::Instance instance;
             ~DeviceHandle()
             {
+                device.waitIdle();
                 vmaDestroyAllocator(allocator);
                 device.destroy();
                 VulkanGraphicsDevice::s_Instance = nullptr;
+                instance.destroySurfaceKHR(surface);
             }
         };
         QueueFamilyIndices m_QueueFamilyIndices;
@@ -146,7 +151,6 @@ namespace BeeEngine::Internal
 
         void CreateSwapChainSupportDetails();
 
-        vk::SurfaceKHR m_Surface;
         DeviceHandle m_DeviceHandle;
         Scope<VulkanSwapChain> m_SwapChain;
         vk::Device m_Device;
@@ -167,7 +171,7 @@ namespace BeeEngine::Internal
             }
         };
 
-        DeletionQueueFlusher m_Deleter;
+        //DeletionQueueFlusher m_Deleter;
 
         bool m_SwapChainRebuildRequested = false;
 

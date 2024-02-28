@@ -12,3 +12,8 @@ enum RenderAPI
     WebGPU = 1,
     Vulkan = 2,
 };
+
+namespace BeeEngine
+{
+    RenderAPI GetPrefferedRenderAPI();
+}

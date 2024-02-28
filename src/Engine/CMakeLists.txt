@@ -112,6 +112,10 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Platform/Vulkan/VulkanTexture2D.h
         src/Platform/Vulkan/VulkanMesh.cpp
         src/Platform/Vulkan/VulkanMesh.h
+        src/Renderer/TopLevelAccelerationStructure.h
+        src/Renderer/TopLevelAccelerationStructure.cpp
+        src/Platform/Vulkan/VulkanTLAS.cpp
+        src/Platform/Vulkan/VulkanTLAS.h
 )
 
 

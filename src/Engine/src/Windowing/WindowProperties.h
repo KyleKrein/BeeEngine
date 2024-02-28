@@ -10,15 +10,10 @@
 namespace BeeEngine{
     struct WindowProperties
     {
-        uint16_t Width;
-        uint16_t Height;
-        const char *Title;
-        VSync Vsync;
-        const RenderAPI PreferredRenderAPI =
-#if defined(BEE_COMPILE_VULKAN)
-                RenderAPI::Vulkan;
-#else
-            RenderAPI::WebGPU;
-#endif
+        uint16_t Width = 1280;
+        uint16_t Height = 720;
+        const char *Title = "BeeEngine App";
+        VSync Vsync = VSync::On;
+        RenderAPI PreferredRenderAPI = GetPrefferedRenderAPI();
     };
 }

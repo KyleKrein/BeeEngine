@@ -12,6 +12,7 @@
 #include "TextRenderingConfiguration.h"
 #include "Core/String.h"
 #include "Font.h"
+
 namespace BeeEngine
 {
     class SceneTreeRenderer
@@ -22,8 +23,8 @@ namespace BeeEngine
 
         void AddEntity(glm::mat4 transform, bool isTransparent, Model& model, const std::vector<BindingSet*>& bindingSets, gsl::span<byte> instancedData);
         void AddText(const UTF8String& text, Font* font, const glm::mat4& transform, const TextRenderingConfiguration& configuration, int32_t entityID);
-        void Render();
-    private:
+        auto&& GetAllEntities() { return std::move(m_AllEntities); }
+
         struct Entity
         {
             glm::mat4 Transform;
@@ -31,8 +32,9 @@ namespace BeeEngine
             std::vector<BindingSet*> BindingSets;
             std::vector<byte> InstancedData;
         };
-        std::vector<Entity> m_NotTransparent;
-        std::vector<Entity> m_Transparent;
+
+    private:
+        std::vector<Entity> m_AllEntities;
         BindingSet* m_TextBindingSet;
         glm::mat4 m_CameraTransform;
     };

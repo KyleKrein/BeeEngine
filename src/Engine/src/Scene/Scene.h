@@ -10,6 +10,7 @@
 #include "Renderer/Model.h"
 #include "Renderer/Texture.h"
 #include "Renderer/SceneTreeRenderer.h"
+#include "Renderer/TopLevelAccelerationStructure.h"
 
 class b2World;
 class b2Body;
@@ -60,12 +61,16 @@ namespace BeeEngine
         [[nodiscard]] bool IsRuntime() const noexcept { return m_IsRuntime; }
 
         void Clear();
+
+        TopLevelAccelerationStructure& GetTLAS() { return *m_TLAS; }
     private:
         entt::registry m_Registry;
 
         bool m_IsRuntime = false;
         //void ResetScene();
         b2World* m_2DPhysicsWorld;
+
+        Ref<TopLevelAccelerationStructure> m_TLAS = TopLevelAccelerationStructure::Create();
 
         void UpdateScripts();
 

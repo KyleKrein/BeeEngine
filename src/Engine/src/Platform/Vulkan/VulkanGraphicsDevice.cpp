@@ -80,9 +80,15 @@ namespace BeeEngine::Internal
             BeeCoreFatalError("Can't create two graphics devices at once");
         }
         s_Instance = this;
+        m_DeviceHandle.instance = instance.GetHandle();
         CreateSurface(instance);
         SelectPhysicalDevice(instance);
         CreateLogicalDevice();
+
+        DeletionQueue::Main().PushFunction([device = m_Device]
+        {
+            device.waitIdle();
+        });
 
         LoadKHRRayTracing();
 
@@ -93,6 +99,10 @@ namespace BeeEngine::Internal
         {
             m_PresentQueue = m_Device.getQueue(m_QueueFamilyIndices.PresentFamily.value(), 0);
         }
+        else
+        {
+            m_PresentQueue = m_GraphicsQueue;
+        }
         CreateSwapChainSupportDetails();
         m_SwapChain = CreateScope<VulkanSwapChain>(*this, WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight());
         CreateCommandPool();
@@ -101,7 +111,7 @@ namespace BeeEngine::Internal
     VulkanGraphicsDevice::~VulkanGraphicsDevice()
     {
         m_Device.waitIdle();
-        //DeletionQueue::Main().Flush();
+        m_Device.destroyCommandPool(m_CommandPool);
     }
 
     void VulkanGraphicsDevice::LogDeviceProperties(vk::PhysicalDevice &device) const
@@ -170,7 +180,7 @@ namespace BeeEngine::Internal
             }
             i++;
         }
-        if(m_PhysicalDevice.getSurfaceSupportKHR(indices.GraphicsFamily.value(), m_Surface))
+        if(m_PhysicalDevice.getSurfaceSupportKHR(indices.GraphicsFamily.value(), m_DeviceHandle.surface))
         {
             BeeCoreInfo("Queue family {} supports presentation", indices.GraphicsFamily.value());
             indices.PresentFamily = indices.GraphicsFamily;
@@ -294,7 +304,7 @@ namespace BeeEngine::Internal
         {
             BeeCoreFatalError("Failed to create Vulkan surface!");
         }
-        m_Surface = vk::SurfaceKHR(cSurface);
+        m_DeviceHandle.surface = vk::SurfaceKHR(cSurface);
     }
 
     void VulkanGraphicsDevice::TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout,
@@ -395,12 +405,15 @@ namespace BeeEngine::Internal
         {
             throw std::runtime_error("failed to allocate buffer!");
         }
-
-        //add the destruction of mesh buffer to the deletion queue
-        DeletionQueue::Main().PushFunction([buffer]() {
-            vmaDestroyBuffer(GetVulkanAllocator(), buffer.Buffer, buffer.Memory);
-        });
         return buffer;
+    }
+
+    void VulkanGraphicsDevice::DestroyBuffer(VulkanBuffer& buffer) const
+    {
+        DeletionQueue::Frame().PushFunction([buf = buffer] ()
+        {
+            vmaDestroyBuffer(GetVulkanAllocator(), buf.Buffer, buf.Memory);
+        });
     }
 
     void VulkanGraphicsDevice::CopyToBuffer(gsl::span<byte> data, VulkanBuffer& outBuffer) const
@@ -546,22 +559,23 @@ namespace BeeEngine::Internal
 
     void VulkanGraphicsDevice::CreateSwapChainSupportDetails()
     {
-        m_SwapChainSupportDetails.capabilities = m_PhysicalDevice.getSurfaceCapabilitiesKHR(m_Surface);
+        auto& surface = m_DeviceHandle.surface;
+        m_SwapChainSupportDetails.capabilities = m_PhysicalDevice.getSurfaceCapabilitiesKHR(surface);
 
         uint32_t formatCount;
-        m_PhysicalDevice.getSurfaceFormatsKHR(m_Surface, &formatCount, nullptr);
+        m_PhysicalDevice.getSurfaceFormatsKHR(surface, &formatCount, nullptr);
 
         if (formatCount != 0) {
             m_SwapChainSupportDetails.formats.resize(formatCount);
-            m_PhysicalDevice.getSurfaceFormatsKHR(m_Surface, &formatCount, m_SwapChainSupportDetails.formats.data());
+            m_PhysicalDevice.getSurfaceFormatsKHR(surface, &formatCount, m_SwapChainSupportDetails.formats.data());
         }
 
         uint32_t presentModeCount;
-        m_PhysicalDevice.getSurfacePresentModesKHR(m_Surface, &presentModeCount, nullptr);
+        m_PhysicalDevice.getSurfacePresentModesKHR(surface, &presentModeCount, nullptr);
 
         if (presentModeCount != 0) {
             m_SwapChainSupportDetails.presentModes.resize(presentModeCount);
-            m_PhysicalDevice.getSurfacePresentModesKHR(m_Surface, &presentModeCount, m_SwapChainSupportDetails.presentModes.data());
+            m_PhysicalDevice.getSurfacePresentModesKHR(surface, &presentModeCount, m_SwapChainSupportDetails.presentModes.data());
         }
     }
 

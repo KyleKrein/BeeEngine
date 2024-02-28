@@ -5,6 +5,7 @@
 #pragma once
 #include "VulkanBuffer.h"
 #include "Renderer/Mesh.h"
+#include "VulkanGraphicsDevice.h"
 
 namespace BeeEngine::Internal
 {

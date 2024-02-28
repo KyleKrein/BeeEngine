@@ -136,7 +136,11 @@ namespace BeeEngine::Internal
                                                         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
                                                         void* pUserData)
     {
-        BeeCoreError("Validation Layer: {0}", pCallbackData->pMessage);
+        String message = pCallbackData->pMessage;
+        if(message.starts_with("Validation Error"))
+            BeeCoreError("Validation Layer: {0}", message);
+        else
+            BeeCoreInfo("Validation Layer: {0}", message);
         return VK_FALSE;
     }
 

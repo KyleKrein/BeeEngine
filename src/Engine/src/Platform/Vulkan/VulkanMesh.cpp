@@ -3,18 +3,22 @@
 //
 
 #include "VulkanMesh.h"
+#include "VulkanGraphicsDevice.h"
 
 namespace BeeEngine::Internal
 {
     VulkanMesh::~VulkanMesh()
     {
-        vmaDestroyBuffer(GetVulkanAllocator(), m_VertexBuffer.Buffer, m_VertexBuffer.Memory);
+        m_Device.DestroyBuffer(m_VertexBuffer);
         if(VulkanMesh::IsIndexed())
         {
-            vmaDestroyBuffer(GetVulkanAllocator(), m_IndexBuffer.Buffer, m_IndexBuffer.Memory);
+            m_Device.DestroyBuffer(m_IndexBuffer);
         }
-        vmaDestroyBuffer(GetVulkanAllocator(), m_AccelerationStructure.Buffer.Buffer, m_AccelerationStructure.Buffer.Memory);
-        m_Device.GetDevice().destroyAccelerationStructureKHR(m_AccelerationStructure.AccelerationStructure);
+        m_Device.DestroyBuffer(m_AccelerationStructure.Buffer);
+        DeletionQueue::Frame().PushFunction([accelerationStructure = m_AccelerationStructure.AccelerationStructure, device = m_Device.GetDevice()]()
+        {
+            device.destroyAccelerationStructureKHR(accelerationStructure);
+        });
     }
 
     uint32_t VulkanMesh::GetVertexCount() const
@@ -74,14 +78,14 @@ namespace BeeEngine::Internal
 
     void VulkanMesh::CreateVertexBuffer(void* verticesData, size_t size, size_t vertexCount)
     {
-        m_VertexBuffer = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR, vk::MemoryPropertyFlagBits::eDeviceLocal);
-        VulkanBuffer bufferForMapping = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+        m_VertexBuffer = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+        VulkanBuffer bufferForMapping = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
         void* mappedData = nullptr;
         vmaMapMemory(GetVulkanAllocator(), bufferForMapping.Memory, &mappedData);
         memcpy(mappedData, verticesData, size);
         vmaUnmapMemory(GetVulkanAllocator(), bufferForMapping.Memory);
         m_Device.CopyBuffer(bufferForMapping.Buffer, m_VertexBuffer.Buffer, size);
-        vmaDestroyBuffer(GetVulkanAllocator(), bufferForMapping.Buffer, bufferForMapping.Memory);
+        m_Device.DestroyBuffer(bufferForMapping);
     }
 
     void VulkanMesh::CreateIndexBuffer(const std::vector<uint32_t>& indices)
@@ -89,14 +93,14 @@ namespace BeeEngine::Internal
         auto size = indices.size() * sizeof(uint32_t);
         auto indicesData = const_cast<void*>(static_cast<const void*>(indices.data()));
 
-        m_IndexBuffer = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR, vk::MemoryPropertyFlagBits::eDeviceLocal);
-        VulkanBuffer bufferForMapping = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent);
+        m_IndexBuffer = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+        VulkanBuffer bufferForMapping = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_AUTO_PREFER_HOST);
         void* mappedData = nullptr;
         vmaMapMemory(GetVulkanAllocator(), bufferForMapping.Memory, &mappedData);
         memcpy(mappedData, indicesData, size);
         vmaUnmapMemory(GetVulkanAllocator(), bufferForMapping.Memory);
         m_Device.CopyBuffer(bufferForMapping.Buffer, m_IndexBuffer.Buffer, size);
-        vmaDestroyBuffer(GetVulkanAllocator(), bufferForMapping.Buffer, bufferForMapping.Memory);
+        m_Device.DestroyBuffer(bufferForMapping);
     }
 
     void VulkanMesh::CreateAccelerationStructure(size_t vertexStride)
@@ -136,7 +140,7 @@ namespace BeeEngine::Internal
         vk::AccelerationStructureBuildSizesInfoKHR buildSizesInfo = device.getAccelerationStructureBuildSizesKHR(
             vk::AccelerationStructureBuildTypeKHR::eDevice, buildInfo, primitiveCount);
 
-        m_AccelerationStructure.Buffer = m_Device.CreateBuffer(buildSizesInfo.accelerationStructureSize, vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR /*| vk::BufferUsageFlagBits::eShaderDeviceAddress*/, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        m_AccelerationStructure.Buffer = m_Device.CreateBuffer(buildSizesInfo.accelerationStructureSize, vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR /*| vk::BufferUsageFlagBits::eShaderDeviceAddress*/, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
         vk::AccelerationStructureCreateInfoKHR createInfo = {};
         createInfo.sType = vk::StructureType::eAccelerationStructureCreateInfoKHR;
@@ -145,7 +149,7 @@ namespace BeeEngine::Internal
         createInfo.setType(vk::AccelerationStructureTypeKHR::eBottomLevel);
         m_AccelerationStructure.AccelerationStructure = device.createAccelerationStructureKHR(createInfo);
 
-        VulkanBuffer scratchBuffer = m_Device.CreateBuffer(buildSizesInfo.buildScratchSize, vk::BufferUsageFlagBits::eStorageBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        VulkanBuffer scratchBuffer = m_Device.CreateBuffer(buildSizesInfo.buildScratchSize, vk::BufferUsageFlagBits::eStorageBuffer, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
         vk::CommandBufferAllocateInfo allocInfo{};
         allocInfo.commandPool = m_Device.GetCommandPool();
@@ -184,6 +188,6 @@ namespace BeeEngine::Internal
 
         device.freeCommandBuffers(m_Device.GetCommandPool(), commandBuffer);
 
-        vmaDestroyBuffer(GetVulkanAllocator(), scratchBuffer.Buffer, scratchBuffer.Memory);
+        m_Device.DestroyBuffer(scratchBuffer);
     }
 }

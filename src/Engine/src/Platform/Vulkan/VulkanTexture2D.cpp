@@ -102,7 +102,7 @@ namespace BeeEngine::Internal
             CopyBufferToImageWithTransition(buffer);
         }
         //buffer.Destroy();
-        vmaDestroyBuffer(GetVulkanAllocator(), buffer.Buffer, buffer.Memory);
+        m_Device.DestroyBuffer(buffer);
     }
 
     VulkanTexture2D::VulkanTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data,
@@ -123,8 +123,11 @@ namespace BeeEngine::Internal
     void VulkanTexture2D::FreeResources()
     {
         auto device = m_Device.GetDevice();
-        device.destroySampler(m_Sampler);
-        device.destroyImageView(m_ImageView);
+        DeletionQueue::Frame().PushFunction([device, sampler = m_Sampler, imageView = m_ImageView]()
+        {
+            device.destroySampler(sampler);
+            device.destroyImageView(imageView);
+        });
         m_Image.Destroy();
         m_Sampler = nullptr;
         m_ImageView = nullptr;

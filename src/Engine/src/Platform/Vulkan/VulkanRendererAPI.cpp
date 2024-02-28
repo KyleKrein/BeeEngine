@@ -3,8 +3,6 @@
 //
 
 #include "VulkanRendererAPI.h"
-
-#include <backends/imgui_impl_vulkan.h>
 #include "Renderer/CommandBuffer.h"
 
 namespace BeeEngine::Internal
@@ -23,6 +21,10 @@ namespace BeeEngine::Internal
         m_Window = WindowHandler::GetInstance();
         m_Device = m_GraphicsDevice->GetDevice();
         CreateCommandBuffers();
+        DeletionQueue::Main().PushFunction([this]
+        {
+            FreeCommandBuffers();
+        });
     }
 
     CommandBuffer VulkanRendererAPI::BeginFrame()
@@ -44,8 +46,7 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to acquire next image");
         }
-        auto commandBuffer = GetCurrentCommandBuffer();
-        vk::CommandBuffer cmd = *(vk::CommandBuffer*)&commandBuffer;
+        vk::CommandBuffer cmd = GetCurrentCommandBuffer().GetHandleAs<vk::CommandBuffer>();
         vk::CommandBufferBeginInfo beginInfo{};
         beginInfo.sType = vk::StructureType::eCommandBufferBeginInfo;
         beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
@@ -53,7 +54,7 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to begin recording command buffer");
         }
-        return commandBuffer;
+        return {cmd};
     }
 
     void VulkanRendererAPI::StartMainRenderPass(CommandBuffer commandBuffer)
@@ -77,7 +78,7 @@ namespace BeeEngine::Internal
         renderPassInfo.pClearValues = clearValues.data();
 
         m_GraphicsDevice->GetGraphicsQueue().waitIdle();
-        auto cmd = *(vk::CommandBuffer*)&commandBuffer;
+        auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
         cmd.beginRenderPass(&renderPassInfo, vk::SubpassContents::eInline);
         vk::Viewport viewport{};
         viewport.x = 0.0f;
@@ -96,8 +97,7 @@ namespace BeeEngine::Internal
     void VulkanRendererAPI::EndMainRenderPass(CommandBuffer commandBuffer)
     {
         BeeExpects(commandBuffer == GetCurrentCommandBuffer());
-        auto cmd = *(vk::CommandBuffer*)&commandBuffer;
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+        auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
         cmd.endRenderPass();
     }
 
@@ -118,12 +118,12 @@ namespace BeeEngine::Internal
     RenderPass VulkanRendererAPI::GetMainRenderPass() const
     {
         auto renderPass = m_GraphicsDevice->GetSwapChain().GetRenderPass();
-        return *(RenderPass*)&renderPass;
+        return {renderPass};
     }
 
     CommandBuffer VulkanRendererAPI::GetCurrentCommandBuffer() const
     {
-        return *(CommandBuffer*)&m_CommandBuffers[m_CurrentImageIndex];
+        return {m_CommandBuffers[m_CurrentImageIndex]};
     }
 
     void VulkanRendererAPI::DrawInstanced(Model& model, InstancedBuffer& instancedBuffer,
@@ -134,7 +134,8 @@ namespace BeeEngine::Internal
     void VulkanRendererAPI::SubmitCommandBuffer(const CommandBuffer& commandBuffer)
     {
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
-        auto cmd = *(vk::CommandBuffer*)&commandBuffer;
+        auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
+        cmd.end();
         swapchain.SubmitCommandBuffers(&cmd, 1, &m_CurrentImageIndex);
     }
 
