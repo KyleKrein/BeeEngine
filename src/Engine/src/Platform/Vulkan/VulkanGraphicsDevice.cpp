@@ -316,12 +316,12 @@ namespace BeeEngine::Internal
          allocInfo.commandBufferCount = 1;
 
          vk::CommandBuffer commandBuffer;
-         m_Device.allocateCommandBuffers(&allocInfo, &commandBuffer);
+         CheckVkResult(m_Device.allocateCommandBuffers(&allocInfo, &commandBuffer));
 
          vk::CommandBufferBeginInfo beginInfo{};
          beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
-         commandBuffer.begin(&beginInfo);
+         CheckVkResult(commandBuffer.begin(&beginInfo));
 
          vk::ImageMemoryBarrier barrier{};
          barrier.oldLayout = oldLayout;
@@ -435,13 +435,13 @@ namespace BeeEngine::Internal
         allocInfo.commandBufferCount = 1;
 
         vk::CommandBuffer commandBuffer;
-        m_Device.allocateCommandBuffers(&allocInfo, &commandBuffer);
+        CheckVkResult(m_Device.allocateCommandBuffers(&allocInfo, &commandBuffer));
 
         vk::CommandBufferBeginInfo beginInfo{};
         beginInfo.sType = vk::StructureType::eCommandBufferBeginInfo;
         beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
-        commandBuffer.begin(&beginInfo);
+        CheckVkResult(commandBuffer.begin(&beginInfo));
         return commandBuffer;
     }
 
@@ -454,7 +454,7 @@ namespace BeeEngine::Internal
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        m_GraphicsQueue.submit(1, &submitInfo, nullptr);
+        CheckVkResult(m_GraphicsQueue.submit(1, &submitInfo, nullptr));
         m_GraphicsQueue.waitIdle();
 
         m_Device.freeCommandBuffers(m_CommandPool, 1, &commandBuffer);
@@ -563,19 +563,19 @@ namespace BeeEngine::Internal
         m_SwapChainSupportDetails.capabilities = m_PhysicalDevice.getSurfaceCapabilitiesKHR(surface);
 
         uint32_t formatCount;
-        m_PhysicalDevice.getSurfaceFormatsKHR(surface, &formatCount, nullptr);
+        CheckVkResult(m_PhysicalDevice.getSurfaceFormatsKHR(surface, &formatCount, nullptr));
 
         if (formatCount != 0) {
             m_SwapChainSupportDetails.formats.resize(formatCount);
-            m_PhysicalDevice.getSurfaceFormatsKHR(surface, &formatCount, m_SwapChainSupportDetails.formats.data());
+            CheckVkResult(m_PhysicalDevice.getSurfaceFormatsKHR(surface, &formatCount, m_SwapChainSupportDetails.formats.data()));
         }
 
         uint32_t presentModeCount;
-        m_PhysicalDevice.getSurfacePresentModesKHR(surface, &presentModeCount, nullptr);
+        CheckVkResult(m_PhysicalDevice.getSurfacePresentModesKHR(surface, &presentModeCount, nullptr));
 
         if (presentModeCount != 0) {
             m_SwapChainSupportDetails.presentModes.resize(presentModeCount);
-            m_PhysicalDevice.getSurfacePresentModesKHR(surface, &presentModeCount, m_SwapChainSupportDetails.presentModes.data());
+            CheckVkResult(m_PhysicalDevice.getSurfacePresentModesKHR(surface, &presentModeCount, m_SwapChainSupportDetails.presentModes.data()));
         }
     }
 

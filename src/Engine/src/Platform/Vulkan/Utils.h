@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Core/Logging/Log.h"
 #if defined(BEE_COMPILE_VULKAN)
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
@@ -20,6 +21,14 @@ namespace BeeEngine::Internal
     extern PFN_vkCreateRayTracingPipelinesKHR CreateRayTracingPipelinesKHR;
     extern PFN_vkGetAccelerationStructureDeviceAddressKHR GetAccelerationStructureDeviceAddressKHR;
     extern PFN_vkGetAccelerationStructureBuildSizesKHR GetAccelerationStructureBuildSizesKHR;
+
+    inline void CheckVkResult(vk::Result result)
+    {
+        if (result != vk::Result::eSuccess)
+        {
+            BeeCoreError("Vulkan error: " + vk::to_string(result));
+        }
+    }
 
     struct VulkanInitializer
     {

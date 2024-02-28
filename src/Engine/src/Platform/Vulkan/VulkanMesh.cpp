@@ -3,6 +3,8 @@
 //
 
 #include "VulkanMesh.h"
+
+#include "Utils.h"
 #include "VulkanGraphicsDevice.h"
 
 namespace BeeEngine::Internal
@@ -157,12 +159,12 @@ namespace BeeEngine::Internal
         allocInfo.commandBufferCount = 1;
 
         vk::CommandBuffer commandBuffer;
-        device.allocateCommandBuffers(&allocInfo, &commandBuffer);
+        CheckVkResult(device.allocateCommandBuffers(&allocInfo, &commandBuffer));
 
         vk::CommandBufferBeginInfo beginInfo{};
         beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
-        commandBuffer.begin(&beginInfo);
+        CheckVkResult(commandBuffer.begin(&beginInfo));
 
         buildInfo.setMode(vk::BuildAccelerationStructureModeKHR::eBuild);
         buildInfo.dstAccelerationStructure = m_AccelerationStructure.AccelerationStructure;
@@ -183,7 +185,7 @@ namespace BeeEngine::Internal
         submitInfo.pCommandBuffers = &commandBuffer;
         auto graphicsQueue = m_Device.GetGraphicsQueue();
 
-        graphicsQueue.submit(1, &submitInfo, vk::Fence(nullptr));
+        CheckVkResult(graphicsQueue.submit(1, &submitInfo, vk::Fence(nullptr)));
         graphicsQueue.waitIdle();
 
         device.freeCommandBuffers(m_Device.GetCommandPool(), commandBuffer);

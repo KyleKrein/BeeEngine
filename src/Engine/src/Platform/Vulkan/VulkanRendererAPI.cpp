@@ -46,7 +46,7 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to acquire next image");
         }
-        vk::CommandBuffer cmd = GetCurrentCommandBuffer().GetHandleAs<vk::CommandBuffer>();
+        auto cmd = GetCurrentCommandBuffer().GetHandleAs<vk::CommandBuffer>();
         vk::CommandBufferBeginInfo beginInfo{};
         beginInfo.sType = vk::StructureType::eCommandBufferBeginInfo;
         beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;

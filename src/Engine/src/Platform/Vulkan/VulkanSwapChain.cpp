@@ -1,6 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
+#include "Utils.h"
 #if defined(BEE_COMPILE_VULKAN)
 #include "VulkanSwapChain.h"
 #include "Core/Logging/Log.h"
@@ -136,11 +137,11 @@ namespace BeeEngine::Internal
 
     vk::Result VulkanSwapChain::AcquireNextImage(uint32_t *imageIndex) {
         auto device = m_GraphicsDevice.GetDevice();
-        device.waitForFences(
+        CheckVkResult(device.waitForFences(
             1,
             &m_InFlightFences[m_CurrentFrame],
             vk::True,
-            std::numeric_limits<uint64_t>::max());
+            std::numeric_limits<uint64_t>::max()));
 
         vk::Result result = device.acquireNextImageKHR(
                 m_SwapChain,
@@ -156,7 +157,7 @@ namespace BeeEngine::Internal
             const vk::CommandBuffer *buffers, size_t count, uint32_t *imageIndex) {
         auto device = m_GraphicsDevice.GetDevice();
         if (m_ImagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
-            device.waitForFences(1, &m_ImagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
+            CheckVkResult(device.waitForFences(1, &m_ImagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX));
         }
         m_ImagesInFlight[*imageIndex] = m_InFlightFences[m_CurrentFrame];
 
@@ -176,7 +177,7 @@ namespace BeeEngine::Internal
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
-        device.resetFences(1, &m_InFlightFences[m_CurrentFrame]);
+        CheckVkResult(device.resetFences(1, &m_InFlightFences[m_CurrentFrame]));
         auto queue = m_GraphicsDevice.GetGraphicsQueue();
         return queue.submit(1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
     }
