@@ -62,24 +62,26 @@ namespace BeeEngine::Internal
         BeeExpects(commandBuffer == GetCurrentCommandBuffer());
 
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
-        vk::RenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = vk::StructureType::eRenderPassBeginInfo;
-        renderPassInfo.renderPass = swapchain.GetRenderPass();
-        renderPassInfo.framebuffer = swapchain.GetFrameBuffer(m_CurrentImageIndex);
 
-        renderPassInfo.renderArea.offset = vk::Offset2D{0,0};
-        renderPassInfo.renderArea.extent = swapchain.GetExtent();
+        m_GraphicsDevice->TransitionImageLayout(swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
+            vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+        vk::RenderingInfoKHR renderingInfo{};
 
-        std::array<vk::ClearValue, 2> clearValues{};
-        clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
-        clearValues[1].depthStencil.depth = 1.f; //= {1.0f, 0};
+        vk::RenderingAttachmentInfoKHR colorAttachment{};
+        colorAttachment.imageView = swapchain.GetImageView(m_CurrentImageIndex);
+        colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
+        colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
+        colorAttachment.clearValue = vk::ClearColorValue{0.1f, 0.1f, 0.1f, 1.0f};
 
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
+        renderingInfo.renderArea = vk::Rect2D{{0, 0}, swapchain.GetExtent()};
+        renderingInfo.layerCount = 1;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &colorAttachment;
 
-        m_GraphicsDevice->GetGraphicsQueue().waitIdle();
+        //m_GraphicsDevice->GetGraphicsQueue().waitIdle();
         auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
-        cmd.beginRenderPass(&renderPassInfo, vk::SubpassContents::eInline);
+        cmd.beginRendering(&renderingInfo);
         vk::Viewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -98,13 +100,16 @@ namespace BeeEngine::Internal
     {
         BeeExpects(commandBuffer == GetCurrentCommandBuffer());
         auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
-        cmd.endRenderPass();
+        cmd.endRendering();
     }
 
     void VulkanRendererAPI::EndFrame()
     {
         SubmitCommandBuffer(GetCurrentCommandBuffer());
-        auto result = m_GraphicsDevice->GetSwapChain().PresentImage(&m_CurrentImageIndex);
+        auto& swapchain = m_GraphicsDevice->GetSwapChain();
+        m_GraphicsDevice->TransitionImageLayout(swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
+            vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
+        auto result = swapchain.PresentImage(&m_CurrentImageIndex);
         if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
         {
             m_GraphicsDevice->RequestSwapChainRebuild();
@@ -117,8 +122,8 @@ namespace BeeEngine::Internal
 
     RenderPass VulkanRendererAPI::GetMainRenderPass() const
     {
-        auto renderPass = m_GraphicsDevice->GetSwapChain().GetRenderPass();
-        return {renderPass};
+        BeeCoreWarn("Trying to get renderpass in vulkan with dynamic rendering");
+        return {nullptr};
     }
 
     CommandBuffer VulkanRendererAPI::GetCurrentCommandBuffer() const

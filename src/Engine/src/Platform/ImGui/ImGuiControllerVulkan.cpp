@@ -52,7 +52,7 @@ namespace BeeEngine::Internal
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+        //TODO: fix multiviewport and uncomment //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
         //io.ConfigViewportsNoAutoMerge = true;
         //io.ConfigViewportsNoTaskBarIcon = true;
 
@@ -74,6 +74,8 @@ namespace BeeEngine::Internal
         //this initializes imgui for SDL
         ImGui_ImplSDL3_InitForVulkan(m_SdlWindow);
         //this initializes imgui for Vulkan
+
+        auto& swapchain = graphicsDevice.GetSwapChain();
         ImGui_ImplVulkan_InitInfo init_info = {};
         init_info.Instance = ((Internal::VulkanInstance*)&WindowHandler::GetInstance()->GetAPIInstance())->GetHandle();
         init_info.PhysicalDevice = graphicsDevice.GetPhysicalDevice();
@@ -82,32 +84,27 @@ namespace BeeEngine::Internal
         init_info.Queue = graphicsDevice.GetGraphicsQueue();
         init_info.PipelineCache = nullptr;
         init_info.DescriptorPool = g_DescriptorPool;
-        init_info.RenderPass = graphicsDevice.GetSwapChain().GetRenderPass();
+        init_info.RenderPass = nullptr;
         init_info.Subpass = 0;
         init_info.MinImageCount = 3;
         init_info.ImageCount = 3;
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         init_info.Allocator = nullptr;
         init_info.CheckVkResultFn = nullptr;
-        //init_info.UseDynamicRendering = true;
+        init_info.UseDynamicRendering = true;
+        VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo = {};
+        pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+        pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+        pipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+        VkFormat colorAttachmentFormats[] = { static_cast<VkFormat>(swapchain.GetFormat()) };
+        pipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
+        pipelineRenderingCreateInfo.pNext = nullptr;
+        pipelineRenderingCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
+        pipelineRenderingCreateInfo.viewMask = 0;
+
+        init_info.PipelineRenderingCreateInfo = pipelineRenderingCreateInfo;
 
         ImGui_ImplVulkan_Init(&init_info);
-
-        //ImGui_ImplVulkan_CreateFontsTexture();
-        //execute a gpu command to upload imgui font textures
-        /*immediate_submit([&](VkCommandBuffer cmd) {
-            ImGui_ImplVulkan_CreateFontsTexture(cmd);
-        });*/
-
-        //clear font textures from cpu data
-        //ImGui_ImplVulkan_DestroyFontUploadObjects();
-
-        //add the destroy the imgui created structures
-        DeletionQueue::Main().PushFunction([=]() {
-
-            //vkDestroyDescriptorPool(Internal::VulkanGraphicsDevice::GetInstance().GetDevice(), g_DescriptorPool, nullptr);
-            //ImGui_ImplVulkan_Shutdown();
-        });
     }
 
     void ImGuiControllerVulkan::Update()

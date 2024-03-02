@@ -18,24 +18,22 @@ namespace BeeEngine::Internal
         std::vector<vk::SurfaceFormatKHR> formats;
         std::vector<vk::PresentModeKHR> presentModes;
     };
-    struct SwapChainFrame
-    {
-        vk::Image Image;
-        vk::ImageView ImageView;
-        vk::Image DepthImage;
-        vk::ImageView DepthImageView;
-        vk::DeviceMemory DepthImageMemory;
-        vk::Framebuffer Framebuffer;
-        vk::CommandBuffer CommandBuffer;
-        vk::Semaphore ImageAvailableSemaphore;
-        vk::Semaphore RenderFinishedSemaphore;
-        vk::Fence InFlightFence;
-    };
     class VulkanSwapChain: public SwapChain
     {
     public:
         VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
         ~VulkanSwapChain() override;
+
+        vk::ImageView GetImageView(uint32_t index)
+        {
+            return m_SwapChainImageViews[index];
+        }
+
+        vk::Image GetImage(uint32_t index)
+        {
+            return m_SwapChainImages[index];
+        }
+
         VulkanSwapChain(const VulkanSwapChain& other) = delete;
         VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;
 
@@ -59,13 +57,7 @@ namespace BeeEngine::Internal
         {
             return m_PresentMode;
         }
-
-        vk::RenderPass GetRenderPass();
         size_t ImageCount();
-        vk::Framebuffer GetFrameBuffer(size_t index)
-        {
-            return m_SwapChainFramebuffers[index];
-        }
 
         vk::Result AcquireNextImage(uint32_t *imageIndex);
         vk::Result SubmitCommandBuffers(const vk::CommandBuffer *buffers, size_t count, uint32_t *imageIndex);
@@ -80,12 +72,9 @@ namespace BeeEngine::Internal
 
         void ChooseExtent(vk::SurfaceCapabilitiesKHR &capabilities);
 
-        void CreateCommandBuffers();
         void CreateSwapChain();
         void CreateImageViews();
         void CreateDepthResources();
-        void CreateRenderPass();
-        void CreateFramebuffers();
         void CreateSyncObjects();
         void Destroy();
 
@@ -94,9 +83,7 @@ namespace BeeEngine::Internal
         vk::PresentModeKHR m_PresentMode;
         vk::Extent2D m_Extent;
 
-        vk::RenderPass m_RenderPass;
         vk::SwapchainKHR m_SwapChain;
-        //std::vector<SwapChainFrame> m_Frames;
         uint32_t m_MaxFrames;
         uint32_t m_CurrentFrame = 0;
         QueueFamilyIndices m_QueueFamilyIndices;
@@ -112,7 +99,6 @@ namespace BeeEngine::Internal
         std::vector<vk::ImageView> m_DepthImageViews;
         std::vector<vk::Image> m_SwapChainImages;
         std::vector<vk::ImageView> m_SwapChainImageViews;
-        std::vector<vk::Framebuffer> m_SwapChainFramebuffers;
 
         bool m_ResizeInProgress = false;
 

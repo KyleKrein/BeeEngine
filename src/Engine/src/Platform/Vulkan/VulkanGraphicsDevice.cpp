@@ -16,7 +16,8 @@ namespace BeeEngine::Internal
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
         VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-        VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME
+        VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
 };
     VulkanGraphicsDevice* VulkanGraphicsDevice::s_Instance = nullptr;
     PFN_vkCmdTraceRaysKHR CmdTraceRaysKHR = nullptr;
@@ -261,6 +262,10 @@ namespace BeeEngine::Internal
 
         vk::PhysicalDeviceFeatures deviceFeatures = {};
         deviceFeatures.samplerAnisotropy = vk::True;
+        //deviceFeatures.multiViewport = vk::True;
+
+        vk::PhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures = {};
+        dynamicRenderingFeatures.dynamicRendering = vk::True;
 
         std::vector<const char*> enabledLayers;
 
@@ -281,6 +286,7 @@ namespace BeeEngine::Internal
                 , deviceExtensions.size(), deviceExtensions.data(),
                 &deviceFeatures
                 );
+        deviceInfo.pNext = &dynamicRenderingFeatures;
 
         try
         {
@@ -344,12 +350,30 @@ namespace BeeEngine::Internal
 
              sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
              destinationStage = vk::PipelineStageFlagBits::eTransfer;
-         } else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal) {
+         } else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+         {
              barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
              barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+         } else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
+         {
+             barrier.setSrcAccessMask({});
+             barrier.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
 
-             sourceStage = vk::PipelineStageFlagBits::eTransfer;
-             destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+             destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+         } else if(oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::ePresentSrcKHR)
+         {
+             barrier.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+             barrier.setDstAccessMask(vk::AccessFlagBits::eMemoryRead);
+
+             sourceStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+             destinationStage = vk::PipelineStageFlagBits::eBottomOfPipe;
+         }   else if (oldLayout == vk::ImageLayout::ePresentSrcKHR && newLayout == vk::ImageLayout::eColorAttachmentOptimal) {
+             barrier.setSrcAccessMask(vk::AccessFlagBits::eMemoryRead);
+             barrier.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+
+             sourceStage = vk::PipelineStageFlagBits::eBottomOfPipe;
+             destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
          } else {
              throw std::invalid_argument("unsupported layout transition!");
          }

@@ -19,10 +19,7 @@ namespace BeeEngine::Internal
     {
         CreateSwapChain();
         CreateImageViews();
-        CreateRenderPass();
         CreateDepthResources();
-        CreateFramebuffers();
-        //CreateCommandBuffers();
         CreateSyncObjects();
     }
 
@@ -120,13 +117,6 @@ namespace BeeEngine::Internal
         {
             //m_GraphicsDevice.GetDevice().destroyImageView(depthImageView, nullptr);
         }
-
-        for (auto framebuffer : m_SwapChainFramebuffers) {
-            vkDestroyFramebuffer(m_GraphicsDevice.GetDevice(), framebuffer, nullptr);
-        }
-
-        vkDestroyRenderPass(m_GraphicsDevice.GetDevice(), m_RenderPass, nullptr);
-
         // cleanup synchronization objects
         for (size_t i = 0; i < m_MaxFrames; i++) {
             vkDestroySemaphore(m_GraphicsDevice.GetDevice(), m_RenderFinishedSemaphores[i], nullptr);
@@ -313,78 +303,6 @@ namespace BeeEngine::Internal
         }
     }
 
-    void VulkanSwapChain::CreateRenderPass()
-    {
-        vk::AttachmentDescription colorAttachment = {};
-        colorAttachment.format = m_SurfaceFormat.format;
-        colorAttachment.samples = vk::SampleCountFlagBits::e1;
-        colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
-        colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
-        colorAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-        colorAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-        colorAttachment.initialLayout = vk::ImageLayout::eUndefined;
-        colorAttachment.finalLayout = vk::ImageLayout::ePresentSrcKHR;
-
-        vk::AttachmentReference colorAttachmentRef = {};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
-
-        vk::AttachmentDescription depthAttachment{};
-        depthAttachment.flags = {};
-        depthAttachment.format = FindDepthFormat();
-        depthAttachment.samples = vk::SampleCountFlagBits::e1;
-        depthAttachment.loadOp = vk::AttachmentLoadOp::eClear;
-        depthAttachment.storeOp = vk::AttachmentStoreOp::eDontCare;
-        depthAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-        depthAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-        depthAttachment.initialLayout = vk::ImageLayout::eUndefined;
-        depthAttachment.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-        vk::AttachmentReference depthAttachmentRef{};
-        depthAttachmentRef.attachment = 1;
-        depthAttachmentRef.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-        vk::SubpassDescription subpass = {};
-        subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-        vk::SubpassDependency dependency = {};
-        dependency.srcSubpass = vk::SubpassExternal;
-        dependency.srcAccessMask = {};
-        dependency.srcStageMask =
-                vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
-        dependency.dstSubpass = 0;
-        dependency.dstStageMask =
-                vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests;
-        dependency.dstAccessMask =
-                vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite;
-
-        vk::SubpassDependency depthDependency = {};
-        depthDependency.srcSubpass = vk::SubpassExternal;
-        depthDependency.dstSubpass = 0;
-        depthDependency.srcStageMask = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
-        depthDependency.srcAccessMask = {};
-        depthDependency.dstStageMask = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
-        depthDependency.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
-
-        std::array<vk::AttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
-        std::array<vk::SubpassDependency, 2> dependencies = {dependency, depthDependency};
-        vk::RenderPassCreateInfo renderPassInfo = {};
-        renderPassInfo.sType = vk::StructureType::eRenderPassCreateInfo;
-        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = dependencies.size();
-        renderPassInfo.pDependencies = dependencies.data();
-
-        if (m_GraphicsDevice.GetDevice().createRenderPass(&renderPassInfo, nullptr, &m_RenderPass) != vk::Result::eSuccess) {
-            throw std::runtime_error("failed to create render pass!");
-        }
-    }
-
     void VulkanSwapChain::CreateSyncObjects()
     {
         m_ImageAvailableSemaphores.resize(m_MaxFrames);
@@ -410,33 +328,6 @@ namespace BeeEngine::Internal
         }
     }
 
-    void VulkanSwapChain::CreateFramebuffers()
-    {
-        size_t size = ImageCount();
-        m_SwapChainFramebuffers.resize(size);
-        auto device = m_GraphicsDevice.GetDevice();
-        for (size_t i = 0; i < size; i++) {
-            std::array<vk::ImageView, 2> attachments = {m_SwapChainImageViews[i], m_DepthImageViews[i]};
-
-            vk::Extent2D swapChainExtent = m_Extent;
-            vk::FramebufferCreateInfo framebufferInfo = {};
-            framebufferInfo.sType = vk::StructureType::eFramebufferCreateInfo;
-            framebufferInfo.renderPass = m_RenderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = swapChainExtent.width;
-            framebufferInfo.height = swapChainExtent.height;
-            framebufferInfo.layers = 1;
-
-            if (device.createFramebuffer(
-                    &framebufferInfo,
-                    nullptr,
-                    &m_SwapChainFramebuffers[i]) != vk::Result::eSuccess) {
-                throw std::runtime_error("failed to create framebuffer!");
-            }
-        }
-    }
-
     vk::Format VulkanSwapChain::FindDepthFormat()
     {
         return m_GraphicsDevice.FindSupportedFormat(
@@ -448,11 +339,6 @@ namespace BeeEngine::Internal
     size_t VulkanSwapChain::ImageCount()
     {
         return m_SwapChainImages.size();
-    }
-
-    vk::RenderPass VulkanSwapChain::GetRenderPass()
-    {
-        return m_RenderPass;
     }
 
     vk::Result VulkanSwapChain::PresentImage(const uint32_t* imageIndex)
