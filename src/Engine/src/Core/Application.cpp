@@ -53,6 +53,7 @@ namespace BeeEngine{
             cv.wait(lock);
         }
         DeletionQueue::Main().Flush();
+        BeeEnsures(DeletionQueue::Main().IsEmpty() && DeletionQueue::Frame().IsEmpty() && DeletionQueue::RendererFlush().IsEmpty());
     }
 
     Application::Application(const WindowProperties& properties)
@@ -70,10 +71,8 @@ namespace BeeEngine{
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
-        //m_AssetManager.LoadStandardAssets();
-        //SceneRenderer::Init();
-
-        //ScriptingEngine::Init();
+        m_AssetManager.LoadStandardAssets();
+        SceneRenderer::Init();
     }
 
     Application::~Application()

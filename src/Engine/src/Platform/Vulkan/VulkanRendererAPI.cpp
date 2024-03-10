@@ -65,9 +65,9 @@ namespace BeeEngine::Internal
 
         m_GraphicsDevice->TransitionImageLayout(swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
             vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-        vk::RenderingInfoKHR renderingInfo{};
+        vk::RenderingInfo renderingInfo{};
 
-        vk::RenderingAttachmentInfoKHR colorAttachment{};
+        vk::RenderingAttachmentInfo colorAttachment{};
         colorAttachment.imageView = swapchain.GetImageView(m_CurrentImageIndex);
         colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
         colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
@@ -134,6 +134,13 @@ namespace BeeEngine::Internal
     void VulkanRendererAPI::DrawInstanced(Model& model, InstancedBuffer& instancedBuffer,
         const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
     {
+        /*auto cmd = GetCurrentCommandBuffer().GetHandleAs<vk::CommandBuffer>();
+        auto& pipeline = model.GetPipeline();
+        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.GetHandle());
+        cmd.bindVertexBuffers(0, 1, &model.GetVertexBuffer().GetHandle(), &model.GetVertexBufferOffset());
+        cmd.bindIndexBuffer(model.GetIndexBuffer().GetHandle(), model.GetIndexBufferOffset(), vk::IndexType::eUint32);
+        cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.GetLayout(), 0, bindingSets.size(), bindingSets.data(), 0, nullptr);
+        cmd.drawIndexed(model.GetIndexCount(), instanceCount, 0, 0, 0);*/
     }
 
     void VulkanRendererAPI::SubmitCommandBuffer(const CommandBuffer& commandBuffer)
@@ -176,7 +183,5 @@ namespace BeeEngine::Internal
             FreeCommandBuffers();
             CreateCommandBuffers();
         }
-        //TODO: Check if the renderpass is compatible with the new swapchain
-        //CreatePipeline();
     }
 }

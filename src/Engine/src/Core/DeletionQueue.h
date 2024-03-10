@@ -41,6 +41,10 @@ namespace BeeEngine
             }
             m_DeletionQueue.clear();
         };
+        [[nodiscard]] bool IsEmpty() const
+        {
+            return m_DeletionQueue.empty();
+        }
 
     private:
         std::deque<std::function<void()>> m_DeletionQueue;

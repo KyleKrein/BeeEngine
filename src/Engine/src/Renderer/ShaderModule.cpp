@@ -9,6 +9,8 @@
 #include "Platform/WebGPU/WebGPUShaderModule.h"
 #include <filesystem>
 
+#include "Platform/Vulkan/VulkanShaderModule.h"
+
 namespace BeeEngine
 {
     String ShaderModule::s_CachePath = "Cache/";
@@ -31,7 +33,10 @@ namespace BeeEngine
 
         switch (Renderer::GetAPI())
         {
-            case WebGPU:
+#if defined(BEE_COMPILE_VULKAN)
+            case Vulkan:
+                return CreateRef<Internal::VulkanShaderModule>(spirv, type, std::move(layout));
+#endif
             case NotAvailable:
             default:
                 BeeCoreError("Unknown renderer API");

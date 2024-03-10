@@ -90,7 +90,7 @@ namespace BeeEngine::Internal
         init_info.ImageCount = 3;
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         init_info.Allocator = nullptr;
-        init_info.CheckVkResultFn = nullptr;
+        init_info.CheckVkResultFn = check_vk_result;
         init_info.UseDynamicRendering = true;
         VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo = {};
         pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;

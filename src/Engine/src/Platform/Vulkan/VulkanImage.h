@@ -13,8 +13,6 @@ namespace BeeEngine::Internal
     {
         vk::Image Image = nullptr;
         VmaAllocation Memory = nullptr;
-
-        void Destroy();
     };
 }
 #endif

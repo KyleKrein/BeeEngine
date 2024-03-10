@@ -123,12 +123,11 @@ namespace BeeEngine::Internal
     void VulkanTexture2D::FreeResources()
     {
         auto device = m_Device.GetDevice();
-        DeletionQueue::Frame().PushFunction([device, sampler = m_Sampler, imageView = m_ImageView]()
+        DeletionQueue::Frame().PushFunction([device, sampler = m_Sampler]()
         {
             device.destroySampler(sampler);
-            device.destroyImageView(imageView);
         });
-        m_Image.Destroy();
+        m_Device.DestroyImageWithView(m_Image, m_ImageView);
         m_Sampler = nullptr;
         m_ImageView = nullptr;
         m_Image = {};

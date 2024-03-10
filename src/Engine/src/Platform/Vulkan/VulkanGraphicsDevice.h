@@ -92,6 +92,8 @@ namespace BeeEngine::Internal
                 vk::BufferUsageFlags usage,
                 VmaMemoryUsage memoryUsage) const;
         void DestroyBuffer(VulkanBuffer& buffer) const;
+        void DestroyImage(VulkanImage& image) const;
+        void DestroyImageWithView(VulkanImage& image, vk::ImageView imageView) const;
 
         void CopyToBuffer(gsl::span<byte> data, VulkanBuffer& outBuffer) const;
 
@@ -117,11 +119,19 @@ namespace BeeEngine::Internal
         const std::vector<vk::Format> &candidates, vk::ImageTiling tiling,
                                                vk::FormatFeatureFlags features);
 
+        bool HasRayTracingSupport() const
+        {
+            return m_HasRayTracingSupport;
+        }
+
+
         vk::PhysicalDeviceProperties properties;
 
         static VulkanGraphicsDevice &GetInstance();
 
     private:
+        mutable bool m_HasRayTracingSupport = false;
+
         void CreateCommandPool();
 
         static VulkanGraphicsDevice* s_Instance;
@@ -139,6 +149,11 @@ namespace BeeEngine::Internal
             vk::Instance instance;
             ~DeviceHandle()
             {
+                while (!DeletionQueue::Main().IsEmpty() || !DeletionQueue::Frame().IsEmpty())
+                {
+                    DeletionQueue::Frame().Flush();
+                    DeletionQueue::Main().Flush();
+                }
                 device.waitIdle();
                 vmaDestroyAllocator(allocator);
                 device.destroy();
@@ -194,7 +209,8 @@ namespace BeeEngine::Internal
 
     inline VmaAllocator GetVulkanAllocator()
     {
-        return VulkanGraphicsDevice::s_Instance->m_DeviceHandle.allocator;
+        static auto allocator = VulkanGraphicsDevice::s_Instance->m_DeviceHandle.allocator;
+        return allocator;
     }
 }
 #endif

@@ -23,5 +23,6 @@ namespace BeeEngine
         }
         static uint32_t GetSystemRAM();
         static SystemTheme GetSystemTheme();
+        static bool HasRayTracingSupport();
     };
 }

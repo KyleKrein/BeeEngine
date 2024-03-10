@@ -22,6 +22,8 @@ namespace BeeEngine::Internal
     extern PFN_vkGetAccelerationStructureDeviceAddressKHR GetAccelerationStructureDeviceAddressKHR;
     extern PFN_vkGetAccelerationStructureBuildSizesKHR GetAccelerationStructureBuildSizesKHR;
 
+    inline vk::DispatchLoaderDynamic g_vkDynamicLoader;
+
     inline void CheckVkResult(vk::Result result)
     {
         if (result != vk::Result::eSuccess)

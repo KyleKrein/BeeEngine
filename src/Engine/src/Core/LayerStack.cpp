@@ -19,7 +19,7 @@ namespace BeeEngine{
     LayerStack::~LayerStack()
     {
         BEE_PROFILE_FUNCTION();
-        for (auto layer: m_layers)
+        for (auto& layer: m_layers)
         {
             layer->OnDetach();
         }
@@ -59,14 +59,16 @@ namespace BeeEngine{
     void LayerStack::PopLayer(Ref<Layer> layer)
     {
         BEE_PROFILE_FUNCTION();
-        std::remove(m_layers.begin(), m_layers.end(), layer);
+        auto it = std::remove(m_layers.begin(), m_layers.end(), layer);
+        m_layers.erase(it, m_layers.end());
         layer->OnDetach();
     }
 
     void LayerStack::PopOverlay(Ref<Layer> overlay)
     {
         BEE_PROFILE_FUNCTION();
-        std::remove(m_layers.begin(), m_layers.end(), overlay);
+        auto it = std::remove(m_layers.begin(), m_layers.end(), overlay);
+        m_layers.erase(it, m_layers.end());
         overlay->OnDetach();
     }
 

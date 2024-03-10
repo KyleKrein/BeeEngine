@@ -4,6 +4,7 @@
 
 #include "Pipeline.h"
 #include "Renderer.h"
+#include "Platform/Vulkan/VulkanPipeline.h"
 #include "Platform/WebGPU/WebGPUPipeline.h"
 
 namespace BeeEngine
@@ -17,6 +18,10 @@ namespace BeeEngine
         {
             case WebGPU:
                 return CreateRef<Internal::WebGPUPipeline>(vertexShader, fragmentShader);
+#if defined(BEE_COMPILE_VULKAN)
+            case Vulkan:
+                return CreateRef<Internal::VulkanPipeline>(vertexShader, fragmentShader);
+#endif
             case NotAvailable:
             default:
                 BeeCoreError("Unknown renderer API");

@@ -12,7 +12,7 @@
 
 namespace BeeEngine::Internal
 {
-    const static std::vector<const char *> requiredExtensions = {
+    static std::vector<const char *> requiredExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
         VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
@@ -33,6 +33,8 @@ namespace BeeEngine::Internal
         nullptr;
     PFN_vkGetAccelerationStructureBuildSizesKHR GetAccelerationStructureBuildSizesKHR = nullptr;
 
+    static size_t VulkanBufferCount = 0;
+    static size_t VulkanImageCount = 0;
     void VulkanGraphicsDevice::LoadKHRRayTracing()
     {
         VkDevice device = m_Device;
@@ -90,10 +92,12 @@ namespace BeeEngine::Internal
         {
             device.waitIdle();
         });
-
-        LoadKHRRayTracing();
+        if(HasRayTracingSupport())
+            LoadKHRRayTracing();
 
         InitializeVulkanMemoryAllocator(instance);
+
+        g_vkDynamicLoader.init(instance.GetHandle(), m_Device);
 
         m_GraphicsQueue = m_Device.getQueue(m_QueueFamilyIndices.GraphicsFamily.value(), 0);
         if(m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
@@ -111,6 +115,12 @@ namespace BeeEngine::Internal
 
     VulkanGraphicsDevice::~VulkanGraphicsDevice()
     {
+        m_Device.waitIdle();
+        while (!DeletionQueue::Main().IsEmpty() || !DeletionQueue::Frame().IsEmpty())
+        {
+            DeletionQueue::Frame().Flush();
+            DeletionQueue::Main().Flush();
+        }
         m_Device.waitIdle();
         m_Device.destroyCommandPool(m_CommandPool);
     }
@@ -142,6 +152,21 @@ namespace BeeEngine::Internal
         return true;
     }
 
+    bool IsRayTracingExtension(const std::string& ext)
+    {
+        return ext == VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME ||
+               ext == VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME ||
+               ext == VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME ||
+               ext == VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME ||
+               ext == VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME ||
+               ext == VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME;
+    }
+
+    bool AreRayTracingOnlyExtensionsPresent(const std::set<std::string>& set)
+    {
+        return std::ranges::all_of(set, IsRayTracingExtension);
+    }
+
     bool VulkanGraphicsDevice::CheckDeviceExtensionSupport(const vk::PhysicalDevice &device,
                                                            const std::vector<const char *> &extensions) const
     {
@@ -158,6 +183,27 @@ namespace BeeEngine::Internal
         for (const auto& extension:availableExtensions)
         {
             requiredExtensions.erase(extension.extensionName);
+        }
+
+        if(!requiredExtensions.empty())
+        {
+            if(AreRayTracingOnlyExtensionsPresent(requiredExtensions))
+            {
+                m_HasRayTracingSupport = false;
+                for(auto& ext : requiredExtensions)
+                {
+                    auto it = std::ranges::find(::BeeEngine::Internal::requiredExtensions, ext.c_str());
+                    if(it != ::BeeEngine::Internal::requiredExtensions.end())
+                    {
+                        ::BeeEngine::Internal::requiredExtensions.erase(it);
+                    }
+                }
+                requiredExtensions.clear();
+            }
+        }
+        else
+        {
+            m_HasRayTracingSupport = true;
         }
 
         return requiredExtensions.empty();
@@ -267,6 +313,21 @@ namespace BeeEngine::Internal
         vk::PhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures = {};
         dynamicRenderingFeatures.dynamicRendering = vk::True;
 
+        vk::PhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures = {};
+        rayTracingFeatures.rayTracingPipeline = HasRayTracingSupport() ? vk::True : vk::False;
+
+        dynamicRenderingFeatures.pNext = &rayTracingFeatures;
+
+        vk::PhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};
+        bufferDeviceAddressFeatures.bufferDeviceAddress = vk::True;
+
+        rayTracingFeatures.pNext = &bufferDeviceAddressFeatures;
+
+        vk::PhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures = {};
+        accelerationStructureFeatures.accelerationStructure = HasRayTracingSupport() ? vk::True : vk::False;
+
+        bufferDeviceAddressFeatures.pNext = &accelerationStructureFeatures;
+
         std::vector<const char*> enabledLayers;
 
 #if defined(BEE_VULKAN_ENABLE_VALIDATION_LAYERS)
@@ -354,6 +415,9 @@ namespace BeeEngine::Internal
          {
              barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
              barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+             sourceStage = vk::PipelineStageFlagBits::eTransfer;
+             destinationStage = vk::PipelineStageFlagBits::eRayTracingShaderKHR | vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader;
          } else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
          {
              barrier.setSrcAccessMask({});
@@ -429,6 +493,7 @@ namespace BeeEngine::Internal
         {
             throw std::runtime_error("failed to allocate buffer!");
         }
+        BeeCoreTrace("Allocated Vulkan VMA buffer successfully! Buffer count: {}", ++VulkanBufferCount);
         return buffer;
     }
 
@@ -437,6 +502,26 @@ namespace BeeEngine::Internal
         DeletionQueue::Frame().PushFunction([buf = buffer] ()
         {
             vmaDestroyBuffer(GetVulkanAllocator(), buf.Buffer, buf.Memory);
+            BeeCoreTrace("Destroyed Vulkan VMA buffer successfully! Buffer count: {}", --VulkanBufferCount);
+        });
+    }
+
+    void VulkanGraphicsDevice::DestroyImage(VulkanImage& image) const
+    {
+        DeletionQueue::Frame().PushFunction([im = image] ()
+        {
+            vmaDestroyImage(GetVulkanAllocator(), im.Image, im.Memory);
+            BeeCoreTrace("Destroyed Vulkan VMA Image successfully! Image count: {}", --VulkanImageCount);
+        });
+    }
+
+    void VulkanGraphicsDevice::DestroyImageWithView(VulkanImage& image, vk::ImageView imageView) const
+    {
+        DeletionQueue::Frame().PushFunction([im = image, imView = imageView, device = m_Device] ()
+        {
+            vmaDestroyImage(GetVulkanAllocator(), im.Image, im.Memory);
+            device.destroyImageView(imView);
+            BeeCoreTrace("Destroyed Vulkan VMA Image successfully! Image count: {}", --VulkanImageCount);
         });
     }
 
@@ -546,25 +631,7 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to create image view!");
         }
-        //add to deletion queues
-        DeletionQueue::Main().PushFunction([device = m_Device, allocator = m_DeviceHandle.allocator, outImageView, outImage]() {
-            vkDestroyImageView(device, outImageView, nullptr);
-            vmaDestroyImage(allocator, outImage.Image, outImage.Memory);
-        });
-
-
-        /*vkCreateImage(m_Device, &imageInfo, nullptr, &image);
-
-        VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(m_Device, image, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-        vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory);
-
-        m_Device.bindImageMemory(image, imageMemory, 0);*/
+        BeeCoreTrace("Created Vulkan VMA Image successfully! Image count: {}", ++VulkanImageCount);
     }
 
     uint32_t VulkanGraphicsDevice::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
@@ -628,11 +695,13 @@ namespace BeeEngine::Internal
         vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
 
         VmaAllocatorCreateInfo allocatorCreateInfo = {};
-        allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+        allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
         allocatorCreateInfo.physicalDevice = m_PhysicalDevice;
         allocatorCreateInfo.device = m_Device;
         allocatorCreateInfo.instance = instance.GetHandle();
         allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
+        allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+
         vmaCreateAllocator(&allocatorCreateInfo, &m_DeviceHandle.allocator);
     }
 

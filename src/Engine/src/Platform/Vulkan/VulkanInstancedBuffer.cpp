@@ -1,0 +1,38 @@
+//
+// Created by Aleksandr on 09.03.2024.
+//
+
+#include "VulkanInstancedBuffer.h"
+
+#include "Renderer/CommandBuffer.h"
+
+namespace BeeEngine::Internal {
+    VulkanInstancedBuffer::VulkanInstancedBuffer(size_t size)
+        : m_GraphicsDevice(VulkanGraphicsDevice::GetInstance()), m_Size(size)
+    {
+        m_Buffer = m_GraphicsDevice.CreateBuffer(m_Size, vk::BufferUsageFlagBits::eVertexBuffer, VMA_MEMORY_USAGE_AUTO);
+    }
+
+    VulkanInstancedBuffer::~VulkanInstancedBuffer()
+    {
+        m_GraphicsDevice.DestroyBuffer(m_Buffer);
+    }
+
+    void VulkanInstancedBuffer::SetData(void* data, size_t size)
+    {
+        BeeExpects(size <= m_Size);
+        m_GraphicsDevice.CopyToBuffer({(byte*)data, size}, m_Buffer);
+    }
+
+    void VulkanInstancedBuffer::Bind(void* cmd)
+    {
+        vk::CommandBuffer commandBuffer = reinterpret_cast<CommandBuffer*>(cmd)
+                                            ->GetHandleAs<vk::CommandBuffer>();
+        commandBuffer.bindVertexBuffers(0, 1, &m_Buffer.Buffer, nullptr);
+    }
+
+    size_t VulkanInstancedBuffer::GetSize()
+    {
+        return m_Size;
+    }
+}

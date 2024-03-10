@@ -107,15 +107,10 @@ namespace BeeEngine::Internal
             vkDestroySwapchainKHR(m_GraphicsDevice.GetDevice(), m_SwapChain, nullptr);
             //m_SwapChain = nullptr;
         }
-
-        for(auto& depthImage : m_DepthImages)
+        BeeExpects(m_DepthImages.size() == m_DepthImageViews.size());
+        for(size_t i = 0; i < m_DepthImages.size(); i++)
         {
-            //vmaDestroyImage(GetVulkanAllocator(), depthImage.Image, depthImage.Memory);
-        }
-
-        for(auto depthImageView : m_DepthImageViews)
-        {
-            //m_GraphicsDevice.GetDevice().destroyImageView(depthImageView, nullptr);
+            m_GraphicsDevice.DestroyImageWithView(m_DepthImages[i], m_DepthImageViews[i]);
         }
         // cleanup synchronization objects
         for (size_t i = 0; i < m_MaxFrames; i++) {
@@ -251,9 +246,9 @@ namespace BeeEngine::Internal
         // allowed to create a swap chain with more. That's why we'll first query the final number of
         // images with vkGetSwapchainImagesKHR, then resize the container and finally call it again to
         // retrieve the handles.
-        device.getSwapchainImagesKHR(m_SwapChain, &imageCount, nullptr);
+        CheckVkResult(device.getSwapchainImagesKHR(m_SwapChain, &imageCount, nullptr));
         m_SwapChainImages.resize(imageCount);
-        device.getSwapchainImagesKHR(m_SwapChain, &imageCount, m_SwapChainImages.data());
+        CheckVkResult(device.getSwapchainImagesKHR(m_SwapChain, &imageCount, m_SwapChainImages.data()));
     }
 
     void VulkanSwapChain::CreateDepthResources()

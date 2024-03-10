@@ -33,8 +33,8 @@ namespace BeeEngine::Internal
         void CopyBufferToImageWithTransition(VulkanBuffer& buffer);
 
         VulkanGraphicsDevice& m_Device;
-        VulkanImage m_Image;
-        vk::ImageView m_ImageView;
-        vk::Sampler m_Sampler;
+        VulkanImage m_Image {};
+        vk::ImageView m_ImageView = nullptr;
+        vk::Sampler m_Sampler = nullptr;
     };
 }

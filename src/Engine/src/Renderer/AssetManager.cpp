@@ -210,3 +210,12 @@ void BeeEngine::InternalAssetManager::LoadStandardAssets()
 
     auto& openSansRegularFont = LoadFont("OpenSansRegular", Internal::GetEmbeddedResource(EmbeddedResource::OpenSansRegular));
 }
+
+void BeeEngine::InternalAssetManager::CleanUp()
+{
+    m_Materials.clear();
+    m_Meshes.clear();
+    m_Models.clear();
+    m_Textures.clear();
+    m_Fonts.clear();
+}
