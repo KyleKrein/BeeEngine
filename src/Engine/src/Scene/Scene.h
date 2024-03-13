@@ -36,6 +36,12 @@ namespace BeeEngine
         friend class PrefabImporter;
         friend class SceneRenderer;
     public:
+        struct SceneRendererData
+        {
+            Ref<UniformBuffer> CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
+            Ref<BindingSet> CameraBindingSet = BindingSet::Create({{0, *CameraUniformBuffer}});
+        };
+
         static Ref<Scene> Copy(Scene& scene);
 
 
@@ -63,12 +69,16 @@ namespace BeeEngine
         void Clear();
 
         TopLevelAccelerationStructure& GetTLAS() { return *m_TLAS; }
+
+        SceneRendererData& GetSceneRendererData() { return m_SceneRendererData; }
     private:
         entt::registry m_Registry;
 
         bool m_IsRuntime = false;
         //void ResetScene();
         b2World* m_2DPhysicsWorld;
+
+        SceneRendererData m_SceneRendererData;
 
         Ref<TopLevelAccelerationStructure> m_TLAS = TopLevelAccelerationStructure::Create();
 

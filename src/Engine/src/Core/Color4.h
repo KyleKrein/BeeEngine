@@ -18,6 +18,10 @@
 #include <webgpu/webgpu.h>
 #endif
 
+#if defined(BEE_COMPILE_VULKAN)
+#include <vulkan/vulkan.hpp>
+#endif
+
 namespace BeeEngine
 {
     struct Color4
@@ -67,6 +71,12 @@ namespace BeeEngine
             return {static_cast<double>(m_R), static_cast<double>(m_G), static_cast<double>(m_B), static_cast<double>(m_A)};
         }
 #endif
+#if defined(BEE_COMPILE_VULKAN)
+        constexpr inline operator vk::ClearValue() const
+        {
+            return vk::ClearColorValue{m_R, m_G, m_B, m_A};
+        }
+#endif
 #if __has_include(<imgui.h>)
         constexpr inline operator ImVec4() const
         {
@@ -93,6 +103,12 @@ namespace BeeEngine
             constexpr operator ImVec4() const
             {
                 return {R, G, B, A};
+            }
+#endif
+#if defined(BEE_COMPILE_VULKAN)
+            constexpr operator vk::ClearValue() const
+            {
+                return vk::ClearColorValue{R, G, B, A};
             }
 #endif
         };

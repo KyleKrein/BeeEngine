@@ -10,7 +10,7 @@
 
 namespace BeeEngine::Internal
 {
-
+    std::function<void()> ImGuiControllerVulkan::s_ShutdownFunction = nullptr;
     void ImGuiControllerVulkan::Initialize(uint16_t width, uint16_t height, uint64_t glfwwindow)
     {
         m_SdlWindow = reinterpret_cast<SDL_Window *>(glfwwindow);
@@ -141,11 +141,15 @@ namespace BeeEngine::Internal
         auto& device = Internal::VulkanGraphicsDevice::GetInstance();
         auto err = vkDeviceWaitIdle(device.GetDevice());
         check_vk_result(err);
-        ImGui_ImplVulkan_Shutdown();
-        ImGui_ImplSDL3_Shutdown();
         //ImGui::DestroyContext();
 
-        vkDestroyDescriptorPool(device.GetDevice(), g_DescriptorPool, nullptr);
+        s_ShutdownFunction = [device = device.GetDevice(), pool = g_DescriptorPool]
+        {
+            BeeCoreTrace("Imgui Vulkan Shutdown");
+            ImGui_ImplVulkan_Shutdown();
+            ImGui_ImplSDL3_Shutdown();
+            vkDestroyDescriptorPool(device, pool, nullptr);
+        };
     }
 }
 #endif

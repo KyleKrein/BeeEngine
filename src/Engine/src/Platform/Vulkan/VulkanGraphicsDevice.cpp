@@ -2,6 +2,8 @@
 // Created by alexl on 09.06.2023.
 //
 #include <SDL_vulkan.h>
+
+#include "Platform/ImGui/ImGuiControllerVulkan.h"
 #if defined(BEE_COMPILE_VULKAN)
 #include "VulkanGraphicsDevice.h"
 #include "Renderer/QueueFamilyIndices.h"
@@ -33,8 +35,8 @@ namespace BeeEngine::Internal
         nullptr;
     PFN_vkGetAccelerationStructureBuildSizesKHR GetAccelerationStructureBuildSizesKHR = nullptr;
 
-    static size_t VulkanBufferCount = 0;
-    static size_t VulkanImageCount = 0;
+    static std::atomic<size_t> VulkanBufferCount = 0;
+    static std::atomic<size_t> VulkanImageCount = 0;
     void VulkanGraphicsDevice::LoadKHRRayTracing()
     {
         VkDevice device = m_Device;
@@ -111,6 +113,7 @@ namespace BeeEngine::Internal
         CreateSwapChainSupportDetails();
         m_SwapChain = CreateScope<VulkanSwapChain>(*this, WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight());
         CreateCommandPool();
+        CreateDescriptorPool();
     }
 
     VulkanGraphicsDevice::~VulkanGraphicsDevice()
@@ -121,7 +124,9 @@ namespace BeeEngine::Internal
             DeletionQueue::Frame().Flush();
             DeletionQueue::Main().Flush();
         }
+        ImGuiControllerVulkan::s_ShutdownFunction();
         m_Device.waitIdle();
+        m_Device.destroyDescriptorPool(m_DescriptorPool);
         m_Device.destroyCommandPool(m_CommandPool);
     }
 
@@ -374,8 +379,18 @@ namespace BeeEngine::Internal
         m_DeviceHandle.surface = vk::SurfaceKHR(cSurface);
     }
 
+    bool IsDepthFormat(vk::Format format)
+    {
+        switch (format)
+        {
+            case vk::Format::eD32Sfloat:
+                return true;
+        }
+        return false;
+    }
+
     void VulkanGraphicsDevice::TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout,
-        vk::ImageLayout newLayout)
+                                                     vk::ImageLayout newLayout)
     {
          vk::CommandBufferAllocateInfo allocInfo{};
          allocInfo.level = vk::CommandBufferLevel::ePrimary;
@@ -396,7 +411,7 @@ namespace BeeEngine::Internal
          barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
          barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
          barrier.image = image;
-         barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+         barrier.subresourceRange.aspectMask = IsDepthFormat(format)?vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
          barrier.subresourceRange.baseMipLevel = 0;
          barrier.subresourceRange.levelCount = 1;
          barrier.subresourceRange.baseArrayLayer = 0;
@@ -438,7 +453,28 @@ namespace BeeEngine::Internal
 
              sourceStage = vk::PipelineStageFlagBits::eBottomOfPipe;
              destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-         } else {
+         } else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+         {
+             barrier.setSrcAccessMask({});
+             barrier.setDstAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+
+             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+                destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+         }else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eAttachmentOptimal)
+         {
+             barrier.setSrcAccessMask({});
+             barrier.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+
+             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+             destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+         }else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+         {
+             barrier.setSrcAccessMask({});
+             barrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+
+             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+             destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+         }else{
              throw std::invalid_argument("unsupported layout transition!");
          }
 
@@ -460,6 +496,20 @@ namespace BeeEngine::Internal
          m_GraphicsQueue.waitIdle();
 
          m_Device.freeCommandBuffers(m_CommandPool, commandBuffer);
+    }
+
+    void VulkanGraphicsDevice::CreateDescriptorSet(vk::DescriptorSetAllocateInfo& info,
+        vk::DescriptorSet* outDescriptorSet) const
+    {
+        CheckVkResult(m_Device.allocateDescriptorSets(&info, outDescriptorSet));
+    }
+
+    void VulkanGraphicsDevice::DestroyDescriptorSet(vk::DescriptorSet descriptorSet) const
+    {
+        DeletionQueue::Frame().PushFunction([descriptorSet, pool = m_DescriptorPool, device = m_Device] ()
+        {
+            device.freeDescriptorSets(pool, descriptorSet);
+        });
     }
 
     VulkanBuffer VulkanGraphicsDevice::CreateBuffer(vk::DeviceSize size,
@@ -622,10 +672,14 @@ namespace BeeEngine::Internal
         allocInfo.requiredFlags = (VkMemoryPropertyFlags)memoryProperties;
 
         //allocate and create the image
-        vmaCreateImage(m_DeviceHandle.allocator, (VkImageCreateInfo*)&imageInfo, &allocInfo, (VkImage*)&outImage.Image, &outImage.Memory, nullptr);
+        vk::Result result = (vk::Result)vmaCreateImage(m_DeviceHandle.allocator, (VkImageCreateInfo*)&imageInfo, &allocInfo, (VkImage*)&outImage.Image, &outImage.Memory, nullptr);
+        if(result != vk::Result::eSuccess)
+        {
+            BeeCoreError("Failed to create image! {}", vk::to_string(result));
+        }
         auto copiedImageViewInfo = imageViewInfo;
         copiedImageViewInfo.image = outImage.Image;
-        auto result = m_Device.createImageView(&copiedImageViewInfo, nullptr, &outImageView);
+        result = m_Device.createImageView(&copiedImageViewInfo, nullptr, &outImageView);
 
         if(result != vk::Result::eSuccess)
         {
@@ -738,6 +792,21 @@ namespace BeeEngine::Internal
         m_CommandPoolAllocateInfo.commandPool = m_CommandPool;
         m_CommandPoolAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
         m_CommandPoolAllocateInfo.commandBufferCount = 1;
+    }
+
+    void VulkanGraphicsDevice::CreateDescriptorPool()
+    {
+        std::vector<vk::DescriptorPoolSize> poolSizes =
+            {
+            {vk::DescriptorType::eUniformBuffer, 1000},
+            {vk::DescriptorType::eSampler, 1000},
+            {vk::DescriptorType::eSampledImage, 1000},
+            };
+        vk::DescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.poolSizeCount = poolSizes.size();
+        poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.maxSets = 1000;
+        CheckVkResult(m_Device.createDescriptorPool(&poolInfo, nullptr, &m_DescriptorPool));
     }
 
     /*void VulkanGraphicsDevice::UploadMesh(Mesh& mesh) const

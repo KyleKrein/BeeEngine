@@ -17,8 +17,8 @@ namespace BeeEngine::Internal
         WebGPUUniformBuffer& operator=(const WebGPUUniformBuffer& other ) = delete;
         void SetData(void* data, size_t size) override;
         void Bind(uint32_t binding) override;
-        std::vector<WGPUBindGroupLayoutEntry> GetBindGroupLayoutEntry() const override;
-        std::vector<WGPUBindGroupEntry> GetBindGroupEntry() const override;
+        std::vector<BindGroupLayoutEntryType> GetBindGroupLayoutEntry() const override;
+        std::vector<BindGroupEntryType> GetBindGroupEntry() const override;
     private:
         WGPUBuffer m_Buffer;
         size_t m_Size;

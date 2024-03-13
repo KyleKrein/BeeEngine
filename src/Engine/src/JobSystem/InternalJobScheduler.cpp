@@ -1,7 +1,10 @@
 //
-// Created by alexl on 27.11.2023.
+// Created by Aleksandr on 11.03.2024.
 //
-#include "JobScheduler.h"
+#include "InternalJobScheduler.h"
+
+//IMPORTANT: DO NOT TOUCH THIS FILE
+//This code needs to be in this file to awoid bugs
 namespace BeeEngine
 {
     Internal::JobScheduler *Job::s_Instance = nullptr;
@@ -21,4 +24,4 @@ namespace BeeEngine
             return s_MainContext;
         }
     } // Internal
-} // BeeEngine
+}

@@ -180,10 +180,9 @@ namespace BeeEngine
     void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix,const std::vector<glm::vec4>& frustumPlanes/* const Math::Cameras::Frustum& frustum*/)
     {
         BEE_PROFILE_FUNCTION();
-        static Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
-        static Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
-        cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
-        SceneTreeRenderer sceneTreeRenderer(viewProjectionMatrix, cameraBindingSet.get());
+        auto& sceneRendererData = scene.GetSceneRendererData();
+        sceneRendererData.CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
+        SceneTreeRenderer sceneTreeRenderer(viewProjectionMatrix, sceneRendererData.CameraBindingSet.get());
 
         //auto frustumPlanes = GetFrustumPlanes(viewProjectionMatrix);
         {
@@ -212,12 +211,12 @@ namespace BeeEngine
                 auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
                 SpriteInstanceBufferData data {transform, spriteComponent.Color, spriteComponent.TilingFactor,
                                                static_cast<int32_t>(entity)+1};
-                std::vector<BindingSet*> bindingSets {cameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture(locale)->GetBindingSet() : s_BlankTexture->GetBindingSet())};
+                std::vector<BindingSet*> bindingSets {sceneRendererData.CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture(locale)->GetBindingSet() : s_BlankTexture->GetBindingSet())};
                 sceneTreeRenderer.AddEntity(data.Model, data.Color.A() < 0.95f || spriteComponent.HasTexture, *s_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
             }
 
             auto circleGroup = scene.m_Registry.view<CircleRendererComponent>();
-            std::vector<BindingSet*> circleBindingSets {cameraBindingSet.get()};
+            std::vector<BindingSet*> circleBindingSets {sceneRendererData.CameraBindingSet.get()};
             for( auto entity : circleGroup )
             {
                 Entity e = {entity, &scene};

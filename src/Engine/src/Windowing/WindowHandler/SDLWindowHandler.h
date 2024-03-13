@@ -6,6 +6,7 @@
 
 
 #include "WindowHandler.h"
+#if defined(BEE_COMPILE_SDL)
 #include "SDL3/SDL.h"
 #include "KeyCodes.h"
 
@@ -73,3 +74,4 @@ namespace BeeEngine::Internal
         void InitializeDragDropOnWindows();
     };
 }
+#endif

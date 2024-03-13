@@ -87,6 +87,9 @@ namespace BeeEngine::Internal
 
         // Buffer Helper Functions
 
+        void CreateDescriptorSet(vk::DescriptorSetAllocateInfo& info, vk::DescriptorSet* outDescriptorSet) const;
+
+        void DestroyDescriptorSet(vk::DescriptorSet descriptorSet) const;
         [[nodiscard]] VulkanBuffer CreateBuffer(
                 vk::DeviceSize size,
                 vk::BufferUsageFlags usage,
@@ -130,9 +133,12 @@ namespace BeeEngine::Internal
         static VulkanGraphicsDevice &GetInstance();
 
     private:
+        vk::DescriptorPool m_DescriptorPool;
         mutable bool m_HasRayTracingSupport = false;
 
         void CreateCommandPool();
+
+        void CreateDescriptorPool();
 
         static VulkanGraphicsDevice* s_Instance;
 

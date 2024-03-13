@@ -4,6 +4,8 @@
 
 #include "VulkanTexture2D.h"
 
+#include "backends/imgui_impl_vulkan.h"
+
 namespace BeeEngine::Internal
 {
     void VulkanTexture2D::CopyBufferToImageWithTransition(VulkanBuffer& buffer)
@@ -13,6 +15,19 @@ namespace BeeEngine::Internal
         m_Device.CopyBufferToImage(buffer.Buffer, m_Image.Image, m_Width, m_Height, 1);
         m_Device.TransitionImageLayout(m_Image.Image, vk::Format::eR8G8B8A8Unorm,
                                        vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
+
+    std::vector<IBindable::BindGroupLayoutEntryType> VulkanTexture2D::GetBindGroupLayoutEntry() const
+    {
+        vk::DescriptorSetLayoutBinding samplerLayoutBinding;
+        samplerLayoutBinding.binding = 0;
+        samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+        return {};
+    }
+
+    std::vector<IBindable::BindGroupEntryType> VulkanTexture2D::GetBindGroupEntry() const
+    {
+        return {};
     }
 
     void VulkanTexture2D::SetData(gsl::span<std::byte> data, uint32_t numberOfChannels)
@@ -96,6 +111,7 @@ namespace BeeEngine::Internal
             samplerCreateInfo.minLod = 0.0f;
             samplerCreateInfo.maxLod = 0.0f;
             m_Sampler = m_Device.GetDevice().createSampler(samplerCreateInfo);
+            m_RendererID = (uintptr_t)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
         else
         {
@@ -128,6 +144,7 @@ namespace BeeEngine::Internal
             device.destroySampler(sampler);
         });
         m_Device.DestroyImageWithView(m_Image, m_ImageView);
+        ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)m_RendererID);
         m_Sampler = nullptr;
         m_ImageView = nullptr;
         m_Image = {};

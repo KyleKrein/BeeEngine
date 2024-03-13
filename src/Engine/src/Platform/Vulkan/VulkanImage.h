@@ -13,6 +13,10 @@ namespace BeeEngine::Internal
     {
         vk::Image Image = nullptr;
         VmaAllocation Memory = nullptr;
+        operator bool () const
+        {
+            return Image && Memory;
+        }
     };
 }
 #endif

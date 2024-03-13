@@ -1,20 +1,21 @@
 //
-// Created by alexl on 16.07.2023.
+// Created by Aleksandr on 10.03.2024.
 //
 
-#include "Renderer/BindingSet.h"
+#include "VulkanBindingSet.h"
 #include "Renderer/IBindable.h"
-#include "WebGPUGraphicsDevice.h"
-#include "WebGPUBindingSet.h"
-#include "Renderer/RenderPass.h"
-#include "WebGPUPipeline.h"
-
 
 namespace BeeEngine::Internal
 {
-    void Internal::WebGPUBindingSet::Bind(void* cmd, uint32_t index) const
+    VulkanBindingSet::VulkanBindingSet(std::initializer_list<BindingSetElement> elements)
+        : BindingSet(elements), m_GraphicsDevice(VulkanGraphicsDevice::GetInstance())
     {
-        auto* currentPipeline= &WebGPUPipeline::GetCurrentPipeline();
+
+    }
+
+    void VulkanBindingSet::Bind(void* cmd, uint32_t index) const
+    {
+        /*auto* currentPipeline= &WebGPUPipeline::GetCurrentPipeline();
         BeeExpects(currentPipeline != nullptr);
         if(!m_BindGroup || m_Pipeline != currentPipeline || m_Index != index)
         {
@@ -43,17 +44,10 @@ namespace BeeEngine::Internal
             bindGroupDesc.entries = entries.data();
             m_BindGroup = wgpuDeviceCreateBindGroup(Internal::WebGPUGraphicsDevice::GetInstance().GetDevice(), &bindGroupDesc);
         }
-        wgpuRenderPassEncoderSetBindGroup((WGPURenderPassEncoder)((RenderPass*)cmd)->GetHandle(), index, m_BindGroup, 0, nullptr);
-    }
-    Internal::WebGPUBindingSet::WebGPUBindingSet(std::initializer_list<BindingSetElement> elements)
-    : BindingSet(elements)
-    {
-
+        wgpuRenderPassEncoderSetBindGroup((WGPURenderPassEncoder)((RenderPass*)cmd)->GetHandle(), index, m_BindGroup, 0, nullptr);*/
     }
 
-    WebGPUBindingSet::~WebGPUBindingSet()
+    VulkanBindingSet::~VulkanBindingSet()
     {
-        if(m_BindGroup)
-            wgpuBindGroupRelease(m_BindGroup);
     }
 }

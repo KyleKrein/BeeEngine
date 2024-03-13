@@ -16,11 +16,16 @@ namespace BeeEngine{
     {
         BEE_PROFILE_FUNCTION();
         BeeExpects(properties.Width > 0 && properties.Height > 0 && properties.Title != nullptr);
+        s_API = api;
         switch (api)
         {
             case WindowHandlerAPI::SDL:
-                s_API = WindowHandlerAPI::SDL;
+#if defined(BEE_COMPILE_SDL)
                 return new SDLWindowHandler(properties, eventQueue);
+#endif
+#if defined(WINDOWS)
+            case WindowHandlerAPI::WinAPI:
+#endif
             default:
                 BeeCoreFatalError("Invalid Window API");
         }

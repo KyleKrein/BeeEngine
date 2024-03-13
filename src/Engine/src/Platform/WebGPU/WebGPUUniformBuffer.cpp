@@ -34,7 +34,7 @@ namespace BeeEngine::Internal
 
     }
 
-    std::vector<WGPUBindGroupLayoutEntry> WebGPUUniformBuffer::GetBindGroupLayoutEntry() const
+    std::vector<IBindable::BindGroupLayoutEntryType> WebGPUUniformBuffer::GetBindGroupLayoutEntry() const
     {
         WGPUBindGroupLayoutEntry entry = {};
         m_GraphicsDevice.SetDefault(entry);
@@ -43,7 +43,7 @@ namespace BeeEngine::Internal
         return {entry};
     }
 
-    std::vector<WGPUBindGroupEntry> WebGPUUniformBuffer::GetBindGroupEntry() const
+    std::vector<IBindable::BindGroupEntryType> WebGPUUniformBuffer::GetBindGroupEntry() const
     {
         WGPUBindGroupEntry entry = {};
         m_GraphicsDevice.SetDefault(entry);

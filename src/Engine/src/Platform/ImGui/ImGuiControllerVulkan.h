@@ -7,6 +7,7 @@
 #include "ImGuiController.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "backends/imgui_impl_sdl3.h"
+#include <functional>
 
 
 namespace BeeEngine::Internal
@@ -15,7 +16,8 @@ namespace BeeEngine::Internal
     {
         SDL_Window* m_SdlWindow;
     public:
-        void Initialize(uint16_t width, uint16_t height, uint64_t glfwwindow) override;
+        static std::function<void()> s_ShutdownFunction;
+        void Initialize(uint16_t width, uint16_t height, uintptr_t windowHandle) override;
         void Update() override;
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
         void Render() override;

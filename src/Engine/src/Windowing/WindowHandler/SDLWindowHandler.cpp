@@ -3,6 +3,7 @@
 //
 
 #include "SDLWindowHandler.h"
+#if defined(BEE_COMPILE_SDL)
 #include "Core/Application.h"
 #include "Platform/Vulkan/VulkanInstance.h"
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
@@ -1253,22 +1254,4 @@ namespace BeeEngine::Internal
     }
 
 }
-uint32_t BeeEngine::Hardware::GetSystemRAM()
-{
-    return SDL_GetSystemRAM();
-}
-
-BeeEngine::Hardware::SystemTheme BeeEngine::Hardware::GetSystemTheme()
-{
-    using enum BeeEngine::Hardware::SystemTheme;
-    auto theme = SDL_GetSystemTheme();
-    switch (theme)
-    {
-        case SDL_SYSTEM_THEME_LIGHT:
-            return SystemTheme::Light;
-        case SDL_SYSTEM_THEME_DARK:
-            return SystemTheme::Dark;
-        default:
-            return SystemTheme::Unknown;
-    }
-}
+#endif

@@ -4,7 +4,6 @@
 
 #pragma once
 #include "Core/Numbers.h"
-#include <thread>
 
 namespace BeeEngine
 {
@@ -17,10 +16,7 @@ namespace BeeEngine
             Light,
             Dark
         };
-        static uint32_t GetNumberOfCores()
-        {
-            return std::thread::hardware_concurrency();
-        }
+        static uint32_t GetNumberOfCores();
         static uint32_t GetSystemRAM();
         static SystemTheme GetSystemTheme();
         static bool HasRayTracingSupport();

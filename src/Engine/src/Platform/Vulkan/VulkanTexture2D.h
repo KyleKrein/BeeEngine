@@ -13,15 +13,9 @@ namespace BeeEngine::Internal
     public:
         void Bind(uint32_t slot=0) override{}
 
-        std::vector<WGPUBindGroupLayoutEntry> GetBindGroupLayoutEntry() const override
-        {
-            return {};
-        }
+        std::vector<IBindable::BindGroupLayoutEntryType> GetBindGroupLayoutEntry() const override;
 
-        std::vector<WGPUBindGroupEntry> GetBindGroupEntry() const override
-        {
-            return {};
-        }
+        std::vector<IBindable::BindGroupEntryType> GetBindGroupEntry() const override;
 
         void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels) override;
 

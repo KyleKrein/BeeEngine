@@ -99,7 +99,6 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/JobSystem/JobScheduler.h
         src/JobSystem/SpinLock.h
         src/JobSystem/AdaptiveMutex.h
-        src/JobSystem/JobSchedulerAdditional.cpp
         src/JobSystem/Mutex.h
         src/FileSystem/FileSystem.h
         src/Scripting/NativeToManaged.cpp
@@ -126,6 +125,12 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Platform/Vulkan/VulkanPipeline.h
         src/Platform/Vulkan/VulkanFrameBuffer.cpp
         src/Platform/Vulkan/VulkanFrameBuffer.h
+        src/Platform/Vulkan/VulkanUniformBuffer.cpp
+        src/Platform/Vulkan/VulkanUniformBuffer.h
+        src/Platform/Vulkan/VulkanBindingSet.cpp
+        src/Platform/Vulkan/VulkanBindingSet.h
+        src/JobSystem/InternalJobScheduler.h
+        src/JobSystem/InternalJobScheduler.cpp
 )
 
 
@@ -150,6 +155,8 @@ if(IOS)
     enable_language(CXX C Swift OBJCXX OBJC)
     MobilePlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
+    set(BEE_COMPILE_VULKAN ON)
+    set(BEE_COMPILE_SDL ON)
 
     #list(APPEND SOURCE_FILES "ios/MyClass.mm")
 elseif(APPLE)
@@ -163,11 +170,14 @@ elseif(APPLE)
     list(APPEND SOURCE_FILES ${MACOS_SOURCE_FILES})
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
+    set(BEE_COMPILE_VULKAN ON)
+    set(BEE_COMPILE_SDL ON)
 elseif(ANDROID)
     # Covers Android implementation
     MobilePlatformsOnly()
     set(BEE_COMPILE_WEBGPU OFF)
     set(BEE_COMPILE_VULKAN ON)
+    set(BEE_COMPILE_SDL ON)
     #list(APPEND SOURCE_FILES "android/MyClass.cpp")
 elseif(WIN32)
     # Covers Windows implementation
@@ -183,6 +193,7 @@ elseif(WIN32)
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
     set(BEE_COMPILE_VULKAN ON)
+    set(BEE_COMPILE_SDL ON)
 elseif (UNIX AND NOT APPLE)
     # Covers Linux implementation
     set(LINUX_SOURCE_FILES
@@ -192,6 +203,7 @@ elseif (UNIX AND NOT APPLE)
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU ON)
     set(BEE_COMPILE_VULKAN ON)
+    set(BEE_COMPILE_SDL ON)
 endif()
 
 #Embedded Resources
@@ -313,7 +325,14 @@ function(add_sdl_subdirectory)
 
     file(WRITE vendor/sdl/CMakeLists.txt "${ORIGINAL_SDL_CMAKELISTS}")
 endfunction()
-add_sdl_subdirectory()
+if (${BEE_COMPILE_SDL})
+    add_sdl_subdirectory()
+    target_compile_definitions(BeeEngine PUBLIC BEE_COMPILE_SDL)
+    #target_include_directories(BeeEngine
+    #        PUBLIC vendor/sdl/include
+    #)
+    target_link_libraries(BeeEngine PRIVATE SDL3::SDL3)
+endif ()
 CPMAddPackage(
         NAME spdlog
         GITHUB_REPOSITORY gabime/spdlog
@@ -384,12 +403,11 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC SPIRV
         PUBLIC glslang
         PUBLIC tinyobjloader
-        PRIVATE SDL3::SDL3
         PUBLIC magic_enum
         PUBLIC Box2D
         PUBLIC MSDFGEN
         PUBLIC ${ICU_LIBRARIES}
-        PRIVATE Boost::context
+        PUBLIC Boost::context
         PRIVATE unofficial::nethost::nethost
         )
 

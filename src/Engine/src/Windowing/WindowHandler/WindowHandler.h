@@ -13,7 +13,8 @@ namespace BeeEngine
     enum class WindowHandlerAPI
     {
         //GLFW = 0,
-        SDL = 1
+        SDL = 1,
+        WinAPI = 2,
     };
     struct WindowNativeInfo
     {

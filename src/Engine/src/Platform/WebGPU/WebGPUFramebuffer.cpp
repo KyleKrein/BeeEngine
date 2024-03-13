@@ -218,12 +218,6 @@ namespace BeeEngine::Internal
         }
         m_Invalid = false;
     }
-
-    uint32_t WebGPUFrameBuffer::GetRendererID() const
-    {
-        BeeExpects(false);
-        return -1;
-    }
     /*
     struct ReadPixelData
     {
@@ -380,10 +374,6 @@ namespace BeeEngine::Internal
         co_return result;
     }
 */
-    void WebGPUFrameBuffer::ClearColorAttachment(uint32_t attachmentIndex, int value)
-    {
-
-    }
 
     WGPUTextureFormat WebGPUFrameBuffer::ConvertToWebGPUTextureFormat(FrameBufferTextureFormat format)
     {

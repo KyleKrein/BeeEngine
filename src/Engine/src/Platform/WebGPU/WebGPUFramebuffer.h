@@ -31,9 +31,7 @@ namespace BeeEngine::Internal
             //wgpuTextureViewReference(m_DepthAttachmentTextureView);
             return (uintptr_t)m_DepthAttachmentTextureView;
         }
-        [[nodiscard]] uint32_t GetRendererID() const override;
         int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
-        void ClearColorAttachment(uint32_t attachmentIndex, int value) override;
 
     private:
         std::vector<FrameBufferTextureSpecification> m_ColorAttachmentSpecification;
