@@ -155,13 +155,14 @@ namespace BeeEngine
         {
             return;
         }
-        GetCurrentFiber()->MarkIncomplete();
+        auto currentFiber = GetCurrentFiber();
+        currentFiber->MarkIncomplete();
         {
             std::unique_lock<std::mutex> lock(m_WaitingJobsMutex);
-            m_WaitingJobs.emplace_back(GetCurrentFiber(), &counter);
+            m_WaitingJobs.emplace_back(currentFiber, &counter);
         }
         m_ConditionVariable.notify_one();
-        GetCurrentFiber()->GetContext() = std::move(GetCurrentFiber()->GetContext().resume());
+        currentFiber->GetContext() = std::move(currentFiber->GetContext().resume());
         //GetMainContext() = GetMainContext().resume();
     }
 
@@ -172,11 +173,10 @@ namespace BeeEngine
             std::unique_lock lock(m_WaitingJobsMutex);
             for (auto it = m_WaitingJobs.begin(); it != m_WaitingJobs.end(); ++it)
             {
-                auto& f = *it;
-                if(!f.counter || f.counter->IsZero())
+                if(auto& f = *it; !f.counter || f.counter->IsZero())
                 {
                     fiber = std::move(f.fiber);
-                    m_WaitingJobs.erase(it);
+                    it = m_WaitingJobs.erase(it);
                     return true;
                 }
             }

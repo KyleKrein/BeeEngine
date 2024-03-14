@@ -83,7 +83,12 @@ namespace BeeEngine::Internal
 
     void VulkanMesh::CreateVertexBuffer(void* verticesData, size_t size, size_t vertexCount)
     {
-        m_VertexBuffer = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+        vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eShaderDeviceAddress;
+        if(Hardware::HasRayTracingSupport())
+        {
+            usage |= vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR;
+        }
+        m_VertexBuffer = m_Device.CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
         VulkanBuffer bufferForMapping = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
         void* mappedData = nullptr;
         vmaMapMemory(GetVulkanAllocator(), bufferForMapping.Memory, &mappedData);
@@ -98,7 +103,12 @@ namespace BeeEngine::Internal
         auto size = indices.size() * sizeof(uint32_t);
         auto indicesData = const_cast<void*>(static_cast<const void*>(indices.data()));
 
-        m_IndexBuffer = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+        vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eShaderDeviceAddress;
+        if(Hardware::HasRayTracingSupport())
+        {
+            usage |= vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR;
+        }
+        m_IndexBuffer = m_Device.CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
         VulkanBuffer bufferForMapping = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
         void* mappedData = nullptr;
         vmaMapMemory(GetVulkanAllocator(), bufferForMapping.Memory, &mappedData);

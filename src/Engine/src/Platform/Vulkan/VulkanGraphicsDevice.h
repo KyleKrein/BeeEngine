@@ -201,7 +201,7 @@ namespace BeeEngine::Internal
         bool IsSuitableDevice(const vk::PhysicalDevice &device) const;
 
         bool CheckDeviceExtensionSupport(const vk::PhysicalDevice &device,
-                                         const std::vector<const char *> &extensions) const;
+                                         std::vector<const char*>& extensions) const;
 
         QueueFamilyIndices FindQueueFamilies();
         void SelectPhysicalDevice(const VulkanInstance &instance);

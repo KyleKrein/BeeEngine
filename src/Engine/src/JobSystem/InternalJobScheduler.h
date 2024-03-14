@@ -15,13 +15,13 @@ namespace BeeEngine
         class Fiber
         {
         public:
-            ::BeeEngine::Internal::Fiber() = default;
+            Fiber() = default;
 
-            ::BeeEngine::Internal::Fiber(Job* job);
+            Fiber(Job* job);
 
-            ::BeeEngine::Internal::Fiber(::BeeEngine::Internal::Fiber &&other) noexcept;
+            Fiber(Fiber &&other) noexcept;
 
-            ::BeeEngine::Internal::Fiber &operator=(::BeeEngine::Internal::Fiber &&other) noexcept;
+            Fiber &operator=(Fiber &&other) noexcept;
 
             // Запускает или возобновляет выполнение файбера
             void Resume();

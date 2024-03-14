@@ -3,6 +3,8 @@
 //
 
 #include "VulkanRendererAPI.h"
+
+#include "Utils.h"
 #include "Renderer/CommandBuffer.h"
 
 namespace BeeEngine::Internal
@@ -81,7 +83,7 @@ namespace BeeEngine::Internal
 
         //m_GraphicsDevice->GetGraphicsQueue().waitIdle();
         auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
-        cmd.beginRendering(&renderingInfo);
+        cmd.beginRendering(&renderingInfo, g_vkDynamicLoader);
         vk::Viewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -100,7 +102,7 @@ namespace BeeEngine::Internal
     {
         BeeExpects(commandBuffer == GetCurrentCommandBuffer());
         auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
-        cmd.endRendering();
+        cmd.endRendering(g_vkDynamicLoader);
     }
 
     void VulkanRendererAPI::EndFrame()

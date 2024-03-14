@@ -13,7 +13,7 @@
 namespace BeeEngine::Internal
 {
 
-    void ImGuiControllerWebGPU::Initialize(uint16_t width, uint16_t height, uint64_t window)
+    void ImGuiControllerWebGPU::Initialize(uint16_t width, uint16_t height, uintptr_t window)
     {
         //this initializes the core structures of imgui
         ImGui::CreateContext();

@@ -182,7 +182,7 @@ namespace BeeEngine::Internal
     }
 
     bool VulkanGraphicsDevice::CheckDeviceExtensionSupport(const vk::PhysicalDevice &device,
-                                                           const std::vector<const char *> &extensions) const
+                                                           std::vector<const char*>& extensions) const
     {
         std::vector<vk::ExtensionProperties> availableExtensions = device.enumerateDeviceExtensionProperties();
 
@@ -206,10 +206,16 @@ namespace BeeEngine::Internal
                 m_HasRayTracingSupport = false;
                 for(auto& ext : requiredExtensions)
                 {
-                    auto it = std::ranges::find(::BeeEngine::Internal::requiredExtensions, ext.c_str());
-                    if(it != ::BeeEngine::Internal::requiredExtensions.end())
+                    for (auto it = extensions.begin(); it != extensions.end();)
                     {
-                        ::BeeEngine::Internal::requiredExtensions.erase(it);
+                        if(strcmp(*it, ext.c_str()) == 0)
+                        {
+                            it = extensions.erase(it);
+                        }
+                        else
+                        {
+                            ++it;
+                        }
                     }
                 }
                 requiredExtensions.clear();
@@ -466,7 +472,9 @@ namespace BeeEngine::Internal
              barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
              sourceStage = vk::PipelineStageFlagBits::eTransfer;
-             destinationStage = vk::PipelineStageFlagBits::eRayTracingShaderKHR | vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader;
+             destinationStage = vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader;
+             if(HasRayTracingSupport())
+                 destinationStage |= vk::PipelineStageFlagBits::eRayTracingShaderKHR;
          } else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
          {
              barrier.setSrcAccessMask({});

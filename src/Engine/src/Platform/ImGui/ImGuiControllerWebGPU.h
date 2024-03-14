@@ -12,7 +12,7 @@ namespace BeeEngine::Internal
     {
     public:
         ImGuiControllerWebGPU(): m_Device(WebGPUGraphicsDevice::GetInstance()) { }
-        void Initialize(uint16_t width, uint16_t height, uint64_t window) override;
+        void Initialize(uint16_t width, uint16_t height, uintptr_t window) override;
         void Update() override;
         void Render() override;
         void Shutdown() override;
