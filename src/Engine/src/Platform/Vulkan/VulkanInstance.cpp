@@ -1,12 +1,19 @@
 //
 // Created by alexl on 09.06.2023.
 //
+
 #if defined(BEE_COMPILE_VULKAN)
 #include "VulkanInstance.h"
 #include "Core/Logging/Log.h"
 #include "Core/Application.h"
+#if defined(BEE_COMPILE_SDL)
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_vulkan.h"
+#endif
+#if defined(WINDOWS)
+#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+#endif
 
 
 namespace BeeEngine::Internal
@@ -43,19 +50,7 @@ namespace BeeEngine::Internal
                                     "BeeEngine",
                                     1,
                                     version);
-        switch (windowApi)
-        {
-            /*case WindowHandlerAPI::GLFW:
-            {
-                ManageGLFW(appInfo);
-                break;
-            }*/
-            case WindowHandlerAPI::SDL:
-            {
-                ManageSDL(appInfo);
-                break;
-            }
-        }
+        ManageInstance(appInfo);
         m_DynamicLoader = vk::DispatchLoaderDynamic(m_Instance, vkGetInstanceProcAddr);
 #if defined(DEBUG)
         MakeDebugMessenger();
@@ -156,16 +151,32 @@ namespace BeeEngine::Internal
         m_DebugMessenger = m_Instance.createDebugUtilsMessengerEXT(createInfo, nullptr, m_DynamicLoader);
     }
 
-    void VulkanInstance::ManageSDL(vk::ApplicationInfo &appInfo)
+    void VulkanInstance::ManageInstance(vk::ApplicationInfo &appInfo)
     {
-        uint32_t extensionCount = 0;
-        SDL_Vulkan_GetInstanceExtensions(&extensionCount);
-        std::vector<const char*> extensions(extensionCount);
-        memcpy(extensions.data(), SDL_Vulkan_GetInstanceExtensions(nullptr), sizeof(const char*) * extensionCount);
+        std::vector<const char*> extensions;
+        switch (m_WindowApi)
+        {
+#if defined(BEE_COMPILE_SDL)
+            case WindowHandlerAPI::SDL:
+            {
+                uint32_t extensionCount = 0;
+                SDL_Vulkan_GetInstanceExtensions(&extensionCount);
+                extensions.resize(extensionCount);
+                memcpy(extensions.data(), SDL_Vulkan_GetInstanceExtensions(nullptr), sizeof(const char*) * extensionCount);
+            }
+                break;
+#endif
+#if defined(WINDOWS)
+            case WindowHandlerAPI::WinAPI:
+                extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+                extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+                break;
+#endif
+        }
 
         if(Application::GetOsPlatform() == OSPlatform::Mac)
         {
-            extensions.push_back("VK_KHR_portability_enumeration");
+            extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         }
 #if defined(DEBUG)
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);

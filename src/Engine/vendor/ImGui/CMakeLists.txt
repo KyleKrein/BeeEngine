@@ -20,14 +20,18 @@ set(ImGui_SOURCES
         ${ImGui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
         #[[${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
         ${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.h]]
-        ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.h
-        ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
         ${ImGui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
         )
 if(BEE_COMPILE_VULKAN)
     list(APPEND ImGui_SOURCES
             ${ImGui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
             ${ImGui_SOURCE_DIR}/backends/imgui_impl_vulkan.h
+            )
+endif()
+if(BEE_COMPILE_SDL)
+    list(APPEND ImGui_SOURCES
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.h
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
             )
 endif()
 if(IOS)
@@ -62,6 +66,10 @@ elseif(WIN32)
                  ${ImGui_SOURCE_DIR}/backends/imgui_impl_wgpu.h
                 )
     endif()
+    list(APPEND ImGui_SOURCES
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_win32.cpp
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_win32.h
+            )
 elseif (UNIX AND NOT APPLE)
     # Covers Linux implementation
     if(BEE_COMPILE_GLFW)
@@ -136,8 +144,9 @@ if(NOT IOS AND BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
     target_link_libraries(${LIB_NAME} PRIVATE Vulkan::Vulkan)
 endif()
-
-target_link_libraries(${LIB_NAME} PRIVATE SDL3::SDL3)
+if(BEE_COMPILE_SDL)
+    target_link_libraries(${LIB_NAME} PRIVATE SDL3::SDL3)
+endif()
 
 # Enable C++11
 target_compile_features(${LIB_NAME} PUBLIC cxx_std_11)

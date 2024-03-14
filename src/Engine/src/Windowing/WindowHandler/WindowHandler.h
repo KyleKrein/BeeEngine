@@ -2,7 +2,7 @@
 
 #include "Renderer/GraphicsDevice.h"
 #include "Core/TypeDefines.h"
-#include "Windowing/WindowProperties.h"
+#include "Windowing/ApplicationProperties.h"
 #include "Core/Events/EventQueue.h"
 #include "Core/Time.h"
 #include "Renderer/Instance.h"
@@ -40,7 +40,7 @@ namespace BeeEngine
         virtual ~WindowHandler() = default;
         WindowHandler(const WindowHandler&) = delete;
         WindowHandler& operator=(const WindowHandler&) = delete;
-        static gsl::not_null<WindowHandler*> Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue);
+        static gsl::not_null<WindowHandler*> Create(WindowHandlerAPI api, const ApplicationProperties& properties, EventQueue& eventQueue);
         uint16_t GetWidth() const
         {
             return m_Width;

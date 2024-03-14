@@ -18,7 +18,7 @@ namespace BeeEngine{
     {
         friend EventQueue;
     public:
-        explicit Application(const WindowProperties& properties);
+        explicit Application(const ApplicationProperties& properties);
         virtual ~Application();
         consteval static OSPlatform GetOsPlatform()
         {
@@ -130,9 +130,10 @@ namespace BeeEngine{
             m_Layers.PushOverlay(std::move(overlay));
         }
     private:
+        WindowHandlerAPI GetPreferredWindowAPI();
         void Dispatch(EventDispatcher &dispatcher);
         static bool OnWindowClose(WindowCloseEvent& event);
-        void CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept;
+        void CheckRendererAPIForCompatibility(ApplicationProperties &properties) noexcept;
         bool OnWindowResize(WindowResizeEvent* event);
         void SubmitToMainThread_Impl(const std::function<void()> &function);
         void ExecuteMainThreadQueue() noexcept;

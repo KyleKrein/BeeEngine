@@ -1,20 +1,20 @@
 //
 // Created by alexl on 10.06.2023.
 //
-#if defined(BEE_COMPILE_VULKAN)
 #pragma once
+#if defined(BEE_COMPILE_VULKAN)
 
 #include "ImGuiController.h"
-#include "backends/imgui_impl_vulkan.h"
-#include "backends/imgui_impl_sdl3.h"
 #include <functional>
+#include <imgui.h>
+#include <vulkan/vulkan.hpp>
 
 
 namespace BeeEngine::Internal
 {
     class ImGuiControllerVulkan: public ImGuiController
     {
-        SDL_Window* m_SdlWindow;
+        void* m_Window = nullptr;
     public:
         static std::function<void()> s_ShutdownFunction;
         void Initialize(uint16_t width, uint16_t height, uintptr_t windowHandle) override;
@@ -23,7 +23,10 @@ namespace BeeEngine::Internal
         void Render() override;
         void Shutdown() override;
     private:
-        VkDescriptorPool         g_DescriptorPool = VK_NULL_HANDLE;
+        void SetupFunctionsForBackend();
+
+        void(*m_NewFrameBackend)() = nullptr;
+        VkDescriptorPool g_DescriptorPool = VK_NULL_HANDLE;
         static void check_vk_result(VkResult err)
         {
             if (err == 0)

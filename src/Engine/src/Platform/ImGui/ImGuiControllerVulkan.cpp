@@ -6,15 +6,21 @@
 #define VK_VERSION_
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 #include "backends/imgui_impl_vulkan.h"
+#if defined(BEE_COMPILE_SDL)
+#include "backends/imgui_impl_sdl3.h"
+#endif
+#if defined(WINDOWS)
+#include "backends/imgui_impl_win32.h"
+#endif
 #include "ImGuiControllerVulkan.h"
 
 namespace BeeEngine::Internal
 {
     std::function<void()> ImGuiControllerVulkan::s_ShutdownFunction = nullptr;
-    void ImGuiControllerVulkan::Initialize(uint16_t width, uint16_t height, uint64_t glfwwindow)
+    void ImGuiControllerVulkan::Initialize(uint16_t width, uint16_t height, uintptr_t window)
     {
-        m_SdlWindow = reinterpret_cast<SDL_Window *>(glfwwindow);
-        Internal::VulkanGraphicsDevice& graphicsDevice = *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
+        m_Window = (void*)window;
+        Internal::VulkanGraphicsDevice& graphicsDevice = VulkanGraphicsDevice::GetInstance();
 
         //1: create descriptor pool for IMGUI
         // the size of the pool is very oversize, but it's copied from imgui demo itself.
@@ -71,8 +77,21 @@ namespace BeeEngine::Internal
         SetDefaultTheme();
         //SetDarkThemeColors();
 
-        //this initializes imgui for SDL
-        ImGui_ImplSDL3_InitForVulkan(m_SdlWindow);
+        SetupFunctionsForBackend();
+        //this initializes imgui for Backend
+        switch (WindowHandler::GetAPI())
+        {
+            case WindowHandlerAPI::SDL:
+#if defined(BEE_COMPILE_SDL)
+                ImGui_ImplSDL3_InitForVulkan((SDL_Window*)m_Window);
+#endif
+                break;
+            case WindowHandlerAPI::WinAPI:
+#if defined(WINDOWS)
+                ImGui_ImplWin32_Init(m_Window);
+#endif
+                break;
+        }
         //this initializes imgui for Vulkan
 
         auto& swapchain = graphicsDevice.GetSwapChain();
@@ -111,7 +130,7 @@ namespace BeeEngine::Internal
     {
         // Start the Dear ImGui frame
         ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
+        m_NewFrameBackend();
         ImGui::NewFrame();
     }
 
@@ -122,7 +141,6 @@ namespace BeeEngine::Internal
         // Rendering
         ImGui::Render();
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Renderer::GetMainCommandBuffer().GetHandleAs<vk::CommandBuffer>());
-
         // Update and Render additional Platform Windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
@@ -147,9 +165,38 @@ namespace BeeEngine::Internal
         {
             BeeCoreTrace("Imgui Vulkan Shutdown");
             ImGui_ImplVulkan_Shutdown();
-            ImGui_ImplSDL3_Shutdown();
+            switch(WindowHandler::GetAPI())
+            {
+                case WindowHandlerAPI::SDL:
+#if defined(BEE_COMPILE_SDL)
+                    ImGui_ImplSDL3_Shutdown();
+#endif
+                    break;
+                case WindowHandlerAPI::WinAPI:
+#if defined(WINDOWS)
+                    ImGui_ImplWin32_Shutdown();
+#endif
+                    break;
+            }
             vkDestroyDescriptorPool(device, pool, nullptr);
         };
+    }
+
+    void ImGuiControllerVulkan::SetupFunctionsForBackend()
+    {
+        switch (WindowHandler::GetAPI()) {
+            case WindowHandlerAPI::SDL:
+#if defined(BEE_COMPILE_SDL)
+                m_NewFrameBackend = ImGui_ImplSDL3_NewFrame;
+#endif
+                break;
+            case WindowHandlerAPI::WinAPI:
+#if defined(WINDOWS)
+                m_NewFrameBackend = ImGui_ImplWin32_NewFrame;
+#endif
+                break;
+        }
+
     }
 }
 #endif

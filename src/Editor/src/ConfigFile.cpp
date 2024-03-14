@@ -7,7 +7,7 @@
 namespace BeeEngine::Editor
 {
 
-    WindowProperties ConfigFile::LoadWindowConfiguration() noexcept
+    ApplicationProperties ConfigFile::LoadWindowConfiguration() noexcept
     {
         return {1280, 720, "BeeEngine Editor", VSync::On};
     }

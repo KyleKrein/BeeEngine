@@ -52,7 +52,6 @@ namespace BeeEngine
     namespace Internal
     {
         class JobScheduler;
-        void ThreadSetAffinity(std::thread& thread, uint32_t core);
     }
     class Job final
     {

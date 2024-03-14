@@ -1,10 +1,19 @@
 //
 // Created by alexl on 09.06.2023.
 //
-#include <SDL_vulkan.h>
 
-#include "Platform/ImGui/ImGuiControllerVulkan.h"
+
+
 #if defined(BEE_COMPILE_VULKAN)
+#include "Platform/ImGui/ImGuiControllerVulkan.h"
+#if defined(WINDOWS)
+#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+#endif
+#include <vulkan/vulkan.hpp>
+#if defined(BEE_COMPILE_SDL)
+#include <SDL_vulkan.h>
+#endif
 #include "VulkanGraphicsDevice.h"
 #include "Renderer/QueueFamilyIndices.h"
 #include <set>
@@ -370,11 +379,36 @@ namespace BeeEngine::Internal
     void VulkanGraphicsDevice::CreateSurface(VulkanInstance& instance)
     {
         VkSurfaceKHR cSurface;
-        auto sdlWindow = (SDL_Window*)WindowHandler::GetInstance()->GetWindow();
-        auto result = SDL_Vulkan_CreateSurface(sdlWindow, instance.GetHandle(), nullptr, &cSurface);
-        if(result != SDL_TRUE)
+        switch (WindowHandler::GetAPI())
         {
-            BeeCoreFatalError("Failed to create Vulkan surface!");
+#if defined(BEE_COMPILE_SDL)
+            case WindowHandlerAPI::SDL:
+            {
+                auto sdlWindow = (SDL_Window*)WindowHandler::GetInstance()->GetWindow();
+                auto result = SDL_Vulkan_CreateSurface(sdlWindow, instance.GetHandle(), nullptr, &cSurface);
+                if(result != SDL_TRUE)
+                {
+                    BeeCoreFatalError("Failed to create Vulkan surface!");
+                }
+            }
+                break;
+#endif
+#if defined(WINDOWS)
+            case WindowHandlerAPI::WinAPI:
+            {
+                auto nativeData = WindowHandler::GetInstance()->GetNativeInfo();
+                VkWin32SurfaceCreateInfoKHR createInfo{};
+                createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+                createInfo.hinstance = (HINSTANCE)nativeData.instance;
+                createInfo.hwnd = (HWND)nativeData.window;
+                auto result = vkCreateWin32SurfaceKHR(instance.GetHandle(), &createInfo, nullptr, &cSurface);
+                if(result != VK_SUCCESS)
+                {
+                    BeeCoreFatalError("Failed to create Vulkan surface!");
+                }
+            }
+                break;
+#endif
         }
         m_DeviceHandle.surface = vk::SurfaceKHR(cSurface);
     }

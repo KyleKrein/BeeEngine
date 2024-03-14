@@ -8,7 +8,9 @@
 #include "shaderc/shaderc.hpp"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "VulkanGraphicsDevice.h"
+#if defined(BEE_COMPILE_SDL)
 #include "SDL3/SDL_vulkan.h"
+#endif
 
 
 namespace BeeEngine::Internal
@@ -74,9 +76,10 @@ namespace BeeEngine::Internal
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
             m_Extent = capabilities.currentExtent;
         } else {
-            int width, height;
-            SDL_GetWindowSize((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
-            vk::Extent2D actualExtent = vk::Extent2D {(uint32_t)width, (uint32_t)height};
+            auto& window = *WindowHandler::GetInstance();
+            //int width, height;
+            //SDL_GetWindowSize((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
+            vk::Extent2D actualExtent = vk::Extent2D {window.GetWidth(), window.GetHeight()};
             actualExtent.width = std::max(
                     capabilities.minImageExtent.width,
                     std::min(capabilities.maxImageExtent.width, actualExtent.width));

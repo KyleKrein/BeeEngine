@@ -45,6 +45,14 @@ namespace BeeEngine
             return {r, g, b, a};
         }
 
+        constexpr explicit operator int32_t() const
+        {
+            return static_cast<int32_t>(m_R * 255.0f) << 24 |
+                   static_cast<int32_t>(m_G * 255.0f) << 16 |
+                   static_cast<int32_t>(m_B * 255.0f) << 8 |
+                   static_cast<int32_t>(m_A * 255.0f);
+        }
+
         constexpr Color4(Color4&& other) noexcept = default;
         constexpr Color4(const Color4& other) = default;
         constexpr Color4& operator=(Color4&& other) noexcept = default;
@@ -98,6 +106,13 @@ namespace BeeEngine
             constexpr operator Color4() const
             {
                 return {R, G, B, A};
+            }
+            constexpr explicit operator int32_t() const
+            {
+                return static_cast<int32_t>(R * 255.0f) << 24 |
+                       static_cast<int32_t>(G * 255.0f) << 16 |
+                       static_cast<int32_t>(B * 255.0f) << 8 |
+                       static_cast<int32_t>(A * 255.0f);
             }
 #if __has_include(<imgui.h>)
             constexpr operator ImVec4() const

@@ -7,7 +7,7 @@
 #include <thread>
 #include "Core/Casts.h"
 #include "Core/Numbers.h"
-namespace BeeEngine::Internal
+namespace BeeEngine
 {
     void ThreadSetAffinity(std::thread& thread, uint32_t core)
     {

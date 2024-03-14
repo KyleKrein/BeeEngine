@@ -56,7 +56,7 @@ namespace BeeEngine{
         BeeEnsures(DeletionQueue::Main().IsEmpty() && DeletionQueue::Frame().IsEmpty() && DeletionQueue::RendererFlush().IsEmpty());
     }
 
-    Application::Application(const WindowProperties& properties)
+    Application::Application(const ApplicationProperties& properties)
     : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers)
     {
         BEE_PROFILE_FUNCTION();
@@ -66,7 +66,7 @@ namespace BeeEngine{
         auto appProperties = properties;
         CheckRendererAPIForCompatibility(appProperties);
 
-        m_Window.reset(WindowHandler::Create(WindowHandlerAPI::SDL, properties, m_EventQueue));
+        m_Window.reset(WindowHandler::Create(GetPreferredWindowAPI(), properties, m_EventQueue));
         Renderer::SetAPI(appProperties.PreferredRenderAPI);
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
@@ -78,6 +78,15 @@ namespace BeeEngine{
     Application::~Application()
     {
         s_Instance = nullptr;
+    }
+
+    WindowHandlerAPI Application::GetPreferredWindowAPI()
+    {
+#if defined(WINDOWS)
+        return WindowHandlerAPI::WinAPI;
+#else
+        return WindowHandlerAPI::SDL;
+#endif
     }
 
     void Application::Dispatch(EventDispatcher &dispatcher)
@@ -105,7 +114,7 @@ namespace BeeEngine{
         m_Window->Close();
     }
 
-    void Application::CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept
+    void Application::CheckRendererAPIForCompatibility(ApplicationProperties &properties) noexcept
     {
         switch (properties.PreferredRenderAPI)
         {
@@ -161,7 +170,7 @@ namespace BeeEngine{
             case OSPlatform::Linux:
                 return RenderAPI::Vulkan;
             case OSPlatform::Mac:
-                return RenderAPI::WebGPU;
+                return RenderAPI::Vulkan;
             case OSPlatform::iOS:
                 return RenderAPI::WebGPU;
             case OSPlatform::Android:

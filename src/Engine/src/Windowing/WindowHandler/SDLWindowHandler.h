@@ -15,7 +15,7 @@ namespace BeeEngine::Internal
     class SDLWindowHandler: public WindowHandler
     {
     public:
-        SDLWindowHandler(const WindowProperties& properties, EventQueue& eventQueue);
+        SDLWindowHandler(const ApplicationProperties& properties, EventQueue& eventQueue);
         ~SDLWindowHandler() override;
         SDLWindowHandler(const SDLWindowHandler&) = delete;
         SDLWindowHandler& operator=(const SDLWindowHandler&) = delete;

@@ -8,7 +8,7 @@
 using namespace BeeEngine;
 gsl::not_null<Application*> BeeEngine::CreateApplication(const ApplicationArgs& args)
 {
-    auto windowProperties = BeeEngine::WindowProperties{1280, 720, "BeeEngineTests", VSync::On};
+    auto windowProperties = BeeEngine::ApplicationProperties{1280, 720, "BeeEngineTests", VSync::On};
     int argc = args.GetArgc();
     testing::InitGoogleTest(&argc, args.GetArgv());
     auto* app = new TestApplication(windowProperties);

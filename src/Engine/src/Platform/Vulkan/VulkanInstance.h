@@ -29,7 +29,7 @@ namespace BeeEngine::Internal
 
         void MakeDebugMessenger();
 
-        void ManageSDL(vk::ApplicationInfo &info);
+        void ManageInstance(vk::ApplicationInfo &info);
     };
 }
 #endif

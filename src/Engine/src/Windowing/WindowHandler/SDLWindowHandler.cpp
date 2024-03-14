@@ -23,7 +23,7 @@
 namespace BeeEngine::Internal
 {
 
-    SDLWindowHandler::SDLWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
+    SDLWindowHandler::SDLWindowHandler(const ApplicationProperties &properties, EventQueue &eventQueue)
     : WindowHandler(eventQueue), m_Finalizer()
     {
         s_Instance = this;
@@ -55,8 +55,8 @@ namespace BeeEngine::Internal
         {
             windowFlags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
         }
-        m_Width = properties.Width;
-        m_Height = properties.Height;
+        m_Width = properties.WindowWidth;
+        m_Height = properties.WindowHeight;
         m_Title = properties.Title;
 
         m_Window = SDL_CreateWindow(properties.Title, gsl::narrow_cast<int>(m_Width), gsl::narrow_cast<int>(m_Height), windowFlags);

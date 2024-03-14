@@ -5,7 +5,9 @@
 #include "ImGuiControllerWebGPU.h"
 #include "backends/imgui_impl_wgpu.h"
 #include "Renderer/Renderer.h"
+#if defined(BEE_COMPILE_SDL)
 #include "backends/imgui_impl_sdl3.h"
+#endif
 #include "Core/Application.h"
 
 namespace BeeEngine::Internal
@@ -40,6 +42,7 @@ namespace BeeEngine::Internal
 
         switch (Application::GetOsPlatform())
         {
+#if defined(BEE_COMPILE_SDL)
             case OSPlatform::Linux:
                 ImGui_ImplSDL3_InitForVulkan((SDL_Window*)window);
                 break;
@@ -49,6 +52,8 @@ namespace BeeEngine::Internal
             case OSPlatform::Windows:
                 ImGui_ImplSDL3_InitForVulkan((SDL_Window*)window);
                 break;
+#endif
+
             case OSPlatform::iOS:
             case OSPlatform::Android:
             case OSPlatform::None:
@@ -68,7 +73,9 @@ namespace BeeEngine::Internal
     void ImGuiControllerWebGPU::Update()
     {
         ImGui_ImplWGPU_NewFrame();
+#if defined(BEE_COMPILE_SDL)
         ImGui_ImplSDL3_NewFrame();
+#endif
         ImGui::NewFrame();
     }
 
@@ -88,7 +95,9 @@ namespace BeeEngine::Internal
     void ImGuiControllerWebGPU::Shutdown()
     {
         ImGui_ImplWGPU_Shutdown();
+#if defined(BEE_COMPILE_SDL)
         ImGui_ImplSDL3_Shutdown();
+#endif
         //ImGui::DestroyContext();
     }
 

@@ -9,6 +9,7 @@
 #include <queue>
 
 #include "Core/TypeDefines.h"
+#include "Platform/Platform.h"
 
 namespace BeeEngine
 {
@@ -144,7 +145,7 @@ namespace BeeEngine
         for (uint32_t i = 0; i < numberOfThreads; ++i)
         {
             auto& thread = m_Threads.emplace_back([this] { WorkerThread(); });
-            Internal::ThreadSetAffinity(thread, i);
+            ThreadSetAffinity(thread, i);
         }
     }
 

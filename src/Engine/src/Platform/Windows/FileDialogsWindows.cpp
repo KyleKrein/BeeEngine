@@ -10,14 +10,10 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <commdlg.h>
-#if defined(BEE_COMPILE_GLFW)
-#include <GLFW/glfw3.h>
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include "GLFW/glfw3native.h"
-#else
+#if defined(BEE_COMPILE_SDL)
 #include "SDL3/SDL.h"
-#include "Windowing/WindowHandler/WindowHandler.h"
 #endif
+#include "Windowing/WindowHandler/WindowHandler.h"
 
 constexpr int MAX_DIR_SIZE = 256;
 namespace BeeEngine

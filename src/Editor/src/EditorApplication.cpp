@@ -10,7 +10,7 @@
 namespace BeeEngine::Editor
 {
 
-    EditorApplication::EditorApplication(WindowProperties&& properties) noexcept
+    EditorApplication::EditorApplication(ApplicationProperties&& properties) noexcept
     : Application(properties)
     {
         PushOverlay(CreateRef<Debug::DebugLayer>());
