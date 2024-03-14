@@ -70,9 +70,8 @@ namespace BeeEngine
                                                       while (!m_Done)
                                                       {
                                                           {
-                                                              std::unique_lock<std::mutex> lock(m_ConditionVariableMutex);
+                                                              std::unique_lock<std::mutex> lock(m_QueueMutex);
                                                               m_ConditionVariable.wait(lock, [this] { return !AllQueuesEmpty() || m_Done; });
-
                                                               if (AllQueuesEmpty() && m_WaitingJobs.empty())
                                                               {
                                                                   break;
@@ -184,7 +183,7 @@ namespace BeeEngine
             }
         }
         {
-            std::unique_lock lock(m_QueueMutex);
+            //std::unique_lock lock(m_QueueMutex);
             if (!m_HighPriorityJobs.empty())
             {
                 fiber = PopJob(m_HighPriorityJobs);
