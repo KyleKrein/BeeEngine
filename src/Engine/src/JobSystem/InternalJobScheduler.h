@@ -152,6 +152,7 @@ namespace BeeEngine
             std::vector<WaitingContext> m_WaitingJobs;
             std::mutex m_WaitingJobsMutex;
             std::condition_variable m_ConditionVariable;
+            std::mutex m_ConditionVariableMutex;
             bool m_Done = false;
             Ref<::BeeEngine::Internal::Fiber>& GetCurrentFiber();
             boost::context::continuation& GetMainContext();

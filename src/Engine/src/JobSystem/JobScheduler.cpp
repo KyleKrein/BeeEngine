@@ -70,7 +70,7 @@ namespace BeeEngine
                                                       while (!m_Done)
                                                       {
                                                           {
-                                                              std::unique_lock<std::mutex> lock(m_QueueMutex);
+                                                              std::unique_lock<std::mutex> lock(m_ConditionVariableMutex);
                                                               m_ConditionVariable.wait(lock, [this] { return !AllQueuesEmpty() || m_Done; });
 
                                                               if (AllQueuesEmpty() && m_WaitingJobs.empty())
@@ -168,33 +168,38 @@ namespace BeeEngine
 
     bool Internal::JobScheduler::GetNextFiber(Ref<BeeEngine::Internal::Fiber>& fiber)
     {
-        if(!m_WaitingJobs.empty())
         {
             std::unique_lock lock(m_WaitingJobsMutex);
-            for (auto it = m_WaitingJobs.begin(); it != m_WaitingJobs.end(); ++it)
+            if(!m_WaitingJobs.empty())
             {
-                if(auto& f = *it; !f.counter || f.counter->IsZero())
+                for (auto it = m_WaitingJobs.begin(); it != m_WaitingJobs.end(); ++it)
                 {
-                    fiber = std::move(f.fiber);
-                    it = m_WaitingJobs.erase(it);
-                    return true;
+                    if(auto& f = *it; !f.counter || f.counter->IsZero())
+                    {
+                        fiber = std::move(f.fiber);
+                        it = m_WaitingJobs.erase(it);
+                        return true;
+                    }
                 }
             }
         }
-        if (!m_HighPriorityJobs.empty())
         {
-            fiber = PopJob(m_HighPriorityJobs);
-            return true;
-        }
-        if (!m_MediumPriorityJobs.empty())
-        {
-            fiber = PopJob(m_MediumPriorityJobs);
-            return true;
-        }
-        if (!m_LowPriorityJobs.empty())
-        {
-            fiber = PopJob(m_LowPriorityJobs);
-            return true;
+            std::unique_lock lock(m_QueueMutex);
+            if (!m_HighPriorityJobs.empty())
+            {
+                fiber = PopJob(m_HighPriorityJobs);
+                return true;
+            }
+            if (!m_MediumPriorityJobs.empty())
+            {
+                fiber = PopJob(m_MediumPriorityJobs);
+                return true;
+            }
+            if (!m_LowPriorityJobs.empty())
+            {
+                fiber = PopJob(m_LowPriorityJobs);
+                return true;
+            }
         }
         return false;
     }
