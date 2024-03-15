@@ -39,12 +39,21 @@ namespace BeeEngine{
 
                 self.m_EventQueue.Dispatch();
                 self.m_Window->UpdateTime();
-                auto cmd = Renderer::BeginFrame();
-                Renderer::StartMainRenderPass(cmd);
-                self.m_Layers.Update();
-                self.Update();
-                Renderer::EndMainRenderPass(cmd);
-                Renderer::EndFrame();
+                if(!self.IsMinimized())
+                {
+                    auto cmd = Renderer::BeginFrame();
+                    Renderer::StartMainRenderPass(cmd);
+                    self.m_Layers.Update();
+                    self.Update();
+                    Renderer::EndMainRenderPass(cmd);
+                    Renderer::EndFrame();
+                }
+                else
+                {
+                    self.m_Layers.Update();
+                    self.Update();
+                }
+
                 DeletionQueue::Frame().Flush();
 
                 frameJobInfo.cv->notify_one();
@@ -91,17 +100,7 @@ namespace BeeEngine{
 
     void Application::Dispatch(EventDispatcher &dispatcher)
     {
-        dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
-        {
-            return OnWindowResize(&event);
-        });
-        dispatcher.Dispatch<WindowFocusedEvent>([this](auto& event){
-            m_IsFocused = event.IsFocused();
-            return false;
-        });
-
-        //dispatcher.Dispatch<WindowCloseEvent>(OnWindowClose);
-        //dispatcher.Dispatch<WindowCloseEvent>(reinterpret_cast<bool (*)(WindowCloseEvent&)>(OnWindowClose));
+        OnEvent(dispatcher);
     }
 
     bool Application::OnWindowClose(WindowCloseEvent& event)

@@ -105,13 +105,6 @@ namespace BeeEngine{
 
     protected:
         virtual void Update() {};
-        virtual void OnEvent(EventDispatcher& dispatcher)
-        {
-            dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
-            {
-                return OnWindowResize(&event);
-            });
-        };
 
         inline void PushLayer(Ref<Layer> layer)
         {
@@ -130,6 +123,23 @@ namespace BeeEngine{
             m_Layers.PushOverlay(std::move(overlay));
         }
     private:
+        void OnEvent(EventDispatcher& dispatcher)
+        {
+            dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
+            {
+                return OnWindowResize(&event);
+            });
+            dispatcher.Dispatch<WindowMinimizedEvent>([this](WindowMinimizedEvent& event) -> bool
+            {
+                m_IsMinimized = event.IsMinimized();
+                return false;
+            });
+            dispatcher.Dispatch<WindowFocusedEvent>([this](auto& event)
+            {
+                m_IsFocused = event.IsFocused();
+                return false;
+            });
+        };
         WindowHandlerAPI GetPreferredWindowAPI();
         void Dispatch(EventDispatcher &dispatcher);
         static bool OnWindowClose(WindowCloseEvent& event);

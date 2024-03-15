@@ -50,6 +50,17 @@ namespace BeeEngine
         Internal::RenderingQueue::FinishFrame();
     }
 
+    void Renderer::SetAPI(const RenderAPI& api)
+    {
+        BEE_PROFILE_FUNCTION();
+        BeeCoreAssert(s_Api == RenderAPI::NotAvailable, "Can't change Renderer API after initialization!");
+        s_Api = api;
+        BeeCoreInfo("Using {} Renderer API", ToString(api));
+        s_RendererAPI = RendererAPI::Create();
+        s_RendererAPI->Init();
+        Internal::RenderingQueue::Initialize();
+    }
+
     void Renderer::DrawString(const String &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform, const TextRenderingConfiguration& config)
     {
         Internal::RenderingQueue::SubmitText(text, font, cameraBindingSet, transform, config);

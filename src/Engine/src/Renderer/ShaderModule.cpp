@@ -99,21 +99,21 @@ namespace BeeEngine
 
     std::string ShaderModule::CompileSpirVToWGSL(in<std::vector<uint32_t>> spirvCode, in<std::string> newPath)
     {
-#if defined(BEE_COMPILE_WEBGPU)
         std::string wgsl;
+#if defined(BEE_COMPILE_WEBGPU)
         bool result = ShaderConverter::SPVtoWGSL(spirvCode, wgsl);
         BeeEnsures(result);
         File::WriteFile(newPath, wgsl);
-        return wgsl;
 #endif
+        return wgsl;
     }
     std::string ShaderModule::LoadWGSLFromCache(const String& path)
     {
-#if defined(BEE_COMPILE_WEBGPU)
+//#if defined(BEE_COMPILE_WEBGPU)
         auto wgsl = ReadGLSLShader(path);
         BeeCoreTrace("Loaded WGSL from cache");
         return std::string(wgsl.data(), wgsl.size());
-#endif
+//#endif
     }
 
     std::string ShaderModule::LoadWGSL(const String& path, ShaderType type, bool loadFromCache, out<BufferLayout> layout)

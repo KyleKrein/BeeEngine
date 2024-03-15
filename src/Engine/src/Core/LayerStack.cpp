@@ -102,6 +102,8 @@ namespace BeeEngine{
                 BEE_PROFILE_SCOPE("Layers::Renderer::Flush");
                 Renderer::FinalFlush();
             }
+            if(Application::GetInstance().IsMinimized())
+                return;
             {
                 BEE_PROFILE_SCOPE("Layers::GUIRendering");
                 m_guiLayer->OnBegin();

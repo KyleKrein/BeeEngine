@@ -5,6 +5,7 @@
 #include "VulkanRendererAPI.h"
 
 #include "Utils.h"
+#include "Core/Application.h"
 #include "Renderer/CommandBuffer.h"
 
 namespace BeeEngine::Internal

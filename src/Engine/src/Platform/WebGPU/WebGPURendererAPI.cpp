@@ -53,7 +53,7 @@ namespace BeeEngine::Internal
 
     void WebGPURendererAPI::Init()
     {
-        RenderingQueue::Initialize();
+
     }
 
     void WebGPURendererAPI::StartMainRenderPass(BeeEngine::CommandBuffer commandBuffer)

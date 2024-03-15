@@ -185,6 +185,7 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_MINIMIZED:
                 {
+                    m_Events.AddEvent(CreateScope<WindowMinimizedEvent>(true));
                     break;
                 }
                 case SDL_EVENT_WINDOW_MAXIMIZED:
@@ -193,6 +194,7 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_RESTORED:
                 {
+                    m_Events.AddEvent(CreateScope<WindowMinimizedEvent>(false));
                     break;
                 }
                 case SDL_EVENT_WINDOW_MOUSE_ENTER:

@@ -6,7 +6,7 @@
 #if defined(BEE_COMPILE_WEBGPU)
 #include "src/tint/writer/wgsl/generator_impl.h"
 #else
-#include "src/tint/lang/spirv/reader/ast_parser/parse.h"
+//#include <src/tint/lang/spirv/reader/ast_parser/parse.h>
 #endif
 #include "Renderer/ShaderTypes.h"
 #include <tint/tint.h>
@@ -266,7 +266,7 @@ namespace BeeEngine
 #else
         tint::spirv::reader::Options options;
         options.allowed_features = tint::wgsl::AllowedFeatures::Everything();
-        auto shader = tint::spirv::reader::ast_parser::Parse(spirv, options);
+        auto shader = tint::spirv::reader::Read(spirv, options);
         tint::inspector::Inspector inspector(shader);
 #endif
         auto entryPoints = inspector.GetEntryPoints();

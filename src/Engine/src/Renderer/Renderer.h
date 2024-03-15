@@ -26,15 +26,8 @@ namespace BeeEngine
         {
             return s_Api;
         }
-        static void SetAPI(const RenderAPI& api)
-        {
-            BEE_PROFILE_FUNCTION();
-            BeeCoreAssert(s_Api == RenderAPI::NotAvailable, "Can't change Renderer API after initialization!");
-            s_Api = api;
-            BeeCoreInfo("Using {} Renderer API", ToString(api));
-            s_RendererAPI = RendererAPI::Create();
-            s_RendererAPI->Init();
-        }
+        static void SetAPI(const RenderAPI& api);
+
         static const Color4& GetClearColor()
         {
             return s_ClearColor;

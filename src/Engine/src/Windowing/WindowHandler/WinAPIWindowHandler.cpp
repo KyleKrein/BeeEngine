@@ -56,6 +56,9 @@ namespace BeeEngine::Internal
         m_vsync = properties.Vsync;
         g_EventQueue = &eventQueue;
 
+        ::SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        ImGui_ImplWin32_EnableDpiAwareness();
+
         m_WindowsInstance = GetModuleHandleW(nullptr); //Get the current instance
 
         std::wstring title = WStringFromUTF8(properties.Title);
@@ -101,8 +104,8 @@ namespace BeeEngine::Internal
         AdjustWindowRectEx(&borderRect, windowStyle, FALSE, windowExStyle);
         windowWidth += borderRect.right - borderRect.left;
         windowHeight += borderRect.bottom - borderRect.top;
-        windowX += borderRect.left;
-        windowY += borderRect.top;
+        windowX -= borderRect.left;
+        windowY -= borderRect.top;
 
         m_Window = CreateWindowExW(
             windowExStyle, m_WindowClassName, title.c_str(),
@@ -121,9 +124,6 @@ namespace BeeEngine::Internal
         int32_t showWindowCommandFlags = shouldActivate ? SW_SHOW : SW_SHOWNOACTIVATE;
         //if initially minimized, use SW_MINIMIZE : SW_SHOWMINNOACTIVATE
         //if initially maximized, use SW_SHOWMAXIMIZED : SW_MAXIMIZE
-
-        ::SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-        ImGui_ImplWin32_EnableDpiAwareness();
 
         m_ScaleFactor = GetRealDpiForMonitor(GetCurrentMonitor());
         m_WidthInPixels = m_ScaleFactor * m_Width;
@@ -248,15 +248,155 @@ namespace BeeEngine::Internal
         return ::MonitorFromWindow(m_Window, MONITOR_DEFAULTTONEAREST);
     }
 
-    BeeEngine::Key ConvertKeyCode(uint32_t key)
+    BeeEngine::Key ConvertKeyCode(WPARAM wParam)
     {
-        switch(key)
+        switch(wParam)
         {
-
+            case VK_SPACE: return BeeEngine::Key::Space;
+            case VK_OEM_7: return BeeEngine::Key::Apostrophe;
+            case VK_OEM_COMMA: return BeeEngine::Key::Comma;
+            case VK_OEM_MINUS: return BeeEngine::Key::Minus;
+            case VK_OEM_PERIOD: return BeeEngine::Key::Period;
+            case VK_OEM_2: return BeeEngine::Key::Slash;
+            case '0': return BeeEngine::Key::D0;
+            case '1': return BeeEngine::Key::D1;
+            case '2': return BeeEngine::Key::D2;
+            case '3': return BeeEngine::Key::D3;
+            case '4': return BeeEngine::Key::D4;
+            case '5': return BeeEngine::Key::D5;
+            case '6': return BeeEngine::Key::D6;
+            case '7': return BeeEngine::Key::D7;
+            case '8': return BeeEngine::Key::D8;
+            case '9': return BeeEngine::Key::D9;
+            case VK_OEM_1: return BeeEngine::Key::Semicolon;
+            case VK_OEM_PLUS: return BeeEngine::Key::Equal;
+            case VK_OEM_4: return BeeEngine::Key::LeftBracket;
+            case VK_OEM_5: return BeeEngine::Key::Backslash;
+            case VK_OEM_6: return BeeEngine::Key::RightBracket;
+            case VK_OEM_3: return BeeEngine::Key::GraveAccent;
+            case VK_ESCAPE: return BeeEngine::Key::Escape;
+            case VK_RETURN: return BeeEngine::Key::Enter;
+            case VK_TAB: return BeeEngine::Key::Tab;
+            case VK_BACK: return BeeEngine::Key::Backspace;
+            case VK_INSERT: return BeeEngine::Key::Insert;
+            case VK_DELETE: return BeeEngine::Key::Delete;
+            case VK_RIGHT: return BeeEngine::Key::Right;
+            case VK_LEFT: return BeeEngine::Key::Left;
+            case VK_DOWN: return BeeEngine::Key::Down;
+            case VK_UP: return BeeEngine::Key::Up;
+            case VK_PRIOR: return BeeEngine::Key::PageUp;
+            case VK_NEXT: return BeeEngine::Key::PageDown;
+            case VK_HOME: return BeeEngine::Key::Home;
+            case VK_END: return BeeEngine::Key::End;
+            case VK_CAPITAL: return BeeEngine::Key::CapsLock;
+            case VK_SCROLL: return BeeEngine::Key::ScrollLock;
+            case VK_NUMLOCK: return BeeEngine::Key::NumLock;
+            case VK_SNAPSHOT: return BeeEngine::Key::PrintScreen;
+            case VK_PAUSE: return BeeEngine::Key::Pause;
+            case VK_F1: return BeeEngine::Key::F1;
+            case VK_F2: return BeeEngine::Key::F2;
+            case VK_F3: return BeeEngine::Key::F3;
+            case VK_F4: return BeeEngine::Key::F4;
+            case VK_F5: return BeeEngine::Key::F5;
+            case VK_F6: return BeeEngine::Key::F6;
+            case VK_F7: return BeeEngine::Key::F7;
+            case VK_F8: return BeeEngine::Key::F8;
+            case VK_F9: return BeeEngine::Key::F9;
+            case VK_F10: return BeeEngine::Key::F10;
+            case VK_F11: return BeeEngine::Key::F11;
+            case VK_F12: return BeeEngine::Key::F12;
+            case VK_F13: return BeeEngine::Key::F13;
+            case VK_F14: return BeeEngine::Key::F14;
+            case VK_F15: return BeeEngine::Key::F15;
+            case VK_F16: return BeeEngine::Key::F16;
+            case VK_F17: return BeeEngine::Key::F17;
+            case VK_F18: return BeeEngine::Key::F18;
+            case VK_F19: return BeeEngine::Key::F19;
+            case VK_F20: return BeeEngine::Key::F20;
+            case VK_F21: return BeeEngine::Key::F21;
+            case VK_F22: return BeeEngine::Key::F22;
+            case VK_F23: return BeeEngine::Key::F23;
+            case VK_F24: return BeeEngine::Key::F24;
+            case VK_NUMPAD0: return BeeEngine::Key::KeyPad0;
+            case VK_NUMPAD1: return BeeEngine::Key::KeyPad1;
+            case VK_NUMPAD2: return BeeEngine::Key::KeyPad2;
+            case VK_NUMPAD3: return BeeEngine::Key::KeyPad3;
+            case VK_NUMPAD4: return BeeEngine::Key::KeyPad4;
+            case VK_NUMPAD5: return BeeEngine::Key::KeyPad5;
+            case VK_NUMPAD6: return BeeEngine::Key::KeyPad6;
+            case VK_NUMPAD7: return BeeEngine::Key::KeyPad7;
+            case VK_NUMPAD8: return BeeEngine::Key::KeyPad8;
+            case VK_NUMPAD9: return BeeEngine::Key::KeyPad9;
+            case VK_DECIMAL: return BeeEngine::Key::KeyPadDecimal;
+            case VK_DIVIDE: return BeeEngine::Key::KeyPadDivide;
+            case VK_MULTIPLY: return BeeEngine::Key::KeyPadMultiply;
+            case VK_SUBTRACT: return BeeEngine::Key::KeyPadSubtract;
+            case VK_ADD: return BeeEngine::Key::KeyPadAdd;
+            case VK_SHIFT:
+            {
+                auto result = GetAsyncKeyState(VK_LSHIFT);
+                if(result & 0x8000)
+                    return BeeEngine::Key::LeftShift;
+                return BeeEngine::Key::RightShift;
+            }
+            case VK_CONTROL:
+            {
+                auto result = GetAsyncKeyState(VK_LCONTROL);
+                if(result & 0x8000)
+                    return BeeEngine::Key::LeftControl;
+                return BeeEngine::Key::RightControl;
+            }
+            case VK_MENU:
+            {
+                auto result = GetAsyncKeyState(VK_LMENU);
+                if(result & 0x8000)
+                    return BeeEngine::Key::LeftAlt;
+                return BeeEngine::Key::RightAlt;
+            }
+            case VK_LWIN: return BeeEngine::Key::LeftSuper;
+            case VK_RWIN: return BeeEngine::Key::RightSuper;
+            case VK_APPS: return BeeEngine::Key::Menu;
+            /*case VK_VOLUME_MUTE: return BeeEngine::Key::VolumeMute;
+            case VK_VOLUME_DOWN: return BeeEngine::Key::VolumeDown;
+            case VK_VOLUME_UP: return BeeEngine::Key::VolumeUp;
+            case VK_MEDIA_NEXT_TRACK: return BeeEngine::Key::MediaNextTrack;
+            case VK_MEDIA_PREV_TRACK: return BeeEngine::Key::MediaPrevTrack;
+            case VK_MEDIA_STOP: return BeeEngine::Key::MediaStop;
+            case VK_MEDIA_PLAY_PAUSE: return BeeEngine::Key::MediaPlayPause;
+            case VK_BROWSER_BACK: return BeeEngine::Key::BrowserBack;
+            case VK_BROWSER_FORWARD: return BeeEngine::Key::BrowserForward;
+            case VK_BROWSER_REFRESH: return BeeEngine::Key::BrowserRefresh;
+            case VK_BROWSER_STOP: return BeeEngine::Key::BrowserStop;*/
         }
         return BeeEngine::Key::Unknown;
     }
 
+    BeeEngine::MouseButton ConvertMouseButton(UINT message, WPARAM wParam) {
+        switch (message) {
+            case WM_LBUTTONDOWN:
+            case WM_LBUTTONUP:
+                return BeeEngine::MouseButton::Left;
+            case WM_RBUTTONDOWN:
+            case WM_RBUTTONUP:
+                return BeeEngine::MouseButton::Right;
+            case WM_MBUTTONDOWN:
+            case WM_MBUTTONUP:
+                return BeeEngine::MouseButton::Middle;
+            case WM_XBUTTONDOWN:
+            case WM_XBUTTONUP:
+                // Используйте GET_XBUTTON_WPARAM для определения конкретной кнопки
+                if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) {
+                    return BeeEngine::MouseButton::Button4;
+                } else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2) {
+                    return BeeEngine::MouseButton::Button5;
+                }
+            // Можно добавить больше условий, если ваша мышь поддерживает больше дополнительных кнопок
+            break;
+        }
+        return static_cast<BeeEngine::MouseButton>(-1); // Нет соответствия или неизвестная кнопка
+    }
+#define GET_KEY_REPEAT_COUNT(lParam) (lParam & 0xFFFF)
+#define IS_KEY_REPEAT(lParam) ((lParam & 0x40000000) ? true : false)
     LRESULT CALLBACK win32_process_message(HWND hwnd, uint32_t msg, WPARAM w_param, LPARAM l_param)
     {
         ImGui_ImplWin32_WndProcHandler(hwnd, msg, w_param, l_param);
@@ -272,6 +412,28 @@ namespace BeeEngine::Internal
             case WM_DESTROY:
                 PostQuitMessage(0);
                 return 0;
+            case WM_SETFOCUS:
+                g_EventQueue->AddEvent(CreateScope<WindowFocusedEvent>(true));
+                break;
+            case WM_KILLFOCUS:
+                g_EventQueue->AddEvent(CreateScope<WindowFocusedEvent>(false));
+                break;
+            case WM_SYSCOMMAND:
+            {
+                switch (w_param)
+                {
+                    case SC_MINIMIZE:
+                    {
+                        g_EventQueue->AddEvent(CreateScope<WindowMinimizedEvent>(true));
+                    }break;
+                    case SC_RESTORE:
+                    {
+                        g_EventQueue->AddEvent(CreateScope<WindowMinimizedEvent>(false));
+                    }break;
+                    default:
+                        break;
+                }
+            }break;
             case WM_SIZE:
             {
                 if (w_param != SIZE_MINIMIZED)
@@ -307,12 +469,12 @@ namespace BeeEngine::Internal
             case WM_KEYUP:
             case WM_KEYDOWN:
             {
-                uint32_t keyCode = static_cast<uint32_t>(w_param);
+                auto key = ConvertKeyCode(w_param);
                 bool8_t isKeyDown = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
                 if(isKeyDown)
-                    g_EventQueue->AddEvent(CreateScope<KeyPressedEvent>(ConvertKeyCode(keyCode),0));
+                    g_EventQueue->AddEvent(CreateScope<KeyPressedEvent>(key,IS_KEY_REPEAT(l_param) ? GET_KEY_REPEAT_COUNT(l_param) : 1));
                 else
-                    g_EventQueue->AddEvent(CreateScope<KeyReleasedEvent>(ConvertKeyCode(keyCode)));
+                    g_EventQueue->AddEvent(CreateScope<KeyReleasedEvent>(key));
             }break;
             case WM_MOUSEMOVE:
             {
@@ -332,15 +494,11 @@ namespace BeeEngine::Internal
             case WM_LBUTTONUP:
             case WM_RBUTTONUP:
             case WM_MBUTTONUP:
+            case WM_XBUTTONDOWN:
+            case WM_XBUTTONUP:
             {
-                BeeEngine::MouseButton button = BeeEngine::MouseButton::Last;
-                if(msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP)
-                    button = BeeEngine::MouseButton::Left;
-                else if(msg == WM_RBUTTONDOWN || msg == WM_RBUTTONUP)
-                    button = BeeEngine::MouseButton::Right;
-                else if(msg == WM_MBUTTONDOWN || msg == WM_MBUTTONUP)
-                    button = BeeEngine::MouseButton::Middle;
-                bool8_t isDown = (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN);
+                bool8_t isDown = (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_XBUTTONDOWN);
+                auto button = ConvertMouseButton(msg, w_param);
                 if(isDown)
                     g_EventQueue->AddEvent(CreateScope<MouseButtonPressedEvent>(button));
                 else
@@ -352,6 +510,16 @@ namespace BeeEngine::Internal
                 s_Instance->m_YPosition = GET_Y_LPARAM(l_param);
                 g_EventQueue->AddEvent(CreateScope<WindowMovedEvent>(s_Instance->m_XPosition, s_Instance->m_YPosition));
             } break;
+            case WM_UNICHAR:
+            {
+                if (w_param == UNICODE_NOCHAR)
+                {
+                    // WM_UNICHAR is not sent by Windows, but is sent by some third-party input method engine
+                    // Returning TRUE here announces support for this message
+                    return TRUE;
+                }
+                g_EventQueue->AddEvent(CreateScope<CharTypedEvent>(static_cast<char32_t>(w_param)));
+            }break;
         }
 
         return ::DefWindowProcW(hwnd, msg, w_param, l_param);

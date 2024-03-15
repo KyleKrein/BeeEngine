@@ -296,6 +296,6 @@ namespace BeeEngine::Internal
 
     int VulkanFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) const
     {
-        return -1;
+        return 0;
     }
 }
