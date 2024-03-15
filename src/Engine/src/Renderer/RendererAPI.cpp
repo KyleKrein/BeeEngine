@@ -14,8 +14,10 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
+#if defined(BEE_COMPILE_WEBGPU)
             case RenderAPI::WebGPU:
                 return CreateRef<Internal::WebGPURendererAPI>();
+#endif
 #if defined(BEE_COMPILE_VULKAN)
             case RenderAPI::Vulkan:
                 return CreateRef<Internal::VulkanRendererAPI>();

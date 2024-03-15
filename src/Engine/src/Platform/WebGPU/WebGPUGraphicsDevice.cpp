@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 30.06.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUGraphicsDevice.h"
 #if defined(BEE_COMPILE_SDL)
 #include "SDL3/SDL.h"
@@ -379,3 +379,4 @@ namespace BeeEngine::Internal
         co_return;
     }
 }
+#endif

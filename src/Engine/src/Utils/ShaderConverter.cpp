@@ -5,9 +5,11 @@
 //#include <spirv_cross/spirv_cross.hpp>
 #if defined(BEE_COMPILE_WEBGPU)
 #include "src/tint/writer/wgsl/generator_impl.h"
+#else
+#include "src/tint/lang/spirv/reader/ast_parser/parse.h"
+#endif
 #include "Renderer/ShaderTypes.h"
 #include <tint/tint.h>
-#endif
 
 namespace BeeEngine
 {
@@ -258,8 +260,15 @@ namespace BeeEngine
     BufferLayout ShaderConverter::GenerateLayout(in<std::vector<uint32_t>> spirv, BufferLayoutBuilder& builder)
     {
         BeeCoreTrace("Generating buffer layout for spirv shader");
+#if defined(BEE_COMPILE_WEBGPU)
         auto shader = tint::reader::spirv::Parse(spirv);
         tint::inspector::Inspector inspector(&shader);
+#else
+        tint::spirv::reader::Options options;
+        options.allowed_features = tint::wgsl::AllowedFeatures::Everything();
+        auto shader = tint::spirv::reader::ast_parser::Parse(spirv, options);
+        tint::inspector::Inspector inspector(shader);
+#endif
         auto entryPoints = inspector.GetEntryPoints();
         for(auto& entryPoint : entryPoints)
         {
@@ -269,7 +278,11 @@ namespace BeeEngine
             builder.NumberOfInputs(inputs.size());
             for(auto& input : inputs)
             {
+#if defined(BEE_COMPILE_WEBGPU)
                 builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.location_attribute);
+#else
+                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.attributes.location.value());
+#endif
             }
 
             const auto& resourceBindings = inspector.GetResourceBindings(entryPoint.name);
@@ -293,6 +306,7 @@ namespace BeeEngine
     }
     BufferLayout ShaderConverter::GenerateLayout(in<std::string> wgsl, in<std::string> path, BufferLayoutBuilder& builder)
     {
+#if defined(BEE_COMPILE_WEBGPU)
         BeeCoreTrace("Generating buffer layout for wgsl shader");
         tint::Source::File file(path, wgsl);
         auto shader = tint::reader::wgsl::Parse(&file);
@@ -332,6 +346,9 @@ namespace BeeEngine
         {
 
         }*/
+#else
+        BeeCoreError("Trying to generate buffer layout for WGSL without WebGPU");
+#endif
         return builder.Build();
     }
     int extractIntegerWords(const std::string& str)

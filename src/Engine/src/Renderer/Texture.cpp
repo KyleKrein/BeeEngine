@@ -20,8 +20,11 @@ namespace BeeEngine
             case RenderAPI::Vulkan:
                 return CreateRef<Internal::VulkanTexture2D>(width, height, data, numberOfChannels);
 #endif
+#if defined(BEE_COMPILE_WEBGPU)
             case RenderAPI::WebGPU:
                 return CreateRef<Internal::WebGPUTexture2D>(width, height, data, numberOfChannels);
+#endif
+
             default:
                 BeeCoreError("Unknown RenderAPI");
                 throw std::exception();

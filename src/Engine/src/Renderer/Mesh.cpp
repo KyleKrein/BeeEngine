@@ -13,8 +13,10 @@ namespace BeeEngine
     {
         switch (Renderer::GetAPI())
         {
+#if defined(BEE_COMPILE_WEBGPU)
             case WebGPU:
                 return CreateRef<Internal::WebGPUMesh>(vertices);
+#endif
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
                 return CreateRef<Internal::VulkanMesh>(vertices);
@@ -28,8 +30,10 @@ namespace BeeEngine
     {
         switch (Renderer::GetAPI())
         {
+#if defined(BEE_COMPILE_WEBGPU)
             case WebGPU:
                 return CreateRef<Internal::WebGPUMesh>(vertices, indices);
+#endif
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
                 return CreateRef<Internal::VulkanMesh>(vertices, indices);
@@ -44,8 +48,10 @@ namespace BeeEngine
     {
         switch (Renderer::GetAPI())
         {
+#if defined(BEE_COMPILE_WEBGPU)
             case WebGPU:
                 return CreateRef<Internal::WebGPUMesh>(verticesData, size, vertexCount, indices);
+#endif
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
                 return CreateRef<Internal::VulkanMesh>(verticesData, size, vertexCount, indices);

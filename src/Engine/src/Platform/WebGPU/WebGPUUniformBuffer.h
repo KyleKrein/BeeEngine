@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/UniformBuffer.h"
 
 namespace BeeEngine::Internal
@@ -25,3 +25,4 @@ namespace BeeEngine::Internal
         class WebGPUGraphicsDevice& m_GraphicsDevice;
     };
 }
+#endif

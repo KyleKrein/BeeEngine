@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 30.06.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPURendererAPI.h"
 #include "WebGPUGraphicsDevice.h"
 #include "Renderer/Renderer.h"
@@ -120,3 +120,4 @@ namespace BeeEngine::Internal
     }
 }
 #pragma clang diagnostic pop
+#endif

@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/Texture.h"
 
 namespace BeeEngine::Internal
@@ -33,3 +33,4 @@ namespace BeeEngine::Internal
         void CreateTextureView(const WGPUTextureDescriptor &textureDesc);
     };
 }
+#endif

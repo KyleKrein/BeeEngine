@@ -1,7 +1,7 @@
 //
 // Created by alexl on 15.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUTexture2D.h"
 #include "WebGPUGraphicsDevice.h"
 #include <version>
@@ -229,3 +229,4 @@ namespace BeeEngine::Internal
         m_Sampler = wgpuDeviceCreateSampler(device, &samplerDesc);
     }
 }
+#endif

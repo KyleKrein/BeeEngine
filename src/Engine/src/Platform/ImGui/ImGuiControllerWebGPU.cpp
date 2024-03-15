@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 01.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "ImGuiControllerWebGPU.h"
 #include "backends/imgui_impl_wgpu.h"
 #include "Renderer/Renderer.h"
@@ -106,3 +106,4 @@ namespace BeeEngine::Internal
 
     }
 }
+#endif

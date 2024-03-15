@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/CommandBuffer.h"
 #include <webgpu/webgpu.h>
 namespace BeeEngine::Internal
@@ -18,3 +18,4 @@ namespace BeeEngine::Internal
         [[nodiscard]] WGPUCommandEncoder GetHandle() const { return static_cast<WGPUCommandEncoder>(m_Handle); }
     };
 }
+#endif

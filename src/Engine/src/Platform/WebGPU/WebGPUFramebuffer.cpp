@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 18.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUFramebuffer.h"
 #include "Debug/Instrumentor.h"
 #include "WebGPUGraphicsDevice.h"
@@ -438,3 +438,4 @@ namespace BeeEngine::Internal
 
     }
 }
+#endif

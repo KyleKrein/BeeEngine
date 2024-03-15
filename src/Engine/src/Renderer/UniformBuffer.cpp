@@ -15,8 +15,11 @@ namespace BeeEngine
     {
         switch (Renderer::GetAPI())
         {
+#if defined(BEE_COMPILE_WEBGPU)
             case WebGPU:
                 return CreateRef<Internal::WebGPUUniformBuffer>(size);
+#endif
+
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
                 return CreateRef<Internal::VulkanUniformBuffer>(size);

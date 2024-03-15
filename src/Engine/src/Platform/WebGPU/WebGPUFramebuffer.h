@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/RenderPass.h"
@@ -80,3 +81,4 @@ namespace BeeEngine::Internal
         FlushCallbackData m_FlushCallbackData {&m_FlushCallback, &m_Flushed};
     };
 }
+#endif

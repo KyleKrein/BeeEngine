@@ -19,8 +19,10 @@ namespace BeeEngine
             preferences.Height < std::numeric_limits<uint32_t>::max());
         switch (Renderer::GetAPI())
         {
+#if defined(BEE_COMPILE_WEBGPU)
             case RenderAPI::WebGPU:
                 return CreateScope<Internal::WebGPUFrameBuffer>(preferences);
+#endif
 #if defined(BEE_COMPILE_VULKAN)
             case RenderAPI::Vulkan:
                 return CreateScope<Internal::VulkanFrameBuffer>(preferences);

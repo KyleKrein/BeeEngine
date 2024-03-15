@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_WEBGPU)
 #include <webgpu/webgpu.h>
 #include "Renderer/RendererAPI.h"
 
@@ -41,3 +42,4 @@ namespace BeeEngine::Internal
         std::vector<CommandBuffer> m_CommandBuffersForSubmition;
     };
 }
+#endif

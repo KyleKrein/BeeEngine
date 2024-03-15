@@ -22,9 +22,11 @@ namespace BeeEngine
         }
         switch (Renderer::GetAPI())
         {
+#if defined(BEE_COMPILE_WEBGPU)
             case WebGPU:
                 s_Controller = std::make_unique<Internal::ImGuiControllerWebGPU>();
                 break;
+#endif
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
                 s_Controller = std::make_unique<Internal::ImGuiControllerVulkan>();

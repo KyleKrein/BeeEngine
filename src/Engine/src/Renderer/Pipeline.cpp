@@ -16,8 +16,11 @@ namespace BeeEngine
         BeeExpects(fragmentShader->GetType() == ShaderType::Fragment);
         switch (Renderer::GetAPI())
         {
+#if defined(BEE_COMPILE_WEBGPU)
             case WebGPU:
                 return CreateRef<Internal::WebGPUPipeline>(vertexShader, fragmentShader);
+#endif
+
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
                 return CreateRef<Internal::VulkanPipeline>(vertexShader, fragmentShader);

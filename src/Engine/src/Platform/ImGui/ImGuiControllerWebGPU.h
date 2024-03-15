@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_WEBGPU)
 #include "ImGuiController.h"
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 
@@ -21,3 +22,4 @@ namespace BeeEngine::Internal
         WebGPUGraphicsDevice& m_Device;
     };
 }
+#endif
