@@ -7,6 +7,7 @@
 #include "Renderer/Renderer.h"
 #include "Platform/WebGPU/WebGPUBindingSet.h"
 #include "Core/TypeDefines.h"
+#include "Platform/Vulkan/VulkanBindingSet.h"
 
 namespace BeeEngine
 {
@@ -18,6 +19,10 @@ namespace BeeEngine
 #if defined(BEE_COMPILE_WEBGPU)
             case WebGPU:
                 return CreateRef<Internal::WebGPUBindingSet>(elements);
+#endif
+#if defined(BEE_COMPILE_VULKAN)
+            case Vulkan:
+                return CreateRef<Internal::VulkanBindingSet>(elements);
 #endif
             default:
                 BeeCoreError("BindingSet::Create: API not available!");
@@ -35,7 +40,10 @@ namespace BeeEngine
                 //return CreateFrameScope<Internal::WebGPUBindingSet>(elements);
                 return FramePtr<Internal::WebGPUBindingSet>(new Internal::WebGPUBindingSet(elements));
 #endif
-
+#if defined(BEE_COMPILE_VULKAN)
+            case Vulkan:
+                return FramePtr<Internal::VulkanBindingSet>(new Internal::VulkanBindingSet(elements));
+#endif
             default:
                 BeeCoreError("BindingSet::Create: API not available!");
                 return nullptr;

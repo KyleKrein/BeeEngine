@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Pipeline.h"
 #include "Core/TypeDefines.h"
 namespace BeeEngine
 {

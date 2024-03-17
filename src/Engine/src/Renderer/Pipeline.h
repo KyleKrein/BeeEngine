@@ -9,9 +9,15 @@
 
 namespace BeeEngine
 {
+    enum class PipelineType
+    {
+        Graphics,
+        Compute
+    };
     class Pipeline
     {
     public:
+        virtual PipelineType GetType() const = 0;
         virtual void Bind(void* commandBuffer) = 0;
         virtual ~Pipeline() = default;
         [[nodiscard]] static Ref<Pipeline> Create(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader);

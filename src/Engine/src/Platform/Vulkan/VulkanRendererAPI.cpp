@@ -7,6 +7,7 @@
 #include "Utils.h"
 #include "Core/Application.h"
 #include "Renderer/CommandBuffer.h"
+#include "Renderer/Renderer.h"
 
 namespace BeeEngine::Internal
 {
@@ -77,10 +78,19 @@ namespace BeeEngine::Internal
         colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
         colorAttachment.clearValue = vk::ClearColorValue{0.1f, 0.1f, 0.1f, 1.0f};
 
+        /*vk::RenderingAttachmentInfo depthAttachment{};
+        depthAttachment.imageView = swapchain.GetDepthImageView(m_CurrentImageIndex);
+        depthAttachment.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+        depthAttachment.loadOp = vk::AttachmentLoadOp::eClear;
+        depthAttachment.storeOp = vk::AttachmentStoreOp::eStore;
+        depthAttachment.clearValue = vk::ClearDepthStencilValue{1.0f, 0};
+        */
+
         renderingInfo.renderArea = vk::Rect2D{{0, 0}, swapchain.GetExtent()};
         renderingInfo.layerCount = 1;
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachments = &colorAttachment;
+        renderingInfo.pDepthAttachment = nullptr;
 
         //m_GraphicsDevice->GetGraphicsQueue().waitIdle();
         auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
@@ -137,13 +147,19 @@ namespace BeeEngine::Internal
     void VulkanRendererAPI::DrawInstanced(Model& model, InstancedBuffer& instancedBuffer,
         const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
     {
-        /*auto cmd = GetCurrentCommandBuffer().GetHandleAs<vk::CommandBuffer>();
-        auto& pipeline = model.GetPipeline();
-        cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.GetHandle());
-        cmd.bindVertexBuffers(0, 1, &model.GetVertexBuffer().GetHandle(), &model.GetVertexBufferOffset());
-        cmd.bindIndexBuffer(model.GetIndexBuffer().GetHandle(), model.GetIndexBufferOffset(), vk::IndexType::eUint32);
-        cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.GetLayout(), 0, bindingSets.size(), bindingSets.data(), 0, nullptr);
-        cmd.drawIndexed(model.GetIndexCount(), instanceCount, 0, 0, 0);*/
+        model.Bind();
+        auto cmd = Renderer::GetCurrentRenderPass().GetHandleAs<vk::CommandBuffer>();
+        CommandBuffer commandBuffer{cmd};
+        instancedBuffer.Bind(&commandBuffer);
+        int32_t index = 0;
+        for(auto& bindingSet : bindingSets)
+        {
+            bindingSet->Bind(&commandBuffer, index++);
+        }
+        if(model.IsIndexed()) [[likely]]
+            cmd.drawIndexed(model.GetIndexCount(), instanceCount, 0, 0, 0);
+        else
+            cmd.draw(model.GetVertexCount(), instanceCount, 0, 0);
     }
 
     void VulkanRendererAPI::SubmitCommandBuffer(const CommandBuffer& commandBuffer)

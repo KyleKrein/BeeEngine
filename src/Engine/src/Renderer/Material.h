@@ -20,6 +20,8 @@ namespace BeeEngine
 
         [[nodiscard]] virtual InstancedBuffer& GetInstancedBuffer() const = 0;
 
+        virtual void Bind(void* cmd) = 0;
+
         static Ref<Material> Create(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, bool loadFromCache = true);
     };
 }

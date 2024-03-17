@@ -120,9 +120,9 @@ namespace BeeEngine::Internal
         switch (type)
         {
             case ShaderType::Vertex:
-                return vk::ShaderStageFlagBits::eVertex;
+                //return vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
             case ShaderType::Fragment:
-                return vk::ShaderStageFlagBits::eFragment;
+                return vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
             case ShaderType::Compute:
                 return vk::ShaderStageFlagBits::eCompute;
             default:

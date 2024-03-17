@@ -246,8 +246,15 @@ namespace BeeEngine
         auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
         //statistics.OpaqueInstanceCount += sceneTreeRenderer.m_NotTransparent.size();
         //statistics.TransparentInstanceCount += sceneTreeRenderer.m_Transparent.size();
-        auto& tlas = scene.GetTLAS();
-        tlas.UpdateInstances(std::move(sceneTreeRenderer.GetAllEntities()));
+        //auto& tlas = scene.GetTLAS();
+        //tlas.UpdateInstances(std::move(sceneTreeRenderer.GetAllEntities()));
+
+        //TODO: this is temporary
+        for(auto& entity : sceneTreeRenderer.m_AllEntities)
+        {
+            Renderer::SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
+        }
+        Renderer::Flush();
     }
 
     void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale)

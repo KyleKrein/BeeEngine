@@ -30,5 +30,6 @@ namespace BeeEngine::Internal
         VulkanImage m_Image {};
         vk::ImageView m_ImageView = nullptr;
         vk::Sampler m_Sampler = nullptr;
+        vk::DescriptorImageInfo m_ImageInfo = {};
     };
 }

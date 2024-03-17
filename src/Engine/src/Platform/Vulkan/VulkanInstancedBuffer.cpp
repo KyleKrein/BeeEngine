@@ -28,7 +28,8 @@ namespace BeeEngine::Internal {
     {
         vk::CommandBuffer commandBuffer = reinterpret_cast<CommandBuffer*>(cmd)
                                             ->GetHandleAs<vk::CommandBuffer>();
-        commandBuffer.bindVertexBuffers(0, 1, &m_Buffer.Buffer, nullptr);
+        vk::DeviceSize offsets[] = {{0}};
+        commandBuffer.bindVertexBuffers(1, 1, &m_Buffer.Buffer, offsets);
     }
 
     size_t VulkanInstancedBuffer::GetSize()

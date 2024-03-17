@@ -7,6 +7,7 @@
 #include "Hardware.h"
 #include "Utils.h"
 #include "VulkanGraphicsDevice.h"
+#include "Renderer/CommandBuffer.h"
 
 namespace BeeEngine::Internal
 {
@@ -38,13 +39,13 @@ namespace BeeEngine::Internal
 
     void VulkanMesh::Bind(void* commandBuffer)
     {
-        auto cmd = *reinterpret_cast<vk::CommandBuffer*>(&commandBuffer);
+        auto cmd = ((CommandBuffer*)commandBuffer)->GetHandleAs<vk::CommandBuffer>();
         vk::Buffer vertexBuffers[] = {m_VertexBuffer.Buffer};
         vk::DeviceSize offsets[] = {0};
-        cmd.bindVertexBuffers(0, 1, vertexBuffers, offsets);
+        cmd.bindVertexBuffers(0, 1, vertexBuffers, offsets, g_vkDynamicLoader);
         if(IsIndexed())
         {
-            cmd.bindIndexBuffer(m_IndexBuffer.Buffer, 0, vk::IndexType::eUint32);
+            cmd.bindIndexBuffer(m_IndexBuffer.Buffer, 0, vk::IndexType::eUint32, g_vkDynamicLoader);
         }
     }
 

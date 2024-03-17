@@ -32,7 +32,7 @@ namespace BeeEngine
             WGPUBindGroupEntry,
 #endif
 #if defined(BEE_COMPILE_VULKAN)
-            vk::DescriptorSet,
+            vk::WriteDescriptorSet,
 #endif
             Dummy>;
             virtual ~IBindable() = default;

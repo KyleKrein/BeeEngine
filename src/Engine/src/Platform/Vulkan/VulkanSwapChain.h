@@ -34,6 +34,12 @@ namespace BeeEngine::Internal
             return m_SwapChainImages[index];
         }
 
+        vk::ImageView GetDepthImageView(uint32_t index)
+        {
+            BeeExpects(index < m_DepthImageViews.size());
+            return m_DepthImageViews[index];
+        }
+
         VulkanSwapChain(const VulkanSwapChain& other) = delete;
         VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;
 

@@ -3,10 +3,11 @@
 //
 
 #pragma once
-
+#include "CommandBuffer.h"
 namespace BeeEngine
 {
-    class RenderPass
+    using RenderPass = CommandBuffer;
+    /*class RenderPass
     {
     public:
         RenderPass() = default;
@@ -17,5 +18,5 @@ namespace BeeEngine
         virtual ~RenderPass() = default;
     private:
         void* m_Handle = nullptr;
-    };
+    };*/
 }

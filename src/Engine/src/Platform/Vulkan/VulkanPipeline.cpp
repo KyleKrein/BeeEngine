@@ -10,6 +10,7 @@
 
 namespace BeeEngine::Internal
 {
+    VulkanPipeline* VulkanPipeline::s_CurrentPipeline = nullptr;
     VulkanPipeline::VulkanPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader)
         : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexShader(std::move(std::static_pointer_cast<VulkanShaderModule>(vertexShader))),
         m_FragmentShader(std::move(std::static_pointer_cast<VulkanShaderModule>(fragmentShader)))
@@ -66,7 +67,8 @@ namespace BeeEngine::Internal
 
         auto descriptorSetLayouts = m_VertexShader->GetDescriptorSetLayouts();
         auto fragmentDescriptorSetLayouts = m_FragmentShader->GetDescriptorSetLayouts();
-        descriptorSetLayouts.insert(descriptorSetLayouts.end(), fragmentDescriptorSetLayouts.begin(), fragmentDescriptorSetLayouts.end());
+        descriptorSetLayouts.insert(descriptorSetLayouts.end(), fragmentDescriptorSetLayouts.begin(),
+            fragmentDescriptorSetLayouts.end());
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.setLayoutCount = descriptorSetLayouts.size();
         pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
@@ -86,6 +88,13 @@ namespace BeeEngine::Internal
         viewportState.scissorCount = 1;
         viewportState.pScissors = &scissor;
 
+        vk::PipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.depthTestEnable = vk::True;
+        depthStencil.depthWriteEnable = vk::True;
+        depthStencil.depthCompareOp = vk::CompareOp::eLess;
+        depthStencil.depthBoundsTestEnable = vk::False;
+        depthStencil.stencilTestEnable = vk::False;
+
         vk::GraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.stageCount = 2;
         pipelineInfo.pStages = shaderStages;
@@ -94,7 +103,7 @@ namespace BeeEngine::Internal
         pipelineInfo.pViewportState = &viewportState;
         pipelineInfo.pRasterizationState = &rasterizer;
         pipelineInfo.pMultisampleState = &multisampling;
-        pipelineInfo.pDepthStencilState = nullptr;
+        pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.pDynamicState = &dynamicState;
         pipelineInfo.layout = m_PipelineLayout;
@@ -114,6 +123,7 @@ namespace BeeEngine::Internal
     {
         vk::CommandBuffer cmd = reinterpret_cast<CommandBuffer*>(commandBuffer)->GetHandleAs<vk::CommandBuffer>();
         cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline);
+        s_CurrentPipeline = this;
     }
 
     VulkanPipeline::~VulkanPipeline()

@@ -10,14 +10,14 @@
 
 namespace BeeEngine::Internal
 {
-    void WebGPUBindModel(Mesh* mesh, Material* material)
+    void BindModel(Mesh* mesh, Material* material)
     {
         auto cmd = Renderer::GetCurrentRenderPass();
         static Material* lastMaterial = nullptr;
         if (lastMaterial != material)
         {
             lastMaterial = material;
-            ((WebGPUMaterial*)material)->Bind(&cmd);
+            material->Bind(&cmd);
         }
         static Mesh* lastMesh = nullptr;
         if (lastMesh != mesh)

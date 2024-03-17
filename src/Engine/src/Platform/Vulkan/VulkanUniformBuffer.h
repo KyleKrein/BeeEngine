@@ -27,6 +27,7 @@ namespace BeeEngine::Internal
         VulkanBuffer m_Buffer;
         size_t m_Size;
         VulkanGraphicsDevice& m_GraphicsDevice;
+        vk::DescriptorBufferInfo m_DescriptorBufferInfo;
     };
 
 }

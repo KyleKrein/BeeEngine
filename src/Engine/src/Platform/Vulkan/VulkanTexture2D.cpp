@@ -19,15 +19,40 @@ namespace BeeEngine::Internal
 
     std::vector<IBindable::BindGroupLayoutEntryType> VulkanTexture2D::GetBindGroupLayoutEntry() const
     {
+        vk::DescriptorSetLayoutBinding uboLayoutBinding;
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorType = vk::DescriptorType::eSampledImage;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+
         vk::DescriptorSetLayoutBinding samplerLayoutBinding;
-        samplerLayoutBinding.binding = 0;
-        samplerLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-        return {};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = vk::DescriptorType::eSampler;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex;
+
+        return {uboLayoutBinding, samplerLayoutBinding};
     }
 
     std::vector<IBindable::BindGroupEntryType> VulkanTexture2D::GetBindGroupEntry() const
     {
-        return {};
+        vk::WriteDescriptorSet imageWrite;
+        imageWrite.dstBinding = 0;
+        imageWrite.dstArrayElement = 0;
+        imageWrite.descriptorType = vk::DescriptorType::eSampledImage;
+        imageWrite.descriptorCount = 1;
+        imageWrite.pImageInfo = &m_ImageInfo;
+
+        vk::WriteDescriptorSet samplerWrite;
+        samplerWrite.dstBinding = 1;
+        samplerWrite.dstArrayElement = 0;
+        samplerWrite.descriptorType = vk::DescriptorType::eSampler;
+        samplerWrite.descriptorCount = 1;
+        samplerWrite.pImageInfo = &m_ImageInfo;
+
+        return {imageWrite, samplerWrite};
     }
 
     void VulkanTexture2D::SetData(gsl::span<std::byte> data, uint32_t numberOfChannels)
@@ -119,6 +144,11 @@ namespace BeeEngine::Internal
         }
         //buffer.Destroy();
         m_Device.DestroyBuffer(buffer);
+
+        m_ImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        m_ImageInfo.imageView = m_ImageView;
+        m_ImageInfo.sampler = m_Sampler;
+        m_BindingSet = BindingSet::Create({{0, *this}});
     }
 
     VulkanTexture2D::VulkanTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data,

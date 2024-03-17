@@ -51,9 +51,7 @@ namespace BeeEngine
         {
             return m_BindingSet.get();
         }
-    private:
-        Ref<BindingSet> m_BindingSet = BindingSet::Create({
-            {0, *this}
-        });
+    protected:
+        Ref<BindingSet> m_BindingSet;
     };
 }

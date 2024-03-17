@@ -543,6 +543,7 @@ namespace BeeEngine::Internal
     void VulkanGraphicsDevice::CreateDescriptorSet(vk::DescriptorSetAllocateInfo& info,
         vk::DescriptorSet* outDescriptorSet) const
     {
+        info.descriptorPool = m_DescriptorPool;
         CheckVkResult(m_Device.allocateDescriptorSets(&info, outDescriptorSet));
     }
 
