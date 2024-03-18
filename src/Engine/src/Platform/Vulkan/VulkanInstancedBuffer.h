@@ -18,7 +18,7 @@ namespace BeeEngine::Internal
 
         void SetData(void* data, size_t size) override;
 
-        void Bind(void* cmd) override;
+        void Bind(CommandBuffer& cmd) override;
 
         size_t GetSize() override;
     private:

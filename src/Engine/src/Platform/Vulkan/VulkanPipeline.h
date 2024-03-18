@@ -14,7 +14,7 @@ namespace BeeEngine::Internal
     {
     public:
         VulkanPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader);
-        void Bind(void* commandBuffer) override;
+        void Bind(CommandBuffer& commandBuffer) override;
         PipelineType GetType() const override { return PipelineType::Graphics; }
 
         ~VulkanPipeline() override;

@@ -23,7 +23,7 @@ namespace BeeEngine::Internal
 
         [[nodiscard]] uint32_t GetIndexCount() const override;
 
-        void Bind(void* commandBuffer) override;
+        void Bind(CommandBuffer& commandBuffer) override;
 
         [[nodiscard]] bool IsIndexed() const override;
 

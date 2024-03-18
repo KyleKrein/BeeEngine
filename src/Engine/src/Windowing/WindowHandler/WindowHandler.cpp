@@ -8,6 +8,7 @@
 #include "SDLWindowHandler.h"
 #include "WinAPIWindowHandler.h"
 #include "Core/CodeSafety/Expects.h"
+#include "Debug/Instrumentor.h"
 using namespace BeeEngine::Internal;
 
 namespace BeeEngine{

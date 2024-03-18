@@ -24,10 +24,9 @@ namespace BeeEngine::Internal {
         m_GraphicsDevice.CopyToBuffer({(byte*)data, size}, m_Buffer);
     }
 
-    void VulkanInstancedBuffer::Bind(void* cmd)
+    void VulkanInstancedBuffer::Bind(CommandBuffer& cmd)
     {
-        vk::CommandBuffer commandBuffer = reinterpret_cast<CommandBuffer*>(cmd)
-                                            ->GetHandleAs<vk::CommandBuffer>();
+        vk::CommandBuffer commandBuffer = cmd.GetBufferHandleAs<vk::CommandBuffer>();
         vk::DeviceSize offsets[] = {{0}};
         commandBuffer.bindVertexBuffers(1, 1, &m_Buffer.Buffer, offsets);
     }

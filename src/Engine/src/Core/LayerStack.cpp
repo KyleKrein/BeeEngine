@@ -86,7 +86,7 @@ namespace BeeEngine{
         }
     }
 
-    void LayerStack::Update()
+    void LayerStack::Update(FrameData& frameData)
     {
         BEE_PROFILE_FUNCTION();
         if (!Application::GetInstance().IsMinimized())
@@ -95,15 +95,11 @@ namespace BeeEngine{
                 BEE_PROFILE_SCOPE("Layers::Update");
                 for (auto& layer: m_layers)
                 {
-                    layer->OnUpdate();
+                    layer->OnUpdate(frameData);
                 }
             }
-            {
-                BEE_PROFILE_SCOPE("Layers::Renderer::Flush");
-                Renderer::FinalFlush();
-            }
-            if(Application::GetInstance().IsMinimized())
-                return;
+            //if(Application::GetInstance().IsMinimized())
+                //return;
             {
                 BEE_PROFILE_SCOPE("Layers::GUIRendering");
                 m_guiLayer->OnBegin();
@@ -112,7 +108,7 @@ namespace BeeEngine{
                     layer->OnGUIRendering();
                 }
                 m_guiLayer->OnGUIRendering();
-                m_guiLayer->OnEnd();
+                m_guiLayer->OnEnd(frameData.GetMainCommandBuffer());
             }
         }
     }
@@ -120,10 +116,5 @@ namespace BeeEngine{
     void LayerStack::SetGuiLayer(ImGuiLayer* guiLayer)
     {
         m_guiLayer.reset(guiLayer);
-    }
-
-    void LayerStack::FinishGuiRendering()
-    {
-        m_guiLayer->OnEnd();
     }
 }

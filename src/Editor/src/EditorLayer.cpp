@@ -49,7 +49,7 @@ namespace BeeEngine::Editor
         }
         ConsoleOutput::SetOutputProvider(nullptr);
     }
-    void EditorLayer::OnUpdate() noexcept
+    void EditorLayer::OnUpdate(FrameData& frameData) noexcept
     {
         BEE_PROFILE_FUNCTION();
         std::unique_lock lock(m_BigLock);

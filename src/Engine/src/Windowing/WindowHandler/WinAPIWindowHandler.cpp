@@ -214,7 +214,7 @@ namespace BeeEngine::Internal
         return m_IsRunning;
     }
 
-    void WinAPIWindowHandler::UpdateTime()
+    Time::secondsD WinAPIWindowHandler::UpdateTime()
     {
         static Time::secondsD lastTime;
         static auto currentTime = Time::secondsD{PlatformGetAbsoluteTime()};
@@ -222,6 +222,7 @@ namespace BeeEngine::Internal
         currentTime = Time::secondsD{PlatformGetAbsoluteTime()};
         auto deltatime = currentTime - lastTime;
         SetDeltaTime(deltatime, currentTime);
+        return deltatime;
     }
 
     void WinAPIWindowHandler::Close()

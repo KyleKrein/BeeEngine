@@ -32,7 +32,7 @@ namespace BeeEngine::Internal
         void ShowCursor() override;
         void ProcessEvents() override;
         [[nodiscard]] bool IsRunning() const override;
-        void UpdateTime() override;
+        Time::secondsD UpdateTime() override;
         void Close() override;
 
         GraphicsDevice& GetGraphicsDevice() override

@@ -6,6 +6,7 @@
 #include "VulkanGraphicsDevice.h"
 #include "VulkanImage.h"
 #include "Renderer/FrameBuffer.h"
+#include "Renderer/RenderingQueue.h"
 
 namespace BeeEngine::Internal
 {
@@ -16,11 +17,9 @@ namespace BeeEngine::Internal
         VulkanFrameBuffer(const FrameBufferPreferences &preferences);
         ~VulkanFrameBuffer() override;
 
-        void Bind() override;
+        CommandBuffer Bind() override;
 
-        void Unbind() override;
-
-        void Flush(const std::function<void()>& callback) override;
+        void Unbind(CommandBuffer& commandBuffer) override;
 
         void Resize(uint32_t width, uint32_t height) override;
 
@@ -34,6 +33,7 @@ namespace BeeEngine::Internal
     private:
         void CreateImageAndImageView(VulkanImage& image, vk::ImageView& view, FrameBufferTextureFormat format);
     private:
+        RenderingQueue m_RenderingQueue;
         std::vector<FrameBufferTextureSpecification> m_ColorAttachmentSpecification;
         FrameBufferTextureSpecification m_DepthAttachmentSpecification;
         FrameBufferPreferences m_Preferences;

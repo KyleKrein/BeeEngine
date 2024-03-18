@@ -12,6 +12,7 @@
 #include "Renderer/ShaderModule.h"
 #include "OsPlatform.h"
 #include "Renderer/AssetManager.h"
+#include "Core/LayerStack.h"
 
 namespace BeeEngine{
     class Application

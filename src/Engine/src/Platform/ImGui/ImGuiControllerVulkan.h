@@ -20,7 +20,7 @@ namespace BeeEngine::Internal
         void Initialize(uint16_t width, uint16_t height, uintptr_t windowHandle) override;
         void Update() override;
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-        void Render() override;
+        void Render(CommandBuffer& commandBuffer) override;
         void Shutdown() override;
     private:
         void SetupFunctionsForBackend();

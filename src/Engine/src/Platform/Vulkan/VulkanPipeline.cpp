@@ -119,9 +119,9 @@ namespace BeeEngine::Internal
         m_Pipeline = result.value;
     }
 
-    void VulkanPipeline::Bind(void* commandBuffer)
+    void VulkanPipeline::Bind(CommandBuffer& commandBuffer)
     {
-        vk::CommandBuffer cmd = reinterpret_cast<CommandBuffer*>(commandBuffer)->GetHandleAs<vk::CommandBuffer>();
+        vk::CommandBuffer cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline);
         s_CurrentPipeline = this;
     }

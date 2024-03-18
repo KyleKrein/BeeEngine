@@ -37,9 +37,9 @@ namespace BeeEngine::Internal
         return m_IndexCount;
     }
 
-    void VulkanMesh::Bind(void* commandBuffer)
+    void VulkanMesh::Bind(CommandBuffer& commandBuffer)
     {
-        auto cmd = ((CommandBuffer*)commandBuffer)->GetHandleAs<vk::CommandBuffer>();
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         vk::Buffer vertexBuffers[] = {m_VertexBuffer.Buffer};
         vk::DeviceSize offsets[] = {0};
         cmd.bindVertexBuffers(0, 1, vertexBuffers, offsets, g_vkDynamicLoader);

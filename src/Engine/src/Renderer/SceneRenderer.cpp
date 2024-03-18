@@ -177,7 +177,7 @@ namespace BeeEngine
         // Сфера пересекает все плоскости фрустума или полностью внутри фрустума
         return true;
     }
-    void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix,const std::vector<glm::vec4>& frustumPlanes/* const Math::Cameras::Frustum& frustum*/)
+    void SceneRenderer::RenderScene(Scene &scene, CommandBuffer &commandBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix,const std::vector<glm::vec4>& frustumPlanes/* const Math::Cameras::Frustum& frustum*/)
     {
         BEE_PROFILE_FUNCTION();
         auto& sceneRendererData = scene.GetSceneRendererData();
@@ -243,7 +243,7 @@ namespace BeeEngine
             }
         }
 
-        auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
+        //auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
         //statistics.OpaqueInstanceCount += sceneTreeRenderer.m_NotTransparent.size();
         //statistics.TransparentInstanceCount += sceneTreeRenderer.m_Transparent.size();
         //auto& tlas = scene.GetTLAS();
@@ -252,12 +252,12 @@ namespace BeeEngine
         //TODO: this is temporary
         for(auto& entity : sceneTreeRenderer.m_AllEntities)
         {
-            Renderer::SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
+            commandBuffer.SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
         }
-        Renderer::Flush();
+        commandBuffer.Flush();
     }
 
-    void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale)
+    void SceneRenderer::RenderScene(Scene &scene, CommandBuffer &commandBuffer, const String& locale)
     {
         SceneCamera* mainCamera = nullptr;
         glm::mat4 cameraTransform;
@@ -286,7 +286,7 @@ namespace BeeEngine
             glm::vec3 up = glm::normalize(glm::vec3(cameraViewMatrix[0][1], cameraViewMatrix[1][1], cameraViewMatrix[2][1]));
             auto frustum = Math::Cameras::CreateFrustumFromCamera(cameraPosition, forward, right, up, mainCamera->GetAspectRatio(), glm::degrees(mainCamera->GetVerticalFOV()), mainCamera->GetNearClip(), mainCamera->GetFarClip());*/
            auto frustumPlanes = GetFrustumPlanes(cameraViewProj);
-           RenderScene(scene, frameBuffer, locale, cameraViewProj, frustumPlanes);
+           RenderScene(scene, commandBuffer, locale, cameraViewProj, frustumPlanes);
         }
     }
 
@@ -298,15 +298,15 @@ namespace BeeEngine
     }
 
     void
-    SceneRenderer::RenderPhysicsColliders(Scene &scene, FrameBuffer &frameBuffer, const glm::mat4 &viewProjectionMatrix)
+    SceneRenderer::RenderPhysicsColliders(Scene &scene, CommandBuffer &commandBuffer, const glm::mat4 &viewProjectionMatrix)
     {
         Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
         Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
         cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
-        RenderPhysicsColliders(scene, frameBuffer, *cameraBindingSet);
+        RenderPhysicsColliders(scene, commandBuffer, *cameraBindingSet);
     }
 
-    void SceneRenderer::RenderPhysicsColliders(Scene &scene, FrameBuffer &frameBuffer, BindingSet &cameraBindingSet)
+    void SceneRenderer::RenderPhysicsColliders(Scene &scene, CommandBuffer &commandBuffer, BindingSet &cameraBindingSet)
     {
         auto& registry = scene.m_Registry;
         auto view = registry.view<BoxCollider2DComponent>();
@@ -325,7 +325,7 @@ namespace BeeEngine
                                           * glm::translate(glm::mat4(1.0f), glm::vec3(bc2d.Offset, 0.001f))
                                           * glm::scale(glm::mat4(1.0f), scale);
 
-                    Renderer::DrawRect(transform, Color4::DarkGreen, cameraBindingSet, 0.1f);
+                    commandBuffer.DrawRect(transform, Color4::DarkGreen, cameraBindingSet, 0.1f);
                 }
                 else if(bc2d.Type == BoxCollider2DComponent::ColliderType::Circle)
                 {
@@ -336,7 +336,7 @@ namespace BeeEngine
                                           * glm::scale(glm::mat4(1.0f), scale);
                     std::vector<BindingSet*> bindingSets {&cameraBindingSet};
                     CircleInstanceBufferData data {transform, Color4::DarkGreen, 0.05f, 0.005f, static_cast<int32_t>(entity)+1};
-                    Renderer::SubmitInstance(*s_CircleModel, bindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
+                    commandBuffer.SubmitInstance(*s_CircleModel, bindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
                 }
             }
         }

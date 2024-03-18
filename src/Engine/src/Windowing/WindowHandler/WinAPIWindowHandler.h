@@ -45,7 +45,7 @@ namespace BeeEngine::Internal
 
         [[nodiscard]] bool IsRunning() const override;
 
-        void UpdateTime() override;
+        Time::secondsD UpdateTime() override;
 
         void Close() override;
 

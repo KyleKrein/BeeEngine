@@ -134,13 +134,13 @@ namespace BeeEngine::Internal
         ImGui::NewFrame();
     }
 
-    void ImGuiControllerVulkan::Render()
+    void ImGuiControllerVulkan::Render(CommandBuffer& commandBuffer)
     {
         //return;
         auto& io = ImGui::GetIO();
         // Rendering
         ImGui::Render();
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Renderer::GetMainCommandBuffer().GetHandleAs<vk::CommandBuffer>());
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer.GetBufferHandleAs<vk::CommandBuffer>());
         // Update and Render additional Platform Windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {

@@ -134,6 +134,7 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Windowing/WindowHandler/WinAPIWindowHandler.cpp
         src/Windowing/WindowHandler/WinAPIWindowHandler.h
         src/Platform/Platform.h
+        src/Renderer/CommandBuffer.cpp
 )
 
 

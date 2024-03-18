@@ -16,9 +16,14 @@ namespace BeeEngine::Internal
         ~VulkanMaterial() override;
 
         [[nodiscard]] InstancedBuffer& GetInstancedBuffer() const override;
-        void Bind(void* cmd) override
+        void Bind(CommandBuffer& cmd) override
         {
             m_Pipeline->Bind(cmd);
+        }
+
+        [[nodiscard]] Pipeline& GetPipeline() const
+        {
+            return *m_Pipeline;
         }
     private:
         Ref<Pipeline> m_Pipeline;

@@ -93,9 +93,9 @@ namespace BeeEngine::Editor
         void RenderImGuizmo(EditorCamera& camera);
         void OpenScene(const Path& path);
 
-        void RenderCameraFrustum();
+        void RenderCameraFrustum(CommandBuffer& commandBuffer);
 
-        void RenderSelectedEntityOutline();
+        void RenderSelectedEntityOutline(CommandBuffer& commandBuffer);
 
         void HandleReadPixelTask();
 

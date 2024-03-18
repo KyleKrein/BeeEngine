@@ -11,14 +11,48 @@
 #include "Core/CodeSafety/Expects.h"
 #include "CommandBuffer.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
-#include "RenderPass.h"
 #include "Model.h"
 #include "RendererStatistics.h"
 #include "Font.h"
-#include "TextRenderingConfiguration.h"
 
 namespace BeeEngine
 {
+    class FrameData
+    {
+    public:
+        FrameData(CommandBuffer commandBuffer, RendererStatistics& statistics)
+            : m_MainCommandBuffer(commandBuffer), m_InProgress(true), m_Statistics(statistics)
+        {}
+        CommandBuffer& GetMainCommandBuffer()
+        {
+            return m_MainCommandBuffer;
+        }
+        bool IsInProgress() const
+        {
+            return m_InProgress;
+        }
+
+        void SetDeltaTime(Time::secondsD deltaTime)
+        {
+            BeeExpects(m_DeltaTime == Time::secondsD(0.0));
+            m_DeltaTime = deltaTime;
+        }
+        [[nodiscard]] Time::secondsD GetDeltaTime() const
+        {
+            return m_DeltaTime;
+        }
+    private:
+        void End()
+        {
+            m_InProgress = false;
+        }
+        friend class Renderer;
+    private:
+        CommandBuffer m_MainCommandBuffer;
+        RendererStatistics m_Statistics;
+        bool m_InProgress = false;
+        Time::secondsD m_DeltaTime = Time::secondsD(0.0);
+    };
     class Renderer
     {
     public:
@@ -32,52 +66,42 @@ namespace BeeEngine
         {
             return s_ClearColor;
         }
-        static void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
+        static void DrawInstanced(CommandBuffer& commandBuffer, Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
         {
             BEE_PROFILE_FUNCTION();
-            s_RendererAPI->DrawInstanced(model, instancedBuffer, bindingSets, instanceCount);
+            s_RendererAPI->DrawInstanced(commandBuffer, model, instancedBuffer, bindingSets, instanceCount);
         }
-        static void DrawString(const String& text, Font& font, BindingSet& cameraBindingSet, const glm::mat4& transform, const TextRenderingConfiguration& config);
         static void SubmitCommandBuffer(const CommandBuffer& commandBuffer)
         {
             s_RendererAPI->SubmitCommandBuffer(commandBuffer);
         }
 
-        static void DrawRect(const glm::mat4& transform, const Color4& color, BindingSet& cameraBindingSet, float lineWidth);
-
-        static void OnSubmittedWorkDone(const std::function<void()>& callback);
-
-        static void SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, gsl::span<byte> instanceData);
-        static void SubmitLine(const glm::vec3& start, const glm::vec3& end, BindingSet& cameraBindingSet, const Color4& color = Color4::Black, float lineWidth = 0.1f);
-        static void Flush();
         //static void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount)
         //{
         //    BEE_PROFILE_FUNCTION();
         //    s_RendererAPI->DrawInstanced(model, instanceBuffer, instanceCount);
         //}
 
-        static CommandBuffer BeginFrame()
+        static FrameData BeginFrame()
         {
             BEE_PROFILE_FUNCTION();
-            BeeExpects(!s_FrameStarted);
-            s_FrameStarted = true;
-            return s_RendererAPI->BeginFrame();
+            return {s_RendererAPI->BeginFrame(), s_Statistics};
         }
 
-        static void EndFrame();
+        static void EndFrame(FrameData& frameData);
 
-        static void StartMainRenderPass(in<CommandBuffer> commandBuffer)
+        static void StartMainCommandBuffer(FrameData& frameData)
         {
             BEE_PROFILE_FUNCTION();
-            BeeExpects(s_FrameStarted);
-            s_RendererAPI->StartMainRenderPass(commandBuffer);
+            BeeExpects(frameData.IsInProgress());
+            s_RendererAPI->StartMainCommandBuffer(frameData.GetMainCommandBuffer());
         }
 
-        static void EndMainRenderPass(in<CommandBuffer> commandBuffer)
+        static void EndMainCommandBuffer(FrameData& frameData)
         {
             BEE_PROFILE_FUNCTION();
-            BeeExpects(s_FrameStarted);
-            s_RendererAPI->EndMainRenderPass(commandBuffer);
+            BeeExpects(frameData.IsInProgress());
+            s_RendererAPI->EndMainCommandBuffer(frameData.GetMainCommandBuffer());
         }
 
         /*static void SubmitCommandBuffers(CommandBuffer* commandBuffers, uint32_t numberOfBuffers)
@@ -87,43 +111,21 @@ namespace BeeEngine
             graphicsDevice.SubmitCommandBuffers(commandBuffers, numberOfBuffers);
         }*/
 
-        static RenderPass GetCurrentRenderPass()
-        {
-            return s_NotMainRenderPass ? s_CurrentRenderPass : GetMainRenderPass();
-        }
-
         static const RendererStatistics& GetStatistics()
         {
             return s_Statistics;
         }
 
-        static void SetCurrentRenderPass(const RenderPass& pass);
-        static void ResetCurrentRenderPass()
-        {
-            BeeExpects(s_NotMainRenderPass);
-            s_NotMainRenderPass = false;
-        }
-
-        static void FinalFlush();
-
-        static CommandBuffer GetMainCommandBuffer()
+        /*static CommandBuffer GetMainCommandBuffer()
         {
             return s_RendererAPI->GetCurrentCommandBuffer();
-        }
+        }*/
 
     private:
-        static RenderPass GetMainRenderPass()
-        {
-            return s_RendererAPI->GetMainRenderPass();
-        }
 
         static RenderAPI s_Api;
-        static Ref<RendererAPI> s_RendererAPI;
+        static Scope<RendererAPI> s_RendererAPI;
         static Color4 s_ClearColor;
-        static bool s_FrameStarted;
         static RendererStatistics s_Statistics;
-
-        static bool s_NotMainRenderPass;
-        static RenderPass s_CurrentRenderPass;
     };
 }

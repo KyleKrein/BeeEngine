@@ -101,10 +101,9 @@ namespace BeeEngine::Internal
         });
     }
 
-    void VulkanFrameBuffer::Bind()
+    CommandBuffer VulkanFrameBuffer::Bind()
     {
         BEE_PROFILE_FUNCTION();
-        Renderer::Flush();
         if(m_Invalid)
         {
             Invalidate();
@@ -166,22 +165,21 @@ namespace BeeEngine::Internal
         m_CurrentCommandBuffer.setViewport(0, 1, &viewport);
         m_CurrentCommandBuffer.setScissor(0, 1, &scissor);
 
-        Renderer::SetCurrentRenderPass({m_CurrentCommandBuffer});
+        CommandBuffer commandBuffer {m_CurrentCommandBuffer, &m_RenderingQueue};
+        commandBuffer.BeginRecording();
+        return commandBuffer;
     }
 
-    void VulkanFrameBuffer::Unbind()
+    void VulkanFrameBuffer::Unbind(CommandBuffer& commandBuffer)
     {
+        BeeExpects(m_CurrentCommandBuffer == commandBuffer.GetBufferHandleAs<vk::CommandBuffer>() && m_CurrentCommandBuffer != nullptr);
         BEE_PROFILE_FUNCTION();
-        Renderer::Flush();
+        commandBuffer.EndRecording();//Flush();
         m_CurrentCommandBuffer.endRendering(g_vkDynamicLoader);
         m_GraphicsDevice.EndSingleTimeCommands(m_CurrentCommandBuffer);
         //Renderer::SubmitCommandBuffer({m_CurrentCommandBuffer});
-        Renderer::ResetCurrentRenderPass();
+        commandBuffer.Invalidate();
         m_CurrentCommandBuffer = nullptr;
-    }
-
-    void VulkanFrameBuffer::Flush(const std::function<void()>& callback)
-    {
     }
 
     void VulkanFrameBuffer::Resize(uint32_t width, uint32_t height)

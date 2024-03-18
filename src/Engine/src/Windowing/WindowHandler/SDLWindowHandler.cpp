@@ -418,7 +418,7 @@ namespace BeeEngine::Internal
         return m_IsRunning;
     }
 
-    void SDLWindowHandler::UpdateTime()
+    Time::secondsD SDLWindowHandler::UpdateTime()
     {
         static uint64_t lastTime = 0;
         static uint64_t currentTime = SDL_GetPerformanceCounter();
@@ -426,6 +426,7 @@ namespace BeeEngine::Internal
         currentTime = SDL_GetPerformanceCounter();
         auto deltatime = ((double)(currentTime - lastTime)) / (double)SDL_GetPerformanceFrequency();
         SetDeltaTime(Time::secondsD(deltatime), Time::secondsD(((double)currentTime)/(double)SDL_GetPerformanceFrequency()));
+        return Time::secondsD(deltatime);
         //UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetPerformanceCounter()));
     }
 

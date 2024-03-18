@@ -1,8 +1,11 @@
 #pragma once
-#include "Core/LayerStack.h"
+#include "Core/TypeDefines.h"
+#include "Core/Events/Event.h"
 #include "JobSystem/SpinLock.h"
 
 namespace BeeEngine{
+    struct LayerStack;
+
     class EventQueue
     {
     public:

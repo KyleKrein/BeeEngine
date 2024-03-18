@@ -10,14 +10,14 @@ namespace BeeEngine
 {
     namespace Internal
     {
-        void BindModel(Mesh* mesh, Material* material);
+        void BindModel(Mesh* mesh, Material* material, CommandBuffer& commandBuffer);
     }
     Ref<Model> BeeEngine::Model::Load(Mesh &mesh, Material &material)
     {
         return CreateRef<Model>(mesh, material);
     }
 
-    void Model::Bind() const
+    void Model::Bind(CommandBuffer& commandBuffer) const
     {
         /*switch (Renderer::GetAPI())
         {
@@ -28,7 +28,7 @@ namespace BeeEngine
 #endif
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:*/
-                Internal::BindModel(m_Mesh, m_Material);
+                Internal::BindModel(m_Mesh, m_Material, commandBuffer);
                 /*break;
 #endif
 

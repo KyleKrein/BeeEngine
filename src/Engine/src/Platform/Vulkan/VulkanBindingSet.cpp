@@ -48,9 +48,8 @@ namespace BeeEngine::Internal
         m_GraphicsDevice.CreateDescriptorSet(allocInfo, &m_DescriptorSet);
     }
 
-    void VulkanBindingSet::Bind(void* cmd, uint32_t index) const
+    void VulkanBindingSet::Bind(CommandBuffer& cmd, uint32_t index, Pipeline& pipeline) const
     {
-        auto& currentPipeline = VulkanPipeline::GetCurrentPipeline();
         std::vector<vk::WriteDescriptorSet> descriptorWrites;
         for (const auto& element : m_Elements)
         {
@@ -72,8 +71,8 @@ namespace BeeEngine::Internal
         }
         m_GraphicsDevice.GetDevice().updateDescriptorSets(descriptorWrites, nullptr);
 
-        auto commandBuffer = static_cast<CommandBuffer*>(cmd)->GetHandleAs<vk::CommandBuffer>();
-        commandBuffer.bindDescriptorSets(GetPipelineBindPoint(currentPipeline.GetType()), currentPipeline.GetPipelineLayout(), index, 1, &m_DescriptorSet, 0, nullptr);
+        auto commandBuffer = cmd.GetBufferHandleAs<vk::CommandBuffer>();
+        commandBuffer.bindDescriptorSets(GetPipelineBindPoint(pipeline.GetType()), ((VulkanPipeline&)pipeline).GetPipelineLayout(), index, 1, &m_DescriptorSet, 0, nullptr);
     }
 
     VulkanBindingSet::~VulkanBindingSet()

@@ -1,11 +1,6 @@
 #pragma once
 
 #include <gsl/gsl>
-#include <utility>
-#include <vector>
-#include "Core/Logging/Log.h"
-#include "Core/TypeDefines.h"
-//#include "ObjectPool.h"
 
 namespace BeeEngine
 {

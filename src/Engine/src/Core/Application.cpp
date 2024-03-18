@@ -38,21 +38,22 @@ namespace BeeEngine{
                 auto& self = *frameJobInfo.self;
 
                 self.m_EventQueue.Dispatch();
-                self.m_Window->UpdateTime();
-                if(!self.IsMinimized())
-                {
-                    auto cmd = Renderer::BeginFrame();
-                    Renderer::StartMainRenderPass(cmd);
-                    self.m_Layers.Update();
+                auto deltaTime = self.m_Window->UpdateTime();
+                //if(!self.IsMinimized())
+                //{
+                    auto frameData = Renderer::BeginFrame();
+                    frameData.SetDeltaTime(deltaTime);
+                    Renderer::StartMainCommandBuffer(frameData);
+                    self.m_Layers.Update(frameData);
                     self.Update();
-                    Renderer::EndMainRenderPass(cmd);
-                    Renderer::EndFrame();
-                }
-                else
-                {
-                    self.m_Layers.Update();
-                    self.Update();
-                }
+                    Renderer::EndMainCommandBuffer(frameData);
+                    Renderer::EndFrame(frameData);
+                //}
+                //else
+                //{
+                //    self.m_Layers.Update();
+                //    self.Update();
+                //}
 
                 DeletionQueue::Frame().Flush();
 

@@ -5,6 +5,7 @@
 #include "VulkanRendererAPI.h"
 
 #include "Utils.h"
+#include "VulkanMaterial.h"
 #include "Core/Application.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/Renderer.h"
@@ -50,7 +51,7 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to acquire next image");
         }
-        auto cmd = GetCurrentCommandBuffer().GetHandleAs<vk::CommandBuffer>();
+        auto cmd = GetCurrentCommandBuffer().GetBufferHandleAs<vk::CommandBuffer>();
         vk::CommandBufferBeginInfo beginInfo{};
         beginInfo.sType = vk::StructureType::eCommandBufferBeginInfo;
         beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
@@ -58,10 +59,11 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to begin recording command buffer");
         }
-        return {cmd};
+        CommandBuffer commandBuffer{m_CommandBuffers[m_CurrentImageIndex], &m_RenderingQueue};
+        return commandBuffer;
     }
 
-    void VulkanRendererAPI::StartMainRenderPass(CommandBuffer commandBuffer)
+    void VulkanRendererAPI::StartMainCommandBuffer(CommandBuffer& commandBuffer)
     {
         BeeExpects(commandBuffer == GetCurrentCommandBuffer());
 
@@ -93,7 +95,7 @@ namespace BeeEngine::Internal
         renderingInfo.pDepthAttachment = nullptr;
 
         //m_GraphicsDevice->GetGraphicsQueue().waitIdle();
-        auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         cmd.beginRendering(&renderingInfo, g_vkDynamicLoader);
         vk::Viewport viewport{};
         viewport.x = 0.0f;
@@ -107,13 +109,17 @@ namespace BeeEngine::Internal
         scissor.extent = swapchain.GetExtent();
         cmd.setViewport(0, 1, &viewport);
         cmd.setScissor(0, 1, &scissor);
+
+        commandBuffer.BeginRecording();
     }
 
-    void VulkanRendererAPI::EndMainRenderPass(CommandBuffer commandBuffer)
+    void VulkanRendererAPI::EndMainCommandBuffer(CommandBuffer& commandBuffer)
     {
         BeeExpects(commandBuffer == GetCurrentCommandBuffer());
-        auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
+        commandBuffer.EndRecording();
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         cmd.endRendering(g_vkDynamicLoader);
+        commandBuffer.Invalidate();
     }
 
     void VulkanRendererAPI::EndFrame()
@@ -133,28 +139,21 @@ namespace BeeEngine::Internal
         }
     }
 
-    RenderPass VulkanRendererAPI::GetMainRenderPass() const
+    CommandBuffer VulkanRendererAPI::GetCurrentCommandBuffer()
     {
-        BeeCoreWarn("Trying to get renderpass in vulkan with dynamic rendering");
-        return {nullptr};
+        return CommandBuffer{m_CommandBuffers[m_CurrentImageIndex], &m_RenderingQueue};
     }
 
-    CommandBuffer VulkanRendererAPI::GetCurrentCommandBuffer() const
-    {
-        return {m_CommandBuffers[m_CurrentImageIndex]};
-    }
-
-    void VulkanRendererAPI::DrawInstanced(Model& model, InstancedBuffer& instancedBuffer,
+    void VulkanRendererAPI::DrawInstanced(CommandBuffer& commandBuffer, Model& model, InstancedBuffer& instancedBuffer,
         const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
     {
-        model.Bind();
-        auto cmd = Renderer::GetCurrentRenderPass().GetHandleAs<vk::CommandBuffer>();
-        CommandBuffer commandBuffer{cmd};
-        instancedBuffer.Bind(&commandBuffer);
+        model.Bind(commandBuffer);
+        instancedBuffer.Bind(commandBuffer);
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         int32_t index = 0;
         for(auto& bindingSet : bindingSets)
         {
-            bindingSet->Bind(&commandBuffer, index++);
+            bindingSet->Bind(commandBuffer, index++, ((VulkanMaterial&)model.GetMaterial()).GetPipeline());
         }
         if(model.IsIndexed()) [[likely]]
             cmd.drawIndexed(model.GetIndexCount(), instanceCount, 0, 0, 0);
@@ -165,7 +164,7 @@ namespace BeeEngine::Internal
     void VulkanRendererAPI::SubmitCommandBuffer(const CommandBuffer& commandBuffer)
     {
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
-        auto cmd = commandBuffer.GetHandleAs<vk::CommandBuffer>();
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         cmd.end();
         swapchain.SubmitCommandBuffers(&cmd, 1, &m_CurrentImageIndex);
     }

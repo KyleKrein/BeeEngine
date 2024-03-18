@@ -93,7 +93,7 @@ namespace BeeEngine
         virtual void ShowCursor() = 0;
         virtual void ProcessEvents() = 0;
         [[nodiscard]] virtual bool IsRunning() const = 0;
-        virtual void UpdateTime() = 0;
+        virtual Time::secondsD UpdateTime() = 0;
         virtual void Close() = 0;
 
         virtual GraphicsDevice& GetGraphicsDevice() = 0;

@@ -10,20 +10,19 @@
 
 namespace BeeEngine::Internal
 {
-    void BindModel(Mesh* mesh, Material* material)
+    void BindModel(Mesh* mesh, Material* material, CommandBuffer& cmd)
     {
-        auto cmd = Renderer::GetCurrentRenderPass();
         static Material* lastMaterial = nullptr;
         if (lastMaterial != material)
         {
             lastMaterial = material;
-            material->Bind(&cmd);
+            material->Bind(cmd);
         }
         static Mesh* lastMesh = nullptr;
         if (lastMesh != mesh)
         {
             lastMesh = mesh;
-            mesh->Bind(&cmd);
+            mesh->Bind(cmd);
         }
         static bool isErased = false;
         if (!isErased)

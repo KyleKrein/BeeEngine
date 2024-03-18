@@ -15,7 +15,7 @@ namespace BeeEngine::Internal
     {
     public:
         VulkanBindingSet(std::initializer_list<BindingSetElement> elements);
-        void Bind(void* cmd, uint32_t index) const override;
+        void Bind(CommandBuffer& cmd, uint32_t index, Pipeline& pipeline) const override;
 
         ~VulkanBindingSet() override;
     private:

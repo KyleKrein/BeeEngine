@@ -9,7 +9,7 @@
 
 namespace BeeEngine
 {
-    Ref<RendererAPI> RendererAPI::Create()
+    Scope<RendererAPI> RendererAPI::Create()
     {
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
@@ -20,7 +20,7 @@ namespace BeeEngine
 #endif
 #if defined(BEE_COMPILE_VULKAN)
             case RenderAPI::Vulkan:
-                return CreateRef<Internal::VulkanRendererAPI>();
+                return CreateScope<Internal::VulkanRendererAPI>();
 #endif
             default:
                 BeeCoreFatalError("Renderer API not supported!");

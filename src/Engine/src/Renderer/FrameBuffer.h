@@ -9,6 +9,11 @@
 
 namespace BeeEngine
 {
+    class CommandBuffer;
+}
+
+namespace BeeEngine
+{
     enum class FrameBufferTextureFormat
     {
         None = 0,
@@ -77,9 +82,8 @@ namespace BeeEngine
     public:
         FrameBuffer() = default;
         virtual ~FrameBuffer() = default;
-        virtual void Bind() = 0;
-        virtual void Unbind() = 0;
-        virtual void Flush(const std::function<void()> &callback) = 0;
+        [[nodiscard]]virtual CommandBuffer Bind() = 0;
+        virtual void Unbind(CommandBuffer& commandBuffer) = 0;
         virtual void Resize(uint32_t width, uint32_t height) = 0;
         virtual void Invalidate() = 0;
         [[nodiscard]] virtual uintptr_t GetColorAttachmentRendererID(uint32_t index) const = 0;
