@@ -65,27 +65,31 @@ namespace BeeEngine
     void Internal::JobScheduler::WorkerThread()
     {
         GetMainContext() = boost::context::callcc([this](boost::context::continuation &&c)
-                                                  {
-                                                      GetMainContext() = std::move(c);
-                                                      while (!m_Done)
-                                                      {
-                                                          {
-                                                              std::unique_lock<std::mutex> lock(m_QueueMutex);
-                                                              m_ConditionVariable.wait(lock, [this] { return !AllQueuesEmpty() || m_Done; });
-                                                              if (AllQueuesEmpty() && m_WaitingJobs.empty())
-                                                              {
-                                                                  break;
-                                                              }
+        {
+            BeeCoreTrace("JobScheduler::WorkerThread: Starting thread {0}", std::this_thread::get_id());
+            GetMainContext() = std::move(c);
+            while (!m_Done)
+            {
+                {
+                    std::unique_lock lock(m_QueueMutex);
+                    //BeeCoreTrace("Waiting on job {0}", std::this_thread::get_id());
+                    m_ConditionVariable.wait(lock, [this] { return !AllQueuesEmpty() || m_Done; });
+                    if (AllQueuesEmpty() || m_Done)
+                    {
+                        break;
+                    }
 
-                                                              if (!GetNextFiber(GetCurrentFiber()))
-                                                              {
-                                                                  continue;
-                                                              }
-                                                          }
-                                                          GetCurrentFiber()->Resume();
-                                                      }
-                                                      return std::move(GetMainContext());
-                                                  });
+                    if (!GetNextFiber(GetCurrentFiber()))
+                    {
+                        continue;
+                    }
+                }
+                //BeeCoreTrace("Starting job {0}", std::this_thread::get_id());
+                GetCurrentFiber()->Resume();
+            }
+            BeeCoreTrace("JobScheduler::WorkerThread: Exiting thread {0}", std::this_thread::get_id());
+            return std::move(GetMainContext());
+        });
     }
     void Job::Initialize(uint32_t numberOfThreads)
     {
