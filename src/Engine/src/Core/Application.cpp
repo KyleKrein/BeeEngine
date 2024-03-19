@@ -88,6 +88,7 @@ namespace BeeEngine{
     Application::~Application()
     {
         s_Instance = nullptr;
+        Renderer::Shutdown();
     }
 
     WindowHandlerAPI Application::GetPreferredWindowAPI()

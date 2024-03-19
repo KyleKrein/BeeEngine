@@ -785,6 +785,15 @@ namespace BeeEngine::Internal
         throw std::runtime_error("failed to find supported format!");
     }
 
+    vk::Viewport VulkanGraphicsDevice::CreateVKViewport(uint32_t width, uint32_t height, float depthMin, float depthMax)
+    {
+        return {
+            0.0f, static_cast<float>(height),//y is flipped https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
+            static_cast<float>(width), -static_cast<float>(height),//y is flipped
+            depthMin, depthMax
+        };
+    }
+
     void VulkanGraphicsDevice::InitializeVulkanMemoryAllocator(VulkanInstance &instance)
     {
         VmaVulkanFunctions vulkanFunctions = {};
@@ -846,6 +855,7 @@ namespace BeeEngine::Internal
             {vk::DescriptorType::eSampledImage, 1000},
             };
         vk::DescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.flags = vk::DescriptorPoolCreateFlags() | vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
         poolInfo.poolSizeCount = poolSizes.size();
         poolInfo.pPoolSizes = poolSizes.data();
         poolInfo.maxSets = 1000;

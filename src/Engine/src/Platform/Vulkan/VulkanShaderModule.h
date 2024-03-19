@@ -32,6 +32,16 @@ namespace BeeEngine::Internal
         {
             return m_DescriptorSetLayouts;
         }
+        struct ColorAttachmentData
+        {
+            const std::vector<vk::Format>& formats;
+            const std::vector<vk::PipelineColorBlendAttachmentState>& attachments;
+        };
+        [[nodiscard]] ColorAttachmentData GetColorAttachmentData() const
+        {
+            BeeExpects(m_Type == ShaderType::Fragment);
+            return {m_ColorAttachmentFormats, m_ColorBlendAttachments};
+        }
 
     private:
         void InitData();
@@ -48,6 +58,8 @@ namespace BeeEngine::Internal
         //std::vector<vk::VertexInputAttributeDescription> m_InstanceAttributeDescriptions;
         vk::PipelineVertexInputStateCreateInfo m_VertexInputState;
         std::vector<vk::DescriptorSetLayout> m_DescriptorSetLayouts;
+        std::vector<vk::Format> m_ColorAttachmentFormats;
+        std::vector<vk::PipelineColorBlendAttachmentState> m_ColorBlendAttachments;
     };
 
 } // Internal

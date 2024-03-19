@@ -31,6 +31,8 @@ namespace BeeEngine::Editor
         preferences.Height = m_Height * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 
+        preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; //RedInteger
+
         m_FrameBuffer = FrameBuffer::Create(preferences);
     }
 

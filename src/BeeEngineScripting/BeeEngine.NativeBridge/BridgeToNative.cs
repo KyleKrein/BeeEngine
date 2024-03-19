@@ -1030,6 +1030,23 @@ internal static class BridgeToNative
         error:
         Debug.Print("Unable to set method from Class. Message: {0}", errorMessage);
     }
+
+    [UnmanagedCallersOnly]
+    public static void UnloadContext(ulong contextId)
+    {
+        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+        {
+            Debug.Print("Context ID is invalid");
+            return;
+        }
+        if(!contextInfo.CanBeUnloaded)
+        {
+            Debug.Print("Context cannot be unloaded");
+            return;
+        }
+        contextInfo.Context.Unload();
+        s_LoadContexts.Remove(contextId);
+    }
     /*[UnmanagedCallersOnly]
     public static void InvokeMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId, object[] args)
     {

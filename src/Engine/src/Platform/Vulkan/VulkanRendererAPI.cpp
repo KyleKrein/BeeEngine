@@ -18,6 +18,7 @@ namespace BeeEngine::Internal
 
     VulkanRendererAPI::~VulkanRendererAPI()
     {
+        FreeCommandBuffers();
     }
 
     void VulkanRendererAPI::Init()
@@ -26,10 +27,6 @@ namespace BeeEngine::Internal
         m_Window = WindowHandler::GetInstance();
         m_Device = m_GraphicsDevice->GetDevice();
         CreateCommandBuffers();
-        DeletionQueue::Main().PushFunction([this]
-        {
-            FreeCommandBuffers();
-        });
     }
 
     CommandBuffer VulkanRendererAPI::BeginFrame()

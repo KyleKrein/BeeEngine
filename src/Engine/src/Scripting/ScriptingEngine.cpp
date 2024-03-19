@@ -388,21 +388,7 @@ namespace BeeEngine
 
     void ScriptingEngine::ReloadAssemblies()
     {
-        s_Data.GameScripts.clear();
-        s_Data.EntityObjects.clear();
-        s_Data.EditableFieldsDefaults.clear();
-        s_Data.Assemblies.clear();
-
-        s_Data.EntityBaseClass = nullptr;
-        s_Data.AssetHandleField = nullptr;
-        s_Data.Texture2DClass = nullptr;
-        s_Data.FontClass = nullptr;
-        s_Data.InternalCallsClass = nullptr;
-
-        //s_Data.TimeVTable = nullptr;
-        s_Data.TotalTimeField = nullptr;
-        s_Data.DeltaTimeField = nullptr;
-        NativeToManaged::UnloadContext(s_Data.AppDomain);
+        UnloadAppContext();
 
         CreateAppDomain();
         LoadCoreAssembly(s_Data.CoreAssemblyPath);
@@ -509,6 +495,30 @@ namespace BeeEngine
     void ScriptingEngine::SetViewportSize(float width, float height)
     {
         s_Data.ViewportSize = {width, height};
+    }
+
+    void ScriptingEngine::UnloadAppContext()
+    {
+        if(s_Data.AppDomain == 0)
+        {
+            return;
+        }
+        s_Data.GameScripts.clear();
+        s_Data.EntityObjects.clear();
+        s_Data.EditableFieldsDefaults.clear();
+        s_Data.Assemblies.clear();
+
+        s_Data.EntityBaseClass = nullptr;
+        s_Data.AssetHandleField = nullptr;
+        s_Data.Texture2DClass = nullptr;
+        s_Data.FontClass = nullptr;
+        s_Data.InternalCallsClass = nullptr;
+
+        //s_Data.TimeVTable = nullptr;
+        s_Data.TotalTimeField = nullptr;
+        s_Data.DeltaTimeField = nullptr;
+        NativeToManaged::UnloadContext(s_Data.AppDomain);
+        s_Data.AppDomain = 0;
     }
 
     void ScriptingEngine::InitDotNetHost()

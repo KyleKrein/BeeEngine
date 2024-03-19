@@ -127,6 +127,8 @@ namespace BeeEngine::Internal
             return m_HasRayTracingSupport;
         }
 
+        vk::Viewport CreateVKViewport(uint32_t width, uint32_t height, float depthMin, float depthMax);
+
 
         vk::PhysicalDeviceProperties properties;
 

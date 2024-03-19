@@ -49,7 +49,7 @@ namespace BeeEngine
         Color4 ClearColor = Color4::CornflowerBlue;
         float ClearDepth = 1.0f;
         int32_t ClearRedInteger= -1;
-        //FrameBufferTextureUsage TextureUsage = FrameBufferTextureUsage::GPUOnly;
+        FrameBufferTextureUsage TextureUsage = FrameBufferTextureUsage::GPUOnly;
     };
 
     struct FrameBufferAttachmentSpecification

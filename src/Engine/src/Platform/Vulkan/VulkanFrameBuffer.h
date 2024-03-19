@@ -31,7 +31,7 @@ namespace BeeEngine::Internal
 
         [[nodiscard]] int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
     private:
-        void CreateImageAndImageView(VulkanImage& image, vk::ImageView& view, FrameBufferTextureFormat format);
+        void CreateImageAndImageView(VulkanImage& image, vk::ImageView& view, FrameBufferTextureFormat format, FrameBufferTextureUsage usage);
     private:
         RenderingQueue m_RenderingQueue;
         std::vector<FrameBufferTextureSpecification> m_ColorAttachmentSpecification;

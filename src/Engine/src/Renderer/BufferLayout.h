@@ -106,12 +106,13 @@ namespace BeeEngine
     struct BufferLayout
     {
         BufferLayout(const std::initializer_list<BufferElement> &elements);
-        BufferLayout(std::vector<BufferElement>&& inElements, std::vector<BufferElement>&& instanceElements, std::vector<BufferUniformElement>&& uniformElements);
+        BufferLayout(std::vector<BufferElement>&& inElements, std::vector<BufferElement>&& instanceElements, std::vector<BufferUniformElement>&& uniformElements, std::vector<BufferElement>&& outElements);
 
         [[nodiscard]] inline const std::vector<BufferElement> &GetElements() const { return m_Elements; }
         [[nodiscard]] inline const std::vector<BufferElement> &GetInputElements() const { return m_InElements; }
         [[nodiscard]] inline const std::vector<BufferElement> &GetInstancedElements() const { return m_InstancedElements; }
         [[nodiscard]] inline const std::vector<BufferUniformElement> &GetUniformElements() const { return m_UniformElements; }
+        [[nodiscard]] inline const std::vector<BufferElement> &GetOutputElements() const { return m_OutElements; }
         [[nodiscard]] inline uint32_t GetStride() const { return m_Stride; }
         [[nodiscard]] inline uint32_t GetInstancedStride() const { return m_InstancedStride; }
 
@@ -129,6 +130,7 @@ namespace BeeEngine
         std::vector<BufferElement> m_InElements;
         std::vector<BufferElement> m_InstancedElements;
         std::vector<BufferUniformElement> m_UniformElements;
+        std::vector<BufferElement> m_OutElements;
 
         void CalculateOffsetsAndStride();
     };
@@ -168,6 +170,14 @@ namespace BeeEngine
             BeeCoreTrace("Registered uniform element of type {0} in binding set {1} and location {2} of size {3}", ToString(type), bindingSet, location, size);
             m_UniformElements.push_back({type, bindingSet, location, size});
         }
+
+        void AddOutput(ShaderDataType type, const String& name, uint32_t location, bool normalized = false)
+        {
+            BeeCoreTrace("Registered out element of type {0} with name {1} in location {2}", ToString(type), name, location);
+            m_OutElements.emplace_back(type, name, location, normalized);
+        }
+
+        [[nodiscard]]
         BufferLayout Build()
         {
             //Flush();
@@ -183,9 +193,19 @@ namespace BeeEngine
             {
                 return a.GetBindingSet() < b.GetBindingSet() || a.GetLocation() < b.GetLocation();
             });
+            std::ranges::sort(m_OutElements, [](const BufferElement& a, const BufferElement& b)
+            {
+                return a.GetLocation() < b.GetLocation();
+            });
             BeeCoreTrace("Finished building layout");
-            return BufferLayout(std::move(m_InElements), std::move(m_InstancedElements), std::move(m_UniformElements));
+            return BufferLayout(std::move(m_InElements), std::move(m_InstancedElements), std::move(m_UniformElements), std::move(m_OutElements));
         }
+
+        void NumberOfOutputs(size_t size)
+        {
+            m_OutElements.reserve(size);
+        }
+
     private:
         void Flush()
         {
@@ -232,5 +252,6 @@ namespace BeeEngine
         std::vector<BufferElement> m_InstancedElements;
         std::vector<uint32_t> m_InstancedLocations;
         std::vector<BufferUniformElement> m_UniformElements;
+        std::vector<BufferElement> m_OutElements;
     };
 }

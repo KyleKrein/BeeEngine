@@ -47,6 +47,7 @@ namespace BeeEngine
     using FieldSetDataFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle, void* data);
     using MethodInvokeFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t methodId, void* instanceGcHandle, void** args);
     using UnmanagedMethodCreateDelegateAndSetToFieldFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* instanceGcHandle, void* functionPtr);
+    using UnloadContextFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId);
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -82,6 +83,7 @@ namespace BeeEngine
         FieldSetDataFunction FieldSetData = nullptr;
         MethodInvokeFunction MethodInvoke = nullptr;
         UnmanagedMethodCreateDelegateAndSetToFieldFunction UnmanagedMethodCreateDelegateAndSetToField = nullptr;
+        UnloadContextFunction UnloadContext = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -194,6 +196,7 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ObtainDelegate(FieldSetData);
         ObtainDelegate(MethodInvoke);
         ObtainDelegate(UnmanagedMethodCreateDelegateAndSetToField);
+        ObtainDelegate(UnloadContext);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -203,7 +206,7 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
 
     void NativeToManaged::UnloadContext(ManagedAssemblyContextID contextID)
     {
-
+        s_Data->UnloadContext(contextID);
     }
 
     void NativeToManaged::Shutdown()

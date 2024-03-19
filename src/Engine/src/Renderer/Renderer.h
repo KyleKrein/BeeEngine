@@ -121,6 +121,11 @@ namespace BeeEngine
             return s_RendererAPI->GetCurrentCommandBuffer();
         }*/
 
+        static void Shutdown()
+        {
+            s_RendererAPI.reset();
+        }
+
     private:
 
         static RenderAPI s_Api;

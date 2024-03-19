@@ -46,24 +46,12 @@ namespace BeeEngine::Internal
         rasterizer.polygonMode = vk::PolygonMode::eFill;
         rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = vk::CullModeFlagBits::eNone;
-        rasterizer.frontFace = vk::FrontFace::eClockwise;
+        rasterizer.frontFace = vk::FrontFace::eCounterClockwise;
         rasterizer.depthBiasEnable = vk::False;
 
         vk::PipelineMultisampleStateCreateInfo multisampling{};
         multisampling.sampleShadingEnable = vk::False;
         multisampling.rasterizationSamples = vk::SampleCountFlagBits::e1;
-
-        vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
-        colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-            vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-        colorBlendAttachment.blendEnable = vk::False;
-
-        vk::PipelineColorBlendStateCreateInfo colorBlending{};
-        colorBlending.logicOpEnable = vk::False;
-        colorBlending.logicOp = vk::LogicOp::eCopy;
-        colorBlending.attachmentCount = 1;
-        colorBlending.pAttachments = &colorBlendAttachment;
-        colorBlending.setBlendConstants({0.0f, 0.0f, 0.0f, 0.0f});
 
         auto descriptorSetLayouts = m_VertexShader->GetDescriptorSetLayouts();
         auto fragmentDescriptorSetLayouts = m_FragmentShader->GetDescriptorSetLayouts();
@@ -95,7 +83,22 @@ namespace BeeEngine::Internal
         depthStencil.depthBoundsTestEnable = vk::False;
         depthStencil.stencilTestEnable = vk::False;
 
+        auto [colorAttachmentFormats, colorBlendAttachments] = m_FragmentShader->GetColorAttachmentData();
+
+        vk::PipelineColorBlendStateCreateInfo colorBlending{};
+        colorBlending.logicOpEnable = vk::False;
+        colorBlending.logicOp = vk::LogicOp::eCopy;
+        colorBlending.attachmentCount = colorAttachmentFormats.size();
+        colorBlending.pAttachments = colorBlendAttachments.data();
+        colorBlending.setBlendConstants({0.0f, 0.0f, 0.0f, 0.0f});
+
+        vk::PipelineRenderingCreateInfo renderingInfo{};
+        renderingInfo.colorAttachmentCount = colorAttachmentFormats.size();
+        renderingInfo.pColorAttachmentFormats = colorAttachmentFormats.data();
+        renderingInfo.depthAttachmentFormat = vk::Format::eD32Sfloat;
+
         vk::GraphicsPipelineCreateInfo pipelineInfo{};
+        pipelineInfo.pNext = &renderingInfo;
         pipelineInfo.stageCount = 2;
         pipelineInfo.pStages = shaderStages;
         pipelineInfo.pVertexInputState = &vertexInputInfo;

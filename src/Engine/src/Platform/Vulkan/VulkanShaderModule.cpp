@@ -132,6 +132,20 @@ namespace BeeEngine::Internal
         return vk::ShaderStageFlagBits::eVertex;
     }
 
+    vk::Format ColorAttachmentFormatToVulkan(ShaderDataType type)
+    {
+        switch (type)
+        {
+            case ShaderDataType::Float:
+                return vk::Format::eR32Sfloat;
+            case ShaderDataType::Float4:
+                return vk::Format::eR8G8B8A8Unorm;
+            default:
+                BeeCoreError("Unknown ColorAttachmentFormat");
+                return vk::Format::eUndefined;
+        }
+    }
+
     void VulkanShaderModule::InitData()
     {
         if(m_Type == ShaderType::Vertex)
@@ -178,6 +192,38 @@ namespace BeeEngine::Internal
             m_VertexInputState.pVertexBindingDescriptions = m_BindingDescriptions;
             m_VertexInputState.vertexAttributeDescriptionCount = m_VertexAttributeDescriptions.size();
             m_VertexInputState.pVertexAttributeDescriptions = m_VertexAttributeDescriptions.data();
+        }
+        else if(m_Type == ShaderType::Fragment)
+        {
+            auto& outputs = m_Layout.GetOutputElements();
+            m_ColorAttachmentFormats.reserve(outputs.size());
+            m_ColorBlendAttachments.reserve(outputs.size());
+            for(auto& element : outputs)
+            {
+                m_ColorAttachmentFormats.push_back(ColorAttachmentFormatToVulkan(element.GetType()));
+            }
+            for(auto format : m_ColorAttachmentFormats)
+            {
+                vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
+                colorBlendAttachment.blendEnable = vk::False;
+                colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                    vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+                /*switch (format)
+                {
+                    case vk::Format::eR32Sfloat:
+                    {
+                        colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR;
+                    }break;
+                    case vk::Format::eR8G8B8A8Unorm:
+                    {
+                        colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                            vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+                    }break;
+                    default:
+                        BeeCoreError("Unknown color attachment format");
+                }*/
+                m_ColorBlendAttachments.push_back(colorBlendAttachment);
+            }
         }
         uniforms:
         auto& uniformElements = m_Layout.GetUniformElements();

@@ -284,6 +284,12 @@ namespace BeeEngine
                 builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.attributes.location.value());
 #endif
             }
+            auto& outputs = entryPoint.output_variables;
+            builder.NumberOfOutputs(outputs.size());
+            for(auto& output : outputs)
+            {
+                builder.AddOutput(GetShaderDataType(output.component_type, output.composition_type),output.name, output.attributes.location.value());
+            }
 
             const auto& resourceBindings = inspector.GetResourceBindings(entryPoint.name);
             BeeCoreTrace("Number of Resource Bindings: {}", resourceBindings.size());
