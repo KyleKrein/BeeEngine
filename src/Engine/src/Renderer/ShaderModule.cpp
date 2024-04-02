@@ -60,7 +60,7 @@ namespace BeeEngine
                 shaderType = ShaderStage::Compute;
                 break;
         }
-        if (!ShaderConverter::GLSLtoSPV(shaderType, glsl.data(), result))
+        if (!ShaderConverter::GLSLtoSPV(shaderType, glsl.data(), result, builder))
         {
             return result;
         }

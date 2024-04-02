@@ -167,8 +167,20 @@ namespace BeeEngine
         }
         void AddUniform(ShaderUniformDataType type, uint32_t bindingSet, uint32_t location, uint32_t size)
         {
+            for (auto& element : m_UniformElements)
+            {
+                if(element.GetBindingSet() == bindingSet && element.GetLocation() == location)
+                {
+                    BeeExpects(type == element.GetType());
+                    if(element.GetSize() != size)
+                    {
+                        element = BufferUniformElement(type, bindingSet, location, size);
+                    }
+                    return;
+                }
+            }
             BeeCoreTrace("Registered uniform element of type {0} in binding set {1} and location {2} of size {3}", ToString(type), bindingSet, location, size);
-            m_UniformElements.push_back({type, bindingSet, location, size});
+            m_UniformElements.emplace_back(type, bindingSet, location, size);
         }
 
         void AddOutput(ShaderDataType type, const String& name, uint32_t location, bool normalized = false)

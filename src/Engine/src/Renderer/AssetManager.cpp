@@ -166,6 +166,17 @@ void BeeEngine::InternalAssetManager::LoadStandardAssets()
     uint32_t data = 0xffffffff;
     auto& blank= LoadTexture("Blank", 1, 1, {(byte *)&data, 4});
 
+    //checkerboard image
+    uint32_t magenta = 0xFF00FFFF;
+    uint32_t black = 0x000000FF;
+    std::array<uint32_t, 16 *16 > pixels; //for 16x16 checkerboard texture
+    for (int x = 0; x < 16; x++) {
+        for (int y = 0; y < 16; y++) {
+            pixels[y*16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
+        }
+    }
+    auto& checkerboard = LoadTexture("Checkerboard", 16, 16, {(byte *)pixels.data(), 16 * 16 * 4});
+
     auto& spriteMaterial = LoadMaterial("Renderer2D_SpriteMaterial", "Shaders/Renderer2D_SpriteShader.vert", "Shaders/Renderer2D_SpriteShader.frag");
 
 

@@ -26,6 +26,7 @@
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/Reflection.h"
 #include "Core/AssetManagement/MeshSource.h"
+#include "Renderer/MaterialData.h"
 #include "Serialization/ISerializer.h"
 
 namespace BeeEngine
@@ -327,6 +328,7 @@ namespace BeeEngine
         //Ref<Material> Material = nullptr;
         AssetHandle MeshSourceHandle;
         bool HasMeshes = false;
+        MaterialInstance MaterialInstance;
 
         [[nodiscard]] MeshSource* MeshSource() const
         {

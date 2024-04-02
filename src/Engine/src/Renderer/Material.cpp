@@ -4,7 +4,10 @@
 
 #include "Material.h"
 
+#include "MaterialData.h"
 #include "Renderer.h"
+#include "Core/Application.h"
+#include "Core/AssetManagement/AssetManager.h"
 #include "Platform/Vulkan/VulkanMaterial.h"
 #include "Platform/WebGPU/WebGPUMaterial.h"
 
@@ -25,4 +28,19 @@ namespace BeeEngine
                 return nullptr;
         }
     }
+    static String defaultLocale = "en_En";
+    Texture2D* MaterialInstance::GetColorTexture() const
+    {
+        if(!AssetManager::IsAssetHandleValid(colorTexture))
+            return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
+        return &AssetManager::GetAsset<Texture2D>(colorTexture, defaultLocale);
+    }
+    Texture2D* MaterialInstance::GetMetalRoughTexture() const
+    {
+        if(!AssetManager::IsAssetHandleValid(metalRoughTexture))
+            return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
+        return &AssetManager::GetAsset<Texture2D>(metalRoughTexture, defaultLocale);
+    }
+
+
 }

@@ -141,6 +141,7 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/AssetManagement/MeshSourceImporter.h
         src/Core/AssetManagement/MeshSource.cpp
         src/Core/AssetManagement/MeshSource.h
+        src/Renderer/MaterialData.h
 )
 
 

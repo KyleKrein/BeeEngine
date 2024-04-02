@@ -273,6 +273,17 @@ namespace BeeEngine::Editor
                 meshComponent.HasMeshes = true;
                 meshComponent.MeshSourceHandle = handle;
             });
+
+            //Material info
+            bool upload = false;
+            if(ImGui::ColorPicker4("Color", glm::value_ptr(meshComponent.MaterialInstance.data.colorFactors)))
+                upload = true;
+            if(ImGui::DragFloat("Metalness", (float*)&meshComponent.MaterialInstance.data.metalRoughFactors.x, 0.025f, 0.0f, 1.0f))
+                upload = true;
+            if(ImGui::DragFloat("Roughness", (float*)&meshComponent.MaterialInstance.data.metalRoughFactors.y, 0.025f, 0.0f, 1.0f))
+                upload = true;
+            if(upload)
+                meshComponent.MaterialInstance.LoadData();
         });
         DrawComponentUI<TextRendererComponent>(m_EditorDomain->Translate("inspector.textRenderer"), entity, [this](TextRendererComponent& component){
            ImGui::InputTextMultiline(m_EditorDomain->Translate("text").c_str(), &component.Text);

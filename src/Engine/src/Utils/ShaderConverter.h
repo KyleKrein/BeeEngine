@@ -23,7 +23,7 @@ namespace BeeEngine
     public:
         static bool AnalyzeGLSL(const ShaderType &stage, out<BufferLayoutBuilder> layout, out<std::string> glsl);
         static bool GLSLtoSPV(const ShaderStage shader_type, const char *pshader,
-                                  std::vector<uint32_t> &spirv);
+                                  std::vector<uint32_t> &spirv, BufferLayoutBuilder& layout);
         static bool SPVtoWGSL(const std::vector<uint32_t> &spirv, std::string &wgsl);
         static BufferLayout GenerateLayout(in<std::vector<uint32_t>>spirv, BufferLayoutBuilder& layout);
         static BufferLayout GenerateLayout(in<std::string>wgsl, in<std::string> path, BufferLayoutBuilder& layout);

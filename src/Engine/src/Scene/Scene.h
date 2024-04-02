@@ -36,10 +36,21 @@ namespace BeeEngine
         friend class PrefabImporter;
         friend class SceneRenderer;
     public:
+        struct GPUSceneData {
+            glm::mat4 view;
+            glm::mat4 proj;
+            glm::mat4 viewproj;
+            glm::vec4 ambientColor;
+            glm::vec4 sunlightDirection; // w for sun power
+            glm::vec4 sunlightColor;
+        };
+
         struct SceneRendererData
         {
             Ref<UniformBuffer> CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
             Ref<BindingSet> CameraBindingSet = BindingSet::Create({{0, *CameraUniformBuffer}});
+            Ref<UniformBuffer> MeshSceneDataUniformBuffer = UniformBuffer::Create(sizeof(GPUSceneData));
+            Ref<BindingSet> MeshSceneDataBindingSet = BindingSet::Create({{0, *MeshSceneDataUniformBuffer}});
         };
 
         static Ref<Scene> Copy(Scene& scene);

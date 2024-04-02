@@ -182,6 +182,15 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         auto& sceneRendererData = scene.GetSceneRendererData();
         sceneRendererData.CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
+
+        Scene::GPUSceneData sceneData{};
+        sceneData.viewproj = viewProjectionMatrix;
+        sceneData.ambientColor = Color4{Color4::Green};
+        sceneData.sunlightDirection = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f};
+        sceneData.sunlightColor = Color4{Color4::Yellow};
+
+        sceneRendererData.MeshSceneDataUniformBuffer->SetData(&sceneData, sizeof(Scene::GPUSceneData));
+
         SceneTreeRenderer sceneTreeRenderer(viewProjectionMatrix, sceneRendererData.CameraBindingSet.get());
 
         //auto frustumPlanes = GetFrustumPlanes(viewProjectionMatrix);
@@ -244,6 +253,8 @@ namespace BeeEngine
 
             auto meshGroup = scene.m_Registry.view<MeshComponent>();
 
+
+
             for(auto entity : meshGroup)
             {
                 auto& meshComponent = meshGroup.get<MeshComponent>(entity);
@@ -258,9 +269,11 @@ namespace BeeEngine
                     int32_t EntityID;
                 } meshInstancedData {transform, static_cast<int32_t>(entity)+1};
 
+                meshComponent.MaterialInstance.LoadData();
+                std::vector bindingSets {sceneRendererData.MeshSceneDataBindingSet.get(), meshComponent.MaterialInstance.bindingSet.get()};
                 for(auto& model : meshComponent.MeshSource()->GetModels())
                 {
-                    sceneTreeRenderer.AddEntity(transform, false, model, circleBindingSets, {(byte*)&meshInstancedData, sizeof(MeshInstancedData)});
+                    sceneTreeRenderer.AddEntity(transform, false, model, bindingSets, {(byte*)&meshInstancedData, sizeof(MeshInstancedData)});
                 }
             }
         }
