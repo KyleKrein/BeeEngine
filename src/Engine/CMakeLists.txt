@@ -135,6 +135,12 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Windowing/WindowHandler/WinAPIWindowHandler.h
         src/Platform/Platform.h
         src/Renderer/CommandBuffer.cpp
+        src/Platform/Vulkan/VulkanComputePipeline.cpp
+        src/Platform/Vulkan/VulkanComputePipeline.h
+        src/Core/AssetManagement/MeshSourceImporter.cpp
+        src/Core/AssetManagement/MeshSourceImporter.h
+        src/Core/AssetManagement/MeshSource.cpp
+        src/Core/AssetManagement/MeshSource.h
 )
 
 
@@ -360,6 +366,12 @@ add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
+CPMAddPackage(
+        NAME fastgltf
+        GITHUB_REPOSITORY spnda/fastgltf
+        GIT_TAG 45cadf78895521b0379832830e628a215772d204
+)
+
 find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)
 find_package(Boost REQUIRED COMPONENTS context)
 find_package(unofficial-nethost CONFIG REQUIRED)
@@ -419,6 +431,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC MSDFGEN
         PUBLIC ${ICU_LIBRARIES}
         PUBLIC Boost::context
+        PRIVATE fastgltf
         PRIVATE unofficial::nethost::nethost
         )
 

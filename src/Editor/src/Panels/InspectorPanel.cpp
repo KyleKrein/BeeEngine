@@ -85,6 +85,7 @@ namespace BeeEngine::Editor
             AddComponentPopup<CameraComponent>("Camera", entity);
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
             AddComponentPopup<CircleRendererComponent>("Circle", entity);
+            AddComponentPopup<MeshComponent>("Mesh", entity);
             AddComponentPopup<TextRendererComponent>("Text", entity);
             //AddComponentPopup<NativeScriptComponent>("Native Script", entity);
             AddComponentPopup<ScriptComponent>("Script", entity);
@@ -236,6 +237,42 @@ namespace BeeEngine::Editor
             ImGui::ColorEdit4(m_EditorDomain->Translate("color").c_str(), circle.Color.ValuePtr());
             ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.thickness").c_str(), &circle.Thickness, 0.025f, 0.0f, 1.0f);
             ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.fade").c_str(), &circle.Fade, 0.0025f, 0.005f, 1.0f);
+        });
+
+        DrawComponentUI<MeshComponent>(m_EditorDomain->Translate("inspector.meshRenderer"), entity, [this](MeshComponent& meshComponent)
+        {
+            if(meshComponent.HasMeshes)
+            {
+                if(ImGui::Button(meshComponent.MeshSource()->Name.data()))
+                {
+                    meshComponent.HasMeshes = false;
+                }
+            }
+            else
+            {
+                ImGui::Button(m_EditorDomain->Translate("none").c_str(), ImVec2(100.0f, 0.0f));
+            }
+            ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &meshComponent](void* data, size_t size){
+                Path meshSourcePath = m_WorkingDirectory / static_cast<const char*>(data);
+                if (!ResourceManager::IsMeshSourceExtension(meshSourcePath.GetExtension()))
+                    return;
+                auto name = meshSourcePath.GetFileNameWithoutExtension().AsUTF8();
+                auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                if(!handlePtr)
+                {
+                    m_AssetManager->LoadAsset(meshSourcePath, {m_ProjectAssetRegistryID});
+                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                }
+                BeeCoreAssert(handlePtr, "Failed to load mesh source from path: {0}", meshSourcePath.AsUTF8());
+                meshComponent.HasMeshes = true;
+                meshComponent.MeshSourceHandle = *handlePtr;
+            });
+
+            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_MESHSOURCE_ITEM", [this, &meshComponent](const auto& handle){
+                BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                meshComponent.HasMeshes = true;
+                meshComponent.MeshSourceHandle = handle;
+            });
         });
         DrawComponentUI<TextRendererComponent>(m_EditorDomain->Translate("inspector.textRenderer"), entity, [this](TextRendererComponent& component){
            ImGui::InputTextMultiline(m_EditorDomain->Translate("text").c_str(), &component.Text);

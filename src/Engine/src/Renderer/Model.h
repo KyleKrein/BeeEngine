@@ -24,10 +24,10 @@ namespace BeeEngine
         }
 
         virtual ~Model() = default;
-        Model& operator=(const Model& other) = delete;
-        Model(const Model& other) = delete;
-        Model& operator=(Model&& other) = delete;
-        Model(Model&& other) = delete;
+        //Model& operator=(const Model& other) = delete;
+        //Model(const Model& other) = delete;
+        //Model& operator=(Model&& other) = delete;
+        //Model(Model&& other) = delete;
 
         void Bind(CommandBuffer& commandBuffer) const;
 

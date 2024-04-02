@@ -151,18 +151,43 @@ namespace BeeEngine::Internal
         BeeCoreInfo("Device device ID: {}", deviceProperties.deviceID);
     }
 
+    bool VulkanGraphicsDevice::CheckDeviceFeaturesSupport(const vk::PhysicalDevice& device) const
+    {
+        vk::PhysicalDeviceFeatures2 deviceFeatures2;
+        vk::PhysicalDeviceVulkan11Features deviceVulkan11Features;
+        vk::PhysicalDeviceVulkan12Features deviceVulkan12Features;
+        vk::PhysicalDeviceVulkan13Features deviceVulkan13Features;
+        deviceFeatures2.pNext = &deviceVulkan11Features;
+        deviceVulkan11Features.pNext = &deviceVulkan12Features;
+        deviceVulkan12Features.pNext = &deviceVulkan13Features;
+        vkGetPhysicalDeviceFeatures2(device, (VkPhysicalDeviceFeatures2*)&deviceFeatures2);
+
+        if(deviceFeatures2.features.samplerAnisotropy == vk::True &&
+            deviceVulkan12Features.bufferDeviceAddress == vk::True &&
+            deviceVulkan13Features.dynamicRendering == vk::True &&
+            deviceVulkan13Features.synchronization2 == vk::True &&
+            deviceVulkan12Features.descriptorIndexing == vk::True)
+        {
+            return true;
+        }
+        return false;
+    }
+
     bool VulkanGraphicsDevice::IsSuitableDevice(const vk::PhysicalDevice &device) const
     {
-        if(CheckDeviceExtensionSupport(device, requiredExtensions))
-        {
-            BeeCoreInfo("Device {} supports all required extensions", device.getProperties().deviceName.data());
-        }
-        else
+        if(!CheckDeviceExtensionSupport(device, requiredExtensions))
         {
             BeeCoreInfo("Device {} does not support all required extensions", device.getProperties().deviceName.data());
             return false;
         }
+        BeeCoreInfo("Device {} supports all required extensions", device.getProperties().deviceName.data());
 
+        if(!CheckDeviceFeaturesSupport(device))
+        {
+            BeeCoreInfo("Device {} does not support all required features", device.getProperties().deviceName.data());
+            return false;
+        }
+        BeeCoreInfo("Device {} supports all required features", device.getProperties().deviceName.data());
         return true;
     }
 
@@ -191,7 +216,7 @@ namespace BeeEngine::Internal
         BeeCoreTrace("Required Extensions for Graphics Device:");
         for (const auto& extension : requiredExtensions)
         {
-            BeeCoreTrace("{}", extension);
+            BeeCoreTrace("- {}", extension);
         }
 
         for (const auto& extension:availableExtensions)
@@ -273,6 +298,12 @@ namespace BeeEngine::Internal
 
         BeeCoreInfo("There are {} physical devices available", physicalDevices.size());
 
+        struct DeviceScore
+        {
+            vk::PhysicalDevice device;
+            uint64_t vram = 0;
+        };
+        DeviceScore bestDevice = {nullptr, 0};
         for (auto& device:physicalDevices)
         {
 #if defined(DEBUG)
@@ -280,10 +311,15 @@ namespace BeeEngine::Internal
 #endif
             if(IsSuitableDevice(device))
             {
-                m_PhysicalDevice = device;
-                break;
+                auto vram = device.getMemoryProperties().memoryHeaps[0].size;
+                if(bestDevice.device == nullptr || vram > bestDevice.vram)
+                {
+                    bestDevice = {device, vram};
+                }
             }
         }
+
+        m_PhysicalDevice = bestDevice.device;
 
         if(!m_PhysicalDevice)
         {
@@ -326,27 +362,33 @@ namespace BeeEngine::Internal
             deviceExtensions.push_back("VK_KHR_portability_subset");
         }
 
-        vk::PhysicalDeviceFeatures deviceFeatures = {};
-        deviceFeatures.samplerAnisotropy = vk::True;
-        //deviceFeatures.multiViewport = vk::True;
+        vk::PhysicalDeviceVulkan11Features deviceVulkan11Features = {};
+        vk::PhysicalDeviceVulkan12Features deviceVulkan12Features = {};
+        vk::PhysicalDeviceVulkan13Features deviceVulkan13Features = {};
 
-        vk::PhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures = {};
-        dynamicRenderingFeatures.dynamicRendering = vk::True;
+        deviceVulkan11Features.pNext = &deviceVulkan12Features;
+        deviceVulkan12Features.pNext = &deviceVulkan13Features;
+
+        vk::PhysicalDeviceFeatures2 deviceFeatures2 = {};
+        deviceFeatures2.pNext = &deviceVulkan11Features;
+
+        deviceFeatures2.features.samplerAnisotropy = vk::True;
+
+        deviceVulkan12Features.bufferDeviceAddress = vk::True;
+        deviceVulkan12Features.descriptorIndexing = vk::True;
+
+        deviceVulkan13Features.synchronization2 = vk::True;
+        deviceVulkan13Features.dynamicRendering = vk::True;
 
         vk::PhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures = {};
         rayTracingFeatures.rayTracingPipeline = HasRayTracingSupport() ? vk::True : vk::False;
 
-        dynamicRenderingFeatures.pNext = &rayTracingFeatures;
-
-        vk::PhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};
-        bufferDeviceAddressFeatures.bufferDeviceAddress = vk::True;
-
-        rayTracingFeatures.pNext = &bufferDeviceAddressFeatures;
+        deviceVulkan13Features.pNext = &rayTracingFeatures;
 
         vk::PhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures = {};
         accelerationStructureFeatures.accelerationStructure = HasRayTracingSupport() ? vk::True : vk::False;
 
-        bufferDeviceAddressFeatures.pNext = &accelerationStructureFeatures;
+        rayTracingFeatures.pNext = &accelerationStructureFeatures;
 
         std::vector<const char*> enabledLayers;
 
@@ -365,9 +407,9 @@ namespace BeeEngine::Internal
                 numberOfQueuesToCreate, queueCreateInfos.data(),
                 enabledLayers.size(), enabledLayers.data()
                 , deviceExtensions.size(), deviceExtensions.data(),
-                &deviceFeatures
+                nullptr
                 );
-        deviceInfo.pNext = &dynamicRenderingFeatures;
+        deviceInfo.pNext = &deviceFeatures2;
 
         try
         {
@@ -445,88 +487,7 @@ namespace BeeEngine::Internal
 
          CheckVkResult(commandBuffer.begin(&beginInfo));
 
-         vk::ImageMemoryBarrier barrier{};
-         barrier.oldLayout = oldLayout;
-         barrier.newLayout = newLayout;
-         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-         barrier.image = image;
-         barrier.subresourceRange.aspectMask = IsDepthFormat(format)?vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
-         barrier.subresourceRange.baseMipLevel = 0;
-         barrier.subresourceRange.levelCount = 1;
-         barrier.subresourceRange.baseArrayLayer = 0;
-         barrier.subresourceRange.layerCount = 1;
-
-         vk::PipelineStageFlags sourceStage;
-         vk::PipelineStageFlags destinationStage;
-
-         if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal) {
-             barrier.srcAccessMask = vk::AccessFlagBits::eNoneKHR;
-             barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
-
-             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
-             destinationStage = vk::PipelineStageFlagBits::eTransfer;
-         } else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-         {
-             barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-             barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-             sourceStage = vk::PipelineStageFlagBits::eTransfer;
-             destinationStage = vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader;
-             if(HasRayTracingSupport())
-                 destinationStage |= vk::PipelineStageFlagBits::eRayTracingShaderKHR;
-         } else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
-         {
-             barrier.setSrcAccessMask({});
-             barrier.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
-
-             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
-             destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-         } else if(oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::ePresentSrcKHR)
-         {
-             barrier.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
-             barrier.setDstAccessMask(vk::AccessFlagBits::eMemoryRead);
-
-             sourceStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-             destinationStage = vk::PipelineStageFlagBits::eBottomOfPipe;
-         }   else if (oldLayout == vk::ImageLayout::ePresentSrcKHR && newLayout == vk::ImageLayout::eColorAttachmentOptimal) {
-             barrier.setSrcAccessMask(vk::AccessFlagBits::eMemoryRead);
-             barrier.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
-
-             sourceStage = vk::PipelineStageFlagBits::eBottomOfPipe;
-             destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-         } else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
-         {
-             barrier.setSrcAccessMask({});
-             barrier.setDstAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
-
-             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
-                destinationStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
-         }else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eAttachmentOptimal)
-         {
-             barrier.setSrcAccessMask({});
-             barrier.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
-
-             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
-             destinationStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-         }else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-         {
-             barrier.setSrcAccessMask({});
-             barrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
-
-             sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
-             destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
-         }else{
-             throw std::invalid_argument("unsupported layout transition!");
-         }
-
-         commandBuffer.pipelineBarrier(
-             sourceStage, destinationStage,
-             vk::DependencyFlags{},
-             0, nullptr, // Memory barriers
-             0, nullptr, // Buffer barriers
-             1, &barrier // Image barriers
-         );
+         TransitionImageLayout(commandBuffer, image, format, oldLayout, newLayout);
 
          commandBuffer.end();
 
@@ -540,8 +501,105 @@ namespace BeeEngine::Internal
          m_Device.freeCommandBuffers(m_CommandPool, commandBuffer);
     }
 
+    void VulkanGraphicsDevice::TransitionImageLayout(vk::CommandBuffer cmd, vk::Image image, vk::Format format,
+        vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+    {
+        vk::ImageMemoryBarrier2 barrier{};
+         barrier.oldLayout = oldLayout;
+         barrier.newLayout = newLayout;
+         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+         barrier.image = image;
+         barrier.subresourceRange.aspectMask = IsDepthFormat(format)?vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
+         barrier.subresourceRange.baseMipLevel = 0;
+         barrier.subresourceRange.levelCount = 1;
+         barrier.subresourceRange.baseArrayLayer = 0;
+         barrier.subresourceRange.layerCount = 1;
+
+         //vk::PipelineStageFlags2 sourceStage;
+         //vk::PipelineStageFlags2 destinationStage;
+
+         if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal) {
+             barrier.srcAccessMask = vk::AccessFlagBits2::eNone;
+             barrier.dstAccessMask = vk::AccessFlagBits2::eTransferWrite;
+
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eTransfer;
+
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eTransfer;
+         } else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+         {
+             barrier.srcAccessMask = vk::AccessFlagBits2::eTransferWrite;
+             barrier.dstAccessMask = vk::AccessFlagBits2::eShaderRead;
+
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTransfer;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader | vk::PipelineStageFlagBits2::eComputeShader;
+             if(HasRayTracingSupport())
+                 barrier.dstStageMask |= vk::PipelineStageFlagBits2::eRayTracingShaderKHR;
+         } else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
+         {
+             barrier.setSrcAccessMask({});
+             barrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
+
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+         } else if(oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::ePresentSrcKHR)
+         {
+             barrier.setSrcAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
+             barrier.setDstAccessMask(vk::AccessFlagBits2::eMemoryRead);
+
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
+         }   else if (oldLayout == vk::ImageLayout::ePresentSrcKHR && newLayout == vk::ImageLayout::eColorAttachmentOptimal) {
+             barrier.setSrcAccessMask(vk::AccessFlagBits2::eMemoryRead);
+             barrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
+
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+         } else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+         {
+             barrier.setSrcAccessMask({});
+             barrier.setDstAccessMask(vk::AccessFlagBits2::eDepthStencilAttachmentRead | vk::AccessFlagBits2::eDepthStencilAttachmentWrite);
+
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests;
+         }else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eAttachmentOptimal)
+         {
+             barrier.setSrcAccessMask({});
+             barrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
+
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+         }else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+         {
+             barrier.setSrcAccessMask({});
+             barrier.setDstAccessMask(vk::AccessFlagBits2::eShaderRead);
+
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
+         }else{
+             static std::vector<std::pair<vk::ImageLayout, vk::ImageLayout>> unsupportedTransitions;
+             auto pair = std::make_pair(oldLayout, newLayout);
+             if(std::ranges::find(unsupportedTransitions, pair) == unsupportedTransitions.end())
+             {
+                 unsupportedTransitions.push_back(pair);
+                 BeeCoreWarn("Unsupported image layout transition! From {} to {}. Fallback to default", vk::to_string(oldLayout), vk::to_string(newLayout));
+             }
+             barrier.srcStageMask = vk::PipelineStageFlagBits2::eAllCommands;
+             barrier.srcAccessMask = vk::AccessFlagBits2::eMemoryWrite;
+             barrier.dstStageMask = vk::PipelineStageFlagBits2::eAllCommands;
+             barrier.dstAccessMask = vk::AccessFlagBits2::eMemoryRead | vk::AccessFlagBits2::eMemoryWrite;
+         }
+        vk::DependencyInfo dependencyInfo{};
+        dependencyInfo.imageMemoryBarrierCount = 1;
+        dependencyInfo.pImageMemoryBarriers = &barrier;
+
+         cmd.pipelineBarrier2(dependencyInfo);
+    }
+
     void VulkanGraphicsDevice::CreateDescriptorSet(vk::DescriptorSetAllocateInfo& info,
-        vk::DescriptorSet* outDescriptorSet) const
+                                                   vk::DescriptorSet* outDescriptorSet) const
     {
         info.descriptorPool = m_DescriptorPool;
         CheckVkResult(m_Device.allocateDescriptorSets(&info, outDescriptorSet));
@@ -572,16 +630,17 @@ namespace BeeEngine::Internal
         //let the VMA library know that this data should be writeable by CPU, but also readable by GPU
         VmaAllocationCreateInfo vmaallocInfo = {};
         vmaallocInfo.usage = memoryUsage;
+        //vmaallocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
         if(memoryUsage == VMA_MEMORY_USAGE_AUTO)
         {
-            vmaallocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+            vmaallocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
         }
         //allocate the buffer
         VulkanBuffer buffer;
         auto result = vmaCreateBuffer(m_DeviceHandle.allocator, &bufferInfo, &vmaallocInfo,
                                       (VkBuffer*)&buffer.Buffer,
                                       &buffer.Memory,
-                                      nullptr);
+                                      &buffer.Info);
         if(result != VK_SUCCESS)
         {
             throw std::runtime_error("failed to allocate buffer!");
@@ -702,6 +761,49 @@ namespace BeeEngine::Internal
         EndSingleTimeCommands(commandBuffer);
     }
 
+    void VulkanGraphicsDevice::CopyImageToImage(vk::CommandBuffer cmd, vk::Image source, vk::Image destination,
+        vk::Extent2D srcSize, vk::Extent2D dstSize)
+    {
+        vk::ImageBlit2 region{};
+
+        region.srcOffsets[0].x = srcSize.width;
+        region.srcOffsets[0].y = srcSize.height;
+        region.srcOffsets[0].z = 1;
+
+        region.dstOffsets[0].x = dstSize.width;
+        region.dstOffsets[0].y = dstSize.height;
+        region.dstOffsets[0].z = 1;
+
+        region.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+        region.srcSubresource.layerCount = 1;
+        region.srcSubresource.mipLevel = 0;
+        region.srcSubresource.baseArrayLayer = 0;
+
+        region.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+        region.dstSubresource.layerCount = 1;
+        region.dstSubresource.mipLevel = 0;
+        region.dstSubresource.baseArrayLayer = 0;
+
+        vk::BlitImageInfo2 blitInfo{};
+        blitInfo.srcImage = source;
+        blitInfo.srcImageLayout = vk::ImageLayout::eTransferSrcOptimal;
+        blitInfo.dstImage = destination;
+        blitInfo.dstImageLayout = vk::ImageLayout::eTransferDstOptimal;
+        blitInfo.regionCount = 1;
+        blitInfo.pRegions = &region;
+        blitInfo.filter = vk::Filter::eLinear;
+
+        cmd.blitImage2(blitInfo);
+    }
+
+    void VulkanGraphicsDevice::CopyImageToImage(vk::Image source, vk::Image destination, vk::Extent2D srcSize,
+        vk::Extent2D dstSize)
+    {
+        auto cmd = BeginSingleTimeCommands();
+        CopyImageToImage(cmd, source, destination, srcSize, dstSize);
+        EndSingleTimeCommands(cmd);
+    }
+
     void
     VulkanGraphicsDevice::CreateImageWithInfo(const vk::ImageCreateInfo& imageInfo,
                  const vk::ImageViewCreateInfo& imageViewInfo,
@@ -728,6 +830,8 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to create image view!");
         }
+        outImage.Format = imageInfo.format;
+        outImage.Extent = vk::Extent2D{imageInfo.extent.width, imageInfo.extent.height};
         BeeCoreTrace("Created Vulkan VMA Image successfully! Image count: {}", ++VulkanImageCount);
     }
 

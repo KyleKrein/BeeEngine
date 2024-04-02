@@ -181,6 +181,8 @@ namespace BeeEngine::Editor
                 return "ASSET_BROWSER_FONT_ITEM";
             case AssetType::Prefab:
                 return "ASSET_BROWSER_PREFAB_ITEM";
+            case AssetType::MeshSource:
+                return "ASSET_BROWSER_MESHSOURCE_ITEM";
             default:
                 return "ASSET_BROWSER_UNKNOWN_ITEM";
         }

@@ -12,6 +12,7 @@ namespace BeeEngine::Internal
     {
         vk::Buffer Buffer;
         VmaAllocation Memory {VK_NULL_HANDLE};
+        VmaAllocationInfo Info;
         //VulkanBuffer() = default;
 
         /*VulkanBuffer(VulkanBuffer&& other) noexcept

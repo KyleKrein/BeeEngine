@@ -76,10 +76,7 @@ namespace BeeEngine::Internal
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
             m_Extent = capabilities.currentExtent;
         } else {
-            auto& window = *WindowHandler::GetInstance();
-            //int width, height;
-            //SDL_GetWindowSize((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
-            vk::Extent2D actualExtent = vk::Extent2D {window.GetWidth(), window.GetHeight()};
+            vk::Extent2D actualExtent = m_Extent;
             actualExtent.width = std::max(
                     capabilities.minImageExtent.width,
                     std::min(capabilities.maxImageExtent.width, actualExtent.width));
@@ -149,25 +146,28 @@ namespace BeeEngine::Internal
         }
         m_ImagesInFlight[*imageIndex] = m_InFlightFences[m_CurrentFrame];
 
-        vk::SubmitInfo submitInfo = {};
-        submitInfo.sType = vk::StructureType::eSubmitInfo;
+        vk::SubmitInfo2 submitInfo = {};
 
-        vk::Semaphore waitSemaphores[] = {m_ImageAvailableSemaphores[m_CurrentFrame]};
-        vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
+        auto semaphoreSubmitInfo = VulkanInitializer::SemaphoreSubmitInfo(m_ImageAvailableSemaphores[m_CurrentFrame], vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+        std::vector<vk::CommandBufferSubmitInfo> commandBufferSubmitInfos;
+        commandBufferSubmitInfos.reserve(count);
+        for(size_t i = 0; i < count; i++)
+        {
+            commandBufferSubmitInfos.push_back(VulkanInitializer::CommandBufferSubmitInfo(buffers[i]));
+        }
+        submitInfo.commandBufferInfoCount = static_cast<uint32_t>(commandBufferSubmitInfos.size());
+        submitInfo.pCommandBufferInfos = commandBufferSubmitInfos.data();
+        submitInfo.waitSemaphoreInfoCount = 1;
+        submitInfo.pWaitSemaphoreInfos = &semaphoreSubmitInfo;
 
-        submitInfo.commandBufferCount = count;
-        submitInfo.pCommandBuffers = buffers;
-
-        vk::Semaphore signalSemaphores[] = {m_RenderFinishedSemaphores[m_CurrentFrame]};
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        submitInfo.signalSemaphoreInfoCount = 1;
+        auto signalSemaphoreSubmitInfo = VulkanInitializer::SemaphoreSubmitInfo(m_RenderFinishedSemaphores[m_CurrentFrame], vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+        submitInfo.pSignalSemaphoreInfos = &signalSemaphoreSubmitInfo;
 
         CheckVkResult(device.resetFences(1, &m_InFlightFences[m_CurrentFrame]));
         auto queue = m_GraphicsDevice.GetGraphicsQueue();
-        return queue.submit(1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
+
+        return queue.submit2(1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
     }
 
     void VulkanSwapChain::CreateImageViews()
@@ -195,8 +195,6 @@ namespace BeeEngine::Internal
     void VulkanSwapChain::CreateSwapChain()
     {
         SwapChainSupportDetails swapChainSupport = m_GraphicsDevice.GetSwapChainSupportDetails();
-        
-        m_MaxFrames = swapChainSupport.capabilities.maxImageCount;
 
         ChooseSurfaceFormat(swapChainSupport.formats);
         ChoosePresentMode(swapChainSupport.presentModes);
@@ -207,6 +205,8 @@ namespace BeeEngine::Internal
             imageCount > swapChainSupport.capabilities.maxImageCount) {
             imageCount = swapChainSupport.capabilities.maxImageCount;
         }
+
+        m_MaxFrames = imageCount;
 
         vk::SwapchainCreateInfoKHR createInfo = {};
         createInfo.sType = vk::StructureType::eSwapchainCreateInfoKHR;

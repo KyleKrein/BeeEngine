@@ -16,6 +16,8 @@ namespace BeeEngine::Internal
         {
             case FrameBufferTextureFormat::RGBA8:
                 return vk::Format::eR8G8B8A8Unorm;
+            case FrameBufferTextureFormat::RGBA16F:
+                return vk::Format::eR16G16B16A16Sfloat;
             case FrameBufferTextureFormat::RedInteger:
                 return vk::Format::eR32Sfloat;
             case FrameBufferTextureFormat::Depth24:
@@ -199,6 +201,7 @@ namespace BeeEngine::Internal
             m_Preferences.Height < std::numeric_limits<uint32_t>::max());
         if(m_Initiated)
         {
+            m_GraphicsDevice.GetDevice().waitIdle(); //ImGui_ImplVulkan_RemoveTexture fails because descriptor set is in use. And I have no idea, how to overcome this.
             for (size_t i = 0; i < m_ColorAttachmentsTextures.size(); ++i)
             {
                 m_GraphicsDevice.DestroyImageWithView(m_ColorAttachmentsTextures[i], m_ColorAttachmentsTextureViews[i]);

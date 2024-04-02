@@ -19,6 +19,7 @@ namespace BeeEngine
         None = 0,
         //color
         RGBA8,
+        RGBA16F,
         RedInteger,
 
         //depth/stencil

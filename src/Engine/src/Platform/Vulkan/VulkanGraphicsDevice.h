@@ -58,6 +58,7 @@ namespace BeeEngine::Internal
             return *m_SwapChain;
         }
         void TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+        void TransitionImageLayout(vk::CommandBuffer cmd, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
         /*VulkanPipeline& GetPipeline()
         {
@@ -109,6 +110,8 @@ namespace BeeEngine::Internal
 
         void CopyBufferToImage(
                 vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height, uint32_t layerCount);
+        void CopyImageToImage(vk::CommandBuffer cmd, vk::Image source, vk::Image destination, vk::Extent2D srcSize, vk::Extent2D dstSize);
+        void CopyImageToImage(vk::Image source, vk::Image destination, vk::Extent2D srcSize, vk::Extent2D dstSize);
 
         void CreateImageWithInfo(
                  const vk::ImageCreateInfo& imageInfo,
@@ -199,6 +202,8 @@ namespace BeeEngine::Internal
         bool m_SwapChainRebuildRequested = false;
 
         void LogDeviceProperties(vk::PhysicalDevice &device) const;
+
+        bool CheckDeviceFeaturesSupport(const vk::PhysicalDevice& device) const;
 
         bool IsSuitableDevice(const vk::PhysicalDevice &device) const;
 

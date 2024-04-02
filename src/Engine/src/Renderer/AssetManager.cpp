@@ -209,6 +209,8 @@ void BeeEngine::InternalAssetManager::LoadStandardAssets()
     auto& lineModel = LoadModel("Renderer_Line", lineMaterial, lineMesh);
 
     auto& openSansRegularFont = LoadFont("OpenSansRegular", Internal::GetEmbeddedResource(EmbeddedResource::OpenSansRegular));
+
+    auto& defaultMeshMaterial = LoadMaterial("Renderer_DefaultMeshMaterial", "Shaders/Renderer_MeshDefaultShader.vert", "Shaders/Renderer_MeshDefaultShader.frag");
 }
 
 void BeeEngine::InternalAssetManager::CleanUp()

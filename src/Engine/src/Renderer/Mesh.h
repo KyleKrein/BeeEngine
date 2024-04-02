@@ -7,12 +7,32 @@
 #include "Vertex.h"
 #include "BufferLayout.h"
 #include "CommandBuffer.h"
+#include "Core/AssetManagement/Asset.h"
 
 namespace BeeEngine
 {
-    class Mesh
+    struct MeshDefaultVertex
+    {
+        glm::vec3 position;
+        float uv_x;
+        glm::vec3 normal;
+        float uv_y;
+        glm::vec4 color;
+    };
+    struct GeoSurface
+    {
+        uint32_t startIndex;
+        uint32_t count;
+    };
+    class Mesh: public Asset
     {
     public:
+        constexpr AssetType GetType() const override
+        {
+            return AssetType::Mesh;
+        }
+
+        std::vector<GeoSurface> Surfaces;
         Mesh() = default;
         virtual ~Mesh() = default;
         [[nodiscard]] virtual uint32_t GetVertexCount() const = 0;

@@ -25,6 +25,7 @@
 #include "Core/TypeSequence.h"
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/Reflection.h"
+#include "Core/AssetManagement/MeshSource.h"
 #include "Serialization/ISerializer.h"
 
 namespace BeeEngine
@@ -126,7 +127,7 @@ namespace BeeEngine
         float TilingFactor = 1.0f;
         bool HasTexture = false;
 
-        Texture2D* Texture(const String& locale) const
+        [[nodiscard]] Texture2D* Texture(const String& locale) const
         {
             BeeExpects(HasTexture);
             BeeExpects(AssetManager::IsAssetHandleValid(TextureHandle));
@@ -320,8 +321,23 @@ namespace BeeEngine
         }*/
     };
 
+    struct MeshComponent
+    {
+        //Ref<Mesh> Mesh = nullptr;
+        //Ref<Material> Material = nullptr;
+        AssetHandle MeshSourceHandle;
+        bool HasMeshes = false;
+
+        [[nodiscard]] MeshSource* MeshSource() const
+        {
+            BeeExpects(HasMeshes);
+            BeeExpects(AssetManager::IsAssetHandleValid(MeshSourceHandle));
+            return &AssetManager::GetAsset<BeeEngine::MeshSource>(MeshSourceHandle);
+        }
+    };
+
     using AllComponents =
             TypeSequence<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
-            SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
-            RigidBody2DComponent, BoxCollider2DComponent, HierarchyComponent>;
+            SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, ScriptComponent, NativeScriptComponent,
+            RigidBody2DComponent, BoxCollider2DComponent, HierarchyComponent, MeshComponent>;
 }

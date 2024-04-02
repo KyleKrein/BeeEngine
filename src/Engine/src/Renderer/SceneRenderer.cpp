@@ -241,6 +241,28 @@ namespace BeeEngine
                 sceneTreeRenderer.AddText(textComponent.Text, &textComponent.Font(locale), Math::ToGlobalTransform(Entity{entity, &scene}), textComponent.Configuration,
                                  static_cast<int32_t>(entity)+1);
             }
+
+            auto meshGroup = scene.m_Registry.view<MeshComponent>();
+
+            for(auto entity : meshGroup)
+            {
+                auto& meshComponent = meshGroup.get<MeshComponent>(entity);
+                if(!meshComponent.HasMeshes)
+                    continue;
+                Entity e = {entity, &scene};
+                glm::mat4 transform = Math::ToGlobalTransform(e);
+
+                struct MeshInstancedData
+                {
+                    glm::mat4 Model;
+                    int32_t EntityID;
+                } meshInstancedData {transform, static_cast<int32_t>(entity)+1};
+
+                for(auto& model : meshComponent.MeshSource()->GetModels())
+                {
+                    sceneTreeRenderer.AddEntity(transform, false, model, circleBindingSets, {(byte*)&meshInstancedData, sizeof(MeshInstancedData)});
+                }
+            }
         }
 
         //auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;

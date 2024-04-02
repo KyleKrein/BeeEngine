@@ -4,6 +4,7 @@
 
 #include "Pipeline.h"
 #include "Renderer.h"
+#include "Platform/Vulkan/VulkanComputePipeline.h"
 #include "Platform/Vulkan/VulkanPipeline.h"
 #include "Platform/WebGPU/WebGPUPipeline.h"
 
@@ -29,6 +30,22 @@ namespace BeeEngine
             default:
                 BeeCoreError("Unknown renderer API");
                 return nullptr;
+        }
+    }
+
+    Ref<Pipeline> Pipeline::Create(const Ref<ShaderModule>& computeShader)
+    {
+        BeeExpects(computeShader->GetType() == ShaderType::Compute);
+        switch (Renderer::GetAPI())
+        {
+#if defined(BEE_COMPILE_VULKAN)
+            case Vulkan:
+                return CreateRef<Internal::VulkanComputePipeline>(computeShader);
+#endif
+            case NotAvailable:
+                default:
+                    BeeCoreError("Unknown renderer API");
+            return nullptr;
         }
     }
 }

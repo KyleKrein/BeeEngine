@@ -64,5 +64,34 @@ namespace BeeEngine::Internal
 
         return info;
     }
+
+    vk::ImageSubresourceRange VulkanInitializer::ImageSubresourceRange(vk::ImageAspectFlags aspectFlags)
+    {
+        vk::ImageSubresourceRange subresourceRange = {};
+        subresourceRange.aspectMask = aspectFlags;
+        subresourceRange.baseMipLevel = 0;
+        subresourceRange.levelCount = vk::RemainingMipLevels;
+        subresourceRange.baseArrayLayer = 0;
+        subresourceRange.layerCount = vk::RemainingArrayLayers;
+        return subresourceRange;
+    }
+
+    vk::SemaphoreSubmitInfo VulkanInitializer::SemaphoreSubmitInfo(vk::Semaphore semaphore,
+        vk::PipelineStageFlags2 stageFlags)
+    {
+        vk::SemaphoreSubmitInfo info = {};
+        info.semaphore = semaphore;
+        info.stageMask = stageFlags;
+        info.deviceIndex = 0;
+        info.value = 1;
+        return info;
+    }
+
+    vk::CommandBufferSubmitInfo VulkanInitializer::CommandBufferSubmitInfo(vk::CommandBuffer commandBuffer)
+    {
+        vk::CommandBufferSubmitInfo info = {};
+        info.commandBuffer = commandBuffer;
+        return info;
+    }
 }
 #endif

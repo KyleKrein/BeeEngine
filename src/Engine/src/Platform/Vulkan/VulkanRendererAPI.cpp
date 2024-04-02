@@ -65,8 +65,9 @@ namespace BeeEngine::Internal
         BeeExpects(commandBuffer == GetCurrentCommandBuffer());
 
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
 
-        m_GraphicsDevice->TransitionImageLayout(swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
+        m_GraphicsDevice->TransitionImageLayout(cmd, swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
             vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
         vk::RenderingInfo renderingInfo{};
 
@@ -92,7 +93,6 @@ namespace BeeEngine::Internal
         renderingInfo.pDepthAttachment = nullptr;
 
         //m_GraphicsDevice->GetGraphicsQueue().waitIdle();
-        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         cmd.beginRendering(&renderingInfo, g_vkDynamicLoader);
         vk::Viewport viewport{};
         viewport.x = 0.0f;
@@ -121,10 +121,11 @@ namespace BeeEngine::Internal
 
     void VulkanRendererAPI::EndFrame()
     {
-        SubmitCommandBuffer(GetCurrentCommandBuffer());
+        auto cmd = GetCurrentCommandBuffer().GetBufferHandleAs<vk::CommandBuffer>();
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
-        m_GraphicsDevice->TransitionImageLayout(swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
+        m_GraphicsDevice->TransitionImageLayout(cmd, swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
             vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
+        SubmitCommandBuffer(GetCurrentCommandBuffer());
         auto result = swapchain.PresentImage(&m_CurrentImageIndex);
         if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
         {
@@ -190,7 +191,7 @@ namespace BeeEngine::Internal
 
     void VulkanRendererAPI::RecreateSwapChain()
     {
-        uint32_t width = m_Window->GetWidth(), height = m_Window->GetHeight();
+        uint32_t width = m_Window->GetWidthInPixels(), height = m_Window->GetHeightInPixels();
         m_GraphicsDevice->WindowResized(width, height);
 
         if(m_GraphicsDevice->GetSwapChain().ImageCount() != m_CommandBuffers.size())
