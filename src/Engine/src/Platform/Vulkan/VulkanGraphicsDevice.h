@@ -14,7 +14,7 @@
 
 namespace BeeEngine::Internal
 {
-    class VulkanGraphicsDevice: public GraphicsDevice
+    class VulkanGraphicsDevice final: public GraphicsDevice
     {
     public:
         VulkanGraphicsDevice(VulkanInstance& instance);
@@ -137,6 +137,11 @@ namespace BeeEngine::Internal
 
         static VulkanGraphicsDevice &GetInstance();
 
+        uint64_t GetVRAM() const override
+        {
+            return m_VRAM;
+        }
+
     private:
         vk::DescriptorPool m_DescriptorPool;
         mutable bool m_HasRayTracingSupport = false;
@@ -181,6 +186,7 @@ namespace BeeEngine::Internal
         Scope<VulkanSwapChain> m_SwapChain;
         vk::Device m_Device;
         vk::PhysicalDevice m_PhysicalDevice;
+        uint64_t m_VRAM = 0;
         vk::Queue m_GraphicsQueue;
         vk::Queue m_PresentQueue;
 

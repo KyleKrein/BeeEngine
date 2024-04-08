@@ -51,6 +51,11 @@ namespace BeeEngine
         return 0;
     }
 
+    uint64_t Hardware::GetGPUVRAM()
+    {
+        return WindowHandler::GetInstance()->GetGraphicsDevice().GetVRAM();
+    }
+
     BeeEngine::Hardware::SystemTheme BeeEngine::Hardware::GetSystemTheme()
     {
         using enum BeeEngine::Hardware::SystemTheme;

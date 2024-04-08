@@ -244,6 +244,27 @@ list(APPEND SOURCE_FILES ${SCRIPTING_SOURCE_FILES})
 
 add_library(BeeEngine ${SOURCE_FILES})
 
+#add_custom_target(BuildBeeEngineScriptingLibs
+#    COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE}
+#    WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting"
+#    COMMENT "Building C# libraries for scripting support"
+#)
+
+#add_dependencies(BeeEngine BuildBeeEngineScriptingLibs)
+# Запускаем dotnet build во время конфигурации
+execute_process(
+    COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting"
+    RESULT_VARIABLE dotnet_result
+    OUTPUT_VARIABLE dotnet_output
+    ERROR_VARIABLE dotnet_error
+)
+
+if(NOT dotnet_result EQUAL "0")
+    message(FATAL_ERROR "Failed to build BeeEngineScripting: ${dotnet_error}")
+else()
+    message(STATUS "C# libraries for scripting support built successfully")
+endif()
 #[[if(IOS OR APPLE)
     set(CMAKE_Swift_LANGUAGE_VERSION 5)
     add_library(BeeEngine_Internal_Swift STATIC

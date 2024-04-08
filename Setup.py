@@ -80,7 +80,7 @@ def install_dependencies():
             subprocess.run(['choco', 'install', 'cmake'])
         if not check_version_installed('cl'):
             # Поиск папки установки MSVC
-            vs_installation_paths = glob.glob("C:/Program Files (x86)/Microsoft Visual Studio/*/BuildTools/VC/Tools/MSVC/*")
+            vs_installation_paths = glob.glob("C:/Program Files/Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*") + glob.glob("C:/Program Files (x86)/Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*") + glob.glob("C:/Program Files/Microsoft Visual Studio/2022/*/BuildTools/VC/Tools/MSVC/*") + glob.glob("C:/Program Files (x86)/Microsoft Visual Studio/2022/*/BuildTools/VC/Tools/MSVC/*")
             if not vs_installation_paths:
                 logging.info("MSVC Build Tools not found. Installing...")
                 subprocess.run(['choco', 'install', 'visualstudio2022buildtools'])
@@ -92,8 +92,9 @@ def install_dependencies():
         if not check_version_installed('ninja'):
             logging.info("Installing Ninja...")
             subprocess.run(["choco", "install", "ninja"], check=True)
-        if not check_version_installed("mono", "6.12"):
-            subprocess.run(['choco', 'install', 'mono'], check=True)
+        if not check_version_installed('dotnet'):
+            logging.info("Installing .NET SDK...")
+            subprocess.run(["choco", "install", "dotnet-sdk"], check=True)
 
     elif os_name == 'Darwin':
         check_and_install_brew()
@@ -110,8 +111,9 @@ def install_dependencies():
         if not check_version_installed('ninja'):
             logging.info("Installing Ninja...")
             subprocess.run(["brew", "install", "ninja"], check=True)
-        if not check_version_installed("mono", "6.12"):
-            subprocess.run(['brew', 'install', 'mono'], check=True)
+        if not check_version_installed('dotnet'):
+            logging.info("Installing .NET SDK...")
+            subprocess.run(["brew", "install", "dotnet"], check=True)
 
     elif os_name == 'Linux':
         if not check_version_installed('git'):
@@ -130,8 +132,9 @@ def install_dependencies():
         if not check_version_installed('ninja'):
             logging.info("Installing Ninja...")
             subprocess.run(["sudo", "apt", "install", "-y", "ninja-build"], check=True)
-        if not check_version_installed("mono", "6.12"):
-            subprocess.run(['sudo', 'apt', 'install', '-y', 'mono-complete'], check=True)
+        if not check_version_installed('dotnet'):
+            logging.info("Installing .NET SDK...")
+            subprocess.run(["sudo", "apt-get", "install", "-y", "dotnet-sdk"], check=True)
 
 
 def init_git_submodules():
@@ -143,23 +146,6 @@ def init_git_submodules():
         logging.error("Failed to initialize Git submodules. You might want to try running 'git submodule update --init --recursive' manually.")
 
 
-def build_csharp_project_with_mono():
-    logging.info("Building C# project with Mono...")
-    sln_path = 'src/BeeEngineScripting/BeeEngineScripting.sln'
-
-    if os.path.exists(sln_path):
-        try:
-            subprocess.run(['msbuild', '/p:Configuration=Release', '/p:Platform=Any CPU', sln_path], check=True)
-            subprocess.run(['msbuild', '/p:Configuration=Debug', '/p:Platform=Any CPU', sln_path], check=True)
-            logging.info("C# project built successfully.")
-        except subprocess.CalledProcessError:
-            raise Exception("Failed to build C# project")
-    else:
-        raise Exception(
-            f"Solution file not found at {sln_path}. Current working directory: {os.getcwd()}. Please make sure you are in the right place.")
-
-
 if __name__ == '__main__':
     install_dependencies()
     init_git_submodules()
-    build_csharp_project_with_mono()

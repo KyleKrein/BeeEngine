@@ -320,6 +320,7 @@ namespace BeeEngine::Internal
         }
 
         m_PhysicalDevice = bestDevice.device;
+        m_VRAM = bestDevice.vram;
 
         if(!m_PhysicalDevice)
         {

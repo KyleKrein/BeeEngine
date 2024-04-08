@@ -248,9 +248,36 @@ namespace BeeEngine::Internal
     {
         return ::MonitorFromWindow(m_Window, MONITOR_DEFAULTTONEAREST);
     }
-
-    BeeEngine::Key ConvertKeyCode(WPARAM wParam)
+    //https://stackoverflow.com/questions/15966642/how-do-you-tell-lshift-apart-from-rshift-in-wm-keydown-events
+    WPARAM MapLeftRightKeys( WPARAM vk, LPARAM lParam)
     {
+        WPARAM new_vk = vk;
+        UINT scancode = (lParam & 0x00ff0000) >> 16;
+        int extended  = (lParam & 0x01000000) != 0;
+
+        switch (vk) {
+            case VK_SHIFT:
+                new_vk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK_EX);
+            break;
+            case VK_CONTROL:
+                new_vk = extended ? VK_RCONTROL : VK_LCONTROL;
+            break;
+            case VK_MENU:
+                new_vk = extended ? VK_RMENU : VK_LMENU;
+            break;
+            default:
+                // not a key we map from generic to left/right specialized
+                    //  just return it.
+                        new_vk = vk;
+            break;
+        }
+
+        return new_vk;
+    }
+
+    BeeEngine::Key ConvertKeyCode(WPARAM wParam, LPARAM lParam)
+    {
+        wParam = MapLeftRightKeys(wParam, lParam);
         switch(wParam)
         {
             case VK_SPACE: return BeeEngine::Key::Space;
@@ -269,6 +296,32 @@ namespace BeeEngine::Internal
             case '7': return BeeEngine::Key::D7;
             case '8': return BeeEngine::Key::D8;
             case '9': return BeeEngine::Key::D9;
+            case 'A': return BeeEngine::Key::A;
+            case 'B': return BeeEngine::Key::B;
+            case 'C': return BeeEngine::Key::C;
+            case 'D': return BeeEngine::Key::D;
+            case 'E': return BeeEngine::Key::E;
+            case 'F': return BeeEngine::Key::F;
+            case 'G': return BeeEngine::Key::G;
+            case 'H': return BeeEngine::Key::H;
+            case 'I': return BeeEngine::Key::I;
+            case 'J': return BeeEngine::Key::J;
+            case 'K': return BeeEngine::Key::K;
+            case 'L': return BeeEngine::Key::L;
+            case 'M': return BeeEngine::Key::M;
+            case 'N': return BeeEngine::Key::N;
+            case 'O': return BeeEngine::Key::O;
+            case 'P': return BeeEngine::Key::P;
+            case 'Q': return BeeEngine::Key::Q;
+            case 'R': return BeeEngine::Key::R;
+            case 'S': return BeeEngine::Key::S;
+            case 'T': return BeeEngine::Key::T;
+            case 'U': return BeeEngine::Key::U;
+            case 'V': return BeeEngine::Key::V;
+            case 'W': return BeeEngine::Key::W;
+            case 'X': return BeeEngine::Key::X;
+            case 'Y': return BeeEngine::Key::Y;
+            case 'Z': return BeeEngine::Key::Z;
             case VK_OEM_1: return BeeEngine::Key::Semicolon;
             case VK_OEM_PLUS: return BeeEngine::Key::Equal;
             case VK_OEM_4: return BeeEngine::Key::LeftBracket;
@@ -333,27 +386,12 @@ namespace BeeEngine::Internal
             case VK_MULTIPLY: return BeeEngine::Key::KeyPadMultiply;
             case VK_SUBTRACT: return BeeEngine::Key::KeyPadSubtract;
             case VK_ADD: return BeeEngine::Key::KeyPadAdd;
-            case VK_SHIFT:
-            {
-                auto result = GetAsyncKeyState(VK_LSHIFT);
-                if(result & 0x8000)
-                    return BeeEngine::Key::LeftShift;
-                return BeeEngine::Key::RightShift;
-            }
-            case VK_CONTROL:
-            {
-                auto result = GetAsyncKeyState(VK_LCONTROL);
-                if(result & 0x8000)
-                    return BeeEngine::Key::LeftControl;
-                return BeeEngine::Key::RightControl;
-            }
-            case VK_MENU:
-            {
-                auto result = GetAsyncKeyState(VK_LMENU);
-                if(result & 0x8000)
-                    return BeeEngine::Key::LeftAlt;
-                return BeeEngine::Key::RightAlt;
-            }
+            case VK_LSHIFT: return BeeEngine::Key::LeftShift;
+            case VK_RSHIFT: return BeeEngine::Key::RightShift;
+            case VK_LCONTROL: return BeeEngine::Key::LeftControl;
+            case VK_RCONTROL: return BeeEngine::Key::RightControl;
+            case VK_LMENU: return BeeEngine::Key::LeftAlt;
+            case VK_RMENU: return BeeEngine::Key::RightAlt;
             case VK_LWIN: return BeeEngine::Key::LeftSuper;
             case VK_RWIN: return BeeEngine::Key::RightSuper;
             case VK_APPS: return BeeEngine::Key::Menu;
@@ -470,7 +508,7 @@ namespace BeeEngine::Internal
             case WM_KEYUP:
             case WM_KEYDOWN:
             {
-                auto key = ConvertKeyCode(w_param);
+                auto key = ConvertKeyCode(w_param, l_param);
                 bool8_t isKeyDown = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
                 if(isKeyDown)
                     g_EventQueue->AddEvent(CreateScope<KeyPressedEvent>(key,IS_KEY_REPEAT(l_param) ? GET_KEY_REPEAT_COUNT(l_param) : 1));
