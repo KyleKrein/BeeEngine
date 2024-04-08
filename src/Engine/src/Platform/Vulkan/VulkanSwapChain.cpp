@@ -167,7 +167,7 @@ namespace BeeEngine::Internal
         CheckVkResult(device.resetFences(1, &m_InFlightFences[m_CurrentFrame]));
         auto queue = m_GraphicsDevice.GetGraphicsQueue();
 
-        return queue.submit2(1, &submitInfo, m_InFlightFences[m_CurrentFrame]);
+        return queue.submit2KHR(1, &submitInfo, m_InFlightFences[m_CurrentFrame], g_vkDynamicLoader);
     }
 
     void VulkanSwapChain::CreateImageViews()

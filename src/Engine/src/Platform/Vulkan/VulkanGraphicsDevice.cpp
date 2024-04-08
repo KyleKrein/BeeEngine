@@ -28,7 +28,8 @@ namespace BeeEngine::Internal
         VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
         VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
         VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME
 };
     VulkanGraphicsDevice* VulkanGraphicsDevice::s_Instance = nullptr;
     PFN_vkCmdTraceRaysKHR CmdTraceRaysKHR = nullptr;
@@ -164,11 +165,31 @@ namespace BeeEngine::Internal
 
         if(deviceFeatures2.features.samplerAnisotropy == vk::True &&
             deviceVulkan12Features.bufferDeviceAddress == vk::True &&
+#if !defined(MACOS) && !defined(IOS)
             deviceVulkan13Features.dynamicRendering == vk::True &&
             deviceVulkan13Features.synchronization2 == vk::True &&
+#endif
             deviceVulkan12Features.descriptorIndexing == vk::True)
         {
             return true;
+        }
+#if !defined(MACOS) && !defined(IOS)
+        if(deviceVulkan13Features.synchronization2 != vk::True)
+        {
+            BeeCoreError("Device does not support synchronization2");
+        }
+        if(deviceVulkan13Features.dynamicRendering != vk::True)
+        {
+            BeeCoreError("Device does not support dynamic rendering");
+        }
+#endif
+        if(deviceVulkan12Features.descriptorIndexing != vk::True)
+        {
+            BeeCoreError("Device does not support descriptor indexing");
+        }
+        if(deviceVulkan12Features.bufferDeviceAddress != vk::True)
+        {
+            BeeCoreError("Device does not support buffer device address");
         }
         return false;
     }
@@ -596,7 +617,7 @@ namespace BeeEngine::Internal
         dependencyInfo.imageMemoryBarrierCount = 1;
         dependencyInfo.pImageMemoryBarriers = &barrier;
 
-         cmd.pipelineBarrier2(dependencyInfo);
+         cmd.pipelineBarrier2(dependencyInfo, g_vkDynamicLoader);
     }
 
     void VulkanGraphicsDevice::CreateDescriptorSet(vk::DescriptorSetAllocateInfo& info,
