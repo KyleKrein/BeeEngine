@@ -6,6 +6,8 @@
 #include "Core/CodeSafety/Expects.h"
 #define UTF_CPP_CPLUSPLUS 201703L
 #include <utf8.h>
+#include <unicode/ucnv.h>
+#include <unicode/unistr.h>
 
 namespace BeeEngine
 {
@@ -183,5 +185,22 @@ namespace BeeEngine
     : m_String(&string)
     {
         BeeExpects(IsValidString(string));
+    }
+    
+    UTF8String ToUppercase(std::string_view string)
+    {
+        icu::UnicodeString unicodeString = icu::UnicodeString::fromUTF8(string);
+        unicodeString.toUpper();
+        UTF8String result;
+        unicodeString.toUTF8String(result);
+        return result;
+    }
+    UTF8String ToLowercase(std::string_view string)
+    {
+        icu::UnicodeString unicodeString = icu::UnicodeString::fromUTF8(string);
+        unicodeString.toLower();
+        UTF8String result;
+        unicodeString.toUTF8String(result);
+        return result;
     }
 }

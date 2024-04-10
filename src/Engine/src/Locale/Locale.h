@@ -8,6 +8,7 @@
 #include <variant>
 
 #include "Core/String.h"
+#include "Core/CodeSafety/Expects.h"
 #include "Core/ToString.h"
 #include "Core/Logging/Log.h"
 #include "Core/Path.h"
@@ -19,23 +20,118 @@
 #include <unicode/ustream.h>
 #include <coroutine>
 #include "Core/Coroutines/Generator.h"
+#include "Core/Hash.h"
 namespace BeeEngine
 {
     class ScriptGlue;
 }
 namespace BeeEngine::Locale
 {
-    UTF8String GetSystemLocale();
+    class Localization
+    {
+        public:
+        const static Localization Default;
+        Localization(): Localization("en_Us") {};
+        Localization(UTF8String&& locale)
+        : m_Locale(std::move(locale)), m_Language(m_Locale.substr(0, 2))
+        {
+            BeeExpects(m_Locale.size() == 2 || m_Locale.size() == 5);
+            if(m_Locale.size() != 5) //does not contain both language and country
+            {
+                m_Locale += '_' + ToUppercase({m_Locale.begin(), m_Locale.begin() + 1}) + *(m_Locale.begin() + 1);
+            }
+        }
+        Localization(const UTF8String& locale)
+        : m_Locale(locale), m_Language(m_Locale.substr(0, 2))
+        {
+            BeeExpects(m_Locale.size() == 2 || m_Locale.size() == 5);
+            if(m_Locale.size() != 5) //does not contain both language and country
+            {
+                m_Locale += '_' + ToUppercase({m_Locale.begin(), m_Locale.begin() + 1}) + *(m_Locale.begin() + 1);
+            }
+        }
+        Localization(Localization&& other) noexcept
+        : m_Locale(std::move(other.m_Locale)), m_Language(std::move(other.m_Language))
+        {}
+        Localization(const Localization& other)
+        : m_Locale(other.m_Locale), m_Language(other.m_Language)
+        {}
+        Localization& operator=(const Localization& other)
+        {
+            m_Locale = other.m_Locale;
+            m_Language = other.m_Language;
+            return *this;
+        }
+        Localization& operator=(Localization&& other) noexcept
+        {
+            m_Locale = std::move(other.m_Locale);
+            m_Language = std::move(other.m_Language);
+            return *this;
+        }
+        std::string_view GetLanguage() const
+        {
+            return {m_Locale.begin(), m_Locale.begin() + 2};
+        }
+        const String& GetLanguageString() const
+        {
+            return m_Language;
+        }
+        std::string_view GetCountry() const
+        {
+            return {m_Locale.begin() + 3, m_Locale.end()};
+        }
+        const auto& GetLocale() const
+        {
+            return m_Locale;
+        }
+        constexpr auto operator <=>(const Localization& other) const noexcept
+        {
+            return m_Locale <=> other.m_Locale;
+        }
+        constexpr auto operator <=>(const UTF8String& other) const noexcept
+        {
+            return m_Locale <=> other;
+        }
+        constexpr bool operator ==(const Localization& other) const noexcept
+        {
+            return m_Locale == other.m_Locale;
+        }
+        uint64_t Hash(uint64_t seed = 0) const
+        {
+            return std::hash<std::string>{}(m_Locale);
+        }
+        String ToString() const
+        {
+            return m_Locale;
+        }
+        private:
+        UTF8String m_Locale;
+        UTF8String m_Language;
+    };
+}
+namespace std
+{
+    template<>
+    struct hash<BeeEngine::Locale::Localization>
+    {
+        std::size_t operator()(const BeeEngine::Locale::Localization& key) const
+        {
+            return key.Hash();
+        }
+    };
+}
+namespace BeeEngine::Locale
+{
+    Localization GetSystemLocale();
     class Domain
     {
         friend class LocalizationGenerator;
         friend class ImGuiLocalizationPanel;
         friend BeeEngine::ScriptGlue;
 
-        using Locale = UTF8String;
-        using ValueVariationsMap = std::unordered_map<UTF8String, UTF8String>;
-        using KeyMap = std::unordered_map<UTF8String, ValueVariationsMap>;
-        using LanguageMap = std::unordered_map<Locale, KeyMap>;
+        using Locale = Localization;
+        using KeyMap = std::unordered_map<UTF8String, UTF8String>;
+        using LanguageMap = std::unordered_map<UTF8String, KeyMap>;
     public:
         Domain(const UTF8String& name)
         : m_Name(name)
@@ -58,24 +154,20 @@ namespace BeeEngine::Locale
         }
         void AddLocale(const Locale& locale)
         {
-            m_Languages[locale] = KeyMap();
-        }
-        void AddLocale(Locale&& locale)
-        {
-            m_Languages[std::move(locale)] = KeyMap();
+            m_Languages[locale.GetLanguageString()] = KeyMap();
         }
         void AddLocalizationSource(const Locale& locale, const Path& path)
         {
             m_LocalizationSources[locale].push_back(path);
         }
-        void AddLocaleKey(const Locale& locale, const UTF8String& key, const UTF8String& value, const UTF8String& variation = "default")
+        void AddLocaleKey(const Locale& locale, const UTF8String& key, const UTF8String& value)
         {
-            m_Languages[locale][key][variation] = value;
+            m_Languages[locale.GetLanguageString()][key] = value;
         }
         void SetLocale(const Locale& locale)
         {
             m_Locale = locale;
-            if (!m_Languages.contains(locale))
+            if (!m_Languages.contains(locale.GetLanguageString()))
             {
                 AddLocale(locale);
             }
@@ -95,21 +187,21 @@ namespace BeeEngine::Locale
             static_assert(sizeof...(args) % 2 == 0, "Translate() requires an even number of arguments for key-value pairs.");
             AreKeysStrings<Args...>(std::index_sequence_for<Args...>{});
 
-            auto localeData = m_Languages.find(m_Locale);
+            auto localeData = m_Languages.find(m_Locale.GetLanguageString());
             if (localeData == m_Languages.end())
             {
                 return key;
             }
 
             auto keyData = localeData->second.find(key);
-            if (keyData == localeData->second.end() || !keyData->second.contains("default"))
+            if (keyData == localeData->second.end())
             {
                 return key;
             }
 
-            UTF8String pattern = keyData->second["default"];
+            UTF8String& pattern = keyData->second;
             UErrorCode status = U_ZERO_ERROR;
-            icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.c_str()), status);
+            icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.GetLocale().c_str()), status);
 
             if(!U_SUCCESS(status))
             {
@@ -161,21 +253,21 @@ namespace BeeEngine::Locale
             //static_assert(sizeof...(args) % 2 == 0, "Translate() requires an even number of arguments for key-value pairs.");
             //AreKeysStrings<Args...>(std::index_sequence_for<Args...>{});
 
-            auto localeData = m_Languages.find(m_Locale);
+            auto localeData = m_Languages.find(m_Locale.GetLanguageString());
             if (localeData == m_Languages.end())
             {
                 return key;
             }
 
             auto keyData = localeData->second.find(key);
-            if (keyData == localeData->second.end() || !keyData->second.contains("default"))
+            if (keyData == localeData->second.end())
             {
                 return key;
             }
 
-            UTF8String pattern = keyData->second["default"];
+            UTF8String& pattern = keyData->second;
             UErrorCode status = U_ZERO_ERROR;
-            icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.c_str()), status);
+            icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.GetLocale().c_str()), status);
 
             if(!U_SUCCESS(status))
             {

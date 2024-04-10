@@ -91,7 +91,7 @@ namespace BeeEngine::Editor
                     }
                     default:
                     {
-                        icon = &AssetManager::GetAsset<Texture2D>(EngineAssetRegistry::FileTexture, "en_US");
+                        icon = &AssetManager::GetAsset<Texture2D>(EngineAssetRegistry::FileTexture, Locale::Localization::Default);
                         break;
                     }
                 }

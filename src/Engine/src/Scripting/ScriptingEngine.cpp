@@ -468,7 +468,7 @@ namespace BeeEngine
     }
     const String& ScriptingEngine::GetScriptingLocale()
     {
-        return s_Data.LocaleDomain->GetLocale();
+        return s_Data.LocaleDomain->GetLocale().GetLanguageString();
     }
 
     void ScriptingEngine::SetMousePosition(int x, int y)

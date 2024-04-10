@@ -10,15 +10,15 @@
 #include <vector>
 #include <utility>
 #include <Gui/ImGui/ImGuiExtension.h>
+#include "Locale.h"
 
 namespace BeeEngine::Locale
 {
     class Domain;
     class ImGuiLocalizationPanel
     {
-        using VariantToValuePair = std::pair<String, String>;
-        using KeyToVariantsPair = std::pair<String, std::vector<VariantToValuePair>>;
-        using LocaleToKeyMap = std::unordered_map<String, std::vector<KeyToVariantsPair>>;
+        using KeyToValuePair = std::pair<String, String>;
+        using LocaleToKeyMap = std::unordered_map<String, std::vector<KeyToValuePair>>;
     public:
         ImGuiLocalizationPanel(Domain& domain, const Path& path);
         void Render(ImGuiWindowFlags flags = ImGuiWindowFlags_None, bool canBeClosed = true);
@@ -27,14 +27,13 @@ namespace BeeEngine::Locale
     private:
         Domain* m_Domain;
         Path m_WorkingDirectory;
-        String m_SelectedLocale;
+        Localization m_SelectedLocale;
         LocaleToKeyMap m_LocaleKeys;
-        std::tuple<String, String, String> m_ValueToRemove;
-        std::pair<String, String> m_KeyToRemove;
+        std::pair<Localization, String> m_KeyToRemove;
         bool m_IsOpened = false;
 
         void RenderUpperPanel();
 
-        void RenderKeysAndValues(bool &removeValue, bool &removeKey);
+        void RenderKeysAndValues(bool &removeKey);
     };
 }

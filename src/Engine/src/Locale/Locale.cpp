@@ -21,11 +21,12 @@
 #endif
 namespace BeeEngine::Locale
 {
-    UTF8String GetSystemLocale() {
+    const Localization Localization::Default = {"en_US"};
+    Localization GetSystemLocale() {
 #if defined(WINDOWS)
       wchar_t lang[LOCALE_NAME_MAX_LENGTH];
       if (GetUserDefaultLocaleName(lang, LOCALE_NAME_MAX_LENGTH)) {
-        return Internal::WStringToUTF8(lang);
+        return {Internal::WStringToUTF8(lang)};
       }
 #elif defined(MACOS) || defined(IOS)
       CFArrayRef preferredLangs = CFLocaleCopyPreferredLanguages();
@@ -34,16 +35,16 @@ namespace BeeEngine::Locale
         if (langRef) {
           char lang[256];
           CFStringGetCString(langRef, lang, sizeof(lang), kCFStringEncodingUTF8);
-          return std::string(lang);
+          return {std::string(lang)};
         }
       }
 #elif defined(LINUX)
       const char* lang = std::getenv("LANG");
       if (lang) {
-        return std::string(lang);
+        return {std::string(lang)};
       }
 #endif
-      return "en_US"; // Fallback to English
+      return Localization::Default; // Fallback to English
     }
 
     void Domain::Build()
@@ -63,7 +64,7 @@ namespace BeeEngine::Locale
         locales.reserve(m_LocalizationSources.size());
         for(auto& [locale, paths] : m_LocalizationSources)
         {
-            locales.push_back(locale);
+            locales.push_back(locale.GetLocale());
         }
         std::ranges::sort(locales);
         for(auto& locale : locales)
@@ -79,11 +80,10 @@ namespace BeeEngine::Locale
 
     UTF8String Domain::Translate(const char *key)
     {
-        if(m_Languages.contains(m_Locale) &&
-                m_Languages[m_Locale].contains(key) &&
-                m_Languages[m_Locale][key].contains("default"))
+        if(m_Languages.contains(m_Locale.GetLanguageString()) &&
+                m_Languages[m_Locale.GetLanguageString()].contains(key))
         {
-            return m_Languages[m_Locale][key]["default"];
+            return m_Languages[m_Locale.GetLanguageString()][key];
         }
         return key;
     }

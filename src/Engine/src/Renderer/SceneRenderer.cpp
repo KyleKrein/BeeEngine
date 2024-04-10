@@ -177,9 +177,10 @@ namespace BeeEngine
         // Сфера пересекает все плоскости фрустума или полностью внутри фрустума
         return true;
     }
-    void SceneRenderer::RenderScene(Scene &scene, CommandBuffer &commandBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix,const std::vector<glm::vec4>& frustumPlanes/* const Math::Cameras::Frustum& frustum*/)
+    void SceneRenderer::RenderScene(Scene &scene, CommandBuffer &commandBuffer, const Locale::Localization& localization, const glm::mat4 &viewProjectionMatrix,const std::vector<glm::vec4>& frustumPlanes/* const Math::Cameras::Frustum& frustum*/)
     {
         BEE_PROFILE_FUNCTION();
+        auto& locale = localization.GetLanguageString();
         auto& sceneRendererData = scene.GetSceneRendererData();
         sceneRendererData.CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
 
@@ -292,7 +293,7 @@ namespace BeeEngine
         commandBuffer.Flush();
     }
 
-    void SceneRenderer::RenderScene(Scene &scene, CommandBuffer &commandBuffer, const String& locale)
+    void SceneRenderer::RenderScene(Scene &scene, CommandBuffer &commandBuffer, const Locale::Localization& locale)
     {
         SceneCamera* mainCamera = nullptr;
         glm::mat4 cameraTransform;

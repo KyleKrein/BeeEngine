@@ -26,13 +26,13 @@ namespace BeeEngine
         static Texture2D* s_BlankTexture;
     public:
         static void Init();
-        static void RenderScene(Scene& scene, CommandBuffer &commandBuffer, const String& locale, const glm::mat4& viewProjectionMatrix, const std::vector<glm::vec4>& frustumPlanes/*const Math::Cameras::Frustum& frustum*/);
-        static void RenderScene(Scene& scene, CommandBuffer &commandBuffer, const String& locale);
+        static void RenderScene(Scene& scene, CommandBuffer &commandBuffer, const Locale::Localization& locale, const glm::mat4& viewProjectionMatrix, const std::vector<glm::vec4>& frustumPlanes/*const Math::Cameras::Frustum& frustum*/);
+        static void RenderScene(Scene& scene, CommandBuffer &commandBuffer, const Locale::Localization& locale);
 
         static void RenderPhysicsColliders(Scene& scene, CommandBuffer &commandBuffer, const glm::mat4& viewProjectionMatrix);
         static void RenderPhysicsColliders(Scene& scene, CommandBuffer &commandBuffer, BindingSet& cameraBindingSet);
         template<CameraClass T>
-        static void RenderScene(Scene& scene, CommandBuffer &commandBuffer, const String& locale, const T& camera, const glm::mat4& viewProjectionMatrix, const glm::vec3& position, const glm::vec3& forwardDirection, const glm::vec3& upDirection, const glm::vec3& rightDirection)
+        static void RenderScene(Scene& scene, CommandBuffer &commandBuffer, const Locale::Localization& locale, const T& camera, const glm::mat4& viewProjectionMatrix, const glm::vec3& position, const glm::vec3& forwardDirection, const glm::vec3& upDirection, const glm::vec3& rightDirection)
         {
             Math::Cameras::Frustum frustum = Math::Cameras::CreateFrustumFromCamera(position, forwardDirection,
                                                       rightDirection, upDirection,

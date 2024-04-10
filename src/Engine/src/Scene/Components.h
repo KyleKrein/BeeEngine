@@ -128,7 +128,7 @@ namespace BeeEngine
         float TilingFactor = 1.0f;
         bool HasTexture = false;
 
-        [[nodiscard]] Texture2D* Texture(const String& locale) const
+        [[nodiscard]] Texture2D* Texture(const Locale::Localization& locale) const
         {
             BeeExpects(HasTexture);
             BeeExpects(AssetManager::IsAssetHandleValid(TextureHandle));

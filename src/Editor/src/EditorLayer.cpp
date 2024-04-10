@@ -31,8 +31,8 @@ namespace BeeEngine::Editor
         m_EditorLocaleDomain.Build();
         ConsoleOutput::SetOutputProvider(&m_Console);
         SetUpMenuBar();
-        m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture, "en_US");
-        m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture, "en_US");
+        m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture, Locale::Localization::Default);
+        m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture, Locale::Localization::Default);
 
         m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());

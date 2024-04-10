@@ -195,7 +195,7 @@ namespace BeeEngine::Editor
                 String textureLabel;
                 if(textureAsset.GetType() == AssetType::Localized)
                 {
-                    textureLabel = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                    textureLabel = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                 }
                 else
                 {
@@ -291,7 +291,7 @@ namespace BeeEngine::Editor
            String fontLabel;
            if(fontAsset.GetType() == AssetType::Localized)
            {
-               fontLabel = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+               fontLabel = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
            }
            else
            {
@@ -535,7 +535,7 @@ namespace BeeEngine::Editor
                             auto& textureAsset = AssetManager::GetAsset<Asset>(value);
                             if(textureAsset.GetType() == AssetType::Localized)
                             {
-                                textureName = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                                textureName = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                             }
                             else
                             {
@@ -602,7 +602,7 @@ namespace BeeEngine::Editor
                             auto& fontAsset = AssetManager::GetAsset<Asset>(value);
                             if(fontAsset.GetType() == AssetType::Localized)
                             {
-                                fontName = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                                fontName = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                             }
                             else
                             {
@@ -669,7 +669,7 @@ namespace BeeEngine::Editor
                             auto& prefabAsset = AssetManager::GetAsset<Asset>(value);
                             if(prefabAsset.GetType() == AssetType::Localized)
                             {
-                                prefabName = String(prefabAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(prefabAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                                prefabName = String(prefabAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(prefabAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                             }
                             else
                             {
