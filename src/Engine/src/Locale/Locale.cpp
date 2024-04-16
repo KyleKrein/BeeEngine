@@ -78,12 +78,12 @@ namespace BeeEngine::Locale
 
     }
 
-    UTF8String Domain::Translate(const char *key)
+    UTF8String Domain::Translate(const char *key) const
     {
         if(m_Languages.contains(m_Locale.GetLanguageString()) &&
-                m_Languages[m_Locale.GetLanguageString()].contains(key))
+                m_Languages.at(m_Locale.GetLanguageString()).contains(key))
         {
-            return m_Languages[m_Locale.GetLanguageString()][key];
+            return m_Languages.at(m_Locale.GetLanguageString()).at(key);
         }
         return key;
     }

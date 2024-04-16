@@ -106,5 +106,9 @@ namespace BeeEngine::Editor
         void SaveAssetRegistry();
 
         void DeleteAsset(const AssetHandle &handle);
+
+        String GenerateImGuiINIFile() const;
+
+        void SetDefaultImGuiWindowLayoutIfNotPresent();
     };
 }

@@ -178,11 +178,11 @@ namespace BeeEngine::Locale
             return m_Locale;
         }
         void Build();
-        UTF8String Translate(const char* key);
+        UTF8String Translate(const char* key) const;
 
 
         template<typename... Args>
-        UTF8String Translate(const char *key, Args&&... args)
+        UTF8String Translate(const char *key, Args&&... args) const
         {
             static_assert(sizeof...(args) % 2 == 0, "Translate() requires an even number of arguments for key-value pairs.");
             AreKeysStrings<Args...>(std::index_sequence_for<Args...>{});
@@ -199,7 +199,7 @@ namespace BeeEngine::Locale
                 return key;
             }
 
-            UTF8String& pattern = keyData->second;
+            const UTF8String& pattern = keyData->second;
             UErrorCode status = U_ZERO_ERROR;
             icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.GetLocale().c_str()), status);
 
@@ -248,7 +248,7 @@ namespace BeeEngine::Locale
         }
     private:
         template<typename... Args>
-        UTF8String TranslateRuntime(const char *key, std::vector<std::variant<Args...>>& args)
+        UTF8String TranslateRuntime(const char *key, std::vector<std::variant<Args...>>& args) const
         {
             //static_assert(sizeof...(args) % 2 == 0, "Translate() requires an even number of arguments for key-value pairs.");
             //AreKeysStrings<Args...>(std::index_sequence_for<Args...>{});
@@ -265,7 +265,7 @@ namespace BeeEngine::Locale
                 return key;
             }
 
-            UTF8String& pattern = keyData->second;
+            const UTF8String& pattern = keyData->second;
             UErrorCode status = U_ZERO_ERROR;
             icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.GetLocale().c_str()), status);
 
@@ -316,7 +316,7 @@ namespace BeeEngine::Locale
 
 
         template <typename... Args, size_t... Indices>
-        inline void AreKeysStrings(std::index_sequence<Indices...>)
+        inline void AreKeysStrings(std::index_sequence<Indices...>) const
         {
             static_assert(((Indices % 2 != 0 || std::is_convertible_v<std::tuple_element_t<Indices, std::tuple<Args...>>, String>) && ...),
                           "Translate() requires key-value pairs, where key is convertible to String.");
