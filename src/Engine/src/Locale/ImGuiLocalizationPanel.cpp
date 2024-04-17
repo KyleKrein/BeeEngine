@@ -127,7 +127,7 @@ namespace BeeEngine::Locale
             size_t j = 0;
             static std::vector<String> *valuesPtr = nullptr;
             static size_t variationIndex = 0;
-            ImGui::BeginTable("localization_table", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders);
+            ImGui::BeginTable("localization_table", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders);
             ImGui::TableSetupColumn("Keys");
             ImGui::TableSetupColumn("Value");
             ImGui::TableHeadersRow();
@@ -137,7 +137,7 @@ namespace BeeEngine::Locale
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
                 float columnWidth = ImGui::GetColumnWidth();
-                ImGui::PushItemWidth(columnWidth - buttonWidth - ImGui::GetStyle().ItemSpacing.x);
+                ImGui::PushItemWidth(columnWidth /*- ImGui::GetStyle().ItemSpacing.x*/);
                 String tempKey = key;
                 if(ImGui::InputText(FormatString("##Key {}", i).c_str(), &tempKey, ImGuiInputTextFlags_EnterReturnsTrue))
                 {
@@ -166,6 +166,11 @@ namespace BeeEngine::Locale
                     ImGui::EndPopup();
                 }
                 ImGui::PopItemWidth();
+                ImGui::TableSetColumnIndex(1);
+                columnWidth = ImGui::GetColumnWidth();
+                ImGui::PushItemWidth(columnWidth -
+                                         (buttonWidth + ImGui::GetStyle().ItemSpacing.x));
+                ImGui::InputText(FormatString("##Value {}", j).c_str(), &value);
                 ImGui::SameLine();
                 if (ImGui::Button(/*"-"*/FormatString("-## {}", i).c_str(), {buttonWidth, buttonWidth}))
                 {
@@ -189,11 +194,6 @@ namespace BeeEngine::Locale
                     }
                     ImGui::EndPopup();
                 }
-                ImGui::TableSetColumnIndex(1);
-                columnWidth = ImGui::GetColumnWidth();
-                ImGui::PushItemWidth(columnWidth -
-                                         (buttonWidth + ImGui::GetStyle().ItemSpacing.x));
-                ImGui::InputText(FormatString("##Value {}", j).c_str(), &value);
                 ImGui::PopItemWidth();
                 i++;
             }

@@ -15,7 +15,7 @@ namespace BeeEngine::LocalizationTool
     public:
         void OnAttach() override;
         void OnDetach() override;
-        void OnUpdate() override;
+        void OnUpdate(FrameData& frameData) override;
         void OnGUIRendering() override;
         void OnEvent(BeeEngine::EventDispatcher &e) override;
     private:
