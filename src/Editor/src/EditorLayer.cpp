@@ -25,14 +25,16 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnAttach() noexcept
     {
+
         m_EditorLocaleDomain.SetLocale(Locale::GetSystemLocale());
         auto localizationFilesPaths = Locale::LocalizationGenerator::GetLocalizationFiles(std::filesystem::current_path() / "Localization");
         Locale::LocalizationGenerator::ProcessLocalizationFiles(m_EditorLocaleDomain, localizationFilesPaths);
         m_EditorLocaleDomain.Build();
+        SetDefaultImGuiWindowLayoutIfNotPresent();
         ConsoleOutput::SetOutputProvider(&m_Console);
         SetUpMenuBar();
-        m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture, "en_US");
-        m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture, "en_US");
+        m_PlayButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture, Locale::Localization::Default);
+        m_StopButtonTexture = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture, Locale::Localization::Default);
 
         m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
         m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
@@ -49,7 +51,7 @@ namespace BeeEngine::Editor
         }
         ConsoleOutput::SetOutputProvider(nullptr);
     }
-    void EditorLayer::OnUpdate() noexcept
+    void EditorLayer::OnUpdate(FrameData& frameData) noexcept
     {
         BEE_PROFILE_FUNCTION();
         std::unique_lock lock(m_BigLock);
@@ -461,7 +463,10 @@ namespace BeeEngine::Editor
         bool ctrl = Input::KeyPressed(Key::LeftControl) || Input::KeyPressed(Key::RightControl);
         if(ctrl && Input::KeyPressed(Key::S))
         {
-            SaveScene();
+            Application::SubmitToMainThread([this]()
+            {
+                SaveScene();
+            });
             return true;
         }
         return false;
@@ -502,5 +507,127 @@ namespace BeeEngine::Editor
         }
         m_EditorAssetManager.RemoveAsset(handle);
         SaveAssetRegistry();
+    }
+    
+    String EditorLayer::GenerateImGuiINIFile() const
+    {
+        std::ostringstream s;
+        s << R"([Window][DockSpace Demo]
+Pos=0,0
+Size=1280,720
+Collapsed=0)";
+        s << '\n' << '\n';
+        s << R"([Window][Debug##Default]
+Pos=60,60
+Size=400,400
+Collapsed=0)";
+        s << '\n' << '\n';
+        s << R"([Window][Project]
+Pos=0,34
+Size=908,686
+Collapsed=0
+DockId=0x0000000E,0)";
+        s << '\n' << '\n';
+        s << R"([Window][Profiler]
+Pos=910,34
+Size=370,486
+Collapsed=0
+DockId=0x00000007,0)";
+        s << '\n' << '\n';
+        s << R"([Window][Renderer Statistics]
+Pos=910,34
+Size=370,486
+Collapsed=0
+DockId=0x00000007,2)";
+        s << '\n' << '\n';
+        s << R"([Window][Allocator statistics]
+Pos=910,34
+Size=370,486
+Collapsed=0
+DockId=0x00000007,1)";
+        s << '\n' << '\n';
+        s << R"([Window][##Toolbar]
+Pos=371,34
+Size=537,31
+Collapsed=0
+DockId=0x0000000D,0)";
+        s << '\n' << '\n';
+        s << R"([Window][##Viewport]
+Pos=371,67
+Size=537,312
+Collapsed=0
+DockId=0x0000000E,0)";
+        s << '\n' << '\n';
+        s << "[Window][" << m_EditorLocaleDomain.Translate("sceneHierarchyPanel") << R"(]
+Pos=0,34
+Size=369,345
+Collapsed=0
+DockId=0x0000000B,0)";
+        s << '\n' << '\n';
+        s << "[Window][" << m_EditorLocaleDomain.Translate("inspector") << R"(]
+Pos=910,34
+Size=370,486
+Collapsed=0
+DockId=0x00000007,3)";
+        s << '\n' << '\n';
+        s << "[Window][" << m_EditorLocaleDomain.Translate("contentBrowserPanel") << R"(]
+Pos=0,381
+Size=536,339
+Collapsed=0
+DockId=0x00000005,0)";
+        s << '\n' << '\n';
+        s << "[Window][" << m_EditorLocaleDomain.Translate("assetPanel") << R"(]
+Pos=538,381
+Size=370,339
+Collapsed=0
+DockId=0x00000006,0)";
+        s << '\n' << '\n';
+        s << R"([Window][FPS]
+Pos=910,623
+Size=370,97
+Collapsed=0
+DockId=0x0000000A,0)";
+        s << '\n' << '\n';
+        s << R"([Window][Output Console]
+Pos=0,381
+Size=536,339
+Collapsed=0
+DockId=0x00000005,1)";
+        s << '\n' << '\n';
+        s << R"([Window][Settings]
+Pos=910,522
+Size=370,99
+Collapsed=0
+DockId=0x00000009,0)";
+        s << '\n' << '\n';
+        s << R"([Docking][Data]
+DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X Selected=0xD04A4B96
+  DockNode        ID=0x00000002 Parent=0x3BC79352 SizeRef=908,686 Split=Y Selected=0xD04A4B96
+    DockNode      ID=0x00000003 Parent=0x00000002 SizeRef=908,345 Split=X
+      DockNode    ID=0x0000000B Parent=0x00000003 SizeRef=369,345 Selected=0xCB122D77
+      DockNode    ID=0x0000000C Parent=0x00000003 SizeRef=537,345 Split=Y Selected=0x064DAA9B
+        DockNode  ID=0x0000000D Parent=0x0000000C SizeRef=537,31 HiddenTabBar=1 Selected=0x766B88B3
+        DockNode  ID=0x0000000E Parent=0x0000000C SizeRef=537,312 CentralNode=1 HiddenTabBar=1 Selected=0x064DAA9B
+    DockNode      ID=0x00000004 Parent=0x00000002 SizeRef=908,339 Split=X Selected=0x93769EF8
+      DockNode    ID=0x00000005 Parent=0x00000004 SizeRef=536,339 Selected=0x98E83348
+      DockNode    ID=0x00000006 Parent=0x00000004 SizeRef=370,339 Selected=0x53414144
+  DockNode        ID=0x00000001 Parent=0x3BC79352 SizeRef=370,686 Split=Y Selected=0x1B782AF8
+    DockNode      ID=0x00000007 Parent=0x00000001 SizeRef=370,486 Selected=0x1B782AF8
+    DockNode      ID=0x00000008 Parent=0x00000001 SizeRef=370,198 Split=Y Selected=0x54723243
+      DockNode    ID=0x00000009 Parent=0x00000008 SizeRef=370,99 Selected=0x54723243
+      DockNode    ID=0x0000000A Parent=0x00000008 SizeRef=370,97 Selected=0x6108FA95
+)";
+    s << '\n' << '\n';
+        return s.str();
+    }
+    
+    void EditorLayer::SetDefaultImGuiWindowLayoutIfNotPresent()
+    {
+        auto iniPath = std::filesystem::current_path() / "imgui.ini";
+        if(std::filesystem::exists(iniPath))
+            return;
+        File::WriteFile(iniPath, GenerateImGuiINIFile());
+        BeeCoreTrace("Setting default Editor layout");
+        //TODO: make a generation of imgui.ini based on locale or make it independant from locale
     }
 }

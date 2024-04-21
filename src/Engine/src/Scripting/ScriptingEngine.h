@@ -69,6 +69,8 @@ namespace BeeEngine
         static glm::vec2 GetViewportSize();
         static void SetViewportSize(float width, float height);
 
+        static void UnloadAppContext();
+
     private:
         static void InitDotNetHost();
         static class MAssembly& LoadAssembly(const Path& path);

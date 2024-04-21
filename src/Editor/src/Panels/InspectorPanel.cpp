@@ -85,6 +85,7 @@ namespace BeeEngine::Editor
             AddComponentPopup<CameraComponent>("Camera", entity);
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
             AddComponentPopup<CircleRendererComponent>("Circle", entity);
+            AddComponentPopup<MeshComponent>("Mesh", entity);
             AddComponentPopup<TextRendererComponent>("Text", entity);
             //AddComponentPopup<NativeScriptComponent>("Native Script", entity);
             AddComponentPopup<ScriptComponent>("Script", entity);
@@ -194,7 +195,7 @@ namespace BeeEngine::Editor
                 String textureLabel;
                 if(textureAsset.GetType() == AssetType::Localized)
                 {
-                    textureLabel = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                    textureLabel = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                 }
                 else
                 {
@@ -237,13 +238,60 @@ namespace BeeEngine::Editor
             ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.thickness").c_str(), &circle.Thickness, 0.025f, 0.0f, 1.0f);
             ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.fade").c_str(), &circle.Fade, 0.0025f, 0.005f, 1.0f);
         });
+
+        DrawComponentUI<MeshComponent>(m_EditorDomain->Translate("inspector.meshRenderer"), entity, [this](MeshComponent& meshComponent)
+        {
+            if(meshComponent.HasMeshes)
+            {
+                if(ImGui::Button(meshComponent.MeshSource()->Name.data()))
+                {
+                    meshComponent.HasMeshes = false;
+                }
+            }
+            else
+            {
+                ImGui::Button(m_EditorDomain->Translate("none").c_str(), ImVec2(100.0f, 0.0f));
+            }
+            ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &meshComponent](void* data, size_t size){
+                Path meshSourcePath = m_WorkingDirectory / static_cast<const char*>(data);
+                if (!ResourceManager::IsMeshSourceExtension(meshSourcePath.GetExtension()))
+                    return;
+                auto name = meshSourcePath.GetFileNameWithoutExtension().AsUTF8();
+                auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                if(!handlePtr)
+                {
+                    m_AssetManager->LoadAsset(meshSourcePath, {m_ProjectAssetRegistryID});
+                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                }
+                BeeCoreAssert(handlePtr, "Failed to load mesh source from path: {0}", meshSourcePath.AsUTF8());
+                meshComponent.HasMeshes = true;
+                meshComponent.MeshSourceHandle = *handlePtr;
+            });
+
+            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_MESHSOURCE_ITEM", [this, &meshComponent](const auto& handle){
+                BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                meshComponent.HasMeshes = true;
+                meshComponent.MeshSourceHandle = handle;
+            });
+
+            //Material info
+            bool upload = false;
+            if(ImGui::ColorPicker4("Color", glm::value_ptr(meshComponent.MaterialInstance.data.colorFactors)))
+                upload = true;
+            if(ImGui::DragFloat("Metalness", (float*)&meshComponent.MaterialInstance.data.metalRoughFactors.x, 0.025f, 0.0f, 1.0f))
+                upload = true;
+            if(ImGui::DragFloat("Roughness", (float*)&meshComponent.MaterialInstance.data.metalRoughFactors.y, 0.025f, 0.0f, 1.0f))
+                upload = true;
+            if(upload)
+                meshComponent.MaterialInstance.LoadData();
+        });
         DrawComponentUI<TextRendererComponent>(m_EditorDomain->Translate("inspector.textRenderer"), entity, [this](TextRendererComponent& component){
            ImGui::InputTextMultiline(m_EditorDomain->Translate("text").c_str(), &component.Text);
            auto& fontAsset = AssetManager::GetAsset<Asset>(component.FontHandle);
            String fontLabel;
            if(fontAsset.GetType() == AssetType::Localized)
            {
-               fontLabel = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+               fontLabel = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
            }
            else
            {
@@ -487,7 +535,7 @@ namespace BeeEngine::Editor
                             auto& textureAsset = AssetManager::GetAsset<Asset>(value);
                             if(textureAsset.GetType() == AssetType::Localized)
                             {
-                                textureName = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                                textureName = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                             }
                             else
                             {
@@ -554,7 +602,7 @@ namespace BeeEngine::Editor
                             auto& fontAsset = AssetManager::GetAsset<Asset>(value);
                             if(fontAsset.GetType() == AssetType::Localized)
                             {
-                                fontName = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                                fontName = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                             }
                             else
                             {
@@ -621,7 +669,7 @@ namespace BeeEngine::Editor
                             auto& prefabAsset = AssetManager::GetAsset<Asset>(value);
                             if(prefabAsset.GetType() == AssetType::Localized)
                             {
-                                prefabName = String(prefabAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(prefabAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                                prefabName = String(prefabAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(prefabAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                             }
                             else
                             {

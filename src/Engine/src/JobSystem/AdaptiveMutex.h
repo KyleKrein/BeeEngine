@@ -31,6 +31,11 @@ namespace BeeEngine::Jobs
             flag.clear(std::memory_order_release);
         }
 
+        [[nodiscard]]bool try_lock()
+        {
+            return !flag.test_and_set(std::memory_order_acquire);
+        }
+
     private:
         std::atomic_flag flag = {};
     };

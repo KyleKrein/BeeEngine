@@ -1,7 +1,7 @@
 //
 // Created by alexl on 16.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/BindingSet.h"
 #include "Renderer/IBindable.h"
 #include "WebGPUGraphicsDevice.h"
@@ -27,12 +27,12 @@ namespace BeeEngine::Internal
             {
                 auto entry = element.Data.GetBindGroupEntry();
 
-                entry[0].binding = element.Binding;
-                entries.push_back(entry[0]);
+                std::get<WGPUBindGroupEntry>(entry[0]).binding = element.Binding;
+                entries.push_back(std::get<WGPUBindGroupEntry>(entry[0]));
                 if(entry.size() > 1)
                 {
-                    entry[1].binding = element.Binding + 1;
-                    entries.push_back(entry[1]);
+                    std::get<WGPUBindGroupEntry>(entry[1]).binding = element.Binding + 1;
+                    entries.push_back(std::get<WGPUBindGroupEntry>(entry[1]));
                 }
             }
             WGPUBindGroupDescriptor bindGroupDesc = {};
@@ -57,3 +57,4 @@ namespace BeeEngine::Internal
             wgpuBindGroupRelease(m_BindGroup);
     }
 }
+#endif

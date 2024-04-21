@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 01.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUPipeline.h"
 #include "Renderer/Renderer.h"
 #include "WebGPUGraphicsDevice.h"
@@ -172,3 +172,4 @@ namespace BeeEngine::Internal
             wgpuRenderPassEncoderSetPipeline((WGPURenderPassEncoder)(((RenderPass*)commandBuffer)->GetHandle()), m_Pipeline);
     }
 }
+#endif

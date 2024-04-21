@@ -1,6 +1,7 @@
 ﻿using BeeEngine.Math;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -41,6 +42,237 @@ namespace BeeEngine.Internal
         private static delegate* unmanaged<IntPtr> s_Locale_GetLocale = null;
         private static delegate* unmanaged<IntPtr, void> s_Locale_SetLocale = null;
         private static delegate* unmanaged<IntPtr, IntPtr> s_Locale_TranslateStatic = null;
+        private static delegate* unmanaged<IntPtr, ArrayInfo, IntPtr> s_Locale_TranslateDynamic = null;
+        private static delegate* unmanaged<ulong, ComponentType, void*> s_Entity_CreateComponent = null;
+        private static delegate* unmanaged<ulong, ComponentType, void*> s_Entity_GetComponent = null;
+        private static delegate* unmanaged<ulong, ComponentType, int> s_Entity_HasComponent = null;
+        private static delegate* unmanaged<ulong, ComponentType, void> s_Entity_RemoveComponent = null;
+
+        enum ReflectionType : UInt32
+        {
+            None = 0x00,
+            Void = 0x01,
+            Boolean = 0x02,
+            Char = 0x03,
+            SByte = 0x04,
+            Byte = 0x05,
+            Int16 = 0x06,
+            UInt16 = 0x07,
+            Int32 = 0x08,
+            UInt32 = 0x09,
+            Int64 = 0x0a,
+            UInt64 = 0x0b,
+            Single = 0x0c,
+            Double = 0x0d,
+            String = 0x0e,
+            Ptr = 0x0f,
+            Dictionary = 0x10,
+            Array = 0x11,
+            List = 0x12,
+            Object = 0x13,
+
+
+            Vector2 = 0x20,
+            Vector3 = 0x21,
+            Vector4 = 0x22,
+            Color = 0x23,
+            Entity = 0x24,
+
+            AssetHandle = 0x25,
+            Asset = 0x26,
+            Texture2D = 0x27,
+            Font = 0x28,
+            Prefab = 0x29,
+        }
+        /// <summary>
+        /// Struct for passing reflection type info to C++ side
+        /// it holds information about the type of the argument 
+        /// and the pointer to the argument or the data itself if it is a value type, 
+        /// that is less than 8 bytes
+        /// 
+        /// IMPORTANT: If this type is changed, the corresponding C++ type in
+        /// ScriptGlue.cpp MUST be changed as well
+        ///
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        struct ReflectionTypeInfo
+        {
+            public ReflectionType Type;
+            public IntPtr Ptr;
+        }
+        /// <summary>
+        /// Struct for passing Array info to C++ side
+        /// it holds pointer to data and the length of the array
+        /// 
+        /// IMPORTANT: If this type is changed, the corresponding C++ type in
+        /// ScriptGlue.h MUST be changed as well
+        ///
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        struct ArrayInfo
+        {
+            public IntPtr Ptr;
+            public ulong Length;
+        }
+        /// <summary>
+        /// Assigns the function pointer to the corresponding function
+        /// based on the name of the function
+        /// 
+        /// IMPORTANT: If a new function is added, it MUST be added here
+        /// and to the ScriptGlue.cpp
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="functionPtr"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private static void AssignFunction(IntPtr name, IntPtr functionPtr)
+        {
+            GCHandle gCHandle = GCHandle.FromIntPtr(name);
+            string? functionName = gCHandle.Target as string;
+            Debug.WriteLine("Registering native function " + functionName ?? "null");
+            if (functionName == "Log_Warn")
+            {
+                s_Log_Warn = (delegate* unmanaged<IntPtr, void>)functionPtr;
+            }
+            else if (functionName == "Log_Error")
+            {
+                s_Log_Error = (delegate* unmanaged<IntPtr, void>)functionPtr;
+            }
+            else if (functionName == "Log_Info")
+            {
+                s_Log_Info = (delegate* unmanaged<IntPtr, void>)functionPtr;
+            }
+            else if (functionName == "Log_Trace")
+            {
+                s_Log_Trace = (delegate* unmanaged<IntPtr, void>)functionPtr;
+            }
+            else if (functionName == "Entity_FindEntityByName")
+            {
+                s_Entity_FindEntityByName = (delegate* unmanaged<IntPtr, ulong>)functionPtr;
+            }
+            else if (functionName == "Entity_GetParent")
+            {
+                s_Entity_GetParent = (delegate* unmanaged<ulong, ulong>)functionPtr;
+            }
+            else if (functionName == "Entity_SetParent")
+            {
+                s_Entity_SetParent = (delegate* unmanaged<ulong, ulong, void>)functionPtr;
+            }
+            else if (functionName == "Entity_GetNextChild")
+            {
+                s_Entity_GetNextChild = (delegate* unmanaged<ulong, ulong, ulong>)functionPtr;
+            }
+            else if (functionName == "Entity_HasChild")
+            {
+                s_Entity_HasChild = (delegate* unmanaged<ulong, ulong, int>)functionPtr;
+            }
+            else if (functionName == "Entity_AddChild")
+            {
+                s_Entity_AddChild = (delegate* unmanaged<ulong, ulong, void>)functionPtr;
+            }
+            else if (functionName == "Entity_RemoveChild")
+            {
+                s_Entity_RemoveChild = (delegate* unmanaged<ulong, ulong, void>)functionPtr;
+            }
+            else if (functionName == "Entity_GetName")
+            {
+                s_Entity_GetName = (delegate* unmanaged<ulong, IntPtr>)functionPtr;
+            }
+            else if (functionName == "Entity_SetName")
+            {
+                s_Entity_SetName = (delegate* unmanaged<ulong, IntPtr, void>)functionPtr;
+            }
+            else if (functionName == "TextRendererComponent_GetText")
+            {
+                s_TextRendererComponent_GetText = (delegate* unmanaged<ulong, IntPtr>)functionPtr;
+            }
+            else if (functionName == "TextRendererComponent_SetText")
+            {
+                s_TextRendererComponent_SetText = (delegate* unmanaged<ulong, IntPtr, void>)functionPtr;
+            }
+            else if (functionName == "Entity_Destroy")
+            {
+                s_Entity_Destroy = (delegate* unmanaged<ulong, void>)functionPtr;
+            }
+            else if (functionName == "Entity_Duplicate")
+            {
+                s_Entity_Duplicate = (delegate* unmanaged<ulong, ulong>)functionPtr;
+            }
+            else if (functionName == "Entity_InstantiatePrefab")
+            {
+                s_Entity_InstantiatePrefab = (delegate* unmanaged<void*, ulong, ulong>)functionPtr;
+            }
+            else if (functionName == "Input_IsKeyDown")
+            {
+                s_Input_IsKeyDown = (delegate* unmanaged<int, int>)functionPtr;
+            }
+            else if (functionName == "Input_IsMouseButtonDown")
+            {
+                s_Input_IsMouseButtonDown = (delegate* unmanaged<int, int>)functionPtr;
+            }
+            else if (functionName == "Input_GetMousePosition")
+            {
+                s_Input_GetMousePosition = (delegate* unmanaged<void*, void>)functionPtr;
+            }
+            else if (functionName == "Input_GetMousePositionInWorldSpace")
+            {
+                s_Input_GetMousePositionInWorldSpace = (delegate* unmanaged<ulong, void*, void>)functionPtr;
+            }
+            else if (functionName == "Asset_Load")
+            {
+                s_Asset_Load = (delegate* unmanaged<void*, void>)functionPtr;
+            }
+            else if (functionName == "Asset_Unload")
+            {
+                s_Asset_Unload = (delegate* unmanaged<void*, void>)functionPtr;
+            }
+            else if (functionName == "Asset_IsValid")
+            {
+                s_Asset_IsValid = (delegate* unmanaged<void*, int>)functionPtr;
+            }
+            else if (functionName == "Asset_IsLoaded")
+            {
+                s_Asset_IsLoaded = (delegate* unmanaged<void*, int>)functionPtr;
+            }
+            else if (functionName == "Physics2D_CastRay")
+            {
+                s_Physics2D_CastRay = (delegate* unmanaged<void*, void*, ulong>)functionPtr;
+            }
+            else if (functionName == "Locale_GetLocale")
+            {
+                s_Locale_GetLocale = (delegate* unmanaged<IntPtr>)functionPtr;
+            }
+            else if (functionName == "Locale_SetLocale")
+            {
+                s_Locale_SetLocale = (delegate* unmanaged<IntPtr, void>)functionPtr;
+            }
+            else if (functionName == "Locale_TranslateStatic")
+            {
+                s_Locale_TranslateStatic = (delegate* unmanaged<IntPtr, IntPtr>)functionPtr;
+            }
+            else if (functionName == "Locale_TranslateDynamic")
+            {
+                s_Locale_TranslateDynamic = (delegate* unmanaged<IntPtr, ArrayInfo, IntPtr>)functionPtr;
+            }
+            else if (functionName == "Entity_CreateComponent")
+            {
+                s_Entity_CreateComponent = (delegate* unmanaged<ulong, ComponentType, void*>)functionPtr;
+            }
+            else if (functionName == "Entity_GetComponent")
+            {
+                s_Entity_GetComponent = (delegate* unmanaged<ulong, ComponentType, void*>)functionPtr;
+            }
+            else if (functionName == "Entity_HasComponent")
+            {
+                s_Entity_HasComponent = (delegate* unmanaged<ulong, ComponentType, int>)functionPtr;
+            }
+            else if (functionName == "Entity_RemoveComponent")
+            {
+                s_Entity_RemoveComponent = (delegate* unmanaged<ulong, ComponentType, void>)functionPtr;
+            }
+            else
+                throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
+            Debug.WriteLine($"Native function {functionName} registered");
+        }
 
         internal static void Log_Warn(string message)
         {
@@ -61,18 +293,57 @@ namespace BeeEngine.Internal
         {
             s_Log_Trace(Marshal.StringToHGlobalUni(message));
         }
+        /// <summary>
+        /// Enum for component types
+        /// IMPORTANT: If this enum is changed, the corresponding C++ enum in
+        /// ScriptGlue.h and the corresponding switch case in ScriptGlue.cpp
+        /// MUST be changed as well
+        /// </summary>
+        enum ComponentType: UInt32
+        {
+            Transform = 0x00,
+            SpriteRenderer = 0x01,
+            TextRenderer = 0x02,
+            BoxCollider2D = 0x03,
+            Rigidbody2D = 0x04,
+            CircleRenderer = 0x05,
+        }
+        private static readonly Dictionary<Type, ComponentType> s_ComponentTypeMap = new Dictionary<Type, ComponentType>
+        {
+            { typeof(TransformComponent), ComponentType.Transform },
+            { typeof(SpriteRendererComponent), ComponentType.SpriteRenderer },
+            { typeof(TextRendererComponent), ComponentType.TextRenderer },
+            { typeof(BoxCollider2DComponent), ComponentType.BoxCollider2D },
+            { typeof(RigidBody2DComponent), ComponentType.Rigidbody2D },
+            { typeof(CircleRendererComponent), ComponentType.CircleRenderer },
+        };
+        internal static void* Entity_CreateComponent(ulong id, Type type)
+        {
+            if (!s_ComponentTypeMap.TryGetValue(type, out ComponentType componentType))
+                throw new NotImplementedException($"Component {type} is not implemented in C# on Engine side");
+            return s_Entity_CreateComponent(id, componentType);
+        }
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern void* Entity_CreateComponent(ulong id, Type type);
+        internal static void* Entity_GetComponent(ulong id, Type type)
+        {
+            if (!s_ComponentTypeMap.TryGetValue(type, out ComponentType componentType))
+                throw new NotImplementedException($"Component {type} is not implemented in C# on Engine side");
+            return s_Entity_GetComponent(id, componentType);
+        }
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern void* Entity_GetComponent(ulong id, Type type);
+        internal static bool Entity_HasComponent(ulong id, Type type)
+        {
+            if (!s_ComponentTypeMap.TryGetValue(type, out ComponentType componentType))
+                throw new NotImplementedException($"Component {type} is not implemented in C# on Engine side");
+            return s_Entity_HasComponent(id, componentType) != 0;
+        }
 
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern bool Entity_HasComponent(ulong id, Type type);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern void Entity_RemoveComponent(ulong id, Type type);
+        internal static void Entity_RemoveComponent(ulong id, Type type)
+        {
+            if (!s_ComponentTypeMap.TryGetValue(type, out ComponentType componentType))
+                throw new NotImplementedException($"Component {type} is not implemented in C# on Engine side");
+            s_Entity_RemoveComponent(id, componentType);
+        }
 
         internal static ulong Entity_FindEntityByName(string name)
         {
@@ -121,7 +392,10 @@ namespace BeeEngine.Internal
 
         internal static string TextRendererComponent_GetText(ulong id)
         {
-            return Marshal.PtrToStringUTF8(s_TextRendererComponent_GetText(id));
+            GCHandle handle = GCHandle.FromIntPtr(s_TextRendererComponent_GetText(id));
+            string text = (string)handle.Target;
+            handle.Free();
+            return text;
         }
 
         internal static void TextRendererComponent_SetText(ulong id, string text)
@@ -200,9 +474,106 @@ namespace BeeEngine.Internal
 
         internal static string Locale_TranslateStatic(string key)
         {
-            return Marshal.PtrToStringUTF8(s_Locale_TranslateStatic(Marshal.StringToHGlobalUni(key)));
+            IntPtr result = s_Locale_TranslateStatic(Marshal.StringToHGlobalUni(key));
+            GCHandle gCHandle = GCHandle.FromIntPtr(result);
+            string resultString = (string)gCHandle.Target;
+            gCHandle.Free();
+            return resultString;
         }
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        internal static extern string Locale_TranslateDynamic(string key, object[] args);
+        private const int MaxReflectionTypeInfos = 1000;
+        private static ReflectionTypeInfo[] s_ReflectionTypeInfos = new ReflectionTypeInfo[MaxReflectionTypeInfos];
+        private static GCHandle s_ReflectionTypeInfosHandle = GCHandle.Alloc(s_ReflectionTypeInfos, GCHandleType.Pinned);
+        private static object s_ReflectionTypeInfosLock = new object();
+        internal static string Locale_TranslateDynamic(string key, object[] args)
+        {
+            Log.AssertAndThrow(args.Length <= MaxReflectionTypeInfos, "Too many arguments for dynamic translation");
+            IntPtr keyPtr = Marshal.StringToHGlobalUni(key);
+            ArrayInfo arrayInfo = new ArrayInfo{ Ptr = s_ReflectionTypeInfosHandle.AddrOfPinnedObject(), Length = (ulong)args.Length };
+            IntPtr resultPtr = IntPtr.Zero;
+            lock(s_ReflectionTypeInfosLock)
+            {
+                for (int i = 0; i < args.Length; i++)
+                {
+                    ReflectionTypeInfo info = new ReflectionTypeInfo{Type = ReflectionType.None, Ptr = IntPtr.Zero};
+                    if (args[i] == null)
+                    {
+                        info.Type = ReflectionType.None;
+                        info.Ptr = IntPtr.Zero;
+                    }
+                    else if (args[i] is bool)
+                    {
+                        info.Ptr = ((bool)args[i]) ? (IntPtr)1 : IntPtr.Zero;
+                        info.Type = ReflectionType.Boolean;
+                    }
+                    else if (args[i] is sbyte)
+                    {
+                        *(sbyte*)&info.Ptr = (sbyte)args[i];
+                        info.Type = ReflectionType.SByte;
+                    }
+                    else if (args[i] is byte)
+                    {
+                        *(byte*)&info.Ptr = (byte)args[i];
+                        info.Type = ReflectionType.Byte;
+                    }
+                    else if (args[i] is short)
+                    {
+                        info.Type = ReflectionType.Int16;
+                        *(short*)&info.Ptr = (short)args[i];
+                    }
+                    else if (args[i] is ushort)
+                    {
+                        info.Type = ReflectionType.UInt16;
+                        *(ushort*)&info.Ptr = (ushort)args[i];
+                    }
+                    else if (args[i] is int)
+                    {
+                        info.Type = ReflectionType.Int32;
+                        *(int*)&info.Ptr = (int)args[i];
+                    }
+                    else if (args[i] is uint)
+                    {
+                        info.Type = ReflectionType.UInt32;
+                        *(uint*)(&info.Ptr) = (uint)args[i];
+                    }
+                    else if (args[i] is long)
+                    {
+                        info.Type = ReflectionType.Int64;
+                        *(long*)(&info.Ptr) = (long)args[i];
+                    }
+                    else if (args[i] is ulong)
+                    {
+                        info.Type = ReflectionType.UInt64;
+                        *(ulong*)(&info.Ptr) = (ulong)args[i];
+                    }
+                    else if (args[i] is float)
+                    {
+                        info.Type = ReflectionType.Single;
+                        *(float*)(&info.Ptr) = (float)args[i];
+                    }
+                    else if (args[i] is double)
+                    {
+                        info.Type = ReflectionType.Double;
+                        *(double*)&info.Ptr = (double)args[i];
+                    }
+                    else if (args[i] is string)
+                    {
+                        info.Type = ReflectionType.String;
+                        info.Ptr = Marshal.StringToHGlobalUni((string)args[i]);
+                    }
+                    else
+                    {
+                        Log.Debug("Type {0} is not implemented in C# on Engine side", args[i].GetType());
+                        throw new NotImplementedException($"Type {args[i].GetType()} is not implemented in C# on Engine side");
+                    }
+                    s_ReflectionTypeInfos[i] = info;
+                }
+                Log.Debug("Calling dynamic translation with {0} arguments", args.Length);
+                resultPtr = s_Locale_TranslateDynamic(keyPtr, arrayInfo);
+            }
+            GCHandle gCHandle = GCHandle.FromIntPtr(resultPtr);
+            string resultString = (string)gCHandle.Target;
+            gCHandle.Free();
+            return resultString;
+        }
     }
 }

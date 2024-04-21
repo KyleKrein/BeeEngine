@@ -3,6 +3,9 @@
 //
 
 #include "RenderingQueue.h"
+
+#include <numeric>
+
 #include "Core/DeletionQueue.h"
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 #include "Renderer.h"
@@ -14,45 +17,60 @@
 
 namespace BeeEngine::Internal
 {
+    RendererStatistics RenderingQueue::s_Statistics = {};
     static constexpr size_t MIN_SIZE = 1024 * 1024 * 10;
 
-    void RenderingQueue::Initialize()
+    RenderingQueue::RenderingQueue()
     {
-        RenderingQueue* self = &GetInstance();
-        DeletionQueue::Main().PushFunction([self]()
-        {
-            self->m_InstanceBuffers.clear();
-            self->m_SubmittedInstances.clear();
-        });
-        self->m_InstanceBuffers.push_back(InstancedBuffer::Create(MIN_SIZE));
-        self->m_Statistics.AllocatedGPUMemory+= MIN_SIZE;
-        self->m_Statistics.AllocatedGPUBuffers++;
+        m_InstanceBuffers.push_back(InstancedBuffer::Create(MIN_SIZE));
+        s_Statistics.AllocatedGPUMemory+= MIN_SIZE;
+        s_Statistics.AllocatedGPUBuffers++;
     }
 
-    void RenderingQueue::SubmitInstanceImpl(RenderInstance &&instance, gsl::span<byte> instanceData)
+    RenderingQueue::~RenderingQueue()
+    {
+        s_Statistics.AllocatedGPUMemory -= std::accumulate(m_InstanceBuffers.begin(), m_InstanceBuffers.end(), 0, [](size_t acc, const auto& buffer)
+        {
+            return acc + buffer->GetSize();
+        });
+        s_Statistics.AllocatedGPUBuffers -= m_InstanceBuffers.size();
+        s_Statistics.AllocatedCPUMemory -= std::accumulate(m_SubmittedInstances.begin(), m_SubmittedInstances.end(), 0, [](size_t acc, const auto& instance)
+        {
+            return acc + instance.second.Data.size();
+        });
+    }
+
+    RenderingQueue::RenderingQueue(size_t sizeInBytes)
+    {
+        m_InstanceBuffers.push_back(InstancedBuffer::Create(sizeInBytes));
+        s_Statistics.AllocatedGPUMemory+= sizeInBytes;
+        s_Statistics.AllocatedGPUBuffers++;
+    }
+
+    void RenderingQueue::SubmitInstance(RenderInstance &&instance, gsl::span<byte> instanceData)
     {
         if(!m_SubmittedInstances.contains(instance))
         {
             m_SubmittedInstances[instance] = RenderData{};
             auto newSize = instanceData.size() * 100;
             m_SubmittedInstances[instance].Data.resize(newSize);
-            m_Statistics.AllocatedCPUMemory += newSize;
+            s_Statistics.AllocatedCPUMemory += newSize;
         }
         auto& renderData = m_SubmittedInstances[instance];
         if(renderData.Offset + instanceData.size() > renderData.Data.size())
         {
             auto deltaSize = instanceData.size() * 100;
             renderData.Data.resize(renderData.Data.size() + deltaSize);
-            m_Statistics.AllocatedCPUMemory += deltaSize;
+            s_Statistics.AllocatedCPUMemory += deltaSize;
         }
         memcpy(renderData.Data.data() + renderData.Offset, instanceData.data(), instanceData.size());
         //renderData.Data[renderData.Offset] = *instanceData.data();
         renderData.Offset += instanceData.size();
         renderData.InstanceCount++;
-        m_Statistics.TotalInstanceCount++;
+        s_Statistics.TotalInstanceCount++;
     }
 
-    void RenderingQueue::FlushImpl()
+    void RenderingQueue::Flush(CommandBuffer& commandBuffer)
     {
         for (auto& [instance, data] : m_SubmittedInstances)
         {
@@ -66,15 +84,15 @@ namespace BeeEngine::Internal
                 {
                     auto newSize = std::max(data.Offset, MIN_SIZE);
                     m_InstanceBuffers.push_back(InstancedBuffer::Create(newSize));
-                    m_Statistics.AllocatedGPUMemory += newSize;
-                    m_Statistics.AllocatedGPUBuffers++;
+                    s_Statistics.AllocatedGPUMemory += newSize;
+                    s_Statistics.AllocatedGPUBuffers++;
                 }
             }
             m_InstanceBuffers[m_CurrentInstanceBufferIndex]->SetData(data.Data.data(), data.Offset);
-            Renderer::DrawInstanced(*instance.Model, *m_InstanceBuffers[m_CurrentInstanceBufferIndex], instance.BindingSets, data.InstanceCount);
-            m_Statistics.DrawCallCount++;
-            m_Statistics.VertexCount += instance.Model->GetVertexCount() * data.InstanceCount;
-            m_Statistics.IndexCount += instance.Model->GetIndexCount() * data.InstanceCount;
+            Renderer::DrawInstanced(commandBuffer, *instance.Model, *m_InstanceBuffers[m_CurrentInstanceBufferIndex], instance.BindingSets, data.InstanceCount);
+            s_Statistics.DrawCallCount++;
+            s_Statistics.VertexCount += instance.Model->GetVertexCount() * data.InstanceCount;
+            s_Statistics.IndexCount += instance.Model->GetIndexCount() * data.InstanceCount;
             m_InstanceBuffers[m_CurrentInstanceBufferIndex]->Submit();
             data.Reset();
             //m_CurrentInstanceBufferIndex++;
@@ -83,12 +101,12 @@ namespace BeeEngine::Internal
         DeletionQueue::RendererFlush().Flush();
     }
 
-    void RenderingQueue::FinishFrameImpl()
+    void RenderingQueue::FinishFrame(CommandBuffer& commandBuffer)
     {
         //size_t takenSize = 0;
         //while (true)
         //{
-        FlushImpl();
+        Flush(commandBuffer);
         //}
         DeletionQueue::Frame().PushFunction([this]()
         {
@@ -99,14 +117,14 @@ namespace BeeEngine::Internal
         });
     }
 
-    void RenderingQueue::ResetStatisticsImpl()
+    void RenderingQueue::ResetStatistics()
     {
-        m_Statistics.TotalInstanceCount = 0;
-        m_Statistics.TransparentInstanceCount = 0;
-        m_Statistics.OpaqueInstanceCount = 0;
-        m_Statistics.DrawCallCount = 0;
-        m_Statistics.VertexCount = 0;
-        m_Statistics.IndexCount = 0;
+        s_Statistics.TotalInstanceCount = 0;
+        s_Statistics.TransparentInstanceCount = 0;
+        s_Statistics.OpaqueInstanceCount = 0;
+        s_Statistics.DrawCallCount = 0;
+        s_Statistics.VertexCount = 0;
+        s_Statistics.IndexCount = 0;
     }
     struct TextInstancedData
     {
@@ -121,7 +139,7 @@ namespace BeeEngine::Internal
         Color4 ForegroundColor;
         Color4 BackgroundColor;
     };
-    void RenderingQueue::SubmitTextImpl(const std::string &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform,
+    void RenderingQueue::SubmitText(const std::string &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform,
                                         const TextRenderingConfiguration& config)
     {
         BeeExpects(IsValidString(text));
@@ -229,7 +247,7 @@ namespace BeeEngine::Internal
                 .ForegroundColor = config.ForegroundColor,
                 .BackgroundColor = config.BackgroundColor,
             };
-            SubmitInstanceImpl({.Model = &textModel, .BindingSets = {&cameraBindingSet, atlasTexture.GetBindingSet()}}, {(byte*)&data, sizeof(TextInstancedData)});
+            SubmitInstance({.Model = &textModel, .BindingSets = {&cameraBindingSet, atlasTexture.GetBindingSet()}}, {(byte*)&data, sizeof(TextInstancedData)});
 
             if(it != end)
             {
@@ -242,7 +260,7 @@ namespace BeeEngine::Internal
         }
     }
 
-    void RenderingQueue::SubmitLineImpl(const glm::vec3 &start, const glm::vec3 &end, const Color4 &color, BindingSet &cameraBindingSet, float lineWidth)
+    void RenderingQueue::SubmitLine(const glm::vec3 &start, const glm::vec3 &end, const Color4 &color, BindingSet &cameraBindingSet, float lineWidth)
     {
         auto& lineModel = Application::GetInstance().GetAssetManager().GetModel("Renderer_Line");
         struct LineInstancedData
@@ -262,7 +280,7 @@ namespace BeeEngine::Internal
             .PositionOffset3 = transform * glm::vec4(0.5f, -0.5f, 0.0f, 1.0f),
         };
 
-        SubmitInstanceImpl({.Model = &lineModel, .BindingSets = {&cameraBindingSet}}, {(byte*)&data, sizeof(LineInstancedData)});
+        SubmitInstance({.Model = &lineModel, .BindingSets = {&cameraBindingSet}}, {(byte*)&data, sizeof(LineInstancedData)});
     }
 
 

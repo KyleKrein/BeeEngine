@@ -38,14 +38,23 @@ namespace BeeEngine{
                 auto& self = *frameJobInfo.self;
 
                 self.m_EventQueue.Dispatch();
-                self.m_Window->UpdateTime();
-                auto cmd = Renderer::BeginFrame();//Internal::VulkanRendererAPI::GetInstance().BeginFrame();
-                Renderer::StartMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
-                self.m_Layers.Update();
-                self.Update();
-                //m_Window->SwapBuffers();
-                Renderer::EndMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
-                Renderer::EndFrame();//Internal::VulkanRendererAPI::GetInstance().EndFrame();
+                auto deltaTime = self.m_Window->UpdateTime();
+                //if(!self.IsMinimized())
+                //{
+                    auto frameData = Renderer::BeginFrame();
+                    frameData.SetDeltaTime(deltaTime);
+                    Renderer::StartMainCommandBuffer(frameData);
+                    self.m_Layers.Update(frameData);
+                    self.Update();
+                    Renderer::EndMainCommandBuffer(frameData);
+                    Renderer::EndFrame(frameData);
+                //}
+                //else
+                //{
+                //    self.m_Layers.Update();
+                //    self.Update();
+                //}
+
                 DeletionQueue::Frame().Flush();
 
                 frameJobInfo.cv->notify_one();
@@ -53,9 +62,11 @@ namespace BeeEngine{
             Job::Schedule(frameJob);
             cv.wait(lock);
         }
+        DeletionQueue::Main().Flush();
+        BeeEnsures(DeletionQueue::Main().IsEmpty() && DeletionQueue::Frame().IsEmpty() && DeletionQueue::RendererFlush().IsEmpty());
     }
 
-    Application::Application(const WindowProperties& properties)
+    Application::Application(const ApplicationProperties& properties)
     : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers)
     {
         BEE_PROFILE_FUNCTION();
@@ -65,35 +76,33 @@ namespace BeeEngine{
         auto appProperties = properties;
         CheckRendererAPIForCompatibility(appProperties);
 
-        m_Window.reset(WindowHandler::Create(WindowHandlerAPI::SDL, properties, m_EventQueue));
+        m_Window.reset(WindowHandler::Create(GetPreferredWindowAPI(), properties, m_EventQueue));
         Renderer::SetAPI(appProperties.PreferredRenderAPI);
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
         m_AssetManager.LoadStandardAssets();
         SceneRenderer::Init();
-
-        //ScriptingEngine::Init();
     }
 
     Application::~Application()
     {
         s_Instance = nullptr;
+        Renderer::Shutdown();
+    }
+
+    WindowHandlerAPI Application::GetPreferredWindowAPI()
+    {
+#if defined(WINDOWS)
+        return WindowHandlerAPI::WinAPI;
+#else
+        return WindowHandlerAPI::SDL;
+#endif
     }
 
     void Application::Dispatch(EventDispatcher &dispatcher)
     {
-        dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
-        {
-            return OnWindowResize(&event);
-        });
-        dispatcher.Dispatch<WindowFocusedEvent>([this](auto& event){
-            m_IsFocused = event.IsFocused();
-            return false;
-        });
-
-        //dispatcher.Dispatch<WindowCloseEvent>(OnWindowClose);
-        //dispatcher.Dispatch<WindowCloseEvent>(reinterpret_cast<bool (*)(WindowCloseEvent&)>(OnWindowClose));
+        OnEvent(dispatcher);
     }
 
     bool Application::OnWindowClose(WindowCloseEvent& event)
@@ -106,12 +115,17 @@ namespace BeeEngine{
         m_Window->Close();
     }
 
-    void Application::CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept
+    void Application::CheckRendererAPIForCompatibility(ApplicationProperties &properties) noexcept
     {
         switch (properties.PreferredRenderAPI)
         {
+#if defined(BEE_COMPILE_VULKAN)
+            case RenderAPI::Vulkan:
+                return;
+#else
             case RenderAPI::WebGPU:
                 return;
+#endif
             default:
                 BeeCoreWarn("Unable to use {} as render API", ToString(properties.PreferredRenderAPI));
                 //properties.PreferredRenderAPI = RenderAPI::WebGPU;
@@ -147,6 +161,23 @@ namespace BeeEngine{
             function();
         }
         m_MainThreadQueue.clear();
+    }
+
+    RenderAPI GetPrefferedRenderAPI()
+    {
+        switch (Application::GetOsPlatform()) {
+            case OSPlatform::Windows:
+                return RenderAPI::Vulkan;
+            case OSPlatform::Linux:
+                return RenderAPI::Vulkan;
+            case OSPlatform::Mac:
+                return RenderAPI::Vulkan;
+            case OSPlatform::iOS:
+                return RenderAPI::WebGPU;
+            case OSPlatform::Android:
+                return RenderAPI::Vulkan;
+        }
+        return RenderAPI::NotAvailable;
     }
 }
 

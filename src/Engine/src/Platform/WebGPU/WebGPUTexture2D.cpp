@@ -1,7 +1,7 @@
 //
 // Created by alexl on 15.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUTexture2D.h"
 #include "WebGPUGraphicsDevice.h"
 #include <version>
@@ -180,7 +180,7 @@ namespace BeeEngine::Internal
         wgpuQueueRelease(queue);
     }
 
-    std::vector<WGPUBindGroupLayoutEntry> WebGPUTexture2D::GetBindGroupLayoutEntry() const
+    std::vector<IBindable::BindGroupLayoutEntryType> WebGPUTexture2D::GetBindGroupLayoutEntry() const
     {
         WGPUBindGroupLayoutEntry textureEntry = {};
         WebGPUGraphicsDevice::GetInstance().SetDefault(textureEntry);
@@ -195,7 +195,7 @@ namespace BeeEngine::Internal
         return { textureEntry, samplerEntry};
     }
 
-    std::vector<WGPUBindGroupEntry> WebGPUTexture2D::GetBindGroupEntry() const
+    std::vector<IBindable::BindGroupEntryType> WebGPUTexture2D::GetBindGroupEntry() const
     {
         WGPUBindGroupEntry textureEntry = {};
         WebGPUGraphicsDevice::GetInstance().SetDefault(textureEntry);
@@ -229,3 +229,4 @@ namespace BeeEngine::Internal
         m_Sampler = wgpuDeviceCreateSampler(device, &samplerDesc);
     }
 }
+#endif

@@ -1,4 +1,4 @@
-//
+    //
 // Created by Aleksandr on 23.12.2023.
 //
 
@@ -22,6 +22,12 @@
 
 namespace BeeEngine
 {
+    /**
+     * @brief A struct to hold an array of uint64_t and its length
+     * MUST be freed using FreeIntPtr
+     * IMPORTANT: if this struct is changed, the corresponding struct 
+     * in BridgeToNative.cs MUST also be changed
+     */
     struct ArrayInfo
     {
         void* Ptr;
@@ -47,6 +53,8 @@ namespace BeeEngine
     using FieldSetDataFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle, void* data);
     using MethodInvokeFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t methodId, void* instanceGcHandle, void** args);
     using UnmanagedMethodCreateDelegateAndSetToFieldFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* instanceGcHandle, void* functionPtr);
+    using UnloadContextFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId);
+    using StringCreateManagedFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(void* str);
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -82,6 +90,8 @@ namespace BeeEngine
         FieldSetDataFunction FieldSetData = nullptr;
         MethodInvokeFunction MethodInvoke = nullptr;
         UnmanagedMethodCreateDelegateAndSetToFieldFunction UnmanagedMethodCreateDelegateAndSetToField = nullptr;
+        UnloadContextFunction UnloadContext = nullptr;
+        StringCreateManagedFunction StringCreateManaged = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -141,17 +151,17 @@ namespace BeeEngine
     }
 #define ObtainDelegate(name) \
 {\
-int rc = s_Data->load_assembly_and_get_function_pointer(\
-path.c_str(),\
-CHAR_PREFIX"BeeEngine.Internal.BridgeToNative, BeeEngine.NativeBridge",\
-CHAR_PREFIX#name,\
-UNMANAGEDCALLERSONLY_METHOD,\
-nullptr,\
-(void**)&s_Data->name);\
-if(rc != 0)\
-{\
-BeeCoreError("Unable to obtain delegate for " #name "!");\
-}\
+    int rc = s_Data->load_assembly_and_get_function_pointer(\
+        path.c_str(),\
+        CHAR_PREFIX"BeeEngine.Internal.BridgeToNative, BeeEngine.NativeBridge",\
+        CHAR_PREFIX#name,\
+        UNMANAGEDCALLERSONLY_METHOD,\
+        nullptr,\
+        (void**)&s_Data->name);\
+    if(rc != 0)\
+    {\
+        BeeCoreError("Unable to obtain delegate for " #name "!");\
+    }\
 }
     void NativeToManaged::Init(const Path& pathToNativeBridgeDll)
     {
@@ -194,6 +204,8 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         ObtainDelegate(FieldSetData);
         ObtainDelegate(MethodInvoke);
         ObtainDelegate(UnmanagedMethodCreateDelegateAndSetToField);
+        ObtainDelegate(UnloadContext);
+        ObtainDelegate(StringCreateManaged);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -203,7 +215,7 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
 
     void NativeToManaged::UnloadContext(ManagedAssemblyContextID contextID)
     {
-
+        s_Data->UnloadContext(contextID);
     }
 
     void NativeToManaged::Shutdown()
@@ -354,5 +366,9 @@ BeeCoreError("Unable to obtain delegate for " #name "!");\
         String result = GetStringFromPtr(managedString);
         s_Data->FreeIntPtr(managedString);
         return result;
+    }
+    GCHandle NativeToManaged::StringCreateManaged(const String &string)
+    {
+        return s_Data->StringCreateManaged((void*)(string.c_str()));
     }
 }

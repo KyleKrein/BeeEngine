@@ -2,7 +2,7 @@
 
 #include "Renderer/GraphicsDevice.h"
 #include "Core/TypeDefines.h"
-#include "Windowing/WindowProperties.h"
+#include "Windowing/ApplicationProperties.h"
 #include "Core/Events/EventQueue.h"
 #include "Core/Time.h"
 #include "Renderer/Instance.h"
@@ -13,7 +13,8 @@ namespace BeeEngine
     enum class WindowHandlerAPI
     {
         //GLFW = 0,
-        SDL = 1
+        SDL = 1,
+        WinAPI = 2,
     };
     struct WindowNativeInfo
     {
@@ -39,7 +40,7 @@ namespace BeeEngine
         virtual ~WindowHandler() = default;
         WindowHandler(const WindowHandler&) = delete;
         WindowHandler& operator=(const WindowHandler&) = delete;
-        static gsl::not_null<WindowHandler*> Create(WindowHandlerAPI api, const WindowProperties& properties, EventQueue& eventQueue);
+        static gsl::not_null<WindowHandler*> Create(WindowHandlerAPI api, const ApplicationProperties& properties, EventQueue& eventQueue);
         uint16_t GetWidth() const
         {
             return m_Width;
@@ -92,7 +93,7 @@ namespace BeeEngine
         virtual void ShowCursor() = 0;
         virtual void ProcessEvents() = 0;
         [[nodiscard]] virtual bool IsRunning() const = 0;
-        virtual void UpdateTime() = 0;
+        virtual Time::secondsD UpdateTime() = 0;
         virtual void Close() = 0;
 
         virtual GraphicsDevice& GetGraphicsDevice() = 0;

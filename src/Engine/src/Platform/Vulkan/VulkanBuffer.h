@@ -5,15 +5,14 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
 #include "vk_mem_alloc.h"
-#include "VulkanGraphicsDevice.h"
-#include "Core/DeletionQueue.h"
 
 namespace BeeEngine::Internal
 {
     struct VulkanBuffer
     {
-        VkBuffer Buffer {VK_NULL_HANDLE};
+        vk::Buffer Buffer;
         VmaAllocation Memory {VK_NULL_HANDLE};
+        VmaAllocationInfo Info;
         //VulkanBuffer() = default;
 
         /*VulkanBuffer(VulkanBuffer&& other) noexcept

@@ -8,7 +8,6 @@
 #include "AssetMetadata.h"
 #include "Core/Path.h"
 #include <map>
-#include <filesystem>
 
 namespace BeeEngine
 {

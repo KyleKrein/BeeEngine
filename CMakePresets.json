@@ -1,73 +1,125 @@
 {
-  "version": 6,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 25,
-    "patch": 0
-  },
-  "include": [
-
-  ],
-  "configurePresets": [
-    {
-      "name": "Debug",
-      "displayName": "Debug Config",
-      "description": "Debug build using Ninja generator",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/Debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      },
-      "environment": {
-
-      },
-      "vendor": {
-
-      }
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
     },
-    {
-      "name": "Release",
-      "displayName": "Release Config",
-      "description": "Release build using Ninja generator",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/Release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      },
-      "environment": {
-
-      },
-      "vendor": {
-
-      }
-    },
-    {
-      "name": "iOS Simulator Debug",
-      "displayName": "iOS Simulator Debug Config",
-      "description": "iOS Simulator Debug Config",
-      "generator": "Xcode",
-      "binaryDir": "${sourceDir}/build/iosSimulator/Debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_TOOLCHAIN_FILE": {
-          "type": "STRING",
-          "value": "src/Engine/vendor/ios.toolchain.cmake"
+    "include": [],
+    "configurePresets": [
+        {
+            "name": "windows-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
+            },
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
         },
-        "PLATFORM": {
-          "type": "STRING",
-          "value": "SIMULATORARM64"
+        {
+            "name": "Debug",
+            "displayName": "Debug Config",
+            "description": "Debug build using Ninja generator",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/Debug",
+            "installDir": "${sourceDir}/install/Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "environment": {},
+            "vendor": {},
+            "condition": {
+                "type": "notEquals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
         },
-        "DEPLOYMENT_TARGET": {
-          "type": "STRING",
-          "value": "16.0"
+        {
+            "name": "Release",
+            "displayName": "Release Config",
+            "description": "Release build using Ninja generator",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/Release",
+            "installDir": "${sourceDir}/install/Release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            },
+            "environment": {},
+            "vendor": {},
+            "condition": {
+                "type": "notEquals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "Debug-Windows",
+            "displayName": "Debug Config",
+            "description": "Debug build using Ninja generator",
+            "inherits": "windows-base",
+            "binaryDir": "${sourceDir}/build/Debug",
+            "installDir": "${sourceDir}/install/Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "environment": {},
+            "vendor": {},
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "Release-Windows",
+            "displayName": "Release Config",
+            "description": "Release build using Ninja generator",
+            "inherits": "windows-base",
+            "binaryDir": "${sourceDir}/build/Release",
+            "installDir": "${sourceDir}/install/Release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            },
+            "environment": {},
+            "vendor": {},
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "iOS Simulator Debug",
+            "displayName": "iOS Simulator Debug Config",
+            "description": "iOS Simulator Debug Config",
+            "generator": "Xcode",
+            "binaryDir": "${sourceDir}/build/iosSimulator/Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TOOLCHAIN_FILE": {
+                    "type": "STRING",
+                    "value": "src/Engine/vendor/ios.toolchain.cmake"
+                },
+                "PLATFORM": {
+                    "type": "STRING",
+                    "value": "SIMULATORARM64"
+                },
+                "DEPLOYMENT_TARGET": {
+                    "type": "STRING",
+                    "value": "16.0"
+                }
+            },
+            "environment": {},
+            "vendor": {}
         }
-      },
-      "environment": {
-
-      },
-      "vendor": {
-
-      }
-    }
-  ]
+    ]
 }

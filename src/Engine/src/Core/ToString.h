@@ -365,6 +365,14 @@ constexpr String ToString<char*>(const char*& obj)
         return obj == nullptr ? "nullptr" : std::to_string(reinterpret_cast<std::uintptr_t>(obj));
     }
 
+    template<>
+    CONSTEXPR_FUNC String ToString<std::thread::id> (const std::thread::id &obj)
+    {
+        std::ostringstream oss;
+        oss << obj;
+        return oss.str();
+    }
+
     template<typename T>
     requires std::is_pointer_v<T>
     CONSTEXPR_FUNC String ToString(T obj)

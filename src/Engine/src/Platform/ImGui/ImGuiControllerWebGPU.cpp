@@ -1,17 +1,19 @@
 //
 // Created by Александр Лебедев on 01.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "ImGuiControllerWebGPU.h"
 #include "backends/imgui_impl_wgpu.h"
 #include "Renderer/Renderer.h"
+#if defined(BEE_COMPILE_SDL)
 #include "backends/imgui_impl_sdl3.h"
+#endif
 #include "Core/Application.h"
 
 namespace BeeEngine::Internal
 {
 
-    void ImGuiControllerWebGPU::Initialize(uint16_t width, uint16_t height, uint64_t window)
+    void ImGuiControllerWebGPU::Initialize(uint16_t width, uint16_t height, uintptr_t window)
     {
         //this initializes the core structures of imgui
         ImGui::CreateContext();
@@ -40,6 +42,7 @@ namespace BeeEngine::Internal
 
         switch (Application::GetOsPlatform())
         {
+#if defined(BEE_COMPILE_SDL)
             case OSPlatform::Linux:
                 ImGui_ImplSDL3_InitForVulkan((SDL_Window*)window);
                 break;
@@ -49,6 +52,8 @@ namespace BeeEngine::Internal
             case OSPlatform::Windows:
                 ImGui_ImplSDL3_InitForVulkan((SDL_Window*)window);
                 break;
+#endif
+
             case OSPlatform::iOS:
             case OSPlatform::Android:
             case OSPlatform::None:
@@ -56,14 +61,21 @@ namespace BeeEngine::Internal
                 BeeCoreError("ImGuiControllerWebGPU::Initialize: Platform {} is not supported", ToString(Application::GetOsPlatform()));
                 break;
         }
-        ImGui_ImplWGPU_Init(m_Device.GetDevice(), 2, m_Device.GetSwapChain().GetFormat(), m_Device.GetSwapChain().GetDepthFormat());
+        ImGui_ImplWGPU_InitInfo init_info = {};
+        init_info.Device = m_Device.GetDevice();
+        init_info.DepthStencilFormat = m_Device.GetSwapChain().GetDepthFormat();
+        init_info.RenderTargetFormat = m_Device.GetSwapChain().GetFormat();
+        init_info.NumFramesInFlight = 2;
+        ImGui_ImplWGPU_Init(&init_info);
         ImGui_ImplWGPU_CreateDeviceObjects();
     }
 
     void ImGuiControllerWebGPU::Update()
     {
         ImGui_ImplWGPU_NewFrame();
+#if defined(BEE_COMPILE_SDL)
         ImGui_ImplSDL3_NewFrame();
+#endif
         ImGui::NewFrame();
     }
 
@@ -83,7 +95,9 @@ namespace BeeEngine::Internal
     void ImGuiControllerWebGPU::Shutdown()
     {
         ImGui_ImplWGPU_Shutdown();
+#if defined(BEE_COMPILE_SDL)
         ImGui_ImplSDL3_Shutdown();
+#endif
         //ImGui::DestroyContext();
     }
 
@@ -92,3 +106,4 @@ namespace BeeEngine::Internal
 
     }
 }
+#endif

@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/GraphicsDevice.h"
 #include "WebGPUInstance.h"
 #include "WebGPUSwapchain.h"
@@ -145,3 +145,4 @@ namespace BeeEngine::Internal
         void LogAdapterInfo() const noexcept;
     };
 }
+#endif

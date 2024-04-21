@@ -35,7 +35,7 @@ namespace BeeEngine::Editor
 
         void OnAttach() noexcept override;
         void OnDetach() noexcept override;
-        void OnUpdate() noexcept override;
+        void OnUpdate(FrameData& frameData) noexcept override;
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
@@ -106,5 +106,9 @@ namespace BeeEngine::Editor
         void SaveAssetRegistry();
 
         void DeleteAsset(const AssetHandle &handle);
+
+        String GenerateImGuiINIFile() const;
+
+        void SetDefaultImGuiWindowLayoutIfNotPresent();
     };
 }

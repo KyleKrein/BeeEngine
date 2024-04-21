@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/InstancedBuffer.h"
 #include "WebGPUBufferPool.h"
 
@@ -29,3 +29,4 @@ namespace BeeEngine::Internal
         WebGPUBuffer m_Buffer;
     };
 }
+#endif

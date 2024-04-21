@@ -21,6 +21,8 @@ namespace BeeEngine
         virtual void RequestSwapChainRebuild() = 0;
         virtual bool SwapChainRequiresRebuild() = 0;
 
+        virtual uint64_t GetVRAM() const = 0;
+
         /*[[nodiscard]] virtual Ref<Surface> GetSurface() const = 0;
         [[nodiscard]] virtual Ref<CommandPool> GetCommandPool() const = 0;
         [[nodiscard]] virtual DeviceID GetDeviceID() const = 0;

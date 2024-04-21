@@ -7,7 +7,6 @@
 #include <gsl/span>
 #include "Core/TypeDefines.h"
 #include "Model.h"
-#include "Platform/WebGPU/WebGPUBufferPool.h"
 #include "RendererStatistics.h"
 #include "Core/Color4.h"
 #include "Font.h"
@@ -72,55 +71,26 @@ namespace BeeEngine::Internal
     {
         friend BeeEngine::SceneRenderer;
     public:
-        static void Initialize();
-        static void SubmitInstance(RenderInstance&& instance, gsl::span<byte> instanceData)
+        RenderingQueue();
+        RenderingQueue(size_t sizeInBytes);
+        ~RenderingQueue();
+        void SubmitInstance(RenderInstance&& instance, gsl::span<byte> instanceData);
+        void SubmitLine(const glm::vec3& start, const glm::vec3& end, const Color4& color, BindingSet& cameraBindingSet, float lineWidth);
+        void SubmitText(const std::string &text, Font& font, BindingSet& cameraBindingSet, const glm::mat4 &transform, const TextRenderingConfiguration& config);
+        void Flush(CommandBuffer& commandBuffer);
+        void FinishFrame(CommandBuffer& commandBuffer);
+
+        static const RendererStatistics& GetGlobalStatistics()
         {
-            GetInstance().SubmitInstanceImpl(std::move(instance), instanceData);
+            return s_Statistics;
         }
 
-        static void SubmitText(const std::string& text, Font& font, BindingSet& cameraBindingSet, const glm::mat4& transform, const TextRenderingConfiguration& config)
-        {
-            GetInstance().SubmitTextImpl(text, font, cameraBindingSet, transform, config);
-        }
+        static void ResetStatistics();
 
-        static void SubmitLine(const glm::vec3& start, const glm::vec3& end, const Color4& color, BindingSet& cameraBindingSet, float lineWidth)
-        {
-            GetInstance().SubmitLineImpl(start, end, color, cameraBindingSet, lineWidth);
-        }
-
-        static void Flush()
-        {
-            GetInstance().FlushImpl();
-        }
-        static void FinishFrame()
-        {
-            GetInstance().FinishFrameImpl();
-        }
-        static const RendererStatistics& GetStatistics()
-        {
-            return GetInstance().m_Statistics;
-        }
-        static void ResetStatistics()
-        {
-            GetInstance().ResetStatisticsImpl();
-        }
     private:
-
-        void SubmitTextImpl(const std::string &text, Font& font, BindingSet& cameraBindingSet, const glm::mat4 &transform, const TextRenderingConfiguration& config);
-        static RenderingQueue& GetInstance()
-        {
-            static RenderingQueue instance {};
-            return instance;
-        }
-        void SubmitInstanceImpl(RenderInstance&& instance, gsl::span<byte> instanceData);
-        void SubmitLineImpl(const glm::vec3& start, const glm::vec3& end, const Color4& color, BindingSet& cameraBindingSet, float lineWidth);
-        void FlushImpl();
-        void FinishFrameImpl();
-
         std::unordered_map<RenderInstance, RenderData> m_SubmittedInstances;
         std::vector<Scope<InstancedBuffer>> m_InstanceBuffers;
         size_t m_CurrentInstanceBufferIndex {0};
-        RendererStatistics m_Statistics {};
-        void ResetStatisticsImpl();
+        static RendererStatistics s_Statistics;
     };
 }

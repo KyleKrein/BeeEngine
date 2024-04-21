@@ -5,7 +5,7 @@
 #include "WebGPUMesh.h"
 #include "WebGPUGraphicsDevice.h"
 #include "Renderer/RenderPass.h"
-
+#if defined(BEE_COMPILE_WEBGPU)
 namespace BeeEngine::Internal
 {
 
@@ -58,3 +58,4 @@ namespace BeeEngine::Internal
         CreateIndexBuffers(indices);
     }
 }
+#endif

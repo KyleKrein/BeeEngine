@@ -46,16 +46,16 @@ namespace BeeEngine
         {
             g_Restart = false;
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
-            Job::Initialize();
             Internal::InitEngine();
+            Job::Initialize();
             Internal::WindowsUTF8ConsoleOutput consoleOutput;
             Application* application = CreateApplication({argc, argv});
             BEE_DEBUG_END_PROFILING_SESSION();
             application->Run();
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineShutdown", "shutdown.json");
             delete application;
-            Internal::ShutDownEngine();
             Job::Shutdown();
+            Internal::ShutDownEngine();
             BEE_DEBUG_END_PROFILING_SESSION();
         }
         return 0;

@@ -18,6 +18,10 @@
 #include <webgpu/webgpu.h>
 #endif
 
+#if defined(BEE_COMPILE_VULKAN)
+#include <vulkan/vulkan.hpp>
+#endif
+
 namespace BeeEngine
 {
     struct Color4
@@ -39,6 +43,14 @@ namespace BeeEngine
         constexpr static Color4 FromNormalized(float r, float g, float b, float a = 1.0f) noexcept
         {
             return {r, g, b, a};
+        }
+
+        constexpr explicit operator int32_t() const
+        {
+            return static_cast<int32_t>(m_R * 255.0f) << 24 |
+                   static_cast<int32_t>(m_G * 255.0f) << 16 |
+                   static_cast<int32_t>(m_B * 255.0f) << 8 |
+                   static_cast<int32_t>(m_A * 255.0f);
         }
 
         constexpr Color4(Color4&& other) noexcept = default;
@@ -67,6 +79,12 @@ namespace BeeEngine
             return {static_cast<double>(m_R), static_cast<double>(m_G), static_cast<double>(m_B), static_cast<double>(m_A)};
         }
 #endif
+#if defined(BEE_COMPILE_VULKAN)
+        constexpr inline operator vk::ClearValue() const
+        {
+            return vk::ClearColorValue{m_R, m_G, m_B, m_A};
+        }
+#endif
 #if __has_include(<imgui.h>)
         constexpr inline operator ImVec4() const
         {
@@ -89,10 +107,23 @@ namespace BeeEngine
             {
                 return {R, G, B, A};
             }
+            constexpr explicit operator int32_t() const
+            {
+                return static_cast<int32_t>(R * 255.0f) << 24 |
+                       static_cast<int32_t>(G * 255.0f) << 16 |
+                       static_cast<int32_t>(B * 255.0f) << 8 |
+                       static_cast<int32_t>(A * 255.0f);
+            }
 #if __has_include(<imgui.h>)
             constexpr operator ImVec4() const
             {
                 return {R, G, B, A};
+            }
+#endif
+#if defined(BEE_COMPILE_VULKAN)
+            constexpr operator vk::ClearValue() const
+            {
+                return vk::ClearColorValue{R, G, B, A};
             }
 #endif
         };

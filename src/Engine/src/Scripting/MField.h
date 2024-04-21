@@ -15,7 +15,7 @@ namespace BeeEngine
         friend class MObject;
     public:
         MField(MClass& mClass, const String& name, MType type, MVisibility visibility, bool isStatic, uint64_t fieldID)
-            : m_Class(&mClass), m_Name(name), m_Type(type), m_Visibility(visibility), m_IsStatic(isStatic) {}
+            : m_Class(&mClass), m_Name(name), m_Type(type), m_Visibility(visibility), m_IsStatic(isStatic), m_FieldID(fieldID) {}
             bool IsStatic() const { return m_IsStatic; }
             MType GetType() const { return m_Type; }
             MVisibility GetVisibility() const { return m_Visibility; }

@@ -107,4 +107,7 @@ namespace BeeEngine
             s.insert( pos, replace );
         }
     }
+
+    UTF8String ToUppercase(std::string_view string);
+    UTF8String ToLowercase(std::string_view string);
 }

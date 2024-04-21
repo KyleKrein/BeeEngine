@@ -81,8 +81,10 @@ namespace BeeEngine
 
     void GameScript::InvokeOnCreate()
     {
-        if(m_OnCreate)
-            m_Instance.Invoke(*m_OnCreate, nullptr);
+        if(!m_OnCreate)
+            return;
+        m_Instance.Invoke(*m_OnCreate, nullptr);
+        m_OnCreate = nullptr; //to prevent double call
     }
 
     void GameScript::InvokeOnDestroy()

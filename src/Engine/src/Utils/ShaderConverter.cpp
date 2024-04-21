@@ -5,14 +5,91 @@
 //#include <spirv_cross/spirv_cross.hpp>
 #if defined(BEE_COMPILE_WEBGPU)
 #include "src/tint/writer/wgsl/generator_impl.h"
+#else
+//#include <src/tint/lang/spirv/reader/ast_parser/parse.h>
+#endif
 #include "Renderer/ShaderTypes.h"
 #include <tint/tint.h>
-#endif
+
+#include "FileSystem/File.h"
 
 namespace BeeEngine
 {
+    class CustomIncluder final : public glslang::TShader::Includer
+    {
+    public:
+        IncludeResult* includeSystem(const char* headerName, const char* includerName, size_t inclusionDepth) override
+        {
+            String code = File::ReadFile(headerName);
+            char* result = new char[strlen(code.c_str())];
+            strcpy(result, code.c_str());
+            return new IncludeResult(headerName, result, code.size(), result);
+        }
+
+        IncludeResult* includeLocal(const char*headerName, const char*includerName, size_t) override
+        {
+            String code = File::ReadFile(std::filesystem::current_path() / "Shaders" / headerName);
+            size_t length = strlen(code.c_str()) + 1;
+            char* result = new char[length];
+            strcpy(result, code.c_str());
+            return new IncludeResult(headerName, result, length-1, result);
+        }
+
+        void releaseInclude(IncludeResult* result) override
+        {
+            delete[] result->headerData;
+            delete result;
+        }
+
+        ~CustomIncluder() override = default;
+    };
+
+    BeeEngine::ShaderUniformDataType GlslangToShaderUniformDataType(const glslang::TType& type)
+    {
+        auto basicType = type.getBasicType();
+        if(basicType == glslang::EbtSampler)
+        {
+            auto& sampler = type.getSampler();
+            if(sampler.isTexture())
+            {
+                return BeeEngine::ShaderUniformDataType::SampledTexture;
+            }
+            return BeeEngine::ShaderUniformDataType::Sampler;
+        }
+
+        return ShaderUniformDataType::Data;
+    }
+
+    void glslang_reflection(glslang::TIntermediate* intermediate, BeeEngine::BufferLayoutBuilder& layout)
+    {
+        class RefrectionTraverser : public glslang::TIntermTraverser {
+        public:
+            RefrectionTraverser(BeeEngine::BufferLayoutBuilder& layout)
+                : layout(layout)
+            {
+            }
+            virtual void visitSymbol(glslang::TIntermSymbol* symbol) override {
+                if (symbol->getQualifier().isUniformOrBuffer()) {
+                    auto name = symbol->getName();
+                    auto qualifier = symbol->getQualifier();
+                    if(qualifier.isUniform())
+                    {
+                        layout.AddUniform(GlslangToShaderUniformDataType(symbol->getType()), qualifier.layoutSet, qualifier.layoutBinding, 0);
+                    }
+                }
+            }
+        private:
+            BufferLayoutBuilder& layout;
+        };
+
+        RefrectionTraverser traverser{layout};
+
+        auto root = intermediate->getTreeRoot();
+        root->traverse(&traverser);
+    }
+
     bool ShaderConverter::GLSLtoSPV(const ShaderStage shader_type, const char *pshader,
-                                   std::vector<uint32_t> &spirv)
+                                    std::vector<uint32_t> &spirv, BufferLayoutBuilder& layout)
     {
         EShLanguage stage = static_cast<EShLanguage>(shader_type);
         glslang::TShader shader(stage);
@@ -28,8 +105,8 @@ namespace BeeEngine
         shader.setStrings(shaderStrings, 1);
         shader.setAutoMapBindings(true);
         shader.setAutoMapLocations(true);
-
-        if (!shader.parse(&Resources, 100, false, messages)) {
+        CustomIncluder includer;
+        if (!shader.parse(&Resources, 450, false, messages, includer)) {
             BeeCoreError(shader.getInfoLog());
             BeeCoreError(shader.getInfoDebugLog());
             return false; // something didn't work
@@ -46,6 +123,7 @@ namespace BeeEngine
             Finalize();
             return false;
         }
+        glslang_reflection(program.getIntermediate(stage), layout);
         glslang::GlslangToSpv(*program.getIntermediate(stage), spirv);
         return true;
     }
@@ -258,8 +336,15 @@ namespace BeeEngine
     BufferLayout ShaderConverter::GenerateLayout(in<std::vector<uint32_t>> spirv, BufferLayoutBuilder& builder)
     {
         BeeCoreTrace("Generating buffer layout for spirv shader");
+#if defined(BEE_COMPILE_WEBGPU)
         auto shader = tint::reader::spirv::Parse(spirv);
         tint::inspector::Inspector inspector(&shader);
+#else
+        tint::spirv::reader::Options options;
+        options.allowed_features = tint::wgsl::AllowedFeatures::Everything();
+        auto shader = tint::spirv::reader::Read(spirv, options);
+        tint::inspector::Inspector inspector(shader);
+#endif
         auto entryPoints = inspector.GetEntryPoints();
         for(auto& entryPoint : entryPoints)
         {
@@ -269,7 +354,17 @@ namespace BeeEngine
             builder.NumberOfInputs(inputs.size());
             for(auto& input : inputs)
             {
+#if defined(BEE_COMPILE_WEBGPU)
                 builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.location_attribute);
+#else
+                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.attributes.location.value());
+#endif
+            }
+            auto& outputs = entryPoint.output_variables;
+            builder.NumberOfOutputs(outputs.size());
+            for(auto& output : outputs)
+            {
+                builder.AddOutput(GetShaderDataType(output.component_type, output.composition_type),output.name, output.attributes.location.value());
             }
 
             const auto& resourceBindings = inspector.GetResourceBindings(entryPoint.name);
@@ -293,6 +388,7 @@ namespace BeeEngine
     }
     BufferLayout ShaderConverter::GenerateLayout(in<std::string> wgsl, in<std::string> path, BufferLayoutBuilder& builder)
     {
+#if defined(BEE_COMPILE_WEBGPU)
         BeeCoreTrace("Generating buffer layout for wgsl shader");
         tint::Source::File file(path, wgsl);
         auto shader = tint::reader::wgsl::Parse(&file);
@@ -332,6 +428,9 @@ namespace BeeEngine
         {
 
         }*/
+#else
+        BeeCoreError("Trying to generate buffer layout for WGSL without WebGPU");
+#endif
         return builder.Build();
     }
     int extractIntegerWords(const std::string& str)

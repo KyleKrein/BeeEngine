@@ -24,7 +24,7 @@ namespace BeeEngine
 
         }
 
-        void DebugLayer::OnUpdate()
+        void DebugLayer::OnUpdate(FrameData& frameData)
         {
             if(Instrumentor::Get().IsSessionActive())
             {

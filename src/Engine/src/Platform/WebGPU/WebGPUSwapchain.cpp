@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 30.06.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUSwapchain.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "WebGPUGraphicsDevice.h"
@@ -69,3 +69,4 @@ namespace BeeEngine::Internal
         wgpuSwapChainRelease(m_SwapChain);
     }
 }
+#endif

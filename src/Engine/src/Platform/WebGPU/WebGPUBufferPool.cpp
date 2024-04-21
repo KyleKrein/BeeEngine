@@ -1,7 +1,7 @@
 //
 // Created by alexl on 17.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUGraphicsDevice.h"
 #include "Core/DeletionQueue.h"
 #include "WebGPUBufferPool.h"
@@ -74,3 +74,4 @@ namespace BeeEngine::Internal
 
     }
 }
+#endif

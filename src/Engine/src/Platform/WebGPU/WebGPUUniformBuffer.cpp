@@ -1,7 +1,7 @@
 //
 // Created by alexl on 11.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUUniformBuffer.h"
 #include "WebGPUGraphicsDevice.h"
 #include "Core/DeletionQueue.h"
@@ -34,7 +34,7 @@ namespace BeeEngine::Internal
 
     }
 
-    std::vector<WGPUBindGroupLayoutEntry> WebGPUUniformBuffer::GetBindGroupLayoutEntry() const
+    std::vector<IBindable::BindGroupLayoutEntryType> WebGPUUniformBuffer::GetBindGroupLayoutEntry() const
     {
         WGPUBindGroupLayoutEntry entry = {};
         m_GraphicsDevice.SetDefault(entry);
@@ -43,7 +43,7 @@ namespace BeeEngine::Internal
         return {entry};
     }
 
-    std::vector<WGPUBindGroupEntry> WebGPUUniformBuffer::GetBindGroupEntry() const
+    std::vector<IBindable::BindGroupEntryType> WebGPUUniformBuffer::GetBindGroupEntry() const
     {
         WGPUBindGroupEntry entry = {};
         m_GraphicsDevice.SetDefault(entry);
@@ -52,3 +52,4 @@ namespace BeeEngine::Internal
         return {entry};
     }
 }
+#endif

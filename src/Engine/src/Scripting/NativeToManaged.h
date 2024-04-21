@@ -57,6 +57,7 @@ namespace BeeEngine
         static void* MethodInvoke(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedMethodID methodID, GCHandle objectHandle, void** args);
         static void UnmanagedMethodCreateDelegateAndSetToField(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedMethodID methodID, GCHandle objectHandle, void* functionPtr);
         static String StringGetFromManagedString(void* managedString);
+        static GCHandle StringCreateManaged(const String& string);
     private:
         static NativeToManagedData* s_Data;
 

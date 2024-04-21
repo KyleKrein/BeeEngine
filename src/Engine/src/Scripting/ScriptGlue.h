@@ -15,6 +15,23 @@ namespace BeeEngine
     {
     public:
         static void Register();
+        /**
+         * @brief Component type enum to be sent to and from C# side
+         * 
+         * IMPORTANT: If you change this enum, you must also change 
+         * the corresponding enum in InternalCalls.cs and
+         * add the corresponding case in the switch statement in
+         * ScriptGlue.cpp
+         */
+        enum class ComponentType: uint32_t
+        {
+            Transform = 0x00,
+            SpriteRenderer = 0x01,
+            TextRenderer = 0x02,
+            BoxCollider2D = 0x03,
+            Rigidbody2D = 0x04,
+            CircleRenderer = 0x05,
+        };
     private:
         struct ArrayInfo
         {
@@ -32,10 +49,10 @@ namespace BeeEngine
         static void Log_Error(void* message);
         static void Log_Trace(void* message);
         static void* Entity_GetTransformComponent(uint64_t id);
-        //static void* Entity_CreateComponent(uint64_t id, MonoReflectionType* reflectionType);
-        //static int32_t Entity_HasComponent(uint64_t id, MonoReflectionType* reflectionType);
-        //static void Entity_RemoveComponent(uint64_t id, MonoReflectionType* reflectionType);
-        //static void* Entity_GetComponent(uint64_t id, MonoReflectionType* reflectionType);
+        static void* Entity_CreateComponent(uint64_t id, ComponentType componentType);
+        static int32_t Entity_HasComponent(uint64_t id, ComponentType componentType);
+        static void Entity_RemoveComponent(uint64_t id, ComponentType componentType);
+        static void* Entity_GetComponent(uint64_t id, ComponentType componentType);
         static void Entity_GetTranslation(uint64_t id, glm::vec3* outTranslation);
         static void Entity_SetTranslation(uint64_t id, glm::vec3* inTranslation);
         static uint64_t Entity_GetParent(uint64_t id);

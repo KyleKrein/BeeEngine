@@ -1,11 +1,6 @@
 #pragma once
 
 #include <gsl/gsl>
-#include <utility>
-#include <vector>
-#include "Core/Logging/Log.h"
-#include "Core/TypeDefines.h"
-//#include "ObjectPool.h"
 
 namespace BeeEngine
 {
@@ -24,22 +19,23 @@ namespace BeeEngine
         WindowResize = 2,
         WindowFocus = 3,
         WindowMoved = 4,
-        AppTick = 5,
-        AppUpdate = 6,
-        AppRender = 7,
-        KeyPressed = 8,
-        KeyReleased = 9,
-        KeyTyped = 10,
-        MouseButtonPressed = 11,
-        MouseButtonReleased = 12,
-        MouseMoved = 13,
-        MouseScrolled = 14,
-        FileDrop = 15,
-        FileDrag = 16,
-        FileDragEnter = 17,
-        FileDragLeave = 18,
-        FileDragStart = 19,
-        FileDragEnd = 20,
+        WindowMinimized = 5,
+        AppTick = 6,
+        AppUpdate = 7,
+        AppRender = 8,
+        KeyPressed = 9,
+        KeyReleased = 10,
+        KeyTyped = 11,
+        MouseButtonPressed = 12,
+        MouseButtonReleased = 13,
+        MouseMoved = 14,
+        MouseScrolled = 15,
+        FileDrop = 16,
+        FileDrag = 17,
+        FileDragEnter = 18,
+        FileDragLeave = 19,
+        FileDragStart = 20,
+        FileDragEnd = 21,
     };
     class Event
     {

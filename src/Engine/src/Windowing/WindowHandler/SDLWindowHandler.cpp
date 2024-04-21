@@ -3,6 +3,7 @@
 //
 
 #include "SDLWindowHandler.h"
+#if defined(BEE_COMPILE_SDL)
 #include "Core/Application.h"
 #include "Platform/Vulkan/VulkanInstance.h"
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
@@ -22,7 +23,7 @@
 namespace BeeEngine::Internal
 {
 
-    SDLWindowHandler::SDLWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
+    SDLWindowHandler::SDLWindowHandler(const ApplicationProperties &properties, EventQueue &eventQueue)
     : WindowHandler(eventQueue), m_Finalizer()
     {
         s_Instance = this;
@@ -37,9 +38,9 @@ namespace BeeEngine::Internal
 
         switch (properties.PreferredRenderAPI)
         {
-            //case Vulkan:
-            //    windowFlags |= SDL_WINDOW_VULKAN;
-            //    break;
+            case Vulkan:
+                windowFlags |= SDL_WINDOW_VULKAN;
+                break;
             case WebGPU:
                 if constexpr (Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
                 {
@@ -54,8 +55,8 @@ namespace BeeEngine::Internal
         {
             windowFlags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
         }
-        m_Width = properties.Width;
-        m_Height = properties.Height;
+        m_Width = properties.WindowWidth;
+        m_Height = properties.WindowHeight;
         m_Title = properties.Title;
 
         m_Window = SDL_CreateWindow(properties.Title, gsl::narrow_cast<int>(m_Width), gsl::narrow_cast<int>(m_Height), windowFlags);
@@ -184,6 +185,7 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_MINIMIZED:
                 {
+                    m_Events.AddEvent(CreateScope<WindowMinimizedEvent>(true));
                     break;
                 }
                 case SDL_EVENT_WINDOW_MAXIMIZED:
@@ -192,6 +194,7 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_RESTORED:
                 {
+                    m_Events.AddEvent(CreateScope<WindowMinimizedEvent>(false));
                     break;
                 }
                 case SDL_EVENT_WINDOW_MOUSE_ENTER:
@@ -415,7 +418,7 @@ namespace BeeEngine::Internal
         return m_IsRunning;
     }
 
-    void SDLWindowHandler::UpdateTime()
+    Time::secondsD SDLWindowHandler::UpdateTime()
     {
         static uint64_t lastTime = 0;
         static uint64_t currentTime = SDL_GetPerformanceCounter();
@@ -423,6 +426,7 @@ namespace BeeEngine::Internal
         currentTime = SDL_GetPerformanceCounter();
         auto deltatime = ((double)(currentTime - lastTime)) / (double)SDL_GetPerformanceFrequency();
         SetDeltaTime(Time::secondsD(deltatime), Time::secondsD(((double)currentTime)/(double)SDL_GetPerformanceFrequency()));
+        return Time::secondsD(deltatime);
         //UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetPerformanceCounter()));
     }
 
@@ -1253,22 +1257,4 @@ namespace BeeEngine::Internal
     }
 
 }
-uint32_t BeeEngine::Hardware::GetSystemRAM()
-{
-    return SDL_GetSystemRAM();
-}
-
-BeeEngine::Hardware::SystemTheme BeeEngine::Hardware::GetSystemTheme()
-{
-    using enum BeeEngine::Hardware::SystemTheme;
-    auto theme = SDL_GetSystemTheme();
-    switch (theme)
-    {
-        case SDL_SYSTEM_THEME_LIGHT:
-            return SystemTheme::Light;
-        case SDL_SYSTEM_THEME_DARK:
-            return SystemTheme::Dark;
-        default:
-            return SystemTheme::Unknown;
-    }
-}
+#endif

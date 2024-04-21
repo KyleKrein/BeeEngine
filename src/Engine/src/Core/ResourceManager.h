@@ -152,9 +152,14 @@ namespace BeeEngine
             return extension == ".beeprefab";
         }
 
+        static bool IsMeshSourceExtension(const Path &extension) noexcept
+        {
+            return extension == ".gltf" or extension == ".glb";
+        }
+
         static bool IsAssetExtension(const Path &extension) noexcept
         {
-            return IsTexture2DExtension(extension) || IsFontExtension(extension) || IsPrefabExtension(extension);
+            return IsTexture2DExtension(extension) || IsFontExtension(extension) || IsPrefabExtension(extension) || IsMeshSourceExtension(extension);
         }
 
         static AssetType GetAssetTypeFromExtension(const Path &extension)
@@ -170,6 +175,10 @@ namespace BeeEngine
             if(IsPrefabExtension(extension))
             {
                 return AssetType::Prefab;
+            }
+            if(IsMeshSourceExtension(extension))
+            {
+                return AssetType::MeshSource;
             }
             return AssetType::None;
         }

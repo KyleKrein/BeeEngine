@@ -12,4 +12,6 @@ namespace BeeEngine
     static_assert(sizeof(float64_t) == 8, "float64_t is not 8 bytes!");
     using bool8_t = bool;
     static_assert(sizeof(bool8_t) == 1, "bool8_t is not 1 byte!");
+    using bool32_t = int32_t;
+    static_assert(sizeof(bool32_t) == 4, "bool32_t is not 4 bytes!");
 }
