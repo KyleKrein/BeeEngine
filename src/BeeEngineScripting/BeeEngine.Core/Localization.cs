@@ -85,5 +85,7 @@ namespace BeeEngine
                 }
             }
         }
+
+        //TODO: Make a cache invalidation method, that can be called when a locale domain is changed (for example from C++ side)
     }
 }

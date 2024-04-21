@@ -254,7 +254,7 @@ namespace BeeEngine
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow(bool isOk, string format, params object[] args)
+        public static void AssertAndThrow([DoesNotReturnIf(false)]bool isOk, string format, params object[] args)
         {
             if (isOk)
             {
@@ -267,7 +267,7 @@ namespace BeeEngine
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow<T>(bool isOk, string format, T arg)
+        public static void AssertAndThrow<T>([DoesNotReturnIf(false)]bool isOk, string format, T arg)
         {
             if (isOk)
             {
@@ -280,7 +280,7 @@ namespace BeeEngine
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow<T0, T1>(bool isOk, string format, T0 arg0, T1 arg1)
+        public static void AssertAndThrow<T0, T1>([DoesNotReturnIf(false)]bool isOk, string format, T0 arg0, T1 arg1)
         {
             if (isOk)
             {
@@ -293,7 +293,7 @@ namespace BeeEngine
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow<T0, T1, T2>(bool isOk, string format, T0 arg0, T1 arg1, T2 arg2)
+        public static void AssertAndThrow<T0, T1, T2>([DoesNotReturnIf(false)]bool isOk, string format, T0 arg0, T1 arg1, T2 arg2)
         {
             if (isOk)
             {
@@ -306,7 +306,7 @@ namespace BeeEngine
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow(bool isOk, string o)
+        public static void AssertAndThrow([DoesNotReturnIf(false)]bool isOk, string o)
         {
             if (isOk)
             {
@@ -318,6 +318,11 @@ namespace BeeEngine
         }
     }
 
+    /// <summary>
+    /// Logs messages to the console.
+    /// But the function calls are only compiled in debug mode
+    /// and completely removed in release mode.
+    /// </summary>
     public static class DebugLog
     {
         private static LogLevel LogLevel { get; set; } = LogLevel.Trace;
@@ -593,7 +598,7 @@ namespace BeeEngine
 
         [Conditional("DEBUG")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow(bool isOk, string format, params object[] args)
+        public static void AssertAndThrow([DoesNotReturnIf(false)]bool isOk, string format, params object[] args)
         {
             if (isOk)
             {
@@ -607,7 +612,7 @@ namespace BeeEngine
 
         [Conditional("DEBUG")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow<T>(bool isOk, string format, T arg)
+        public static void AssertAndThrow<T>([DoesNotReturnIf(false)]bool isOk, string format, T arg)
         {
             if (isOk)
             {
@@ -621,7 +626,7 @@ namespace BeeEngine
 
         [Conditional("DEBUG")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow<T0, T1>(bool isOk, string format, T0 arg0, T1 arg1)
+        public static void AssertAndThrow<T0, T1>([DoesNotReturnIf(false)]bool isOk, string format, T0 arg0, T1 arg1)
         {
             if (isOk)
             {
@@ -635,7 +640,7 @@ namespace BeeEngine
 
         [Conditional("DEBUG")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow<T0, T1, T2>(bool isOk, string format, T0 arg0, T1 arg1, T2 arg2)
+        public static void AssertAndThrow<T0, T1, T2>([DoesNotReturnIf(false)]bool isOk, string format, T0 arg0, T1 arg1, T2 arg2)
         {
             if (isOk)
             {
@@ -649,7 +654,7 @@ namespace BeeEngine
 
         [Conditional("DEBUG")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void AssertAndThrow(bool isOk, string o)
+        public static void AssertAndThrow([DoesNotReturnIf(false)]bool isOk, string o)
         {
             if (isOk)
             {

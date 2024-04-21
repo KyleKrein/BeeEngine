@@ -47,3 +47,24 @@ windows_install.bat
 5) Load CMakeLists and wait. You might need to reload it several times in order to fetch all dependencies and generate all code
 
 6) Choose one of the targets to build: BeeEngine to get a static lib or BeeEngineEditor to build editor app, that uses BeeEngine
+
+### Documentation Generation
+Note: This documentation is far from being complete and is meant to be used for internal development only
+
+1) Install doxygen from https://www.doxygen.nl/download.html
+
+2) Install MiKTeX from https://miktex.org/download
+
+3) Install Graphviz from https://graphviz.org/download/
+
+4) Open terminal at project/docs directory and type
+
+~~~
+doxygen DoxyfileCpp
+~~~
+
+~~~
+doxygen DoxyfileCs
+~~~
+
+5) Wait for generation to complete, go to folder docs and open index.html
