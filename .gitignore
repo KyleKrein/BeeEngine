@@ -55,6 +55,8 @@ build/Release
 obj
 .DS_Store
 
+docs
+
 BeeEngineScripting.sln.DotSettings.user
 
 [Bb][Uu][Ii][Ll][Dd]/

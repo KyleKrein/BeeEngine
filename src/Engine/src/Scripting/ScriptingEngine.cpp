@@ -231,7 +231,7 @@ namespace BeeEngine
             }
             if(mClass->GetName() == "LifeTimeManager")
             {
-                static constexpr auto flags = static_cast<ManagedBindingFlags>(ManagedBindingFlags_Public | ManagedBindingFlags_Static);
+                static constexpr auto flags = static_cast<ManagedBindingFlags>(ManagedBindingFlags_Public | ManagedBindingFlags_Static | ManagedBindingFlags_NonPublic);
                 s_Data.AddEntityScriptMethod = &mClass->GetMethod("AddEntityScript", flags);
                 s_Data.EntityWasRemovedMethod = &mClass->GetMethod("EntityWasRemoved", flags);
                 s_Data.EndSceneMethod = &mClass->GetMethod("EndScene", flags);
@@ -283,20 +283,11 @@ namespace BeeEngine
         }
         auto script = CreateRef<GameScript>(*pClass, entity, GetScriptingLocale());
         s_Data.EntityObjects[uuid] = script;
-        //
         {
-            //MonoObject *entityID = mono_value_box(s_Data.AppDomain, s_Data.ulongClass, &ulongUUID);
-            //MonoException *exc = nullptr;
             auto instance = script->GetMObject().GetHandle();
-            void* params[] = {&uuid, &instance};
+            void* params[] = {&uuid, instance};
+            BeeCoreTrace("Params: {} {}", (uintptr_t)params[0], (uintptr_t)params[1]);
             s_Data.AddEntityScriptMethod->InvokeStatic(params);
-            /*if(exc)
-            {
-                MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
-                char* message = mono_string_to_utf8(msg);
-                BeeCoreError("Exception while adding script for entity {} in C#: {}", uuid, message);
-                mono_free(message);
-            }*/
         }
     }
     void ScriptingEngine::OnEntityDestroyed(UUID uuid)
@@ -381,9 +372,11 @@ namespace BeeEngine
 
     void ScriptingEngine::RegisterNativeFunction(const String& name, void* function)
     {
-        MField& field = s_Data.InternalCallsClass->GetField("s_" + name);
-        auto& mclass = field.GetClass();
-        NativeToManaged::UnmanagedMethodCreateDelegateAndSetToField(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), field.GetFieldID(), nullptr,function);
+        MMethod& assignFunction = s_Data.InternalCallsClass->GetMethod("AssignFunction", (ManagedBindingFlags)(ManagedBindingFlags_NonPublic | ManagedBindingFlags_Static));;
+        GCHandle str = NativeToManaged::StringCreateManaged(name);
+        void* params[] = {&str, &function};
+        assignFunction.InvokeStatic(params);
+        NativeToManaged::ObjectFreeGCHandle(str);
     }
 
     void ScriptingEngine::ReloadAssemblies()

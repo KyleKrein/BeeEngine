@@ -124,7 +124,6 @@ namespace BeeEngine::Locale
             auto &locale = m_SelectedLocale.GetLanguageString();
             auto &keys = m_LocaleKeys[locale];
             size_t i = 0;
-            size_t j = 0;
             static std::vector<String> *valuesPtr = nullptr;
             static size_t variationIndex = 0;
             ImGui::BeginTable("localization_table", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders);
@@ -170,7 +169,7 @@ namespace BeeEngine::Locale
                 columnWidth = ImGui::GetColumnWidth();
                 ImGui::PushItemWidth(columnWidth -
                                          (buttonWidth + ImGui::GetStyle().ItemSpacing.x));
-                ImGui::InputText(FormatString("##Value {}", j).c_str(), &value);
+                ImGui::InputText(FormatString("##Value {}", i).c_str(), &value);
                 ImGui::SameLine();
                 if (ImGui::Button(/*"-"*/FormatString("-## {}", i).c_str(), {buttonWidth, buttonWidth}))
                 {

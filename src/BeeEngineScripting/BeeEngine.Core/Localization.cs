@@ -53,7 +53,11 @@ namespace BeeEngine
             if (key is null)
                 throw new ArgumentNullException(nameof(key));
             ValidateArgs(args);
-            int hash = args.GetHashCode() ^ key.GetHashCode();
+            int hash = key.GetHashCode();
+            foreach (var arg in args)
+            {
+                hash ^= arg.GetHashCode();
+            }
             if (!s_CachedDynamicKeys.TryGetValue(hash, out var translate))
             {
                 translate = InternalCalls.Locale_TranslateDynamic(key, args);

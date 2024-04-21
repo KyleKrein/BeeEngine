@@ -126,6 +126,15 @@ internal static class BridgeToNative
         return 0;
     }
 
+    /// <summary>
+    /// ArrayInfo is a struct that contains a pointer to an array 
+    /// of ulong and the length of the array.
+    /// User MUST free the pointer returned by this method using FreeIntPtr later
+    /// IMPORTANT: If this type is changed, the corresponding C++ type 
+    /// in NativeToManaged.cpp must be changed as well
+    /// </summary>
+    /// <param name="Ptr"></param>
+    /// <param name="Length"></param>
     [StructLayout(LayoutKind.Sequential)]
     public record struct ArrayInfo(IntPtr Ptr, ulong Length);
     //User MUST free the pointer returned by this method using FreeIntPtr later
@@ -768,22 +777,22 @@ internal static class BridgeToNative
         }
         object? obj = handle?.Target;
         string? errorMessage = null;
-        if (s_LoadContexts.TryGetValue(contextId, out var context))
+        if (!s_LoadContexts.TryGetValue(contextId, out var context))
         {
             errorMessage = "Context ID is invalid";
             goto error;
         }
-        if (context.AssemblyInfo.TryGetValue(assemblyId, out var assembly))
+        if (!context.AssemblyInfo.TryGetValue(assemblyId, out var assembly))
         {
             errorMessage = "Assembly ID is invalid";
             goto error;
         }
-        if (assembly.Types.TryGetValue(classId, out var type))
+        if (!assembly.Types.TryGetValue(classId, out var type))
         {
             errorMessage = "Class ID is invalid";
             goto error;
         }
-        if (type.Fields.TryGetValue(fieldId, out var field))
+        if (!type.Fields.TryGetValue(fieldId, out var field))
         {
             errorMessage = "Field ID is invalid";
             goto error;
@@ -813,22 +822,22 @@ internal static class BridgeToNative
         }
         object? obj = handle?.Target;
         string? errorMessage = null;
-        if (s_LoadContexts.TryGetValue(contextId, out var context))
+        if (!s_LoadContexts.TryGetValue(contextId, out var context))
         {
             errorMessage = "Context ID is invalid";
             goto error;
         }
-        if (context.AssemblyInfo.TryGetValue(assemblyId, out var assembly))
+        if (!context.AssemblyInfo.TryGetValue(assemblyId, out var assembly))
         {
             errorMessage = "Assembly ID is invalid";
             goto error;
         }
-        if (assembly.Types.TryGetValue(classId, out var type))
+        if (!assembly.Types.TryGetValue(classId, out var type))
         {
             errorMessage = "Class ID is invalid";
             goto error;
         }
-        if (type.Fields.TryGetValue(fieldId, out var field))
+        if (!type.Fields.TryGetValue(fieldId, out var field))
         {
             errorMessage = "Field ID is invalid";
             goto error;
@@ -952,25 +961,45 @@ internal static class BridgeToNative
         var parameters = method.Method.GetParameters();
         var returnType = method.Method.ReturnType;
         object? result = null;
+        Debug.WriteLine("MethodInvoke: {0} on instance {1} with parameters: {2}", method.Method.Name, instance is null ? "null" : instance.ToString(), parameters.Length);
         if (parameters.Length == 0)
         {
-            result = method.Method.Invoke(instance, null);
+            try
+            {
+                result = method.Method.Invoke(instance, null);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("MethodInvoke Error: "+ e.Message);
+                return IntPtr.Zero;
+            }
             goto returnResult;
         }
         var argsArray = new object[parameters.Length];
         for (int i = 0; i < parameters.Length; i++)
         {
+            Debug.Write("Parameter: ", i.ToString());
             var paramType = parameters[i].ParameterType;
             if(paramType.IsValueType)
-                argsArray[i] = Marshal.PtrToStructure(new IntPtr(args[i]), parameters[i].ParameterType);
+                argsArray[i] = Marshal.PtrToStructure((IntPtr)args[i], paramType);
             else
             {
-                GCHandle handle = GCHandle.FromIntPtr(new IntPtr(args[i]));
+                GCHandle handle = GCHandle.FromIntPtr((IntPtr)args[i]);
                 argsArray[i] = handle.Target;
             }
+            Debug.WriteLine("{0}", (UIntPtr)args[i]);
         }
-        result = method.Method.Invoke(instance, argsArray);
+        try
+        {
+            result = method.Method.Invoke(instance, argsArray);
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine("MethodInvoke Error: "+ e.Message);
+            return IntPtr.Zero;
+        }
         returnResult:
+        Debug.WriteLine("MethodInvoke Success");
         if (result == null)
         {
             return IntPtr.Zero;
@@ -1026,6 +1055,7 @@ internal static class BridgeToNative
             goto error;
         }
         field.SetValue(instance, /*Marshal.GetDelegateForFunctionPointer(*/functionPtr/*, field.FieldType)*/);
+        Debug.Print("Delegate set to field. Field: {0}, Value {1}, Old {2}", field.Name, (nuint)field.GetValue(instance), (nuint)functionPtr);
         return;
         error:
         Debug.Print("Unable to set method from Class. Message: {0}", errorMessage);
@@ -1046,6 +1076,14 @@ internal static class BridgeToNative
         }
         contextInfo.Context.Unload();
         s_LoadContexts.Remove(contextId);
+    }
+
+    [UnmanagedCallersOnly]
+    public static IntPtr StringCreateManaged(IntPtr strPtr)
+    {
+        string? str = Marshal.PtrToStringUTF8(strPtr);
+        GCHandle handle = GCHandle.Alloc(str, GCHandleType.Pinned);
+        return GCHandle.ToIntPtr(handle);
     }
     /*[UnmanagedCallersOnly]
     public static void InvokeMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId, object[] args)

@@ -95,7 +95,7 @@ namespace BeeEngine
             set
             {
                 CheckIfDestroyed();
-                if (value == null)
+                if (value is null)
                 {
                     *m_HasTexture = false;
                     return;

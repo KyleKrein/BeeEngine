@@ -463,7 +463,10 @@ namespace BeeEngine::Editor
         bool ctrl = Input::KeyPressed(Key::LeftControl) || Input::KeyPressed(Key::RightControl);
         if(ctrl && Input::KeyPressed(Key::S))
         {
-            SaveScene();
+            Application::SubmitToMainThread([this]()
+            {
+                SaveScene();
+            });
             return true;
         }
         return false;
