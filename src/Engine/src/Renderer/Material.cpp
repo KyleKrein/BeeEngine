@@ -32,13 +32,21 @@ namespace BeeEngine
     Texture2D* MaterialInstance::GetColorTexture() const
     {
         if(!AssetManager::IsAssetHandleValid(colorTexture))
+        {
+            if(colorTextureRef)
+                return colorTextureRef.get();
             return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
+        }
         return &AssetManager::GetAsset<Texture2D>(colorTexture, defaultLocale);
     }
     Texture2D* MaterialInstance::GetMetalRoughTexture() const
     {
         if(!AssetManager::IsAssetHandleValid(metalRoughTexture))
+        {
+            if(metalRoughTextureRef)
+                return metalRoughTextureRef.get();
             return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
+        }
         return &AssetManager::GetAsset<Texture2D>(metalRoughTexture, defaultLocale);
     }
 

@@ -21,6 +21,11 @@ namespace BeeEngine
         MaterialData data;
         AssetHandle colorTexture;
         AssetHandle metalRoughTexture;
+        //Temp
+        Ref<Texture2D> colorTextureRef;
+        Ref<Texture2D> metalRoughTextureRef;
+
+        //
         Ref<UniformBuffer> dataBuffer = UniformBuffer::Create(sizeof(MaterialData));
         Ref<BindingSet> bindingSet = BindingSet::Create({{0, *dataBuffer}, {1, *GetColorTexture()}, {3, *GetMetalRoughTexture()}});
 

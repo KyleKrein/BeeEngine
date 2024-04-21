@@ -44,8 +44,13 @@ namespace BeeEngine
         {
             return AssetType::Texture2D;
         }
+        enum class Filter
+        {
+            Nearest = 0,
+            Linear = 1
+        };
 
-        static Ref<Texture2D> Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels = 4);
+        static Ref<Texture2D> Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels = 4, Filter filter = Filter::Linear, Filter mipmapFilter = Filter::Linear);
 
         BindingSet* GetBindingSet()
         {

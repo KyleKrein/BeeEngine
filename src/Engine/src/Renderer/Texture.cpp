@@ -11,14 +11,14 @@
 namespace BeeEngine
 {
 
-    Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels)
+    Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels, Filter filter, Filter mipmapFilter)
     {
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())
         {
 #if defined(BEE_COMPILE_VULKAN)
             case RenderAPI::Vulkan:
-                return CreateRef<Internal::VulkanTexture2D>(width, height, data, numberOfChannels);
+                return CreateRef<Internal::VulkanTexture2D>(width, height, data, numberOfChannels, filter, mipmapFilter);
 #endif
 #if defined(BEE_COMPILE_WEBGPU)
             case RenderAPI::WebGPU:

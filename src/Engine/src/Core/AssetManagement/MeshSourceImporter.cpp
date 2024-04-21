@@ -6,7 +6,11 @@
 #include <fastgltf/core.hpp>
 
 #include "fastgltf/tools.hpp"
+#include <glm.hpp>
 #include <fastgltf/glm_element_traits.hpp>
+#include <gtx/quaternion.hpp>
+
+#include "Core/Application.h"
 
 namespace BeeEngine
 {
@@ -25,6 +29,36 @@ namespace BeeEngine
             return MeshSourceFormat::GLTF_BINARY;
         return MeshSourceFormat::Unknown;
     }
+    Texture2D::Filter ExtractFilter(fastgltf::Filter filter)
+    {
+        switch (filter)
+        {
+            // nearest samplers
+            case fastgltf::Filter::Nearest:
+            case fastgltf::Filter::NearestMipMapNearest:
+            case fastgltf::Filter::NearestMipMapLinear:
+                return Texture2D::Filter::Nearest;
+            // linear samplers
+            case fastgltf::Filter::Linear:
+            case fastgltf::Filter::LinearMipMapNearest:
+            case fastgltf::Filter::LinearMipMapLinear:
+            default:
+                return Texture2D::Filter::Linear;
+        }
+    }
+    Texture2D::Filter ExtractMimMapMode(fastgltf::Filter filter)
+    {
+        switch (filter)
+        {
+            case fastgltf::Filter::NearestMipMapNearest:
+            case fastgltf::Filter::LinearMipMapNearest:
+                return Texture2D::Filter::Nearest;
+            case fastgltf::Filter::NearestMipMapLinear:
+            case fastgltf::Filter::LinearMipMapLinear:
+            default:
+                return Texture2D::Filter::Linear;
+        }
+    }
     Ref<MeshSource> MeshSourceImporter::ImportMeshSource(AssetHandle handle, const AssetMetadata& metadata)
     {
         BeeExpects(metadata.Type == AssetType::MeshSource);
@@ -36,9 +70,12 @@ namespace BeeEngine
 
         if(format == MeshSourceFormat::GLTF || format == MeshSourceFormat::GLTF_BINARY)
         {
+            MeshSourceBuilder builder;
+
             fastgltf::Parser parser{};
 
             constexpr auto gltfOptions = fastgltf::Options::DontRequireValidAssetMember | fastgltf::Options::AllowDouble | fastgltf::Options::LoadGLBBuffers | fastgltf::Options::LoadExternalBuffers;
+            // fastgltf::Options::LoadExternalImages;
 
             fastgltf::GltfDataBuffer data;
 
@@ -74,11 +111,55 @@ namespace BeeEngine
                     return nullptr;
                 }
             }
-            /*//load samplers
-            for(fastgltf::Sampler& sampler : gltf.samplers)
-            {
 
-            }*/
+            // load samplers
+            std::vector<std::tuple<Texture2D::Filter, Texture2D::Filter, Texture2D::Filter>> samplers;
+            for (fastgltf::Sampler& sampler : gltf.samplers) {
+                samplers.emplace_back(ExtractFilter(sampler.minFilter.value_or(Texture2D::Filter::Nearest)), ExtractFilter(sampler.magFilter.value_or(Texture2D::Filter::Nearest)), ExtractMimMapMode(sampler.minFilter.value_or(Texture2D::Filter::Nearest)));
+            }
+
+            // load textures
+            std::vector<Ref<Texture2D>> textures;
+            for (fastgltf::Texture& texture : gltf.textures) {
+                auto t = Application::GetInstance().GetAssetManager().GetTextureRef("Checkerboard");
+                textures.push_back(t);
+                builder.AddTexture(String{texture.name}, std::move(t));
+            }
+
+            std::vector<Ref<MaterialInstance>> materials;
+
+            for(auto& mat : gltf.materials)
+            {
+                Ref<MaterialInstance> newMat = CreateRef<MaterialInstance>();
+                materials.push_back(newMat);
+                //newMat->Name = mat.name;
+                newMat->data.colorFactors.x = mat.pbrData.baseColorFactor[0];
+                newMat->data.colorFactors.y = mat.pbrData.baseColorFactor[1];
+                newMat->data.colorFactors.z = mat.pbrData.baseColorFactor[2];
+                newMat->data.colorFactors.w = mat.pbrData.baseColorFactor[3];
+
+                newMat->data.metalRoughFactors.x = mat.pbrData.metallicFactor;
+                newMat->data.metalRoughFactors.y = mat.pbrData.roughnessFactor;
+
+                /*MaterialPass passType = MaterialPass::MainColor;
+                if (mat.alphaMode == fastgltf::AlphaMode::Blend) {
+                    passType = MaterialPass::Transparent;
+                }*/
+
+                if(mat.pbrData.baseColorTexture.has_value())
+                {
+                    size_t img = gltf.textures[mat.pbrData.baseColorTexture.value().textureIndex].imageIndex.value();
+                    size_t sampler = gltf.textures[mat.pbrData.baseColorTexture.value().textureIndex].samplerIndex.value();
+
+                    newMat->colorTextureRef = textures[img];
+                }
+
+                newMat->LoadData();
+                newMat->RebuildBindingSet();
+
+                builder.AddMaterial(String{mat.name}, std::move(newMat));
+            }
+
             std::vector<Ref<Mesh>> meshes;
 
             std::vector<uint32_t> indices;
@@ -159,11 +240,17 @@ namespace BeeEngine
                             });
                     }
 
+                    if (p.materialIndex.has_value()) {
+                        newSurface.material = materials[p.materialIndex.value()];
+                    } else {
+                        newSurface.material = materials[0];
+                    }
+
                     surfaces.push_back(newSurface);
                 }
 
                 // display the vertex normals
-                constexpr bool OverrideColors = true;
+                constexpr bool OverrideColors = false;
                 if (OverrideColors) {
                     for (auto& vtx : vertices) {
                         vtx.color = glm::vec4(vtx.normal, 1.f);
@@ -175,7 +262,60 @@ namespace BeeEngine
                 //newMesh->Location = AssetLocation::MeshSource;
                 meshes.emplace_back(std::move(newMesh));
             }
-            auto result = CreateRef<MeshSource>(std::move(meshes));
+
+            std::vector<Ref<Node>> nodes;
+            // load all nodes and their meshes
+            for (fastgltf::Node& node : gltf.nodes) {
+                std::shared_ptr<Node> newNode;
+
+                // find if the node has a mesh, and if it does hook it to the mesh pointer and allocate it with the meshnode class
+                if (node.meshIndex.has_value()) {
+                    newNode = std::make_shared<MeshNode>();
+                    static_cast<MeshNode*>(newNode.get())->Mesh = meshes[*node.meshIndex];
+                } else {
+                    newNode = std::make_shared<Node>();
+                }
+
+                nodes.push_back(newNode);
+                builder.AddNode(String{node.name}, Ref{newNode});
+
+                std::visit(fastgltf::visitor { [&](fastgltf::Node::TransformMatrix matrix) {
+                                                  memcpy(&newNode->LocalTransform, matrix.data(), sizeof(matrix));
+                                              },
+                               [&](fastgltf::TRS transform) {
+                                   glm::vec3 tl(transform.translation[0], transform.translation[1],
+                                       transform.translation[2]);
+                                   glm::quat rot(transform.rotation[3], transform.rotation[0], transform.rotation[1],
+                                       transform.rotation[2]);
+                                   glm::vec3 sc(transform.scale[0], transform.scale[1], transform.scale[2]);
+
+                                   glm::mat4 tm = glm::translate(glm::mat4(1.f), tl);
+                                   glm::mat4 rm = glm::toMat4(rot);
+                                   glm::mat4 sm = glm::scale(glm::mat4(1.f), sc);
+
+                                   newNode->LocalTransform = tm * rm * sm;
+                               } },
+                    node.transform);
+            }
+            // run loop again to setup transform hierarchy
+            for (int i = 0; i < gltf.nodes.size(); i++) {
+                fastgltf::Node& node = gltf.nodes[i];
+                std::shared_ptr<Node>& sceneNode = nodes[i];
+
+                for (auto& c : node.children) {
+                    sceneNode->Children.push_back(nodes[c]);
+                    nodes[c]->Parent = sceneNode;
+                }
+            }
+
+            // find the top nodes, with no parents
+            for (auto& node : nodes) {
+                if (node->Parent.lock() == nullptr) {
+                    builder.AddTopNode(node);
+                    node->RefreshTransform(glm::mat4 { 1.f });
+                }
+            }
+            auto result = builder.Build();
             result->Handle = handle;
             result->Name = metadata.Name;
             return result;

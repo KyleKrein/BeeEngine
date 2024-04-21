@@ -7,6 +7,7 @@
 #include "Vertex.h"
 #include "BufferLayout.h"
 #include "CommandBuffer.h"
+#include "MaterialData.h"
 #include "Core/AssetManagement/Asset.h"
 
 namespace BeeEngine
@@ -23,6 +24,7 @@ namespace BeeEngine
     {
         uint32_t startIndex;
         uint32_t count;
+        Ref<MaterialInstance> material;
     };
     class Mesh: public Asset
     {

@@ -1,3 +1,13 @@
+/**
+ * @file Application.h
+ * @author Aleksandr
+ * @brief Application class that is the main entry point for the BeeEngine application.
+ * @version 0.1
+ * @date 2024-04-19
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #pragma once
 //#include "Windowing/Window.h"
 
@@ -14,7 +24,8 @@
 #include "Renderer/AssetManager.h"
 #include "Core/LayerStack.h"
 
-namespace BeeEngine{
+namespace BeeEngine
+{
     class Application
     {
         friend EventQueue;

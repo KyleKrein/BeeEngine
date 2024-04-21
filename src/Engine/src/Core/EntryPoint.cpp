@@ -1,6 +1,10 @@
 //
 // Created by Александр Лебедев on 06.05.2023.
 //
+/**
+ * @file EntryPoint.cpp
+ * @brief Contains the entry point for the BeeEngine application.
+*/
 #include "EntryPoint.h"
 #include "RestartApplication.h"
 #include "Debug/Instrumentor.h"

@@ -19,7 +19,7 @@ namespace BeeEngine::Internal
 
         void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels) override;
 
-        VulkanTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels);
+        VulkanTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels, Filter filter, Filter mipmapFilter);
         ~VulkanTexture2D() override;
     private:
         void FreeResources();
@@ -31,5 +31,7 @@ namespace BeeEngine::Internal
         vk::ImageView m_ImageView = nullptr;
         vk::Sampler m_Sampler = nullptr;
         vk::DescriptorImageInfo m_ImageInfo = {};
+        Filter m_Filter;
+        Filter m_MipmapFilter;
     };
 }

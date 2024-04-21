@@ -31,6 +31,7 @@ namespace BeeEngine
         [[nodiscard]] Material& GetMaterial(const std::string& name);
         [[nodiscard]] Mesh& GetMesh(const std::string& name);
         [[nodiscard]] Texture2D& GetTexture(const std::string& name);
+        [[nodiscard]] Ref<Texture2D> GetTextureRef(const std::string& name);
         [[nodiscard]] Model& GetModel(const std::string& name);
         [[nodiscard]] Font& GetFont(const std::string& name);
 

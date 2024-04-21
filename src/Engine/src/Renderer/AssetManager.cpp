@@ -80,6 +80,12 @@ BeeEngine::Texture2D &BeeEngine::InternalAssetManager::GetTexture(const std::str
     return *m_Textures.at(name);
 }
 
+BeeEngine::Ref<BeeEngine::Texture2D> BeeEngine::InternalAssetManager::GetTextureRef(const std::string& name)
+{
+    BeeExpects(HasTexture(name));
+    return m_Textures.at(name);
+}
+
 bool BeeEngine::InternalAssetManager::HasMaterial(const std::string &name) const
 {
     if(m_Materials.find(name) != m_Materials.end())
