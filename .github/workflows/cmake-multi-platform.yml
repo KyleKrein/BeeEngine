@@ -62,7 +62,7 @@ jobs:
         key: vulkan-sdk-1.3.204.0
     - name: Setup Vulkan
       if: steps.cache-vulkan-sdk.outputs.cache-hit != 'true'
-        run: |
+      run: |
         Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.3.204.0/windows/VulkanSDK-1.3.204.0-Installer.exe" -OutFile VulkanSDK.exe
         $installer = Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("/S");
         $installer.WaitForExit();
