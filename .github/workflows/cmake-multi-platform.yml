@@ -40,28 +40,30 @@ jobs:
           #  cpp_compiler: clang++
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
+
     - name: Setup MSBuild
       if: matrix.os == 'windows-latest'
-      uses: microsoft/setup-msbuild@v1
+      uses: microsoft/setup-msbuild@v2
     - name: Set up MSVC
       if: matrix.os == 'windows-latest'
       uses: ilammy/msvc-dev-cmd@v1
     
+    - name: Run Setup.py
+      run: python Setup.py
+
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.0
       with:
-        vulkan-query-version: 1.3.204.0
+        vulkan-query-version: latest
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
 
 
-    - name: Run Setup.py
-      run: python Setup.py
 
     #- name: Build C# Core Library
     #  run: msbuild ${{ github.workspace }}/src/BeeEngineScripting/BeeEngineScripting.sln /t:Build /p:Configuration=${{ matrix.build_type }}
