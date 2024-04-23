@@ -78,18 +78,8 @@ def check_vulkan_installed():
 
 
 def install_vulkan_sdk():
-    os_name = platform.system()
-    if os_name == 'Windows':
-        if not check_vulkan_installed():
-            logging.info("Installing Vulkan SDK...")
-            subprocess.run(['choco', 'install', 'vulkan-sdk'], check=True)
-    elif os_name == 'Darwin':
-        if not check_vulkan_installed():
-            logging.info("Installing Vulkan SDK...")
-            subprocess.run(['brew', 'install', '--cask', 'vulkan-sdk'], check=True)
-    elif os_name == 'Linux':
-        if not check_vulkan_installed():
-            logging.info("Vulkan SDK needs to be installed manually on Linux or set up through specific distro package managers.")
+    if not check_vulkan_installed():
+        logging.error("Vulkan SDK is required to build the project. Please install it manually from https://vulkan.lunarg.com/sdk/home#sdk/download.")
 
 
 def install_dependencies():
