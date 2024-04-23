@@ -52,17 +52,23 @@ jobs:
     - name: Set up MSVC
       if: matrix.os == 'windows-latest'
       uses: ilammy/msvc-dev-cmd@v1
+
+# TODO: Add vulkan sdk installation for other platforms
+    - name: Cache Vulkan SDK
+      id: cache-vulkan-sdk
+      uses: actions/cache@v1
+      with:
+        path: "C:\\VulkanSDK\\1.3.204.0"
+        key: vulkan-sdk-1.3.204.0
+    - name: Setup Vulkan
+      if: steps.cache-vulkan-sdk.outputs.cache-hit != 'true'
+        run: |
+        Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/1.3.204.0/windows/VulkanSDK-1.3.204.0-Installer.exe" -OutFile VulkanSDK.exe
+        $installer = Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("/S");
+        $installer.WaitForExit();
     
     - name: Run Setup.py
       run: python Setup.py
-
-    - name: Prepare Vulkan SDK
-      uses: humbletim/setup-vulkan-sdk@v1.2.0
-      with:
-        vulkan-query-version: latest
-        vulkan-components: Vulkan-Headers, Vulkan-Loader
-        vulkan-use-cache: true
-
 
 
     #- name: Build C# Core Library
