@@ -65,6 +65,33 @@ def install_xcode_command_line_tools():
             logging.error("Failed to install Xcode Command Line Tools. Please try installing manually.")
 
 
+def check_vulkan_installed():
+    try:
+        # Попытка выполнить команду vulkaninfo
+        result = subprocess.run(['vulkaninfo'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if "Vulkan Instance Version" in result.stdout:
+            logging.info("Vulkan SDK is installed.")
+            return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        logging.info("Vulkan SDK is not installed.")
+        return False
+
+
+def install_vulkan_sdk():
+    os_name = platform.system()
+    if os_name == 'Windows':
+        if not check_vulkan_installed():
+            logging.info("Installing Vulkan SDK...")
+            subprocess.run(['choco', 'install', 'vulkan-sdk'], check=True)
+    elif os_name == 'Darwin':
+        if not check_vulkan_installed():
+            logging.info("Installing Vulkan SDK...")
+            subprocess.run(['brew', 'install', '--cask', 'vulkan-sdk'], check=True)
+    elif os_name == 'Linux':
+        if not check_vulkan_installed():
+            logging.info("Vulkan SDK needs to be installed manually on Linux or set up through specific distro package managers.")
+
+
 def install_dependencies():
     os_name = platform.system()
 
@@ -135,6 +162,8 @@ def install_dependencies():
         if not check_version_installed('dotnet'):
             logging.info("Installing .NET SDK...")
             subprocess.run(["sudo", "apt-get", "install", "-y", "dotnet-sdk"], check=True)
+    
+    install_vulkan_sdk()
 
 
 def init_git_submodules():
