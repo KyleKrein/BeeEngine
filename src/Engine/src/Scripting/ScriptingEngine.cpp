@@ -518,6 +518,7 @@ namespace BeeEngine
     {
         Path rootPath = std::filesystem::current_path() / "libs"/"BeeEngine.NativeBridge.dll";
         NativeToManaged::Init(rootPath);
+        NativeToManaged::SetupLogger();
         CreateAppDomain();
     }
 

@@ -230,7 +230,7 @@ namespace BeeEngine
     MFieldValue::~MFieldValue()
     {
         if(MUtils::IsValueType(m_Type))
-            NativeToManaged::MemoryFree(m_Value);
+            NativeToManaged::FreeIntPtr(m_Value);
         else
             NativeToManaged::ObjectFreeGCHandle(m_Value);
     }

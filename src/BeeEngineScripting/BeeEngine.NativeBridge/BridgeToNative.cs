@@ -60,8 +60,40 @@ public static class AddressHelper
     }
 }
 
+internal class Logger
+{
+    private unsafe delegate* unmanaged<IntPtr, void> m_LogInfo;
+    private unsafe delegate* unmanaged<IntPtr, void> m_LogWarning;
+    private unsafe delegate* unmanaged<IntPtr, void> m_LogTrace;
+    private unsafe delegate* unmanaged<IntPtr, void> m_LogError;
+    public unsafe Logger(IntPtr logInfo, IntPtr logWarning, IntPtr logTrace, IntPtr logError)
+    {
+        m_LogInfo = (delegate* unmanaged<IntPtr, void>)logInfo;
+        m_LogWarning = (delegate* unmanaged<IntPtr, void>)logWarning;
+        m_LogTrace = (delegate* unmanaged<IntPtr, void>)logTrace;
+        m_LogError = (delegate* unmanaged<IntPtr, void>)logError;
+    }
+    public unsafe void Info(string message)
+    {
+        m_LogInfo(Marshal.StringToHGlobalUni(message));
+    }
+    public unsafe void Warning(string message)
+    {
+        m_LogWarning(Marshal.StringToHGlobalUni(message));
+    }
+    public unsafe void Trace(string message)
+    {
+        m_LogTrace(Marshal.StringToHGlobalUni(message));
+    }
+    public unsafe void Error(string message)
+    {
+        m_LogError(Marshal.StringToHGlobalUni(message));
+    }
+}
+
 internal static class BridgeToNative
 {
+    private static Logger s_Logger = null;
     private static ulong s_TempCurrentIdCounter = 1; //TODO: Replace with proper uuid generation
 
     static ulong GetNewId()
@@ -88,6 +120,11 @@ internal static class BridgeToNative
         ulong newId = GetNewId();
         s_LoadContexts.Add(newId, new(new(name, canBeUnloaded != 0), new(), canBeUnloaded != 0));
         return newId;
+    }
+    [UnmanagedCallersOnly]
+    public static void SetupLogger(IntPtr logInfo, IntPtr logWarning, IntPtr logTrace, IntPtr logError)
+    {
+        s_Logger = new Logger(logInfo, logWarning, logTrace, logError);
     }
     [UnmanagedCallersOnly]
     public static ulong LoadAssemblyFromPath(ulong contextId, IntPtr pathPtr)
@@ -122,7 +159,7 @@ internal static class BridgeToNative
             message = e.Message;
         }
         error:
-        Debug.Print("Unable to load Assembly from path {0}. Message: {1}", path, message);
+        s_Logger.Error(string.Format("Unable to load Assembly from path {0}. Message: {1}", path, message));
         return 0;
     }
 
@@ -167,7 +204,7 @@ internal static class BridgeToNative
         new Span<ulong>(array, 0, array.Length).CopyTo(new Span<ulong>((void*)result, array.Length));// Same as Marshal.Copy, but for ulong
         return new(result, (ulong)array.Length);
         error:
-        Debug.Print("Unable to load classes from Assembly. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load classes from Assembly. Message: {0}", errorMessage));
         return new(0, 0);
     }
     [UnmanagedCallersOnly]
@@ -200,7 +237,7 @@ internal static class BridgeToNative
         return Marshal.StringToHGlobalUni(type.Type.Name);
         
         error:
-        Debug.Print("Unable to load class name from Assembly. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load class name from Assembly. Message: {0}", errorMessage));
         return 0;
     }
     [UnmanagedCallersOnly]
@@ -228,7 +265,7 @@ internal static class BridgeToNative
         return Marshal.StringToHGlobalUni(type.Type.Namespace ?? "");
         
         error:
-        Debug.Print("Unable to load class namespace from Assembly. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load class namespace from Assembly. Message: {0}", errorMessage));
         return 0;
     }
     [UnmanagedCallersOnly]
@@ -255,7 +292,7 @@ internal static class BridgeToNative
 
         return Marshal.StringToHGlobalUni(type.Type.FullName ?? "");
         error:
-        Debug.Print("Unable to load class full name from Assembly. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load class full name from Assembly. Message: {0}", errorMessage));
         return 0;
     }
     //User MUST free the pointer returned by this method using FreeIntPtr later
@@ -301,7 +338,7 @@ internal static class BridgeToNative
         return new(result, (ulong)array.Length);
         
         error:
-        Debug.Print("Unable to load methods from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load methods from Class. Message: {0}", errorMessage));
         return new(0, 0);
     }
     [UnmanagedCallersOnly]
@@ -329,7 +366,7 @@ internal static class BridgeToNative
         return type.Type.IsValueType ? 1 : 0;
         
         error:
-        Debug.Print("Unable to load info from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load info from Class. Message: {0}", errorMessage));
         return 0;
     }
     [UnmanagedCallersOnly]
@@ -357,7 +394,7 @@ internal static class BridgeToNative
         return type.Type.IsEnum ? 1 : 0;
         
         error:
-        Debug.Print("Unable to load info from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load info from Class. Message: {0}", errorMessage));
         return 0;
     }
     [UnmanagedCallersOnly]
@@ -403,7 +440,7 @@ internal static class BridgeToNative
         return typeDerived.Type.IsSubclassOf(typeBase.Type) ? 1 : 0;
         
         error:
-        Debug.Print("Unable to load info from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load info from Class. Message: {0}", errorMessage));
         return 0;
     }
     [UnmanagedCallersOnly]
@@ -447,7 +484,7 @@ internal static class BridgeToNative
         type.Methods.Add(newId, new(method, null));
         return newId;
         error:
-        Debug.Print("Unable to load method from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load method from Class. Message: {0}", errorMessage));
         return 0;
     }
     [UnmanagedCallersOnly]
@@ -476,7 +513,7 @@ internal static class BridgeToNative
         }
         return method.Method.MethodHandle.GetFunctionPointer();
         error:
-        Debug.Print("Unable to load method from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load method from Class. Message: {0}", errorMessage));
         return IntPtr.Zero;
     }
     [UnmanagedCallersOnly]
@@ -510,7 +547,7 @@ internal static class BridgeToNative
         }
         return Marshal.GetFunctionPointerForDelegate(method.Delegate);
         error:
-        Debug.Print("Unable to load method from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load method from Class. Message: {0}", errorMessage));
         return IntPtr.Zero;
     }
     [UnmanagedCallersOnly]
@@ -542,7 +579,7 @@ internal static class BridgeToNative
         }
         return Marshal.StringToHGlobalUni(method.Method.Name);
         error:
-        Debug.Print("Unable to load method name from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load method name from Class. Message: {0}", errorMessage));
         return 0;
     }
     //User MUST free the pointer returned by this method using FreeIntPtr later
@@ -584,7 +621,7 @@ internal static class BridgeToNative
         new Span<ulong>(array, 0, array.Length).CopyTo(new Span<ulong>((void*)result, array.Length));// Same as Marshal.Copy, but for ulong
         return new(result, (ulong)array.Length);
         error:
-        Debug.Print("Unable to load fields from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load fields from Class. Message: {0}", errorMessage));
         return new(0, 0);
     }
     //User MUST free the pointer returned by this method using FreeIntPtr later
@@ -614,7 +651,7 @@ internal static class BridgeToNative
         }
         return Marshal.StringToHGlobalUni(field.Name);
         error:
-        Debug.Print("Unable to load field name from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load field name from Class. Message: {0}", errorMessage));
         return 0;
     }
     [UnmanagedCallersOnly]
@@ -643,7 +680,7 @@ internal static class BridgeToNative
         }
         return Marshal.StringToHGlobalUni(field.FieldType.Name);
         error:
-        Debug.Print("Unable to load field type name from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load field type name from Class. Message: {0}", errorMessage));
         return 0;
     }
     [UnmanagedCallersOnly]
@@ -672,98 +709,8 @@ internal static class BridgeToNative
         }
         return (int)field.Attributes;
         error:
-        Debug.Print("Unable to load field type name from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to load field type name from Class. Message: {0}", errorMessage));
         return 0;
-    }
-    [UnmanagedCallersOnly]
-    public static void FieldSetValue(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId, IntPtr instancePtr, IntPtr valuePtr)
-    {
-        string? errorMessage = null;
-        object? instance = null;
-        if (instancePtr != IntPtr.Zero)
-        {
-            instance = Marshal.PtrToStructure(instancePtr, typeof(object));
-        }
-        if (valuePtr == IntPtr.Zero)
-        {
-            errorMessage = "Value pointer is null";
-            goto error;
-        }
-        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
-        {
-            errorMessage = "Context ID is invalid";
-            goto error;
-        }
-        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
-        {
-            errorMessage = "Assembly ID is invalid";
-            goto error;
-        }
-        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
-        {
-            errorMessage = "Class ID is invalid";
-            goto error;
-        }
-        if (!type.Fields.TryGetValue(fieldId, out var field))
-        {
-            errorMessage = "Field ID is invalid";
-            goto error;
-        }
-        field.SetValue(instance, Marshal.PtrToStructure(valuePtr, field.FieldType));
-        return;
-        error:
-        Debug.Print("Unable to set field from Class. Message: {0}", errorMessage);
-    }
-    [UnmanagedCallersOnly]
-    public static unsafe IntPtr FieldGetValue(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId, IntPtr instancePtr)
-    {
-        string? errorMessage = null;
-        object? instance = null;
-        if (instancePtr != IntPtr.Zero)
-        {
-            instance = Marshal.PtrToStructure(instancePtr, typeof(object));
-        }
-        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
-        {
-            errorMessage = "Context ID is invalid";
-            goto error;
-        }
-        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
-        {
-            errorMessage = "Assembly ID is invalid";
-            goto error;
-        }
-        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
-        {
-            errorMessage = "Class ID is invalid";
-            goto error;
-        }
-        if (!type.Fields.TryGetValue(fieldId, out var field))
-        {
-            errorMessage = "Field ID is invalid";
-            goto error;
-        }
-
-        if (field.FieldType.IsValueType)
-        {
-            int size = Marshal.SizeOf(field.FieldType);
-            IntPtr result = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(field.GetValue(instance), result, false);
-        }
-
-        var value = field.GetValue(instance);
-        if(value == null)
-        {
-            return IntPtr.Zero;
-        }
-        //GCHandle handle = GCHandle.Alloc(value, GCHandleType.Weak);
-        //IntPtr resultPtr = GCHandle.ToIntPtr(handle);
-        //handle.Free();
-        IntPtr resultPtr = AddressHelper.GetAddress(value);
-        return resultPtr;
-        error:
-        Debug.Print("Unable to get field from Class. Message: {0}", errorMessage);
-        return IntPtr.Zero;
     }
 
     [UnmanagedCallersOnly]
@@ -808,7 +755,7 @@ internal static class BridgeToNative
         IntPtr resultPtr = GCHandle.ToIntPtr(resultHandle);
         return resultPtr;
         error:
-        Debug.Print("Unable to get field data from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to get field data from Class. Message: {0}", errorMessage));
         return IntPtr.Zero;
     }
     [UnmanagedCallersOnly]
@@ -851,37 +798,7 @@ internal static class BridgeToNative
         field.SetValue(obj, valueHandle.Target);
         return;
         error:
-        Debug.Print("Unable to set field data from Class. Message: {0}", errorMessage);
-    }
-    [UnmanagedCallersOnly]
-    public static IntPtr ObjectNew(ulong contextId, ulong assemblyId, ulong classId)
-    {
-        string? errorMessage = null;
-        object? instance = null;
-        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
-        {
-            errorMessage = "Context ID is not valid";
-            goto error;
-        }
-        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
-        {
-            errorMessage = "Assembly ID is not valid";
-            goto error;
-        }
-        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
-        {
-            errorMessage = "Class ID is not valid";
-            goto error;
-        }
-        instance = Activator.CreateInstance(type.Type);
-        //GCHandle handle = GCHandle.Alloc(instance, GCHandleType.Weak);
-        //IntPtr resultPtr = GCHandle.ToIntPtr(handle);
-        //handle.Free();
-        IntPtr resultPtr = AddressHelper.GetAddress(instance);
-        return resultPtr;
-        error:
-        Debug.Print("Unable to create object from Class. Message: {0}", errorMessage);
-        return IntPtr.Zero;
+        s_Logger.Error(string.Format("Unable to set field data from Class. Message: {0}", errorMessage));
     }
     //Handle types: 0 = weak, 1 = normal, 2 = pinned
 
@@ -908,10 +825,9 @@ internal static class BridgeToNative
         instance = Activator.CreateInstance(type.Type);
         GCHandle handle = GCHandle.Alloc(instance, handleType == 0 ? GCHandleType.Weak : handleType == 1 ? GCHandleType.Normal : GCHandleType.Pinned);
         IntPtr resultPtr = GCHandle.ToIntPtr(handle);
-        //handle.Free();
         return resultPtr;
         error:
-        Debug.Print("Unable to create object from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to create object from Class. Message: {0}", errorMessage));
         return IntPtr.Zero;
     }
     [UnmanagedCallersOnly]
@@ -920,17 +836,12 @@ internal static class BridgeToNative
         GCHandle handle = GCHandle.FromIntPtr(handlePtr);
         handle.Free();
     }
-    [UnmanagedCallersOnly]
-    public static void MemoryFree(IntPtr ptr)
-    {
-        Marshal.FreeHGlobal(ptr);
-    }
     public static IntPtr ObjectGetAdressFromGCHandle(IntPtr handlePtr)
     {
         GCHandle handle = GCHandle.FromIntPtr(handlePtr);
-        return AddressHelper.GetAddress(handle.Target);
+        return handle.AddrOfPinnedObject();
     }
-
+//TODO: make an additional way to invoke methods, that uses Delegate.CreateDelegate and sends a function pointer to the native side
     [UnmanagedCallersOnly]
     public static unsafe IntPtr MethodInvoke(ulong contextId, ulong assemblyId, ulong classId, ulong methodId,
         IntPtr instanceGcHandlePtr, void** args)
@@ -966,16 +877,21 @@ internal static class BridgeToNative
         var parameters = method.Method.GetParameters();
         var returnType = method.Method.ReturnType;
         object? result = null;
-        Debug.WriteLine("MethodInvoke: {0} on instance {1} with parameters: {2}", method.Method.Name, instance is null ? "null" : instance.ToString(), parameters.Length);
+        //Debug.WriteLine("MethodInvoke: {0} on instance {1} with parameters: {2}", method.Method.Name, instance is null ? "null" : instance.ToString(), parameters.Length);
         if (parameters.Length == 0)
         {
             try
             {
                 result = method.Method.Invoke(instance, null);
             }
+            catch(TargetInvocationException e)
+            {
+                s_Logger.Error(string.Format("C# Exception: "+ e.InnerException?.Message ?? e.Message));
+                return IntPtr.Zero;
+            }
             catch (Exception e)
             {
-                Debug.WriteLine("MethodInvoke Error: "+ e.Message);
+                s_Logger.Error(string.Format("MethodInvoke Error: "+ e.Message));
                 return IntPtr.Zero;
             }
             goto returnResult;
@@ -983,7 +899,7 @@ internal static class BridgeToNative
         var argsArray = new object[parameters.Length];
         for (int i = 0; i < parameters.Length; i++)
         {
-            Debug.Write("Parameter: ", i.ToString());
+            //Debug.Write("Parameter: ", i.ToString());
             var paramType = parameters[i].ParameterType;
             if(paramType.IsValueType)
                 argsArray[i] = Marshal.PtrToStructure((IntPtr)args[i], paramType);
@@ -992,19 +908,24 @@ internal static class BridgeToNative
                 GCHandle handle = GCHandle.FromIntPtr((IntPtr)args[i]);
                 argsArray[i] = handle.Target;
             }
-            Debug.WriteLine("{0}", (UIntPtr)args[i]);
+            //Debug.WriteLine("{0}", (UIntPtr)args[i]);
         }
         try
         {
             result = method.Method.Invoke(instance, argsArray);
         }
+        catch(TargetInvocationException e)
+        {
+            s_Logger.Error(string.Format("C# Exception: "+ e.InnerException?.Message ?? e.Message));
+            return IntPtr.Zero;
+        }
         catch (Exception e)
         {
-            Debug.WriteLine("MethodInvoke Error: "+ e.Message);
+            s_Logger.Error(string.Format("MethodInvoke Error: "+ e.Message));
             return IntPtr.Zero;
         }
         returnResult:
-        Debug.WriteLine("MethodInvoke Success");
+        //Debug.WriteLine("MethodInvoke Success");
         if (result == null)
         {
             return IntPtr.Zero;
@@ -1022,48 +943,8 @@ internal static class BridgeToNative
         resultPtr = GCHandle.ToIntPtr(resultHandle);
         return resultPtr;
         error:
-        Debug.Print("Unable to invoke method from Class. Message: {0}", errorMessage);
+        s_Logger.Error(string.Format("Unable to invoke method from Class. Message: {0}", errorMessage));
         return IntPtr.Zero;
-    }
-    [UnmanagedCallersOnly]
-    public static void UnmanagedMethodCreateDelegateAndSetToField(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId, IntPtr gcHandlePtr, IntPtr functionPtr)
-    {
-        string? errorMessage = null;
-        object? instance = null;
-        if (gcHandlePtr != IntPtr.Zero)
-        {
-            instance = GCHandle.FromIntPtr(gcHandlePtr).Target;
-        }
-        if (functionPtr == IntPtr.Zero)
-        {
-            errorMessage = "Function pointer is null";
-            goto error;
-        }
-        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
-        {
-            errorMessage = "Context ID is not valid";
-            goto error;
-        }
-        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
-        {
-            errorMessage = "Assembly ID is not valid";
-            goto error;
-        }
-        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
-        {
-            errorMessage = "Class ID is not valid";
-            goto error;
-        }
-        if (!type.Fields.TryGetValue(fieldId, out var field))
-        {
-            errorMessage = "Field ID is not valid";
-            goto error;
-        }
-        field.SetValue(instance, /*Marshal.GetDelegateForFunctionPointer(*/functionPtr/*, field.FieldType)*/);
-        Debug.Print("Delegate set to field. Field: {0}, Value {1}, Old {2}", field.Name, (nuint)field.GetValue(instance), (nuint)functionPtr);
-        return;
-        error:
-        Debug.Print("Unable to set method from Class. Message: {0}", errorMessage);
     }
 
     [UnmanagedCallersOnly]
@@ -1071,12 +952,12 @@ internal static class BridgeToNative
     {
         if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
         {
-            Debug.Print("Context ID is invalid");
+            s_Logger.Error("Context ID is invalid");
             return;
         }
         if(!contextInfo.CanBeUnloaded)
         {
-            Debug.Print("Context cannot be unloaded");
+            s_Logger.Error("Context cannot be unloaded");
             return;
         }
         contextInfo.Context.Unload();
@@ -1090,71 +971,4 @@ internal static class BridgeToNative
         GCHandle handle = GCHandle.Alloc(str, GCHandleType.Pinned);
         return GCHandle.ToIntPtr(handle);
     }
-    /*[UnmanagedCallersOnly]
-    public static void InvokeMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId, object[] args)
-    {
-        string? errorMessage = null;
-        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
-        {
-            errorMessage = "Context ID is invalid";
-            goto error;
-        }
-
-        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
-        {
-            errorMessage = "Assembly ID is invalid";
-            goto error;
-        }
-
-        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
-        {
-            errorMessage = "Class ID is invalid";
-            goto error;
-        }
-
-        if (!type.Methods.TryGetValue(methodId, out var method))
-        {
-            errorMessage = "Method ID is invalid";
-            goto error;
-        }
-
-        method.Invoke(null, args);
-        
-        error:
-        Debug.Print("Unable to invoke method from Class. Message: {0}", errorMessage);
-    }
-    [UnmanagedCallersOnly]
-    public static Delegate GetNativeDelegateForMethod(ulong contextId, ulong assemblyId, ulong classId, ulong methodId)
-    {
-        string? errorMessage = null;
-        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
-        {
-            errorMessage = "Context ID is invalid";
-            goto error;
-        }
-
-        if (!contextInfo.AssemblyInfo.TryGetValue(assemblyId, out var assemblyInfo))
-        {
-            errorMessage = "Assembly ID is invalid";
-            goto error;
-        }
-
-        if (!assemblyInfo.Types.TryGetValue(classId, out var type))
-        {
-            errorMessage = "Class ID is invalid";
-            goto error;
-        }
-
-        if (!type.Methods.TryGetValue(methodId, out var method))
-        {
-            errorMessage = "Method ID is invalid";
-            goto error;
-        }
-
-        return method.CreateDelegate<Delegate>();
-        
-        error:
-        Debug.Print("Unable to get delegate for method from Class. Message: {0}", errorMessage);
-        return null;
-    }*/
 }

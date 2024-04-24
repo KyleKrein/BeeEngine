@@ -90,6 +90,21 @@ namespace BeeEngine
                 {"Texture2D", MType::Texture2D},
                 {"Font", MType::Font},
                 {"Prefab", MType::Prefab},
+
+                {"int", MType::Int32},
+                {"float", MType::Single},
+                {"double", MType::Double},
+                {"bool", MType::Boolean},
+                {"char", MType::Char},
+                {"uint", MType::UInt32},
+                {"long", MType::Int64},
+                {"ulong", MType::UInt64},
+                {"short", MType::Int16},
+                {"ushort", MType::UInt16},
+                {"byte", MType::Byte},
+                {"sbyte", MType::SByte},
+                {"string", MType::String},
+                {"object", MType::Object},
         };
         if(MTypeMap.contains(name))
             return MTypeMap.at(name);
