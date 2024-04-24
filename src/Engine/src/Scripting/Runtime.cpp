@@ -229,6 +229,10 @@ namespace BeeEngine
 
     MFieldValue::~MFieldValue()
     {
+        if(MUtils::IsValueType(m_Type))
+            NativeToManaged::MemoryFree(m_Value);
+        else
+            NativeToManaged::ObjectFreeGCHandle(m_Value);
     }
 
     MObject::MObject(const MClass& object)
@@ -260,7 +264,7 @@ namespace BeeEngine
 
     MFieldValue MObject::GetFieldValue(MField& field)
     {
-        return {MUtils::ShouldFreeGCHandle(field), GetFieldValueUnsafe(field), field.GetType()};
+        return {GetFieldValueUnsafe(field), field.GetType()};
     }
 
     void* MObject::GetFieldValueUnsafe(MField& field)

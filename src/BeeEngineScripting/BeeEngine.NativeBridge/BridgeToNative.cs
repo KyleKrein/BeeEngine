@@ -920,6 +920,11 @@ internal static class BridgeToNative
         GCHandle handle = GCHandle.FromIntPtr(handlePtr);
         handle.Free();
     }
+    [UnmanagedCallersOnly]
+    public static void MemoryFree(IntPtr ptr)
+    {
+        Marshal.FreeHGlobal(ptr);
+    }
     public static IntPtr ObjectGetAdressFromGCHandle(IntPtr handlePtr)
     {
         GCHandle handle = GCHandle.FromIntPtr(handlePtr);

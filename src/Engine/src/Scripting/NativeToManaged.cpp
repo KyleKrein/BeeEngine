@@ -55,6 +55,7 @@ namespace BeeEngine
     using UnmanagedMethodCreateDelegateAndSetToFieldFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* instanceGcHandle, void* functionPtr);
     using UnloadContextFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId);
     using StringCreateManagedFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(void* str);
+    using MemoryFreeFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* ptr);
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -92,6 +93,7 @@ namespace BeeEngine
         UnmanagedMethodCreateDelegateAndSetToFieldFunction UnmanagedMethodCreateDelegateAndSetToField = nullptr;
         UnloadContextFunction UnloadContext = nullptr;
         StringCreateManagedFunction StringCreateManaged = nullptr;
+        MemoryFreeFunction MemoryFree = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -206,6 +208,7 @@ namespace BeeEngine
         ObtainDelegate(UnmanagedMethodCreateDelegateAndSetToField);
         ObtainDelegate(UnloadContext);
         ObtainDelegate(StringCreateManaged);
+        ObtainDelegate(MemoryFree);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -364,11 +367,16 @@ namespace BeeEngine
     String NativeToManaged::StringGetFromManagedString(void* managedString)
     {
         String result = GetStringFromPtr(managedString);
-        s_Data->FreeIntPtr(managedString);
+        //s_Data->FreeIntPtr(managedString);
+        MemoryFree(managedString);
         return result;
     }
     GCHandle NativeToManaged::StringCreateManaged(const String &string)
     {
         return s_Data->StringCreateManaged((void*)(string.c_str()));
+    }
+    void NativeToManaged::MemoryFree(void* ptr)
+    {
+        s_Data->MemoryFree(ptr);
     }
 }

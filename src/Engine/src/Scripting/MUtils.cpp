@@ -263,4 +263,24 @@ namespace BeeEngine
                type == MType::Font ||
                type == MType::Prefab;
     }
+    
+    bool MUtils::IsValueType(MType type)
+    {
+        return type == MType::Char ||
+               type == MType::Boolean ||
+               type == MType::SByte ||
+               type == MType::Byte ||
+               type == MType::Int16 ||
+               type == MType::UInt16 ||
+               type == MType::Int32 ||
+               type == MType::UInt32 ||
+               type == MType::Int64 ||
+               type == MType::UInt64 ||
+               type == MType::Single ||
+               type == MType::Double ||
+               type == MType::Vector2 ||
+               type == MType::Vector3 ||
+               type == MType::Vector4 ||
+               type == MType::Color;
+    }
 }
