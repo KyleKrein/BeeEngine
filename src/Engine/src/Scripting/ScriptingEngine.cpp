@@ -520,9 +520,9 @@ namespace BeeEngine
         {
             return;
         }
-        s_Data.GameScripts.clear();
-        s_Data.EntityObjects.clear();
         s_Data.EditableFieldsDefaults.clear();
+        s_Data.EntityObjects.clear();
+        s_Data.GameScripts.clear();
         s_Data.Assemblies.clear();
 
         s_Data.Handles = {};

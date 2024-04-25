@@ -149,10 +149,12 @@ internal static class BridgeToNative
                 message = "Context ID is not valid";
                 goto error;
             }
-            var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-            var assembly = contextInfo.Context.LoadFromStream(fs);
             ulong newId = GetNewId();
-            contextInfo.AssemblyInfo.Add(newId, new(assembly, new()));
+            using(var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                var assembly = contextInfo.Context.LoadFromStream(fs);
+                contextInfo.AssemblyInfo.Add(newId, new(assembly, new()));
+            }
             return newId;
         }
         catch (Exception e)
