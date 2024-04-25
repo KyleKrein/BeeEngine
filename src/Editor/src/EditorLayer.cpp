@@ -302,9 +302,9 @@ namespace BeeEngine::Editor
         if(ScriptingEngine::IsInitialized())
             ScriptingEngine::ReloadAssemblies();
         m_SceneHierarchyPanel.ClearSelection();
-        m_ViewPort.GetScene()->Clear();
+        m_ActiveScene->Clear();
         serializer.Deserialize(tempPath);
-        m_ViewPort.GetScene()->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
+        m_ActiveScene->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
     }
 
     void EditorLayer::SetupGameLibrary()

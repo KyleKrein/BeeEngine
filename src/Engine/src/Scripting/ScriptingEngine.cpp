@@ -19,26 +19,20 @@
 #include "MTypes.h"
 #include "NativeToManaged.h"
 #include "FileSystem/File.h"
+#include "Core/Reflection.h"
 
 namespace BeeEngine
 {
     //typedef void(__stdcall *AddEntityScript)(uint64_t id, MonoObject* behaviour, MonoException** exception);
     //typedef void(__stdcall *EntityWasRemoved)(uint64_t id, MonoException ** exception);
-    struct ScriptingEngineData
+    struct ManagedHandles
     {
+        REFLECT()
         MMethod* AddEntityScriptMethod = nullptr;
         MMethod* EntityWasRemovedMethod = nullptr;
 
         MMethod* EndSceneMethod = nullptr;
 
-        bool EnableDebugging = false;
-
-        Scene* CurrentScene = nullptr;
-        std::unordered_map<UUID, Ref<GameScript>> EntityObjects;
-        std::unordered_map<MClass*, std::vector<GameScriptField>> EditableFieldsDefaults;
-
-        std::unordered_map<String, MAssembly> Assemblies = {};
-        std::unordered_map<String, Ref<MClass>> GameScripts = {};
         MClass* EntityBaseClass = nullptr;
 
         MField* AssetHandleField = nullptr;
@@ -50,6 +44,33 @@ namespace BeeEngine
 
         MField* DeltaTimeField = nullptr;
         MField* TotalTimeField = nullptr;
+    };
+
+    REFLECT_STRUCT_BEGIN(ManagedHandles)
+        REFLECT_STRUCT_MEMBER(AddEntityScriptMethod)
+        REFLECT_STRUCT_MEMBER(EntityWasRemovedMethod)
+        REFLECT_STRUCT_MEMBER(EndSceneMethod)
+        REFLECT_STRUCT_MEMBER(EntityBaseClass)
+        REFLECT_STRUCT_MEMBER(AssetHandleField)
+        REFLECT_STRUCT_MEMBER(Texture2DClass)
+        REFLECT_STRUCT_MEMBER(FontClass)
+        REFLECT_STRUCT_MEMBER(PrefabClass)
+        REFLECT_STRUCT_MEMBER(InternalCallsClass)
+        REFLECT_STRUCT_MEMBER(DeltaTimeField)
+        REFLECT_STRUCT_MEMBER(TotalTimeField)
+    REFLECT_STRUCT_END()
+
+    
+    struct ScriptingEngineData
+    {
+        bool EnableDebugging = false;
+
+        Scene* CurrentScene = nullptr;
+        std::unordered_map<UUID, Ref<GameScript>> EntityObjects;
+        std::unordered_map<MClass*, std::vector<GameScriptField>> EditableFieldsDefaults;
+
+        std::unordered_map<String, MAssembly> Assemblies = {};
+        std::unordered_map<String, Ref<MClass>> GameScripts = {};
 
         ManagedAssemblyContextID AppDomain = 0;
 
@@ -61,6 +82,8 @@ namespace BeeEngine
         int MouseX = 0;
         int MouseY = 0;
         glm::vec2 ViewportSize = {-1, -1};
+
+        ManagedHandles Handles = {};
     };
     ScriptingEngineData ScriptingEngine::s_Data = {};
 
@@ -77,7 +100,7 @@ namespace BeeEngine
         s_Data.EditableFieldsDefaults.clear();
         s_Data.Assemblies.clear();
         s_Data.CurrentScene = nullptr;
-        s_Data.EntityBaseClass = nullptr;
+        s_Data.Handles = {};
         //s_Data.AddEntityScriptMethod = nullptr;
         //s_Data.EntityWasRemovedMethod = nullptr;
 
@@ -151,8 +174,8 @@ namespace BeeEngine
     }
     bool ScriptingEngine::IsGameScript(const MClass& klass)
     {
-        BeeExpects(s_Data.EntityBaseClass != nullptr);
-        return klass.IsDerivedFrom(*s_Data.EntityBaseClass);
+        BeeExpects(s_Data.Handles.EntityBaseClass != nullptr);
+        return klass.IsDerivedFrom(*s_Data.Handles.EntityBaseClass);
     }
     void ScriptingEngine::LoadGameAssembly(const Path& path)
     {
@@ -191,6 +214,19 @@ namespace BeeEngine
         return *s_Data.GameScripts.at(name);
     }
 
+    bool ScriptingEngine::AreAllManagedHandlesLoaded()
+    {
+        const auto& typeDescriptor = Reflection::TypeResolver::Get<ManagedHandles>();
+        for(const auto& field : typeDescriptor.Members)
+        {
+            if(field.Get<void*>(&s_Data.Handles) == nullptr)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     void ScriptingEngine::LoadCoreAssembly(const Path &path)
     {
         s_Data.CoreAssemblyPath = path;
@@ -199,67 +235,55 @@ namespace BeeEngine
         {
             if(mClass->GetName() == "Behaviour")
             {
-                s_Data.EntityBaseClass = mClass.get();
+                s_Data.Handles.EntityBaseClass = mClass.get();
                 continue;
             }
             if(mClass->GetName() == "Asset")
             {
-                s_Data.AssetHandleField = &mClass->GetField("m_Handle");
+                s_Data.Handles.AssetHandleField = &mClass->GetField("m_Handle");
                 continue;
             }
             if(mClass->GetName() == "Texture2D")
             {
-                s_Data.Texture2DClass = mClass.get();
+                s_Data.Handles.Texture2DClass = mClass.get();
                 continue;
             }
             if(mClass->GetName() == "Font")
             {
-                s_Data.FontClass = mClass.get();
+                s_Data.Handles.FontClass = mClass.get();
                 continue;
             }
             if(mClass->GetName() == "Prefab")
             {
-                s_Data.PrefabClass = mClass.get();
+                s_Data.Handles.PrefabClass = mClass.get();
                 continue;
             }
             if(mClass->GetName() == "Time")
             {
                 //s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
-                s_Data.DeltaTimeField = &mClass->GetField("m_DeltaTime");
-                s_Data.TotalTimeField = &mClass->GetField("m_TotalTime");
+                s_Data.Handles.DeltaTimeField = &mClass->GetField("m_DeltaTime");
+                s_Data.Handles.TotalTimeField = &mClass->GetField("m_TotalTime");
                 continue;
             }
             if(mClass->GetName() == "LifeTimeManager")
             {
                 static constexpr auto flags = static_cast<ManagedBindingFlags>(ManagedBindingFlags_Public | ManagedBindingFlags_Static | ManagedBindingFlags_NonPublic);
-                s_Data.AddEntityScriptMethod = &mClass->GetMethod("AddEntityScript", flags);
-                s_Data.EntityWasRemovedMethod = &mClass->GetMethod("EntityWasRemoved", flags);
-                s_Data.EndSceneMethod = &mClass->GetMethod("EndScene", flags);
+                s_Data.Handles.AddEntityScriptMethod = &mClass->GetMethod("AddEntityScript", flags);
+                s_Data.Handles.EntityWasRemovedMethod = &mClass->GetMethod("EntityWasRemoved", flags);
+                s_Data.Handles.EndSceneMethod = &mClass->GetMethod("EndScene", flags);
             }
             if(mClass->GetName() == "InternalCalls")
             {
-                s_Data.InternalCallsClass = mClass.get();
+                s_Data.Handles.InternalCallsClass = mClass.get();
             }
 
-            if(s_Data.EntityBaseClass && s_Data.AssetHandleField &&
-            s_Data.Texture2DClass && s_Data.FontClass && s_Data.PrefabClass &&
-            s_Data.TotalTimeField && s_Data.DeltaTimeField && s_Data.AddEntityScriptMethod &&
-            s_Data.EntityWasRemovedMethod && s_Data.EndSceneMethod && s_Data.InternalCallsClass)
+            if(AreAllManagedHandlesLoaded())
             {
                 break;
             }
         }
-        /*
-        MonoClass* lifeTimeManager = mono_class_from_name(assembly.m_MonoImage, "BeeEngine.Internal", "LifeTimeManager");
-        MonoMethod* addEntityScriptMethod = mono_class_get_method_from_name(lifeTimeManager, "AddEntityScript", 2);
-        MonoMethod* entityWasRemovedMethod = mono_class_get_method_from_name(lifeTimeManager, "EntityWasRemoved", 1);
-        MonoMethod* endSceneMethod = mono_class_get_method_from_name(lifeTimeManager, "EndScene", 0);
-        s_Data.AddEntityScriptMethod = (AddEntityScript)mono_method_get_unmanaged_thunk(addEntityScriptMethod);
-        s_Data.EntityWasRemovedMethod = (EntityWasRemoved)mono_method_get_unmanaged_thunk(entityWasRemovedMethod);
-        s_Data.EndSceneMethod = (void(*)())mono_method_get_unmanaged_thunk(endSceneMethod);
-        s_Data.ulongClass = mono_class_from_name(mono_get_corlib(), "System", "UInt64");
-        */
-
+        
+        BeeEnsures(AreAllManagedHandlesLoaded());
     }
 
     void ScriptingEngine::OnRuntimeStart(Scene *scene)
@@ -270,7 +294,7 @@ namespace BeeEngine
     void ScriptingEngine::OnRuntimeStop()
     {
         s_Data.CurrentScene = nullptr;
-        s_Data.EndSceneMethod->InvokeStatic(nullptr);
+        s_Data.Handles.EndSceneMethod->InvokeStatic(nullptr);
         s_Data.EntityObjects.clear();
     }
 
@@ -287,7 +311,7 @@ namespace BeeEngine
             auto instance = script->GetMObject().GetHandle();
             void* params[] = {&uuid, instance};
             BeeCoreTrace("Params: {} {}", (uintptr_t)params[0], (uintptr_t)params[1]);
-            s_Data.AddEntityScriptMethod->InvokeStatic(params);
+            s_Data.Handles.AddEntityScriptMethod->InvokeStatic(params);
         }
     }
     void ScriptingEngine::OnEntityDestroyed(UUID uuid)
@@ -299,7 +323,7 @@ namespace BeeEngine
             s_Data.EntityObjects.at(uuid)->InvokeOnDestroy();
         }
         void* params[] = {&uuid};
-        s_Data.EntityWasRemovedMethod->InvokeStatic(params);
+        s_Data.Handles.EntityWasRemovedMethod->InvokeStatic(params);
         //s_Data.EntityWasRemovedMethod(uuid, &exc);
         //if(exc)
         {
@@ -357,7 +381,7 @@ namespace BeeEngine
 
     MClass &ScriptingEngine::GetEntityClass()
     {
-        return *s_Data.EntityBaseClass;
+        return *s_Data.Handles.EntityBaseClass;
     }
 
     bool ScriptingEngine::HasGameScript(const String &name)
@@ -372,7 +396,7 @@ namespace BeeEngine
 
     void ScriptingEngine::RegisterNativeFunction(const String& name, void* function)
     {
-        MMethod& assignFunction = s_Data.InternalCallsClass->GetMethod("AssignFunction", (ManagedBindingFlags)(ManagedBindingFlags_NonPublic | ManagedBindingFlags_Static));;
+        MMethod& assignFunction = s_Data.Handles.InternalCallsClass->GetMethod("AssignFunction", (ManagedBindingFlags)(ManagedBindingFlags_NonPublic | ManagedBindingFlags_Static));;
         GCHandle str = NativeToManaged::StringCreateManaged(name);
         void* params[] = {&str, &function};
         assignFunction.InvokeStatic(params);
@@ -415,25 +439,25 @@ namespace BeeEngine
         );
         if(type == MType::Texture2D)
         {
-            MObject assetObj = s_Data.Texture2DClass->Instantiate();
+            MObject assetObj = s_Data.Handles.Texture2DClass->Instantiate();
             //auto* assetMonoObj = assetObj.GetMonoObject();
-            assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
+            assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
             obj.SetFieldValue(field, assetObj.GetHandle());
             return;
         }
         if(type == MType::Font)
         {
-            MObject assetObj = s_Data.FontClass->Instantiate();
+            MObject assetObj = s_Data.Handles.FontClass->Instantiate();
             //auto* assetMonoObj = assetObj.GetMonoObject();
-            assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
+            assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
             obj.SetFieldValue(field, assetObj.GetHandle());
             return;
         }
         if(type == MType::Prefab)
         {
-            MObject assetObj = s_Data.PrefabClass->Instantiate();
+            MObject assetObj = s_Data.Handles.PrefabClass->Instantiate();
             //auto* assetMonoObj = assetObj.GetMonoObject();
-            assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
+            assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
             obj.SetFieldValue(field, assetObj.GetHandle());
             return;
         }
@@ -441,7 +465,7 @@ namespace BeeEngine
 
     void ScriptingEngine::GetAssetHandle(void* gchandle, AssetHandle &handle)
     {
-        auto& field = *s_Data.AssetHandleField;
+        auto& field = *s_Data.Handles.AssetHandleField;
         auto& mclass = field.GetClass();
         handle = *static_cast<AssetHandle*>(NativeToManaged::FieldGetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), field.GetFieldID(), gchandle));
         //obj.GetFieldValue(*s_Data.AssetHandleField, &handle);
@@ -449,13 +473,13 @@ namespace BeeEngine
 
     void ScriptingEngine::UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime)
     {
-        if(!s_Data.DeltaTimeField)
+        if(!s_Data.Handles.DeltaTimeField)
             return;
         double deltaTimeDouble = deltaTime.count();
         double totalTimeDouble = totalTime.count();
-        auto& mclass = s_Data.DeltaTimeField->GetClass();
-        NativeToManaged::FieldSetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), s_Data.DeltaTimeField->GetFieldID(), nullptr,&deltaTimeDouble);
-        NativeToManaged::FieldSetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), s_Data.TotalTimeField->GetFieldID(), nullptr,&totalTimeDouble);
+        auto& mclass = s_Data.Handles.DeltaTimeField->GetClass();
+        NativeToManaged::FieldSetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), s_Data.Handles.DeltaTimeField->GetFieldID(), nullptr,&deltaTimeDouble);
+        NativeToManaged::FieldSetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), s_Data.Handles.TotalTimeField->GetFieldID(), nullptr,&totalTimeDouble);
         //mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTimeDouble);
         //mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTimeDouble);
     }
@@ -501,15 +525,8 @@ namespace BeeEngine
         s_Data.EditableFieldsDefaults.clear();
         s_Data.Assemblies.clear();
 
-        s_Data.EntityBaseClass = nullptr;
-        s_Data.AssetHandleField = nullptr;
-        s_Data.Texture2DClass = nullptr;
-        s_Data.FontClass = nullptr;
-        s_Data.InternalCallsClass = nullptr;
+        s_Data.Handles = {};
 
-        //s_Data.TimeVTable = nullptr;
-        s_Data.TotalTimeField = nullptr;
-        s_Data.DeltaTimeField = nullptr;
         NativeToManaged::UnloadContext(s_Data.AppDomain);
         s_Data.AppDomain = 0;
     }

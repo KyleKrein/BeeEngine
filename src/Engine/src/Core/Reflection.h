@@ -33,6 +33,13 @@ namespace BeeEngine::Reflection
     // Declare the function template that handles primitive types such as int, std::string, etc.:
     template<typename T>
     TypeDescriptor &GetPrimitiveDescriptor();
+
+    template <typename T>
+    requires std::is_pointer_v<T>
+    TypeDescriptor& GetPrimitiveDescriptor() {
+        static TypeDescriptor typeDesc{"void*", sizeof(T)};
+        return typeDesc;
+    }
     struct TypeDescriptor_Struct;
     // A helper class to find TypeDescriptors in different ways:
     struct DefaultResolver
@@ -93,6 +100,17 @@ namespace BeeEngine::Reflection
             const char *Name;
             size_t Offset;
             TypeDescriptor *Type;
+
+            void* GetPtr(void* objectPtr) const
+            {
+                return static_cast<char*>(objectPtr) + Offset;
+            }
+
+            template<typename T>
+            T& Get(void* objectPtr) const
+            {
+                return *static_cast<T*>(GetPtr(objectPtr));
+            }
         };
 
         std::vector<Member> Members;

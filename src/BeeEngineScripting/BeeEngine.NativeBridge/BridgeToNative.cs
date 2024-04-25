@@ -106,7 +106,7 @@ internal static class BridgeToNative
     private record struct TypeInfo(Type Type, Dictionary<ulong, MethodTypeInfo> Methods, Dictionary<ulong, FieldInfo> Fields);
     private record struct AssemblyInfo(Assembly Assembly, Dictionary<ulong, TypeInfo> Types);
     
-    private record struct AssemblyLoadContextInfo(
+    private record AssemblyLoadContextInfo(
         AssemblyLoadContext Context,
         Dictionary<ulong, AssemblyInfo> AssemblyInfo,
         bool CanBeUnloaded);
@@ -149,7 +149,8 @@ internal static class BridgeToNative
                 message = "Context ID is not valid";
                 goto error;
             }
-            var assembly = contextInfo.Context.LoadFromAssemblyPath(path);
+            var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
+            var assembly = contextInfo.Context.LoadFromStream(fs);
             ulong newId = GetNewId();
             contextInfo.AssemblyInfo.Add(newId, new(assembly, new()));
             return newId;
@@ -950,18 +951,33 @@ internal static class BridgeToNative
     [UnmanagedCallersOnly]
     public static void UnloadContext(ulong contextId)
     {
-        if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+        WeakReference weakRef;
         {
-            s_Logger.Error("Context ID is invalid");
-            return;
+            if (!s_LoadContexts.TryGetValue(contextId, out var contextInfo))
+            {
+                s_Logger.Error("Context ID is invalid");
+                return;
+            }
+            if(!contextInfo.CanBeUnloaded)
+            {
+                s_Logger.Error("Context cannot be unloaded");
+                return;
+            }
+            weakRef = new WeakReference(contextInfo.Context, trackResurrection: true);
+            contextInfo.Context.Unload();
         }
-        if(!contextInfo.CanBeUnloaded)
-        {
-            s_Logger.Error("Context cannot be unloaded");
-            return;
-        }
-        contextInfo.Context.Unload();
+        
         s_LoadContexts.Remove(contextId);
+
+        for (int i = 0; weakRef.IsAlive && (i < 10); i++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+        if (weakRef.IsAlive)
+        {
+            s_Logger.Error("Context was not unloaded properly");
+        }
     }
 
     [UnmanagedCallersOnly]
