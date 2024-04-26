@@ -379,6 +379,6 @@ namespace BeeEngine
     }
     void NativeToManaged::SetupLogger()
     {
-        s_Data->SetupLogger(Log_Info, Log_Warn, Log_Trace, Log_Error);
+        s_Data->SetupLogger((void*)Log_Info, (void*)Log_Warn, (void*)Log_Trace, (void*)Log_Error);
     }
 }
