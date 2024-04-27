@@ -562,12 +562,12 @@ namespace BeeEngine.Internal
                     }
                     else
                     {
-                        Log.Debug("Type {0} is not implemented in C# on Engine side", args[i].GetType());
+                        //Log.Debug("Type {0} is not implemented in C# on Engine side", args[i].GetType());
                         throw new NotImplementedException($"Type {args[i].GetType()} is not implemented in C# on Engine side");
                     }
                     s_ReflectionTypeInfos[i] = info;
                 }
-                Log.Debug("Calling dynamic translation with {0} arguments", args.Length);
+                //Log.Debug("Calling dynamic translation with {0} arguments", args.Length);
                 resultPtr = s_Locale_TranslateDynamic(keyPtr, arrayInfo);
             }
             GCHandle gCHandle = GCHandle.FromIntPtr(resultPtr);

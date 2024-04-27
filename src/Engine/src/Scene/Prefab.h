@@ -11,19 +11,33 @@
 namespace BeeEngine
 {
     class Entity;
+    class Application;
     class Prefab final: public Asset
     {
         friend Scene;
         friend class PrefabImporter;
+        friend class Application;
     public:
         [[nodiscard]] constexpr AssetType GetType() const final;
         ~Prefab() final;
     private:
         static Ref<Scene>& GetPrefabScene()
         {
-            static Ref<Scene> scene = CreateRef<Scene>();
-            return scene;
+            return s_PrefabScene;
         }
+        static void InitPrefabScene()
+        {
+            s_PrefabScene = CreateRef<Scene>();
+        }
+        static void ResetPrefabScene()
+        {
+            s_PrefabScene.reset();
+        }
+        static bool IsPrefabSceneInitialized()
+        {
+            return s_PrefabScene != nullptr;
+        }
+        static Ref<Scene> s_PrefabScene;
         Entity m_RootEntity = Entity::Null;
     };
 }

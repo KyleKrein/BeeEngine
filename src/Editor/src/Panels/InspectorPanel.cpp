@@ -46,13 +46,13 @@ namespace BeeEngine::Editor
 
         ImGui::End();
     }
-    template<typename T>
+    template<typename T, MType type>
     static void GetFieldData(MField& field, T* value, MObject* mObject, GameScriptField& gameScriptField)
     {
         if(mObject)
         {
             auto obj = mObject->GetFieldValue(field);
-            *value = *static_cast<T*>(obj.GetValue());
+            *value = obj.GetValue<type>();
             return;
         }
         *value = gameScriptField.GetData<T>();
@@ -379,7 +379,7 @@ namespace BeeEngine::Editor
                     case MType::Boolean:
                     {
                         bool value = false;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<bool, MType::Boolean>(mField, &value, mObject, field);
                         if(ImGui::Checkbox(name, &value))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -389,7 +389,7 @@ namespace BeeEngine::Editor
                     case MType::Int32:
                     {
                         int32_t value = 0;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<int32_t, MType::Int32>(mField, &value, mObject, field);
                         if(ImGui::DragInt(name, &value))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -399,7 +399,7 @@ namespace BeeEngine::Editor
                     case MType::Single:
                     {
                         float value = 0;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<float, MType::Single>(mField, &value, mObject, field);
                         if(ImGui::DragFloat(name, &value))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -421,7 +421,7 @@ namespace BeeEngine::Editor
                     case MType::Vector2:
                     {
                         glm::vec2 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<glm::vec2, MType::Vector2>(mField, &value, mObject, field);
                         if(ImGui::DragFloat2(name, glm::value_ptr(value)))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -431,7 +431,7 @@ namespace BeeEngine::Editor
                     case MType::Vector3:
                     {
                         glm::vec3 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<glm::vec3, MType::Vector3>(mField, &value, mObject, field);
                         if(ImGui::DragFloat3(name, glm::value_ptr(value)))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -441,7 +441,7 @@ namespace BeeEngine::Editor
                     case MType::Vector4:
                     {
                         glm::vec4 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<glm::vec4, MType::Vector4>(mField, &value, mObject, field);
                         if(ImGui::DragFloat4(name, glm::value_ptr(value)))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -451,7 +451,7 @@ namespace BeeEngine::Editor
                     case MType::Color:
                     {
                         Color4 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<Color4, MType::Color>(mField, &value, mObject, field);
                         if(ImGui::ColorEdit4(name, value.ValuePtr()))
                         {
                             SetFieldData(mField, &value, mObject, field);

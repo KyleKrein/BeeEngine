@@ -33,6 +33,7 @@ namespace BeeEngine
         void* Ptr;
         uint64_t Length;
     };
+    using SetupLoggerFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* info, void* warn, void* trace, void* error);
     using CreateAssemblyContextFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(void* name, int32_t canBeUnloaded);
     using LoadAssemblyFromPathFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, void* path);
     using GetClassesFromAssemblyFunction = ArrayInfo(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId);
@@ -52,7 +53,6 @@ namespace BeeEngine
     using FieldGetDataFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle);
     using FieldSetDataFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* gcHandle, void* data);
     using MethodInvokeFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t methodId, void* instanceGcHandle, void** args);
-    using UnmanagedMethodCreateDelegateAndSetToFieldFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId, void* instanceGcHandle, void* functionPtr);
     using UnloadContextFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId);
     using StringCreateManagedFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(void* str);
 
@@ -89,11 +89,28 @@ namespace BeeEngine
         FieldGetDataFunction FieldGetData = nullptr;
         FieldSetDataFunction FieldSetData = nullptr;
         MethodInvokeFunction MethodInvoke = nullptr;
-        UnmanagedMethodCreateDelegateAndSetToFieldFunction UnmanagedMethodCreateDelegateAndSetToField = nullptr;
         UnloadContextFunction UnloadContext = nullptr;
         StringCreateManagedFunction StringCreateManaged = nullptr;
+        SetupLoggerFunction SetupLogger = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
+
+    static void Log_Info(void* message)
+    {
+        BeeCoreInfo("C# : {}", NativeToManaged::StringGetFromManagedString(message));
+    }
+    static void Log_Warn(void* message)
+    {
+        BeeCoreWarn("C# : {}", NativeToManaged::StringGetFromManagedString(message));
+    }
+    static void Log_Error(void* message)
+    {
+        BeeCoreError("C# : {}", NativeToManaged::StringGetFromManagedString(message));
+    }
+    static void Log_Trace(void* message)
+    {
+        BeeCoreTrace("C# : {}", NativeToManaged::StringGetFromManagedString(message));
+    }
 
     // Using the nethost library, discover the location of hostfxr and get exports
     bool NativeToManaged::init_hostfxr(const Path& assembly_path)
@@ -203,9 +220,9 @@ namespace BeeEngine
         ObtainDelegate(FieldGetData);
         ObtainDelegate(FieldSetData);
         ObtainDelegate(MethodInvoke);
-        ObtainDelegate(UnmanagedMethodCreateDelegateAndSetToField);
         ObtainDelegate(UnloadContext);
         ObtainDelegate(StringCreateManaged);
+        ObtainDelegate(SetupLogger);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -251,18 +268,14 @@ namespace BeeEngine
         ManagedClassID classID)
     {
         void* ptr = s_Data->GetClassName(contextID, assemblyId, classID);
-        String name = GetStringFromPtr(ptr);
-        s_Data->FreeIntPtr(ptr);
-        return name;
+        return StringGetFromManagedString(ptr);
     }
 
     String NativeToManaged::GetClassNamespace(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID)
     {
         void* ptr = s_Data->GetClassNamespace(contextID, assemblyId, classID);
-        String name = GetStringFromPtr(ptr);
-        s_Data->FreeIntPtr(ptr);
-        return name;
+        return StringGetFromManagedString(ptr);
     }
 
     bool NativeToManaged::ClassIsValueType(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
@@ -305,18 +318,14 @@ namespace BeeEngine
         ManagedClassID classID, ManagedFieldID fieldID)
     {
         void* ptr = s_Data->FieldGetName(contextID, assemblyId, classID, fieldID);
-        String name = GetStringFromPtr(ptr);
-        s_Data->FreeIntPtr(ptr);
-        return name;
+        return StringGetFromManagedString(ptr);
     }
 
     String NativeToManaged::FieldGetTypeName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, ManagedFieldID fieldID)
     {
         void* ptr = s_Data->FieldGetTypeName(contextID, assemblyId, classID, fieldID);
-        String name = GetStringFromPtr(ptr);
-        s_Data->FreeIntPtr(ptr);
-        return name;
+        return StringGetFromManagedString(ptr);
     }
 
     MFieldFlags NativeToManaged::FieldGetFlags(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
@@ -354,13 +363,6 @@ namespace BeeEngine
         return s_Data->MethodInvoke(contextID, assemblyId, classID, methodID, objectHandle, args);
     }
 
-    void NativeToManaged::UnmanagedMethodCreateDelegateAndSetToField(ManagedAssemblyContextID contextID,
-        ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedMethodID methodID, GCHandle objectHandle,
-        void* functionPtr)
-    {
-        s_Data->UnmanagedMethodCreateDelegateAndSetToField(contextID, assemblyId, classID, methodID, objectHandle, functionPtr);
-    }
-
     String NativeToManaged::StringGetFromManagedString(void* managedString)
     {
         String result = GetStringFromPtr(managedString);
@@ -370,5 +372,13 @@ namespace BeeEngine
     GCHandle NativeToManaged::StringCreateManaged(const String &string)
     {
         return s_Data->StringCreateManaged((void*)(string.c_str()));
+    }
+    void NativeToManaged::FreeIntPtr(void* ptr)
+    {
+        s_Data->FreeIntPtr(ptr);
+    }
+    void NativeToManaged::SetupLogger()
+    {
+        s_Data->SetupLogger((void*)Log_Info, (void*)Log_Warn, (void*)Log_Trace, (void*)Log_Error);
     }
 }
