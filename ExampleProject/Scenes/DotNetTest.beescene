@@ -1,0 +1,41 @@
+Scene: Untitled
+Entities:
+  - Entity: 4668219278899832242
+    TagComponent:
+      Tag: Entity
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.DotNetTest
+    TextRendererComponent:
+      Text: Suck
+      Font: [0, 328465234592345234]
+      Foreground Color: [0, 0, 0, 1]
+      Background Color: [0, 0, 0, 0]
+      Kerning: 0
+      Line Spacing: 0
+    HierarchyComponent:
+      []
+  - Entity: 3391183283342346714
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [-0.0256622434, 0.137102842, -9.30000019]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveVerticalFOV: 0.785398185
+        PerspectiveNearClip: 10000
+        PerspectiveFarClip: 0.00999999978
+        OrthographicSize: 10
+        OrthographicNearClip: 1
+        OrthographicFarClip: 1
+        AspectRatio: 1.72115386
+      Primary: true
+      FixedAspectRatio: false
+    HierarchyComponent:
+      []

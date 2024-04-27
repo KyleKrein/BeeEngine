@@ -7,6 +7,7 @@
 #include "Core/Path.h"
 
 class TestFileDialogs;
+
 namespace BeeEngine
 {
     class FileDialogs
@@ -21,11 +22,10 @@ namespace BeeEngine
             friend class ::TestFileDialogs;
             const char* name;
             const char* filter;
-#if defined(WINDOWS)
             Filter(const char* name, const char* filter)
                     : name(name), filter(filter)
             {}
-
+#if defined(WINDOWS)
         private:
             std::string WindowsFilter()
             {
@@ -37,6 +37,7 @@ namespace BeeEngine
     public:
         static Path OpenFile(Filter filter);
         static Path SaveFile(Filter filter);
+        static Path OpenFolder();
     private:
         /*static void CheckFilter(Filter& filter)
         {

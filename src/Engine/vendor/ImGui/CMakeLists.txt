@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 CPMAddPackage(
         NAME ImGui
         GITHUB_REPOSITORY ocornut/imgui
-        GIT_TAG 8566fec661801a026e56f06cd53f5dac25c2595b
+        GIT_TAG c6aa051629753f0ef0d26bf775a8b6a92aa213b2
         DOWNLOAD_ONLY YES
 )
 set(ImGui_INCLUDE_DIR ${ImGui_SOURCE_DIR})
@@ -18,16 +18,20 @@ set(ImGui_SOURCES
         ${ImGui_SOURCE_DIR}/imgui_draw.cpp
         ${ImGui_SOURCE_DIR}/imgui_widgets.cpp
         ${ImGui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
-        ${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
-        ${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
-        ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.h
-        ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
+        #[[${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+        ${ImGui_SOURCE_DIR}/backends/imgui_impl_opengl3.h]]
         ${ImGui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
         )
 if(BEE_COMPILE_VULKAN)
     list(APPEND ImGui_SOURCES
             ${ImGui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
             ${ImGui_SOURCE_DIR}/backends/imgui_impl_vulkan.h
+            )
+endif()
+if(BEE_COMPILE_SDL)
+    list(APPEND ImGui_SOURCES
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.h
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
             )
 endif()
 if(IOS)
@@ -42,8 +46,8 @@ elseif(APPLE)
     endif()
     if(BEE_COMPILE_WEBGPU)
         list(APPEND ImGui_SOURCES
-                backends/imgui_impl_wgpu.cpp
-                backends/imgui_impl_wgpu.h
+                ${ImGui_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp
+                ${ImGui_SOURCE_DIR}/backends/imgui_impl_wgpu.h
                 )
     endif()
 elseif(ANDROID)
@@ -58,10 +62,14 @@ elseif(WIN32)
     endif()
     if(BEE_COMPILE_WEBGPU)
         list(APPEND ImGui_SOURCES
-                backends/imgui_impl_wgpu.cpp
-                backends/imgui_impl_wgpu.h
+                 ${ImGui_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp
+                 ${ImGui_SOURCE_DIR}/backends/imgui_impl_wgpu.h
                 )
     endif()
+    list(APPEND ImGui_SOURCES
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_win32.cpp
+            ${ImGui_SOURCE_DIR}/backends/imgui_impl_win32.h
+            )
 elseif (UNIX AND NOT APPLE)
     # Covers Linux implementation
     if(BEE_COMPILE_GLFW)
@@ -136,8 +144,9 @@ if(NOT IOS AND BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
     target_link_libraries(${LIB_NAME} PRIVATE Vulkan::Vulkan)
 endif()
-
-target_link_libraries(${LIB_NAME} PRIVATE SDL3::SDL3)
+if(BEE_COMPILE_SDL)
+    target_link_libraries(${LIB_NAME} PRIVATE SDL3::SDL3)
+endif()
 
 # Enable C++11
 target_compile_features(${LIB_NAME} PUBLIC cxx_std_11)

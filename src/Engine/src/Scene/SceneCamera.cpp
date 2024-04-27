@@ -114,8 +114,43 @@ namespace BeeEngine
         RecalculateProjectionMatrix();
     }
 
-    float SceneCamera::GetAspectRatio()
+    float SceneCamera::GetAspectRatio() const noexcept
     {
         return m_AspectRatio;
     }
+
+REFLECT_STRUCT_BEGIN(SceneCamera)
+    REFLECT_STRUCT_MEMBER(m_Type)
+    REFLECT_STRUCT_MEMBER(m_OrthographicSize)
+    REFLECT_STRUCT_MEMBER(m_OrthographicNear)
+    REFLECT_STRUCT_MEMBER(m_OrthographicFar)
+    REFLECT_STRUCT_MEMBER(m_AspectRatio)
+    REFLECT_STRUCT_MEMBER(m_VerticalFOV)
+    REFLECT_STRUCT_MEMBER(m_PerspectiveNear)
+    REFLECT_STRUCT_MEMBER(m_PerspectiveFar)
+    /*REFLECT_MEMBERS_END()
+    REFLECT_METHODS_BEGIN()
+    REFLECT_METHOD(SetOrthographic)
+    REFLECT_METHOD(SetPerspective)
+    REFLECT_METHOD(SetViewportSize)
+    REFLECT_METHOD(SetProjectionType)
+    REFLECT_METHOD(SetOrthographicSize)
+    REFLECT_METHOD(SetOrthographicNearClip)
+    REFLECT_METHOD(SetOrthographicFarClip)
+    REFLECT_METHOD(SetPerspectiveVerticalFOV)
+    REFLECT_METHOD(SetPerspectiveNearClip)
+    REFLECT_METHOD(SetPerspectiveFarClip)
+    REFLECT_METHOD(SetAspectRatio)
+    REFLECT_METHOD(GetAspectRatio)
+    REFLECT_METHOD(GetProjectionType)
+    REFLECT_METHOD(GetOrthographicSize)
+    REFLECT_METHOD(GetOrthographicNearClip)
+    REFLECT_METHOD(GetOrthographicFarClip)
+    REFLECT_METHOD(GetPerspectiveVerticalFOV)
+    REFLECT_METHOD(GetPerspectiveNearClip)
+    REFLECT_METHOD(GetPerspectiveFarClip)
+    REFLECT_METHOD(GetProjectionMatrix)*/
+REFLECT_STRUCT_END()
+
+REFLECT_ENUM(SceneCamera::CameraType)
 }

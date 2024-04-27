@@ -15,7 +15,7 @@ namespace BeeEngine::Internal
         ~WebGPUMaterial() override;
         [[nodiscard]] InstancedBuffer& GetInstancedBuffer() const override;
 
-        void Bind(void* cmd) const
+        void Bind(CommandBuffer& cmd) override
         {
             m_Pipeline->Bind(cmd);
         }

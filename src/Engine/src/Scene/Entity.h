@@ -14,6 +14,7 @@ namespace BeeEngine
 {
     class Entity
     {
+        friend class PrefabImporter;
     public:
         constexpr Entity() = default;
         constexpr Entity(EntityID id, Scene* scene)
@@ -58,6 +59,13 @@ namespace BeeEngine
             m_Scene = Null.Scene;
         }
 
+        void RemoveParent();
+        void SetParent(Entity& parent);
+        bool HasChild(Entity& child);
+        Entity GetParent();
+        bool HasParent();
+        const std::vector<Entity>& GetChildren();
+
         operator bool() const { return m_ID.ID != entt::null; }
         operator EntityID() const { return m_ID; }
         operator uint32_t() const { return (uint32_t)m_ID.ID; }
@@ -73,10 +81,17 @@ namespace BeeEngine
             constexpr operator Entity() const { return Entity(ID, Scene); }
         };
 
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & GetUUID();
+        }
+
         constexpr static EntityInit const Null{};
 
     private:
         EntityID m_ID {};
         Scene* m_Scene = nullptr;
+        void SetParentWithoutChecks(Entity& parent);
     };
 }

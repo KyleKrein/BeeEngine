@@ -9,49 +9,29 @@
 namespace BeeEngine
 {
     RenderAPI Renderer::s_Api = RenderAPI::NotAvailable;
-    Ref<RendererAPI> Renderer::s_RendererAPI = nullptr;
+    Scope<RendererAPI> Renderer::s_RendererAPI = nullptr;
     Color4 Renderer::s_ClearColor = Color4::DarkGray;
     RendererStatistics Renderer::s_Statistics {};
-    bool Renderer::s_FrameStarted = false;
 
-    bool Renderer::s_NotMainRenderPass = false;
-    RenderPass Renderer::s_CurrentRenderPass = {};
-
-    void Renderer::SubmitInstance(Model &model, std::vector<BindingSet *> &bindingSets, gsl::span<byte> instanceData)
-    {
-        Internal::RenderingQueue::SubmitInstance({&model, bindingSets}, instanceData);
-    }
-
-    void Renderer::Flush()
-    {
-        Internal::RenderingQueue::Flush();
-    }
-
-    void Renderer::EndFrame()
+    void Renderer::EndFrame(FrameData& frameData)
     {
         BEE_PROFILE_FUNCTION();
-        BeeExpects(s_FrameStarted);
+        BeeExpects(frameData.IsInProgress());
         s_RendererAPI->EndFrame();
-        s_FrameStarted = false;
+        frameData.End();
 
-        s_Statistics = Internal::RenderingQueue::GetStatistics();
+        s_Statistics = Internal::RenderingQueue::GetGlobalStatistics();
         Internal::RenderingQueue::ResetStatistics();
     }
 
-    void Renderer::SetCurrentRenderPass(const RenderPass& pass)
+    void Renderer::SetAPI(const RenderAPI& api)
     {
-        BeeExpects(!s_NotMainRenderPass);
-        s_NotMainRenderPass = true;
-        s_CurrentRenderPass = pass;
-    }
-
-    void Renderer::FinalFlush()
-    {
-        Internal::RenderingQueue::FinishFrame();
-    }
-
-    void Renderer::DrawString(const String &text, Font &font, BindingSet& cameraBindingSet, const glm::mat4 &transform, const TextRenderingConfiguration& config)
-    {
-        Internal::RenderingQueue::SubmitText(text, font, cameraBindingSet, transform, config);
+        BEE_PROFILE_FUNCTION();
+        BeeCoreAssert(s_Api == RenderAPI::NotAvailable, "Can't change Renderer API after initialization!");
+        s_Api = api;
+        BeeCoreInfo("Using {} Renderer API", ToString(api));
+        s_RendererAPI = RendererAPI::Create();
+        s_RendererAPI->Init();
+        //Internal::RenderingQueue::Initialize();
     }
 }

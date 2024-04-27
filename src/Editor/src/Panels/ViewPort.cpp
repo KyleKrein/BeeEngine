@@ -3,12 +3,14 @@
 //
 
 #include "ViewPort.h"
+#include "Debug/Instrumentor.h"
 #include "Scene/Entity.h"
 #include "Scene/Components.h"
 #include "gtc/type_ptr.hpp"
 #include "Core/Events/Event.h"
 #include "Scene/SceneSerializer.h"
 #include "Core/ResourceManager.h"
+#include "Renderer/SceneRenderer.h"
 
 
 namespace BeeEngine::Editor
@@ -25,9 +27,11 @@ namespace BeeEngine::Editor
         m_ClearColor(clearColor)
     {
         FrameBufferPreferences preferences;
-        preferences.Width = m_Width;
-        preferences.Height = m_Height;
-        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, /*FrameBufferTextureFormat::RedInteger, */FrameBufferTextureFormat::Depth24};
+        preferences.Width = m_Width * WindowHandler::GetInstance()->GetScaleFactor();
+        preferences.Height = m_Height * WindowHandler::GetInstance()->GetScaleFactor();
+        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
+
+        preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; //RedInteger
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
     }
@@ -41,66 +45,118 @@ namespace BeeEngine::Editor
         {
             return;
         }
-        DISPATCH_EVENT(event,MouseButtonPressedEvent ,EventType::MouseButtonPressed, OnMouseButtonPressed);
-        DISPATCH_EVENT(event,KeyPressedEvent,EventType::KeyPressed, OnKeyButtonPressed);
+        event.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& event) -> bool
+        {
+            return OnMouseButtonPressed(&event);
+        });
+        event.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) -> bool
+        {
+            return OnKeyButtonPressed(&event);
+        });
         //m_CameraController.OnEvent(event);
     }
 
-    void ViewPort::UpdateRuntime() noexcept
+    void ViewPort::UpdateRuntime(bool renderPhysicsColliders) noexcept
     {
-        Renderer::Clear();
-        m_FrameBuffer->Bind();
-
-        m_Scene->UpdateRuntime();
-
-        m_FrameBuffer->Unbind();
-    }
-    void ViewPort::UpdateEditor(EditorCamera& camera) noexcept
-    {
-        m_FrameBuffer->Bind();
-
-        m_Scene->UpdateEditor(camera);
+        BEE_PROFILE_FUNCTION();
+        auto cmd = m_FrameBuffer->Bind();
 
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         const glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 
-        if(Renderer::GetAPI() == RenderAPI::OpenGL)
+        int mouseX = static_cast<int>(mx);
+        int mouseY = static_cast<int>(my);
+
+        m_MousePosition = {mx, my};
+
+        if(mouseX >= 0 && mouseY >= 0
+           && gsl::narrow_cast<float>(mouseX) < viewportSize.x
+           && gsl::narrow_cast<float>(mouseY) < viewportSize.y)
         {
-            my = viewportSize.y - my;
+            ScriptingEngine::SetMousePosition(mouseX, mouseY);
         }
+
+        m_Scene->UpdateRuntime();
+        SceneRenderer::RenderScene(*m_Scene, cmd, m_GameDomain->GetLocale());
+
+        auto primaryCameraEntity = m_Scene->GetPrimaryCameraEntity();
+        if(primaryCameraEntity)
+        {
+            auto& cameraComponent = primaryCameraEntity.GetComponent<CameraComponent>();
+            auto& camera = cameraComponent.Camera;
+            auto viewMatrix = glm::inverse(Math::ToGlobalTransform(primaryCameraEntity));
+            auto viewProjection = camera.GetProjectionMatrix() * viewMatrix;
+            m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjection)), sizeof(glm::mat4));
+            RenderSelectedEntityOutline(cmd);
+            if(renderPhysicsColliders)
+                SceneRenderer::RenderPhysicsColliders(*m_Scene, cmd, *m_CameraBindingSet);
+        }
+        m_FrameBuffer->Unbind(cmd);
+    }
+    void ViewPort::UpdateEditor(EditorCamera& camera, bool renderPhysicsColliders) noexcept
+    {
+        BEE_PROFILE_FUNCTION();
+        auto cmd = m_FrameBuffer->Bind();
+        m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(camera.GetViewProjection())), sizeof(glm::mat4));
+        if(m_SelectedEntity && m_SelectedEntity.HasComponent<CameraComponent>())
+            RenderCameraFrustum(cmd);
+        SceneRenderer::RenderScene(*m_Scene, cmd, m_GameDomain->GetLocale(), camera, camera.GetViewProjection(), camera.GetPosition(), camera.GetForwardDirection(), camera.GetUpDirection(), camera.GetRightDirection());
+        RenderSelectedEntityOutline(cmd);
+        if(renderPhysicsColliders)
+            SceneRenderer::RenderPhysicsColliders(*m_Scene, cmd, *m_CameraBindingSet);
+        auto [mx, my] = ImGui::GetMousePos();
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        const glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 
         int mouseX = static_cast<int>(mx);
         int mouseY = static_cast<int>(my);
+        m_MousePosition = {mouseX, mouseY};
 
         if(mouseX >= 0 && mouseY >= 0
         && gsl::narrow_cast<float>(mouseX) < viewportSize.x
         && gsl::narrow_cast<float>(mouseY) < viewportSize.y)
         {
-            //int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
-            //m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
+            ScriptingEngine::SetMousePosition(mouseX, mouseY);
+            int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
+            pixelData--; //I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I need to make invalid number -1 too, so in scene I make + 1
+            //BeeCoreTrace("Coords: {}, {}. Pixel data: {}", mouseX, mouseY, pixelData);
+            m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
         }
-
-        m_FrameBuffer->Unbind();
+        m_FrameBuffer->Unbind(cmd);
     }
 
     void ViewPort::RenderImGuizmo(EditorCamera& camera)
     {
         //BeeCoreTrace("RenderImGuizmo. Mode: {}", m_GuizmoOperation == GuizmoOperation::None ? "None" : m_GuizmoOperation == GuizmoOperation::Translate ? "Translate" : m_GuizmoOperation == GuizmoOperation::Rotate ? "Rotate" : "Scale");
+
+        const glm::mat4* cameraProjection = nullptr;
+        glm::mat4 cameraView;
+        if(m_Scene->IsRuntime())
+        {
+            Entity mainCamera = m_Scene->GetPrimaryCameraEntity();
+            if(!mainCamera)
+                return;
+            auto& cameraComponent = mainCamera.GetComponent<CameraComponent>();
+            cameraProjection = &cameraComponent.Camera.GetProjectionMatrix();
+            cameraView = glm::inverse(mainCamera.GetComponent<TransformComponent>().GetTransform());
+        }
+        else
+        {
+            cameraProjection = &camera.GetProjectionMatrix();
+            cameraView = camera.GetViewMatrix();
+        }
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::SetDrawlist();
 
         ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
 
-
-        const glm::mat4& cameraProjection = camera.GetProjectionMatrix();
-        glm::mat4 cameraView = camera.GetViewMatrix();
-
         auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
 
-        glm::mat4 transform = transformComponent.GetTransform();
+        glm::mat4 transform = Math::ToGlobalTransform(m_SelectedEntity);
 
         //Snapping
         const float snapValue = m_GuizmoOperation == GuizmoOperation::Rotate ? 45.0f : 0.5f;
@@ -108,7 +164,7 @@ namespace BeeEngine::Editor
         float snapValues[3] = {snapValue, snapValue, snapValue};
 
         ImGuizmo::Manipulate(glm::value_ptr(cameraView),
-                             glm::value_ptr(cameraProjection),
+                             glm::value_ptr(*cameraProjection),
                              static_cast<ImGuizmo::OPERATION>(m_GuizmoOperation),
                              ImGuizmo::LOCAL,
                              glm::value_ptr(transform),
@@ -116,7 +172,7 @@ namespace BeeEngine::Editor
                              m_GuizmoSnap ? snapValues : nullptr);
         if (ImGuizmo::IsUsing())
         {
-            transformComponent.SetTransform(transform);
+            transformComponent.SetTransform(Math::ToLocalTransform(m_SelectedEntity, transform));
         }
     }
 
@@ -142,9 +198,10 @@ namespace BeeEngine::Editor
         {
             m_Width = gsl::narrow_cast<uint32_t>(size.x);
             m_Height = gsl::narrow_cast<uint32_t>(size.y);
-            m_FrameBuffer->Resize(m_Width, m_Height);
+            m_FrameBuffer->Resize(m_Width * WindowHandler::GetInstance()->GetScaleFactor(), m_Height * WindowHandler::GetInstance()->GetScaleFactor());
             m_Scene->OnViewPortResize(m_Width, m_Height);
             camera.SetViewportSize(m_Width, m_Height);
+            ScriptingEngine::SetViewportSize(m_Width, m_Height);
         }
         auto textureID = m_FrameBuffer->GetColorAttachmentRendererID(0);
         BeeExpects(textureID != 0);
@@ -209,9 +266,16 @@ namespace BeeEngine::Editor
 
     bool ViewPort::OnMouseButtonPressed(MouseButtonPressedEvent *event) noexcept
     {
+        /*if(event->GetButton() == MouseButton::Left && !m_Scene->IsRuntime()
+        && IsMouseInViewport() && !m_IsReadPixelTaskRunning && !ImGuizmo::IsOver()
+        && !Input::KeyPressed(Key::LeftAlt))
+        {
+            m_ReadPixelTask = m_FrameBuffer->ReadPixel(1, m_MousePosition.x, m_MousePosition.y);
+            m_IsReadPixelTaskRunning = true;
+        }*/
         if(event->GetButton() == MouseButton::Left)
         {
-            if(m_IsHovered && !ImGuizmo::IsOver() && !Input::KeyPressed(Key::LeftAlt))
+            if(!m_Scene->IsRuntime() && m_IsHovered && !ImGuizmo::IsOver() && !Input::KeyPressed(Key::LeftAlt))
             {
                 m_SelectedEntity = m_HoveredEntity;
             }
@@ -224,5 +288,98 @@ namespace BeeEngine::Editor
         BeeCoreTrace("Opening scene {0}", path.AsUTF8());
         m_NewSceneWasLoaded = true;
         m_ScenePath = path.AsUTF8();
+    }
+
+    void ViewPort::RenderCameraFrustum(CommandBuffer& commandBuffer)
+    {
+        auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
+        auto& cameraComponent = m_SelectedEntity.GetComponent<CameraComponent>();
+        auto& camera = cameraComponent.Camera;
+        auto transform = Math::ToGlobalTransform(m_SelectedEntity);
+        float aspectRatio = camera.GetAspectRatio();
+        float fovY = camera.GetVerticalFOV();
+        float zNear = camera.GetNearClip();
+        float zFar = camera.GetFarClip();
+        Color4 color = Color4::Green;
+
+        // Вычисление ширины и высоты ближних и дальних плоскостей фрустума
+        float nearHeight = tan(fovY) / 2.0f * zNear * 2.0f;
+        float nearWidth = nearHeight * aspectRatio;
+        float farHeight = tan(fovY / 2.0f) * zFar * 2.0f;
+        float farWidth = farHeight * aspectRatio;
+
+        // Вычисление вершин фрустума в локальных координатах камеры
+        glm::vec3 ntl = glm::vec3(-nearWidth / 2.0f, nearHeight / 2.0f, zNear); //TODO: must be -zNear and -zFar everywhere
+        glm::vec3 ntr = glm::vec3(nearWidth / 2.0f, nearHeight / 2.0f, zNear);
+        glm::vec3 nbl = glm::vec3(-nearWidth / 2.0f, -nearHeight / 2.0f, zNear);
+        glm::vec3 nbr = glm::vec3(nearWidth / 2.0f, -nearHeight / 2.0f, zNear);
+
+        glm::vec3 ftl = glm::vec3(-farWidth / 2.0f, farHeight / 2.0f, zFar);
+        glm::vec3 ftr = glm::vec3(farWidth / 2.0f, farHeight / 2.0f, zFar);
+        glm::vec3 fbl = glm::vec3(-farWidth / 2.0f, -farHeight / 2.0f, zFar);
+        glm::vec3 fbr = glm::vec3(farWidth / 2.0f, -farHeight / 2.0f, zFar);
+
+        // Преобразование вершин в мировые координаты
+        ntl = glm::vec3(transform * glm::vec4(ntl, 1.0f));
+        ntr = glm::vec3(transform * glm::vec4(ntr, 1.0f));
+        nbl = glm::vec3(transform * glm::vec4(nbl, 1.0f));
+        nbr = glm::vec3(transform * glm::vec4(nbr, 1.0f));
+
+        ftl = glm::vec3(transform * glm::vec4(ftl, 1.0f));
+        ftr = glm::vec3(transform * glm::vec4(ftr, 1.0f));
+        fbl = glm::vec3(transform * glm::vec4(fbl, 1.0f));
+        fbr = glm::vec3(transform * glm::vec4(fbr, 1.0f));
+
+        // Отрисовка линий фрустума
+        // Верхняя грань
+        commandBuffer.SubmitLine(ntl, ntr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ntr, ftr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ftr, ftl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ftl, ntl, *m_CameraBindingSet, color, 0.1f);
+
+        // Нижняя грань
+        commandBuffer.SubmitLine(nbl, nbr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(nbr, fbr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(fbr, fbl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(fbl, nbl, *m_CameraBindingSet, color, 0.1f);
+
+        // Боковые грани
+        commandBuffer.SubmitLine(ntl, nbl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ntr, nbr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ftl, fbl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ftr, fbr, *m_CameraBindingSet, color, 0.1f);
+    }
+
+    void ViewPort::RenderSelectedEntityOutline(CommandBuffer& commandBuffer)
+    {
+        if(m_SelectedEntity && (m_SelectedEntity.HasComponent<SpriteRendererComponent>() || m_SelectedEntity.HasComponent<CircleRendererComponent>()))
+        {
+            auto transform = Math::ToGlobalTransform(m_SelectedEntity);
+            commandBuffer.DrawRect(transform, Color4::DarkOrange, *m_CameraBindingSet, 0.05f);
+        }
+    }
+
+    void ViewPort::HandleReadPixelTask()
+    {
+        /*if(!m_IsReadPixelTaskRunning)
+        {
+            return;
+        }
+        int pixelData = sync_await(std::move(m_ReadPixelTask));//m_ReadPixelTask.get();
+        m_IsReadPixelTaskRunning = false;
+        pixelData--; //I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I need to make invalid number -1 too, so in scene I make + 1
+        auto hovered = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
+        if(hovered)
+        {
+            m_SelectedEntity = hovered;
+        }*/
+    }
+
+    bool ViewPort::IsMouseInViewport()
+    {
+        const glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+        return m_MousePosition.x >= 0 && m_MousePosition.y >= 0
+               && m_MousePosition.x < viewportSize.x
+               && m_MousePosition.y < viewportSize.y;
     }
 }

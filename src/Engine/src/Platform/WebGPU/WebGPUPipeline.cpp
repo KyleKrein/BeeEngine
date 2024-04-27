@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 01.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUPipeline.h"
 #include "Renderer/Renderer.h"
 #include "WebGPUGraphicsDevice.h"
@@ -58,11 +58,11 @@ namespace BeeEngine::Internal
         // But the face orientation does not matter much because we do not
         // cull (i.e. "hide") the faces pointing away from us (which is often
         // used for optimization).
-#if defined(DEBUG)
-        renderPipelineDescriptor.primitive.cullMode = WGPUCullMode_None;
-#else
-        renderPipelineDescriptor.primitive.cullMode = WGPUCullMode_Front;
-#endif
+//#if defined(DEBUG)
+        renderPipelineDescriptor.primitive.cullMode = WGPUCullMode_None; //TODO: make configurable
+//#else
+        //renderPipelineDescriptor.primitive.cullMode = WGPUCullMode_Front;
+//#endif
 
         //fragment
         WGPUFragmentState fragmentState{};
@@ -110,12 +110,12 @@ namespace BeeEngine::Internal
         colorTarget.blend = &blendState;
         colorTarget.writeMask = WGPUColorWriteMask_All; // We could write to only some of the color channels.
 
-       /* WGPUColorTargetState entityIDColorTarget{};
+       WGPUColorTargetState entityIDColorTarget{};
         entityIDColorTarget.format = WGPUTextureFormat_R32Float;
         entityIDColorTarget.blend = nullptr;
-        entityIDColorTarget.writeMask = WGPUColorWriteMask::WGPUColorWriteMask_All;*/
+        entityIDColorTarget.writeMask = WGPUColorWriteMask::WGPUColorWriteMask_All;
 
-        std::vector<WGPUColorTargetState> colorTargets {colorTarget/*, entityIDColorTarget*/};
+        std::vector<WGPUColorTargetState> colorTargets {colorTarget, entityIDColorTarget};
 
         // We have only one target because our render pass has only one output color
         // attachment.
@@ -172,3 +172,4 @@ namespace BeeEngine::Internal
             wgpuRenderPassEncoderSetPipeline((WGPURenderPassEncoder)(((RenderPass*)commandBuffer)->GetHandle()), m_Pipeline);
     }
 }
+#endif

@@ -1,31 +1,66 @@
 //
-// Created by alexl on 09.06.2023.
+// Created by Aleksandr on 02.03.2024.
 //
 
 #pragma once
-#if defined(BEE_COMPILE_VULKAN)
-#include <gsl/span>
-#include "vulkan/vulkan.hpp"
+#include "VulkanGraphicsDevice.h"
+#include "Renderer/ShaderModule.h"
+
 
 namespace BeeEngine::Internal
 {
-    class VulkanShaderModule
+
+    class VulkanShaderModule: public ShaderModule
     {
     public:
-        VulkanShaderModule(std::string_view name, gsl::span<std::byte> shaderCode);
-        VulkanShaderModule(std::string_view name, std::string_view filepath);
-        VulkanShaderModule(vk::Device& device, std::string_view name, std::string_view filepath);
-        ~VulkanShaderModule();
+        VulkanShaderModule(std::vector<uint32_t>& spirv, ShaderType type, BufferLayout&& layout);
+        ~VulkanShaderModule() override;
 
-        vk::ShaderModule& GetHandle()
+        [[nodiscard]] ShaderType GetType() const override;
+
+        [[nodiscard]] Scope<InstancedBuffer> CreateInstancedBuffer() override;
+
+        [[nodiscard]] vk::ShaderModule GetShaderModule() const
         {
             return m_ShaderModule;
         }
-    private:
-        vk::ShaderModule m_ShaderModule;
-        vk::Device& m_Device;
+        [[nodiscard]] vk::PipelineVertexInputStateCreateInfo GetVertexInputState() const
+        {
+            return m_VertexInputState;
+        }
+        [[nodiscard]] const std::vector<vk::DescriptorSetLayout>& GetDescriptorSetLayouts() const
+        {
+            return m_DescriptorSetLayouts;
+        }
+        struct ColorAttachmentData
+        {
+            const std::vector<vk::Format>& formats;
+            const std::vector<vk::PipelineColorBlendAttachmentState>& attachments;
+        };
+        [[nodiscard]] ColorAttachmentData GetColorAttachmentData() const
+        {
+            BeeExpects(m_Type == ShaderType::Fragment);
+            return {m_ColorAttachmentFormats, m_ColorBlendAttachments};
+        }
 
-        void CreateShaderModule(gsl::span<std::byte> shaderCode);
+    private:
+        void InitData();
+
+        ShaderType m_Type;
+        BufferLayout m_Layout;
+        VulkanGraphicsDevice& m_GraphicsDevice;
+        vk::ShaderModule m_ShaderModule;
+        size_t m_OneInstanceSize;
+        vk::VertexInputBindingDescription m_BindingDescriptions[2];
+        vk::VertexInputBindingDescription& m_VertexBindingDescription = m_BindingDescriptions[0];
+        std::vector<vk::VertexInputAttributeDescription> m_VertexAttributeDescriptions;
+        vk::VertexInputBindingDescription& m_InstanceBindingDescription = m_BindingDescriptions[1];
+        //std::vector<vk::VertexInputAttributeDescription> m_InstanceAttributeDescriptions;
+        vk::PipelineVertexInputStateCreateInfo m_VertexInputState;
+        std::vector<vk::DescriptorSetLayout> m_DescriptorSetLayouts;
+        std::vector<vk::Format> m_ColorAttachmentFormats;
+        std::vector<vk::PipelineColorBlendAttachmentState> m_ColorBlendAttachments;
     };
-}
-#endif
+
+} // Internal
+// BeeEngine

@@ -9,64 +9,103 @@
 #include "Renderer/Renderer.h"
 #include "DeletionQueue.h"
 #include "Scripting/ScriptingEngine.h"
+#include "Renderer/SceneRenderer.h"
+#include "JobSystem/JobScheduler.h"
+#include "Scene/Prefab.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 namespace BeeEngine{
     Application* Application::s_Instance = nullptr;
+    std::thread::id Application::s_MainThreadID = {};
     void Application::Run()
     {
-        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight()));
+        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight(), m_Window->GetWidthInPixels(), m_Window->GetHeightInPixels()));
+        std::condition_variable cv;
+        std::mutex mutex;
+        struct FrameJobInfo
+        {
+            std::condition_variable* cv;
+            Application* self;
+        } frameJobInfo = {&cv, this};
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
             ExecuteMainThreadQueue();
             m_Window->ProcessEvents();
-            m_EventQueue.Dispatch();
-            m_Window->UpdateTime();
-            auto cmd = Renderer::BeginFrame();//Internal::VulkanRendererAPI::GetInstance().BeginFrame();
-            Renderer::StartMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().BeginSwapchainRenderPass(cmd);
-            m_Layers.Update();
-            Update();
-            //m_Window->SwapBuffers();
-            Renderer::EndMainRenderPass(cmd);//Internal::VulkanRendererAPI::GetInstance().EndSwapchainRenderPass(cmd);
-            Renderer::EndFrame();//Internal::VulkanRendererAPI::GetInstance().EndFrame();
-            DeletionQueue::Frame().Flush();
+            std::unique_lock lock(mutex);
+            Job frameJob{[](void* data){
+                auto& frameJobInfo = *reinterpret_cast<FrameJobInfo*>(data);
+                auto& self = *frameJobInfo.self;
+
+                self.m_EventQueue.Dispatch();
+                auto deltaTime = self.m_Window->UpdateTime();
+                //if(!self.IsMinimized())
+                //{
+                    auto frameData = Renderer::BeginFrame();
+                    frameData.SetDeltaTime(deltaTime);
+                    Renderer::StartMainCommandBuffer(frameData);
+                    self.m_Layers.Update(frameData);
+                    self.Update();
+                    Renderer::EndMainCommandBuffer(frameData);
+                    Renderer::EndFrame(frameData);
+                //}
+                //else
+                //{
+                //    self.m_Layers.Update();
+                //    self.Update();
+                //}
+
+                DeletionQueue::Frame().Flush();
+
+                frameJobInfo.cv->notify_one();
+            }, &frameJobInfo, nullptr,Jobs::Priority::High, 1024*1024};
+            Job::Schedule(frameJob);
+            cv.wait(lock);
         }
+        DeletionQueue::Main().Flush();
+        BeeEnsures(DeletionQueue::Main().IsEmpty() && DeletionQueue::Frame().IsEmpty() && DeletionQueue::RendererFlush().IsEmpty());
     }
 
-    Application::Application(const WindowProperties& properties)
-    : m_IsMinimized(false), m_Layers(LayerStack()), m_EventQueue(EventQueue(m_Layers))
+    Application::Application(const ApplicationProperties& properties)
+    : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers)
     {
         BEE_PROFILE_FUNCTION();
         BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");
         s_Instance = this;
+        s_MainThreadID = std::this_thread::get_id();
         auto appProperties = properties;
         CheckRendererAPIForCompatibility(appProperties);
 
-        m_Window.reset(WindowHandler::Create(WindowHandlerAPI::SDL, properties, m_EventQueue));
+        m_Window.reset(WindowHandler::Create(GetPreferredWindowAPI(), properties, m_EventQueue));
         Renderer::SetAPI(appProperties.PreferredRenderAPI);
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
-#ifdef DEBUG
-        m_Layers.PushOverlay(CreateRef<Debug::DebugLayer>());
-#endif
+        Prefab::InitPrefabScene();
         m_AssetManager.LoadStandardAssets();
-
-        //ScriptingEngine::Init();
+        SceneRenderer::Init();
     }
 
     Application::~Application()
     {
         s_Instance = nullptr;
+        Prefab::ResetPrefabScene();
+        Renderer::Shutdown();
+    }
+
+    WindowHandlerAPI Application::GetPreferredWindowAPI()
+    {
+#if defined(WINDOWS)
+        return WindowHandlerAPI::WinAPI;
+#else
+        return WindowHandlerAPI::SDL;
+#endif
     }
 
     void Application::Dispatch(EventDispatcher &dispatcher)
     {
-        DISPATCH_EVENT(dispatcher, WindowResizeEvent, EventType::WindowResize, OnWindowResize);
-        //dispatcher.Dispatch<WindowCloseEvent>(OnWindowClose);
-        //dispatcher.Dispatch<WindowCloseEvent>(reinterpret_cast<bool (*)(WindowCloseEvent&)>(OnWindowClose));
+        OnEvent(dispatcher);
     }
 
     bool Application::OnWindowClose(WindowCloseEvent& event)
@@ -79,20 +118,21 @@ namespace BeeEngine{
         m_Window->Close();
     }
 
-    void Application::CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept
+    void Application::CheckRendererAPIForCompatibility(ApplicationProperties &properties) noexcept
     {
         switch (properties.PreferredRenderAPI)
         {
-            case RenderAPI::WebGPU:
-                return;
+#if defined(BEE_COMPILE_VULKAN)
             case RenderAPI::Vulkan:
                 return;
-            case RenderAPI::DirectX:
-            case RenderAPI::OpenGL:
-            case RenderAPI::Metal:
+#else
+            case RenderAPI::WebGPU:
+                return;
+#endif
             default:
                 BeeCoreWarn("Unable to use {} as render API", ToString(properties.PreferredRenderAPI));
-                //properties.PreferredRenderAPI = RenderAPI::OpenGL;
+                //properties.PreferredRenderAPI = RenderAPI::WebGPU;
+                debug_break();
                 return;
         }
 
@@ -101,7 +141,7 @@ namespace BeeEngine{
     bool Application::OnWindowResize(WindowResizeEvent *event)
     {
         //m_Window->GetGraphicsDevice().WindowResized(event->GetWidth(), event->GetHeight());
-        if(event->GetWidth() == 0 || event->GetHeight() == 0)
+        if(event->GetWidthInPoints() == 0 || event->GetWidthInPoints() == 0)
         {
             m_IsMinimized = true;
             return false;
@@ -124,6 +164,23 @@ namespace BeeEngine{
             function();
         }
         m_MainThreadQueue.clear();
+    }
+
+    RenderAPI GetPrefferedRenderAPI()
+    {
+        switch (Application::GetOsPlatform()) {
+            case OSPlatform::Windows:
+                return RenderAPI::Vulkan;
+            case OSPlatform::Linux:
+                return RenderAPI::Vulkan;
+            case OSPlatform::Mac:
+                return RenderAPI::Vulkan;
+            case OSPlatform::iOS:
+                return RenderAPI::WebGPU;
+            case OSPlatform::Android:
+                return RenderAPI::Vulkan;
+        }
+        return RenderAPI::NotAvailable;
     }
 }
 

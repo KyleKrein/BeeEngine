@@ -7,9 +7,13 @@
 enum RenderAPI
 {
     NotAvailable = 0,
-    OpenGL = 1,
-    Metal = 2,
-    DirectX = 3,
-    Vulkan = 4,
-    WebGPU = 5
+    /*Metal = 2,
+    DirectX = 3,*/
+    WebGPU = 1,
+    Vulkan = 2,
 };
+
+namespace BeeEngine
+{
+    RenderAPI GetPrefferedRenderAPI();
+}

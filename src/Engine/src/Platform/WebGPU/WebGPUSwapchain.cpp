@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 30.06.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUSwapchain.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "WebGPUGraphicsDevice.h"
@@ -15,8 +15,8 @@ namespace BeeEngine::Internal
         WGPUSwapChainDescriptor swapChainDesc = {};
         swapChainDesc.nextInChain = nullptr;
 
-        swapChainDesc.width = WindowHandler::GetInstance()->GetWidth();
-        swapChainDesc.height = WindowHandler::GetInstance()->GetHeight();
+        swapChainDesc.width = WindowHandler::GetInstance()->GetWidthInPixels();
+        swapChainDesc.height = WindowHandler::GetInstance()->GetHeightInPixels();
         BeeCoreTrace("Creating swapchain with size: {}x{}", swapChainDesc.width, swapChainDesc.height);
         m_Width = swapChainDesc.width;
         m_Height = swapChainDesc.height;
@@ -27,7 +27,7 @@ namespace BeeEngine::Internal
         swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
         if(WindowHandler::GetInstance()->GetVSync() == VSync::On)
             swapChainDesc.presentMode = WGPUPresentMode_Fifo;
-        else if(Application::GetOsPlatform() == OSPlatform::Mac)
+        else if constexpr (Application::GetOsPlatform() == OSPlatform::Mac)
             swapChainDesc.presentMode = WGPUPresentMode_Immediate;
         else
             swapChainDesc.presentMode = WGPUPresentMode_Mailbox;
@@ -64,7 +64,9 @@ namespace BeeEngine::Internal
     WebGPUSwapChain::~WebGPUSwapChain()
     {
         wgpuTextureViewRelease(m_DepthTextureView);
+        wgpuTextureDestroy(m_DepthTexture);
         wgpuTextureRelease(m_DepthTexture);
         wgpuSwapChainRelease(m_SwapChain);
     }
 }
+#endif

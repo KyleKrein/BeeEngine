@@ -39,7 +39,10 @@ namespace BeeEngine
 
     void EditorCamera::OnEvent(EventDispatcher &dispatcher)
     {
-        DISPATCH_EVENT(dispatcher, MouseScrolledEvent, EventType::MouseScrolled, OnMouseScrolled);
+        dispatcher.Dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& event) -> bool
+        {
+            return OnMouseScrolled(&event);
+        });
     }
 
     glm::vec3 EditorCamera::GetUpDirection() const noexcept

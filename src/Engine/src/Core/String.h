@@ -4,6 +4,8 @@
 
 #pragma once
 #include <string>
+#include <vector>
+#include <string_view>
 #include <filesystem>
 
 namespace BeeEngine
@@ -20,9 +22,15 @@ namespace BeeEngine
     {
     public:
         UTF8StringView(const UTF8String& string);
-        class iterator: public std::iterator<std::bidirectional_iterator_tag, char32_t, std::string::difference_type, const char32_t*, const char32_t&>
+        class iterator
         {
         public:
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = char32_t;
+            using difference_type = std::string::difference_type;
+            using pointer = const char32_t*;
+            using reference = const char32_t&;
+
             iterator(std::string::const_iterator it);
             iterator(const iterator& source);
             iterator& operator=(const iterator& rhs);
@@ -68,4 +76,38 @@ namespace BeeEngine
         // or
         return std::wstring::traits_type::length(s);
     }
+
+    constexpr std::vector<std::string_view> SplitString(std::string_view str, std::string_view delimiters) {
+        std::vector<std::string_view> output;
+        size_t first = 0;
+
+        while (first < str.size()) {
+            const auto second = str.find_first_of(delimiters, first);
+
+            if (first != second)
+                output.emplace_back(str.substr(first, second-first));
+
+            if (second == std::string_view::npos)
+                break;
+
+            first = second + 1;
+        }
+
+        return output;
+    }
+    constexpr void ReplaceAllSubstrings( std::string &s, const std::string &search, const std::string &replace )
+    {
+        for( size_t pos = 0; ; pos += replace.length() )
+        {
+            // Locate the substring to replace
+            pos = s.find( search, pos );
+            if( pos == std::string::npos ) break;
+            // Replace by erasing and inserting
+            s.erase( pos, search.length() );
+            s.insert( pos, replace );
+        }
+    }
+
+    UTF8String ToUppercase(std::string_view string);
+    UTF8String ToLowercase(std::string_view string);
 }

@@ -153,3 +153,75 @@ TEST(StringTest, ConvertUTF8ToUTF16ToUTF8) {
     UTF8String back = ConvertUTF16ToUTF8(converted);
     EXPECT_EQ(original, back);
 }
+
+TEST(SplitTest, NormalCase) {
+    auto result = SplitString("one::two::three", "::");
+    ASSERT_EQ(result.size(), 3);
+    EXPECT_EQ(result[0], "one");
+    EXPECT_EQ(result[1], "two");
+    EXPECT_EQ(result[2], "three");
+}
+
+TEST(SplitTest, EmptyString) {
+    auto result = SplitString("", "::");
+    ASSERT_TRUE(result.empty());
+}
+
+TEST(SplitTest, OnlyDelimiters) {
+    auto result = SplitString("::", "::");
+    ASSERT_EQ(result.size(), 0);
+}
+
+TEST(SplitTest, LeadingDelimiters) {
+    auto result = SplitString("::one::two::three", "::");
+    ASSERT_EQ(result.size(), 3);
+    EXPECT_EQ(result[0], "one");
+    EXPECT_EQ(result[1], "two");
+    EXPECT_EQ(result[2], "three");
+}
+
+TEST(SplitTest, TrailingDelimiters) {
+    auto result = SplitString("one::two::three::", "::");
+    ASSERT_EQ(result.size(), 3);
+    EXPECT_EQ(result[0], "one");
+    EXPECT_EQ(result[1], "two");
+    EXPECT_EQ(result[2], "three");
+}
+
+enum class TestEnum {
+    VALUE_ONE,
+    VALUE_TWO,
+    VALUE_THREE
+};
+
+enum class UnhandledEnum {
+    VAL1 = 500,
+    VAL2 = 600
+};
+
+TEST(EnumTest, EnumToStringHandled) {
+    EXPECT_EQ(EnumToString(TestEnum::VALUE_ONE), "VALUE_ONE");
+    EXPECT_EQ(EnumToString(TestEnum::VALUE_TWO), "VALUE_TWO");
+}
+
+/*TEST(EnumTest, EnumToStringUnhandled) {
+    // Пример предполагает, что UnhandledEnum не обрабатывается magic_enum
+    EXPECT_EQ(EnumToString<UnhandledEnum>((UnhandledEnum)500), "UnhandledEnum::500");
+}*///THIS DOES NOT COMPILE
+
+TEST(EnumTest, StringToEnumHandled) {
+    EXPECT_EQ(StringToEnum<TestEnum>("VALUE_ONE"), TestEnum::VALUE_ONE);
+    EXPECT_EQ(StringToEnum<TestEnum>("VALUE_TWO"), TestEnum::VALUE_TWO);
+}
+
+/*TEST(EnumTest, StringToEnumUnhandled) {
+    // Пример предполагает, что UnhandledEnum не обрабатывается magic_enum
+    EXPECT_EQ(StringToEnum<UnhandledEnum>("UnhandledEnum::500"), UnhandledEnum::VAL1);
+}*/
+
+TEST(EnumTest, RoundTrip) {
+    auto original = TestEnum::VALUE_ONE;
+    auto str = EnumToString(original);
+    auto back = StringToEnum<TestEnum>(str);
+    EXPECT_EQ(original, back);
+}

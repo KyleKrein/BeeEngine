@@ -7,11 +7,15 @@
 #include "BeeEngine.h"
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
+#include "Scene/SceneSerializer.h"
+#include "Core/AssetManagement//PrefabImporter.h"
+#include "Gui/ImGui/ImGuiExtension.h"
+#include "ImGuiNativeDragAndDrop.h"
 
 
 namespace BeeEngine::Editor
 {
-    static void OpenCreatePopup(const char* name, bool open, const std::function<void(const char*)>& onCreate) noexcept
+    static void OpenCreatePopup(const char* name, bool open, Locale::Domain* domain, const std::function<void(const char*)>& onCreate) noexcept
     {
         if (open)
         {
@@ -20,19 +24,19 @@ namespace BeeEngine::Editor
 
         if (ImGui::BeginPopup(name))
         {
-            static char buffer[256] = { 0 };
-            ImGui::Text("Name");
-            ImGui::InputText("##Name", buffer, sizeof(buffer));
+            static std::array<char, 256> buffer;
+            ImGui::Text(domain->Translate("name").c_str());
+            ImGui::InputText("##Name", buffer.data(), buffer.size());
 
-            if (ImGui::Button("Create", { 120, 0 }))
+            if (ImGui::Button(domain->Translate("create").c_str(), { 120, 0 }))
             {
-                onCreate(buffer);
+                onCreate(buffer.data());
                 ImGui::CloseCurrentPopup();
                 buffer[0] = '\0';
             }
 
             ImGui::SameLine();
-            if (ImGui::Button("Cancel", { 120, 0 }))
+            if (ImGui::Button(domain->Translate("cancel").c_str(), { 120, 0 }))
             {
                 ImGui::CloseCurrentPopup();
                 buffer[0] = '\0';
@@ -44,7 +48,7 @@ namespace BeeEngine::Editor
 
     void ContentBrowserPanel::OnGUIRender() noexcept
     {
-        ImGui::Begin("Content Browser");
+        ImGui::Begin(m_EditorDomain->Translate("contentBrowserPanel").c_str());
 
         if (m_CurrentDirectory != m_WorkingDirectory)
         {
@@ -53,6 +57,22 @@ namespace BeeEngine::Editor
                 m_CurrentDirectory = m_CurrentDirectory.GetParent();
             }
             DragAndDropFileToFolder(m_CurrentDirectory.GetParent());
+        }
+        if(ImGui::IsDragAndDropPayloadInProcess("ENTITY_ID"))
+        {
+            auto width = ImGui::GetContentRegionAvail().x;
+            ImGui::Button(m_EditorDomain->Translate("contentBrowserPanel.exportPrefab").c_str(), {width, 0});
+            ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this](const auto& e){
+                Entity droppedEntity = {e, m_Context.get()};
+                BeeExpects(droppedEntity);
+                PrefabImporter::GeneratePrefab(droppedEntity, m_CurrentDirectory / (droppedEntity.GetComponent<TagComponent>().Tag + ".beeprefab"), {m_Project->GetAssetRegistryID()});
+            });
+        }
+        if(ImGui::IsDragAndDropPayloadInProcess("EXTERN_DRAG_AND_DROP"))
+        {
+            auto width = ImGui::GetContentRegionAvail().x;
+            ImGui::Button(m_EditorDomain->Translate("contentBrowserPanel.copyFiles").c_str(), {width, 0});
+            AcceptExternFilesAndCopy(m_CurrentDirectory);
         }
 
         static float padding = 16.0f;
@@ -90,12 +110,7 @@ namespace BeeEngine::Editor
             //ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
             ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 
-            if (ImGui::BeginDragDropSource())
-            {
-                const auto& itemPath = relativePath.AsUTF8();
-                ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath.c_str(), itemPath.size() + 1);
-                ImGui::EndDragDropSource();
-            }
+            ImGui::StartDragAndDrop("CONTENT_BROWSER_ITEM", (void *) relativePath.AsCString(), relativePath.AsUTF8().size() + 1);
 
             if(File::IsDirectory(path))
             {
@@ -140,26 +155,26 @@ namespace BeeEngine::Editor
         bool createFolderPopupOpen = false;
         if (ImGui::BeginPopupContextWindow("##CreateMenu", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
         {
-            if(ImGui::MenuItem("Create Folder"))
+            if(ImGui::MenuItem(m_EditorDomain->Translate("createFolder").c_str()))
             {
                 createFolderPopupOpen = true;
             }
-            if (ImGui::MenuItem("Create Script"))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("createScript").c_str()))
             {
                 createScriptPopupOpen = true;
             }
-            if (ImGui::MenuItem("Create Scene"))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("createScene").c_str()))
             {
                 createScenePopupOpen = true;
             }
             ImGui::EndPopup();
         }
-        OpenCreatePopup("Create Folder", createFolderPopupOpen, [&](const char* name)
+        OpenCreatePopup(m_EditorDomain->Translate("createFolder").c_str(), createFolderPopupOpen, m_EditorDomain, [&](const char* name)
         {
             auto path = m_CurrentDirectory / name;
             File::CreateDirectory(path);
         });
-        OpenCreatePopup("Create Script", createScriptPopupOpen, [&](const char* name)
+        OpenCreatePopup(m_EditorDomain->Translate("createScript").c_str(), createScriptPopupOpen, m_EditorDomain, [&](const char* name)
         {
             std::string scriptName = name;
             if (scriptName.empty())
@@ -169,9 +184,11 @@ namespace BeeEngine::Editor
             File::WriteFile(scriptPath, templ);
             m_NeedToRegenerateSolution = true;
         });
-        OpenCreatePopup("Create Scene", createScenePopupOpen, [&](const char* name)
+        OpenCreatePopup(m_EditorDomain->Translate("createScene").c_str(), createScenePopupOpen, m_EditorDomain, [&](const char* name)
         {
-
+            Ref<Scene> scene = CreateRef<Scene>();
+            SceneSerializer serializer(scene);
+            serializer.Serialize(m_CurrentDirectory / (String(name) + ".beescene"));
         });
 
         ImGui::End();
@@ -203,13 +220,29 @@ namespace BeeEngine::Editor
             }
             ImGui::EndDragDropTarget();
         }
+        AcceptExternFilesAndCopy(path);
     }
 
-    ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory) noexcept
+    void ContentBrowserPanel::AcceptExternFilesAndCopy(const Path& folder) const
+    {
+        ImGui::AcceptDragAndDrop<std::vector<Path>*>("EXTERN_DRAG_AND_DROP", [&folder,this](const auto& payload){
+            auto files = *payload;
+            for(auto& path : files)
+            {
+                std::error_code error;
+                std::filesystem::copy_file(path.ToStdPath(), (folder / path.GetFileName()).ToStdPath(), std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing, error);
+                if(error)
+                    BeeCoreError("Failed to copy file: {0}", error.message());
+            }
+        });
+    }
+
+    ContentBrowserPanel::ContentBrowserPanel(const Path &workingDirectory, Locale::Domain& editorDomain) noexcept
             : m_WorkingDirectory(workingDirectory)
             , m_CurrentDirectory(workingDirectory)
+            , m_EditorDomain(&editorDomain)
     {
-        m_DirectoryIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture);
-        m_FileIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::FileTexture);
+        m_DirectoryIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture, Locale::Localization::Default);
+        m_FileIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::FileTexture, Locale::Localization::Default);
     }
 }

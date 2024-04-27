@@ -1,9 +1,12 @@
 //
 // Created by alexl on 15.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUTexture2D.h"
 #include "WebGPUGraphicsDevice.h"
+#include <version>
+#include <cmath>
+#include <bit>
 
 namespace BeeEngine::Internal
 {
@@ -37,6 +40,14 @@ namespace BeeEngine::Internal
         m_RendererID = reinterpret_cast<uintptr_t>(m_TextureView);
     }
 
+//#if !defined(__cpp_lib_int_pow2)
+    template<typename T>
+    T bit_width(T value)
+    {
+        return value == 0? 0:log2(value) + 1;
+    }
+//#endif
+
     void WebGPUTexture2D::CreateTextureAndSampler(int width, int height, WGPUDevice &device, WGPUTextureDescriptor &textureDesc)
     {
         device= WebGPUGraphicsDevice::GetInstance().GetDevice();
@@ -47,7 +58,11 @@ namespace BeeEngine::Internal
         textureDesc.format = WGPUTextureFormat_RGBA8Unorm; // by convention for bmp, png and jpg file. Be careful with other formats.
         textureDesc.sampleCount = 1;
         textureDesc.size = { (unsigned int)width, (unsigned int)height, 1 };
+//#if !defined(__cpp_lib_int_pow2)
+        textureDesc.mipLevelCount = bit_width(std::max(textureDesc.size.width, textureDesc.size.height));
+/*#else
         textureDesc.mipLevelCount = std::bit_width(std::max(textureDesc.size.width, textureDesc.size.height));
+#endif*/
         textureDesc.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst;
         textureDesc.viewFormatCount = 0;
         textureDesc.viewFormats = nullptr;
@@ -165,7 +180,7 @@ namespace BeeEngine::Internal
         wgpuQueueRelease(queue);
     }
 
-    std::vector<WGPUBindGroupLayoutEntry> WebGPUTexture2D::GetBindGroupLayoutEntry() const
+    std::vector<IBindable::BindGroupLayoutEntryType> WebGPUTexture2D::GetBindGroupLayoutEntry() const
     {
         WGPUBindGroupLayoutEntry textureEntry = {};
         WebGPUGraphicsDevice::GetInstance().SetDefault(textureEntry);
@@ -180,7 +195,7 @@ namespace BeeEngine::Internal
         return { textureEntry, samplerEntry};
     }
 
-    std::vector<WGPUBindGroupEntry> WebGPUTexture2D::GetBindGroupEntry() const
+    std::vector<IBindable::BindGroupEntryType> WebGPUTexture2D::GetBindGroupEntry() const
     {
         WGPUBindGroupEntry textureEntry = {};
         WebGPUGraphicsDevice::GetInstance().SetDefault(textureEntry);
@@ -214,3 +229,4 @@ namespace BeeEngine::Internal
         m_Sampler = wgpuDeviceCreateSampler(device, &samplerDesc);
     }
 }
+#endif

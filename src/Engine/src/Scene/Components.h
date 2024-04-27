@@ -24,12 +24,24 @@
 #include "Renderer/Font.h"
 #include "Core/TypeSequence.h"
 #include "Core/AssetManagement/AssetManager.h"
+#include "Core/Reflection.h"
+#include "Core/AssetManagement/MeshSource.h"
+#include "Renderer/MaterialData.h"
+#include "Serialization/ISerializer.h"
 
 namespace BeeEngine
 {
     struct UUIDComponent
     {
         UUID ID;
+
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"UUID"} & Serialization::Value{ID};
+        }
+    private:
+        REFLECT()
     };
     struct TagComponent
     {
@@ -42,6 +54,13 @@ namespace BeeEngine
 
         operator String&() { return Tag; }
         operator const String&() const { return Tag; }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Tag;
+        }
+    private:
+        REFLECT()
     };
 
     struct TransformComponent
@@ -60,13 +79,23 @@ namespace BeeEngine
             return glm::translate(glm::mat4(1.0f), Translation) * rotation * glm::scale(glm::mat4(1.0f), Scale);
         }
 
-        void SetTransform(glm::mat4 &transform) noexcept
+        void SetTransform(const glm::mat4 &transform) noexcept
         {
             auto [translation, rotation, scale] = Math::DecomposeTransform(transform);
             Translation = translation;
             Rotation += rotation - Rotation;
             Scale = scale;
         }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            using Serialization::Marker;
+            serializer & Serialization::Key{"Translation"} & Serialization::Value{Translation};
+            serializer & Serialization::Key{"Rotation"} & Serialization::Value{Rotation};
+            serializer & Serialization::Key{"Scale"} & Serialization::Value{Scale};
+        }
+    private:
+        REFLECT()
     };
 
     struct CameraComponent
@@ -81,6 +110,15 @@ namespace BeeEngine
 
         operator class Camera&() { return Camera; }
         operator const class Camera&() const { return Camera; }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Camera;
+            serializer & Serialization::Key{"Primary"} & Serialization::Value{Primary};
+            serializer & Serialization::Key{"Fixed Aspect Ratio"} & Serialization::Value{FixedAspectRatio};
+        }
+    private:
+        REFLECT()
     };
 
     struct SpriteRendererComponent
@@ -90,18 +128,24 @@ namespace BeeEngine
         float TilingFactor = 1.0f;
         bool HasTexture = false;
 
-        Texture2D* Texture() const
+        [[nodiscard]] Texture2D* Texture(const Locale::Localization& locale) const
         {
             BeeExpects(HasTexture);
             BeeExpects(AssetManager::IsAssetHandleValid(TextureHandle));
-            return &AssetManager::GetAsset<Texture2D>(TextureHandle);
+            return &AssetManager::GetAsset<Texture2D>(TextureHandle, locale);
         }
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
 
-        operator Texture2D&() { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
-        operator Texture2D&() const { return AssetManager::GetAsset<Texture2D>(TextureHandle); }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Color"} & Serialization::Value{Color};
+            serializer & Serialization::Key{"Texture Handle"} & Serialization::Value{TextureHandle};
+            serializer & Serialization::Key{"Tiling Factor"} & Serialization::Value{TilingFactor};
+            serializer & Serialization::Key{"Has Texture"} & Serialization::Value{HasTexture};
+        }
     };
 
     struct CircleRendererComponent
@@ -109,6 +153,13 @@ namespace BeeEngine
         Color4 Color = Color4::White;
         float Thickness = 1.0f;
         float Fade = 0.005f;
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Color"} & Serialization::Value{Color};
+            serializer & Serialization::Key{"Thickness"} & Serialization::Value{Thickness};
+            serializer & Serialization::Key{"Fade"} & Serialization::Value{Fade};
+        }
     };
 
     struct TextRendererComponent
@@ -117,9 +168,16 @@ namespace BeeEngine
         AssetHandle FontHandle = EngineAssetRegistry::OpenSansRegular;
         std::string Text;
 
-        Font& Font() const
+        Font& Font(const String& locale) const
         {
-            return AssetManager::GetAsset<BeeEngine::Font>(FontHandle);
+            return AssetManager::GetAsset<BeeEngine::Font>(FontHandle, locale);
+        }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Configuration"} & Serialization::Value{Configuration};
+            serializer & Serialization::Key{"Font Handle"} & Serialization::Value{FontHandle};
+            serializer & Serialization::Key{"Text"} & Serialization::Value{Text};
         }
     };
 
@@ -144,6 +202,12 @@ namespace BeeEngine
         class MClass* Class = nullptr;
         std::vector<GameScriptField> EditableFields;
         void SetClass(class MClass* mClass) noexcept;
+        /*template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            //serializer & Serialization::Key{"Class"} & Serialization::Value{Class};
+            //serializer & Serialization::Key{"Editable Fields"} & Serialization::Value{EditableFields};
+        }*/
     };
 
     struct NativeScriptComponent
@@ -197,6 +261,12 @@ namespace BeeEngine
         bool FixedRotation = false;
 
         void* RuntimeBody = nullptr;
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Type"} & Serialization::Value{Type};
+            serializer & Serialization::Key{"Fixed Rotation"} & Serialization::Value{FixedRotation};
+        }
         /*float Mass = 1.0f;
         float Friction = 0.5f;
         float Restitution = 0.5f;
@@ -229,10 +299,47 @@ namespace BeeEngine
         float RestitutionThreshold = 0.5f;
 
         void* RuntimeFixture = nullptr;
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & Serialization::Key{"Type"} & Serialization::Value{Type};
+            serializer & Serialization::Key{"Offset"} & Serialization::Value{Offset};
+            serializer & Serialization::Key{"Size"} & Serialization::Value{Size};
+            serializer & Serialization::Key{"Density"} & Serialization::Value{Density};
+            serializer & Serialization::Key{"Friction"} & Serialization::Value{Friction};
+            serializer & Serialization::Key{"Restitution"} & Serialization::Value{Restitution};
+            serializer & Serialization::Key{"Restitution Threshold"} & Serialization::Value{RestitutionThreshold};
+        }
+    };
+
+    struct HierarchyComponent
+    {
+        Entity Parent = Entity::Null;
+        std::vector<Entity> Children;
+        /*void Serialize(Serialization::ISerializer& serializer)
+        {
+            serializer & Children;
+        }*/
+    };
+
+    struct MeshComponent
+    {
+        //Ref<Mesh> Mesh = nullptr;
+        //Ref<Material> Material = nullptr;
+        AssetHandle MeshSourceHandle;
+        bool HasMeshes = false;
+        MaterialInstance MaterialInstance;
+
+        [[nodiscard]] MeshSource* MeshSource() const
+        {
+            BeeExpects(HasMeshes);
+            BeeExpects(AssetManager::IsAssetHandleValid(MeshSourceHandle));
+            return &AssetManager::GetAsset<BeeEngine::MeshSource>(MeshSourceHandle);
+        }
     };
 
     using AllComponents =
             TypeSequence<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
-            SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, /*MeshComponent,*/ ScriptComponent, NativeScriptComponent,
-            RigidBody2DComponent, BoxCollider2DComponent>;
+            SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, ScriptComponent, NativeScriptComponent,
+            RigidBody2DComponent, BoxCollider2DComponent, HierarchyComponent, MeshComponent>;
 }

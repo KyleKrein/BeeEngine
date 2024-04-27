@@ -12,7 +12,11 @@
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Scripting/GameScript.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 #include <misc/cpp/imgui_stdlib.h>
+#include <ranges>
+
+#include "Scripting/NativeToManaged.h"
 
 namespace BeeEngine::Editor
 {
@@ -30,7 +34,7 @@ namespace BeeEngine::Editor
 
     void InspectorPanel::OnGUIRender(Entity selectedEntity) noexcept
     {
-        ImGui::Begin("Inspector");
+        ImGui::Begin(m_EditorDomain->Translate("inspector").c_str());
 
         if(selectedEntity == Entity::Null)
         {
@@ -42,12 +46,13 @@ namespace BeeEngine::Editor
 
         ImGui::End();
     }
-    template<typename T>
+    template<typename T, MType type>
     static void GetFieldData(MField& field, T* value, MObject* mObject, GameScriptField& gameScriptField)
     {
         if(mObject)
         {
-            mObject->GetFieldValue(field, value);
+            auto obj = mObject->GetFieldValue(field);
+            *value = obj.GetValue<type>();
             return;
         }
         *value = gameScriptField.GetData<T>();
@@ -67,18 +72,7 @@ namespace BeeEngine::Editor
     {
 
         auto& tag = entity.GetComponent<TagComponent>().Tag;
-        char buffer[256];
-        memset(buffer, 0, sizeof(buffer));
-#ifdef WINDOWS
-        strcpy_s(buffer, sizeof(buffer), tag.c_str());
-#else
-        strcpy(buffer, tag.c_str());
-#endif
-        if(ImGui::InputText("##Tag", buffer, sizeof(buffer)))
-        {
-            tag = std::string(buffer);
-        }
-
+        ImGui::InputText("##Tag", &tag);
         ImGui::SameLine();
         ImGui::PushItemWidth(-1);
 
@@ -91,6 +85,7 @@ namespace BeeEngine::Editor
             AddComponentPopup<CameraComponent>("Camera", entity);
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
             AddComponentPopup<CircleRendererComponent>("Circle", entity);
+            AddComponentPopup<MeshComponent>("Mesh", entity);
             AddComponentPopup<TextRendererComponent>("Text", entity);
             //AddComponentPopup<NativeScriptComponent>("Native Script", entity);
             AddComponentPopup<ScriptComponent>("Script", entity);
@@ -102,26 +97,26 @@ namespace BeeEngine::Editor
         ImGui::PopItemWidth();
 
 
-        DrawConsistentComponentUI<TransformComponent>("Transform", entity, [this](TransformComponent& transform)
+        DrawConsistentComponentUI<TransformComponent>(m_EditorDomain->Translate("transform"), entity, [this](TransformComponent& transform)
         {
-            DrawVec3ComponentUI("Translation", transform.Translation);
+            DrawVec3ComponentUI(m_EditorDomain->Translate("transform.translation"), transform.Translation);
             glm::vec3 rotation = glm::degrees(transform.Rotation);
-            DrawVec3ComponentUI("Rotation", rotation);
+            DrawVec3ComponentUI(m_EditorDomain->Translate("transform.rotation"), rotation);
             transform.Rotation = glm::radians(rotation);
-            DrawVec3ComponentUI("Scale", transform.Scale, 1.0f);
+            DrawVec3ComponentUI(m_EditorDomain->Translate("transform.scale"), transform.Scale, 1.0f);
         });
 
-        DrawComponentUI<CameraComponent>("Camera", entity, [this](CameraComponent& camera)
+        DrawComponentUI<CameraComponent>(m_EditorDomain->Translate("camera"), entity, [this](CameraComponent& camera)
         {
-            constexpr static const char* projectionTypeStrings[] = {"Perspective", "Orthographic"};
+            static String projectionTypeStrings[] = {m_EditorDomain->Translate("camera.projection.perspective"), m_EditorDomain->Translate("camera.projection.orthographic")};
             SceneCamera::CameraType currentProjectionType = camera.Camera.GetProjectionType();
-            const char* currentProjectionTypeString = projectionTypeStrings[static_cast<int>(currentProjectionType)];
-            if(ImGui::BeginCombo("Projection", currentProjectionTypeString))
+            String& currentProjectionTypeString = projectionTypeStrings[static_cast<int>(currentProjectionType)];
+            if(ImGui::BeginCombo(m_EditorDomain->Translate("camera.projection").c_str(), currentProjectionTypeString.c_str()))
             {
                 for(int i = 0; i < 2; ++i)
                 {
                     bool isSelected = currentProjectionTypeString == projectionTypeStrings[i];
-                    if(ImGui::Selectable(projectionTypeStrings[i], isSelected))
+                    if(ImGui::Selectable(projectionTypeStrings[i].c_str(), isSelected))
                     {
                         currentProjectionTypeString = projectionTypeStrings[i];
                         camera.Camera.SetProjectionType(static_cast<SceneCamera::CameraType>(i));
@@ -137,17 +132,17 @@ namespace BeeEngine::Editor
             if(currentProjectionType == SceneCamera::CameraType::Perspective)
             {
                 float fov = glm::degrees(camera.Camera.GetPerspectiveVerticalFOV());
-                if(ImGui::DragFloat("FOV", &fov, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.fov").c_str(), &fov, 0.1f))
                 {
                     camera.Camera.SetPerspectiveVerticalFOV(glm::radians(fov));
                 }
                 float nearClip = camera.Camera.GetPerspectiveNearClip();
-                if(ImGui::DragFloat("Near Clip", &nearClip, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.nearClip").c_str(), &nearClip, 0.1f))
                 {
                     camera.Camera.SetPerspectiveNearClip(nearClip);
                 }
                 float farClip = camera.Camera.GetPerspectiveFarClip();
-                if(ImGui::DragFloat("Far Clip", &farClip, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.farClip").c_str(), &farClip, 0.1f))
                 {
                     camera.Camera.SetPerspectiveFarClip(farClip);
                 }
@@ -155,24 +150,24 @@ namespace BeeEngine::Editor
             else if(camera.Camera.GetProjectionType() == SceneCamera::CameraType::Orthographic)
             {
                 float size = camera.Camera.GetOrthographicSize();
-                if(ImGui::DragFloat("Size", &size, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("size").c_str(), &size, 0.1f))
                 {
                     camera.Camera.SetOrthographicSize(size);
                 }
                 float nearClip = camera.Camera.GetOrthographicNearClip();
-                if(ImGui::DragFloat("Near Clip", &nearClip, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.nearClip").c_str(), &nearClip, 0.1f))
                 {
                     camera.Camera.SetOrthographicNearClip(nearClip);
                 }
                 float farClip = camera.Camera.GetOrthographicFarClip();
-                if(ImGui::DragFloat("Far Clip", &farClip, 0.1f))
+                if(ImGui::DragFloat(m_EditorDomain->Translate("camera.farClip").c_str(), &farClip, 0.1f))
                 {
                     camera.Camera.SetOrthographicFarClip(farClip);
                 }
             }
-            ImGui::Checkbox("Fixed Aspect Ratio", &camera.FixedAspectRatio);
+            ImGui::Checkbox(m_EditorDomain->Translate("camera.fixedAspectRatio").c_str(), &camera.FixedAspectRatio);
             bool oldPrimary = camera.Primary;
-            ImGui::Checkbox("Primary", &camera.Primary);
+            ImGui::Checkbox(m_EditorDomain->Translate("primary", "gender", "female").c_str(), &camera.Primary);
             if(camera.Primary != oldPrimary && camera.Primary)
             {
                 auto cameras = m_Context->m_Registry.view<CameraComponent>();
@@ -184,108 +179,149 @@ namespace BeeEngine::Editor
             }
         });
 
-        DrawComponentUI<SpriteRendererComponent>("Sprite", entity, [this](SpriteRendererComponent& sprite)
+        DrawComponentUI<SpriteRendererComponent>(m_EditorDomain->Translate("sprite"), entity, [this](SpriteRendererComponent& sprite)
         {
-            ImGui::ColorEdit4("Color", sprite.Color.ValuePtr());
+            ImGui::ColorEdit4(m_EditorDomain->Translate("color").c_str(), sprite.Color.ValuePtr());
 
             if(sprite.HasTexture)
             {
-                auto* texture = sprite.Texture();
+                auto* texture = sprite.Texture(m_Project->GetProjectLocaleDomain().GetLocale());
                 float aspectRatio = (float)texture->GetWidth() / (float)texture->GetHeight();
                 if(ImGui::ImageButton((void*)texture->GetRendererID(), ImVec2(100.0f * aspectRatio, 100.0f * aspectRatio), { 0, 1 }, { 1, 0 }))
                 {
                     sprite.HasTexture = false;
                 }
+                auto& textureAsset = AssetManager::GetAsset<Asset>(sprite.TextureHandle);
+                String textureLabel;
+                if(textureAsset.GetType() == AssetType::Localized)
+                {
+                    textureLabel = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
+                }
+                else
+                {
+                    textureLabel = textureAsset.Name;
+                }
+                ImGui::Text(textureLabel.c_str());
             }
             else
             {
-                ImGui::Button("Texture", ImVec2(100.0f, 0.0f));
+                ImGui::Button(m_EditorDomain->Translate("texture").c_str(), ImVec2(100.0f, 0.0f));
             }
-            if (ImGui::BeginDragDropTarget())
-            {
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+            ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &sprite](void* data, size_t size){
+                Path texturePath = m_WorkingDirectory / static_cast<const char*>(data);
+                if (!ResourceManager::IsTexture2DExtension(texturePath.GetExtension()))
+                    return;
+                auto name = texturePath.GetFileNameWithoutExtension().AsUTF8();
+                auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                if(!handlePtr)
                 {
-                    Path texturePath = m_WorkingDirectory / (const char*)payload->Data;
-                    if(ResourceManager::IsTexture2DExtension(texturePath.GetExtension()))
-                    {
-                        auto name = texturePath.GetFileNameWithoutExtension().AsUTF8();
-                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                        if(!handlePtr)
-                        {
-                            m_AssetManager->LoadAsset(texturePath, {m_ProjectAssetRegistryID});
-                            handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                        }
-                        BeeCoreAssert(handlePtr, "Failed to load texture from path: {0}", texturePath.AsUTF8());
-                        sprite.HasTexture = true;
-                        sprite.TextureHandle = *handlePtr;
-                    }
+                    m_AssetManager->LoadAsset(texturePath, {m_ProjectAssetRegistryID});
+                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
                 }
-                ImGui::EndDragDropTarget();
-            }
+                BeeCoreAssert(handlePtr, "Failed to load texture from path: {0}", texturePath.AsUTF8());
+                sprite.HasTexture = true;
+                sprite.TextureHandle = *handlePtr;
+            });
 
-            if (ImGui::BeginDragDropTarget())
-            {
-                if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
-                {
-                    auto* handlePtr = (AssetHandle*)payload->Data;
-                    BeeExpects(handlePtr);
-                    BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                    sprite.HasTexture = true;
-                    sprite.TextureHandle = *handlePtr;
-                }
-                ImGui::EndDragDropTarget();
-            }
+            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_TEXTURE2D_ITEM", [this, &sprite](const auto& handle){
+                BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                sprite.HasTexture = true;
+                sprite.TextureHandle = handle;
+            });
 
-
-
-            ImGui::DragFloat("Tiling Factor", &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
+            ImGui::DragFloat(m_EditorDomain->Translate("sprite.tilingFactor").c_str(), &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
         });
 
-        DrawComponentUI<CircleRendererComponent>("Circle Renderer", entity, [this](CircleRendererComponent& circle)
+        DrawComponentUI<CircleRendererComponent>(m_EditorDomain->Translate("inspector.circleRenderer"), entity, [this](CircleRendererComponent& circle)
         {
-            ImGui::ColorEdit4("Color", circle.Color.ValuePtr());
-            ImGui::DragFloat("Thickness", &circle.Thickness, 0.025f, 0.0f, 1.0f);
-            ImGui::DragFloat("Fade", &circle.Fade, 0.0025f, 0.005f, 1.0f);
+            ImGui::ColorEdit4(m_EditorDomain->Translate("color").c_str(), circle.Color.ValuePtr());
+            ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.thickness").c_str(), &circle.Thickness, 0.025f, 0.0f, 1.0f);
+            ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.fade").c_str(), &circle.Fade, 0.0025f, 0.005f, 1.0f);
         });
-        DrawComponentUI<TextRendererComponent>("Text Renderer", entity, [this](TextRendererComponent& component){
-           ImGui::InputTextMultiline("Text", &component.Text);
-           if(ImGui::Button(component.Font().Name.data(), ImVec2(0.0f, 0.0f)))
+
+        DrawComponentUI<MeshComponent>(m_EditorDomain->Translate("inspector.meshRenderer"), entity, [this](MeshComponent& meshComponent)
+        {
+            if(meshComponent.HasMeshes)
+            {
+                if(ImGui::Button(meshComponent.MeshSource()->Name.data()))
+                {
+                    meshComponent.HasMeshes = false;
+                }
+            }
+            else
+            {
+                ImGui::Button(m_EditorDomain->Translate("none").c_str(), ImVec2(100.0f, 0.0f));
+            }
+            ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &meshComponent](void* data, size_t size){
+                Path meshSourcePath = m_WorkingDirectory / static_cast<const char*>(data);
+                if (!ResourceManager::IsMeshSourceExtension(meshSourcePath.GetExtension()))
+                    return;
+                auto name = meshSourcePath.GetFileNameWithoutExtension().AsUTF8();
+                auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                if(!handlePtr)
+                {
+                    m_AssetManager->LoadAsset(meshSourcePath, {m_ProjectAssetRegistryID});
+                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                }
+                BeeCoreAssert(handlePtr, "Failed to load mesh source from path: {0}", meshSourcePath.AsUTF8());
+                meshComponent.HasMeshes = true;
+                meshComponent.MeshSourceHandle = *handlePtr;
+            });
+
+            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_MESHSOURCE_ITEM", [this, &meshComponent](const auto& handle){
+                BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                meshComponent.HasMeshes = true;
+                meshComponent.MeshSourceHandle = handle;
+            });
+
+            //Material info
+            bool upload = false;
+            if(ImGui::ColorPicker4("Color", glm::value_ptr(meshComponent.MaterialInstance.data.colorFactors)))
+                upload = true;
+            if(ImGui::DragFloat("Metalness", (float*)&meshComponent.MaterialInstance.data.metalRoughFactors.x, 0.025f, 0.0f, 1.0f))
+                upload = true;
+            if(ImGui::DragFloat("Roughness", (float*)&meshComponent.MaterialInstance.data.metalRoughFactors.y, 0.025f, 0.0f, 1.0f))
+                upload = true;
+            if(upload)
+                meshComponent.MaterialInstance.LoadData();
+        });
+        DrawComponentUI<TextRendererComponent>(m_EditorDomain->Translate("inspector.textRenderer"), entity, [this](TextRendererComponent& component){
+           ImGui::InputTextMultiline(m_EditorDomain->Translate("text").c_str(), &component.Text);
+           auto& fontAsset = AssetManager::GetAsset<Asset>(component.FontHandle);
+           String fontLabel;
+           if(fontAsset.GetType() == AssetType::Localized)
+           {
+               fontLabel = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
+           }
+           else
+           {
+               fontLabel = fontAsset.Name;
+           }
+           if(ImGui::Button(fontLabel.c_str(), ImVec2(0.0f, 0.0f)))
            {
                component.FontHandle = EngineAssetRegistry::OpenSansRegular;
            }
-           if (ImGui::BeginDragDropTarget())
-           {
-               if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+           ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &component](void* data, size_t size){
+               Path fontPath = m_WorkingDirectory / static_cast<const char*>(data);
+               if(ResourceManager::IsFontExtension(fontPath.GetExtension()))
                {
-                   Path fontPath = m_WorkingDirectory / (const char*)payload->Data;
-                   if(ResourceManager::IsFontExtension(fontPath.GetExtension()))
+                   auto name = fontPath.GetFileNameWithoutExtension().AsUTF8();
+                   auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                   if(!handlePtr)
                    {
-                       auto name = fontPath.GetFileNameWithoutExtension().AsUTF8();
-                       auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                       if(!handlePtr)
-                       {
-                           m_AssetManager->LoadAsset(fontPath, {m_ProjectAssetRegistryID});
-                           handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                       }
-                       BeeCoreAssert(handlePtr, "Failed to load font from path: {0}", fontPath.AsUTF8());
-                       component.FontHandle = *handlePtr;
+                       m_AssetManager->LoadAsset(fontPath, {m_ProjectAssetRegistryID});
+                       handlePtr = m_AssetManager->GetAssetHandleByName(name);
                    }
-               }
-               ImGui::EndDragDropTarget();
-           }
-           if (ImGui::BeginDragDropTarget())
-           {
-               if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
-               {
-                   auto* handlePtr = (AssetHandle*)payload->Data;
-                   BeeExpects(handlePtr);
-                   BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
+                   BeeCoreAssert(handlePtr, "Failed to load font from path: {0}", fontPath.AsUTF8());
                    component.FontHandle = *handlePtr;
                }
-               ImGui::EndDragDropTarget();
-           }
-           ImGui::ColorEdit4("Foreground", component.Configuration.ForegroundColor.ValuePtr());
-           ImGui::ColorEdit4("Background", component.Configuration.BackgroundColor.ValuePtr());
+           });
+           ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_FONT_ITEM", [this, &component](const auto& handle){
+               BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+               component.FontHandle = handle;
+           });
+           ImGui::ColorEdit4(m_EditorDomain->Translate("inspector.textRenderer.foreground").c_str(), component.Configuration.ForegroundColor.ValuePtr());
+           //ImGui::ColorEdit4("Background", component.Configuration.BackgroundColor.ValuePtr());
            ImGui::DragFloat("Kerning offset", &component.Configuration.KerningOffset, 0.025f);
            ImGui::DragFloat("Line spacing", &component.Configuration.LineSpacing, 0.025f);
         });
@@ -295,10 +331,9 @@ namespace BeeEngine::Editor
             auto& scripts = ScriptingEngine::GetGameScripts();
             scriptNames.reserve(scripts.size() + 1);
             scriptNames.push_back("##");
-            for(auto& script : scripts)
-            {
-                scriptNames.push_back(script.second->GetFullName().c_str());
-            }
+            std::ranges::transform(scripts, std::back_inserter(scriptNames), [](auto& script){
+                return script.second->GetFullName().c_str();
+            });
             const char* currentScriptName = script.Class != nullptr ? script.Class->GetFullName().c_str() : "##";
             if(ImGui::BeginCombo("Class", currentScriptName))
             {
@@ -344,7 +379,7 @@ namespace BeeEngine::Editor
                     case MType::Boolean:
                     {
                         bool value = false;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<bool, MType::Boolean>(mField, &value, mObject, field);
                         if(ImGui::Checkbox(name, &value))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -354,7 +389,7 @@ namespace BeeEngine::Editor
                     case MType::Int32:
                     {
                         int32_t value = 0;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<int32_t, MType::Int32>(mField, &value, mObject, field);
                         if(ImGui::DragInt(name, &value))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -364,7 +399,7 @@ namespace BeeEngine::Editor
                     case MType::Single:
                     {
                         float value = 0;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<float, MType::Single>(mField, &value, mObject, field);
                         if(ImGui::DragFloat(name, &value))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -386,7 +421,7 @@ namespace BeeEngine::Editor
                     case MType::Vector2:
                     {
                         glm::vec2 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<glm::vec2, MType::Vector2>(mField, &value, mObject, field);
                         if(ImGui::DragFloat2(name, glm::value_ptr(value)))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -396,7 +431,7 @@ namespace BeeEngine::Editor
                     case MType::Vector3:
                     {
                         glm::vec3 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<glm::vec3, MType::Vector3>(mField, &value, mObject, field);
                         if(ImGui::DragFloat3(name, glm::value_ptr(value)))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -406,7 +441,7 @@ namespace BeeEngine::Editor
                     case MType::Vector4:
                     {
                         glm::vec4 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<glm::vec4, MType::Vector4>(mField, &value, mObject, field);
                         if(ImGui::DragFloat4(name, glm::value_ptr(value)))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -416,7 +451,7 @@ namespace BeeEngine::Editor
                     case MType::Color:
                     {
                         Color4 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<Color4, MType::Color>(mField, &value, mObject, field);
                         if(ImGui::ColorEdit4(name, value.ValuePtr()))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -430,9 +465,8 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            auto object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
@@ -468,30 +502,16 @@ namespace BeeEngine::Editor
                             }
                             ImGui::EndDragDropTarget();
                         }
-                        if (ImGui::BeginDragDropTarget())
-                        {
-                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
-                            {
-                                auto* handlePtr = (AssetHandle*)payload->Data;
-                                BeeExpects(handlePtr);
-                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                                value = *handlePtr;
-                                SetFieldData(mField, &value, mObject, field);
-                            }
-                            ImGui::EndDragDropTarget();
-                        }
-                        if (ImGui::BeginDragDropTarget())
-                        {
-                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
-                            {
-                                auto* handlePtr = (AssetHandle*)payload->Data;
-                                BeeExpects(handlePtr);
-                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                                value = *handlePtr;
-                                SetFieldData(mField, &value, mObject, field);
-                            }
-                            ImGui::EndDragDropTarget();
-                        }
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_FONT_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_TEXTURE2D_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
                         break;
                     }
                     case MType::Texture2D:
@@ -501,16 +521,32 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            auto object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
                             value = field.GetData<AssetHandle>();
                         }
                         bool isValid = AssetManager::IsAssetHandleValid(value);
-                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Texture2D>(value).Name.data() : "null"))
+                        String textureName;
+                        if(isValid)
+                        {
+                            auto& textureAsset = AssetManager::GetAsset<Asset>(value);
+                            if(textureAsset.GetType() == AssetType::Localized)
+                            {
+                                textureName = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
+                            }
+                            else
+                            {
+                                textureName = textureAsset.Name;
+                            }
+                        }
+                        else
+                        {
+                            textureName = "null";
+                        }
+                        if(ImGui::Button(textureName.c_str()))
                         {
                             value = {0,0};
                             if(!m_Context->IsRuntime())
@@ -538,18 +574,11 @@ namespace BeeEngine::Editor
                             }
                             ImGui::EndDragDropTarget();
                         }
-                        if (ImGui::BeginDragDropTarget())
-                        {
-                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_TEXTURE2D_ITEM"))
-                            {
-                                auto* handlePtr = (AssetHandle*)payload->Data;
-                                BeeExpects(handlePtr);
-                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                                value = *handlePtr;
-                                SetFieldData(mField, &value, mObject, field);
-                            }
-                            ImGui::EndDragDropTarget();
-                        }
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_TEXTURE2D_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
                         break;
                     }
                     case MType::Font:
@@ -559,16 +588,32 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            auto object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
                             value = field.GetData<AssetHandle>();
                         }
                         bool isValid = AssetManager::IsAssetHandleValid(value);
-                        if(ImGui::Button(isValid ? AssetManager::GetAsset<Font>(value).Name.data() : "null"))
+                        String fontName;
+                        if(isValid)
+                        {
+                            auto& fontAsset = AssetManager::GetAsset<Asset>(value);
+                            if(fontAsset.GetType() == AssetType::Localized)
+                            {
+                                fontName = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
+                            }
+                            else
+                            {
+                                fontName = fontAsset.Name;
+                            }
+                        }
+                        else
+                        {
+                            fontName = "null";
+                        }
+                        if(ImGui::Button(fontName.c_str()))
                         {
                             value = {0,0};
                             if(!m_Context->IsRuntime())
@@ -596,18 +641,78 @@ namespace BeeEngine::Editor
                             }
                             ImGui::EndDragDropTarget();
                         }
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_FONT_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
+                        break;
+                    }
+                    case MType::Prefab:
+                    {
+                        AssetHandle value;
+                        ImGui::Text(name);
+                        ImGui::SameLine();
+                        if(mObject)
+                        {
+                            auto object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
+                        }
+                        else
+                        {
+                            value = field.GetData<AssetHandle>();
+                        }
+                        bool isValid = AssetManager::IsAssetHandleValid(value);
+                        String prefabName;
+                        if(isValid)
+                        {
+                            auto& prefabAsset = AssetManager::GetAsset<Asset>(value);
+                            if(prefabAsset.GetType() == AssetType::Localized)
+                            {
+                                prefabName = String(prefabAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(prefabAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
+                            }
+                            else
+                            {
+                                prefabName = prefabAsset.Name;
+                            }
+                        }
+                        else
+                        {
+                            prefabName = "null";
+                        }
+                        if(ImGui::Button(prefabName.c_str()))
+                        {
+                            value = {0,0};
+                            if(!m_Context->IsRuntime())
+                                SetFieldData(mField, &value, mObject, field);
+                        }
+                        if(m_Context->IsRuntime())
+                            break;
                         if (ImGui::BeginDragDropTarget())
                         {
-                            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_FONT_ITEM"))
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                             {
-                                auto* handlePtr = (AssetHandle*)payload->Data;
-                                BeeExpects(handlePtr);
-                                BeeExpects(m_AssetManager->IsAssetHandleValid(*handlePtr));
-                                value = *handlePtr;
-                                SetFieldData(mField, &value, mObject, field);
+                                Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
+                                if(ResourceManager::IsPrefabExtension(assetPath.GetExtension()))
+                                {
+                                    auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
+                                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    if(!handlePtr)
+                                    {
+                                        m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
+                                    }
+                                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    value = *handlePtr;
+                                    SetFieldData(mField, &value, mObject, field);
+                                }
                             }
                             ImGui::EndDragDropTarget();
                         }
+                        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM", [this, &value, &mField, &mObject, &field](const auto& handle){
+                            BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                            value = handle;
+                            SetFieldData(mField, &value, mObject, field);
+                        });
                         break;
                     }
                 }

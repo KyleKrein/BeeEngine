@@ -4,28 +4,59 @@
 
 #pragma once
 #include <type_traits>
+#include <utility>
 #include "Asset.h"
 #include "Core/TypeDefines.h"
 #include "IAssetManager.h"
+#include "LocalizedAsset.h"
+#include "Locale/Locale.h"
 
 namespace BeeEngine
 {
+    class Texture2D;
+    class Font;
     class AssetManager
     {
     public:
         template<typename T>
-        requires std::is_base_of_v<Asset, T>
+        requires std::is_same_v<T, Font> || std::is_same_v<T, Texture2D> || std::is_same_v<T, Asset>
+        static Ref<T> GetAssetRef(const AssetHandle& handle, const Locale::Localization& locale)
+        {
+            BeeExpects(s_AssetManager);
+            Ref<Asset> asset = s_AssetManager->GetAssetRef(handle);
+            if(asset->GetType() == AssetType::Localized)
+            {
+                return std::dynamic_pointer_cast<T>(std::static_pointer_cast<LocalizedAsset>(asset)->GetAssetRef(locale.GetLanguageString()));
+            }
+            return std::dynamic_pointer_cast<T>(asset);
+        }
+        template<typename T>
+        requires std::is_same_v<T, Texture2D> || std::is_same_v<T, Font> || std::is_same_v<T, Asset>
+        static T& GetAsset(const AssetHandle& handle, const Locale::Localization& locale)
+        {
+            BeeExpects(s_AssetManager);
+            Asset* asset = s_AssetManager->GetAsset(handle);
+            if(asset->GetType() == AssetType::Localized)
+            {
+                return dynamic_cast<T&>(dynamic_cast<LocalizedAsset*>(asset)->GetAsset(locale.GetLanguageString()));
+            }
+            return dynamic_cast<T&>(*asset);
+        }
+        template<typename T>
+        requires (std::is_base_of_v<Asset, T> || std::is_same_v<Asset, T>)
+        && (!std::is_same_v<T, Texture2D>) && (!std::is_same_v<T, Font>)
         static Ref<T> GetAssetRef(const AssetHandle& handle)
         {
             BeeExpects(s_AssetManager);
             return std::dynamic_pointer_cast<T>(s_AssetManager->GetAssetRef(handle));
         }
         template<typename T>
-        requires std::is_base_of_v<Asset, T>
+        requires (std::is_base_of_v<Asset, T> || std::is_same_v<Asset, T>)
+        && (!std::is_same_v<T, Texture2D>) && (!std::is_same_v<T, Font>)
         static T& GetAsset(const AssetHandle& handle)
         {
             BeeExpects(s_AssetManager);
-            return *(T*)s_AssetManager->GetAsset(handle);
+            return dynamic_cast<T&>(*s_AssetManager->GetAsset(handle));
         }
 
         static bool IsAssetHandleValid(const AssetHandle& handle)
@@ -44,6 +75,16 @@ namespace BeeEngine
         {
             BeeExpects(s_AssetManager);
             s_AssetManager->UnloadAsset(handle);
+        }
+        static void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type)
+        {
+            BeeExpects(s_AssetManager);
+            s_AssetManager->LoadAsset(data, std::move(handle), name, type);
+        }
+        static void LoadAsset(const Path& path, AssetHandle handle)
+        {
+            BeeExpects(s_AssetManager);
+            s_AssetManager->LoadAsset(path, std::move(handle));
         }
 
     private:

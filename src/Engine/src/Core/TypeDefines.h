@@ -10,6 +10,7 @@
 #include "ToString.h"
 
 #include "String.h"
+#include "Numbers.h"
 
 namespace BeeEngine
 {
@@ -17,6 +18,8 @@ namespace BeeEngine
     using Scope = std::unique_ptr<T>;
     template<typename T>
     using Ref = std::shared_ptr<T>;
+    template<typename T>
+    using WeakRef = std::weak_ptr<T>;
 
     template<typename T>
     using FrameScope = FramePtr<T>;

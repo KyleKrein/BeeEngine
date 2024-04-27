@@ -7,7 +7,10 @@ project(BeeEngine_Tests)
 add_executable(BeeEngine_Tests tests_main.cpp GeneralPurposeAllocatorTest.cpp StringTests.cpp RenderingTests/TextureTest.cpp ApplicationInit.h "RenderingTests/GeneralRenderingTests.cpp" PropertyClassTest.cpp TestFileDialogs.cpp CodeSafetyCheck.cpp
         ThreadPoolTest.cpp
         TypeDefinesTests.cpp
-        FormatStringTest.cpp)
+        FormatStringTest.cpp
+        TransformTests.cpp
+        HashTests.cpp
+        LocaleTests.cpp)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 
@@ -28,10 +31,6 @@ target_link_libraries(BeeEngine_Tests
         PUBLIC gtest
         PUBLIC BeeEngine
 )
-
-set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Engine/vendor/mono/libs/)
-configureMono(${MONO_DIRECTORY})
-copy_mono_dlls(BeeEngine_Tests)
 
 file(COPY AssetsForTests DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
 

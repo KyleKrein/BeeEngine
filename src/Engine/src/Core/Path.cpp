@@ -15,10 +15,17 @@ namespace BeeEngine
 {
     static constexpr size_t bufferSize = 1024;
 
-    Path::Path()
+    inline static UTF8String StringFromStdPath(const std::filesystem::path& path)
     {
-
+#if defined(WINDOWS)
+        return Internal::WStringToUTF8(path.wstring());
+#else
+        return path.string();
+#endif
     }
+
+    Path::Path()
+    = default;
 
     Path::Path(const UTF8String &path)
     {
@@ -29,22 +36,14 @@ namespace BeeEngine
 
     Path::Path(const std::filesystem::path &path)
     {
-#if defined(WINDOWS)
-        auto utf8 = Internal::WStringToUTF8(path.wstring());
-#else
-        auto utf8 = path.string();
-#endif
-        std::replace(utf8.begin(), utf8.end(), '\\', '/');
-        m_Path = std::move(utf8);
-        BeeEnsures(IsValidString(m_Path));
+        auto utf8 = StringFromStdPath(path);
+        RefactorApplyAndCheck(std::move(utf8));
     }
 
     Path::Path(const UTF16String &path)
     {
         auto utf8 = ConvertUTF16ToUTF8(path);
-        std::replace(utf8.begin(), utf8.end(), '\\', '/');
-        m_Path = std::move(utf8);
-        BeeEnsures(IsValidString(m_Path));
+        RefactorApplyAndCheck(std::move(utf8));
     }
 
     Path::Path(const char *path)
@@ -64,18 +63,17 @@ namespace BeeEngine
 
     Path::Path(UTF8String &&path) noexcept
     {
-        m_Path = std::move(path);
-        std::replace(m_Path.begin(), m_Path.end(), '\\', '/');
-        BeeEnsures(IsValidString(m_Path));
+        RefactorApplyAndCheck(std::move(path));
     }
 
     Path::Path(std::filesystem::path &&path) noexcept
     {
-#if defined(WINDOWS)
-        auto utf8 = Internal::WStringToUTF8(path.wstring());
-#else
-        auto utf8 = path.string();
-#endif
+        auto utf8 = StringFromStdPath(path);
+        RefactorApplyAndCheck(std::move(utf8));
+    }
+
+    void Path::RefactorApplyAndCheck(UTF8String&& utf8)
+    {
         std::replace(utf8.begin(), utf8.end(), '\\', '/');
         m_Path = std::move(utf8);
         BeeEnsures(IsValidString(m_Path));
@@ -84,9 +82,7 @@ namespace BeeEngine
     Path::Path(UTF16String &&path) noexcept
     {
         auto utf8 = ConvertUTF16ToUTF8(path);
-        std::replace(utf8.begin(), utf8.end(), '\\', '/');
-        m_Path = std::move(utf8);
-        BeeEnsures(IsValidString(m_Path));
+        RefactorApplyAndCheck(std::move(utf8));
     }
 
     Path &Path::operator=(const UTF8String &path)
@@ -99,23 +95,15 @@ namespace BeeEngine
 
     Path &Path::operator=(const std::filesystem::path &path)
     {
-#if defined(WINDOWS)
-        auto utf8 = Internal::WStringToUTF8(path.wstring());
-#else
-        auto utf8 = path.string();
-#endif
-        std::replace(utf8.begin(), utf8.end(), '\\', '/');
-        m_Path = std::move(utf8);
-        BeeEnsures(IsValidString(m_Path));
+        auto utf8 = StringFromStdPath(path);
+        RefactorApplyAndCheck(std::move(utf8));
         return *this;
     }
 
     Path &Path::operator=(const UTF16String &path)
     {
         auto utf8 = ConvertUTF16ToUTF8(path);
-        std::replace(utf8.begin(), utf8.end(), '\\', '/');
-        m_Path = std::move(utf8);
-        BeeEnsures(IsValidString(m_Path));
+        RefactorApplyAndCheck(std::move(utf8));
         return *this;
     }
 
@@ -135,31 +123,21 @@ namespace BeeEngine
 
     Path &Path::operator=(UTF8String &&path) noexcept
     {
-        m_Path = std::move(path);
-        std::replace(m_Path.begin(), m_Path.end(), '\\', '/');
-        BeeEnsures(IsValidString(m_Path));
+        RefactorApplyAndCheck(std::move(path));
         return *this;
     }
 
     Path &Path::operator=(std::filesystem::path &&path) noexcept
     {
-#if defined(WINDOWS)
-        auto utf8 = Internal::WStringToUTF8(path.wstring());
-#else
-        auto utf8 = path.string();
-#endif
-        std::replace(utf8.begin(), utf8.end(), '\\', '/');
-        m_Path = std::move(utf8);
-        BeeEnsures(IsValidString(m_Path));
+        auto utf8 = StringFromStdPath(path);
+        RefactorApplyAndCheck(std::move(utf8));
         return *this;
     }
 
     Path &Path::operator=(UTF16String &&path) noexcept
     {
         auto utf8 = ConvertUTF16ToUTF8(path);
-        std::replace(utf8.begin(), utf8.end(), '\\', '/');
-        m_Path = std::move(utf8);
-        BeeEnsures(IsValidString(m_Path));
+        RefactorApplyAndCheck(std::move(utf8));
         return *this;
     }
 

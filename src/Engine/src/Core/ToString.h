@@ -4,6 +4,7 @@
 
 #pragma once
 #include <string>
+#include <ranges>
 #include <vector>
 #include <array>
 #include <unordered_map>
@@ -21,6 +22,7 @@
 #include <webgpu/webgpu.h>
 #endif
 #include "spdlog/spdlog.h"
+#include <glm/glm.hpp>
 namespace BeeEngine
 {
     template<typename T>
@@ -35,7 +37,7 @@ namespace BeeEngine
     };
 
     template<ToStringAble T>
-    CONSTEXPR_FUNC std::string ToString(const T &obj)
+    CONSTEXPR_FUNC String ToString(const T &obj)
     {
         return obj.ToString();
     }
@@ -45,9 +47,14 @@ namespace BeeEngine
         return String(obj);
     }
 
+    CONSTEXPR_FUNC String ToString(char *obj)
+    {
+        return String(obj);
+    }
+
     template<typename T>
     requires std::is_enum_v<T>
-    CONSTEXPR_FUNC String EnumToString(T obj);
+    constexpr String EnumToString(T obj);
 
     template<typename T>
     CONSTEXPR_FUNC String TypeName(const T &obj)
@@ -97,16 +104,30 @@ namespace BeeEngine
 
     template<typename T>
     requires std::is_enum_v<T>
-    CONSTEXPR_FUNC String EnumToString(T obj)
+    constexpr String EnumToString(T obj)
     {
-//String name = String(magic_enum::enum_type_name<T>()) + "::" + String(magic_enum::enum_name(obj));
         auto name = magic_enum::enum_name(obj);
         if (name.empty())
         {
             return String{magic_enum::enum_type_name<T>()} + "::" +
                    String{std::to_string(static_cast<std::underlying_type_t<T>>(obj))};
         } else
-            return String{magic_enum::enum_name(obj)};
+            return String{name};
+    }
+
+    template<typename T>
+    requires std::is_enum_v<T>
+    constexpr T StringToEnum(const String& str)
+    {
+        if(str.contains("::"))
+        {
+            auto parts = SplitString(str, "::");
+            return static_cast<T>(std::stoi(parts[1].data()));
+        }
+        else
+        {
+            return magic_enum::enum_cast<T>(str).value();
+        }
     }
 
 #if defined(BEE_COMPILE_WEBGPU)
@@ -247,6 +268,24 @@ constexpr String ToString<char*>(const char*& obj)
     }
 
     template<>
+    CONSTEXPR_FUNC String ToString<glm::vec2>(const glm::vec2 &obj)
+    {
+        return fmt::format("({:f}, {:f})", obj.x, obj.y);
+    }
+
+    template<>
+    CONSTEXPR_FUNC String ToString<glm::vec3>(const glm::vec3 &obj)
+    {
+        return fmt::format("({:f}, {:f}, {:f})", obj.x, obj.y, obj.z);
+    }
+
+    template<>
+    CONSTEXPR_FUNC String ToString<glm::vec4>(const glm::vec4 &obj)
+    {
+        return fmt::format("({:f}, {:f}, {:f}, {:f})", obj.x, obj.y, obj.z, obj.w);
+    }
+
+    template<>
     CONSTEXPR_FUNC String ToString<unsigned long long>(const unsigned long long &obj)
     {
         return std::to_string(obj);
@@ -326,6 +365,14 @@ constexpr String ToString<char*>(const char*& obj)
         return obj == nullptr ? "nullptr" : std::to_string(reinterpret_cast<std::uintptr_t>(obj));
     }
 
+    template<>
+    CONSTEXPR_FUNC String ToString<std::thread::id> (const std::thread::id &obj)
+    {
+        std::ostringstream oss;
+        oss << obj;
+        return oss.str();
+    }
+
     template<typename T>
     requires std::is_pointer_v<T>
     CONSTEXPR_FUNC String ToString(T obj)
@@ -338,9 +385,9 @@ constexpr String ToString<char*>(const char*& obj)
     {
         return std::to_string(static_cast<int>(obj));
     }
-
-    template<typename T>
-    CONSTEXPR_FUNC String ToString(const std::vector<T> &collection)
+    template<std::ranges::range T>
+    requires (!std::is_convertible_v<T, String> && !ToStringAble<T>)
+    CONSTEXPR_FUNC String ToString(const T& collection)
     {
         String result = "[";
         for (auto &item: collection)
@@ -350,29 +397,10 @@ constexpr String ToString<char*>(const char*& obj)
         result.replace(result.size() - 2, 2, "]");
         return result;
     }
-
-    template<typename T, size_t numberOfElements>
-    CONSTEXPR_FUNC String ToString(const std::array<T, numberOfElements> &collection)
+    template<typename P1, typename P2>
+    CONSTEXPR_FUNC String ToString(const std::pair<P1, P2> &obj)
     {
-        String result = "[";
-        for (auto &item: collection)
-        {
-            result += ToString(item) + ", ";
-        }
-        result.replace(result.size() - 2, 2, "]");
-        return result;
-    }
-
-    template<typename Key, typename Value>
-    CONSTEXPR_FUNC String ToString(const std::unordered_map<Key, Value> &collection)
-    {
-        String result = "[";
-        for (auto &item: collection)
-        {
-            result += "[" + ToString(item.first) + " : " + ToString(item.second) + "]" ", ";
-        }
-        result.replace(result.size() - 2, 2, "]");
-        return result;
+        return "[" + ToString(obj.first) + " : " + ToString(obj.second) + "]";
     }
 }
 #undef CONSTEXPR_FUNC

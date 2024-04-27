@@ -16,12 +16,14 @@ namespace BeeEngine
     void EventQueue::AddEvent(Scope<Event>&& event)
     {
         BEE_PROFILE_FUNCTION();
+        std::unique_lock<Jobs::SpinLock> lock(m_Lock);
         m_Events.push_back(std::move(event));
     }
 
     void EventQueue::Dispatch()
     {
         BEE_PROFILE_FUNCTION();
+        std::unique_lock<Jobs::SpinLock> lock(m_Lock);
         for (size_t i = 0; i < m_Events.size(); ++i)
         {
             Event* event = m_Events[i].get();
@@ -37,7 +39,7 @@ namespace BeeEngine
     void EventQueue::ApplicationOnEvent(EventDispatcher &e)
     {
         BEE_PROFILE_FUNCTION();
-        Application::s_Instance->Dispatch(e);
+        Application::GetInstance().Dispatch(e);
     }
 }
 

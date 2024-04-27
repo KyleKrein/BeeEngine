@@ -14,5 +14,13 @@ namespace BeeEngine
         Color4 BackgroundColor = Color4::Transparent;
         float KerningOffset = 0.0f;
         float LineSpacing = 0.0f;
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & ForegroundColor;
+            serializer & BackgroundColor;
+            serializer & KerningOffset;
+            serializer & LineSpacing;
+        }
     };
 }

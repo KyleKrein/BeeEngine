@@ -3,120 +3,112 @@
 //
 
 #pragma once
+#include "VulkanImage.h"
 #if defined(BEE_COMPILE_VULKAN)
 #include "vulkan/vulkan.hpp"
 #include "Renderer/QueueFamilyIndices.h"
 #include "Renderer/SwapChain.h"
-#include "VulkanImage.h"
 
 namespace BeeEngine::Internal
 {
     class VulkanGraphicsDevice;
     struct SwapChainSupportDetails
     {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
-    };
-    struct SwapChainFrame
-    {
-        vk::Image Image;
-        vk::ImageView ImageView;
-        vk::Image DepthImage;
-        vk::ImageView DepthImageView;
-        vk::DeviceMemory DepthImageMemory;
-        vk::Framebuffer Framebuffer;
-        vk::CommandBuffer CommandBuffer;
-        vk::Semaphore ImageAvailableSemaphore;
-        vk::Semaphore RenderFinishedSemaphore;
-        vk::Fence InFlightFence;
+        vk::SurfaceCapabilitiesKHR capabilities;
+        std::vector<vk::SurfaceFormatKHR> formats;
+        std::vector<vk::PresentModeKHR> presentModes;
     };
     class VulkanSwapChain: public SwapChain
     {
     public:
         VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
         ~VulkanSwapChain() override;
+
+        vk::ImageView GetImageView(uint32_t index)
+        {
+            return m_SwapChainImageViews[index];
+        }
+
+        vk::Image GetImage(uint32_t index)
+        {
+            return m_SwapChainImages[index];
+        }
+
+        vk::ImageView GetDepthImageView(uint32_t index)
+        {
+            BeeExpects(index < m_DepthImageViews.size());
+            return m_DepthImageViews[index];
+        }
+
         VulkanSwapChain(const VulkanSwapChain& other) = delete;
         VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;
 
-        VkSwapchainKHR& GetHandle()
+        vk::SwapchainKHR& GetHandle()
         {
             return m_SwapChain;
         }
-        VkFormat& GetFormat()
+        vk::Format& GetFormat()
         {
             return m_SurfaceFormat.format;
         }
-        VkExtent2D& GetExtent()
+        vk::Extent2D& GetExtent()
         {
             return m_Extent;
         }
-        VkSurfaceFormatKHR& GetSurfaceFormat()
+        vk::SurfaceFormatKHR& GetSurfaceFormat()
         {
             return m_SurfaceFormat;
         }
-        VkPresentModeKHR& GetPresentMode()
+        vk::PresentModeKHR& GetPresentMode()
         {
             return m_PresentMode;
         }
-
-        vk::RenderPass GetRenderPass();
         size_t ImageCount();
-        vk::Framebuffer GetFrameBuffer(size_t index)
-        {
-            return m_SwapChainFramebuffers[index];
-        }
 
-        VkResult AcquireNextImage(uint32_t *imageIndex);
-        VkResult SubmitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
-
+        vk::Result AcquireNextImage(uint32_t *imageIndex);
+        vk::Result SubmitCommandBuffers(const vk::CommandBuffer *buffers, size_t count, uint32_t *imageIndex);
+        vk::Result PresentImage(const uint32_t *imageIndex);
         bool ResizeInProgress();
 
     private:
         SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice& physicalDevice, vk::SurfaceKHR& surface);
 
-        void ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
-        void ChoosePresentMode(const std::vector<VkPresentModeKHR>& presentModes);
+        void ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& formats);
+        void ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes);
 
-        void ChooseExtent(VkSurfaceCapabilitiesKHR &capabilities);
+        void ChooseExtent(vk::SurfaceCapabilitiesKHR &capabilities);
 
-        void CreateCommandBuffers();
         void CreateSwapChain();
         void CreateImageViews();
         void CreateDepthResources();
-        void CreateRenderPass();
-        void CreateFramebuffers();
         void CreateSyncObjects();
         void Destroy();
 
     private:
-        VkSurfaceFormatKHR m_SurfaceFormat;
-        VkPresentModeKHR m_PresentMode;
-        VkExtent2D m_Extent;
+        vk::SurfaceFormatKHR m_SurfaceFormat;
+        vk::PresentModeKHR m_PresentMode;
+        vk::Extent2D m_Extent;
 
-        VkRenderPass m_RenderPass;
-        VkSwapchainKHR m_SwapChain;
-        //std::vector<SwapChainFrame> m_Frames;
+        vk::SwapchainKHR m_SwapChain;
         uint32_t m_MaxFrames;
         uint32_t m_CurrentFrame = 0;
         QueueFamilyIndices m_QueueFamilyIndices;
         SwapChainSupportDetails m_SwapChainSupportDetails;
         VulkanGraphicsDevice& m_GraphicsDevice;
 
-        std::vector<VkSemaphore> m_ImageAvailableSemaphores;
-        std::vector<VkSemaphore> m_RenderFinishedSemaphores;
-        std::vector<VkFence> m_InFlightFences;
-        std::vector<VkFence> m_ImagesInFlight;
+        std::vector<vk::Semaphore> m_ImageAvailableSemaphores;
+        std::vector<vk::Semaphore> m_RenderFinishedSemaphores;
+        std::vector<vk::Fence> m_InFlightFences;
+        std::vector<vk::Fence> m_ImagesInFlight;
 
         std::vector<VulkanImage> m_DepthImages;
-        std::vector<VkImageView> m_DepthImageViews;
-        std::vector<VkImage> m_SwapChainImages;
-        std::vector<VkImageView> m_SwapChainImageViews;
-        std::vector<VkFramebuffer> m_SwapChainFramebuffers;
+        std::vector<vk::ImageView> m_DepthImageViews;
+        std::vector<vk::Image> m_SwapChainImages;
+        std::vector<vk::ImageView> m_SwapChainImageViews;
 
         bool m_ResizeInProgress = false;
 
-        VkFormat FindDepthFormat();
+        vk::Format FindDepthFormat();
     };
 }
 #endif

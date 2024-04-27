@@ -5,6 +5,12 @@
 #pragma once
 #include "Core/TypeDefines.h"
 #include "Core/Color4.h"
+#include "Core/Coroutines/Task.h"
+
+namespace BeeEngine
+{
+    class CommandBuffer;
+}
 
 namespace BeeEngine
 {
@@ -13,6 +19,7 @@ namespace BeeEngine
         None = 0,
         //color
         RGBA8,
+        RGBA16F,
         RedInteger,
 
         //depth/stencil
@@ -43,7 +50,7 @@ namespace BeeEngine
         Color4 ClearColor = Color4::CornflowerBlue;
         float ClearDepth = 1.0f;
         int32_t ClearRedInteger= -1;
-        //FrameBufferTextureUsage TextureUsage = FrameBufferTextureUsage::GPUOnly;
+        FrameBufferTextureUsage TextureUsage = FrameBufferTextureUsage::GPUOnly;
     };
 
     struct FrameBufferAttachmentSpecification
@@ -76,15 +83,13 @@ namespace BeeEngine
     public:
         FrameBuffer() = default;
         virtual ~FrameBuffer() = default;
-        virtual void Bind() = 0;
-        virtual void Unbind() = 0;
+        [[nodiscard]]virtual CommandBuffer Bind() = 0;
+        virtual void Unbind(CommandBuffer& commandBuffer) = 0;
         virtual void Resize(uint32_t width, uint32_t height) = 0;
         virtual void Invalidate() = 0;
         [[nodiscard]] virtual uintptr_t GetColorAttachmentRendererID(uint32_t index) const = 0;
         [[nodiscard]] virtual uintptr_t GetDepthAttachmentRendererID() const = 0;
-        [[nodiscard]] virtual uint32_t GetRendererID() const = 0;
-        virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const = 0;
-        virtual void ClearColorAttachment(uint32_t attachmentIndex, int value) = 0;
+        [[nodiscard]] virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const = 0;
         static Scope<FrameBuffer> Create(const FrameBufferPreferences& preferences);
         static Scope<FrameBuffer> Create(FrameBufferPreferences&& preferences);
 

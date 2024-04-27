@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/BindingSet.h"
 #include "WebGPUPipeline.h"
 
@@ -20,3 +21,4 @@ namespace BeeEngine::Internal
         mutable uint32_t m_Index = 0;
     };
 }
+#endif

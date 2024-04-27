@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/Instance.h"
 #include <webgpu/webgpu.h>
 
@@ -24,3 +24,4 @@ namespace BeeEngine::Internal
         WGPUInstance m_Instance;
     };
 }
+#endif

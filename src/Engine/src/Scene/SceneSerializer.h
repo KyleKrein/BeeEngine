@@ -15,12 +15,18 @@ namespace BeeEngine
     public:
         SceneSerializer(Ref<Scene>& scene);
         void Serialize(const Path& filepath);
+        String SerializeToString();
+        String SerializeEntityToString(Entity entity);
         void SerializeBinary(const Path& filepath);
         void Deserialize(const Path& filepath);
+        void DeserializeFromString(const String& string);
+        Entity DeserializeEntityFromString(const String& string);
         void DeserializeBinary(const Path& filepath);
     private:
         Ref<Scene> m_Scene;
 
         void SerializeEntity(YAML::Emitter& emitter, Entity entity);
+
+        Entity DeserializeEntity(YAML::Node &entities);
     };
 }

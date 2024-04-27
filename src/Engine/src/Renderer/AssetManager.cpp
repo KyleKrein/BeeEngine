@@ -166,6 +166,17 @@ void BeeEngine::InternalAssetManager::LoadStandardAssets()
     uint32_t data = 0xffffffff;
     auto& blank= LoadTexture("Blank", 1, 1, {(byte *)&data, 4});
 
+    //checkerboard image
+    uint32_t magenta = 0xFF00FFFF;
+    uint32_t black = 0x000000FF;
+    std::array<uint32_t, 16 *16 > pixels; //for 16x16 checkerboard texture
+    for (int x = 0; x < 16; x++) {
+        for (int y = 0; y < 16; y++) {
+            pixels[y*16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
+        }
+    }
+    auto& checkerboard = LoadTexture("Checkerboard", 16, 16, {(byte *)pixels.data(), 16 * 16 * 4});
+
     auto& spriteMaterial = LoadMaterial("Renderer2D_SpriteMaterial", "Shaders/Renderer2D_SpriteShader.vert", "Shaders/Renderer2D_SpriteShader.frag");
 
 
@@ -196,5 +207,28 @@ void BeeEngine::InternalAssetManager::LoadStandardAssets()
     auto& fontMesh = LoadMesh<glm::vec2>("Renderer_FontMesh", fontVertexBuffer, indexBuffer);
     auto& fontModel = LoadModel("Renderer_Font", fontMaterial, fontMesh);
 
+    auto& lineMaterial = LoadMaterial("Renderer_LineMaterial", "Shaders/Renderer_LineShader.vert", "Shaders/Renderer_LineShader.frag");
+    const float halfLineWidth = 0.5f;
+    std::vector<glm::vec3> lineVertexBuffer = {
+            {-0.5f, -halfLineWidth, 0.0f},
+            {0.5f,  -halfLineWidth, 0.0f},
+            {0.5f,  halfLineWidth, 0.0f},
+            {-0.5f, halfLineWidth, 0.0f},
+    };
+    auto& lineMesh = LoadMesh<glm::vec3>("Renderer_LineMesh", lineVertexBuffer, indexBuffer);
+
+    auto& lineModel = LoadModel("Renderer_Line", lineMaterial, lineMesh);
+
     auto& openSansRegularFont = LoadFont("OpenSansRegular", Internal::GetEmbeddedResource(EmbeddedResource::OpenSansRegular));
+
+    auto& defaultMeshMaterial = LoadMaterial("Renderer_DefaultMeshMaterial", "Shaders/Renderer_MeshDefaultShader.vert", "Shaders/Renderer_MeshDefaultShader.frag");
+}
+
+void BeeEngine::InternalAssetManager::CleanUp()
+{
+    m_Materials.clear();
+    m_Meshes.clear();
+    m_Models.clear();
+    m_Textures.clear();
+    m_Fonts.clear();
 }

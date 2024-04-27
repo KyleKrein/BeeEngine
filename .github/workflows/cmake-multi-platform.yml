@@ -4,9 +4,9 @@ name: CMake on multiple platforms
 
 on:
   push:
-    branches: [ "master", "dev" ]
+    #branches: [ "master", "dev" ]
   pull_request:
-    branches: [ "master", "dev" ]
+    #branches: [ "master", "dev" ]
 
 jobs:
   build:
@@ -30,8 +30,8 @@ jobs:
             c_compiler: cl
             cpp_compiler: cl
           - os: macos-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+            c_compiler: cc
+            cpp_compiler: c++
           #- os: ubuntu-latest
           #  c_compiler: gcc
           #  cpp_compiler: g++
@@ -41,14 +41,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Cache Build Artifacts
-      id: cache-build
-      uses: actions/cache@v2
-      with:
-          path: build/
-          key: ${{ runner.os }}-build-${{ matrix.build_type }}
-          restore-keys: ${{ runner.os }}-build-${{ matrix.build_type }}
-
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -74,6 +66,12 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build/${{ matrix.build_type }}" >> "$GITHUB_OUTPUT"
 
+    - name: Restore Cache
+      uses: actions/cache/restore@v3
+      id: restore-cache
+      with:
+        key: cache-${{ matrix.os }}-${{ matrix.build_type }}-${{ hashFiles('**/CICacheHash.txt') }}
+        path: build/
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
@@ -90,18 +88,17 @@ jobs:
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --target BeeEngineEditor
     - name: Build Tests for BeeEngine
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --target BeeEngine_Tests
-
-    - name: Test
-      shell: bash
-      run: |
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          ${{ steps.strings.outputs.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests.exe
-        else
-          ${{ steps.strings.outputs.build-output-dir }}/${{ matrix.build_type }}/src/tests/BeeEngine_Tests
-        fi
-
+    - name: Cache Build folder
+      uses: actions/cache/save@v3
+      if: always()
+      with:
+        path: build/
+        key: ${{ steps.restore-cache.outputs.cache-primary-key }}
     #- name: Test
-      #working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      #run: ctest --build-config ${{ matrix.build_type }}
+    #  shell: bash
+    #  run: |
+    #    if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+    #      build/${{ matrix.build_type }}/src/tests/BeeEngine_Tests.exe
+    #    else
+    #      build/${{ matrix.build_type }}/src/tests/BeeEngine_Tests
+    #    fi

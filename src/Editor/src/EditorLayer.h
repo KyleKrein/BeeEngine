@@ -19,6 +19,12 @@
 #include "NativeScripting/GameBuilder.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Panels/AssetPanel.h"
+#include "Core/Logging/ConsoleOutput.h"
+#include "Panels/ImGuiOutputConsole.h"
+#include "Locale/Locale.h"
+#include "Locale/ImGuiLocalizationPanel.h"
+#include "ImGuiNativeDragAndDrop.h"
+#include "JobSystem/AdaptiveMutex.h"
 
 namespace BeeEngine::Editor
 {
@@ -29,22 +35,29 @@ namespace BeeEngine::Editor
 
         void OnAttach() noexcept override;
         void OnDetach() noexcept override;
-        void OnUpdate() noexcept override;
+        void OnUpdate(FrameData& frameData) noexcept override;
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
+        Jobs::SpinLock m_BigLock {};
+        ImGuiNativeDragAndDrop m_DragAndDrop {};
+        Locale::Domain m_EditorLocaleDomain {"Editor"};
+        ImGuiOutputConsole m_Console {};
         EditorAssetManager m_EditorAssetManager {};
         EditorCamera m_EditorCamera = {};
         DockSpace m_DockSpace {};
         MenuBar m_MenuBar {};
-        AssetPanel m_AssetPanel {&m_EditorAssetManager};
-        ContentBrowserPanel m_ContentBrowserPanel {std::filesystem::current_path()};
-        SceneHierarchyPanel m_SceneHierarchyPanel {};
+        AssetPanel m_AssetPanel {&m_EditorAssetManager, m_EditorLocaleDomain};
+        ContentBrowserPanel m_ContentBrowserPanel {std::filesystem::current_path(), m_EditorLocaleDomain};
+        SceneHierarchyPanel m_SceneHierarchyPanel {m_EditorLocaleDomain};
         ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         Path m_ScenePath;
         BeeEngine::Internal::FpsCounter m_FpsCounter {};
-        InspectorPanel m_InspectorPanel {&m_EditorAssetManager};
+        InspectorPanel m_InspectorPanel {&m_EditorAssetManager, m_EditorLocaleDomain};
         Scope<ProjectFile> m_ProjectFile = nullptr;
+        Scope<Locale::ImGuiLocalizationPanel> m_LocalizationPanel = nullptr;
+
+        bool m_RenderPhysicsColliders = false;
 
         Ref<Scene> m_ActiveScene = nullptr;
         Ref<Scene> m_EditorScene = nullptr;
@@ -93,5 +106,9 @@ namespace BeeEngine::Editor
         void SaveAssetRegistry();
 
         void DeleteAsset(const AssetHandle &handle);
+
+        String GenerateImGuiINIFile() const;
+
+        void SetDefaultImGuiWindowLayoutIfNotPresent();
     };
 }

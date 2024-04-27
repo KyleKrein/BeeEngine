@@ -9,6 +9,7 @@
 #include "Scene/SceneCamera.h"
 #include "Scene/Entity.h"
 #include <ImGuizmo.h>
+#include "Locale/Locale.h"
 
 namespace BeeEngine::Editor
 {
@@ -24,11 +25,12 @@ namespace BeeEngine::Editor
     public:
         ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity, const Color4& clearColor = Color4::CornflowerBlue) noexcept;
         void OnEvent(EventDispatcher& event) noexcept;
-        void UpdateRuntime() noexcept;
-        void UpdateEditor(EditorCamera& camera) noexcept;
+        void UpdateRuntime(bool renderPhysicsColliders) noexcept;
+        void UpdateEditor(EditorCamera& camera, bool renderPhysicsColliders) noexcept;
         void Render(EditorCamera& camera) noexcept;
         Ref<Scene>& GetScene() noexcept { return m_Scene; }
         void SetScene(const Ref<Scene>& scene) noexcept { m_Scene.reset(); m_Scene = scene; }
+        void SetDomain(const Locale::Domain* domain) noexcept { m_GameDomain = domain; }
 
         [[nodiscard]] uint32_t GetHeight() const
         {
@@ -59,11 +61,13 @@ namespace BeeEngine::Editor
     private:
         uint32_t m_Width;
         uint32_t m_Height;
+        glm::vec2 m_MousePosition;
         Scope<FrameBuffer> m_FrameBuffer;
         bool m_IsFocused;
         bool m_IsHovered;
         Ref<Scene> m_Scene;
         Entity& m_SelectedEntity;
+        const Locale::Domain* m_GameDomain = nullptr;
         GuizmoOperation m_GuizmoOperation = GuizmoOperation::Translate;
         bool m_GuizmoSnap = false;
 
@@ -80,10 +84,21 @@ namespace BeeEngine::Editor
 
         std::string m_ScenePath;
 
+        Ref<UniformBuffer> m_CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
+        Ref<BindingSet> m_CameraBindingSet = BindingSet::Create({{0, *m_CameraUniformBuffer}});
+
 
         bool OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept;
         bool OnKeyButtonPressed(KeyPressedEvent* event) noexcept;
         void RenderImGuizmo(EditorCamera& camera);
         void OpenScene(const Path& path);
+
+        void RenderCameraFrustum(CommandBuffer& commandBuffer);
+
+        void RenderSelectedEntityOutline(CommandBuffer& commandBuffer);
+
+        void HandleReadPixelTask();
+
+        bool IsMouseInViewport();
     };
 }

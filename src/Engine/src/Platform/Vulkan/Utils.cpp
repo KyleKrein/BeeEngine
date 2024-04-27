@@ -7,36 +7,36 @@
 namespace BeeEngine::Internal
 {
 
-    VkImageCreateInfo
-    VulkanInitializer::ImageCreateInfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent)
+    vk::ImageCreateInfo
+    VulkanInitializer::ImageCreateInfo(vk::Format format, vk::ImageUsageFlags usageFlags, vk::Extent3D extent)
     {
-        VkImageCreateInfo info = { };
-        info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        vk::ImageCreateInfo info = { };
+        info.sType = vk::StructureType::eImageCreateInfo;
         info.pNext = nullptr;
 
-        info.imageType = VK_IMAGE_TYPE_2D;
+        info.imageType = vk::ImageType::e2D;
 
         info.format = format;
         info.extent = extent;
 
         info.mipLevels = 1;
         info.arrayLayers = 1;
-        info.samples = VK_SAMPLE_COUNT_1_BIT;
-        info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        info.samples = vk::SampleCountFlagBits::e1;
+        info.tiling = vk::ImageTiling::eOptimal;
         info.usage = usageFlags;
 
         return info;
     }
 
-    VkImageViewCreateInfo
-    VulkanInitializer::ImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags)
+    vk::ImageViewCreateInfo
+    VulkanInitializer::ImageViewCreateInfo(vk::Format format, vk::Image image, vk::ImageAspectFlags aspectFlags)
     {
         //build a image-view for the depth image to use for rendering
-        VkImageViewCreateInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        vk::ImageViewCreateInfo info = {};
+        info.sType = vk::StructureType::eImageViewCreateInfo;
         info.pNext = nullptr;
 
-        info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        info.viewType = vk::ImageViewType::e2D;
         info.image = image;
         info.format = format;
         info.subresourceRange.baseMipLevel = 0;
@@ -48,20 +48,49 @@ namespace BeeEngine::Internal
         return info;
     }
 
-    VkPipelineDepthStencilStateCreateInfo VulkanInitializer::DepthStencilCreateInfo(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp)
+    vk::PipelineDepthStencilStateCreateInfo VulkanInitializer::DepthStencilCreateInfo(bool bDepthTest, bool bDepthWrite, vk::CompareOp compareOp)
     {
-        VkPipelineDepthStencilStateCreateInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        vk::PipelineDepthStencilStateCreateInfo info = {};
+        info.sType = vk::StructureType::ePipelineDepthStencilStateCreateInfo;
         info.pNext = nullptr;
 
-        info.depthTestEnable = bDepthTest ? VK_TRUE : VK_FALSE;
-        info.depthWriteEnable = bDepthWrite ? VK_TRUE : VK_FALSE;
-        info.depthCompareOp = bDepthTest ? compareOp : VK_COMPARE_OP_ALWAYS;
-        info.depthBoundsTestEnable = VK_FALSE;
+        info.depthTestEnable = bDepthTest ? vk::True : vk::False;
+        info.depthWriteEnable = bDepthWrite ? vk::True : vk::False;
+        info.depthCompareOp = bDepthTest ? compareOp : vk::CompareOp::eAlways;
+        info.depthBoundsTestEnable = vk::False;
         info.minDepthBounds = 0.0f; // Optional
         info.maxDepthBounds = 1.0f; // Optional
-        info.stencilTestEnable = VK_FALSE;
+        info.stencilTestEnable = vk::False;
 
+        return info;
+    }
+
+    vk::ImageSubresourceRange VulkanInitializer::ImageSubresourceRange(vk::ImageAspectFlags aspectFlags)
+    {
+        vk::ImageSubresourceRange subresourceRange = {};
+        subresourceRange.aspectMask = aspectFlags;
+        subresourceRange.baseMipLevel = 0;
+        subresourceRange.levelCount = vk::RemainingMipLevels;
+        subresourceRange.baseArrayLayer = 0;
+        subresourceRange.layerCount = vk::RemainingArrayLayers;
+        return subresourceRange;
+    }
+
+    vk::SemaphoreSubmitInfo VulkanInitializer::SemaphoreSubmitInfo(vk::Semaphore semaphore,
+        vk::PipelineStageFlags2 stageFlags)
+    {
+        vk::SemaphoreSubmitInfo info = {};
+        info.semaphore = semaphore;
+        info.stageMask = stageFlags;
+        info.deviceIndex = 0;
+        info.value = 1;
+        return info;
+    }
+
+    vk::CommandBufferSubmitInfo VulkanInitializer::CommandBufferSubmitInfo(vk::CommandBuffer commandBuffer)
+    {
+        vk::CommandBufferSubmitInfo info = {};
+        info.commandBuffer = commandBuffer;
         return info;
     }
 }

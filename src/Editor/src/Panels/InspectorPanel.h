@@ -13,8 +13,8 @@ namespace BeeEngine::Editor
     class InspectorPanel
     {
     public:
-        InspectorPanel(EditorAssetManager* assetManager)
-        : m_AssetManager(assetManager)
+        InspectorPanel(EditorAssetManager* assetManager, Locale::Domain& editorDomain)
+        : m_AssetManager(assetManager), m_EditorDomain(&editorDomain)
         {}
         explicit InspectorPanel(const Ref<Scene>& context, EditorAssetManager* assetManager);
 
@@ -42,6 +42,7 @@ namespace BeeEngine::Editor
         EditorAssetManager* m_AssetManager = nullptr;
 
         Path m_WorkingDirectory;
+        Locale::Domain* m_EditorDomain = nullptr;
 
         const std::vector<NativeScriptInfo>* m_NativeScripts = nullptr;
 

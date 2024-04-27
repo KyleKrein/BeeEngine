@@ -3,13 +3,14 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/GraphicsDevice.h"
 #include "WebGPUInstance.h"
 #include "WebGPUSwapchain.h"
 #include "WebGPUCommandBuffer.h"
 #include "gsl/gsl"
 #include "WebGPUBufferPool.h"
+#include "Core/Coroutines/Task.h"
 
 namespace BeeEngine::Internal
 {
@@ -42,6 +43,10 @@ namespace BeeEngine::Internal
         WebGPUSwapChain& GetSwapChain()
         {
             return *m_SwapChain;
+        }
+        WGPUQueue GetQueue() const
+        {
+            return m_Queue;
         }
 
         WGPUBuffer CreateBuffer(WGPUBufferUsageFlags usage, uint32_t size);
@@ -115,6 +120,13 @@ namespace BeeEngine::Internal
             wgpuTextureViewRelease(textureView);
         }
 
+        const WGPUSupportedLimits& GetSupportedLimits() const noexcept
+        {
+            return m_SupportedLimits;
+        }
+
+        Task<> WaitForQueueIdle();
+
     private:
         static WebGPUGraphicsDevice* s_Instance;
         static WGPUAdapter RequestAdapter(WGPUInstance instance, WGPURequestAdapterOptions const * options);
@@ -126,9 +138,11 @@ namespace BeeEngine::Internal
         WGPUDevice m_Device;
         Scope<WebGPUBufferPool> m_BufferPool;
         Scope<WebGPUSwapChain> m_SwapChain;
+        WGPUSupportedLimits m_SupportedLimits;
 
         bool m_SwapChainRequiresRebuild = false;
 
         void LogAdapterInfo() const noexcept;
     };
 }
+#endif

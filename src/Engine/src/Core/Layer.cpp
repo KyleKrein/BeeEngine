@@ -2,6 +2,8 @@
 // Created by Александр Лебедев on 07.05.2023.
 //
 #include "Layer.h"
+
+#include <memory>
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Platform/ImGui/ImGuiControllerVulkan.h"
 #include "Renderer/Renderer.h"
@@ -20,15 +22,16 @@ namespace BeeEngine
         }
         switch (Renderer::GetAPI())
         {
-            //case OpenGL:
-                //s_Controller.reset(new ImGuiControllerOpenGL());
-              //  break;
-            //case Vulkan:
-                //s_Controller.reset(new ImGuiControllerVulkan());
-                //break;
+#if defined(BEE_COMPILE_WEBGPU)
             case WebGPU:
-                s_Controller.reset(new Internal::ImGuiControllerWebGPU());
+                s_Controller = std::make_unique<Internal::ImGuiControllerWebGPU>();
                 break;
+#endif
+#if defined(BEE_COMPILE_VULKAN)
+            case Vulkan:
+                s_Controller = std::make_unique<Internal::ImGuiControllerVulkan>();
+                break;
+#endif
             default:
                 BeeCoreAssert(false, "Renderer API not supported!");
                 break;

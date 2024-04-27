@@ -3,17 +3,27 @@
 //
 
 #include "SDLWindowHandler.h"
+#if defined(BEE_COMPILE_SDL)
 #include "Core/Application.h"
 #include "Platform/Vulkan/VulkanInstance.h"
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "Platform/WebGPU/WebGPUInstance.h"
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
+#include "Hardware.h"
+
+#if defined(WINDOWS)
+#include "Platform/Windows/WindowsDropSource.h"
+#endif
+
+#if defined(MACOS)
+#include "Platform/MacOS/MacOSDragDrop.h"
+#endif
 
 namespace BeeEngine::Internal
 {
 
-    SDLWindowHandler::SDLWindowHandler(const WindowProperties &properties, EventQueue &eventQueue)
+    SDLWindowHandler::SDLWindowHandler(const ApplicationProperties &properties, EventQueue &eventQueue)
     : WindowHandler(eventQueue), m_Finalizer()
     {
         s_Instance = this;
@@ -37,9 +47,6 @@ namespace BeeEngine::Internal
                     windowFlags |= SDL_WINDOW_METAL;
                 }
                 break;
-            case OpenGL:
-            case Metal:
-            case DirectX:
             default:
             BeeCoreFatalError("Invalid Renderer API chosen for SDL");
         }
@@ -48,8 +55,8 @@ namespace BeeEngine::Internal
         {
             windowFlags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
         }
-        m_Width = properties.Width;
-        m_Height = properties.Height;
+        m_Width = properties.WindowWidth;
+        m_Height = properties.WindowHeight;
         m_Title = properties.Title;
 
         m_Window = SDL_CreateWindow(properties.Title, gsl::narrow_cast<int>(m_Width), gsl::narrow_cast<int>(m_Height), windowFlags);
@@ -57,10 +64,19 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to create SDL3 window! {}", SDL_GetError());
         }
-        int width, height;
-        SDL_GetWindowSizeInPixels(m_Window, &width, &height);
-        m_Width = width;
-        m_Height = height;
+        int widthInPixels, heightInPixels;
+        SDL_GetWindowSizeInPixels(m_Window, &widthInPixels, &heightInPixels);
+        m_WidthInPixels = widthInPixels;
+        m_HeightInPixels = heightInPixels;
+        m_ScaleFactor = (float32_t)m_WidthInPixels / (float32_t)m_Width;
+        int posX, posY;
+        SDL_GetWindowPosition(m_Window, &posX, &posY);
+        m_XPosition = posX;
+        m_YPosition = posY;
+        InitializeDragDropOnWindows();
+#if defined(MACOS)
+        IntegrateDragAndDropSDL();
+#endif
         switch (properties.PreferredRenderAPI)
         {
 #if defined(BEE_COMPILE_VULKAN)
@@ -71,13 +87,9 @@ namespace BeeEngine::Internal
             case WebGPU:
                 InitializeWebGPU();
                 break;
-            case OpenGL:
-            case Metal:
-            case DirectX:
             default:
                 BeeCoreFatalError("Invalid Renderer API chosen for SDL");
         }
-
         m_IsRunning = true;
     }
 
@@ -106,28 +118,17 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::SetWidth(uint16_t width)
     {
-        if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
-        {
-            m_Width = width;
-        }
-        else
-        {
-            m_Width = width;
-        }
+        if(width == m_Width)
+            return;
+        m_Width = width;
         SDL_SetWindowSize(m_Window, m_Width, m_Height);
-        //m_GraphicsDevice->WindowResized(m_Width, m_Height);
     }
 
     void SDLWindowHandler::SetHeight(uint16_t height)
     {
-        if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
-        {
-            m_Height = height;
-        }
-        else
-        {
-            m_Height = height;
-        }
+        if(height == m_Height)
+            return;
+        m_Height = height;
         SDL_SetWindowSize(m_Window, m_Width, m_Height);
     }
 
@@ -157,7 +158,8 @@ namespace BeeEngine::Internal
     void SDLWindowHandler::ProcessEvents()
     {
         SDL_Event sdlEvent;
-        while (SDL_PollEvent(&sdlEvent))
+        static Scope<FileDropEvent> fileDropEvent = nullptr;
+        while (SDL_PollEvent(&sdlEvent) != 0)
         {
             ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
             switch (sdlEvent.type)
@@ -169,27 +171,21 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_RESIZED:
                 {
-                    /*if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
-                    {
-                        m_Width = sdlEvent.window.data1;
-                        m_Height = sdlEvent.window.data2;
-                    }
-                    else
-                    {
-                        m_Width = sdlEvent.window.data1;
-                        m_Height = sdlEvent.window.data2;
-                    }*/
+                    m_Width = sdlEvent.window.data1;
+                    m_Height = sdlEvent.window.data2;
                     int width, height;
                     SDL_GetWindowSizeInPixels(m_Window, &width, &height);
-                    m_Width = width;
-                    m_Height = height;
+                    m_WidthInPixels = width;
+                    m_HeightInPixels = height;
+                    m_ScaleFactor = (float32_t)m_WidthInPixels / (float32_t)m_Width;
                     m_GraphicsDevice->RequestSwapChainRebuild();
-                    auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height);
+                    auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height, m_WidthInPixels, m_HeightInPixels);
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
                 case SDL_EVENT_WINDOW_MINIMIZED:
                 {
+                    m_Events.AddEvent(CreateScope<WindowMinimizedEvent>(true));
                     break;
                 }
                 case SDL_EVENT_WINDOW_MAXIMIZED:
@@ -198,14 +194,17 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_RESTORED:
                 {
+                    m_Events.AddEvent(CreateScope<WindowMinimizedEvent>(false));
                     break;
                 }
                 case SDL_EVENT_WINDOW_MOUSE_ENTER:
                 {
+                    //BeeCoreTrace("Mouse entered window");
                     break;
                 }
                 case SDL_EVENT_WINDOW_MOUSE_LEAVE:
                 {
+                    //BeeCoreTrace("Mouse left window");
                     break;
                 }
                 case SDL_EVENT_WINDOW_FOCUS_GAINED:
@@ -227,6 +226,14 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_TAKE_FOCUS:
                 {
+                    break;
+                }
+                case SDL_EVENT_WINDOW_MOVED:
+                {
+                    m_XPosition = sdlEvent.window.data1;
+                    m_YPosition = sdlEvent.window.data2;
+                    auto event = CreateScope<WindowMovedEvent>(m_XPosition, m_YPosition);
+                    m_Events.AddEvent(std::move(event));
                     break;
                 }
                 case SDL_EVENT_WINDOW_HIT_TEST:
@@ -251,7 +258,8 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_TEXT_INPUT:
                 {
-                    UTF8StringView text(sdlEvent.text.text);
+                    UTF8String string = sdlEvent.text.text;
+                    UTF8StringView text(string);
                     for (char32_t c : text)
                     {
                         auto event = CreateScope<CharTypedEvent>(c);
@@ -287,6 +295,34 @@ namespace BeeEngine::Internal
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
+#if !defined(MACOS)
+                case SDL_EVENT_DROP_BEGIN:
+                {
+                    fileDropEvent = CreateScope<FileDropEvent>();
+                    break;
+                }
+                case SDL_EVENT_DROP_FILE:
+                {
+                    char* path = sdlEvent.drop.data;
+                    fileDropEvent->AddFile(path);
+                    break;
+                }
+                case SDL_EVENT_DROP_COMPLETE:
+                {
+                    m_Events.AddEvent(std::move(fileDropEvent));
+                    break;
+                }
+                case SDL_EVENT_DROP_TEXT:
+                {
+                    break;
+                }
+                case SDL_EVENT_DROP_POSITION:
+                {
+                    auto event = CreateScope<FileDragEvent>(sdlEvent.drop.x, sdlEvent.drop.y);
+                    m_Events.AddEvent(std::move(event));
+                    break;
+                }
+#endif
                 case SDL_EVENT_JOYSTICK_AXIS_MOTION:
                 {
                     break;
@@ -351,22 +387,6 @@ namespace BeeEngine::Internal
                 {
                     break;
                 }
-                case SDL_EVENT_DROP_FILE:
-                {
-                    break;
-                }
-                case SDL_EVENT_DROP_TEXT:
-                {
-                    break;
-                }
-                case SDL_EVENT_DROP_BEGIN:
-                {
-                    break;
-                }
-                case SDL_EVENT_DROP_COMPLETE:
-                {
-                    break;
-                }
                 case SDL_EVENT_AUDIO_DEVICE_ADDED:
                 {
                     break;
@@ -375,19 +395,7 @@ namespace BeeEngine::Internal
                 {
                     break;
                 }
-                case SDL_EVENT_RENDER_TARGETS_RESET:
-                {
-                    break;
-                }
-                case SDL_EVENT_RENDER_DEVICE_RESET:
-                {
-                    break;
-                }
                 case SDL_EVENT_USER:
-                {
-                    break;
-                }
-                case SDL_EVENT_LAST:
                 {
                     break;
                 }
@@ -397,21 +405,6 @@ namespace BeeEngine::Internal
                 }
             }
         }
-    }
-
-    void SDLWindowHandler::SwapBuffers()
-    {
-
-    }
-
-    void SDLWindowHandler::MakeContextCurrent()
-    {
-
-    }
-
-    void SDLWindowHandler::MakeContextNonCurrent()
-    {
-
     }
 
     bool SDLWindowHandler::IsRunning() const
@@ -425,14 +418,15 @@ namespace BeeEngine::Internal
         return m_IsRunning;
     }
 
-    void SDLWindowHandler::UpdateTime()
+    Time::secondsD SDLWindowHandler::UpdateTime()
     {
         static uint64_t lastTime = 0;
         static uint64_t currentTime = SDL_GetPerformanceCounter();
         lastTime = currentTime;
         currentTime = SDL_GetPerformanceCounter();
         auto deltatime = ((double)(currentTime - lastTime)) / (double)SDL_GetPerformanceFrequency();
-        SetDeltaTime(deltatime, ((double)currentTime)/(double)SDL_GetPerformanceFrequency());
+        SetDeltaTime(Time::secondsD(deltatime), Time::secondsD(((double)currentTime)/(double)SDL_GetPerformanceFrequency()));
+        return Time::secondsD(deltatime);
         //UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetPerformanceCounter()));
     }
 
@@ -1214,4 +1208,53 @@ namespace BeeEngine::Internal
                 return MouseButton::Last;
         }
     }
+
+    WindowNativeInfo SDLWindowHandler::GetNativeInfo()
+    {
+        WindowNativeInfo info;
+#if defined(WINDOWS)
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.win32.hwnd", NULL);
+        info.instance = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.win32.hinstance", NULL);
+#elif defined(LINUX)
+        info.display = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.display", NULL);
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.window", NULL);
+#elif defined(MACOS)
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.cocoa.window", NULL);
+#elif defined(IOS)
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.uikit.window", NULL);
+#elif defined(ANDROID)
+        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.android.window", NULL);
+#endif
+        return info;
+    }
+
+    void SDLWindowHandler::InitializeDragDropOnWindows()
+    {
+#if defined(WINDOWS)
+        HWND hwnd = (HWND)GetNativeInfo().window;
+        if (FAILED(OleInitialize(NULL)))
+        {
+            BeeCoreError("Failed to initialize OLE");
+        }
+        if (FAILED(RegisterDragDrop(hwnd, static_cast<LPDROPTARGET>(new WindowsDropTarget()))))
+        {
+            BeeCoreError("Failed to register drop source");
+        }
+#endif
+    }
+
+    GlobalMouseState SDLWindowHandler::GetGlobalMouseState() const
+    {
+        GlobalMouseState state;
+        float x, y;
+        uint32_t buttons = SDL_GetGlobalMouseState(&x, &y);
+        state.x = x;
+        state.y = y;
+        state.left = (buttons & SDL_BUTTON_LMASK) != 0;
+        state.right = (buttons & SDL_BUTTON_RMASK) != 0;
+        state.middle = (buttons & SDL_BUTTON_MMASK) != 0;
+        return state;
+    }
+
 }
+#endif

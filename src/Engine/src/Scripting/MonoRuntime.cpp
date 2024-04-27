@@ -4,25 +4,15 @@
 #include "MAssembly.h"
 #include "MClass.h"
 #include "FileSystem/File.h"
-#include "mono/metadata/assembly.h"
 #include "Core/Logging/Log.h"
-#include "mono/metadata/blob.h"
-#include "mono/metadata/row-indexes.h"
-#include "mono/metadata/metadata.h"
 #include "ScriptingEngine.h"
-#include "mono/metadata/loader.h"
 #include "MObject.h"
-#include "mono/metadata/appdomain.h"
 #include "MMethod.h"
 #include "GameScript.h"
-#include <mono/metadata/object.h>
 #include "Scene/Entity.h"
 #include "MField.h"
 #include "MUtils.h"
-#include "mono/metadata/tabledefs.h"
 #include "Scene/Components.h"
-#include "mono/metadata/threads.h"
-#include "mono/metadata/mono-debug.h"
 
 
 namespace BeeEngine
@@ -49,7 +39,7 @@ namespace BeeEngine
     }
     MAssembly::~MAssembly()
     {
-        //UnloadAssembly();
+        UnloadAssembly();
     }
     void MAssembly::LoadAssembly()
     {
@@ -87,8 +77,9 @@ namespace BeeEngine
             || name.contains(compilerGenerated) || name.contains(enumerator)
             || name.contains(keyHolder))
                 continue;
-            const char* ns = mono_metadata_string_heap(m_MonoImage, cols[MONO_TYPEDEF_NAMESPACE]);
-
+            std::string ns = mono_metadata_string_heap(m_MonoImage, cols[MONO_TYPEDEF_NAMESPACE]);
+            if(ns.empty())
+                continue;
             m_Classes.emplace_back(CreateRef<MClass>(name, ns, m_MonoImage));
         }
     }
@@ -97,7 +88,7 @@ namespace BeeEngine
     {
         if(m_MonoImage)
         {
-            mono_image_close(m_MonoImage);
+            //mono_image_close(m_MonoImage);
             m_MonoImage = nullptr;
         }
         if(m_MonoAssembly)
@@ -135,6 +126,7 @@ namespace BeeEngine
 
     MObject::MObject(MClass &object)
     {
+        MUtils::RegisterThread();
         m_Class = &object;
         MonoObject* instance = mono_object_new(mono_domain_get(), m_Class->m_MonoClass);
         mono_runtime_object_init(instance);
@@ -274,7 +266,7 @@ namespace BeeEngine
 
     }
 
-    GameScript::GameScript(MClass& mClass, Entity entity)
+    GameScript::GameScript(MClass& mClass, Entity entity, const String& locale)
     : m_Instance(mClass.Instantiate())
     {
         //auto& constructor = ScriptingEngine::GetEntityClass().GetMethod(".ctor", 1);
@@ -294,7 +286,7 @@ namespace BeeEngine
         if(entity.HasComponent<ScriptComponent>())
         {
             auto& sc = entity.GetComponent<ScriptComponent>();
-            CopyFieldsData(sc.EditableFields);
+            CopyFieldsData(sc.EditableFields, locale);
         }
     }
 
@@ -357,19 +349,19 @@ namespace BeeEngine
         }
     }
 
-    void GameScript::CopyFieldsData(std::vector<GameScriptField> &aClass)
+    void GameScript::CopyFieldsData(std::vector<GameScriptField> &aClass, const String& locale)
     {
         for(auto& field : aClass)
         {
             auto& mField = field.GetMField();
             auto type = mField.GetType();
-            if(type == MType::Asset || type == MType::Texture2D || type == MType::Font)
+            if(type == MType::Asset || type == MType::Texture2D || type == MType::Font || type == MType::Prefab)
             {
                 AssetHandle handle = field.GetData<AssetHandle>();
                 if(AssetManager::IsAssetHandleValid(handle))
                 {
                     if(type == MType::Asset)
-                        type = AssetTypeToMType(AssetManager::GetAsset<Asset>(handle).GetType());
+                        type = AssetTypeToMType(AssetManager::GetAsset<Asset>(handle, locale).GetType());
                     ScriptingEngine::SetAssetHandle(m_Instance, mField, handle, type);
                 }
                 continue;

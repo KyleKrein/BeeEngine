@@ -2,10 +2,10 @@
 
 #include "Core/Events/Event.h"
 #include "Platform/ImGui/ImGuiController.h"
-#include "Renderer/Shader.h"
 #include "Debug/Instrumentor.h"
 #include "Core/AssetManagement/IAssetManager.h"
 #include "Core/AssetManagement/AssetManager.h"
+#include "Renderer/Renderer.h"
 
 
 namespace BeeEngine
@@ -16,7 +16,7 @@ namespace BeeEngine
         virtual ~Layer() = default;
         virtual void OnAttach() {}
         virtual void OnDetach() {}
-        virtual void OnUpdate() {}
+        virtual void OnUpdate(FrameData& frameData) {}
         virtual void OnGUIRendering() {}
         virtual void OnEvent(EventDispatcher& e) {}
     protected:
@@ -26,7 +26,7 @@ namespace BeeEngine
         }
     };
 
-    class ImGuiLayer: public Layer
+    class ImGuiLayer final: public Layer
     {
     public:
         ImGuiLayer()
@@ -39,10 +39,10 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             s_Controller->Update();
         };
-        void OnEnd()
+        void OnEnd(CommandBuffer& cmd)
         {
             BEE_PROFILE_FUNCTION();
-            s_Controller->Render();
+            s_Controller->Render(cmd);
         };
         void OnDetach() override
         {

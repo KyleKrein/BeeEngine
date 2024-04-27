@@ -1,22 +1,24 @@
 //#include "TestLayer.h"
-#include "WebGPUTestLayer.h"
+#include "JobSystem/JobScheduler.h"
+#include "Windowing/ApplicationProperties.h"
+#include "Core/Application.h"
+#include "Core/EntryPoint.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 //#include "BeeEngine.h"
-
+#include "VulkanTestLayer.h"
+using namespace BeeEngine;
 class Game: public BeeEngine::Application
 {
 public:
-    Game(const BeeEngine::WindowProperties& properties)
-    : BeeEngine::Application(properties)
+    Game(const ApplicationProperties& properties)
+    : Application(properties)
     {
-        //BeeEngine::Ref<BeeEngine::Layer> layer;
-        /*if(properties.PreferredRenderAPI == Vulkan)
-            //layer = BeeEngine::CreateRef<TestLayer>();
-            return;
-        else if(properties.PreferredRenderAPI == WebGPU)
-            //layer = BeeEngine::CreateRef<WebGPUTestLayer>();
-        else*/
-            BeeError("Renderer API is not chosen");
-        //PushLayer(layer);
+        PushLayer(CreateRef<VulkanTestLayer>());
+    }
+
+    void Update() override
+    {
+
     }
 
     virtual ~Game() override
@@ -27,6 +29,6 @@ public:
 
 gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication(const BeeEngine::ApplicationArgs& args)
 {
-    constexpr static WindowProperties properties = {1280, 720, "Pochemu", VSync::Off, RenderAPI::WebGPU};
+    static ApplicationProperties properties = {1280, 720, "Pochemu", VSync::On};
     return new Game(properties);
 }

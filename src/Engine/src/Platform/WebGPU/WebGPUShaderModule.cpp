@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 01.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUShaderModule.h"
 #include "WebGPUGraphicsDevice.h"
 #include "WebGPUInstancedBuffer.h"
@@ -33,15 +33,14 @@ namespace BeeEngine::Internal
     }
     WebGPUShaderModule::~WebGPUShaderModule()
     {
-        auto layouts = m_BindGroupLayouts;
-        DeletionQueue::Frame().PushFunction([layouts]()
+        DeletionQueue::Frame().PushFunction([shaderModule = m_ShaderModule, layouts = m_BindGroupLayouts]()
         {
             for (auto[_, bindGroupLayout] : layouts)
             {
                 wgpuBindGroupLayoutRelease(bindGroupLayout); //TODO: check why it fails if released in DeletionQueue::Main()
             }
+            wgpuShaderModuleRelease(shaderModule);
         });
-        wgpuShaderModuleRelease(m_ShaderModule);
     }
     constexpr static WGPUVertexFormat ShaderDataTypeToWGPIU(ShaderDataType type)
     {
@@ -193,3 +192,4 @@ namespace BeeEngine::Internal
         return CreateScope<WebGPUInstancedBuffer>(m_InstanceBufferLayout, MAX_INSTANCED_BUFFER_COUNT);
     }
 }
+#endif

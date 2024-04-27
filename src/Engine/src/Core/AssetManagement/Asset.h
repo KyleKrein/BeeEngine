@@ -46,16 +46,28 @@ namespace BeeEngine
         {
             return RegistryID == other.RegistryID && AssetID == other.AssetID;
         }
+        template<typename Archive>
+        void Serialize(Archive& serializer)
+        {
+            serializer & RegistryID;
+            serializer & AssetID;
+        }
     };
     enum class AssetType: uint16_t
     {
         None = 0,
         Texture2D = 1,
         Font = 2,
-        Shader = 3,
+        Prefab = 3,
+        Scene = 4,
+        Mesh = 5,
+        MeshSource = 10,
+
+        /*Shader = 3,
         Mesh = 4,
         Material = 5,
-        Model = 6,
+        Model = 6,*/
+        Localized = 100,
     };
     enum class AssetLocation: uint16_t
     {

@@ -3,16 +3,26 @@
 //
 
 #pragma once
-#include <filesystem>
 #include "Renderer/Texture.h"
 #include "Core/Path.h"
+#include <atomic>
+#include "Scene/Scene.h"
+#include "../ProjectFile.h"
 
 namespace BeeEngine::Editor
 {
     class ContentBrowserPanel
     {
     public:
-        ContentBrowserPanel(const Path& workingDirectory) noexcept;
+        ContentBrowserPanel(const Path& workingDirectory, Locale::Domain& editorDomain) noexcept;
+        void SetContext(const Ref<Scene>& context) noexcept
+        {
+            m_Context = context;
+        }
+        void SetProject(ProjectFile* project) noexcept
+        {
+            m_Project = project;
+        }
         void SetWorkingDirectory(const Path& path) noexcept
         {
             m_WorkingDirectory = path;
@@ -34,11 +44,16 @@ namespace BeeEngine::Editor
     private:
         Path m_WorkingDirectory;
         Path m_CurrentDirectory;
+        Ref<Scene> m_Context;
+        ProjectFile* m_Project;
+        Locale::Domain* m_EditorDomain = nullptr;
 
         Ref<Texture2D> m_DirectoryIcon;
         Ref<Texture2D> m_FileIcon;
         bool m_NeedToRegenerateSolution = false;
 
         void DragAndDropFileToFolder(const Path &path);
+
+        void AcceptExternFilesAndCopy(const Path& folder) const;
     };
 }

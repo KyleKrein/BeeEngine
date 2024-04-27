@@ -15,5 +15,9 @@ namespace BeeEngine
     {
 
     }
+
+REFLECT_STRUCT_BEGIN(UUID)
+    REFLECT_STRUCT_MEMBER(m_UUID)
+REFLECT_STRUCT_END()
 }
 

@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/RenderPass.h"
@@ -16,6 +17,7 @@ namespace BeeEngine::Internal
         ~WebGPUFrameBuffer() override;
         void Bind() override;
         void Unbind() override;
+        void Flush(const std::function<void()>& callback) override;
         void Resize(uint32_t width, uint32_t height) override;
         void Invalidate() override;
         [[nodiscard]] uintptr_t GetColorAttachmentRendererID(uint32_t index) const override
@@ -30,9 +32,7 @@ namespace BeeEngine::Internal
             //wgpuTextureViewReference(m_DepthAttachmentTextureView);
             return (uintptr_t)m_DepthAttachmentTextureView;
         }
-        [[nodiscard]] uint32_t GetRendererID() const override;
         int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
-        void ClearColorAttachment(uint32_t attachmentIndex, int value) override;
 
     private:
         std::vector<FrameBufferTextureSpecification> m_ColorAttachmentSpecification;
@@ -64,12 +64,21 @@ namespace BeeEngine::Internal
         {
             void* Data;
             WGPUBuffer* Buffer;
+            bool* Waiting;
         };
-        mutable BufferContext m_EntityIDBufferContext {&m_ReadPixelValue, &m_EntityIDBuffer};
-
         mutable CommandBuffer m_BufferCopyEncoder {nullptr};
 
-        mutable bool m_PixelDataReady {false};
         mutable bool m_WaitingForReadPixel {false};
+        mutable BufferContext m_EntityIDBufferContext {&m_ReadPixelValue, &m_EntityIDBuffer, &m_WaitingForReadPixel};
+
+        std::function<void()> m_FlushCallback;
+        bool m_Flushed {true};
+        struct FlushCallbackData
+        {
+            std::function<void()>* Callback;
+            bool* Flushed;
+        };
+        FlushCallbackData m_FlushCallbackData {&m_FlushCallback, &m_Flushed};
     };
 }
+#endif

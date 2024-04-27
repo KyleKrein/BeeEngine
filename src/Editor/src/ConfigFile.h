@@ -10,7 +10,7 @@ namespace BeeEngine::Editor
     class ConfigFile
     {
     public:
-        [[nodiscard("Config file is very important")]] static WindowProperties LoadWindowConfiguration() noexcept;
+        [[nodiscard("Config file is very important")]] static ApplicationProperties LoadWindowConfiguration() noexcept;
         static std::filesystem::path LoadCompilerConfiguration() noexcept;
     };
 }

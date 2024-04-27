@@ -6,6 +6,7 @@
 
 
 #include "String.h"
+#include <version>
 
 namespace BeeEngine
 {
@@ -45,10 +46,18 @@ namespace BeeEngine
         {
             return m_Path.empty();
         }
+#if __has_cpp_attribute(__cpp_explicit_this_parameter)
+        template<typename Self>
+        auto&& AsUTF8(this Self&& self) noexcept
+        {
+            return std::forward<Self>(self).m_Path;
+        }
+#else
         const UTF8String& AsUTF8() const noexcept
         {
             return m_Path;
         }
+#endif
         const char* AsCString() const noexcept
         {
             return m_Path.c_str();
@@ -56,6 +65,11 @@ namespace BeeEngine
         UTF16String ToUTF16() const
         {
             return ConvertUTF8ToUTF16(m_Path);
+        }
+
+        String ToString() const
+        {
+            return m_Path;
         }
 
         std::filesystem::path ToStdPath() const;
@@ -101,6 +115,8 @@ namespace BeeEngine
         }
     private:
         UTF8String m_Path;
+
+        void RefactorApplyAndCheck(UTF8String&& utf8);
     };
 }
 namespace std

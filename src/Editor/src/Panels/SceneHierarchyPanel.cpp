@@ -4,6 +4,10 @@
 
 #include "SceneHierarchyPanel.h"
 #include "Scene/Components.h"
+#include "Core/DeletionQueue.h"
+#include "Scene/Prefab.h"
+#include "Core/Input.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 
 
 namespace BeeEngine::Editor
@@ -21,12 +25,30 @@ namespace BeeEngine::Editor
 
     void SceneHierarchyPanel::OnGUIRender() noexcept
     {
-        ImGui::Begin("Scene Hierarchy");
-        m_Context->m_Registry.each([&](auto entityID)
+        ImGui::Begin(m_EditorDomain->Translate("sceneHierarchyPanel").c_str());
+        if(ImGui::IsDragAndDropPayloadInProcess("ENTITY_ID") ||
+        ImGui::IsDragAndDropPayloadInProcess("ASSET_BROWSER_PREFAB_ITEM"))
         {
-            Entity entity {EntityID{entityID}, m_Context.get()};
-            DrawEntityNode(entity);
-        });
+            auto width = ImGui::GetContentRegionAvail().x;
+            ImGui::Button(m_EditorDomain->Translate("sceneHierarchyPanel.toTopLevel").c_str(), {width, 0});
+            ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this](auto& e)mutable {
+                Entity droppedEntity = {e, m_Context.get()};
+                droppedEntity.RemoveParent();
+            });
+            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM", [this](auto& e)mutable {
+                Prefab& prefab = AssetManager::GetAsset<Prefab>(e);
+                m_Context->InstantiatePrefab(prefab, Entity::Null);
+            });
+        }
+
+        m_Context->m_Registry.view<HierarchyComponent>()
+                .each([&](auto entityID, auto& hierarchy)
+                     {
+                         if (hierarchy.Parent == Entity::Null) // Только для "главных" сущностей
+                         {
+                             DrawEntityNode({entityID, m_Context.get()});
+                         }
+                     });
 
         if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
         {
@@ -35,11 +57,11 @@ namespace BeeEngine::Editor
 
         if (ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
         {
-            if (ImGui::MenuItem("Create Empty Entity"))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.createEmptyEntity").c_str()))
             {
                 m_Context->CreateEntity();
             }
-            if (ImGui::MenuItem("Create Camera"))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.createCamera").c_str()))
             {
                 auto newCamera = m_Context->CreateEntity("Camera");
                 newCamera.AddComponent<CameraComponent>();
@@ -52,44 +74,58 @@ namespace BeeEngine::Editor
     void SceneHierarchyPanel::DrawEntityNode(Entity entity) noexcept
     {
         auto& tag = entity.GetComponent<TagComponent>().Tag;
+        auto& hierarchy = entity.GetComponent<HierarchyComponent>(); // Предположим, что у всех есть этот компонент
 
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
-                ((m_SelectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0) |
-                ImGuiTreeNodeFlags_SpanAvailWidth;
+                                   ((m_SelectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0) |
+                                   ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 
         bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
-
+        entt::entity entityID = entity;
+        ImGui::StartDragAndDrop("ENTITY_ID", entityID);
+        ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this, currentEntity = entity](auto& e)mutable {
+            Entity droppedEntity = {e, m_Context.get()};
+            droppedEntity.SetParent(currentEntity);
+        });
+        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM", [this, currentEntity = entity](auto& e)mutable {
+            Prefab& prefab = AssetManager::GetAsset<Prefab>(e);
+            m_Context->InstantiatePrefab(prefab, currentEntity);
+        });
         if (ImGui::IsItemClicked())
         {
             m_SelectedEntity = entity;
         }
 
-        bool entityDeleted = false;
         if(ImGui::BeginPopupContextItem())
         {
-            if(ImGui::MenuItem("Delete Entity"))
+            if(ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.deleteEntity").c_str()))
             {
-                entityDeleted = true;
+                DeletionQueue::Frame().PushFunction([this, entityToDelete = entity]() mutable
+                    {
+                        if(m_SelectedEntity == entityToDelete || entityToDelete.HasChild(m_SelectedEntity))
+                        {
+                            m_SelectedEntity = Entity::Null;
+                        }
+                        m_Context->DestroyEntity(entityToDelete);
+                    });
             }
-            if(ImGui::MenuItem("Duplicate Entity"))
+            if(ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.duplicateEntity").c_str()))
             {
-                m_Context->DuplicateEntity(entity);
+                DeletionQueue::Frame().PushFunction([this, entityToDublicate = entity]() mutable
+                    {
+                        m_Context->DuplicateEntity(entityToDublicate);
+                    });
             }
             ImGui::EndPopup();
         }
 
         if(opened)
         {
-            ImGui::TreePop();
-        }
-
-        if(entityDeleted)
-        {
-            m_Context->DestroyEntity(entity);
-            if(m_SelectedEntity == entity)
+            for(auto child : hierarchy.Children)
             {
-                m_SelectedEntity = Entity::Null;
+                DrawEntityNode(child); // Рекурсивный вызов
             }
+            ImGui::TreePop();
         }
     }
 
@@ -100,7 +136,10 @@ namespace BeeEngine::Editor
 
     void SceneHierarchyPanel::OnEvent(EventDispatcher &e) noexcept
     {
-        DISPATCH_EVENT(e, KeyPressedEvent, EventType::KeyPressed, OnKeyPressedEvent);
+        e.Dispatch<KeyPressedEvent>([this](auto& e) -> bool
+        {
+            return OnKeyPressedEvent(&e);
+        });
     }
 
     bool SceneHierarchyPanel::OnKeyPressedEvent(KeyPressedEvent *e) noexcept

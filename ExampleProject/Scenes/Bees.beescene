@@ -1,0 +1,50 @@
+Scene: Untitled
+Entities:
+  - Entity: 16894677396234548823
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [7, 2, -22]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveVerticalFOV: 0.785398185
+        PerspectiveNearClip: 0.00999999978
+        PerspectiveFarClip: 1000
+        OrthographicSize: 10
+        OrthographicNearClip: -1
+        OrthographicFarClip: 1
+        AspectRatio: 1.94748127
+      Primary: true
+      FixedAspectRatio: false
+    ScriptComponent:
+      FullName: Example.Camera
+      Fields:
+        - Name: Speed
+          Type: float
+          Data: 1
+    HierarchyComponent:
+      []
+  - Entity: 7409060455932691265
+    TagComponent:
+      Tag: Bee Generator
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.BeeGenerator
+      Fields:
+        - Name: BeePrefab
+          Type: Prefab
+          Data: [3753192931707503016, 3914033094796980827]
+        - Name: BeesX
+          Type: int
+          Data: 100
+        - Name: BeesY
+          Type: int
+          Data: 100
+    HierarchyComponent:
+      []

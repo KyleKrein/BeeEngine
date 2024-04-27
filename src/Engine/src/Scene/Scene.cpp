@@ -13,6 +13,7 @@
 #include "NativeScriptFactory.h"
 #include "Core/UUID.h"
 #include "Scripting/ScriptingEngine.h"
+#include "Prefab.h"
 
 #include <box2d/box2d.h>
 #include <box2d/b2_body.h>
@@ -71,7 +72,7 @@ namespace BeeEngine
 
             scriptComponent.Instance->OnUpdate();
         }
-
+#if defined(BEE_ENABLE_SCRIPTING)
         auto view = m_Registry.view<ScriptComponent>();
         for (auto e : view)
         {
@@ -100,99 +101,38 @@ namespace BeeEngine
                 ScriptingEngine::OnEntityUpdate(entity);
             }
         }
+#endif
     }
 
     void Scene::DestroyEntity(Entity entity)
     {
         UUID uuid = entity.GetUUID();
+        auto& hierarchy = entity.GetComponent<HierarchyComponent>();
+        for (auto e: hierarchy.Children)
+        {
+            DestroyEntity(e);
+        }
+        if(hierarchy.Parent)
+        {
+            entity.RemoveParent();
+        }
         m_UUIDMap.erase(uuid);
         m_Registry.destroy(entity);
+#if defined(BEE_ENABLE_SCRIPTING)
         if(m_IsRuntime)
             ScriptingEngine::OnEntityDestroyed(uuid);
+#endif
     }
 
     void Scene::Clear()
     {
         m_Registry.clear();
     }
-    struct SpriteInstanceBufferData
-    {
-        glm::mat4 Model {1.0f};
-        BeeEngine::Color4 Color {BeeEngine::Color4::White};
-        float TilingFactor = 1.0f;
-        //int32_t EntityID = -1;
-    };
-    struct CircleInstanceBufferData
-    {
-        glm::mat4 Model {1.0f};
-        BeeEngine::Color4 Color {BeeEngine::Color4::White};
-        float Thickness = 1.0f;
-        float Fade = 0.005f;
-    };
+
     void Scene::UpdateRuntime()
     {
         UpdateScripts();
         Update2DPhysics();
-
-        SceneCamera* mainCamera = nullptr;
-        glm::mat4 cameraTransform;
-
-        auto camerasGroup = m_Registry.group<CameraComponent>(entt::get<TransformComponent>);
-        for (auto entity:camerasGroup)
-        {
-            auto [transform, camera] = camerasGroup.get<TransformComponent, CameraComponent>(entity);
-            if(camera.Primary)
-            {
-                mainCamera = &camera.Camera;
-                cameraTransform = transform.GetTransform();
-                break;
-            }
-        }
-
-        if(mainCamera)
-        {
-            auto cameraViewProj = mainCamera->GetProjectionMatrix() * glm::inverse(cameraTransform);
-            m_CameraUniformBuffer->SetData(&cameraViewProj, sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
-
-            RenderScene();
-
-        }
-    }
-
-    void Scene::UpdateEditor(EditorCamera& camera)
-    {
-        auto cameraViewProj = camera.GetViewProjection();
-        m_CameraUniformBuffer->SetData(glm::value_ptr(cameraViewProj), sizeof(glm::mat4));//Renderer2D::BeginScene(camera);
-
-        RenderScene();
-    }
-
-    void Scene::RenderScene()
-    {
-        auto spriteGroup = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-        for( auto entity : spriteGroup )
-        {
-            auto [transform, spriteComponent] = spriteGroup.get<TransformComponent, SpriteRendererComponent>(entity);
-            SpriteInstanceBufferData data {transform.GetTransform(), spriteComponent.Color, spriteComponent.TilingFactor};
-            std::vector<BindingSet*> bindingSets {m_CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture()->GetBindingSet() : m_BlankTexture->GetBindingSet())};
-            Renderer::SubmitInstance(*m_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
-        }
-
-        auto circleGroup = m_Registry.view<TransformComponent, CircleRendererComponent>();
-        std::vector<BindingSet*> circleBindingSets {m_CameraBindingSet.get()};
-        for( auto entity : circleGroup )
-        {
-            auto [transform, circleComponent] = circleGroup.get<TransformComponent, CircleRendererComponent>(entity);
-            CircleInstanceBufferData data {transform.GetTransform(), circleComponent.Color, circleComponent.Thickness, circleComponent.Fade};
-            Renderer::SubmitInstance(*m_CircleModel, circleBindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
-        }
-
-        auto textGroup = m_Registry.view<TransformComponent, TextRendererComponent>();
-        for( auto entity : textGroup )
-        {
-            auto [transform, textComponent] = textGroup.get<TransformComponent, TextRendererComponent>(entity);
-            Renderer::DrawString(textComponent.Text, textComponent.Font(), *m_CameraBindingSet, transform.GetTransform(), textComponent.Configuration);
-        }
     }
 
     void Scene::StartRuntime()
@@ -203,22 +143,22 @@ namespace BeeEngine
         }*/
         m_IsRuntime = true;
         StartPhysicsWorld();
+#if defined(BEE_ENABLE_SCRIPTING)
         ScriptingEngine::OnRuntimeStart(this);
+#endif
     }
 
     void Scene::StopRuntime()
     {
         m_IsRuntime = false;
+#if defined(BEE_ENABLE_SCRIPTING)
         ScriptingEngine::OnRuntimeStop();
+#endif
         StopPhysicsWorld();
         //DestroyScripts();
     }
 
-    Scene::Scene()
-    : m_CameraUniformBuffer(UniformBuffer::Create(sizeof(glm::mat4))), m_RectModel(&Application::GetInstance().GetAssetManager().GetModel("Renderer2D_Rectangle")), m_CircleModel(&Application::GetInstance().GetAssetManager().GetModel("Renderer2D_Circle")), m_BlankTexture(&Application::GetInstance().GetAssetManager().GetTexture("Blank"))
-    {
-        m_CameraBindingSet = BindingSet::Create({{0,*m_CameraUniformBuffer}});
-    }
+    Scene::Scene() = default;
 
     void Scene::DestroyScripts()
     {
@@ -239,6 +179,7 @@ namespace BeeEngine
         Entity entity(EntityID{m_Registry.create()}, this);
         entity.AddComponent<UUIDComponent>(uuid);
         entity.AddComponent<TransformComponent>();
+        entity.AddComponent<HierarchyComponent>();
         auto& tag = entity.AddComponent<TagComponent>();
         tag.Tag = name;
         m_UUIDMap[uuid] = entity;
@@ -275,14 +216,7 @@ namespace BeeEngine
             Entity entity{EntityID{e}, this};
             auto& rigidBody = entity.GetComponent<RigidBody2DComponent>();
             auto& transform = entity.GetComponent<TransformComponent>();
-            b2BodyDef bodyDef;
-            bodyDef.type = ConvertRigidBodyTypeToBox2D(rigidBody.Type);
-            bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
-            bodyDef.angle = transform.Rotation.z;
-
-            b2Body* body = m_2DPhysicsWorld->CreateBody(&bodyDef);
-            body->SetFixedRotation(rigidBody.FixedRotation);
-            rigidBody.RuntimeBody = body;
+            b2Body *body = (b2Body*)CreateRuntimeRigidBody2D(rigidBody, transform);
 
 
             if(!entity.HasComponent<BoxCollider2DComponent>())
@@ -291,21 +225,28 @@ namespace BeeEngine
             }
             auto& boxCollider = entity.GetComponent<BoxCollider2DComponent>();
 
-            if(boxCollider.Type == BoxCollider2DComponent::ColliderType::Box)
-            {
-                b2PolygonShape boxShape;
-                boxShape.SetAsBox(boxCollider.Size.x * transform.Scale.x, boxCollider.Size.y * transform.Scale.y, b2Vec2(boxCollider.Offset.x, boxCollider.Offset.y), 0.0f);
+            CreateRuntimeBoxCollider2DFixture(transform, body, boxCollider);
+        }
+    }
 
-                b2FixtureDef fixtureDef;
-                fixtureDef.shape = &boxShape;
-                fixtureDef.density = boxCollider.Density;
-                fixtureDef.friction = boxCollider.Friction;
-                fixtureDef.restitution = boxCollider.Restitution;
-                fixtureDef.restitutionThreshold = boxCollider.RestitutionThreshold;
-                body->CreateFixture(&fixtureDef);
-                continue;
-            }
+    void Scene::CreateRuntimeBoxCollider2DFixture(const TransformComponent &transform, b2Body *body,
+                                                  BoxCollider2DComponent &boxCollider) const
+    {
+        if(boxCollider.Type == BoxCollider2DComponent::ColliderType::Box)
+        {
+            b2PolygonShape boxShape;
+            boxShape.SetAsBox(boxCollider.Size.x * transform.Scale.x, boxCollider.Size.y * transform.Scale.y, b2Vec2(boxCollider.Offset.x, boxCollider.Offset.y), 0.0f);
 
+            b2FixtureDef fixtureDef;
+            fixtureDef.shape = &boxShape;
+            fixtureDef.density = boxCollider.Density;
+            fixtureDef.friction = boxCollider.Friction;
+            fixtureDef.restitution = boxCollider.Restitution;
+            fixtureDef.restitutionThreshold = boxCollider.RestitutionThreshold;
+            boxCollider.RuntimeFixture = static_cast<void*>(body->CreateFixture(&fixtureDef));
+        }
+        else if(boxCollider.Type == BoxCollider2DComponent::ColliderType::Circle)
+        {
             b2CircleShape circleShape;
             circleShape.m_radius = boxCollider.Size.x * transform.Scale.x;
             circleShape.m_p.Set(boxCollider.Offset.x * transform.Scale.x, boxCollider.Offset.y * transform.Scale.y);
@@ -316,8 +257,21 @@ namespace BeeEngine
             fixtureDef.friction = boxCollider.Friction;
             fixtureDef.restitution = boxCollider.Restitution;
             fixtureDef.restitutionThreshold = boxCollider.RestitutionThreshold;
-            body->CreateFixture(&fixtureDef);
+            boxCollider.RuntimeFixture = static_cast<void*>(body->CreateFixture(&fixtureDef));
         }
+    }
+
+    void* Scene::CreateRuntimeRigidBody2D(RigidBody2DComponent &rigidBody, const TransformComponent &transform)
+    {
+        b2BodyDef bodyDef;
+        bodyDef.type = ConvertRigidBodyTypeToBox2D(rigidBody.Type);
+        bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
+        bodyDef.angle = transform.Rotation.z;
+
+        b2Body* body = m_2DPhysicsWorld->CreateBody(&bodyDef);
+        body->SetFixedRotation(rigidBody.FixedRotation);
+        rigidBody.RuntimeBody = body;
+        return body;
     }
 
     void Scene::StopPhysicsWorld()
@@ -330,7 +284,7 @@ namespace BeeEngine
     {
         static constexpr int32_t velocityIterations = 6;
         static constexpr int32_t positionIterations = 2; //TODO: expose to editor
-        m_2DPhysicsWorld->Step(gsl::narrow_cast<float>(Time::DeltaTime()), velocityIterations, positionIterations);
+        m_2DPhysicsWorld->Step(gsl::narrow_cast<float>(Time::secondsD(Time::DeltaTime()).count()), velocityIterations, positionIterations);
 
         auto view = m_Registry.view<RigidBody2DComponent>();
         for (auto e:view)
@@ -341,7 +295,15 @@ namespace BeeEngine
             b2Body* body = (b2Body*)rigidBody.RuntimeBody;
             if(body == nullptr)
             {
-                continue;
+                body = (b2Body*)CreateRuntimeRigidBody2D(rigidBody, transform);
+            }
+            if(entity.HasComponent<BoxCollider2DComponent>())
+            {
+                auto& boxCollider = entity.GetComponent<BoxCollider2DComponent>();
+                if(!boxCollider.RuntimeFixture)
+                {
+                    CreateRuntimeBoxCollider2DFixture(transform, body, boxCollider);
+                }
             }
             const auto& position = body->GetPosition();
             transform.Translation = {position.x, position.y, transform.Translation.z};
@@ -359,6 +321,12 @@ namespace BeeEngine
         auto& component = src.get<Component>(srcEntity);
         dst.emplace_or_replace<Component>(dstEntity, component);
     }
+    template<>
+    static void CopyComponent<HierarchyComponent>(entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
+    {}
+    template<>
+    static void CopyComponent<UUIDComponent>(entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
+    {}
 
     template<typename ...Component>
     static void CopyComponents(TypeSequence<Component...>,entt::registry& dst, const entt::registry& src, entt::entity srcEntity, entt::entity dstEntity)
@@ -366,35 +334,127 @@ namespace BeeEngine
         (CopyComponent<Component>(dst, src, srcEntity, dstEntity), ...);
     }
 
-    Ref<Scene> Scene::Copy(const Scene &scene)
+    Ref<Scene> Scene::Copy(Scene &scene)
     {
         Ref<Scene> newScene = CreateRef<Scene>();
-        newScene->m_CameraUniformBuffer = scene.m_CameraUniformBuffer;
-        newScene->m_CameraBindingSet = scene.m_CameraBindingSet;
-        newScene->m_RectModel = scene.m_RectModel;
-        newScene->m_BlankTexture = scene.m_BlankTexture;
 
         auto& srcRegistry = scene.m_Registry;
         auto& dstRegistry = newScene->m_Registry;
-        auto idView = srcRegistry.view<UUIDComponent>();
+        auto idView = srcRegistry.view<HierarchyComponent, UUIDComponent>();
         for (auto e : idView)
         {
+            if(idView.get<HierarchyComponent>(e).Parent)
+            {
+                continue;
+            }
             UUID uuid = idView.get<UUIDComponent>(e).ID;
             const auto& name = srcRegistry.get<TagComponent>(e).Tag;
-            Entity entity = newScene->CreateEntityWithUUID(uuid, name);
-            CopyComponents(AllComponents{}, dstRegistry, srcRegistry, e, (entt::entity)entity);
+            Entity entity = scene.CopyEntity({e, &scene}, *newScene, Entity::Null, true);
         }
         return newScene;
     }
 
     Entity Scene::DuplicateEntity(Entity entity)
     {
-        UUID uuid = {};
-        Entity newEntity = CreateEntityWithUUID(uuid, entity.GetComponent<TagComponent>().Tag);
-        CopyComponents(AllComponents{}, m_Registry, m_Registry, (entt::entity)entity, (entt::entity)newEntity);
-        auto& uuidComponent = newEntity.GetComponent<UUIDComponent>();
-        uuidComponent.ID = uuid;
-        BeeEnsures(entity.GetUUID() != newEntity.GetUUID());
+        return CopyEntity(entity, *this, entity.GetComponent<HierarchyComponent>().Parent, false);
+    }
+
+    Entity Scene::CopyEntity(Entity entity, Scene &targetScene, Entity parent, bool preserveUUID)
+    {
+        Entity newEntity = targetScene.CreateEntityWithUUID(preserveUUID ? entity.GetUUID() : UUID{}, entity.GetComponent<TagComponent>().Tag);
+        CopyComponents(AllComponents{}, targetScene.m_Registry, m_Registry, (entt::entity)entity, (entt::entity)newEntity);
+        //Copy Hierarchies
+        auto& hierarchy = entity.GetComponent<HierarchyComponent>();
+        BeeCoreAssert(!(parent == Entity::Null && hierarchy.Parent), "Entity has parent but parent is null");
+        if(parent != Entity::Null)
+        {
+            auto& parentHierarchy = parent.GetComponent<HierarchyComponent>();
+            parentHierarchy.Children.push_back(newEntity);
+            newEntity.GetComponent<HierarchyComponent>().Parent = parent;
+        }
+        for (auto child : hierarchy.Children)
+        {
+            auto newChild = CopyEntity(child, targetScene, newEntity, preserveUUID);
+            newChild.GetComponent<HierarchyComponent>().Parent = newEntity;
+        }
+        BeeEnsures(entity.GetUUID() != newEntity.GetUUID() || preserveUUID);
         return newEntity;
+    }
+
+    Entity Scene::InstantiatePrefab(Prefab &prefab, Entity parent)
+    {
+        Entity newEntity = Prefab::GetPrefabScene()->CopyEntity(prefab.m_RootEntity, *this, Entity::Null, false);
+        if(parent)
+        {
+            newEntity.SetParent(parent);
+        }
+        return newEntity;
+    }
+
+    Entity Scene::GetPrimaryCameraEntity()
+    {
+        auto view = m_Registry.view<CameraComponent>();
+        for (auto entity:view)
+        {
+            auto& cameraComponent = view.get<CameraComponent>(entity);
+            if (cameraComponent.Primary)
+            {
+                return {EntityID{entity}, this};
+            }
+        }
+        return Entity::Null;
+    }
+    class RayCast2DCallback : public b2RayCastCallback
+    {
+    public:
+        float ReportFixture(b2Fixture *fixture, const b2Vec2 &point, const b2Vec2 &normal, float fraction) override
+        {
+            m_Fixture = fixture;
+            m_Point = point;
+            m_Normal = normal;
+            m_Fraction = fraction;
+            return fraction;
+        }
+        b2Fixture* GetFixture() const
+        {
+            return m_Fixture;
+        }
+        b2Vec2 GetPoint() const
+        {
+            return m_Point;
+        }
+        b2Vec2 GetNormal() const
+        {
+            return m_Normal;
+        }
+        float GetFraction() const
+        {
+            return m_Fraction;
+        }
+    private:
+        b2Fixture* m_Fixture = nullptr;
+        b2Vec2 m_Point;
+        b2Vec2 m_Normal;
+        float m_Fraction;
+    };
+
+    Entity Scene::RayCast2D(glm::vec2 start, glm::vec2 end)
+    {
+        RayCast2DCallback callback;
+        m_2DPhysicsWorld->RayCast(&callback, {start.x, start.y}, {end.x, end.y});
+        if(auto fixture = callback.GetFixture())
+        {
+            auto view = m_Registry.view<BoxCollider2DComponent>();
+            auto it = std::ranges::find_if(view, [fixture, &view](auto entity)
+            {
+                auto& boxCollider = view.get<BoxCollider2DComponent>(entity);
+                return boxCollider.RuntimeFixture == fixture;
+            });
+            if(it != view.end())
+            {
+                return {EntityID{*it}, this};
+            }
+        }
+        return Entity::Null;
     }
 }

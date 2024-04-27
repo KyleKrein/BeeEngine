@@ -1,0 +1,2 @@
+test_scene.score: "{score, plural, one{Очко: #} few{Очка: #} many{Очков: #} other{Очков: #}}"
+hello: Привет {count, plural, one{Мир} few{# Мира} many {# Миров} other {# Мира}}!

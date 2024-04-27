@@ -8,6 +8,10 @@
 #include "Core/UUID.h"
 #include "Core/AssetManagement/Asset.h"
 #include "MTypes.h"
+#include "Locale/Locale.h"
+#include <glm/glm.hpp>
+#include "Core/Time.h"
+#include "MUtils.h"
 
 namespace BeeEngine
 {
@@ -19,7 +23,10 @@ namespace BeeEngine
     public:
         static void Init();
         static void Shutdown();
-
+        static bool IsInitialized();
+        static void SetLocaleDomain(Locale::Domain& domain);
+        static Locale::Domain& GetLocaleDomain();
+        static const String& GetScriptingLocale();
         static void EnableDebugging();
 
         static void LoadGameAssembly(const Path& path);
@@ -34,7 +41,7 @@ namespace BeeEngine
 
         static bool HasGameScript(const String& name);
         static const std::unordered_map<String, Ref<MClass>>& GetGameScripts();
-        static void RegisterInternalCall(const std::string& name, void* method);
+        static void RegisterNativeFunction(const String& name, void* function);
 
         static void OnEntityCreated(Entity entity, MClass *pClass);
 
@@ -54,13 +61,22 @@ namespace BeeEngine
 
         static void GetAssetHandle(void* monoObject, AssetHandle &handle);
 
-        static void UpdateTime(double deltaTime, double totalTime);
+        static void UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime);
+
+        static void SetMousePosition(int x, int y);
+        static glm::vec2 GetMousePosition();
+
+        static glm::vec2 GetViewportSize();
+        static void SetViewportSize(float width, float height);
+
+        static void UnloadAppContext();
 
     private:
-
+        static void InitDotNetHost();
         static class MAssembly& LoadAssembly(const Path& path);
         static void InitMono();
         static bool IsGameScript(const MClass& klass);
+        static bool AreAllManagedHandlesLoaded();
         static struct ScriptingEngineData s_Data;
 
         static void MonoShutdown();

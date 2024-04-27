@@ -20,14 +20,18 @@ namespace BeeEngine
                 return "AssetType::Texture2D";
             case AssetType::Font:
                 return "AssetType::Font";
-            case AssetType::Shader:
+            case AssetType::Prefab:
+                return "AssetType::Prefab";
+            case AssetType::Scene:
+                return "AssetType::Scene";
+            /*case AssetType::Shader:
                 return "AssetType::Shader";
             case AssetType::Mesh:
                 return "AssetType::Mesh";
             case AssetType::Material:
                 return "AssetType::Material";
             case AssetType::Model:
-                return "AssetType::Model";
+                return "AssetType::Model";*/
         }
         BeeCoreError("Unknown AssetType: {0}", ToString(type));
         return "AssetType::None";
@@ -41,14 +45,18 @@ namespace BeeEngine
             return AssetType::Texture2D;
         if (type == "AssetType::Font")
             return AssetType::Font;
-        if (type == "AssetType::Shader")
+        if (type == "AssetType::Prefab")
+            return AssetType::Prefab;
+        if (type == "AssetType::Scene")
+            return AssetType::Scene;
+        /*if (type == "AssetType::Shader")
             return AssetType::Shader;
         if (type == "AssetType::Mesh")
             return AssetType::Mesh;
         if (type == "AssetType::Material")
             return AssetType::Material;
         if (type == "AssetType::Model")
-            return AssetType::Model;
+            return AssetType::Model;*/
         BeeCoreError("Unknown AssetType: {0}", type);
         return AssetType::None;
     }

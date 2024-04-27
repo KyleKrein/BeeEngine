@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/ShaderModule.h"
 #include "Renderer/BufferLayout.h"
 #include <webgpu/webgpu.h>
@@ -51,3 +51,4 @@ namespace BeeEngine::Internal
         std::vector<WGPUBindGroupLayoutEntry> m_BindGroupLayoutEntries;
     };
 }
+#endif

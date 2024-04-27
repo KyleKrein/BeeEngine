@@ -1,15 +1,16 @@
 //
 // Created by Александр Лебедев on 30.06.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUGraphicsDevice.h"
+#if defined(BEE_COMPILE_SDL)
 #include "SDL3/SDL.h"
-#include "SDL3/SDL_syswm.h"
+#endif
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Core/TypeDefines.h"
 #include "Renderer/Vertex.h"
 #include "Core/DeletionQueue.h"
-
+#include <Core/Coroutines/Co_Promise.h>
 namespace BeeEngine::Internal
 {
     WebGPUGraphicsDevice* WebGPUGraphicsDevice::s_Instance = nullptr;
@@ -47,8 +48,7 @@ namespace BeeEngine::Internal
         WGPUSupportedLimits supportedLimits;
 
         wgpuAdapterGetLimits(m_Adapter, &supportedLimits);
-        BeeCoreTrace("adapter.maxVertexAttributes: {}", supportedLimits.limits.maxVertexAttributes);
-
+        m_SupportedLimits = supportedLimits;
         WGPUChainedStruct dawnTogglesChained = {};
         dawnTogglesChained.sType = WGPUSType_DawnTogglesDescriptor;
         dawnTogglesChained.next = nullptr;
@@ -121,12 +121,6 @@ namespace BeeEngine::Internal
         });
 
         m_Queue = wgpuDeviceGetQueue(m_Device);
-
-        auto onQueueWorkDone = [](WGPUQueueWorkDoneStatus status, void* /* pUserData */) {
-            BeeCoreTrace("Queued work finished with status: {}", ToString(status));
-        };
-        wgpuQueueOnSubmittedWorkDone(m_Queue, 0, onQueueWorkDone, nullptr /* pUserData */);//signal value ???
-
         m_BufferPool = CreateScope<WebGPUBufferPool>();
 
         m_SwapChain = CreateScope<WebGPUSwapChain>(*this);
@@ -136,6 +130,8 @@ namespace BeeEngine::Internal
     {
         m_BufferPool.reset();
         m_SwapChain.reset();
+        wgpuQueueRelease(m_Queue);
+        wgpuDeviceDestroy(m_Device);
         wgpuDeviceRelease(m_Device);
         wgpuAdapterRelease(m_Adapter);
         wgpuSurfaceRelease(m_Surface);
@@ -195,32 +191,25 @@ namespace BeeEngine::Internal
     WGPUSurface WebGPUGraphicsDevice::CreateSurface(WGPUInstance instance)
     {
         //Code taken from https://github.com/gecko0307/wgpu-dlang/blob/master/src/dgpu/core/gpu.d
-        SDL_SysWMinfo wmInfo;
-        SDL_GetWindowWMInfo((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &wmInfo, SDL_SYSWM_CURRENT_VERSION);
-
         WGPUSurface surface;
+#if defined(BEE_COMPILE_SDL)
+        SDL_Window* window = (SDL_Window*)WindowHandler::GetInstance()->GetWindow();
+#endif
 #if defined(WINDOWS)
-        if (wmInfo.subsystem == SDL_SYSWM_WINDOWS)
-        {
-            auto win_hwnd = wmInfo.info.win.window;
-            auto win_hinstance = wmInfo.info.win.hinstance;
-            WGPUSurfaceDescriptorFromWindowsHWND sfdHwnd = {
-                    .chain =  {
-                            .next =  nullptr,
-                            .sType =  WGPUSType_SurfaceDescriptorFromWindowsHWND
-                    },
-                    .hinstance =  win_hinstance,
-                    .hwnd =  win_hwnd
-            };
-            WGPUSurfaceDescriptor sfd = {
-                    .nextInChain =  (WGPUChainedStruct*)&sfdHwnd,
-                    .label =  "SDL Window"
-            };
-            surface = wgpuInstanceCreateSurface(instance, &sfd);
-        } else
-        {
-            BeeCoreError("Unsupported platform");
-        }
+        auto nativeInfo = WindowHandler::GetInstance()->GetNativeInfo();
+        WGPUSurfaceDescriptorFromWindowsHWND sfdHwnd = {
+                .chain =  {
+                        .next =  nullptr,
+                        .sType =  WGPUSType_SurfaceDescriptorFromWindowsHWND
+                },
+                .hinstance =  nativeInfo.instance,
+                .hwnd =  nativeInfo.window
+        };
+        WGPUSurfaceDescriptor sfd = {
+                .nextInChain =  (WGPUChainedStruct*)&sfdHwnd,
+                .label =  "SDL Window"
+        };
+        surface = wgpuInstanceCreateSurface(instance, &sfd);
 #endif
 #if defined(LINUX)
         // Needs test!
@@ -249,7 +238,7 @@ namespace BeeEngine::Internal
 #endif
 #if defined(MACOS)
         // Needs test!
-        SDL_Renderer* renderer = SDL_CreateRenderer((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), "metal",/* WindowHandler::GetInstance()->GetVSync() == VSync::On ? SDL_RENDERER_PRESENTVSYNC : */0);
+        SDL_Renderer* renderer = SDL_CreateRenderer(window, "metal",/* WindowHandler::GetInstance()->GetVSync() == VSync::On ? SDL_RENDERER_PRESENTVSYNC : */0);
         if(renderer == nullptr)
             BeeCoreError("Could not create renderer: {}", SDL_GetError());
         auto metalLayer = SDL_GetRenderMetalLayer(renderer);
@@ -374,4 +363,20 @@ namespace BeeEngine::Internal
         wgpuQueueWriteBuffer(m_Queue, buffer, 0, data.data(), data.size());
     }
 
+    Task<> WebGPUGraphicsDevice::WaitForQueueIdle()
+    {
+        Co_Promise<void> promise;
+        auto future = promise.get_future();
+        wgpuQueueOnSubmittedWorkDone(m_Queue, 0, [](WGPUQueueWorkDoneStatus status, void* userdata)
+        {
+            auto* p = (Co_Promise<void>*)userdata;
+            p->set_value();
+        }, &promise);
+        while (!future.await_ready())
+        {
+            wgpuDeviceTick(m_Device);
+        }
+        co_return;
+    }
 }
+#endif

@@ -1,0 +1,8 @@
+{
+  "dependencies":
+  [
+    "icu",
+    "boost-context",
+    "nethost"
+  ]
+}

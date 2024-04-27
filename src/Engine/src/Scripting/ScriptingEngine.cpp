@@ -3,9 +3,6 @@
 //
 
 #include "ScriptingEngine.h"
-#include <mono/jit/jit.h>
-#include "mono/metadata/assembly.h"
-#include <mono/metadata/mono-config.h>
 #include "Core/Logging/Log.h"
 #include <filesystem>
 #include "Core/ResourceManager.h"
@@ -18,29 +15,54 @@
 #include "MObject.h"
 #include "GameScript.h"
 #include "MUtils.h"
-#include "AllocatorStatistics.h"
-#include <mono/metadata/mono-debug.h>
-#include <mono/metadata/threads.h>
-#include <mono/metadata/mono-gc.h>
+#include "Allocator/AllocatorStatistics.h"
 #include "MTypes.h"
+#include "NativeToManaged.h"
 #include "FileSystem/File.h"
+#include "Core/Reflection.h"
 
 namespace BeeEngine
 {
-    typedef void(__stdcall *AddEntityScript)(uint64_t id, MonoObject* behaviour, MonoException** exception);
-    typedef void(__stdcall *EntityWasRemoved)(uint64_t id, MonoException ** exception);
+    //typedef void(__stdcall *AddEntityScript)(uint64_t id, MonoObject* behaviour, MonoException** exception);
+    //typedef void(__stdcall *EntityWasRemoved)(uint64_t id, MonoException ** exception);
+    struct ManagedHandles
+    {
+        REFLECT()
+        MMethod* AddEntityScriptMethod = nullptr;
+        MMethod* EntityWasRemovedMethod = nullptr;
+
+        MMethod* EndSceneMethod = nullptr;
+
+        MClass* EntityBaseClass = nullptr;
+
+        MField* AssetHandleField = nullptr;
+        MClass* Texture2DClass = nullptr;
+        MClass* FontClass = nullptr;
+        MClass* PrefabClass = nullptr;
+
+        MClass* InternalCallsClass = nullptr;
+
+        MField* DeltaTimeField = nullptr;
+        MField* TotalTimeField = nullptr;
+    };
+
+    REFLECT_STRUCT_BEGIN(ManagedHandles)
+        REFLECT_STRUCT_MEMBER(AddEntityScriptMethod)
+        REFLECT_STRUCT_MEMBER(EntityWasRemovedMethod)
+        REFLECT_STRUCT_MEMBER(EndSceneMethod)
+        REFLECT_STRUCT_MEMBER(EntityBaseClass)
+        REFLECT_STRUCT_MEMBER(AssetHandleField)
+        REFLECT_STRUCT_MEMBER(Texture2DClass)
+        REFLECT_STRUCT_MEMBER(FontClass)
+        REFLECT_STRUCT_MEMBER(PrefabClass)
+        REFLECT_STRUCT_MEMBER(InternalCallsClass)
+        REFLECT_STRUCT_MEMBER(DeltaTimeField)
+        REFLECT_STRUCT_MEMBER(TotalTimeField)
+    REFLECT_STRUCT_END()
+
+    
     struct ScriptingEngineData
     {
-        MonoDomain* RootDomain = nullptr;
-        MonoDomain* AppDomain = nullptr;
-
-        AddEntityScript AddEntityScriptMethod = nullptr;
-        EntityWasRemoved EntityWasRemovedMethod = nullptr;
-
-        void(*EndSceneMethod)() = nullptr;
-
-        MonoClass* ulongClass = nullptr;
-
         bool EnableDebugging = false;
 
         Scene* CurrentScene = nullptr;
@@ -49,23 +71,26 @@ namespace BeeEngine
 
         std::unordered_map<String, MAssembly> Assemblies = {};
         std::unordered_map<String, Ref<MClass>> GameScripts = {};
-        MClass* EntityBaseClass = nullptr;
 
-        MField* AssetHandleField = nullptr;
-        MClass* Texture2DClass = nullptr;
-        MClass* FontClass = nullptr;
-
-        MonoVTable* TimeVTable = nullptr;
-        MonoClassField * DeltaTimeField = nullptr;
-        MonoClassField* TotalTimeField = nullptr;
+        ManagedAssemblyContextID AppDomain = 0;
 
         Path GameAssemblyPath = "";
         Path CoreAssemblyPath = "";
+
+        Locale::Domain* LocaleDomain = nullptr;
+
+        int MouseX = 0;
+        int MouseY = 0;
+        glm::vec2 ViewportSize = {-1, -1};
+
+        ManagedHandles Handles = {};
     };
     ScriptingEngineData ScriptingEngine::s_Data = {};
+
     void ScriptingEngine::Init()
     {
-        InitMono();
+        //InitMono();
+        InitDotNetHost();
     }
 
     void ScriptingEngine::Shutdown()
@@ -75,17 +100,21 @@ namespace BeeEngine
         s_Data.EditableFieldsDefaults.clear();
         s_Data.Assemblies.clear();
         s_Data.CurrentScene = nullptr;
-        s_Data.EntityBaseClass = nullptr;
-        s_Data.AddEntityScriptMethod = nullptr;
-        s_Data.EntityWasRemovedMethod = nullptr;
-        s_Data.ulongClass = nullptr;
+        s_Data.Handles = {};
+        //s_Data.AddEntityScriptMethod = nullptr;
+        //s_Data.EntityWasRemovedMethod = nullptr;
 
         MonoShutdown();
     }
 
+    bool ScriptingEngine::IsInitialized()
+    {
+        return s_Data.AppDomain != 0;
+    }
+
     void ScriptingEngine::InitMono()
     {
-        mono_set_assemblies_path("mono/lib");
+        /*mono_set_assemblies_path("mono/lib");
         if(s_Data.EnableDebugging)
         {
             const char* argv[2] = {
@@ -113,25 +142,27 @@ namespace BeeEngine
 
         CreateAppDomain();
 
-        BeeCoreInfo("Mono JIT initialized successfully!");
+        BeeCoreInfo("Mono JIT initialized successfully!");*/
     }
 
     void ScriptingEngine::CreateAppDomain()
     {
-        s_Data.AppDomain = mono_domain_create_appdomain((char *)"BeeEngineAppDomain", nullptr);
-        mono_domain_set(s_Data.AppDomain, true);
+        s_Data.AppDomain = NativeToManaged::CreateContext("BeeEngine", true);
+        BeeEnsures(s_Data.AppDomain);
     }
 
     MAssembly& ScriptingEngine::LoadAssembly(const Path &path)
     {
         auto name = path.GetFileNameWithoutExtension().AsUTF8();
 
-        s_Data.Assemblies[name] = {path, s_Data.EnableDebugging};
+        s_Data.Assemblies[name] = {s_Data.AppDomain, path.IsAbsolute() ? path : path.GetAbsolutePath(), s_Data.EnableDebugging};
         return s_Data.Assemblies.at(name);
     }
 
     void ScriptingEngine::MonoShutdown()
     {
+        /*
+        MUtils::RegisterThread();
         mono_domain_set(mono_get_root_domain(), false);
         mono_domain_unload(s_Data.AppDomain);
         mono_jit_cleanup(s_Data.RootDomain);
@@ -139,11 +170,12 @@ namespace BeeEngine
         s_Data.RootDomain = nullptr;
         s_Data.AppDomain = nullptr;
         BeeCoreInfo("Mono JIT shutdown successfully!");
+        */
     }
     bool ScriptingEngine::IsGameScript(const MClass& klass)
     {
-        BeeExpects(s_Data.EntityBaseClass != nullptr);
-        return klass.IsDerivedFrom(*s_Data.EntityBaseClass);
+        BeeExpects(s_Data.Handles.EntityBaseClass != nullptr);
+        return klass.IsDerivedFrom(*s_Data.Handles.EntityBaseClass);
     }
     void ScriptingEngine::LoadGameAssembly(const Path& path)
     {
@@ -169,10 +201,8 @@ namespace BeeEngine
                     if(MUtils::IsSutableForEdit(field))
                     {
                         auto& scriptField = fields.emplace_back(field);
-                        byte buffer[GameScriptField::MAX_FIELD_SIZE];
-                        memset(buffer, 0, GameScriptField::MAX_FIELD_SIZE);
-                        obj.GetFieldValue(field, buffer);
-                        scriptField.SetData(buffer);
+                        auto data = obj.GetFieldValue(field);
+                        scriptField.SetData(data);
                     }
                 }
             }
@@ -184,6 +214,19 @@ namespace BeeEngine
         return *s_Data.GameScripts.at(name);
     }
 
+    bool ScriptingEngine::AreAllManagedHandlesLoaded()
+    {
+        const auto& typeDescriptor = Reflection::TypeResolver::Get<ManagedHandles>();
+        for(const auto& field : typeDescriptor.Members)
+        {
+            if(field.Get<void*>(s_Data.Handles) == nullptr)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     void ScriptingEngine::LoadCoreAssembly(const Path &path)
     {
         s_Data.CoreAssemblyPath = path;
@@ -192,48 +235,55 @@ namespace BeeEngine
         {
             if(mClass->GetName() == "Behaviour")
             {
-                s_Data.EntityBaseClass = mClass.get();
+                s_Data.Handles.EntityBaseClass = mClass.get();
                 continue;
             }
             if(mClass->GetName() == "Asset")
             {
-                s_Data.AssetHandleField = &mClass->GetField("m_Handle");
+                s_Data.Handles.AssetHandleField = &mClass->GetField("m_Handle");
                 continue;
             }
             if(mClass->GetName() == "Texture2D")
             {
-                s_Data.Texture2DClass = mClass.get();
+                s_Data.Handles.Texture2DClass = mClass.get();
                 continue;
             }
             if(mClass->GetName() == "Font")
             {
-                s_Data.FontClass = mClass.get();
+                s_Data.Handles.FontClass = mClass.get();
+                continue;
+            }
+            if(mClass->GetName() == "Prefab")
+            {
+                s_Data.Handles.PrefabClass = mClass.get();
                 continue;
             }
             if(mClass->GetName() == "Time")
             {
-                s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
-                s_Data.DeltaTimeField = mClass->GetField("m_DeltaTime");
-                s_Data.TotalTimeField = mClass->GetField("m_TotalTime");
+                //s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
+                s_Data.Handles.DeltaTimeField = &mClass->GetField("m_DeltaTime");
+                s_Data.Handles.TotalTimeField = &mClass->GetField("m_TotalTime");
                 continue;
             }
+            if(mClass->GetName() == "LifeTimeManager")
+            {
+                static constexpr auto flags = static_cast<ManagedBindingFlags>(ManagedBindingFlags_Public | ManagedBindingFlags_Static | ManagedBindingFlags_NonPublic);
+                s_Data.Handles.AddEntityScriptMethod = &mClass->GetMethod("AddEntityScript", flags);
+                s_Data.Handles.EntityWasRemovedMethod = &mClass->GetMethod("EntityWasRemoved", flags);
+                s_Data.Handles.EndSceneMethod = &mClass->GetMethod("EndScene", flags);
+            }
+            if(mClass->GetName() == "InternalCalls")
+            {
+                s_Data.Handles.InternalCallsClass = mClass.get();
+            }
 
-            if(s_Data.EntityBaseClass && s_Data.AssetHandleField &&
-            s_Data.Texture2DClass && s_Data.FontClass &&
-            s_Data.TotalTimeField && s_Data.DeltaTimeField && s_Data.TimeVTable)
+            if(AreAllManagedHandlesLoaded())
             {
                 break;
             }
         }
-        MonoClass* lifeTimeManager = mono_class_from_name(assembly.m_MonoImage, "BeeEngine.Internal", "LifeTimeManager");
-        MonoMethod* addEntityScriptMethod = mono_class_get_method_from_name(lifeTimeManager, "AddEntityScript", 2);
-        MonoMethod* entityWasRemovedMethod = mono_class_get_method_from_name(lifeTimeManager, "EntityWasRemoved", 1);
-        MonoMethod* endSceneMethod = mono_class_get_method_from_name(lifeTimeManager, "EndScene", 0);
-        s_Data.AddEntityScriptMethod = (AddEntityScript)mono_method_get_unmanaged_thunk(addEntityScriptMethod);
-        s_Data.EntityWasRemovedMethod = (EntityWasRemoved)mono_method_get_unmanaged_thunk(entityWasRemovedMethod);
-        s_Data.EndSceneMethod = (void(*)())mono_method_get_unmanaged_thunk(endSceneMethod);
-        s_Data.ulongClass = mono_class_from_name(mono_get_corlib(), "System", "UInt64");
-
+        
+        BeeEnsures(AreAllManagedHandlesLoaded());
     }
 
     void ScriptingEngine::OnRuntimeStart(Scene *scene)
@@ -244,7 +294,7 @@ namespace BeeEngine
     void ScriptingEngine::OnRuntimeStop()
     {
         s_Data.CurrentScene = nullptr;
-        s_Data.EndSceneMethod();
+        s_Data.Handles.EndSceneMethod->InvokeStatic(nullptr);
         s_Data.EntityObjects.clear();
     }
 
@@ -255,45 +305,43 @@ namespace BeeEngine
         {
             return;
         }
-        auto script = CreateRef<GameScript>(*pClass, entity);
+        auto script = CreateRef<GameScript>(*pClass, entity, GetScriptingLocale());
         s_Data.EntityObjects[uuid] = script;
-        //
         {
-            //MonoObject *entityID = mono_value_box(s_Data.AppDomain, s_Data.ulongClass, &ulongUUID);
-            MonoException *exc = nullptr;
-            MonoObject* instance = script->GetMObject().GetMonoObject();
-            s_Data.AddEntityScriptMethod(uuid, instance, &exc);
-            if(exc)
-            {
-                MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
-                char* message = mono_string_to_utf8(msg);
-                BeeCoreError("Exception while adding script for entity {} in C#: {}", uuid, message);
-                mono_free(message);
-            }
+            auto instance = script->GetMObject().GetHandle();
+            void* params[] = {&uuid, instance};
+            BeeCoreTrace("Params: {} {}", (uintptr_t)params[0], (uintptr_t)params[1]);
+            s_Data.Handles.AddEntityScriptMethod->InvokeStatic(params);
         }
     }
     void ScriptingEngine::OnEntityDestroyed(UUID uuid)
     {
-        MonoException *exc = nullptr;
+        //MonoException *exc = nullptr;
         bool contains = s_Data.EntityObjects.contains(uuid);
         if(contains)
         {
             s_Data.EntityObjects.at(uuid)->InvokeOnDestroy();
         }
-        s_Data.EntityWasRemovedMethod(uuid, &exc);
-        if(exc)
+        void* params[] = {&uuid};
+        s_Data.Handles.EntityWasRemovedMethod->InvokeStatic(params);
+        //s_Data.EntityWasRemovedMethod(uuid, &exc);
+        //if(exc)
         {
-            MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
-            char* message = mono_string_to_utf8(msg);
-            BeeCoreError("Exception while removing entity {} from C#: {}", uuid, message);
-            mono_free(message);
+            //MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
+            //char* message = mono_string_to_utf8(msg);
+            //BeeCoreError("Exception while removing entity {} from C#: {}", uuid, message);
+            //mono_free(message);
         }
         s_Data.EntityObjects.erase(uuid);
     }
     void ScriptingEngine::OnEntityUpdate(BeeEngine::Entity entity)
     {
         UUID uuid = entity.GetUUID();
-        BeeCoreAssert(s_Data.EntityObjects.contains(uuid), "Entity does not have a script attached!");
+        if(!s_Data.EntityObjects.contains(uuid))
+        {
+            return;
+        }
+        //BeeCoreAssert(s_Data.EntityObjects.contains(uuid), "Entity does not have a script attached!");
         auto& script = s_Data.EntityObjects.at(uuid);
         script->InvokeOnUpdate();
     }
@@ -333,7 +381,7 @@ namespace BeeEngine
 
     MClass &ScriptingEngine::GetEntityClass()
     {
-        return *s_Data.EntityBaseClass;
+        return *s_Data.Handles.EntityBaseClass;
     }
 
     bool ScriptingEngine::HasGameScript(const String &name)
@@ -346,27 +394,20 @@ namespace BeeEngine
         return s_Data.GameScripts;
     }
 
+    void ScriptingEngine::RegisterNativeFunction(const String& name, void* function)
+    {
+        MMethod& assignFunction = s_Data.Handles.InternalCallsClass->GetMethod("AssignFunction", (ManagedBindingFlags)(ManagedBindingFlags_NonPublic | ManagedBindingFlags_Static));;
+        GCHandle str = NativeToManaged::StringCreateManaged(name);
+        void* params[] = {&str, &function};
+        assignFunction.InvokeStatic(params);
+        NativeToManaged::ObjectFreeGCHandle(str);
+    }
+
     void ScriptingEngine::ReloadAssemblies()
     {
-        s_Data.GameScripts.clear();
-        s_Data.EntityObjects.clear();
-        s_Data.EditableFieldsDefaults.clear();
-        s_Data.Assemblies.clear();
-
-        s_Data.EntityBaseClass = nullptr;
-        s_Data.AssetHandleField = nullptr;
-        s_Data.Texture2DClass = nullptr;
-        s_Data.FontClass = nullptr;
-
-        s_Data.TimeVTable = nullptr;
-        s_Data.TotalTimeField = nullptr;
-        s_Data.DeltaTimeField = nullptr;
-
-        mono_domain_set(mono_get_root_domain(), false);
-        mono_domain_unload(s_Data.AppDomain);
+        UnloadAppContext();
 
         CreateAppDomain();
-
         LoadCoreAssembly(s_Data.CoreAssemblyPath);
         LoadGameAssembly(s_Data.GameAssemblyPath);
 
@@ -375,53 +416,136 @@ namespace BeeEngine
 
     void ScriptingEngine::EnableDebugging()
     {
-        BeeCoreAssert(s_Data.RootDomain == nullptr, "Cannot enable debugging after the runtime has been initialized!");
+       // BeeCoreAssert(s_Data.RootDomain == nullptr, "Cannot enable debugging after the runtime has been initialized!");
         s_Data.EnableDebugging = true;
     }
 
     void ScriptingEngine::UpdateAllocatorStatistics()
     {
         auto& stats = BeeEngine::Internal::AllocatorStatistics::GetStatistics();
-        stats.gcGenerations.store(mono_gc_max_generation());
-        stats.gcHeapSize.store(mono_gc_get_heap_size());
-        stats.gcUsedMemory.store(mono_gc_get_used_size());
+        stats.totalAllocatedMemory -= stats.gcHeapSize;
+        //stats.gcUsedMemory.store(mono_gc_get_used_size());
+        //stats.gcGenerations.store(mono_gc_max_generation());
+        //stats.gcHeapSize.store(mono_gc_get_heap_size());
+        stats.totalAllocatedMemory += stats.gcHeapSize;
     }
 
     void ScriptingEngine::SetAssetHandle(MObject& obj, MField& field, AssetHandle& handle, MType type)
     {
         BeeExpects(
                 type == MType::Texture2D ||
-                        type == MType::Font
+                        type == MType::Font ||
+                        type == MType::Prefab
         );
         if(type == MType::Texture2D)
         {
-            MObject assetObj = s_Data.Texture2DClass->Instantiate();
-            auto* assetMonoObj = assetObj.GetMonoObject();
-            assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
-            obj.SetFieldValue(field, assetMonoObj);
+            MObject assetObj = s_Data.Handles.Texture2DClass->Instantiate();
+            //auto* assetMonoObj = assetObj.GetMonoObject();
+            assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
+            obj.SetFieldValue(field, assetObj.GetHandle());
             return;
         }
         if(type == MType::Font)
         {
-            MObject assetObj = s_Data.FontClass->Instantiate();
-            auto* assetMonoObj = assetObj.GetMonoObject();
-            assetObj.SetFieldValue(*s_Data.AssetHandleField, &handle);
-            obj.SetFieldValue(field, assetMonoObj);
+            MObject assetObj = s_Data.Handles.FontClass->Instantiate();
+            //auto* assetMonoObj = assetObj.GetMonoObject();
+            assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
+            obj.SetFieldValue(field, assetObj.GetHandle());
+            return;
+        }
+        if(type == MType::Prefab)
+        {
+            MObject assetObj = s_Data.Handles.PrefabClass->Instantiate();
+            //auto* assetMonoObj = assetObj.GetMonoObject();
+            assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
+            obj.SetFieldValue(field, assetObj.GetHandle());
             return;
         }
     }
 
-    void ScriptingEngine::GetAssetHandle(void* monoObject, AssetHandle &handle)
+    void ScriptingEngine::GetAssetHandle(void* gchandle, AssetHandle &handle)
     {
-        MObject obj {(MonoObject*)monoObject};
-        obj.GetFieldValue(*s_Data.AssetHandleField, &handle);
+        auto& field = *s_Data.Handles.AssetHandleField;
+        auto& mclass = field.GetClass();
+        handle = *static_cast<AssetHandle*>(NativeToManaged::FieldGetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), field.GetFieldID(), gchandle));
+        //obj.GetFieldValue(*s_Data.AssetHandleField, &handle);
     }
 
-    void ScriptingEngine::UpdateTime(double deltaTime, double totalTime)
+    void ScriptingEngine::UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime)
     {
-        if(!s_Data.DeltaTimeField)
+        if(!s_Data.Handles.DeltaTimeField)
             return;
-        mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTime);
-        mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTime);
+        double deltaTimeDouble = deltaTime.count();
+        double totalTimeDouble = totalTime.count();
+        auto& mclass = s_Data.Handles.DeltaTimeField->GetClass();
+        NativeToManaged::FieldSetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), s_Data.Handles.DeltaTimeField->GetFieldID(), nullptr,&deltaTimeDouble);
+        NativeToManaged::FieldSetData(mclass.GetContextID(), mclass.GetAssemblyID(), mclass.GetClassID(), s_Data.Handles.TotalTimeField->GetFieldID(), nullptr,&totalTimeDouble);
+        //mono_field_static_set_value(s_Data.TimeVTable, s_Data.DeltaTimeField, &deltaTimeDouble);
+        //mono_field_static_set_value(s_Data.TimeVTable, s_Data.TotalTimeField, &totalTimeDouble);
+    }
+    const String& ScriptingEngine::GetScriptingLocale()
+    {
+        return s_Data.LocaleDomain->GetLocale().GetLanguageString();
+    }
+
+    void ScriptingEngine::SetMousePosition(int x, int y)
+    {
+        s_Data.MouseX = x;
+        s_Data.MouseY = y;
+    }
+
+    glm::vec2 ScriptingEngine::GetMousePosition()
+    {
+        return {s_Data.MouseX, s_Data.MouseY};
+    }
+
+    glm::vec2 ScriptingEngine::GetViewportSize()
+    {
+        if(s_Data.ViewportSize.x == -1 || s_Data.ViewportSize.y == -1)
+        {
+            auto& app = Application::GetInstance();
+            return {app.GetWidth(), app.GetHeight()};
+        }
+        return s_Data.ViewportSize;
+    }
+
+    void ScriptingEngine::SetViewportSize(float width, float height)
+    {
+        s_Data.ViewportSize = {width, height};
+    }
+
+    void ScriptingEngine::UnloadAppContext()
+    {
+        if(s_Data.AppDomain == 0)
+        {
+            return;
+        }
+        s_Data.EditableFieldsDefaults.clear();
+        s_Data.EntityObjects.clear();
+        s_Data.GameScripts.clear();
+        s_Data.Assemblies.clear();
+
+        s_Data.Handles = {};
+
+        NativeToManaged::UnloadContext(s_Data.AppDomain);
+        s_Data.AppDomain = 0;
+    }
+
+    void ScriptingEngine::InitDotNetHost()
+    {
+        Path rootPath = std::filesystem::current_path() / "libs"/"BeeEngine.NativeBridge.dll";
+        NativeToManaged::Init(rootPath);
+        NativeToManaged::SetupLogger();
+        CreateAppDomain();
+    }
+
+    void ScriptingEngine::SetLocaleDomain(Locale::Domain &domain)
+    {
+        s_Data.LocaleDomain = &domain;
+    }
+
+    Locale::Domain &ScriptingEngine::GetLocaleDomain()
+    {
+        return *s_Data.LocaleDomain;
     }
 }

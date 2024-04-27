@@ -4,12 +4,14 @@
 
 namespace BeeEngine
 {
+    class CommandBuffer;
+
     class ImGuiController
     {
     public:
-        virtual void Initialize(uint16_t width, uint16_t height, uint64_t window) = 0;
+        virtual void Initialize(uint16_t width, uint16_t height, uintptr_t windowHandle) = 0;
         virtual void Update() = 0;
-        virtual void Render() = 0;
+        virtual void Render(CommandBuffer& cmd) = 0;
         virtual void Shutdown() = 0;
         virtual ~ImGuiController() = default;
         void SetDarkThemeColors();

@@ -16,7 +16,9 @@ namespace BeeEngine::Internal
         auto& stats = Renderer::GetStatistics();
         ImGui::Begin("Renderer Statistics");
         ImGui::Text("Draw calls: %zu", stats.DrawCallCount);
-        ImGui::Text("Instance count: %zu", stats.InstanceCount);
+        ImGui::Text("Total Instance count: %zu", stats.TotalInstanceCount);
+        ImGui::Text("Opaque Instances: %zu", stats.OpaqueInstanceCount);
+        ImGui::Text("Transparent Instances: %zu", stats.TransparentInstanceCount);
         ImGui::Text("Vertex count: %zu", stats.VertexCount);
         ImGui::Text("Index count: %zu", stats.IndexCount);
         ImGui::Text("Allocated GPU memory: %.3f MB", ConvertFromBytesToMegabytes(stats.AllocatedGPUMemory));

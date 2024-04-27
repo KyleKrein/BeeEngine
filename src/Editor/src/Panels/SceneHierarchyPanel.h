@@ -5,13 +5,17 @@
 #pragma once
 #include "BeeEngine.h"
 #include "Scene/Entity.h"
+#include "Locale/Locale.h"
+#include <atomic>
 
 namespace BeeEngine::Editor
 {
     class SceneHierarchyPanel
     {
     public:
-        SceneHierarchyPanel() = default;
+        SceneHierarchyPanel(Locale::Domain& editorDomain)
+        : m_EditorDomain(&editorDomain)
+        {}
         explicit SceneHierarchyPanel(const Ref<Scene>& context);
 
         void SetContext(const Ref<Scene>& context);
@@ -31,5 +35,6 @@ namespace BeeEngine::Editor
 
         Ref<Scene> m_Context;
         Entity m_SelectedEntity;
+        Locale::Domain* m_EditorDomain = nullptr;
     };
 }

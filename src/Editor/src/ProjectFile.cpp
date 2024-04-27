@@ -11,23 +11,31 @@
 #include <yaml-cpp/yaml.h>
 #include <fstream>
 #include <filesystem>
+#include "Locale/LocalizationGenerator.h"
+#include "Utils/Commands.h"
+
 namespace BeeEngine::Editor
 {
-
+    const String dotNetVersion = "net8.0";
     ProjectFile::ProjectFile(const Path &projectPath, const std::string &projectName, EditorAssetManager* assetManager) noexcept
-    : m_ProjectName(projectName), m_ProjectPath(projectPath), m_AssetManager(assetManager)
+    : m_ProjectName(projectName), m_ProjectPath(projectPath), m_AssetManager(assetManager), m_ProjectLocaleDomain(projectName)
     {
         BeeCoreTrace("ProjectName: {0}", m_ProjectName);
         BeeCoreTrace("ProjectPath: {0}", m_ProjectPath.AsUTF8());
+        LoadLocalizationFiles();
         if(!File::Exists(m_ProjectPath / ".beeengine"))
         {
             File::CreateDirectory(m_ProjectPath / ".beeengine");
         }
         if(!File::Exists(m_ProjectPath / ".beeengine" /"build"))
         {
-            File::CreateDirectory(m_ProjectPath / ".beeengine" / "build");
+            m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
+            File::CreateDirectory(m_AppAssemblyPath);
+            m_AppAssemblyPath = m_AppAssemblyPath / dotNetVersion;
+            File::CreateDirectory(m_AppAssemblyPath);
         }
-        m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
+        else
+            m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build"/ dotNetVersion;
         if(File::Exists(m_AppAssemblyPath))
             m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath, [this](const Path & path, FileWatcher::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
         m_AppAssemblyPath = m_AppAssemblyPath / "GameLibrary.dll";
@@ -68,7 +76,6 @@ namespace BeeEngine::Editor
             File::CreateDirectory(m_ProjectPath / "Assets");
             File::CreateDirectory(m_ProjectPath / "Scenes");
 
-            VSProjectGeneration::GenerateAssemblyInfoFile(m_ProjectPath, m_ProjectName);
             RegenerateSolution();
             m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath, [this](const Path & path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
             return;
@@ -149,11 +156,14 @@ namespace BeeEngine::Editor
 
     void ProjectFile::Update() noexcept
     {
-        if(m_AppAssemblyFileWatcher)
-            return;
-        if(File::Exists(m_AppAssemblyPath))
+        if(!m_AppAssemblyFileWatcher && File::Exists(m_AppAssemblyPath))
         {
             m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath, [this](const Path & path, FileWatcher::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+        }
+        if(m_MustReload)
+        {
+            m_MustReload = false;
+            ReloadAndRebuild();
         }
     }
 
@@ -170,6 +180,11 @@ namespace BeeEngine::Editor
     void ProjectFile::OnAssetFileSystemEvent(const Path &path, FileWatcher::Event changeType)
     {
         Path p = path;
+        if(ResourceManager::IsScriptExtension(p.GetExtension()))
+        {
+            //HandleChangedScriptFile(path, changeType);
+            return;
+        }
         if(!ResourceManager::IsAssetExtension(p.GetExtension()))
             return;
         if(p.IsRelative())
@@ -207,7 +222,7 @@ namespace BeeEngine::Editor
             case FileWatcher::Event::Modified:
                 if(m_AssetManager->IsAssetLoaded(handle))
                 {
-                    Application::SubmitToMainThread([this, p, handle]()
+                    Application::SubmitToMainThread([this, handle]()
                     {
                         if(m_AssetManager->IsAssetLoaded(handle))
                             m_AssetManager->UnloadAsset(handle);
@@ -227,5 +242,29 @@ namespace BeeEngine::Editor
                                             });
 
         }
+    }
+
+    void ProjectFile::LoadLocalizationFiles()
+    {
+        auto paths = Locale::LocalizationGenerator::GetLocalizationFiles(m_ProjectPath);
+        Locale::LocalizationGenerator::ProcessLocalizationFiles(m_ProjectLocaleDomain, paths);
+        m_ProjectLocaleDomain.Build();
+    }
+
+    void ProjectFile::HandleChangedScriptFile(const Path &path, FileWatcher::Event event)
+    {
+        if(!Application::GetInstance().IsFocused())
+        {
+            m_MustReload = true;
+            return;
+        }
+        ReloadAndRebuild();
+    }
+
+    void ProjectFile::ReloadAndRebuild()
+    {
+        RegenerateSolution();
+        //RunCommand("msbuild " + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln /t:Build /p:Configuration=Debug /p:Platform=x64");
+        m_AssemblyReloadPending = true;
     }
 }

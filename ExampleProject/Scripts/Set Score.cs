@@ -7,7 +7,7 @@ namespace Example
     public class SetScore : Behaviour
     {
         private TextRendererComponent m_Text;
-        private int m_Score = 0;
+        public int Score = 0;
         private TransformComponent m_Transform;
         private Camera m_Camera;
         public Vector3 Offset = Vector3.Zero;
@@ -20,6 +20,21 @@ namespace Example
             m_Camera = cameraEntity.GetBehaviour<Camera>();
             m_Camera.PositionChanged += Camera_PositionChanged;
             Camera_PositionChanged(m_Camera, cameraEntity.GetComponent<TransformComponent>());
+            SetTextScore();
+        }
+
+        void OnUpdate()
+        {
+            if(Input.IsKeyDown(Key.KeyPadSubtract))
+            {
+                --Score;
+                SetTextScore();
+            }
+            if (Input.IsKeyDown(Key.KeyPadAdd))
+            {
+                ++Score;
+                SetTextScore();
+            }
         }
 
         private void OnDestroy()
@@ -29,12 +44,17 @@ namespace Example
 
         private void Camera_PositionChanged(object sender, TransformComponent e)
         {
-            m_Transform.Translation = e.Translation + Offset;
+            m_Transform.Translation.Xy = e.Translation.Xy + Offset.Xy;
         }
 
         public void IncreaseScore()
         {
-            m_Text.Text = $"Score: {++m_Score}";
+            ++Score;
+            SetTextScore();
+        }
+        private void SetTextScore()
+        {
+            m_Text.Text = Localization.Translate("test_scene.score", "score", Score);
         }
     }
 }
