@@ -24,7 +24,7 @@ namespace BeeEngine
         template<>
         void SetData<MFieldValue>(const MFieldValue& data)
         {
-            memcpy(m_Buffer, data.GetValue(), MUtils::SizeOfMType(data.GetType()));
+            memcpy(m_Buffer, data.GetValuePtr(), MUtils::SizeOfMType(data.GetType()));
         }
 
         void SetData(void* data)

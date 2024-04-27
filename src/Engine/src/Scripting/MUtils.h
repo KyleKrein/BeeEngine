@@ -22,5 +22,6 @@ namespace BeeEngine
         static size_t SizeOfMType(MType type);
 
         static bool ShouldFreeGCHandle(const MField& field);
+        static bool IsValueType(MType type);
     };
 }

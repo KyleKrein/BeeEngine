@@ -76,6 +76,7 @@ namespace BeeEngine
         static class MAssembly& LoadAssembly(const Path& path);
         static void InitMono();
         static bool IsGameScript(const MClass& klass);
+        static bool AreAllManagedHandlesLoaded();
         static struct ScriptingEngineData s_Data;
 
         static void MonoShutdown();

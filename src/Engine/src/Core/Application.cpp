@@ -11,6 +11,7 @@
 #include "Scripting/ScriptingEngine.h"
 #include "Renderer/SceneRenderer.h"
 #include "JobSystem/JobScheduler.h"
+#include "Scene/Prefab.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -81,6 +82,7 @@ namespace BeeEngine{
 
         m_Layers.SetGuiLayer(new ImGuiLayer());
 
+        Prefab::InitPrefabScene();
         m_AssetManager.LoadStandardAssets();
         SceneRenderer::Init();
     }
@@ -88,6 +90,7 @@ namespace BeeEngine{
     Application::~Application()
     {
         s_Instance = nullptr;
+        Prefab::ResetPrefabScene();
         Renderer::Shutdown();
     }
 

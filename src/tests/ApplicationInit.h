@@ -14,5 +14,4 @@ public:
     {
 
     }
-    ~TestApplication() override {};
 };

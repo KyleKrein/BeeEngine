@@ -8,6 +8,18 @@ using System.Threading.Tasks;
 
 namespace BeeEngine
 {
+    /// <summary>
+    /// Represents an entity in the scene.
+    /// Each entity can have several components, associated with it.
+    /// Each entity has a name, uuid and a hierarchy component.
+    /// The name can be accessed using the Name property.
+    /// The uuid can not be accessed directly, but is used internally to identify the entity.
+    /// The hierarchy component can be accessed using the Parent and Children properties.
+    /// To access, add or remove other components, use the CreateComponent<T>, GetComponent<T> and RemoveComponent<T> methods.
+    /// Use HasComponent<T> to check if a component is attached to the entity.
+    /// Each entity can have a behaviour (script) attached to it. The behaviour can be accessed using the GetBehaviour<T> method.
+    /// IMPORTANT: The entity is destroyed, when the Destroy method is called. After that, the entity can not be used anymore.
+    /// </summary>
     public sealed class Entity
     {
         internal readonly ulong ID;

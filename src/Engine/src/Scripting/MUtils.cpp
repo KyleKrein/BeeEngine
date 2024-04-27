@@ -90,6 +90,21 @@ namespace BeeEngine
                 {"Texture2D", MType::Texture2D},
                 {"Font", MType::Font},
                 {"Prefab", MType::Prefab},
+
+                {"int", MType::Int32},
+                {"float", MType::Single},
+                {"double", MType::Double},
+                {"bool", MType::Boolean},
+                {"char", MType::Char},
+                {"uint", MType::UInt32},
+                {"long", MType::Int64},
+                {"ulong", MType::UInt64},
+                {"short", MType::Int16},
+                {"ushort", MType::UInt16},
+                {"byte", MType::Byte},
+                {"sbyte", MType::SByte},
+                {"string", MType::String},
+                {"object", MType::Object},
         };
         if(MTypeMap.contains(name))
             return MTypeMap.at(name);
@@ -262,5 +277,25 @@ namespace BeeEngine
                type == MType::Texture2D ||
                type == MType::Font ||
                type == MType::Prefab;
+    }
+    
+    bool MUtils::IsValueType(MType type)
+    {
+        return type == MType::Char ||
+               type == MType::Boolean ||
+               type == MType::SByte ||
+               type == MType::Byte ||
+               type == MType::Int16 ||
+               type == MType::UInt16 ||
+               type == MType::Int32 ||
+               type == MType::UInt32 ||
+               type == MType::Int64 ||
+               type == MType::UInt64 ||
+               type == MType::Single ||
+               type == MType::Double ||
+               type == MType::Vector2 ||
+               type == MType::Vector3 ||
+               type == MType::Vector4 ||
+               type == MType::Color;
     }
 }

@@ -29,11 +29,28 @@ namespace BeeEngine
                     return;
                 }
 
+                if(!ValidateLocale(value))
+                    throw new ArgumentException("Invalid locale format. Locale must be in the format 'language_COUNTRY' or 'language' and must consist of 2 characters for language and 2 characters for country. Example: 'en_US' or 'en'");
+
                 s_CachedLocale = value;
                 InternalCalls.Locale_SetLocale(value);
                 s_CachedStaticKeys.Clear();
                 s_CachedDynamicKeys.Clear();
             }
+        }
+
+        private static bool ValidateLocale(string value)
+        {
+            if (value.Length < 2 || value.Length > 5)
+                return false;
+            if (value.Length == 2)
+                return true;
+            if (value.Length == 5)
+            {
+                return value[2] == '_';
+            }
+
+            return false;
         }
 
         public static string Translate(string key)
@@ -76,14 +93,23 @@ namespace BeeEngine
 
             for (int i = 0; i < args.Length; i++)
             {
+                if(args[i] is null)
+                    throw new ArgumentNullException($"Argument {i} is null");
                 if(i % 2 != 0)
-                    continue;
-                if (args[i].GetType() != typeof(string))
+                {
+                    if(args[i] is string or int or float or double or bool or byte or sbyte or short or ushort or uint or long or ulong)
+                        continue;
+                    throw new ArgumentException(
+                        $"Each value argument in key-value pair must be a string or int or float or double or bool or byte or sbyte or short or ushort or uint or long or ulong. Argument {i} is not one of these types");
+                }
+                if (args[i] is not string)
                 {
                     throw new ArgumentException(
                         $"Each key argument in key-value pair must be a string. Argument {i} is not a string");
                 }
             }
         }
+
+        //TODO: Make a cache invalidation method, that can be called when a locale domain is changed (for example from C++ side)
     }
 }
