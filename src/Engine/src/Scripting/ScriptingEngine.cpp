@@ -219,7 +219,7 @@ namespace BeeEngine
         const auto& typeDescriptor = Reflection::TypeResolver::Get<ManagedHandles>();
         for(const auto& field : typeDescriptor.Members)
         {
-            if(field.Get<void*>(&s_Data.Handles) == nullptr)
+            if(field.Get<void*>(s_Data.Handles) == nullptr)
             {
                 return false;
             }

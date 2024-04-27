@@ -106,10 +106,10 @@ namespace BeeEngine::Reflection
                 return static_cast<char*>(objectPtr) + Offset;
             }
 
-            template<typename T>
-            T& Get(void* objectPtr) const
+            template<typename T, typename StructType>
+            T& Get(StructType& object) const
             {
-                return *static_cast<T*>(GetPtr(objectPtr));
+                return *static_cast<T*>(GetPtr(&object));
             }
         };
 
