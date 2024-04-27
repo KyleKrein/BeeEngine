@@ -7,6 +7,7 @@
 
 namespace BeeEngine
 {
+    Ref<Scene> Prefab::s_PrefabScene = nullptr;
     constexpr AssetType Prefab::GetType() const
     {
         return AssetType::Prefab;
@@ -14,7 +15,7 @@ namespace BeeEngine
 
     Prefab::~Prefab()
     {
-        if(m_RootEntity)
+        if(m_RootEntity && IsPrefabSceneInitialized())
             GetPrefabScene()->DestroyEntity(m_RootEntity);
     }
 }

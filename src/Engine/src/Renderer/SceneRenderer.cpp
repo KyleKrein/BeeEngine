@@ -177,13 +177,22 @@ namespace BeeEngine
         // Сфера пересекает все плоскости фрустума или полностью внутри фрустума
         return true;
     }
-    void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale, const glm::mat4 &viewProjectionMatrix,const std::vector<glm::vec4>& frustumPlanes/* const Math::Cameras::Frustum& frustum*/)
+    void SceneRenderer::RenderScene(Scene &scene, CommandBuffer &commandBuffer, const Locale::Localization& localization, const glm::mat4 &viewProjectionMatrix,const std::vector<glm::vec4>& frustumPlanes/* const Math::Cameras::Frustum& frustum*/)
     {
         BEE_PROFILE_FUNCTION();
-        static Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
-        static Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
-        cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
-        SceneTreeRenderer sceneTreeRenderer(viewProjectionMatrix, cameraBindingSet.get());
+        auto& locale = localization.GetLanguageString();
+        auto& sceneRendererData = scene.GetSceneRendererData();
+        sceneRendererData.CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
+
+        Scene::GPUSceneData sceneData{};
+        sceneData.viewproj = viewProjectionMatrix;
+        sceneData.ambientColor = Color4{Color4::Green};
+        sceneData.sunlightDirection = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f};
+        sceneData.sunlightColor = Color4{Color4::Yellow};
+
+        sceneRendererData.MeshSceneDataUniformBuffer->SetData(&sceneData, sizeof(Scene::GPUSceneData));
+
+        SceneTreeRenderer sceneTreeRenderer(viewProjectionMatrix, sceneRendererData.CameraBindingSet.get());
 
         //auto frustumPlanes = GetFrustumPlanes(viewProjectionMatrix);
         {
@@ -212,12 +221,12 @@ namespace BeeEngine
                 auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
                 SpriteInstanceBufferData data {transform, spriteComponent.Color, spriteComponent.TilingFactor,
                                                static_cast<int32_t>(entity)+1};
-                std::vector<BindingSet*> bindingSets {cameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture(locale)->GetBindingSet() : s_BlankTexture->GetBindingSet())};
+                std::vector<BindingSet*> bindingSets {sceneRendererData.CameraBindingSet.get(), (spriteComponent.HasTexture ? spriteComponent.Texture(locale)->GetBindingSet() : s_BlankTexture->GetBindingSet())};
                 sceneTreeRenderer.AddEntity(data.Model, data.Color.A() < 0.95f || spriteComponent.HasTexture, *s_RectModel, bindingSets, {(byte*)&data, sizeof(SpriteInstanceBufferData)});
             }
 
             auto circleGroup = scene.m_Registry.view<CircleRendererComponent>();
-            std::vector<BindingSet*> circleBindingSets {cameraBindingSet.get()};
+            std::vector<BindingSet*> circleBindingSets {sceneRendererData.CameraBindingSet.get()};
             for( auto entity : circleGroup )
             {
                 Entity e = {entity, &scene};
@@ -242,45 +251,49 @@ namespace BeeEngine
                 sceneTreeRenderer.AddText(textComponent.Text, &textComponent.Font(locale), Math::ToGlobalTransform(Entity{entity, &scene}), textComponent.Configuration,
                                  static_cast<int32_t>(entity)+1);
             }
-        }
 
-        auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
-        statistics.OpaqueInstanceCount += sceneTreeRenderer.m_NotTransparent.size();
-        statistics.TransparentInstanceCount += sceneTreeRenderer.m_Transparent.size();
+            auto meshGroup = scene.m_Registry.view<MeshComponent>();
 
-        {
-            BEE_PROFILE_SCOPE("SceneTreeRenderer::Sort");
-            std::ranges::sort(sceneTreeRenderer.m_Transparent,
-                              [&viewProjectionMatrix](const SceneTreeRenderer::Entity &a,
-                                                      const SceneTreeRenderer::Entity &b)
-                              {
-                                  auto aDistance = glm::distance(a.Transform[3], viewProjectionMatrix[3]);
-                                  auto bDistance = glm::distance(b.Transform[3], viewProjectionMatrix[3]);
-                                  return aDistance > bDistance;
-                              });
-        }
-        {
-            BEE_PROFILE_SCOPE("SceneTreeRenderer::SubmitToRendering");
-            for (auto &entity: sceneTreeRenderer.m_NotTransparent)
+
+
+            for(auto entity : meshGroup)
             {
-                Renderer::SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
-            }
-            Renderer::Flush();
-            /*frameBuffer.Flush([transparent = std::move(sceneTreeRenderer.m_Transparent), cameraBuffer = std::move(cameraUniformBuffer), cameraSet = std::move(cameraBindingSet)]()mutable {
-                for(auto& entity: transparent)
+                auto& meshComponent = meshGroup.get<MeshComponent>(entity);
+                if(!meshComponent.HasMeshes)
+                    continue;
+                Entity e = {entity, &scene};
+                glm::mat4 transform = Math::ToGlobalTransform(e);
+
+                struct MeshInstancedData
                 {
-                    Renderer::SubmitInstance(*entity.Model,entity.BindingSets, entity.InstancedData);
+                    glm::mat4 Model;
+                    int32_t EntityID;
+                } meshInstancedData {transform, static_cast<int32_t>(entity)+1};
+
+                meshComponent.MaterialInstance.LoadData();
+                std::vector bindingSets {sceneRendererData.MeshSceneDataBindingSet.get(), meshComponent.MaterialInstance.bindingSet.get()};
+                for(auto& model : meshComponent.MeshSource()->GetModels())
+                {
+                    sceneTreeRenderer.AddEntity(transform, false, model, bindingSets, {(byte*)&meshInstancedData, sizeof(MeshInstancedData)});
                 }
-            });*/
-            for (auto &entity: sceneTreeRenderer.m_Transparent)
-            {
-                Renderer::SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
             }
-            Renderer::Flush();
         }
+
+        //auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
+        //statistics.OpaqueInstanceCount += sceneTreeRenderer.m_NotTransparent.size();
+        //statistics.TransparentInstanceCount += sceneTreeRenderer.m_Transparent.size();
+        //auto& tlas = scene.GetTLAS();
+        //tlas.UpdateInstances(std::move(sceneTreeRenderer.GetAllEntities()));
+
+        //TODO: this is temporary
+        for(auto& entity : sceneTreeRenderer.m_AllEntities)
+        {
+            commandBuffer.SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
+        }
+        commandBuffer.Flush();
     }
 
-    void SceneRenderer::RenderScene(Scene &scene, FrameBuffer &frameBuffer, const String& locale)
+    void SceneRenderer::RenderScene(Scene &scene, CommandBuffer &commandBuffer, const Locale::Localization& locale)
     {
         SceneCamera* mainCamera = nullptr;
         glm::mat4 cameraTransform;
@@ -309,7 +322,7 @@ namespace BeeEngine
             glm::vec3 up = glm::normalize(glm::vec3(cameraViewMatrix[0][1], cameraViewMatrix[1][1], cameraViewMatrix[2][1]));
             auto frustum = Math::Cameras::CreateFrustumFromCamera(cameraPosition, forward, right, up, mainCamera->GetAspectRatio(), glm::degrees(mainCamera->GetVerticalFOV()), mainCamera->GetNearClip(), mainCamera->GetFarClip());*/
            auto frustumPlanes = GetFrustumPlanes(cameraViewProj);
-           RenderScene(scene, frameBuffer, locale, cameraViewProj, frustumPlanes);
+           RenderScene(scene, commandBuffer, locale, cameraViewProj, frustumPlanes);
         }
     }
 
@@ -321,15 +334,15 @@ namespace BeeEngine
     }
 
     void
-    SceneRenderer::RenderPhysicsColliders(Scene &scene, FrameBuffer &frameBuffer, const glm::mat4 &viewProjectionMatrix)
+    SceneRenderer::RenderPhysicsColliders(Scene &scene, CommandBuffer &commandBuffer, const glm::mat4 &viewProjectionMatrix)
     {
         Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
         Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
         cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
-        RenderPhysicsColliders(scene, frameBuffer, *cameraBindingSet);
+        RenderPhysicsColliders(scene, commandBuffer, *cameraBindingSet);
     }
 
-    void SceneRenderer::RenderPhysicsColliders(Scene &scene, FrameBuffer &frameBuffer, BindingSet &cameraBindingSet)
+    void SceneRenderer::RenderPhysicsColliders(Scene &scene, CommandBuffer &commandBuffer, BindingSet &cameraBindingSet)
     {
         auto& registry = scene.m_Registry;
         auto view = registry.view<BoxCollider2DComponent>();
@@ -348,7 +361,7 @@ namespace BeeEngine
                                           * glm::translate(glm::mat4(1.0f), glm::vec3(bc2d.Offset, 0.001f))
                                           * glm::scale(glm::mat4(1.0f), scale);
 
-                    Renderer::DrawRect(transform, Color4::DarkGreen, cameraBindingSet, 0.1f);
+                    commandBuffer.DrawRect(transform, Color4::DarkGreen, cameraBindingSet, 0.1f);
                 }
                 else if(bc2d.Type == BoxCollider2DComponent::ColliderType::Circle)
                 {
@@ -359,7 +372,7 @@ namespace BeeEngine
                                           * glm::scale(glm::mat4(1.0f), scale);
                     std::vector<BindingSet*> bindingSets {&cameraBindingSet};
                     CircleInstanceBufferData data {transform, Color4::DarkGreen, 0.05f, 0.005f, static_cast<int32_t>(entity)+1};
-                    Renderer::SubmitInstance(*s_CircleModel, bindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
+                    commandBuffer.SubmitInstance(*s_CircleModel, bindingSets, {(byte*)&data, sizeof(CircleInstanceBufferData)});
                 }
             }
         }

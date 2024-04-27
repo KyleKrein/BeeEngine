@@ -9,6 +9,11 @@
 
 namespace BeeEngine
 {
+    class CommandBuffer;
+}
+
+namespace BeeEngine
+{
     namespace Internal
     {
         class RenderingQueue;
@@ -21,7 +26,7 @@ namespace BeeEngine
         InstancedBuffer(const InstancedBuffer& other) = delete;
         InstancedBuffer& operator=(const InstancedBuffer& other ) = delete;
         virtual void SetData(void* data, size_t size) = 0;
-        virtual void Bind(void* cmd) = 0;
+        virtual void Bind(CommandBuffer& cmd) = 0;
         virtual size_t GetSize() = 0;
 
         static Scope<InstancedBuffer> Create(size_t size);

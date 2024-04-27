@@ -6,11 +6,6 @@
 #include "MObject.h"
 #include "MMethod.h"
 
-extern "C"
-{
-    typedef struct _MonoException MonoException;
-}
-
 namespace BeeEngine
 {
     class GameScriptField
@@ -25,6 +20,11 @@ namespace BeeEngine
         {
             static_assert(sizeof (T)<= MAX_FIELD_SIZE, "Type is too large");
             memcpy(m_Buffer, &data, sizeof (T));
+        }
+        template<>
+        void SetData<MFieldValue>(const MFieldValue& data)
+        {
+            memcpy(m_Buffer, data.GetValuePtr(), MUtils::SizeOfMType(data.GetType()));
         }
 
         void SetData(void* data)
@@ -51,7 +51,7 @@ namespace BeeEngine
     class GameScript
     {
     public:
-        using OnFunction = void(*)(MonoObject* self, MonoException** exc);
+        //using OnFunction = void(*)();
 
         GameScript(MClass& mClass, class Entity entity, const String& locale);
         void InvokeOnCreate();
@@ -67,9 +67,9 @@ namespace BeeEngine
     private:
         MObject m_Instance;
 
-        OnFunction m_OnCreate = nullptr;
-        OnFunction m_OnDestroy = nullptr;
-        OnFunction m_OnUpdate = nullptr;
+        MMethod* m_OnCreate = nullptr;
+        MMethod* m_OnDestroy = nullptr;
+        MMethod* m_OnUpdate = nullptr;
 
         void CopyFieldsData(std::vector<GameScriptField> &aClass, const String& locale);
     };

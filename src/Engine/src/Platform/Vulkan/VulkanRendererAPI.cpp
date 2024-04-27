@@ -1,178 +1,203 @@
 //
-// Created by Александр Лебедев on 24.06.2023.
+// Created by Aleksandr on 22.02.2024.
 //
-#if defined(BEE_COMPILE_VULKAN)
+
 #include "VulkanRendererAPI.h"
-#include "SDL3/SDL_vulkan.h"
-#include "SDL3/SDL.h"
+
+#include "Utils.h"
+#include "VulkanMaterial.h"
+#include "Core/Application.h"
+#include "Renderer/CommandBuffer.h"
+#include "Renderer/Renderer.h"
 
 namespace BeeEngine::Internal
 {
     VulkanRendererAPI::VulkanRendererAPI()
-    : m_GraphicsDevice((*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice()))
     {
-        CreateCommandBuffers();
     }
 
     VulkanRendererAPI::~VulkanRendererAPI()
     {
-        //FreeCommandBuffers();
+        FreeCommandBuffers();
     }
 
-    void VulkanRendererAPI::CreateCommandBuffers()
+    void VulkanRendererAPI::Init()
     {
-        m_CommandBuffers.resize(m_GraphicsDevice.GetSwapChain().ImageCount());
-
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = m_GraphicsDevice.GetCommandPool().GetHandle();
-        allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
-
-        if(vkAllocateCommandBuffers(m_GraphicsDevice.GetDevice(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
-        {
-            BeeError("Failed to allocate command buffers");
-        }
+        m_GraphicsDevice = &VulkanGraphicsDevice::GetInstance();
+        m_Window = WindowHandler::GetInstance();
+        m_Device = m_GraphicsDevice->GetDevice();
+        CreateCommandBuffers();
     }
 
-    void VulkanRendererAPI::RecreateSwapchain()
-    {
-        BeeCoreInfo("Recreating swap chain");
-        int width = 0, height = 0;
-        /*
-        //SDL_GetWindowSizeInPixels((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
-        if (width == 0 || height == 0)
-        {
-#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
-            if(WindowHandler::GetAPI() == WindowHandlerAPI::SDL)
-            {
-#endif
-                SDL_GetWindowSizeInPixels((SDL_Window*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
-                SDL_PumpEvents();
-                //WindowHandler::GetInstance()->ProcessEvents();
-#if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
-            }
-            else
-            {
-                glfwGetWindowSize((GLFWwindow*)WindowHandler::GetInstance()->GetWindow(), &width, &height);
-                glfwWaitEvents();
-            }
-#endif
-        }
-*/
-        m_GraphicsDevice.WindowResized(width, height);
-        if(m_GraphicsDevice.GetSwapChain().ImageCount() != m_CommandBuffers.size())
-        {
-            FreeCommandBuffers();
-            CreateCommandBuffers();
-        }
-        //TODO: Check if the renderpass is compatible with the new swapchain
-        //CreatePipeline();
-    }
-
-    void VulkanRendererAPI::FreeCommandBuffers()
-    {
-        auto& device = (*(BeeEngine::Internal::VulkanGraphicsDevice*)&BeeEngine::WindowHandler::GetInstance()->GetGraphicsDevice());
-        vkFreeCommandBuffers(device.GetDevice(), device.GetCommandPool().GetHandle(), static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
-        m_CommandBuffers.clear();
-    }
-
-    VkCommandBuffer VulkanRendererAPI::BeginFrame()
+    CommandBuffer VulkanRendererAPI::BeginFrame()
     {
         BeginFrame:
-        BeeCoreAssert(!m_IsFrameStarted, "Can't call BeginFrame while already in frame");
-
-        if(m_GraphicsDevice.SwapChainRequiresRebuild())
+        if (m_GraphicsDevice->SwapChainRequiresRebuild())
         {
-            auto oldSwapChainptr = &m_GraphicsDevice.GetSwapChain();
-            RecreateSwapchain();
-            BeeEnsures(oldSwapChainptr != &m_GraphicsDevice.GetSwapChain());
+            BeeCoreTrace("Rebuilding swapchain");
+            RecreateSwapChain();
         }
-
-        auto result = m_GraphicsDevice.GetSwapChain().AcquireNextImage(&m_CurrentImageIndex);
-        if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+        auto& swapchain = m_GraphicsDevice->GetSwapChain();
+        auto result = swapchain.AcquireNextImage(&m_CurrentImageIndex);
+        if(result == vk::Result::eErrorOutOfDateKHR)
         {
-            m_GraphicsDevice.RequestSwapChainRebuild();
+            m_GraphicsDevice->RequestSwapChainRebuild();
             goto BeginFrame;
         }
-        if(result != VK_SUCCESS)
+        else if(result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
         {
-            BeeCoreError("Failed to acquire swap chain image");
+            BeeCoreError("Failed to acquire next image");
         }
-        m_IsFrameStarted = true;
-        auto commandBuffer = GetCurrentCommandBuffer();
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if(vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+        auto cmd = GetCurrentCommandBuffer().GetBufferHandleAs<vk::CommandBuffer>();
+        vk::CommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = vk::StructureType::eCommandBufferBeginInfo;
+        beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        if(cmd.begin(&beginInfo) != vk::Result::eSuccess)
         {
             BeeCoreError("Failed to begin recording command buffer");
         }
+        CommandBuffer commandBuffer{m_CommandBuffers[m_CurrentImageIndex], &m_RenderingQueue};
         return commandBuffer;
+    }
+
+    void VulkanRendererAPI::StartMainCommandBuffer(CommandBuffer& commandBuffer)
+    {
+        BeeExpects(commandBuffer == GetCurrentCommandBuffer());
+
+        auto& swapchain = m_GraphicsDevice->GetSwapChain();
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
+
+        m_GraphicsDevice->TransitionImageLayout(cmd, swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
+            vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+        vk::RenderingInfo renderingInfo{};
+
+        vk::RenderingAttachmentInfo colorAttachment{};
+        colorAttachment.imageView = swapchain.GetImageView(m_CurrentImageIndex);
+        colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
+        colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
+        colorAttachment.clearValue = vk::ClearColorValue{0.1f, 0.1f, 0.1f, 1.0f};
+
+        /*vk::RenderingAttachmentInfo depthAttachment{};
+        depthAttachment.imageView = swapchain.GetDepthImageView(m_CurrentImageIndex);
+        depthAttachment.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+        depthAttachment.loadOp = vk::AttachmentLoadOp::eClear;
+        depthAttachment.storeOp = vk::AttachmentStoreOp::eStore;
+        depthAttachment.clearValue = vk::ClearDepthStencilValue{1.0f, 0};
+        */
+
+        renderingInfo.renderArea = vk::Rect2D{{0, 0}, swapchain.GetExtent()};
+        renderingInfo.layerCount = 1;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &colorAttachment;
+        renderingInfo.pDepthAttachment = nullptr;
+
+        //m_GraphicsDevice->GetGraphicsQueue().waitIdle();
+        cmd.beginRendering(&renderingInfo, g_vkDynamicLoader);
+        vk::Viewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float)swapchain.GetExtent().width;
+        viewport.height = (float)swapchain.GetExtent().height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vk::Rect2D scissor{};
+        scissor.offset = vk::Offset2D{0,0};
+        scissor.extent = swapchain.GetExtent();
+        cmd.setViewport(0, 1, &viewport);
+        cmd.setScissor(0, 1, &scissor);
+
+        commandBuffer.BeginRecording();
+    }
+
+    void VulkanRendererAPI::EndMainCommandBuffer(CommandBuffer& commandBuffer)
+    {
+        BeeExpects(commandBuffer == GetCurrentCommandBuffer());
+        commandBuffer.EndRecording();
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
+        cmd.endRendering(g_vkDynamicLoader);
+        commandBuffer.Invalidate();
     }
 
     void VulkanRendererAPI::EndFrame()
     {
-        BeeCoreAssert(m_IsFrameStarted, "Can't call EndFrame outside of a frame");
-        auto commandBuffer = GetCurrentCommandBuffer();
-        if(vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+        auto cmd = GetCurrentCommandBuffer().GetBufferHandleAs<vk::CommandBuffer>();
+        auto& swapchain = m_GraphicsDevice->GetSwapChain();
+        m_GraphicsDevice->TransitionImageLayout(cmd, swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
+            vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
+        SubmitCommandBuffer(GetCurrentCommandBuffer());
+        auto result = swapchain.PresentImage(&m_CurrentImageIndex);
+        if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
         {
-            BeeCoreError("Failed to record command buffer");
+            m_GraphicsDevice->RequestSwapChainRebuild();
         }
-        auto result = m_GraphicsDevice.GetSwapChain().SubmitCommandBuffers(&commandBuffer, &m_CurrentImageIndex);
-        if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
-        {
-            m_GraphicsDevice.RequestSwapChainRebuild();
-        }
-        else if(result != VK_SUCCESS)
+        else if(result != vk::Result::eSuccess)
         {
             BeeCoreError("Failed to present swap chain image");
         }
-        m_IsFrameStarted = false;
     }
 
-    void VulkanRendererAPI::BeginSwapchainRenderPass(VkCommandBuffer commandBuffer)
+    CommandBuffer VulkanRendererAPI::GetCurrentCommandBuffer()
     {
-        BeeCoreAssert(m_IsFrameStarted, "Can't call BeginSwapchainRenderPass outside of a frame");
-        BeeExpects(commandBuffer == GetCurrentCommandBuffer());
-
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = m_GraphicsDevice.GetSwapChain().GetRenderPass();
-        renderPassInfo.framebuffer = m_GraphicsDevice.GetSwapChain().GetFrameBuffer(m_CurrentImageIndex);
-
-        renderPassInfo.renderArea.offset = {0,0};
-        renderPassInfo.renderArea.extent = m_GraphicsDevice.GetSwapChain().GetExtent();
-
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
-        clearValues[1].depthStencil.depth = 1.f; //= {1.0f, 0};
-
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
-
-        vkQueueWaitIdle(m_GraphicsDevice.GetGraphicsQueue().GetQueue());
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)m_GraphicsDevice.GetSwapChain().GetExtent().width;
-        viewport.height = (float)m_GraphicsDevice.GetSwapChain().GetExtent().height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        VkRect2D scissor{};
-        scissor.offset = {0,0};
-        scissor.extent = m_GraphicsDevice.GetSwapChain().GetExtent();
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+        return CommandBuffer{m_CommandBuffers[m_CurrentImageIndex], &m_RenderingQueue};
     }
 
-    void VulkanRendererAPI::EndSwapchainRenderPass(VkCommandBuffer commandBuffer)
+    void VulkanRendererAPI::DrawInstanced(CommandBuffer& commandBuffer, Model& model, InstancedBuffer& instancedBuffer,
+        const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
     {
-        BeeCoreAssert(m_IsFrameStarted, "Can't call EndSwapchainRenderPass outside of a frame");
-        BeeExpects(commandBuffer == GetCurrentCommandBuffer());
+        model.Bind(commandBuffer);
+        instancedBuffer.Bind(commandBuffer);
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
+        int32_t index = 0;
+        for(auto& bindingSet : bindingSets)
+        {
+            bindingSet->Bind(commandBuffer, index++, ((VulkanMaterial&)model.GetMaterial()).GetPipeline());
+        }
+        if(model.IsIndexed()) [[likely]]
+            cmd.drawIndexed(model.GetIndexCount(), instanceCount, 0, 0, 0);
+        else
+            cmd.draw(model.GetVertexCount(), instanceCount, 0, 0);
+    }
 
-        vkCmdEndRenderPass(commandBuffer);
+    void VulkanRendererAPI::SubmitCommandBuffer(const CommandBuffer& commandBuffer)
+    {
+        auto& swapchain = m_GraphicsDevice->GetSwapChain();
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
+        cmd.end();
+        swapchain.SubmitCommandBuffers(&cmd, 1, &m_CurrentImageIndex);
+    }
+
+    void VulkanRendererAPI::CreateCommandBuffers()
+    {
+        m_CommandBuffers.resize(m_GraphicsDevice->GetSwapChain().ImageCount());
+
+        vk::CommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = vk::StructureType::eCommandBufferAllocateInfo;
+        allocInfo.level = vk::CommandBufferLevel::ePrimary;
+        allocInfo.commandPool = m_GraphicsDevice->GetCommandPool();
+        allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
+
+        if(m_Device.allocateCommandBuffers(&allocInfo, m_CommandBuffers.data()) != vk::Result::eSuccess)
+        {
+            BeeCoreError("Failed to allocate command buffers");
+        }
+    }
+
+    void VulkanRendererAPI::FreeCommandBuffers()
+    {
+        m_Device.freeCommandBuffers(m_GraphicsDevice->GetCommandPool(), static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
+        m_CommandBuffers.clear();
+    }
+
+    void VulkanRendererAPI::RecreateSwapChain()
+    {
+        uint32_t width = m_Window->GetWidthInPixels(), height = m_Window->GetHeightInPixels();
+        m_GraphicsDevice->WindowResized(width, height);
+
+        if(m_GraphicsDevice->GetSwapChain().ImageCount() != m_CommandBuffers.size())
+        {
+            FreeCommandBuffers();
+            CreateCommandBuffers();
+        }
     }
 }
-#endif

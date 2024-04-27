@@ -13,6 +13,7 @@
 #include "Core/AssetManagement/Asset.h"
 #include "Path.h"
 #include <string_view>
+#include "String.h"
 
 namespace BeeEngine
 {
@@ -131,30 +132,40 @@ namespace BeeEngine
 
         static bool IsTexture2DExtension(const Path &extension)
         {
-            return extension == ".png" or
-                   extension == ".jpg" or
-                   extension == ".jpeg" or
-                   extension == ".bmp";
+            auto ext = ToLowercase(extension.AsUTF8());
+            return ext == ".png" or
+                   ext == ".jpg" or
+                   ext == ".jpeg" or
+                   ext == ".bmp";
         }
 
         static bool IsSceneExtension(const Path &extension) noexcept
         {
-            return extension == ".beescene";
+            auto ext = ToLowercase(extension.AsUTF8());
+            return ext == ".beescene";
         }
 
         static bool IsFontExtension(const Path &extension) noexcept
         {
-            return extension == ".ttf";
+            auto ext = ToLowercase(extension.AsUTF8());
+            return ext == ".ttf";
         }
 
         static bool IsPrefabExtension(const Path &extension) noexcept
         {
-            return extension == ".beeprefab";
+            auto ext = ToLowercase(extension.AsUTF8());
+            return ext == ".beeprefab";
+        }
+
+        static bool IsMeshSourceExtension(const Path &extension) noexcept
+        {
+            auto ext = ToLowercase(extension.AsUTF8());
+            return ext == ".gltf" or ext == ".glb";
         }
 
         static bool IsAssetExtension(const Path &extension) noexcept
         {
-            return IsTexture2DExtension(extension) || IsFontExtension(extension) || IsPrefabExtension(extension);
+            return IsTexture2DExtension(extension) || IsFontExtension(extension) || IsPrefabExtension(extension) || IsMeshSourceExtension(extension);
         }
 
         static AssetType GetAssetTypeFromExtension(const Path &extension)
@@ -171,12 +182,17 @@ namespace BeeEngine
             {
                 return AssetType::Prefab;
             }
+            if(IsMeshSourceExtension(extension))
+            {
+                return AssetType::MeshSource;
+            }
             return AssetType::None;
         }
 
         static bool IsScriptExtension(const Path& extension)
         {
-            return extension == ".cs";
+            auto ext = ToLowercase(extension.AsUTF8());
+            return ext == ".cs";
         }
     };
 }

@@ -2,7 +2,7 @@
 function(FileEmbedSetup)
 
     if (NOT EXISTS ${CMAKE_BINARY_DIR}/file_embed)
-        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}file_embed)
+        file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/file_embed)
     endif ()
 
     if (NOT EXISTS ${CMAKE_BINARY_DIR}/file_embed/file_embed_empty.c)
@@ -12,6 +12,14 @@ function(FileEmbedSetup)
     add_library(file_embed ${CMAKE_BINARY_DIR}/file_embed/file_embed_empty.c)
     target_include_directories(file_embed PUBLIC ${CMAKE_BINARY_DIR}/file_embed)
 
+endfunction()
+
+function(FileEmbedUseGeneratedFiles)
+    file(GLOB_RECURSE EMBEDDED_FILES
+            ${CMAKE_BINARY_DIR}/file_embed/*.c
+    )
+    #add source files to file_embed
+    target_sources(file_embed PUBLIC ${EMBEDDED_FILES})
 endfunction()
 
 function(FileEmbedAdd file)

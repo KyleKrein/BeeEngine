@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
 project(Sandbox2D)
 set(SOURCE_FILES src/main.cpp
+        src/VulkanTestLayer.cpp
+        src/VulkanTestLayer.h
         #src/TestLayer.cpp
-        src/TestLayer.h src/WebGPUTestLayer.cpp src/WebGPUTestLayer.h)
+)
 #if(APPLE AND NOT IOS)
 #    add_executable(Sandbox2D MACOSX_BUNDLE ${SOURCE_FILES})
 #    file(COPY Assets DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME}/${PROJECT_NAME}.app/Contents/MacOS)
@@ -32,7 +34,3 @@ target_include_directories( Sandbox2D PRIVATE ${CMAKE_BINARY_DIR}/_deps/webgpu_d
 
 file(COPY Assets DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
-
-set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Engine/vendor/mono/libs/)
-configureMono(${MONO_DIRECTORY})
-copy_mono_dlls(Sandbox2D)

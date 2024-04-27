@@ -5,8 +5,6 @@
 #include "MUtils.h"
 #include "MTypes.h"
 #include "Core/TypeDefines.h"
-#include "mono/metadata/object.h"
-#include "mono/metadata/tabledefs.h"
 #include "MField.h"
 #include "vec2.hpp"
 #include "vec3.hpp"
@@ -62,22 +60,21 @@ namespace BeeEngine
     MType MUtils::StringToMType(const String& name)
     {
         static std::unordered_map<std::string_view, MType> MTypeMap = {
-                {"void", MType::Void},
-                {"bool", MType::Boolean},
-                {"char", MType::Char},
-                {"sbyte", MType::SByte},
-                {"byte", MType::Byte},
-                {"short", MType::Int16},
-                {"ushort", MType::UInt16},
-                {"int", MType::Int32},
-                {"uint", MType::UInt32},
-                {"long", MType::Int64},
-                {"ulong", MType::UInt64},
-                {"float", MType::Single},
-                {"double", MType::Double},
-                {"string", MType::String},
-                {"object", MType::Object},
-                {"void*", MType::Ptr},
+                {"Void", MType::Void},
+                {"Boolean", MType::Boolean},
+                {"Char", MType::Char},
+                {"SByte", MType::SByte},
+                {"Byte", MType::Byte},
+                {"Int16", MType::Int16},
+                {"UInt16", MType::UInt16},
+                {"Int32", MType::Int32},
+                {"UInt32", MType::UInt32},
+                {"Int64", MType::Int64},
+                {"UInt64", MType::UInt64},
+                {"Single", MType::Single},
+                {"Double", MType::Double},
+                {"String", MType::String},
+                {"Object", MType::Object},
                 {"Array", MType::Array},
                 {"Dictionary", MType::Dictionary},
                 {"List", MType::List},
@@ -93,13 +90,30 @@ namespace BeeEngine
                 {"Texture2D", MType::Texture2D},
                 {"Font", MType::Font},
                 {"Prefab", MType::Prefab},
+
+                {"int", MType::Int32},
+                {"float", MType::Single},
+                {"double", MType::Double},
+                {"bool", MType::Boolean},
+                {"char", MType::Char},
+                {"uint", MType::UInt32},
+                {"long", MType::Int64},
+                {"ulong", MType::UInt64},
+                {"short", MType::Int16},
+                {"ushort", MType::UInt16},
+                {"byte", MType::Byte},
+                {"sbyte", MType::SByte},
+                {"string", MType::String},
+                {"object", MType::Object},
         };
         if(MTypeMap.contains(name))
             return MTypeMap.at(name);
+        if(name.ends_with('*'))
+            return MType::Ptr;
         return MType::None;
     }
 
-    MType MUtils::MonoTypeToMType(MonoType *monoType)
+    /*MType MUtils::MonoTypeToMType(MonoType *monoType)
     {
         char* typeName = mono_type_get_name(monoType);
         MType type = ManagedNameToMType(typeName);
@@ -109,7 +123,7 @@ namespace BeeEngine
         }
         mono_free(typeName);
         return type;
-    }
+    }*/
 
     const char *MUtils::MTypeToString(MType type)
     {
@@ -181,47 +195,13 @@ namespace BeeEngine
         return "unknown";
     }
 
-    MVisibility MUtils::MonoFieldFlagsToVisibility(uint32_t flags)
-    {
-        if(flags & FIELD_ATTRIBUTE_PRIVATE)
-            return MVisibility::Private;
-        if(flags & FIELD_ATTRIBUTE_PUBLIC)
-            return MVisibility::Public;
-        if(flags & FIELD_ATTRIBUTE_FAMILY)
-            return MVisibility::Protected;
-        if(flags & FIELD_ATTRIBUTE_ASSEMBLY)
-            return MVisibility::Internal;
-        if(flags & FIELD_ATTRIBUTE_FAM_AND_ASSEM)
-            return MVisibility::ProtectedInternal;
-        if(flags & FIELD_ATTRIBUTE_FAM_OR_ASSEM)
-            return MVisibility::ProtectedInternal;
-        return MVisibility::Private;
-    }
-
     bool MUtils::IsSutableForEdit(const MField& field)
     {
-        return field.GetVisibility() == MVisibility::Public &&
+        return field.GetVisibility() == MVisibility_Public &&
                !field.IsStatic() &&
                field.GetType() != MType::None &&
                field.GetType() != MType::Ptr &&
                field.GetType() != MType::Void;
-    }
-
-    MVisibility MUtils::MonoMethodFlagsToVisibility(uint32_t flags)
-    {
-        if(flags & METHOD_ATTRIBUTE_PRIVATE)
-            return MVisibility::Private;
-        if(flags & METHOD_ATTRIBUTE_PUBLIC)
-            return MVisibility::Public;
-        if(flags & METHOD_ATTRIBUTE_FAMILY)
-            return MVisibility::Protected;
-        if(flags & METHOD_ATTRIBUTE_ASSEM)
-            return MVisibility::Internal;
-        if(flags & METHOD_ATTRIBUTE_FAM_AND_ASSEM)
-            return MVisibility::ProtectedInternal;
-        if(flags & METHOD_ATTRIBUTE_FAM_OR_ASSEM)
-            return MVisibility::ProtectedInternal;
-        return MVisibility::Private;
     }
 
     size_t MUtils::SizeOfMType(MType type)
@@ -251,17 +231,17 @@ namespace BeeEngine
             case MType::Double:
                 return sizeof (double);
             case MType::String:
-                return sizeof (MonoString*);
+                return sizeof (uint64_t);
             case MType::Ptr:
                 return sizeof (void*);
             case MType::Dictionary:
-                return sizeof (MonoObject*);
+                return sizeof (uint64_t);
             case MType::Array:
-                return sizeof (MonoArray*);
+                return sizeof (uint64_t);
             case MType::List:
-                return sizeof (MonoObject*);
+                return sizeof (uint64_t);
             case MType::Object:
-                return sizeof (MonoObject*);
+                return sizeof (uint64_t);
             case MType::Vector2:
                 return sizeof (glm::vec2);
             case MType::Vector3:
@@ -271,7 +251,7 @@ namespace BeeEngine
             case MType::Color:
                 return sizeof (Color4);
             case MType::Entity:
-                return sizeof (MonoObject*);
+                return sizeof (uint64_t);
             case MType::Asset:
             case MType::Texture2D:
             case MType::Font:
@@ -283,5 +263,39 @@ namespace BeeEngine
                 return 0;
         }
         return 0;
+    }
+
+    bool MUtils::ShouldFreeGCHandle(const MField& field)
+    {
+        MType type = field.GetType();
+        return type == MType::String ||
+               type == MType::Array ||
+               type == MType::Dictionary ||
+               type == MType::List ||
+               type == MType::Object ||
+               type == MType::Asset ||
+               type == MType::Texture2D ||
+               type == MType::Font ||
+               type == MType::Prefab;
+    }
+    
+    bool MUtils::IsValueType(MType type)
+    {
+        return type == MType::Char ||
+               type == MType::Boolean ||
+               type == MType::SByte ||
+               type == MType::Byte ||
+               type == MType::Int16 ||
+               type == MType::UInt16 ||
+               type == MType::Int32 ||
+               type == MType::UInt32 ||
+               type == MType::Int64 ||
+               type == MType::UInt64 ||
+               type == MType::Single ||
+               type == MType::Double ||
+               type == MType::Vector2 ||
+               type == MType::Vector3 ||
+               type == MType::Vector4 ||
+               type == MType::Color;
     }
 }

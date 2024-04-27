@@ -4,7 +4,7 @@
 #include <thread>
 #include "Core/Numbers.h"
 #include <windows.h>
-namespace BeeEngine::Internal
+namespace BeeEngine
 {
     void ThreadSetAffinity(std::thread& thread, uint32_t core)
     {

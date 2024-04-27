@@ -63,8 +63,9 @@ namespace BeeEngine
     private:
         float m_Fov = 45.0f;
         float m_AspectRatio = 1.778f;
-        float m_NearClip = 0.1f;
-        float m_FarClip = 1000.0f;
+        //Near clip is more than far clip because of the reversed depth buffer in order to increase quality of depth testing https://vkguide.dev/docs/new_chapter_3/loading_meshes/
+        float m_NearClip = 10000;//0.1f;
+        float m_FarClip = 0.01f;//1000.0f;
 
         glm::mat4 m_ViewMatrix{1.0f};
         glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };

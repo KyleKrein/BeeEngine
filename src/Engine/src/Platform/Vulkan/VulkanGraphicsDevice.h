@@ -9,21 +9,16 @@
 #include "vulkan/vulkan.hpp"
 #include "VulkanInstance.h"
 #include "Renderer/QueueFamilyIndices.h"
-#include "VulkanGraphicsQueue.h"
 #include "VulkanSwapChain.h"
-#include "VulkanPipeline.h"
-#include "VulkanCommandPool.h"
-#include "VulkanCommandBuffer.h"
-#include "VulkanFence.h"
-#include "VulkanSemaphore.h"
 #include "VulkanBuffer.h"
 
 namespace BeeEngine::Internal
 {
-    class VulkanGraphicsDevice: public GraphicsDevice
+    class VulkanGraphicsDevice final: public GraphicsDevice
     {
     public:
         VulkanGraphicsDevice(VulkanInstance& instance);
+
         ~VulkanGraphicsDevice() override;
 
         void WindowResized(uint32_t width, uint32_t height) override;
@@ -37,26 +32,34 @@ namespace BeeEngine::Internal
         {
             return m_PhysicalDevice;
         }
+
         QueueFamilyIndices& GetQueueFamilyIndices()
         {
             return m_QueueFamilyIndices;
         }
-        VulkanGraphicsQueue& GetGraphicsQueue()
+
+        vk::Queue GetGraphicsQueue()
         {
-            return *m_GraphicsQueue;
+            return m_GraphicsQueue;
         }
-        VulkanGraphicsQueue& GetPresentQueue()
+
+        vk::Queue GetPresentQueue()
         {
-            return *m_PresentQueue;
+            return m_PresentQueue;
         }
-        VulkanSurface& GetSurface()
+
+        vk::SurfaceKHR GetSurface()
         {
-            return *m_Surface;
+            return m_DeviceHandle.surface;
         }
+
         VulkanSwapChain& GetSwapChain()
         {
             return *m_SwapChain;
         }
+        void TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+        void TransitionImageLayout(vk::CommandBuffer cmd, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+
         /*VulkanPipeline& GetPipeline()
         {
             return *m_Pipeline;
@@ -67,9 +70,9 @@ namespace BeeEngine::Internal
             return m_SwapChainSupportDetails;
         }
 
-        VulkanCommandPool &GetCommandPool()
+        vk::CommandPool GetCommandPool()
         {
-            return *m_CommandPool;
+            return m_CommandPool;
         }
 
         void RequestSwapChainRebuild() override
@@ -77,48 +80,80 @@ namespace BeeEngine::Internal
             BeeCoreInfo("Swap chain rebuild requested");
             m_SwapChainRebuildRequested = true;
         }
+
         bool SwapChainRequiresRebuild() override
         {
             return m_SwapChainRebuildRequested;
         }
 
         // Buffer Helper Functions
-        void CreateBuffer(
-                VkDeviceSize size,
-                VkBufferUsageFlags usage,
-                VmaMemoryUsage memoryUsage,
-                out<VulkanBuffer> buffer) const;
 
-        void CopyToBuffer(gsl::span<byte> data, out<VulkanBuffer> buffer) const;
+        void CreateDescriptorSet(vk::DescriptorSetAllocateInfo& info, vk::DescriptorSet* outDescriptorSet) const;
+
+        void DestroyDescriptorSet(vk::DescriptorSet descriptorSet) const;
+        [[nodiscard]] VulkanBuffer CreateBuffer(
+                vk::DeviceSize size,
+                vk::BufferUsageFlags usage,
+                VmaMemoryUsage memoryUsage) const;
+        void DestroyBuffer(VulkanBuffer& buffer) const;
+        void DestroyImage(VulkanImage& image) const;
+        void DestroyImageWithView(VulkanImage& image, vk::ImageView imageView) const;
+
+        void CopyToBuffer(gsl::span<byte> data, VulkanBuffer& outBuffer) const;
 
 
-        VkCommandBuffer BeginSingleTimeCommands();
+        vk::CommandBuffer BeginSingleTimeCommands();
 
-        void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+        void EndSingleTimeCommands(vk::CommandBuffer commandBuffer);
 
-        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, vk::DeviceSize size);
+        void CopyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
 
         void CopyBufferToImage(
-                VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
+                vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height, uint32_t layerCount);
+        void CopyImageToImage(vk::CommandBuffer cmd, vk::Image source, vk::Image destination, vk::Extent2D srcSize, vk::Extent2D dstSize);
+        void CopyImageToImage(vk::Image source, vk::Image destination, vk::Extent2D srcSize, vk::Extent2D dstSize);
 
         void CreateImageWithInfo(
-                 in<VkImageCreateInfo> imageInfo,
-                 in<VkImageViewCreateInfo> imageViewInfo,
-                 in<VkMemoryPropertyFlags> memoryProperties,
-                 in<VmaMemoryUsage> memoryUsage,
-                 out<VulkanImage> image,
-                 out<VkImageView> imageView) const;
-        VkFormat FindSupportedFormat(
-                const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+                 const vk::ImageCreateInfo& imageInfo,
+                 const vk::ImageViewCreateInfo& imageViewInfo,
+                 vk::MemoryPropertyFlags memoryProperties,
+                 const VmaMemoryUsage& memoryUsage,
+                 VulkanImage& outImage,
+                 vk::ImageView& outImageView) const;
+
+        vk::Format FindSupportedFormat(
+        const std::vector<vk::Format> &candidates, vk::ImageTiling tiling,
+                                               vk::FormatFeatureFlags features);
+
+        bool HasRayTracingSupport() const
+        {
+            return m_HasRayTracingSupport;
+        }
+
+        vk::Viewport CreateVKViewport(uint32_t width, uint32_t height, float depthMin, float depthMax);
+
 
         vk::PhysicalDeviceProperties properties;
 
         static VulkanGraphicsDevice &GetInstance();
 
+        uint64_t GetVRAM() const override
+        {
+            return m_VRAM;
+        }
+
     private:
+        vk::DescriptorPool m_DescriptorPool;
+        mutable bool m_HasRayTracingSupport = false;
+
+        void CreateCommandPool();
+
+        void CreateDescriptorPool();
+
         static VulkanGraphicsDevice* s_Instance;
 
         uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+        void LoadKHRRayTracing();
         //
 
 
@@ -126,11 +161,20 @@ namespace BeeEngine::Internal
         {
             vk::Device device;
             VmaAllocator allocator;
+            vk::SurfaceKHR surface;
+            vk::Instance instance;
             ~DeviceHandle()
             {
+                while (!DeletionQueue::Main().IsEmpty() || !DeletionQueue::Frame().IsEmpty())
+                {
+                    DeletionQueue::Frame().Flush();
+                    DeletionQueue::Main().Flush();
+                }
+                device.waitIdle();
                 vmaDestroyAllocator(allocator);
                 device.destroy();
                 VulkanGraphicsDevice::s_Instance = nullptr;
+                instance.destroySurfaceKHR(surface);
             }
         };
         QueueFamilyIndices m_QueueFamilyIndices;
@@ -138,17 +182,18 @@ namespace BeeEngine::Internal
 
         void CreateSwapChainSupportDetails();
 
-        Ref<VulkanSurface> m_Surface;
         DeviceHandle m_DeviceHandle;
         Scope<VulkanSwapChain> m_SwapChain;
         vk::Device m_Device;
         vk::PhysicalDevice m_PhysicalDevice;
-        Ref<VulkanGraphicsQueue> m_GraphicsQueue;
-        Ref<VulkanGraphicsQueue> m_PresentQueue;
+        uint64_t m_VRAM = 0;
+        vk::Queue m_GraphicsQueue;
+        vk::Queue m_PresentQueue;
 
         //Ref<VulkanPipeline> m_Pipeline;
-        VulkanCommandBuffer m_MainCommandBuffer;
-        Ref<VulkanCommandPool> m_CommandPool;
+        vk::CommandBuffer m_MainCommandBuffer;
+        vk::CommandPool m_CommandPool;
+        vk::CommandBufferAllocateInfo m_CommandPoolAllocateInfo;
 
         struct DeletionQueueFlusher
         {
@@ -158,20 +203,23 @@ namespace BeeEngine::Internal
             }
         };
 
-        DeletionQueueFlusher m_Deleter;
+        //DeletionQueueFlusher m_Deleter;
 
         bool m_SwapChainRebuildRequested = false;
 
         void LogDeviceProperties(vk::PhysicalDevice &device) const;
 
+        bool CheckDeviceFeaturesSupport(const vk::PhysicalDevice& device) const;
+
         bool IsSuitableDevice(const vk::PhysicalDevice &device) const;
 
         bool CheckDeviceExtensionSupport(const vk::PhysicalDevice &device,
-                                         const std::vector<const char *> &extensions) const;
+                                         std::vector<const char*>& extensions) const;
 
         QueueFamilyIndices FindQueueFamilies();
-        void CreatePhysicalDevice(const VulkanInstance &instance);
+        void SelectPhysicalDevice(const VulkanInstance &instance);
         void CreateLogicalDevice();
+        void CreateSurface(VulkanInstance &instance);
         void InitializeVulkanMemoryAllocator(VulkanInstance &instance);
 
 
@@ -180,7 +228,8 @@ namespace BeeEngine::Internal
 
     inline VmaAllocator GetVulkanAllocator()
     {
-        return VulkanGraphicsDevice::s_Instance->m_DeviceHandle.allocator;
+        static auto allocator = VulkanGraphicsDevice::s_Instance->m_DeviceHandle.allocator;
+        return allocator;
     }
 }
 #endif

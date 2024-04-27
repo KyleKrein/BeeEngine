@@ -12,13 +12,14 @@
 #include "Renderer/ShaderModule.h"
 #include "OsPlatform.h"
 #include "Renderer/AssetManager.h"
+#include "Core/LayerStack.h"
 
 namespace BeeEngine{
     class Application
     {
         friend EventQueue;
     public:
-        explicit Application(const WindowProperties& properties);
+        explicit Application(const ApplicationProperties& properties);
         virtual ~Application();
         consteval static OSPlatform GetOsPlatform()
         {
@@ -41,10 +42,11 @@ namespace BeeEngine{
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
         static consteval bool IsLittleEndian() { return false; }
 #else
-        static bool IsLittleEndian()
+        inline static bool IsLittleEndian()
         {
-            int32_t num = 1;
-            return (*(char*)&num == 1);
+            static int32_t num = 1;
+            static bool isLittleEndian = (*(char*)&num == 1);
+            return isLittleEndian;
         }
 #endif
 
@@ -52,6 +54,11 @@ namespace BeeEngine{
         static Application& GetInstance()
         {
             return *s_Instance;
+        }
+
+        static bool IsMainThread()
+        {
+            return std::this_thread::get_id() == s_MainThreadID;
         }
 
         static void SubmitToMainThread(const std::function<void()>& func)
@@ -99,13 +106,6 @@ namespace BeeEngine{
 
     protected:
         virtual void Update() {};
-        virtual void OnEvent(EventDispatcher& dispatcher)
-        {
-            dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
-            {
-                return OnWindowResize(&event);
-            });
-        };
 
         inline void PushLayer(Ref<Layer> layer)
         {
@@ -124,9 +124,27 @@ namespace BeeEngine{
             m_Layers.PushOverlay(std::move(overlay));
         }
     private:
+        void OnEvent(EventDispatcher& dispatcher)
+        {
+            dispatcher.Dispatch<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool
+            {
+                return OnWindowResize(&event);
+            });
+            dispatcher.Dispatch<WindowMinimizedEvent>([this](WindowMinimizedEvent& event) -> bool
+            {
+                m_IsMinimized = event.IsMinimized();
+                return false;
+            });
+            dispatcher.Dispatch<WindowFocusedEvent>([this](auto& event)
+            {
+                m_IsFocused = event.IsFocused();
+                return false;
+            });
+        };
+        WindowHandlerAPI GetPreferredWindowAPI();
         void Dispatch(EventDispatcher &dispatcher);
         static bool OnWindowClose(WindowCloseEvent& event);
-        void CheckRendererAPIForCompatibility(WindowProperties &properties) noexcept;
+        void CheckRendererAPIForCompatibility(ApplicationProperties &properties) noexcept;
         bool OnWindowResize(WindowResizeEvent* event);
         void SubmitToMainThread_Impl(const std::function<void()> &function);
         void ExecuteMainThreadQueue() noexcept;
@@ -139,6 +157,7 @@ namespace BeeEngine{
         Scope<WindowHandler> m_Window;
         LayerStack m_Layers;
         EventQueue m_EventQueue;
+        static std::thread::id s_MainThreadID;
 
         InternalAssetManager m_AssetManager;
     };

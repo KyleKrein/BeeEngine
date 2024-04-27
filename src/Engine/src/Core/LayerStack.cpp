@@ -19,7 +19,7 @@ namespace BeeEngine{
     LayerStack::~LayerStack()
     {
         BEE_PROFILE_FUNCTION();
-        for (auto layer: m_layers)
+        for (auto& layer: m_layers)
         {
             layer->OnDetach();
         }
@@ -59,14 +59,16 @@ namespace BeeEngine{
     void LayerStack::PopLayer(Ref<Layer> layer)
     {
         BEE_PROFILE_FUNCTION();
-        std::remove(m_layers.begin(), m_layers.end(), layer);
+        auto it = std::remove(m_layers.begin(), m_layers.end(), layer);
+        m_layers.erase(it, m_layers.end());
         layer->OnDetach();
     }
 
     void LayerStack::PopOverlay(Ref<Layer> overlay)
     {
         BEE_PROFILE_FUNCTION();
-        std::remove(m_layers.begin(), m_layers.end(), overlay);
+        auto it = std::remove(m_layers.begin(), m_layers.end(), overlay);
+        m_layers.erase(it, m_layers.end());
         overlay->OnDetach();
     }
 
@@ -84,7 +86,7 @@ namespace BeeEngine{
         }
     }
 
-    void LayerStack::Update()
+    void LayerStack::Update(FrameData& frameData)
     {
         BEE_PROFILE_FUNCTION();
         if (!Application::GetInstance().IsMinimized())
@@ -93,13 +95,11 @@ namespace BeeEngine{
                 BEE_PROFILE_SCOPE("Layers::Update");
                 for (auto& layer: m_layers)
                 {
-                    layer->OnUpdate();
+                    layer->OnUpdate(frameData);
                 }
             }
-            {
-                BEE_PROFILE_SCOPE("Layers::Renderer::Flush");
-                Renderer::FinalFlush();
-            }
+            //if(Application::GetInstance().IsMinimized())
+                //return;
             {
                 BEE_PROFILE_SCOPE("Layers::GUIRendering");
                 m_guiLayer->OnBegin();
@@ -108,7 +108,7 @@ namespace BeeEngine{
                     layer->OnGUIRendering();
                 }
                 m_guiLayer->OnGUIRendering();
-                m_guiLayer->OnEnd();
+                m_guiLayer->OnEnd(frameData.GetMainCommandBuffer());
             }
         }
     }
@@ -116,10 +116,5 @@ namespace BeeEngine{
     void LayerStack::SetGuiLayer(ImGuiLayer* guiLayer)
     {
         m_guiLayer.reset(guiLayer);
-    }
-
-    void LayerStack::FinishGuiRendering()
-    {
-        m_guiLayer->OnEnd();
     }
 }

@@ -24,5 +24,7 @@ namespace BeeEngine
         static constexpr AssetHandle PlayButtonTexture = {0, 899864344847468468};
         static constexpr AssetHandle DirectoryTexture = {0, 849648416847684646};
         static constexpr AssetHandle FileTexture = {0, 8496488484431620020};
+
+        static constexpr AssetHandle CheckerboardTexture = {0, 345643574357345345};
     };
 }

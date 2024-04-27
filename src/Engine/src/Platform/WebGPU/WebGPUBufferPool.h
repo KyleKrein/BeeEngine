@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_WEBGPU)
 #include <webgpu/webgpu.h>
 #include <vector>
 namespace BeeEngine::Internal
@@ -54,3 +55,4 @@ namespace BeeEngine::Internal
         std::vector<WebGPUBuffer> m_Buffers;
     };
 }
+#endif

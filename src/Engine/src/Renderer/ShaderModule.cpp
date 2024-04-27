@@ -9,6 +9,8 @@
 #include "Platform/WebGPU/WebGPUShaderModule.h"
 #include <filesystem>
 
+#include "Platform/Vulkan/VulkanShaderModule.h"
+
 namespace BeeEngine
 {
     String ShaderModule::s_CachePath = "Cache/";
@@ -31,7 +33,10 @@ namespace BeeEngine
 
         switch (Renderer::GetAPI())
         {
-            case WebGPU:
+#if defined(BEE_COMPILE_VULKAN)
+            case Vulkan:
+                return CreateRef<Internal::VulkanShaderModule>(spirv, type, std::move(layout));
+#endif
             case NotAvailable:
             default:
                 BeeCoreError("Unknown renderer API");
@@ -55,7 +60,7 @@ namespace BeeEngine
                 shaderType = ShaderStage::Compute;
                 break;
         }
-        if (!ShaderConverter::GLSLtoSPV(shaderType, glsl.data(), result))
+        if (!ShaderConverter::GLSLtoSPV(shaderType, glsl.data(), result, builder))
         {
             return result;
         }
@@ -94,21 +99,21 @@ namespace BeeEngine
 
     std::string ShaderModule::CompileSpirVToWGSL(in<std::vector<uint32_t>> spirvCode, in<std::string> newPath)
     {
-#if defined(BEE_COMPILE_WEBGPU)
         std::string wgsl;
+#if defined(BEE_COMPILE_WEBGPU)
         bool result = ShaderConverter::SPVtoWGSL(spirvCode, wgsl);
         BeeEnsures(result);
         File::WriteFile(newPath, wgsl);
-        return wgsl;
 #endif
+        return wgsl;
     }
     std::string ShaderModule::LoadWGSLFromCache(const String& path)
     {
-#if defined(BEE_COMPILE_WEBGPU)
+//#if defined(BEE_COMPILE_WEBGPU)
         auto wgsl = ReadGLSLShader(path);
         BeeCoreTrace("Loaded WGSL from cache");
         return std::string(wgsl.data(), wgsl.size());
-#endif
+//#endif
     }
 
     std::string ShaderModule::LoadWGSL(const String& path, ShaderType type, bool loadFromCache, out<BufferLayout> layout)

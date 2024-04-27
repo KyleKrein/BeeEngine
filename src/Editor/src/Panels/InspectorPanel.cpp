@@ -16,6 +16,8 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <ranges>
 
+#include "Scripting/NativeToManaged.h"
+
 namespace BeeEngine::Editor
 {
 
@@ -44,12 +46,13 @@ namespace BeeEngine::Editor
 
         ImGui::End();
     }
-    template<typename T>
+    template<typename T, MType type>
     static void GetFieldData(MField& field, T* value, MObject* mObject, GameScriptField& gameScriptField)
     {
         if(mObject)
         {
-            mObject->GetFieldValue(field, value);
+            auto obj = mObject->GetFieldValue(field);
+            *value = obj.GetValue<type>();
             return;
         }
         *value = gameScriptField.GetData<T>();
@@ -82,6 +85,7 @@ namespace BeeEngine::Editor
             AddComponentPopup<CameraComponent>("Camera", entity);
             AddComponentPopup<SpriteRendererComponent>("Sprite", entity);
             AddComponentPopup<CircleRendererComponent>("Circle", entity);
+            AddComponentPopup<MeshComponent>("Mesh", entity);
             AddComponentPopup<TextRendererComponent>("Text", entity);
             //AddComponentPopup<NativeScriptComponent>("Native Script", entity);
             AddComponentPopup<ScriptComponent>("Script", entity);
@@ -191,7 +195,7 @@ namespace BeeEngine::Editor
                 String textureLabel;
                 if(textureAsset.GetType() == AssetType::Localized)
                 {
-                    textureLabel = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                    textureLabel = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                 }
                 else
                 {
@@ -234,13 +238,60 @@ namespace BeeEngine::Editor
             ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.thickness").c_str(), &circle.Thickness, 0.025f, 0.0f, 1.0f);
             ImGui::DragFloat(m_EditorDomain->Translate("inspector.circleRenderer.fade").c_str(), &circle.Fade, 0.0025f, 0.005f, 1.0f);
         });
+
+        DrawComponentUI<MeshComponent>(m_EditorDomain->Translate("inspector.meshRenderer"), entity, [this](MeshComponent& meshComponent)
+        {
+            if(meshComponent.HasMeshes)
+            {
+                if(ImGui::Button(meshComponent.MeshSource()->Name.data()))
+                {
+                    meshComponent.HasMeshes = false;
+                }
+            }
+            else
+            {
+                ImGui::Button(m_EditorDomain->Translate("none").c_str(), ImVec2(100.0f, 0.0f));
+            }
+            ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &meshComponent](void* data, size_t size){
+                Path meshSourcePath = m_WorkingDirectory / static_cast<const char*>(data);
+                if (!ResourceManager::IsMeshSourceExtension(meshSourcePath.GetExtension()))
+                    return;
+                auto name = meshSourcePath.GetFileNameWithoutExtension().AsUTF8();
+                auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                if(!handlePtr)
+                {
+                    m_AssetManager->LoadAsset(meshSourcePath, {m_ProjectAssetRegistryID});
+                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                }
+                BeeCoreAssert(handlePtr, "Failed to load mesh source from path: {0}", meshSourcePath.AsUTF8());
+                meshComponent.HasMeshes = true;
+                meshComponent.MeshSourceHandle = *handlePtr;
+            });
+
+            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_MESHSOURCE_ITEM", [this, &meshComponent](const auto& handle){
+                BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                meshComponent.HasMeshes = true;
+                meshComponent.MeshSourceHandle = handle;
+            });
+
+            //Material info
+            bool upload = false;
+            if(ImGui::ColorPicker4("Color", glm::value_ptr(meshComponent.MaterialInstance.data.colorFactors)))
+                upload = true;
+            if(ImGui::DragFloat("Metalness", (float*)&meshComponent.MaterialInstance.data.metalRoughFactors.x, 0.025f, 0.0f, 1.0f))
+                upload = true;
+            if(ImGui::DragFloat("Roughness", (float*)&meshComponent.MaterialInstance.data.metalRoughFactors.y, 0.025f, 0.0f, 1.0f))
+                upload = true;
+            if(upload)
+                meshComponent.MaterialInstance.LoadData();
+        });
         DrawComponentUI<TextRendererComponent>(m_EditorDomain->Translate("inspector.textRenderer"), entity, [this](TextRendererComponent& component){
            ImGui::InputTextMultiline(m_EditorDomain->Translate("text").c_str(), &component.Text);
            auto& fontAsset = AssetManager::GetAsset<Asset>(component.FontHandle);
            String fontLabel;
            if(fontAsset.GetType() == AssetType::Localized)
            {
-               fontLabel = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+               fontLabel = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
            }
            else
            {
@@ -328,7 +379,7 @@ namespace BeeEngine::Editor
                     case MType::Boolean:
                     {
                         bool value = false;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<bool, MType::Boolean>(mField, &value, mObject, field);
                         if(ImGui::Checkbox(name, &value))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -338,7 +389,7 @@ namespace BeeEngine::Editor
                     case MType::Int32:
                     {
                         int32_t value = 0;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<int32_t, MType::Int32>(mField, &value, mObject, field);
                         if(ImGui::DragInt(name, &value))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -348,7 +399,7 @@ namespace BeeEngine::Editor
                     case MType::Single:
                     {
                         float value = 0;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<float, MType::Single>(mField, &value, mObject, field);
                         if(ImGui::DragFloat(name, &value))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -370,7 +421,7 @@ namespace BeeEngine::Editor
                     case MType::Vector2:
                     {
                         glm::vec2 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<glm::vec2, MType::Vector2>(mField, &value, mObject, field);
                         if(ImGui::DragFloat2(name, glm::value_ptr(value)))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -380,7 +431,7 @@ namespace BeeEngine::Editor
                     case MType::Vector3:
                     {
                         glm::vec3 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<glm::vec3, MType::Vector3>(mField, &value, mObject, field);
                         if(ImGui::DragFloat3(name, glm::value_ptr(value)))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -390,7 +441,7 @@ namespace BeeEngine::Editor
                     case MType::Vector4:
                     {
                         glm::vec4 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<glm::vec4, MType::Vector4>(mField, &value, mObject, field);
                         if(ImGui::DragFloat4(name, glm::value_ptr(value)))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -400,7 +451,7 @@ namespace BeeEngine::Editor
                     case MType::Color:
                     {
                         Color4 value;
-                        GetFieldData(mField, &value, mObject, field);
+                        GetFieldData<Color4, MType::Color>(mField, &value, mObject, field);
                         if(ImGui::ColorEdit4(name, value.ValuePtr()))
                         {
                             SetFieldData(mField, &value, mObject, field);
@@ -414,9 +465,8 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            auto object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
@@ -471,9 +521,8 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            auto object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
@@ -486,7 +535,7 @@ namespace BeeEngine::Editor
                             auto& textureAsset = AssetManager::GetAsset<Asset>(value);
                             if(textureAsset.GetType() == AssetType::Localized)
                             {
-                                textureName = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                                textureName = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                             }
                             else
                             {
@@ -539,9 +588,8 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            auto object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
@@ -554,7 +602,7 @@ namespace BeeEngine::Editor
                             auto& fontAsset = AssetManager::GetAsset<Asset>(value);
                             if(fontAsset.GetType() == AssetType::Localized)
                             {
-                                fontName = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                                fontName = String(fontAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(fontAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                             }
                             else
                             {
@@ -607,9 +655,8 @@ namespace BeeEngine::Editor
                         ImGui::SameLine();
                         if(mObject)
                         {
-                            MonoObject* monoObject;
-                            mObject->GetFieldValue(mField, &monoObject);
-                            ScriptingEngine::GetAssetHandle(monoObject, value);
+                            auto object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
                         }
                         else
                         {
@@ -622,7 +669,7 @@ namespace BeeEngine::Editor
                             auto& prefabAsset = AssetManager::GetAsset<Asset>(value);
                             if(prefabAsset.GetType() == AssetType::Localized)
                             {
-                                prefabName = String(prefabAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(prefabAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale()).Name) + ")";
+                                prefabName = String(prefabAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(prefabAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
                             }
                             else
                             {

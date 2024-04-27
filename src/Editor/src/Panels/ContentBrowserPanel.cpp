@@ -242,7 +242,7 @@ namespace BeeEngine::Editor
             , m_CurrentDirectory(workingDirectory)
             , m_EditorDomain(&editorDomain)
     {
-        m_DirectoryIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture, "en_US");
-        m_FileIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::FileTexture, "en_US");
+        m_DirectoryIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture, Locale::Localization::Default);
+        m_FileIcon = AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::FileTexture, Locale::Localization::Default);
     }
 }

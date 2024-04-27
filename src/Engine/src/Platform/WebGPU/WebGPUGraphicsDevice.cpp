@@ -1,9 +1,11 @@
 //
 // Created by Александр Лебедев on 30.06.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUGraphicsDevice.h"
+#if defined(BEE_COMPILE_SDL)
 #include "SDL3/SDL.h"
+#endif
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "Core/TypeDefines.h"
 #include "Renderer/Vertex.h"
@@ -190,7 +192,9 @@ namespace BeeEngine::Internal
     {
         //Code taken from https://github.com/gecko0307/wgpu-dlang/blob/master/src/dgpu/core/gpu.d
         WGPUSurface surface;
+#if defined(BEE_COMPILE_SDL)
         SDL_Window* window = (SDL_Window*)WindowHandler::GetInstance()->GetWindow();
+#endif
 #if defined(WINDOWS)
         auto nativeInfo = WindowHandler::GetInstance()->GetNativeInfo();
         WGPUSurfaceDescriptorFromWindowsHWND sfdHwnd = {
@@ -375,3 +379,4 @@ namespace BeeEngine::Internal
         co_return;
     }
 }
+#endif

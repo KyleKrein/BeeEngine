@@ -11,6 +11,7 @@
 #include "Locale/Locale.h"
 #include <glm/glm.hpp>
 #include "Core/Time.h"
+#include "MUtils.h"
 
 namespace BeeEngine
 {
@@ -22,6 +23,7 @@ namespace BeeEngine
     public:
         static void Init();
         static void Shutdown();
+        static bool IsInitialized();
         static void SetLocaleDomain(Locale::Domain& domain);
         static Locale::Domain& GetLocaleDomain();
         static const String& GetScriptingLocale();
@@ -39,7 +41,7 @@ namespace BeeEngine
 
         static bool HasGameScript(const String& name);
         static const std::unordered_map<String, Ref<MClass>>& GetGameScripts();
-        static void RegisterInternalCall(const std::string& name, void* method);
+        static void RegisterNativeFunction(const String& name, void* function);
 
         static void OnEntityCreated(Entity entity, MClass *pClass);
 
@@ -67,11 +69,14 @@ namespace BeeEngine
         static glm::vec2 GetViewportSize();
         static void SetViewportSize(float width, float height);
 
-    private:
+        static void UnloadAppContext();
 
+    private:
+        static void InitDotNetHost();
         static class MAssembly& LoadAssembly(const Path& path);
         static void InitMono();
         static bool IsGameScript(const MClass& klass);
+        static bool AreAllManagedHandlesLoaded();
         static struct ScriptingEngineData s_Data;
 
         static void MonoShutdown();

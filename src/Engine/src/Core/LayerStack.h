@@ -19,10 +19,9 @@ namespace BeeEngine{
         void PopLayer(Ref<Layer> layer);
         void PopOverlay(Ref<Layer> overlay);
         void SetGuiLayer(ImGuiLayer* guiLayer);
-        void FinishGuiRendering();
 
         void OnEvent(EventDispatcher& dispatcher);
-        void Update();
+        void Update(FrameData& frameData);
     private:
         std::vector<Ref<Layer>> m_layers;
         Scope<ImGuiLayer> m_guiLayer;

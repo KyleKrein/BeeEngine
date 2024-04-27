@@ -60,6 +60,8 @@ namespace BeeEngine
         Font = 2,
         Prefab = 3,
         Scene = 4,
+        Mesh = 5,
+        MeshSource = 10,
 
         /*Shader = 3,
         Mesh = 4,

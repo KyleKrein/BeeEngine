@@ -2,6 +2,7 @@
   "dependencies":
   [
     "icu",
-    "boost-context"
+    "boost-context",
+    "nethost"
   ]
 }

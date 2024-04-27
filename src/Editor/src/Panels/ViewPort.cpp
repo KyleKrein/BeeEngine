@@ -31,6 +31,8 @@ namespace BeeEngine::Editor
         preferences.Height = m_Height * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 
+        preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; //RedInteger
+
         m_FrameBuffer = FrameBuffer::Create(preferences);
     }
 
@@ -57,8 +59,7 @@ namespace BeeEngine::Editor
     void ViewPort::UpdateRuntime(bool renderPhysicsColliders) noexcept
     {
         BEE_PROFILE_FUNCTION();
-        Renderer::Clear();
-        m_FrameBuffer->Bind();
+        auto cmd = m_FrameBuffer->Bind();
 
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
@@ -78,7 +79,7 @@ namespace BeeEngine::Editor
         }
 
         m_Scene->UpdateRuntime();
-        SceneRenderer::RenderScene(*m_Scene, *m_FrameBuffer, m_GameDomain->GetLocale());
+        SceneRenderer::RenderScene(*m_Scene, cmd, m_GameDomain->GetLocale());
 
         auto primaryCameraEntity = m_Scene->GetPrimaryCameraEntity();
         if(primaryCameraEntity)
@@ -88,23 +89,23 @@ namespace BeeEngine::Editor
             auto viewMatrix = glm::inverse(Math::ToGlobalTransform(primaryCameraEntity));
             auto viewProjection = camera.GetProjectionMatrix() * viewMatrix;
             m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjection)), sizeof(glm::mat4));
-            RenderSelectedEntityOutline();
+            RenderSelectedEntityOutline(cmd);
             if(renderPhysicsColliders)
-                SceneRenderer::RenderPhysicsColliders(*m_Scene, *m_FrameBuffer, *m_CameraBindingSet);
+                SceneRenderer::RenderPhysicsColliders(*m_Scene, cmd, *m_CameraBindingSet);
         }
-        m_FrameBuffer->Unbind();
+        m_FrameBuffer->Unbind(cmd);
     }
     void ViewPort::UpdateEditor(EditorCamera& camera, bool renderPhysicsColliders) noexcept
     {
         BEE_PROFILE_FUNCTION();
-        m_FrameBuffer->Bind();
+        auto cmd = m_FrameBuffer->Bind();
         m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(camera.GetViewProjection())), sizeof(glm::mat4));
         if(m_SelectedEntity && m_SelectedEntity.HasComponent<CameraComponent>())
-            RenderCameraFrustum();
-        SceneRenderer::RenderScene(*m_Scene, *m_FrameBuffer, m_GameDomain->GetLocale(), camera, camera.GetViewProjection(), camera.GetPosition(), camera.GetForwardDirection(), camera.GetUpDirection(), camera.GetRightDirection());
-        RenderSelectedEntityOutline();
+            RenderCameraFrustum(cmd);
+        SceneRenderer::RenderScene(*m_Scene, cmd, m_GameDomain->GetLocale(), camera, camera.GetViewProjection(), camera.GetPosition(), camera.GetForwardDirection(), camera.GetUpDirection(), camera.GetRightDirection());
+        RenderSelectedEntityOutline(cmd);
         if(renderPhysicsColliders)
-            SceneRenderer::RenderPhysicsColliders(*m_Scene, *m_FrameBuffer, *m_CameraBindingSet);
+            SceneRenderer::RenderPhysicsColliders(*m_Scene, cmd, *m_CameraBindingSet);
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
@@ -124,7 +125,7 @@ namespace BeeEngine::Editor
             //BeeCoreTrace("Coords: {}, {}. Pixel data: {}", mouseX, mouseY, pixelData);
             m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
         }
-        m_FrameBuffer->Unbind();
+        m_FrameBuffer->Unbind(cmd);
     }
 
     void ViewPort::RenderImGuizmo(EditorCamera& camera)
@@ -289,7 +290,7 @@ namespace BeeEngine::Editor
         m_ScenePath = path.AsUTF8();
     }
 
-    void ViewPort::RenderCameraFrustum()
+    void ViewPort::RenderCameraFrustum(CommandBuffer& commandBuffer)
     {
         auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
         auto& cameraComponent = m_SelectedEntity.GetComponent<CameraComponent>();
@@ -331,30 +332,30 @@ namespace BeeEngine::Editor
 
         // Отрисовка линий фрустума
         // Верхняя грань
-        Renderer::SubmitLine(ntl, ntr, *m_CameraBindingSet, color, 0.1f);
-        Renderer::SubmitLine(ntr, ftr, *m_CameraBindingSet, color, 0.1f);
-        Renderer::SubmitLine(ftr, ftl, *m_CameraBindingSet, color, 0.1f);
-        Renderer::SubmitLine(ftl, ntl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ntl, ntr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ntr, ftr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ftr, ftl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ftl, ntl, *m_CameraBindingSet, color, 0.1f);
 
         // Нижняя грань
-        Renderer::SubmitLine(nbl, nbr, *m_CameraBindingSet, color, 0.1f);
-        Renderer::SubmitLine(nbr, fbr, *m_CameraBindingSet, color, 0.1f);
-        Renderer::SubmitLine(fbr, fbl, *m_CameraBindingSet, color, 0.1f);
-        Renderer::SubmitLine(fbl, nbl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(nbl, nbr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(nbr, fbr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(fbr, fbl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(fbl, nbl, *m_CameraBindingSet, color, 0.1f);
 
         // Боковые грани
-        Renderer::SubmitLine(ntl, nbl, *m_CameraBindingSet, color, 0.1f);
-        Renderer::SubmitLine(ntr, nbr, *m_CameraBindingSet, color, 0.1f);
-        Renderer::SubmitLine(ftl, fbl, *m_CameraBindingSet, color, 0.1f);
-        Renderer::SubmitLine(ftr, fbr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ntl, nbl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ntr, nbr, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ftl, fbl, *m_CameraBindingSet, color, 0.1f);
+        commandBuffer.SubmitLine(ftr, fbr, *m_CameraBindingSet, color, 0.1f);
     }
 
-    void ViewPort::RenderSelectedEntityOutline()
+    void ViewPort::RenderSelectedEntityOutline(CommandBuffer& commandBuffer)
     {
         if(m_SelectedEntity && (m_SelectedEntity.HasComponent<SpriteRendererComponent>() || m_SelectedEntity.HasComponent<CircleRendererComponent>()))
         {
             auto transform = Math::ToGlobalTransform(m_SelectedEntity);
-            Renderer::DrawRect(transform, Color4::DarkOrange, *m_CameraBindingSet, 0.05f);
+            commandBuffer.DrawRect(transform, Color4::DarkOrange, *m_CameraBindingSet, 0.05f);
         }
     }
 

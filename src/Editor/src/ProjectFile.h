@@ -59,6 +59,11 @@ namespace BeeEngine::Editor
             return m_ProjectLocaleDomain;
         }
 
+        const Path& GetAssemblyPath() const
+        {
+            return m_AppAssemblyPath;
+        }
+
     private:
         void OnAppAssemblyFileSystemEvent(const Path& path, FileWatcher::Event changeType);
         void OnAssetFileSystemEvent(const Path& path, FileWatcher::Event changeType);

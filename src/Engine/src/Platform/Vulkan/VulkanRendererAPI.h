@@ -1,59 +1,48 @@
 //
-// Created by Александр Лебедев on 24.06.2023.
+// Created by Aleksandr on 22.02.2024.
 //
-
 #pragma once
-#if defined(BEE_COMPILE_VULKAN)
-#include "vulkan/vulkan.h"
-#include "Core/TypeDefines.h"
-#include "Platform/Vulkan/VulkanGraphicsDevice.h"
+#include "Renderer/RendererAPI.h"
+#include <vulkan/vulkan.hpp>
+
+#include "VulkanSwapChain.h"
+#include "VulkanGraphicsDevice.h"
+#include "Renderer/RenderingQueue.h"
 
 namespace BeeEngine::Internal
 {
-    class VulkanRendererAPI
+    class VulkanRendererAPI final : public RendererAPI
     {
     public:
         VulkanRendererAPI();
-        ~VulkanRendererAPI();
+        ~VulkanRendererAPI() override;
 
-        VkCommandBuffer BeginFrame();
-        void EndFrame();
-        void BeginSwapchainRenderPass(VkCommandBuffer commandBuffer);
-        void EndSwapchainRenderPass(VkCommandBuffer commandBuffer);
+        void Init() override;
 
-        bool IsFrameStarted() const
-        {
-            return m_IsFrameStarted;
-        }
-        VkCommandBuffer GetCurrentCommandBuffer() const
-        {
-            BeeExpects(m_IsFrameStarted);
-            return m_CommandBuffers[m_CurrentImageIndex];
-        }
+        CommandBuffer BeginFrame() override;
 
-        VkRenderPass GetSwapchainRenderPass() const
-        {
-            return m_GraphicsDevice.GetSwapChain().GetRenderPass();
-        }
+        void EndFrame() override;
 
-        static VulkanRendererAPI& GetInstance()
-        {
-            static VulkanRendererAPI instance;
-            return instance;
-        }
+        void StartMainCommandBuffer(CommandBuffer& commandBuffer) override;
 
-        VulkanRendererAPI(const VulkanRendererAPI& other) = delete;
-        VulkanRendererAPI& operator=(const VulkanRendererAPI& other) = delete;
+        void EndMainCommandBuffer(CommandBuffer& commandBuffer) override;
+
+        [[nodiscard]] CommandBuffer GetCurrentCommandBuffer() override;
+
+        void DrawInstanced(CommandBuffer& commandBuffer, Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets,
+            uint32_t instanceCount) override;
+
+        void SubmitCommandBuffer(const CommandBuffer& commandBuffer) override;
     private:
         void CreateCommandBuffers();
         void FreeCommandBuffers();
-        void RecreateSwapchain();
-
+        void RecreateSwapChain();
     private:
-        std::vector<VkCommandBuffer> m_CommandBuffers;
+        RenderingQueue m_RenderingQueue;
+        std::vector<vk::CommandBuffer> m_CommandBuffers;
         uint32_t m_CurrentImageIndex = 0;
-        bool m_IsFrameStarted = false;
-        VulkanGraphicsDevice& m_GraphicsDevice;
+        VulkanGraphicsDevice* m_GraphicsDevice;
+        vk::Device m_Device;
+        WindowHandler* m_Window;
     };
 }
-#endif

@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 01.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUShaderModule.h"
 #include "WebGPUGraphicsDevice.h"
 #include "WebGPUInstancedBuffer.h"
@@ -192,3 +192,4 @@ namespace BeeEngine::Internal
         return CreateScope<WebGPUInstancedBuffer>(m_InstanceBufferLayout, MAX_INSTANCED_BUFFER_COUNT);
     }
 }
+#endif

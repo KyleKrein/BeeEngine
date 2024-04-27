@@ -4,7 +4,7 @@
 
 #include "WebGPUInstance.h"
 #include "Core/CodeSafety/Expects.h"
-
+#if defined(BEE_COMPILE_WEBGPU)
 namespace BeeEngine::Internal
 {
 
@@ -22,3 +22,4 @@ namespace BeeEngine::Internal
         wgpuInstanceRelease(m_Instance);
     }
 }
+#endif

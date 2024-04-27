@@ -40,7 +40,7 @@ namespace BeeEngine
 
         virtual void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels = 4) = 0;
 
-        [[nodiscard]] constexpr AssetType GetType() const override
+        [[nodiscard]] constexpr AssetType GetType() const final
         {
             return AssetType::Texture2D;
         }
@@ -51,9 +51,7 @@ namespace BeeEngine
         {
             return m_BindingSet.get();
         }
-    private:
-        Ref<BindingSet> m_BindingSet = BindingSet::Create({
-            {0, *this}
-        });
+    protected:
+        Ref<BindingSet> m_BindingSet;
     };
 }

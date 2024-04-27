@@ -227,7 +227,7 @@ namespace BeeEngine
             Category = EventCategory::App;
             m_Type = EventType::WindowFocus;
         }
-        bool IsFocused() const
+        [[nodiscard]] bool IsFocused() const
         {
             return m_IsFocused;
         }
@@ -418,6 +418,10 @@ namespace BeeEngine
     struct WindowMovedEvent: public Event
     {
     public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::WindowMoved;
+        }
         WindowMovedEvent(int32_t x, int32_t y)
         : m_X(x), m_Y(y)
         {
@@ -434,5 +438,26 @@ namespace BeeEngine
         }
     private:
         int32_t m_X, m_Y;
+    };
+
+    struct WindowMinimizedEvent: public Event
+    {
+    public:
+        static consteval EventType GetStaticType() noexcept
+        {
+            return EventType::WindowMinimized;
+        }
+        WindowMinimizedEvent(bool isMinimized)
+            : m_IsMinimized(isMinimized)
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::WindowMinimized;
+        }
+        [[nodiscard]] bool IsMinimized() const
+        {
+            return m_IsMinimized;
+        }
+    private:
+        const bool m_IsMinimized;
     };
 }

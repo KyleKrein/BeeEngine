@@ -32,10 +32,6 @@ target_link_libraries(BeeEngine_Tests
         PUBLIC BeeEngine
 )
 
-set(MONO_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../Engine/vendor/mono/libs/)
-configureMono(${MONO_DIRECTORY})
-copy_mono_dlls(BeeEngine_Tests)
-
 file(COPY AssetsForTests DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
 
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

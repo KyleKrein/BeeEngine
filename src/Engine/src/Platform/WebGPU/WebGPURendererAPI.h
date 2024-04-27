@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_WEBGPU)
 #include <webgpu/webgpu.h>
 #include "Renderer/RendererAPI.h"
 
@@ -24,12 +25,7 @@ namespace BeeEngine::Internal
 
         [[nodiscard]] RenderPass GetMainRenderPass() const override;
 
-        void SetClearColor(const Color4& color) override;
-        void Clear() override;
-
         [[nodiscard]]CommandBuffer GetCurrentCommandBuffer() const override { return m_CurrentCommandBuffer; }
-
-        void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) override;
 
         void DrawInstanced(Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount) override;
 
@@ -37,7 +33,6 @@ namespace BeeEngine::Internal
         {
             m_CommandBuffersForSubmition.push_back(commandBuffer);
         }
-        [[nodiscard]] Color4 ReadPixel(uint32_t x, uint32_t y) override;
     private:
         class WebGPUGraphicsDevice& m_GraphicsDevice;
         WGPUTextureView m_NextTexture;
@@ -47,3 +42,4 @@ namespace BeeEngine::Internal
         std::vector<CommandBuffer> m_CommandBuffersForSubmition;
     };
 }
+#endif

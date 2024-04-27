@@ -88,7 +88,8 @@ namespace BeeEngine
         float m_AspectRatio = 0.0f;
 
         float m_VerticalFOV = glm::radians(45.0f);
-        float m_PerspectiveNear = 0.01f;
-        float m_PerspectiveFar = 1000.0f;
+        //Near clip is more than far clip because of the reversed depth buffer in order to increase quality of depth testing https://vkguide.dev/docs/new_chapter_3/loading_meshes/
+        float m_PerspectiveNear = 10000;//0.01f;
+        float m_PerspectiveFar = 0.01f;//1000.0f;
     };
 }

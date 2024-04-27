@@ -14,7 +14,7 @@ namespace BeeEngine::LocalizationTool
 
     void LocalizationToolLayer::OnAttach()
     {
-        m_Domain.SetLocale("en_US");
+        m_Domain.SetLocale(Locale::Localization::Default);
         Path folder = FileDialogs::OpenFolder();
         auto paths = Locale::LocalizationGenerator::GetLocalizationFiles(folder);
         Locale::LocalizationGenerator::ProcessLocalizationFiles(m_Domain, paths);
@@ -27,7 +27,7 @@ namespace BeeEngine::LocalizationTool
 
     }
 
-    void LocalizationToolLayer::OnUpdate()
+    void LocalizationToolLayer::OnUpdate(FrameData& frameData)
     {
 
     }

@@ -10,6 +10,6 @@ namespace BeeEngine::Editor
     class EditorApplication: public Application
     {
     public:
-        explicit EditorApplication(WindowProperties&& properties) noexcept;
+        explicit EditorApplication(ApplicationProperties&& properties) noexcept;
     };
 }

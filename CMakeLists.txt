@@ -8,6 +8,8 @@ project(
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(BEEENGINE_DOTNET_VERSION "8.0")
+
 include(cmake/StandardProjectSettings.cmake)
 include(cmake/PackageInstaller.cmake)
 
@@ -17,7 +19,7 @@ add_library(project_warnings INTERFACE)
 include(cmake/CompilerWarnings.cmake)
 set_project_warnings(project_warnings)
 
-include_directories(src/Engine/src/Allocator)
+#include_directories(src/Engine/src/Allocator)
 
 add_subdirectory(src/Engine)
 add_subdirectory(src/Sandbox2D)

@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/Mesh.h"
 #include <webgpu/webgpu.h>
 
@@ -48,3 +49,4 @@ namespace BeeEngine::Internal
         class WebGPUGraphicsDevice& m_GraphicsDevice;
     };
 }
+#endif

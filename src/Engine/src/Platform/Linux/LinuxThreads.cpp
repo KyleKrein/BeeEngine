@@ -5,7 +5,7 @@
 #include <sched.h>
 #include <thread>
 #include "Core/Numbers.h"
-namespace BeeEngine::Internal
+namespace BeeEngine
 {
     void ThreadSetAffinity(std::thread& thread, uint32_t core)
     {

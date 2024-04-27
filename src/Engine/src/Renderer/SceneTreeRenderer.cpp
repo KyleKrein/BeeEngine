@@ -24,37 +24,7 @@ namespace BeeEngine
     {
         std::vector<byte> instancedDataVector(instancedData.size());
         memcpy(instancedDataVector.data(), instancedData.data(), instancedData.size());
-        if(isTransparent)
-        {
-            m_Transparent.emplace_back(Entity{transform,&model,bindingSets, std::move(instancedDataVector)});
-        }
-        else
-        {
-            m_NotTransparent.emplace_back(Entity{transform,&model,bindingSets,std::move(instancedDataVector)});
-        }
-    }
-
-    void SceneTreeRenderer::Render()
-    {
-        std::ranges::sort(m_Transparent, [this](const Entity& a, const Entity& b)
-        {
-            auto aDistance = glm::distance(a.Transform[3], m_CameraTransform[3]);
-            auto bDistance = glm::distance(b.Transform[3], m_CameraTransform[3]);
-            return aDistance > bDistance;
-        });
-        for(auto& entity: m_NotTransparent)
-        {
-            Renderer::SubmitInstance(*entity.Model,entity.BindingSets, entity.InstancedData);
-        }
-        Renderer::Flush();
-        for(auto& entity: m_Transparent)
-        {
-            Renderer::SubmitInstance(*entity.Model,entity.BindingSets, entity.InstancedData);
-        }
-        Renderer::Flush();
-        //auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
-        //statistics.OpaqueInstanceCount += m_NotTransparent.size();
-        //statistics.TransparentInstanceCount += m_Transparent.size();
+        m_AllEntities.emplace_back(Entity{transform,&model,bindingSets,std::move(instancedDataVector)});
     }
     struct TextInstancedData
     {
@@ -181,7 +151,7 @@ namespace BeeEngine
             };
             std::vector<byte> instancedData(sizeof(TextInstancedData));
             memcpy(instancedData.data(), &data, sizeof(TextInstancedData));
-            m_Transparent.emplace_back(Entity{transform,&textModel,std::vector<BindingSet*>{m_TextBindingSet, atlasTexture.GetBindingSet()}, std::move(instancedData)});
+            m_AllEntities.emplace_back(Entity{transform,&textModel,std::vector<BindingSet*>{m_TextBindingSet, atlasTexture.GetBindingSet()}, std::move(instancedData)});
 
             if(it != end)
             {

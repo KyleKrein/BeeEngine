@@ -71,7 +71,7 @@ if (WIN32) #Apply patches to exclude d3d and WINUI
         set(BEE_WEBGPU_PATCH_TAG_CACHE ${BEE_WEBGPU_PATCH_TAG} CACHE INTERNAL "WebGPU patch tag" FORCE)
     endif ()
 endif ()
-
+set(DAWN_FETCH_DEPENDENCIES OFF CACHE BOOL "Fetch dependencies from the internet" FORCE)
 
 function(enable_webgpu target)
     message("Enabling WebGPU for ${target}")

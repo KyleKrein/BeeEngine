@@ -11,7 +11,7 @@ namespace BeeEngine::LocalizationTool
     class LocalizationToolApplication : public Application
     {
     public:
-        LocalizationToolApplication(WindowProperties&& properties) noexcept
+        LocalizationToolApplication(ApplicationProperties&& properties) noexcept
         : Application(properties)
         {
             PushLayer(CreateRef<LocalizationToolLayer>());

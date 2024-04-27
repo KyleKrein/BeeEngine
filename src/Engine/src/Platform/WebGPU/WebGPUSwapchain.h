@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include <webgpu/webgpu.h>
 
 namespace BeeEngine::Internal
@@ -29,3 +29,4 @@ namespace BeeEngine::Internal
         uint32_t m_Height;
     };
 }
+#endif

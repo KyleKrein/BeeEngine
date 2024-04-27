@@ -39,23 +39,23 @@ namespace BeeEngine
     }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
-    static int Main(int argc, char *argv[])
+    int Main(int argc, char *argv[])
     {
         g_Restart = true;
         while (g_Restart)
         {
             g_Restart = false;
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
-            Job::Initialize();
             Internal::InitEngine();
+            Job::Initialize();
             Internal::WindowsUTF8ConsoleOutput consoleOutput;
             Application* application = CreateApplication({argc, argv});
             BEE_DEBUG_END_PROFILING_SESSION();
             application->Run();
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineShutdown", "shutdown.json");
             delete application;
-            Internal::ShutDownEngine();
             Job::Shutdown();
+            Internal::ShutDownEngine();
             BEE_DEBUG_END_PROFILING_SESSION();
         }
         return 0;

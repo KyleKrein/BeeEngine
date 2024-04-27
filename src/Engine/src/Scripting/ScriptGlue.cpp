@@ -10,31 +10,36 @@
 #include "Scene/Prefab.h"
 #include "Core/Input.h"
 #include "MAssembly.h"
+#include "NativeToManaged.h"
 #include "Core/Logging/GameLogger.h"
 
 
-#define BEE_INTERNAL_CALL(name) ScriptingEngine::RegisterInternalCall("BeeEngine.Internal.InternalCalls::" #name, (void*)&name)
+#define BEE_NATIVE_FUNCTION(name) ScriptingEngine::RegisterNativeFunction(#name, (void*)&name)
 
 namespace BeeEngine
 {
-    static UTF8String ConvertMonoStringToString(MonoString* str)
-    {
-        MonoError error {};
-        char* strPtr = mono_string_to_utf8_checked(str, &error);
-        if(error.error_code != MONO_ERROR_NONE)
-        {
-            BeeError("Could not convert MonoString to char*: {}", mono_error_get_message(&error));
-            return {};
-        }
-        UTF8String result = strPtr;
-        mono_free(strPtr);
-        return result;
-    }
 
-    std::unordered_map<MonoType*, std::function<void*(Entity)>> s_CreateComponentFunctions;
-    std::unordered_map<MonoType*, std::function<void*(Entity)>> s_GetComponentFunctions;
-    std::unordered_map<MonoType*, std::function<bool(Entity)>> s_HasComponentFunctions;
-    std::unordered_map<MonoType*, std::function<void(Entity)>> s_RemoveComponentFunctions;
+    std::unordered_map<ScriptGlue::ComponentType, std::function<void*(Entity)>> s_CreateComponentFunctions;
+    std::unordered_map<ScriptGlue::ComponentType, std::function<void*(Entity)>> s_GetComponentFunctions;
+    std::unordered_map<ScriptGlue::ComponentType, std::function<bool(Entity)>> s_HasComponentFunctions;
+    std::unordered_map<ScriptGlue::ComponentType, std::function<void(Entity)>> s_RemoveComponentFunctions;
+
+    std::optional<ScriptGlue::ComponentType> ManagedNameToComponentType(const String& name)
+    {
+        if(name == "BeeEngine.TransformComponent")
+            return ScriptGlue::ComponentType::Transform;
+        if(name == "BeeEngine.SpriteRendererComponent")
+            return ScriptGlue::ComponentType::SpriteRenderer;
+        if(name == "BeeEngine.TextRendererComponent")
+            return ScriptGlue::ComponentType::TextRenderer;
+        if(name == "BeeEngine.BoxCollider2DComponent")
+            return ScriptGlue::ComponentType::BoxCollider2D;
+        if(name == "BeeEngine.Rigidbody2DComponent")
+            return ScriptGlue::ComponentType::Rigidbody2D;
+        if(name == "BeeEngine.CircleRendererComponent")
+            return ScriptGlue::ComponentType::CircleRenderer;
+        return std::nullopt;
+    }
 
     template<typename ...Component>
     void ScriptGlue::RegisterComponent()
@@ -43,16 +48,16 @@ namespace BeeEngine
             auto typeName = TypeName<Component>();
             size_t pos = typeName.find_last_of(':');
             std::string managedTypeName = FormatString("BeeEngine.{}", typeName.substr(pos + 1));
-            MonoType* managedType = mono_reflection_type_from_name((char*)managedTypeName.c_str(), ScriptingEngine::GetCoreAssembly().m_MonoImage);
-            if(!managedType)
+            std::optional<ScriptGlue::ComponentType> managedType = ManagedNameToComponentType(managedTypeName);
+            if(!managedType.has_value())
             {
                 BeeCoreTrace("Could not find C# component type {}", managedTypeName);
                 return;
-            }                                            \
-            s_CreateComponentFunctions[managedType] = [](Entity entity) {return &entity.AddComponent<Component>();};
-            s_GetComponentFunctions[managedType] = [](Entity entity) {return &entity.GetComponent<Component>();};
-            s_HasComponentFunctions[managedType] = [](Entity entity) {return entity.HasComponent<Component>();};
-            s_RemoveComponentFunctions[managedType] = [](Entity entity) {entity.RemoveComponent<Component>();};
+            }
+            s_CreateComponentFunctions[managedType.value()] = [](Entity entity) {return &entity.AddComponent<Component>();};
+            s_GetComponentFunctions[managedType.value()] = [](Entity entity) {return &entity.GetComponent<Component>();};
+            s_HasComponentFunctions[managedType.value()] = [](Entity entity) {return entity.HasComponent<Component>();};
+            s_RemoveComponentFunctions[managedType.value()] = [](Entity entity) {entity.RemoveComponent<Component>();};
 
         }(), ...);
     }
@@ -64,6 +69,7 @@ namespace BeeEngine
     }
     void ScriptGlue::Register()
     {
+        
         if(!s_CreateComponentFunctions.empty())
         {
             s_CreateComponentFunctions.clear();
@@ -75,76 +81,70 @@ namespace BeeEngine
             RegisterComponent(AllComponents{});
         }
         {//Internal Calls
-            BEE_INTERNAL_CALL(Log_Warn);
-            BEE_INTERNAL_CALL(Log_Info);
-            BEE_INTERNAL_CALL(Log_Error);
-            BEE_INTERNAL_CALL(Log_Trace);
+            BEE_NATIVE_FUNCTION(Log_Warn);
+            BEE_NATIVE_FUNCTION(Log_Info);
+            BEE_NATIVE_FUNCTION(Log_Error);
+            BEE_NATIVE_FUNCTION(Log_Trace);
 
-            BEE_INTERNAL_CALL(Entity_GetComponent);
-            BEE_INTERNAL_CALL(Entity_CreateComponent);
-            BEE_INTERNAL_CALL(Entity_HasComponent);
-            BEE_INTERNAL_CALL(Entity_RemoveComponent);
-            BEE_INTERNAL_CALL(Entity_FindEntityByName);
-            BEE_INTERNAL_CALL(Entity_GetScriptInstance);
-            BEE_INTERNAL_CALL(Entity_GetParent);
-            BEE_INTERNAL_CALL(Entity_SetParent);
-            BEE_INTERNAL_CALL(Entity_GetNextChild);
-            BEE_INTERNAL_CALL(Entity_HasChild);
-            BEE_INTERNAL_CALL(Entity_AddChild);
-            BEE_INTERNAL_CALL(Entity_RemoveChild);
-            BEE_INTERNAL_CALL(Entity_GetName);
-            BEE_INTERNAL_CALL(Entity_SetName);
-            BEE_INTERNAL_CALL(Entity_Destroy);
-            BEE_INTERNAL_CALL(Entity_Duplicate);
-            BEE_INTERNAL_CALL(Entity_InstantiatePrefab);
+            BEE_NATIVE_FUNCTION(Entity_GetComponent);
+            BEE_NATIVE_FUNCTION(Entity_CreateComponent);
+            BEE_NATIVE_FUNCTION(Entity_HasComponent);
+            BEE_NATIVE_FUNCTION(Entity_RemoveComponent);
+            BEE_NATIVE_FUNCTION(Entity_FindEntityByName);
+            BEE_NATIVE_FUNCTION(Entity_GetParent);
+            BEE_NATIVE_FUNCTION(Entity_SetParent);
+            BEE_NATIVE_FUNCTION(Entity_GetNextChild);
+            BEE_NATIVE_FUNCTION(Entity_HasChild);
+            BEE_NATIVE_FUNCTION(Entity_AddChild);
+            BEE_NATIVE_FUNCTION(Entity_RemoveChild);
+            BEE_NATIVE_FUNCTION(Entity_GetName);
+            BEE_NATIVE_FUNCTION(Entity_SetName);
+            BEE_NATIVE_FUNCTION(Entity_Destroy);
+            BEE_NATIVE_FUNCTION(Entity_Duplicate);
+            BEE_NATIVE_FUNCTION(Entity_InstantiatePrefab);
 
-            BEE_INTERNAL_CALL(Entity_GetTransformComponent);
-            BEE_INTERNAL_CALL(Entity_GetTranslation);
-            BEE_INTERNAL_CALL(Entity_SetTranslation);
+            BEE_NATIVE_FUNCTION(TextRendererComponent_GetText);
+            BEE_NATIVE_FUNCTION(TextRendererComponent_SetText);
 
-            BEE_INTERNAL_CALL(TextRendererComponent_GetText);
-            BEE_INTERNAL_CALL(TextRendererComponent_SetText);
+            BEE_NATIVE_FUNCTION(Input_IsKeyDown);
+            BEE_NATIVE_FUNCTION(Input_IsMouseButtonDown);
+            BEE_NATIVE_FUNCTION(Input_GetMousePosition);
+            BEE_NATIVE_FUNCTION(Input_GetMousePositionInWorldSpace);
 
-            BEE_INTERNAL_CALL(Input_IsKeyDown);
-            BEE_INTERNAL_CALL(Input_IsMouseButtonDown);
-            BEE_INTERNAL_CALL(Input_GetMousePosition);
-            BEE_INTERNAL_CALL(Input_GetMousePositionInWorldSpace);
+            BEE_NATIVE_FUNCTION(Asset_Load);
+            BEE_NATIVE_FUNCTION(Asset_Unload);
+            BEE_NATIVE_FUNCTION(Asset_IsValid);
+            BEE_NATIVE_FUNCTION(Asset_IsLoaded);
 
-            BEE_INTERNAL_CALL(Asset_Load);
-            BEE_INTERNAL_CALL(Asset_Unload);
-            BEE_INTERNAL_CALL(Asset_IsValid);
-            BEE_INTERNAL_CALL(Asset_IsLoaded);
+            BEE_NATIVE_FUNCTION(Physics2D_CastRay);
 
-            BEE_INTERNAL_CALL(Physics2D_CastRay);
-
-            BEE_INTERNAL_CALL(Locale_GetLocale);
-            BEE_INTERNAL_CALL(Locale_SetLocale);
-            BEE_INTERNAL_CALL(Locale_TranslateStatic);
-            BEE_INTERNAL_CALL(Locale_TranslateDynamic);
+            BEE_NATIVE_FUNCTION(Locale_GetLocale);
+            BEE_NATIVE_FUNCTION(Locale_SetLocale);
+            BEE_NATIVE_FUNCTION(Locale_TranslateStatic);
+            BEE_NATIVE_FUNCTION(Locale_TranslateDynamic);
         }
     }
-
-    void ScriptGlue::Log_Warn(MonoString *message)
+    void ScriptGlue::Log_Warn(void *message)
     {
-        auto msg = ConvertMonoStringToString(message);
+        auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeWarn(msg);
     }
 
-    void ScriptGlue::Log_Info(MonoString *message)
+    void ScriptGlue::Log_Info(void *message)
     {
-        auto msg = ConvertMonoStringToString(message);
+        auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeInfo(msg);
     }
 
-    void ScriptGlue::Log_Error(MonoString *message)
+    void ScriptGlue::Log_Error(void *message)
     {
-        auto msg = ConvertMonoStringToString(message);
+        auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeError(msg);
     }
 
-    void ScriptGlue::Log_Trace(MonoString *message)
+    void ScriptGlue::Log_Trace(void *message)
     {
-        auto msg = ConvertMonoStringToString(message);
+        auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeCoreTrace(msg);
     }
 
@@ -162,12 +162,12 @@ namespace BeeEngine
         entity.GetComponent<TransformComponent>().Translation = *inTranslation;
     }
 
-    bool ScriptGlue::Input_IsKeyDown(Key key)
+    int32_t ScriptGlue::Input_IsKeyDown(Key key)
     {
         return Input::KeyPressed(key);
     }
 
-    bool ScriptGlue::Input_IsMouseButtonDown(MouseButton button)
+    int32_t ScriptGlue::Input_IsMouseButtonDown(MouseButton button)
     {
         return Input::MouseKeyPressed(button);
     }
@@ -178,110 +178,44 @@ namespace BeeEngine
         Entity entity = scene->GetEntityByUUID(id);
         return &entity.GetComponent<TransformComponent>();
     }
-
-    void *ScriptGlue::Entity_CreateComponent(uint64_t id, MonoReflectionType *reflectionType)
-    {
-        auto entity = GetEntity(id);
-        BeeExpects(entity);
-        BeeExpects(reflectionType != nullptr);
-        MonoType* managedType = mono_reflection_type_get_type(reflectionType);
-#if defined(BEE_ENABLE_CHECKS)
-        if(s_CreateComponentFunctions.contains(managedType))
-        {
-#endif
-                return s_CreateComponentFunctions.at(managedType)(entity);
-#if defined(BEE_ENABLE_CHECKS)
-        }
-        else
-        {
-            char* typeName = mono_type_get_name(managedType);
-            BeeError("Could not find C# component type {}", typeName);
-            mono_free(typeName);
-            return nullptr;
-        }
-#endif
-    }
-
     class Entity ScriptGlue::GetEntity(UUID id)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         return scene->GetEntityByUUID(id);
     }
 
-    bool ScriptGlue::Entity_HasComponent(uint64_t id, MonoReflectionType *reflectionType)
+    void *ScriptGlue::Entity_CreateComponent(uint64_t id, ComponentType componentType)
     {
         auto entity = GetEntity(id);
         BeeExpects(entity);
-        BeeExpects(reflectionType != nullptr);
-        MonoType* managedType = mono_reflection_type_get_type(reflectionType);
-        if(s_HasComponentFunctions.contains(managedType))
-        {
-            return s_HasComponentFunctions.at(managedType)(entity);
-        }
-        else
-        {
-            char* typeName = mono_type_get_name(managedType);
-            BeeError("Could not find C# component type {}", typeName);
-            mono_free(typeName);
-            return false;
-        }
+        return s_CreateComponentFunctions.at(componentType)(entity);
     }
 
-    void ScriptGlue::Entity_RemoveComponent(uint64_t id, MonoReflectionType *reflectionType)
+    int32_t ScriptGlue::Entity_HasComponent(uint64_t id, ComponentType componentType)
     {
         auto entity = GetEntity(id);
         BeeExpects(entity);
-        BeeExpects(reflectionType != nullptr);
-        MonoType* managedType = mono_reflection_type_get_type(reflectionType);
-#if defined(BEE_ENABLE_CHECKS)
-        if(s_RemoveComponentFunctions.contains(managedType))
-        {
-#endif
-                s_RemoveComponentFunctions.at(managedType)(entity);
-#if defined(BEE_ENABLE_CHECKS)
-                return;
-        }
-        else
-        {
-            char* typeName = mono_type_get_name(managedType);
-            BeeError("Could not find C# component type {}", typeName);
-            mono_free(typeName);
-        }
-#endif
+        return s_HasComponentFunctions.at(componentType)(entity);
     }
 
-    void *ScriptGlue::Entity_GetComponent(uint64_t id, MonoReflectionType *reflectionType)
+    void ScriptGlue::Entity_RemoveComponent(uint64_t id, ComponentType componentType)
     {
         auto entity = GetEntity(id);
         BeeExpects(entity);
-        BeeExpects(reflectionType != nullptr);
-        MonoType* managedType = mono_reflection_type_get_type(reflectionType);
-#if defined(BEE_ENABLE_CHECKS)
-        if(s_GetComponentFunctions.contains(managedType))
-        {
-#endif
-                return s_GetComponentFunctions.at(managedType)(entity);
-#if defined(BEE_ENABLE_CHECKS)
-        }
-        else
-        {
-            char* typeName = mono_type_get_name(managedType);
-            BeeError("Could not find C# component type {}", typeName);
-            mono_free(typeName);
-            return nullptr;
-        }
-#endif
+        s_RemoveComponentFunctions.at(componentType)(entity);
     }
 
-    MonoObject *ScriptGlue::Entity_GetScriptInstance(uint64_t id)
+    void *ScriptGlue::Entity_GetComponent(uint64_t id, ComponentType componentType)
     {
-        return ScriptingEngine::GetEntityScriptInstance(id)->GetMObject().GetMonoObject();
+        auto entity = GetEntity(id);
+        BeeExpects(entity);
+        return s_GetComponentFunctions.at(componentType)(entity);
     }
 
-    uint64_t ScriptGlue::Entity_FindEntityByName(MonoString *name)
+
+    uint64_t ScriptGlue::Entity_FindEntityByName(void *name)
     {
-        MonoError error {};
-        auto nameStr = ConvertMonoStringToString(name);
+        auto nameStr = NativeToManaged::StringGetFromManagedString(name);
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByName(nameStr);
         if(!entity)
@@ -296,31 +230,21 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_Destroy(uint64_t id)
     {
-        /*DeletionQueue::Frame().PushFunction([id]()
-        {
-            auto* scene = ScriptingEngine::GetSceneContext();
-            if(!scene)
-                return;
-            auto entity = scene->GetEntityByUUID(id);
-            if(!entity)
-                return;
-            scene->DestroyEntity(entity);
-        });*/
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByUUID(id);
         scene->DestroyEntity(entity);
     }
 
-    MonoString *ScriptGlue::TextRendererComponent_GetText(uint64_t id)
+    void* ScriptGlue::TextRendererComponent_GetText(uint64_t id)
     {
         auto entity = GetEntity(id);
-        MonoString* string = mono_string_new(mono_domain_get(), entity.GetComponent<TextRendererComponent>().Text.c_str());
-        return string;
+        GCHandle handle = NativeToManaged::StringCreateManaged(entity.GetComponent<TextRendererComponent>().Text);
+        return handle;
     }
 
-    void ScriptGlue::TextRendererComponent_SetText(uint64_t id, MonoString *text)
+    void ScriptGlue::TextRendererComponent_SetText(uint64_t id, void *text)
     {
-        auto textStr = ConvertMonoStringToString(text);
+        auto textStr = NativeToManaged::StringGetFromManagedString(text);
         auto entity = GetEntity(id);
         if(!entity)
         {
@@ -340,12 +264,12 @@ namespace BeeEngine
         AssetManager::UnloadAsset(*handle);
     }
 
-    bool ScriptGlue::Asset_IsLoaded(AssetHandle* handle)
+    int32_t ScriptGlue::Asset_IsLoaded(AssetHandle* handle)
     {
         return AssetManager::IsAssetHandleValid(*handle);
     }
 
-    bool ScriptGlue::Asset_IsValid(AssetHandle* handle)
+    int32_t ScriptGlue::Asset_IsValid(AssetHandle* handle)
     {
         return AssetManager::IsAssetLoaded(*handle);
     }
@@ -395,7 +319,7 @@ namespace BeeEngine
         return 0;
     }
 
-    bool ScriptGlue::Entity_HasChild(uint64_t parentId, uint64_t childId)
+    int32_t ScriptGlue::Entity_HasChild(uint64_t parentId, uint64_t childId)
     {
         auto parent = GetEntity(parentId);
         auto child = GetEntity(childId);
@@ -417,16 +341,16 @@ namespace BeeEngine
         child.RemoveParent();
     }
 
-    MonoString *ScriptGlue::Entity_GetName(uint64_t id)
+    void *ScriptGlue::Entity_GetName(uint64_t id)
     {
         auto entity = GetEntity(id);
-        MonoString* string = mono_string_new(mono_domain_get(), entity.GetComponent<TagComponent>().Tag.c_str());
-        return string;
+        GCHandle handle = NativeToManaged::StringCreateManaged(entity.GetComponent<TagComponent>().Tag);
+        return handle;
     }
 
-    void ScriptGlue::Entity_SetName(uint64_t id, MonoString *name)
+    void ScriptGlue::Entity_SetName(uint64_t id, void *name)
     {
-        auto nameStr = ConvertMonoStringToString(name);
+        auto nameStr = NativeToManaged::StringGetFromManagedString(name);
         auto entity = GetEntity(id);
         if(!entity)
         {
@@ -486,105 +410,96 @@ namespace BeeEngine
         *outPosition = {worldCoords.x, worldCoords.y};
     }
 
-    MonoString *ScriptGlue::Locale_GetLocale()
+    void *ScriptGlue::Locale_GetLocale()
     {
-        return mono_string_new(mono_domain_get(), ScriptingEngine::GetScriptingLocale().c_str());
+        GCHandle handle = NativeToManaged::StringCreateManaged(ScriptingEngine::GetScriptingLocale());
+        return handle;
     }
 
-    void ScriptGlue::Locale_SetLocale(MonoString *locale)
+    void ScriptGlue::Locale_SetLocale(void *locale)
     {
-        auto localeStr = ConvertMonoStringToString(locale);
+        auto localeStr = NativeToManaged::StringGetFromManagedString(locale);
         ScriptingEngine::GetLocaleDomain().SetLocale(localeStr);
     }
 
-    MonoString *ScriptGlue::Locale_TranslateStatic(MonoString *key)
+    void *ScriptGlue::Locale_TranslateStatic(void *key)
     {
-        auto keyStr = ConvertMonoStringToString(key);
-        return mono_string_new(mono_domain_get(), ScriptingEngine::GetLocaleDomain().Translate(keyStr.c_str()).c_str());
+        auto keyStr = NativeToManaged::StringGetFromManagedString(key);
+        String translated = ScriptingEngine::GetLocaleDomain().Translate(keyStr.c_str());
+        GCHandle handle = NativeToManaged::StringCreateManaged(translated);
+        return handle;
     }
     using VariantType = std::variant<String, bool, int32_t, int16_t, int64_t, uint32_t, uint16_t, uint64_t, float32_t, float64_t>;
-    VariantType ProcessArrayElement(MonoObject* obj)
-    {
-        MonoClass* klass = mono_object_get_class(obj);
-        MonoType* type = mono_class_get_type(klass);
-        switch (mono_type_get_type(type))
-        {
-            case MONO_TYPE_BOOLEAN:
-            {
-                bool* value = (bool*)mono_object_unbox(obj);
-                return *value;
-            }
-            case MONO_TYPE_I4:
-            {
-                int32_t* value = (int32_t*)mono_object_unbox(obj);
-                return *value;
-            }
-            case MONO_TYPE_I2:
-            {
-                int16_t* value = (int16_t*)mono_object_unbox(obj);
-                return *value;
-            }
-            case MONO_TYPE_I8:
-            {
-                int64_t* value = (int64_t*)mono_object_unbox(obj);
-                return *value;
-            }
-            case MONO_TYPE_U4:
-            {
-                uint32_t* value = (uint32_t*)mono_object_unbox(obj);
-                return *value;
-            }
-            case MONO_TYPE_U2:
-            {
-                uint16_t* value = (uint16_t*)mono_object_unbox(obj);
-                return *value;
-            }
-            case MONO_TYPE_U8:
-            {
-                uint64_t* value = (uint64_t*)mono_object_unbox(obj);
-                return *value;
-            }
-            case MONO_TYPE_R4:
-            {
-                float32_t* value = (float32_t*)mono_object_unbox(obj);
-                return *value;
-            }
-            case MONO_TYPE_R8:
-            {
-                float64_t* value = (float64_t*)mono_object_unbox(obj);
-                return *value;
-            }
-            case MONO_TYPE_STRING:
-            {
-                return ConvertMonoStringToString((MonoString*)obj);
-            }
-            default:
-            {
-                MonoObject* ex;
-                MonoString* str = mono_object_to_string(obj, &ex);
-                if(ex)
-                {
-                    MonoString * message = mono_object_to_string(ex, nullptr);
-                    BeeCoreError("Could not convert object to string: {}", ConvertMonoStringToString(message));
-                    return {};
-                }
-                return ConvertMonoStringToString(str);
-            }
-        }
-    }
 
-    MonoString *ScriptGlue::Locale_TranslateDynamic(MonoString *keyMono, MonoArray *argsMono)
+    /**
+     * @brief Struct that holds information about the type of the argument 
+     * and the pointer to the argument or the data itself if it is a value type, 
+     * that is less than 8 bytes
+     * 
+     * IMPORTANT: If this type is changed, the corresponding C# type in
+     * InternalCalls.cs MUST be changed as well
+     */
+    struct ReflectionTypeInfo
     {
-        auto key = ConvertMonoStringToString(keyMono);
+        MType Type;
+        void* Ptr;
+    };
+
+    void* ScriptGlue::Locale_TranslateDynamic(void *keyM, ArrayInfo argsM)
+    {
+        String key = NativeToManaged::StringGetFromManagedString(keyM);
         std::vector<VariantType> args;
-        size_t length = mono_array_length(argsMono);
-        args.reserve(length);
-        for(size_t i = 0; i < length; i++)
+        std::span<ReflectionTypeInfo> argsSpan{reinterpret_cast<ReflectionTypeInfo*>(argsM.data), argsM.size};
+        args.reserve(argsM.size);
+
+        for(auto& arg : argsSpan)
         {
-            MonoObject* obj = mono_array_get(argsMono, MonoObject*, i);
-            args.push_back(ProcessArrayElement(obj));
+            switch(arg.Type)
+            {
+                case MType::String:
+                    args.push_back(NativeToManaged::StringGetFromManagedString(arg.Ptr));
+                    break;
+                case MType::Boolean:
+                    args.push_back(*reinterpret_cast<bool32_t*>(&arg.Ptr) != 0);
+                    break;
+                case MType::Int32:
+                    args.push_back(*reinterpret_cast<int32_t*>(&arg.Ptr));
+                    break;
+                case MType::Int16:
+                    args.push_back(*reinterpret_cast<int16_t*>(&arg.Ptr));
+                    break;
+                case MType::Int64:
+                    args.push_back(*reinterpret_cast<int64_t*>(&arg.Ptr));
+                    break;
+                case MType::UInt32:
+                    args.push_back(*reinterpret_cast<uint32_t*>(&arg.Ptr));
+                    break;
+                case MType::UInt16:
+                    args.push_back(*reinterpret_cast<uint16_t*>(&arg.Ptr));
+                    break;
+                case MType::UInt64:
+                    args.push_back(*reinterpret_cast<uint64_t*>(&arg.Ptr));
+                    break;
+                case MType::Single:
+                    args.push_back(*reinterpret_cast<float32_t*>(&arg.Ptr));
+                    break;
+                case MType::Double:
+                    args.push_back(*reinterpret_cast<float64_t*>(&arg.Ptr));
+                    break;
+                case MType::Byte:
+                    args.push_back(*reinterpret_cast<uint8_t*>(&arg.Ptr));
+                    break;
+                case MType::SByte:
+                    args.push_back(*reinterpret_cast<int8_t*>(&arg.Ptr));
+                    break;
+                default:
+                    BeeError("Unsupported argument type {}", arg.Type);
+                    break;
+            }
         }
-        auto translated = ScriptingEngine::GetLocaleDomain().TranslateRuntime(key.c_str(), args);
-        return mono_string_new(mono_domain_get(), translated.c_str());
+        
+        String translated = ScriptingEngine::GetLocaleDomain().TranslateRuntime(key.c_str(), args);
+        BeeCoreTrace("Translated key {} to {}", key, translated);
+        return NativeToManaged::StringCreateManaged(translated);
     }
 }

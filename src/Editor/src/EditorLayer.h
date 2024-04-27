@@ -24,6 +24,7 @@
 #include "Locale/Locale.h"
 #include "Locale/ImGuiLocalizationPanel.h"
 #include "ImGuiNativeDragAndDrop.h"
+#include "JobSystem/AdaptiveMutex.h"
 
 namespace BeeEngine::Editor
 {
@@ -34,10 +35,11 @@ namespace BeeEngine::Editor
 
         void OnAttach() noexcept override;
         void OnDetach() noexcept override;
-        void OnUpdate() noexcept override;
+        void OnUpdate(FrameData& frameData) noexcept override;
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
     private:
+        Jobs::SpinLock m_BigLock {};
         ImGuiNativeDragAndDrop m_DragAndDrop {};
         Locale::Domain m_EditorLocaleDomain {"Editor"};
         ImGuiOutputConsole m_Console {};
@@ -104,5 +106,9 @@ namespace BeeEngine::Editor
         void SaveAssetRegistry();
 
         void DeleteAsset(const AssetHandle &handle);
+
+        String GenerateImGuiINIFile() const;
+
+        void SetDefaultImGuiWindowLayoutIfNotPresent();
     };
 }

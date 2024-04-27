@@ -10,6 +10,11 @@
 
 namespace BeeEngine
 {
+    class CommandBuffer;
+}
+
+namespace BeeEngine
+{
     class Material
     {
         public:
@@ -19,6 +24,8 @@ namespace BeeEngine
         Material& operator=(const Material& other ) = delete;
 
         [[nodiscard]] virtual InstancedBuffer& GetInstancedBuffer() const = 0;
+
+        virtual void Bind(CommandBuffer& cmd) = 0;
 
         static Ref<Material> Create(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, bool loadFromCache = true);
     };

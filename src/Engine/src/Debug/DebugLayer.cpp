@@ -4,7 +4,7 @@
 
 #include "DebugLayer.h"
 #include "Instrumentor.h"
-#include "AllocatorStatistics.h"
+#include "Allocator/AllocatorStatistics.h"
 #include <imgui.h>
 
 
@@ -24,7 +24,7 @@ namespace BeeEngine
 
         }
 
-        void DebugLayer::OnUpdate()
+        void DebugLayer::OnUpdate(FrameData& frameData)
         {
             if(Instrumentor::Get().IsSessionActive())
             {

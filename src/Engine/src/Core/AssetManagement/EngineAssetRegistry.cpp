@@ -7,6 +7,18 @@
 
 namespace BeeEngine
 {
+    consteval static auto CreateCheckerboardTexture()
+    {
+        uint32_t magenta = 0xFF00FFFF;
+        uint32_t black = 0x000000FF;
+        std::array<uint32_t, 16 * 16> pixels; //for 16x16 checkerboard texture
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 16; y++) {
+                pixels[y * 16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
+            }
+        }
+        return pixels;
+    }
     static void LoadTextures(IAssetManager* assetManager)
     {
         auto stopButtonTexture = Internal::GetEmbeddedResource(EmbeddedResource::StopButtonTexture);
@@ -20,6 +32,9 @@ namespace BeeEngine
 
         auto fileTexture = Internal::GetEmbeddedResource(EmbeddedResource::FileTexture);
         assetManager->LoadAsset(fileTexture, EngineAssetRegistry::FileTexture, "File Texture", AssetType::Texture2D);
+
+        constexpr static std::array<uint32_t, 16 *16 > pixels = CreateCheckerboardTexture(); //for 16x16 checkerboard texture
+        //assetManager->LoadAsset({(byte*)pixels.data(), pixels.size() * sizeof(uint32_t)}, EngineAssetRegistry::CheckerboardTexture, "Checkerboard Texture", AssetType::Texture2D);
     }
 
     static void LoadFonts(IAssetManager* assetManager)

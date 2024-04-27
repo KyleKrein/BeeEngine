@@ -8,10 +8,10 @@
 #include "Locale.h"
 namespace BeeEngine::Locale
 {
-    String LocalizationGenerator::GenerateLocalization(const Domain &domain, const String &locale)
+    String LocalizationGenerator::GenerateLocalization(const Domain &domain, const Localization &locale)
     {
         // Проверка наличия локали в данных
-        if (!domain.m_Languages.contains(locale))
+        if (!domain.m_Languages.contains(locale.GetLanguageString()))
         {
             throw std::runtime_error("Locale not found");
         }
@@ -19,27 +19,11 @@ namespace BeeEngine::Locale
         YAML::Emitter out;
         out << YAML::BeginMap;
 
-        const auto& keyMap = domain.m_Languages.at(locale);
-        for (const auto& [key, values] : keyMap)
+        const auto& keyMap = domain.m_Languages.at(locale.GetLanguageString());
+        for (const auto& [key, value] : keyMap)
         {
-            // Проверка на наличие вариаций (склонения, множественное число и т.д.)
-            if (values.size() == 1)
-            {
-                out << YAML::Key << key;
-                out << YAML::Value << values.at("default");
-            }
-            else
-            {
-                out << YAML::Key << key;
-                out << YAML::Value << YAML::BeginMap;
-
-                for (const auto& [variation, value] : values)
-                {
-                    out << YAML::Key << variation << YAML::Value << value;
-                }
-
-                out << YAML::EndMap;
-            }
+            out << YAML::Key << key;
+            out << YAML::Value << value;
         }
 
         out << YAML::EndMap;
@@ -51,7 +35,7 @@ namespace BeeEngine::Locale
         File::WriteFile(path, content);
     }
 
-    void LocalizationGenerator::CreateLocalizationFile(const Domain &domain, const String &locale, const Path &path)
+    void LocalizationGenerator::CreateLocalizationFile(const Domain &domain, const Localization &locale, const Path &path)
     {
         CreateLocalizationFile(path, GenerateLocalization(domain, locale));
     }
@@ -71,24 +55,14 @@ namespace BeeEngine::Locale
 
     void LocalizationGenerator::ProcessLocalizationFile(Domain &domain, const Path &path)
     {
-        String locale = path.GetFileNameWithoutExtension();
+        Localization locale = {path.GetFileNameWithoutExtension()};
         domain.AddLocale(locale);
         domain.AddLocalizationSource(locale, path);
         auto content = File::ReadFile(path);
         YAML::Node node = YAML::Load(content);
         for(auto key : node)
         {
-            if(key.second.IsScalar())
-            {
-                domain.AddLocaleKey(locale, key.first.as<std::string>(), key.second.as<std::string>());
-            }
-            else if(key.second.IsMap())
-            {
-                for(auto variation : key.second)
-                {
-                    domain.AddLocaleKey(locale, key.first.as<std::string>(), variation.second.as<std::string>(), variation.first.as<std::string>());
-                }
-            }
+            domain.AddLocaleKey(locale, key.first.as<std::string>(), key.second.as<std::string>());
         }
     }
 

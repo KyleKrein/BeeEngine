@@ -1,7 +1,7 @@
 //
 // Created by Александр Лебедев on 18.07.2023.
 //
-
+#if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUFramebuffer.h"
 #include "Debug/Instrumentor.h"
 #include "WebGPUGraphicsDevice.h"
@@ -218,12 +218,6 @@ namespace BeeEngine::Internal
         }
         m_Invalid = false;
     }
-
-    uint32_t WebGPUFrameBuffer::GetRendererID() const
-    {
-        BeeExpects(false);
-        return -1;
-    }
     /*
     struct ReadPixelData
     {
@@ -380,10 +374,6 @@ namespace BeeEngine::Internal
         co_return result;
     }
 */
-    void WebGPUFrameBuffer::ClearColorAttachment(uint32_t attachmentIndex, int value)
-    {
-
-    }
 
     WGPUTextureFormat WebGPUFrameBuffer::ConvertToWebGPUTextureFormat(FrameBufferTextureFormat format)
     {
@@ -448,3 +438,4 @@ namespace BeeEngine::Internal
 
     }
 }
+#endif

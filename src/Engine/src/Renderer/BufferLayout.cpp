@@ -74,8 +74,8 @@ namespace BeeEngine
         }
     }
 
-    BufferLayout::BufferLayout(std::vector<BufferElement> &&inElements, std::vector<BufferElement> &&instanceElements, std::vector<BufferUniformElement>&& uniformElements)
-    : m_Stride(0), m_InstancedStride(0), m_InElements(inElements), m_InstancedElements(instanceElements), m_UniformElements(uniformElements)
+    BufferLayout::BufferLayout(std::vector<BufferElement> &&inElements, std::vector<BufferElement> &&instanceElements, std::vector<BufferUniformElement>&& uniformElements, std::vector<BufferElement>&& outElements)
+    : m_Stride(0), m_InstancedStride(0), m_InElements(std::move(inElements)), m_InstancedElements(std::move(instanceElements)), m_UniformElements(std::move(uniformElements)), m_OutElements(std::move(outElements))
     {
         BEE_PROFILE_FUNCTION();
         uint32_t offset = 0;

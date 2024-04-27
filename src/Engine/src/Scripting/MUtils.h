@@ -3,11 +3,11 @@
 //
 
 #pragma once
+#include <complex.h>
+
+#include "MAssembly.h"
+#include "MClass.h"
 #include "MTypes.h"
-extern "C"
-{
-    typedef struct _MonoType MonoType;
-}
 namespace BeeEngine
 {
     class MUtils
@@ -15,15 +15,13 @@ namespace BeeEngine
     public:
         static MType ManagedNameToMType(const String& name);
         static MType StringToMType(const String& name);
-        static MType MonoTypeToMType(MonoType* monoType);
         static const char* MTypeToString(MType type);
-
-        static MVisibility MonoFieldFlagsToVisibility(uint32_t flags);
 
         static bool IsSutableForEdit(const class MField& field);
 
-        static MVisibility MonoMethodFlagsToVisibility(uint32_t flags);
-
         static size_t SizeOfMType(MType type);
+
+        static bool ShouldFreeGCHandle(const MField& field);
+        static bool IsValueType(MType type);
     };
 }

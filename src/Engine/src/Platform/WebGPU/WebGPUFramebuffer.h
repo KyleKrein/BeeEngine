@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#if defined(BEE_COMPILE_WEBGPU)
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/RenderPass.h"
@@ -31,9 +32,7 @@ namespace BeeEngine::Internal
             //wgpuTextureViewReference(m_DepthAttachmentTextureView);
             return (uintptr_t)m_DepthAttachmentTextureView;
         }
-        [[nodiscard]] uint32_t GetRendererID() const override;
         int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
-        void ClearColorAttachment(uint32_t attachmentIndex, int value) override;
 
     private:
         std::vector<FrameBufferTextureSpecification> m_ColorAttachmentSpecification;
@@ -82,3 +81,4 @@ namespace BeeEngine::Internal
         FlushCallbackData m_FlushCallbackData {&m_FlushCallback, &m_Flushed};
     };
 }
+#endif

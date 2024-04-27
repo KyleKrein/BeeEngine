@@ -47,6 +47,7 @@ namespace BeeEngine
         std::unordered_map<std::string, Ref<Font>> m_Fonts;
 
         void LoadStandardAssets();
+        void CleanUp();
         friend class Application;
     };
 }

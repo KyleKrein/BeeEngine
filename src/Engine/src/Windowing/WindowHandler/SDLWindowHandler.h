@@ -6,6 +6,7 @@
 
 
 #include "WindowHandler.h"
+#if defined(BEE_COMPILE_SDL)
 #include "SDL3/SDL.h"
 #include "KeyCodes.h"
 
@@ -14,7 +15,7 @@ namespace BeeEngine::Internal
     class SDLWindowHandler: public WindowHandler
     {
     public:
-        SDLWindowHandler(const WindowProperties& properties, EventQueue& eventQueue);
+        SDLWindowHandler(const ApplicationProperties& properties, EventQueue& eventQueue);
         ~SDLWindowHandler() override;
         SDLWindowHandler(const SDLWindowHandler&) = delete;
         SDLWindowHandler& operator=(const SDLWindowHandler&) = delete;
@@ -31,7 +32,7 @@ namespace BeeEngine::Internal
         void ShowCursor() override;
         void ProcessEvents() override;
         [[nodiscard]] bool IsRunning() const override;
-        void UpdateTime() override;
+        Time::secondsD UpdateTime() override;
         void Close() override;
 
         GraphicsDevice& GetGraphicsDevice() override
@@ -73,3 +74,4 @@ namespace BeeEngine::Internal
         void InitializeDragDropOnWindows();
     };
 }
+#endif
