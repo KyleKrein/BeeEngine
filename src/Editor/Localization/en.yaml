@@ -1,54 +1,64 @@
+menubar.file.openScene: Open Scene
 inspector.textRenderer.foreground: Foreground
-text: Text
-inspector.circleRenderer.fade: Fade
-inspector.textRenderer: Text Renderer
+buildProject.build.tooltip: Fill all fields before building
+transform.scale: Scale
+camera.projection.orthographic: Orthographic
 inspector.circleRenderer.thickness: Thickness
+text: Text
 primary: Primary
-texture: Texture
+camera.projection.perspective: Perspective
+sceneHierarchyPanel.createCamera: Create Camera
+buildProject.defaultLocale: Default locale
+inspector.circleRenderer.fade: Fade
 sceneHierarchyPanel.toTopLevel: To Top Level
+menubar.build.reloadScripts: Reload Scripts
+menubar.file.saveSceneAs: Save Scene As...
+inspector.textRenderer: Text Renderer
+texture: Texture
 sceneHierarchyPanel.createEmptyEntity: Create Empty Entity
+menubar.file.saveScene: Save Scene
+sceneHierarchyPanel.duplicateEntity: Duplicate Entity
 size: Size
+sprite: Sprite
+assetPanel.deleteAsset: Delete Asset
 camera.nearClip: Near Clip
 camera.farClip: Far Clip
 camera.fov: FOV
 camera.projection: Projection
-camera.projection.perspective: Perspective
 camera: Camera
+inspector: Inspector
 transform.rotation: Rotation
 createFolder: Create Folder
 transform: Transform
-camera.projection.orthographic: Orthographic
 menubar.file: File
+camera.fixedAspectRatio: Fixed Aspect Ratio
 menubar.view: View
 color: Color
-menubar.file.openScene: Open Scene
-camera.fixedAspectRatio: Fixed Aspect Ratio
 inspector.circleRenderer: Circle Renderer
 assetPanel.dropAssetsButton: Drop here to load asset
 menubar.file.newScene: New Scene
+buildProject.defaultLocale.invalidError: Currently chosen default locale does not exist in the current project
 contentBrowserPanel.exportPrefab: Export Prefab
-sprite: Sprite
 sprite.tilingFactor: Tiling Factor
-menubar.build.reloadScripts: Reload Scripts
-transform.scale: Scale
-menubar.file.saveSceneAs: Save Scene As...
-menubar.file.saveScene: Save Scene
+menubar.view.outputConsole: Output Console
 createScene: Create Scene
-sceneHierarchyPanel.duplicateEntity: Duplicate Entity
 assetPanel: Assets
 createScript: Create Script
+buildProject.build: Build
 menubar.build: Build
-assetPanel.deleteAsset: Delete Asset
 create: Create
+menubar.view.localization: Localization
 menubar.file.exit: Exit
 name: Name
-menubar.build.regenerateVSSolution: Regenerate VS Solution
 transform.translation: Translation
+menubar.build.regenerateVSSolution: Regenerate VS Solution
 cancel: Cancel
-menubar.view.outputConsole: Output Console
-menubar.view.localization: Localization
-sceneHierarchyPanel.createCamera: Create Camera
 contentBrowserPanel: Content Browser
-sceneHierarchyPanel.deleteEntity: Delete Entity
 sceneHierarchyPanel: Scene Hierarchy
-inspector: Inspector
+sceneHierarchyPanel.deleteEntity: Delete Entity
+menubar.build.buildProject: Build project
+buildProject: Build project
+buildProject.buildtype: Build Type
+buildProject.outputPath: Output path
+buildProject.outputPath.invalidError: Output path should be not empty and should point to an existing directory
+buildProject.defaultLocale.tooltip: Choose a language, that will be used if user's system language is not supported

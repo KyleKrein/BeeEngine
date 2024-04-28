@@ -9,9 +9,21 @@
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "FileSystem/FileWatcher.h"
 #include "Locale/Locale.h"
+#include "Core/OsPlatform.h"
 
 namespace BeeEngine::Editor
 {
+    struct BuildProjectOptions
+    {
+        enum class BuildType
+        {
+            Debug,
+            Release
+        };
+        BuildType BuildType = BuildType::Debug;
+        Path OutputPath;
+        Locale::Localization DefaultLocale = Locale::Localization::Default;
+    };
     class ProjectFile
     {
     public:
@@ -50,6 +62,8 @@ namespace BeeEngine::Editor
 
         void RegenerateSolution();
 
+        void BuildProject(const BuildProjectOptions& options);
+
         void Save() noexcept;
 
         void Update() noexcept;
@@ -65,6 +79,8 @@ namespace BeeEngine::Editor
         }
 
     private:
+        std::vector<std::pair<OSPlatform, Path>> CheckForAvailablePlatforms();
+        Path BuildWindowsGame(const Path& gameLibraryPath, const Path& outputDirectory);
         void OnAppAssemblyFileSystemEvent(const Path& path, FileWatcher::Event changeType);
         void OnAssetFileSystemEvent(const Path& path, FileWatcher::Event changeType);
 

@@ -13,6 +13,7 @@
 #include <filesystem>
 #include "Locale/LocalizationGenerator.h"
 #include "Utils/Commands.h"
+#include <Core/GameConfig.h>
 
 namespace BeeEngine::Editor
 {
@@ -144,6 +145,167 @@ namespace BeeEngine::Editor
     {
         auto sources = VSProjectGeneration::GetSourceFiles(m_ProjectPath);
         VSProjectGeneration::GenerateProject(m_ProjectPath, sources, m_ProjectName);
+    }
+
+    std::vector<std::pair<OSPlatform, Path>> ProjectFile::CheckForAvailablePlatforms()
+    {
+        std::vector<std::pair<OSPlatform, Path>> result;
+        //TODO implement
+        result.emplace_back(OSPlatform::Windows, std::filesystem::current_path() / "Platforms" / "Windows");
+        return result;
+    }
+
+    class BuildProjectAssetManager : public IAssetManager
+    {
+        public:
+        Ref<Asset> GetAssetRef(AssetHandle handle) const
+        {
+            return nullptr;
+        }
+        Asset * GetAsset(AssetHandle handle) const
+        {
+            return nullptr;
+        }
+        void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type) {}
+        void LoadAsset(const Path& path, AssetHandle handle) {}
+        void UnloadAsset(AssetHandle handle) {}
+
+        bool IsAssetHandleValid(AssetHandle handle) const { return false; }
+        bool IsAssetLoaded(AssetHandle handle) const { return false; }
+
+        AssetRegistry& GetAssetRegistry()
+        {
+            return m_AssetRegistry;
+        }
+        private:
+        AssetRegistry m_AssetRegistry;
+    };
+
+    void ProjectFile::BuildProject(const BuildProjectOptions& options)
+    {
+        const Path libraryOutputPath = m_ProjectPath.AsUTF8() + "/.beeengine/build/"  + ToString(options.BuildType);
+        RunCommand("dotnet build " + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln --configuration " + ToString(options.BuildType) + " --output " + libraryOutputPath.AsUTF8());
+        const Path gameLibraryPath = libraryOutputPath /"GameLibrary.dll";
+        const auto outputPath = options.OutputPath.ToStdPath();
+        std::filesystem::remove_all(outputPath);
+        std::filesystem::create_directory(outputPath);
+        
+        const std::vector<std::pair<OSPlatform, Path>> availablePlatforms = CheckForAvailablePlatforms();
+        for(const auto& [platform, pathToTemplate] : availablePlatforms)
+        {
+            const auto platformOutputPath = outputPath / ToString(platform);
+            std::filesystem::create_directory(platformOutputPath);
+            std::filesystem::copy(pathToTemplate.ToStdPath(), platformOutputPath, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+            Path gameFilesPath;
+            switch (platform)
+            {
+            case OSPlatform::Windows:
+                gameFilesPath = BuildWindowsGame(gameLibraryPath, platformOutputPath);
+                break;
+            default:
+                BeeCoreWarn("Cannot build for platform {0}", platform);
+                continue;
+            }
+            const Path gameConfigPath = gameFilesPath / "Game.cfg";
+            const Path assetRegistryPath = gameFilesPath / (GetProjectName() + ".beeassetregistry");
+
+            const Path assetPath = gameFilesPath / "Assets";
+            const Path scenePath = assetPath / "Scenes";
+            const Path texturePath = assetPath / "Textures";
+            const Path localePath = assetPath / "Localization";
+            const Path prefabPath = assetPath / "Prefabs";
+            const Path fontPath = assetPath / "Fonts";
+
+            File::CreateDirectory(assetPath);
+            File::CreateDirectory(scenePath);
+            File::CreateDirectory(texturePath);
+            File::CreateDirectory(localePath);
+            File::CreateDirectory(prefabPath);
+            File::CreateDirectory(fontPath);
+
+            AssetRegistry assetRegistry;
+            for(const auto& [registryUuid, assetMap] : m_AssetManager->GetAssetRegistry())
+            {
+                if(registryUuid != m_AssetRegistryID)
+                {
+                    continue; //TODO add support for multiple asset registries
+                }
+                for(const auto& [uuid, metadata] : assetMap)
+                {
+                    if(metadata.Location == AssetLocation::Embedded)
+                    {
+                        continue;
+                    }
+                    AssetMetadata meta = metadata;
+                    auto choosePath = [&]()
+                    {
+                        switch (meta.Type)
+                        {
+                        case AssetType::Scene:
+                            return scenePath;
+                        case AssetType::Texture2D:
+                            return texturePath;
+                        case AssetType::Prefab:
+                            return prefabPath;
+                        case AssetType::Font:
+                            return fontPath;
+                        default:
+                            return assetPath;
+                        }
+                    };
+                    const Path assetOutputPath = choosePath() / std::get<Path>(meta.Data).GetFileName();
+                    File::CopyFile(std::get<Path>(meta.Data), assetOutputPath);
+                    meta.Data = assetOutputPath;
+                    assetRegistry[registryUuid].emplace(uuid, std::move(meta));
+                }
+            }
+            BuildProjectAssetManager assetManager;
+            assetManager.GetAssetRegistry() = std::move(assetRegistry);
+            AssetRegistrySerializer serializer(&assetManager, gameFilesPath, m_AssetRegistryID);
+            serializer.Serialize(assetRegistryPath);
+
+            for(const auto& entry : std::filesystem::recursive_directory_iterator(GetProjectPath().ToStdPath()))
+            {
+                auto extension = entry.path().extension();
+                if(ResourceManager::IsSceneExtension(extension))
+                {
+                    File::CopyFile(entry.path(), scenePath / entry.path().filename());
+                    continue;
+                }
+                if(extension == ".yaml")
+                {
+                    File::CopyFile(entry.path(), localePath / entry.path().filename());
+                    continue;
+                }
+            }
+
+            GameConfig config;
+            config.Name = GetProjectName();
+            config.DefaultLocale = options.DefaultLocale;
+            const auto startingSceneName = GetLastUsedScenePath().GetFileName();
+            
+            for(const auto& entry : std::filesystem::directory_iterator(scenePath.ToStdPath()))
+            {
+                if(startingSceneName == entry.path().filename())
+                {
+                    Path scenePath = entry.path();
+                    config.StartingScene = scenePath.GetRelativePath(gameFilesPath);
+                    break;
+                }
+            }
+            config.Serialize(gameConfigPath);
+        }
+    }
+
+    Path ProjectFile::BuildWindowsGame(const Path &gameLibraryPath, const Path &outputDirectory)
+    {
+        if(!File::Exists(outputDirectory / "libs"))
+        {
+            File::CreateDirectory(outputDirectory / "libs");
+        }
+        File::CopyFile(gameLibraryPath, outputDirectory / "libs" / "GameLibrary.dll");
+
+        return outputDirectory;
     }
 
     void ProjectFile::OnAppAssemblyFileSystemEvent(const Path &path, const FileWatcher::Event changeType)

@@ -1,54 +1,64 @@
+menubar.file.openScene: Открыть сцену
 inspector.textRenderer.foreground: Передний план
-text: Текст
-inspector.circleRenderer.fade: Дымка
-inspector.textRenderer: Текст
+buildProject.build.tooltip: Заполните все поля перед сборкой проекта
+transform.scale: Scale
+camera.projection.orthographic: Ортографическая
 inspector.circleRenderer.thickness: Толщина
+text: Текст
 primary: "{gender, select, male{Главный} female{Главная} other{Главное}}"
-texture: Текстура
+camera.projection.perspective: Перспективная
+sceneHierarchyPanel.createCamera: Создать камеру
+buildProject.defaultLocale: Локализация по умолчанию
+inspector.circleRenderer.fade: Дымка
 sceneHierarchyPanel.toTopLevel: На верхний уровень
+menubar.build.reloadScripts: Перезагрузить скрипты
+menubar.file.saveSceneAs: Сохранить сцену как...
+inspector.textRenderer: Текст
+texture: Текстура
 sceneHierarchyPanel.createEmptyEntity: Создать сущность
+menubar.file.saveScene: Сохранить сцену
+sceneHierarchyPanel.duplicateEntity: Дублировать
 size: Размер
+sprite: Спрайт
+assetPanel.deleteAsset: Удалить
 camera.nearClip: Near Clip
 camera.farClip: Far Clip
 camera.fov: FOV
 camera.projection: Проекция
-camera.projection.perspective: Перспективная
 camera: Камера
+inspector: Инспектор
 transform.rotation: Rotation
 createFolder: Создать папку
 transform: Transform
-camera.projection.orthographic: Ортографическая
 menubar.file: Файл
+camera.fixedAspectRatio: Фиксированное соотношение сторон
 menubar.view: Вид
 color: Цвет
-menubar.file.openScene: Открыть сцену
-camera.fixedAspectRatio: Фиксированное соотношение сторон
 inspector.circleRenderer: Круг
 assetPanel.dropAssetsButton: Импортировать ассет
 menubar.file.newScene: Новая сцена
+buildProject.defaultLocale.invalidError: Выбранная локализация по умолчанию не существует в текущем проекте
 contentBrowserPanel.exportPrefab: Экспортировать префаб
-sprite: Спрайт
 sprite.tilingFactor: Tiling Factor
-menubar.build.reloadScripts: Перезагрузить скрипты
-transform.scale: Scale
-menubar.file.saveSceneAs: Сохранить сцену как...
-menubar.file.saveScene: Сохранить сцену
+menubar.view.outputConsole: Консоль вывода
 createScene: Создать сцену
-sceneHierarchyPanel.duplicateEntity: Дублировать
 assetPanel: Ресурсы игры
 createScript: Создать скрипт
+buildProject.build: Собрать
 menubar.build: Сборка
-assetPanel.deleteAsset: Удалить
 create: Создать
+menubar.view.localization: Локализация
 menubar.file.exit: Выход
 name: Название
-menubar.build.regenerateVSSolution: Пересоздать решение VS
 transform.translation: Translation
+menubar.build.regenerateVSSolution: Пересоздать решение VS
 cancel: Отмена
-menubar.view.outputConsole: Консоль вывода
-menubar.view.localization: Локализация
-sceneHierarchyPanel.createCamera: Создать камеру
 contentBrowserPanel: Файлы проекта
-sceneHierarchyPanel.deleteEntity: Удалить
 sceneHierarchyPanel: Сцена
-inspector: Инспектор
+sceneHierarchyPanel.deleteEntity: Удалить
+menubar.build.buildProject: Сборка проекта
+buildProject: Сборка проекта
+buildProject.buildtype: Тип
+buildProject.outputPath: Путь сборки
+buildProject.outputPath.invalidError: Путь сборки не должен быть пустым, а также должен указывать на существующую папку
+buildProject.defaultLocale.tooltip: Выберите язык локализации, который будет выбран, если язык системы у пользователя не поддерживается в игре

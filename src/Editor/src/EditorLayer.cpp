@@ -19,6 +19,7 @@
 #include "FileSystem/File.h"
 #include "JobSystem/JobScheduler.h"
 #include "Locale/LocalizationGenerator.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 
 namespace BeeEngine::Editor
 {
@@ -115,6 +116,7 @@ namespace BeeEngine::Editor
             m_Console.RenderGUI();
             m_LocalizationPanel->Render();
             m_DragAndDrop.ImGuiRender();
+            DrawBuildProjectPopup();
             ImGui::Begin("Settings");
             ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
             ImGui::End();
@@ -281,6 +283,9 @@ namespace BeeEngine::Editor
         }});
         BuildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.reloadScripts"), [this](){
             ReloadAssembly();
+        }});
+        BuildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.buildProject"), [this](){
+            m_ShowBuildProjectPopup = true;
         }});
         m_MenuBar.AddElement(BuildMenu);
 
@@ -629,5 +634,133 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
         File::WriteFile(iniPath, GenerateImGuiINIFile());
         BeeCoreTrace("Setting default Editor layout");
         //TODO: make a generation of imgui.ini based on locale or make it independant from locale
+    }
+    void EditorLayer::DrawBuildProjectPopup()
+    {
+        if(!m_ShowBuildProjectPopup)
+            return;
+        ImGui::OpenPopup(m_EditorLocaleDomain.Translate("buildProject").c_str());
+        ImGui::BeginPopupModal(m_EditorLocaleDomain.Translate("buildProject").c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+        static BuildProjectOptions options;
+        static std::string outputPath;
+        ImGui::Text(m_EditorLocaleDomain.Translate("buildProject.buildtype").c_str());
+        ImGui::RadioButton("Debug", reinterpret_cast<int*>(&options.BuildType), static_cast<int>(BuildProjectOptions::BuildType::Debug));
+        ImGui::SameLine();
+        ImGui::RadioButton("Release", reinterpret_cast<int*>(&options.BuildType), static_cast<int>(BuildProjectOptions::BuildType::Release));
+
+        //Choose a default locale from the project locale domain
+        ImGui::Text(m_EditorLocaleDomain.Translate("buildProject.defaultLocale").c_str());
+        ImGui::SameLine();
+        if(ImGui::BeginCombo("##defaultLocale", options.DefaultLocale.GetLanguageString().c_str()))
+        {
+            if(ImGui::BeginTooltip())
+            {
+                ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("buildProject.defaultLocale.tooltip").c_str());
+                ImGui::EndTooltip();
+            }
+            for(auto& locale : m_ProjectFile->GetProjectLocaleDomain().GetLocales())
+            {
+                bool isSelected = options.DefaultLocale.GetLanguageString() == locale;
+                if(ImGui::Selectable(locale.c_str(), isSelected))
+                {
+                    options.DefaultLocale = locale;
+                }
+                if(isSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::Text(m_EditorLocaleDomain.Translate("buildProject.outputPath").c_str());
+        ImGui::SameLine();
+        if(ImGui::InputText("##", &outputPath), ImGuiInputTextFlags_ReadOnly)
+        {
+            options.OutputPath = outputPath;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("..."))
+        {
+            struct JobData
+            {
+                std::string& StringPath;
+                Path& Path;
+            };
+            static JobData getOutputPathJobData {outputPath, options.OutputPath};
+            static Job getOutputPathJob {
+                .Function = [](void* data)
+                {
+                    auto& jobData = *static_cast<JobData*>(data);
+                    Path path = FileDialogs::OpenFolder();
+                    if(path.IsEmpty())
+                        return;
+                    jobData.StringPath = path.AsUTF8();
+                    jobData.Path = std::move(path);
+                },
+                .Data = &getOutputPathJobData,
+            };
+            Job::Schedule(getOutputPathJob);
+        }
+        static std::string customError;
+        auto areAllFieldsFilled = [this]() -> bool
+        {
+            customError.clear();
+            bool isOutputPathEmpty = options.OutputPath.IsEmpty();
+            bool isOutputPathValid = false;
+            bool isDefaultLocaleValid = false;
+            if(!isOutputPathEmpty)
+            {
+                isOutputPathValid = File::Exists(options.OutputPath) && File::IsDirectory(options.OutputPath);
+            }
+            if(!isOutputPathValid)
+            {
+                customError += '\n' + m_EditorLocaleDomain.Translate("buildProject.outputPath.invalidError");
+            }
+            for(auto& locale : m_ProjectFile->GetProjectLocaleDomain().GetLocales())
+            {
+                if(locale == options.DefaultLocale.GetLanguageString())
+                {
+                    isDefaultLocaleValid = true;
+                    break;
+                }
+            }
+            if(!isDefaultLocaleValid)
+            {
+                customError += '\n' + m_EditorLocaleDomain.Translate("buildProject.defaultLocale.invalidError");
+            }
+            bool isEverythingFilled = !isOutputPathEmpty && isOutputPathValid && isDefaultLocaleValid;
+            return isEverythingFilled;
+        };
+        bool disabled = !areAllFieldsFilled();
+        if(disabled)
+        {
+            ImGui::BeginDisabled();
+        }
+        if(ImGui::Button(m_EditorLocaleDomain.Translate("buildProject.build").c_str()))
+        {
+            m_ProjectFile->BuildProject(options);
+            ImGui::CloseCurrentPopup();
+            m_ShowBuildProjectPopup = false;
+        }
+        if(disabled)
+        {
+            ImGui::EndDisabled();
+            if(ImGui::BeginItemTooltip())
+            {
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                ImGui::TextUnformatted((m_EditorLocaleDomain.Translate("buildProject.build.tooltip") + "\n" + customError).c_str());
+                ImGui::PopTextWrapPos();
+                ImGui::EndTooltip();
+            }
+        }
+        ImGui::SameLine();
+        if(ImGui::Button(m_EditorLocaleDomain.Translate("cancel").c_str()))
+        {
+            ImGui::CloseCurrentPopup();
+            m_ShowBuildProjectPopup = false;
+        }
+        ImGui::EndPopup();
     }
 }

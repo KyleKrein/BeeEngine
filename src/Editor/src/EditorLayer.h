@@ -110,5 +110,8 @@ namespace BeeEngine::Editor
         String GenerateImGuiINIFile() const;
 
         void SetDefaultImGuiWindowLayoutIfNotPresent();
+
+        void DrawBuildProjectPopup();
+        bool m_ShowBuildProjectPopup = false;
     };
 }
