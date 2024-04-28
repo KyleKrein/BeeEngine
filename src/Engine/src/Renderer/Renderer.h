@@ -14,6 +14,7 @@
 #include "Model.h"
 #include "RendererStatistics.h"
 #include "Font.h"
+#include "FrameBuffer.h"
 
 namespace BeeEngine
 {
@@ -41,6 +42,7 @@ namespace BeeEngine
         {
             return m_DeltaTime;
         }
+        void CopyFrameBufferImageToSwapchain(FrameBuffer& framebuffer, uint32_t attachmentIndex);
     private:
         void End()
         {
@@ -55,6 +57,7 @@ namespace BeeEngine
     };
     class Renderer
     {
+        friend FrameData;
     public:
         static RenderAPI GetAPI()
         {

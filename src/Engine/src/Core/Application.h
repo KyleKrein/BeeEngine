@@ -105,7 +105,7 @@ namespace BeeEngine{
         }
 
     protected:
-        virtual void Update() {};
+        virtual void Update(FrameData& frameData) {};
 
         inline void PushLayer(Ref<Layer> layer)
         {

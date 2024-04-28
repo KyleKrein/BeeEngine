@@ -150,8 +150,21 @@ namespace BeeEngine::Editor
     std::vector<std::pair<OSPlatform, Path>> ProjectFile::CheckForAvailablePlatforms()
     {
         std::vector<std::pair<OSPlatform, Path>> result;
-        //TODO implement
-        result.emplace_back(OSPlatform::Windows, std::filesystem::current_path() / "Platforms" / "Windows");
+        const Path windowsPath = std::filesystem::current_path() / "Platforms" / "Windows";
+        if(File::Exists(windowsPath))
+            result.emplace_back(OSPlatform::Windows, windowsPath);
+        const Path linuxPath = std::filesystem::current_path() / "Platforms" / "Linux";
+        if(File::Exists(linuxPath))
+            result.emplace_back(OSPlatform::Linux, linuxPath);
+        const Path macPath = std::filesystem::current_path() / "Platforms" / "MacOS";
+        if(File::Exists(macPath))
+            result.emplace_back(OSPlatform::Mac, macPath);
+        const Path iosPath = std::filesystem::current_path() / "Platforms" / "iOS";
+        if(File::Exists(iosPath))
+            result.emplace_back(OSPlatform::iOS, iosPath);
+        const Path androidPath = std::filesystem::current_path() / "Platforms" / "Android";
+        if(File::Exists(androidPath))
+            result.emplace_back(OSPlatform::Android, androidPath);
         return result;
     }
 
@@ -250,6 +263,7 @@ namespace BeeEngine::Editor
                         case AssetType::Font:
                             return fontPath;
                         default:
+                            BeeCoreWarn("Unsupported asset type in project build{0}", meta.Type);
                             return assetPath;
                         }
                     };
@@ -295,6 +309,8 @@ namespace BeeEngine::Editor
             }
             config.Serialize(gameConfigPath);
         }
+        std::filesystem::remove_all(libraryOutputPath.ToStdPath());
+        BeeCoreInfo("Project {0} built successfully in {1} mode!", GetProjectName(), options.BuildType);
     }
 
     Path ProjectFile::BuildWindowsGame(const Path &gameLibraryPath, const Path &outputDirectory)

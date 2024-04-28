@@ -3,6 +3,8 @@
 //
 #include "CommandBuffer.h"
 #include "RenderingQueue.h"
+#include "FrameBuffer.h"
+#include <Platform/Vulkan/VulkanGraphicsDevice.h>
 namespace BeeEngine
 {
     void CommandBuffer::BeginRecording()

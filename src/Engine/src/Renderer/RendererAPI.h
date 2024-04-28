@@ -13,6 +13,7 @@
 
 namespace BeeEngine
 {
+    class FrameBuffer;
     class RendererAPI {
     public:
         virtual ~RendererAPI() = default;
@@ -28,6 +29,8 @@ namespace BeeEngine
         [[nodiscard]] virtual CommandBuffer GetCurrentCommandBuffer() = 0;
         virtual void DrawInstanced(CommandBuffer& commandBuffer, Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount) = 0;
         virtual void SubmitCommandBuffer(const CommandBuffer& commandBuffer) = 0;
+
+        virtual void CopyFrameBufferImageToSwapchain(FrameBuffer& framebuffer, uint32_t attachmentIndex) = 0;
 
         //virtual void DrawInstanced(const Ref<Model>& model, const Ref<UniformBuffer>& instanceBuffer, uint32_t instanceCount) = 0;
 

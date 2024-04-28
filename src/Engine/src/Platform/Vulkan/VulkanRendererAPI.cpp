@@ -9,6 +9,7 @@
 #include "Core/Application.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/Renderer.h"
+#include "VulkanFrameBuffer.h"
 
 namespace BeeEngine::Internal
 {
@@ -165,6 +166,52 @@ namespace BeeEngine::Internal
         auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         cmd.end();
         swapchain.SubmitCommandBuffers(&cmd, 1, &m_CurrentImageIndex);
+    }
+
+    void VulkanRendererAPI::CopyFrameBufferImageToSwapchain(FrameBuffer &framebuffer, uint32_t attachmentIndex)
+    {
+        auto& fb = static_cast<Internal::VulkanFrameBuffer&>(framebuffer);
+        auto& swapchain = m_GraphicsDevice->GetSwapChain();
+        VulkanImage image = fb.GetColorAttachment(attachmentIndex);
+        //vk::CommandBuffer cmd = m_GraphicsDevice->BeginSingleTimeCommands();
+        CommandBuffer commandBuffer = GetCurrentCommandBuffer();
+        auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
+        cmd.endRendering(g_vkDynamicLoader);
+        m_GraphicsDevice->TransitionImageLayout(cmd, image.Image, image.Format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eTransferSrcOptimal);
+        vk::Image swapchainImage = swapchain.GetImage(m_CurrentImageIndex);
+        m_GraphicsDevice->TransitionImageLayout(cmd, swapchainImage, swapchain.GetFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        m_GraphicsDevice->CopyImageToImage(cmd, image.Image, swapchainImage, image.Extent, swapchain.GetExtent());
+        m_GraphicsDevice->TransitionImageLayout(cmd, image.Image, image.Format, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+        m_GraphicsDevice->TransitionImageLayout(cmd, swapchainImage, swapchain.GetFormat(), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal);
+        //m_GraphicsDevice->EndSingleTimeCommands(cmd);
+        vk::RenderingInfo renderingInfo{};
+
+        vk::RenderingAttachmentInfo colorAttachment{};
+        colorAttachment.imageView = swapchain.GetImageView(m_CurrentImageIndex);
+        colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        colorAttachment.loadOp = vk::AttachmentLoadOp::eLoad;
+        colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
+        colorAttachment.clearValue = vk::ClearColorValue{0.1f, 0.1f, 0.1f, 1.0f};
+
+        renderingInfo.renderArea = vk::Rect2D{{0, 0}, swapchain.GetExtent()};
+        renderingInfo.layerCount = 1;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &colorAttachment;
+        renderingInfo.pDepthAttachment = nullptr;
+
+        cmd.beginRendering(&renderingInfo, g_vkDynamicLoader);
+        vk::Viewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float)swapchain.GetExtent().width;
+        viewport.height = (float)swapchain.GetExtent().height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vk::Rect2D scissor{};
+        scissor.offset = vk::Offset2D{0,0};
+        scissor.extent = swapchain.GetExtent();
+        cmd.setViewport(0, 1, &viewport);
+        cmd.setScissor(0, 1, &scissor);
     }
 
     void VulkanRendererAPI::CreateCommandBuffers()

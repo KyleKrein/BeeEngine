@@ -33,6 +33,8 @@ namespace BeeEngine::Internal
             uint32_t instanceCount) override;
 
         void SubmitCommandBuffer(const CommandBuffer& commandBuffer) override;
+
+        void CopyFrameBufferImageToSwapchain(FrameBuffer& framebuffer, uint32_t attachmentIndex) override;
     private:
         void CreateCommandBuffers();
         void FreeCommandBuffers();

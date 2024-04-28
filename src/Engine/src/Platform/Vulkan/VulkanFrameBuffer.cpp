@@ -41,7 +41,7 @@ namespace BeeEngine::Internal
         imageCreateInfo.format = ConvertToVulkanFormat(format);
         imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
         imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
-        imageCreateInfo.usage = IsDepthFormat(format) ? vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled : vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+        imageCreateInfo.usage = IsDepthFormat(format) ? vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled : vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc;
         if(usage == FrameBufferTextureUsage::CPUAndGPU)
         {
             //imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferSrc;
@@ -308,5 +308,10 @@ namespace BeeEngine::Internal
         vmaUnmapMemory(GetVulkanAllocator(), m_ColorAttachmentsTextures[attachmentIndex].Memory);
 
         return pixel;
+    }
+    VulkanImage VulkanFrameBuffer::GetColorAttachment(uint32_t index) const
+    {
+        BeeExpects(index < m_ColorAttachmentsTextures.size());
+        return m_ColorAttachmentsTextures[index];
     }
 }

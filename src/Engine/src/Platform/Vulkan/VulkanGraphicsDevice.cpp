@@ -788,13 +788,13 @@ namespace BeeEngine::Internal
     {
         vk::ImageBlit2 region{};
 
-        region.srcOffsets[0].x = srcSize.width;
-        region.srcOffsets[0].y = srcSize.height;
-        region.srcOffsets[0].z = 1;
+        region.srcOffsets[1].x = srcSize.width;
+        region.srcOffsets[1].y = srcSize.height;
+        region.srcOffsets[1].z = 1;
 
-        region.dstOffsets[0].x = dstSize.width;
-        region.dstOffsets[0].y = dstSize.height;
-        region.dstOffsets[0].z = 1;
+        region.dstOffsets[1].x = dstSize.width;
+        region.dstOffsets[1].y = dstSize.height;
+        region.dstOffsets[1].z = 1;
 
         region.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
         region.srcSubresource.layerCount = 1;

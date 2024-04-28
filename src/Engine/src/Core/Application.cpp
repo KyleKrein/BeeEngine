@@ -46,7 +46,7 @@ namespace BeeEngine{
                     frameData.SetDeltaTime(deltaTime);
                     Renderer::StartMainCommandBuffer(frameData);
                     self.m_Layers.Update(frameData);
-                    self.Update();
+                    self.Update(frameData);
                     Renderer::EndMainCommandBuffer(frameData);
                     Renderer::EndFrame(frameData);
                 //}

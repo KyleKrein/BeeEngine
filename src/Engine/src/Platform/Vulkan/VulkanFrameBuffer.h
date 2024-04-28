@@ -30,6 +30,8 @@ namespace BeeEngine::Internal
         [[nodiscard]] uintptr_t GetDepthAttachmentRendererID() const override;
 
         [[nodiscard]] int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
+
+        VulkanImage GetColorAttachment(uint32_t index) const;
     private:
         void CreateImageAndImageView(VulkanImage& image, vk::ImageView& view, FrameBufferTextureFormat format, FrameBufferTextureUsage usage);
     private:

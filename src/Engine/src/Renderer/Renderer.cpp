@@ -13,6 +13,12 @@ namespace BeeEngine
     Color4 Renderer::s_ClearColor = Color4::DarkGray;
     RendererStatistics Renderer::s_Statistics {};
 
+    void FrameData::CopyFrameBufferImageToSwapchain(FrameBuffer& framebuffer, uint32_t attachmentIndex)
+    {
+        BEE_PROFILE_FUNCTION();
+        Renderer::s_RendererAPI->CopyFrameBufferImageToSwapchain(framebuffer, attachmentIndex);
+    }
+
     void Renderer::EndFrame(FrameData& frameData)
     {
         BEE_PROFILE_FUNCTION();

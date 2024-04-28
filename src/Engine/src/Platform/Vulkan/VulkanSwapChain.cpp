@@ -217,7 +217,7 @@ namespace BeeEngine::Internal
         createInfo.imageColorSpace = m_SurfaceFormat.colorSpace;
         createInfo.imageExtent = m_Extent;
         createInfo.imageArrayLayers = 1;
-        createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
+        createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst;
 
         QueueFamilyIndices indices = m_GraphicsDevice.GetQueueFamilyIndices();
         uint32_t queueFamilyIndices[] = {indices.GraphicsFamily.value(), indices.GraphicsFamily.value()};
