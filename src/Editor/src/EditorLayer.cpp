@@ -26,7 +26,6 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnAttach() noexcept
     {
-
         m_EditorLocaleDomain.SetLocale(Locale::GetSystemLocale());
         auto localizationFilesPaths = Locale::LocalizationGenerator::GetLocalizationFiles(std::filesystem::current_path() / "Localization");
         Locale::LocalizationGenerator::ProcessLocalizationFiles(m_EditorLocaleDomain, localizationFilesPaths);
@@ -283,6 +282,15 @@ namespace BeeEngine::Editor
         }});
         BuildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.reloadScripts"), [this](){
             ReloadAssembly();
+        }});
+        BuildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.rebuildGameLibrary"), [this](){
+            static Job reloadJob {[](void* data)
+            {
+                auto& self = *static_cast<EditorLayer*>(data);
+                self.m_ProjectFile->ReloadAndRebuildGameLibrary();
+            }};
+            reloadJob.Data = this;
+            Job::Schedule(reloadJob);
         }});
         BuildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.buildProject"), [this](){
             m_ShowBuildProjectPopup = true;

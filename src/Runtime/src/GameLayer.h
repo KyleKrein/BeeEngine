@@ -19,10 +19,16 @@ namespace BeeEngine::Runtime
         }
         void OnUpdate(FrameData& frameData) override;
         void OnEvent(EventDispatcher& e) override;
-        //void OnGUIRendering() override;
+        void OnGUIRendering() override
+        {
+            if(m_RenderImGui)
+                m_ImGuiLayer->OnGUIRendering();
+        }
     private:
         Ref<Scene> m_ActiveScene;
         Ref<FrameBuffer> m_FrameBuffer;
         Locale::Domain& m_LocaleDomain;
+        Ref<Layer> m_ImGuiLayer;
+        bool m_RenderImGui = false;
     };
 }

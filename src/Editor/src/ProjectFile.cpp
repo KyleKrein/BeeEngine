@@ -320,7 +320,7 @@ namespace BeeEngine::Editor
             File::CreateDirectory(outputDirectory / "libs");
         }
         File::CopyFile(gameLibraryPath, outputDirectory / "libs" / "GameLibrary.dll");
-
+        std::filesystem::rename((outputDirectory / "GameRuntime.exe").ToStdPath(), (outputDirectory / (GetProjectName() + ".exe")).ToStdPath());
         return outputDirectory;
     }
 
@@ -341,7 +341,7 @@ namespace BeeEngine::Editor
         if(m_MustReload)
         {
             m_MustReload = false;
-            ReloadAndRebuild();
+            ReloadAndRebuildGameLibrary();
         }
     }
 
@@ -360,7 +360,7 @@ namespace BeeEngine::Editor
         Path p = path;
         if(ResourceManager::IsScriptExtension(p.GetExtension()))
         {
-            //HandleChangedScriptFile(path, changeType);
+            HandleChangedScriptFile(path, changeType);
             return;
         }
         if(!ResourceManager::IsAssetExtension(p.GetExtension()))
@@ -431,18 +431,24 @@ namespace BeeEngine::Editor
 
     void ProjectFile::HandleChangedScriptFile(const Path &path, FileWatcher::Event event)
     {
+        if(event == FileWatcher::Event::RenamedOldName || 
+        event == FileWatcher::Event::Added || 
+        path.GetFileName().AsUTF8().contains("AssemblyInfo.cs"))
+        {
+            return;
+        }
         if(!Application::GetInstance().IsFocused())
         {
             m_MustReload = true;
             return;
         }
-        ReloadAndRebuild();
+        ReloadAndRebuildGameLibrary();
     }
 
-    void ProjectFile::ReloadAndRebuild()
+    void ProjectFile::ReloadAndRebuildGameLibrary()
     {
         RegenerateSolution();
-        //RunCommand("msbuild " + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln /t:Build /p:Configuration=Debug /p:Platform=x64");
+        RunCommand("dotnet build " + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln --configuration Debug");
         m_AssemblyReloadPending = true;
     }
 }

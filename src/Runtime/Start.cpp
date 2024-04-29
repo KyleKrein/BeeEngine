@@ -9,7 +9,7 @@ gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication(const Applic
         .ApplicationProperties = {},
         .ApplicationArgs = args
     };
-    config.ApplicationProperties.Title = config.GameConfig.Name.c_str();
+    config.ApplicationProperties.Title = config.GameConfig.Name;
     config.ApplicationProperties.Vsync = VSync::Off; //TODO: make it configurable
     return new BeeEngine::Runtime::GameApplication(std::move(config));
 }

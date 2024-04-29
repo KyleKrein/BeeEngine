@@ -21,6 +21,7 @@ namespace BeeEngine::Runtime
     {
     public:
         GameApplication(RuntimeConfiguration config);
+        ~GameApplication() override;
 
     private:
         void LoadLocalizationFiles();

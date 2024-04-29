@@ -123,7 +123,7 @@ namespace BeeEngine
         int32_t m_XPosition;
         int32_t m_YPosition;
         float m_ScaleFactor;
-        const char *m_Title;
+        String m_Title;
         VSync m_vsync;
         EventQueue& m_Events;
     };

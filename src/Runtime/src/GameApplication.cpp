@@ -64,4 +64,8 @@ namespace BeeEngine::Runtime
         SceneSerializer serializer(m_ActiveScene);
         serializer.Deserialize(Path(std::filesystem::current_path()) / m_Config.GameConfig.StartingScene);
     }
+    GameApplication::~GameApplication()
+    {
+        ScriptingEngine::Shutdown();
+    }
 } // namespace BeeEngine::Runtime

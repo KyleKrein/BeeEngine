@@ -78,6 +78,8 @@ namespace BeeEngine::Editor
             return m_AppAssemblyPath;
         }
 
+        void ReloadAndRebuildGameLibrary();
+
     private:
         std::vector<std::pair<OSPlatform, Path>> CheckForAvailablePlatforms();
         Path BuildWindowsGame(const Path& gameLibraryPath, const Path& outputDirectory);
@@ -103,7 +105,5 @@ namespace BeeEngine::Editor
         void HandleChangedScriptFile(const Path &path, FileWatcher::Event event);
 
         bool m_MustReload;
-
-        void ReloadAndRebuild();
     };
 }

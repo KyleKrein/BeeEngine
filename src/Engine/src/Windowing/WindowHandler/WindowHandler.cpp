@@ -17,7 +17,7 @@ namespace BeeEngine{
     gsl::not_null<WindowHandler*> WindowHandler::Create(WindowHandlerAPI api, const ApplicationProperties& properties, EventQueue& eventQueue)
     {
         BEE_PROFILE_FUNCTION();
-        BeeExpects(properties.WindowWidth > 0 && properties.WindowHeight > 0 && properties.Title != nullptr);
+        BeeExpects(properties.WindowWidth > 0 && properties.WindowHeight > 0 && !properties.Title.empty());
         s_API = api;
         switch (api)
         {

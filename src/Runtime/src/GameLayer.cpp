@@ -1,13 +1,17 @@
 #include "GameLayer.h"
 #include <Renderer/SceneRenderer.h>
+#include "DebugLayer.h"
 
 namespace BeeEngine::Runtime
 {
     GameLayer::GameLayer(Ref<Scene> activeScene, Ref<FrameBuffer> frameBuffer, Locale::Domain& localeDomain)
     : m_ActiveScene(std::move(activeScene)), m_FrameBuffer(std::move(frameBuffer)), m_LocaleDomain(localeDomain)
-    {}
+    {
+        m_ImGuiLayer = CreateRef<DebugLayer>();
+    }
     void GameLayer::OnUpdate(FrameData &frameData)
     {
+        m_ImGuiLayer->OnUpdate(frameData);
         float32_t mouseX = Input::GetMouseX(), mouseY = Input::GetMouseY();
         ScriptingEngine::SetMousePosition(static_cast<int32_t>(mouseX), static_cast<int32_t>(mouseY));
         m_ActiveScene->UpdateRuntime();
@@ -22,6 +26,15 @@ namespace BeeEngine::Runtime
         {
             m_FrameBuffer->Resize(e.GetWidthInPixels(), e.GetHeightInPixels());
             m_ActiveScene->OnViewPortResize(e.GetWidthInPoints(), e.GetHeightInPoints());
+            return false;
+        });
+        e.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& e)
+        {
+            if (e.GetKey() == Key::F4)
+            {
+                m_RenderImGui = !m_RenderImGui;
+                return true;
+            }
             return false;
         });
     }

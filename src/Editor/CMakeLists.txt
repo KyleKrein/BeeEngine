@@ -34,4 +34,5 @@ configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSI
 configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.NativeBridge.runtimeconfig.json ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.runtimeconfig.json COPYONLY)
 configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.NativeBridge.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.dll COPYONLY)
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/Localization/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Localization)
+file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/Platforms/)
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/Platforms/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Platforms)
