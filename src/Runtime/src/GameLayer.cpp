@@ -34,6 +34,9 @@ namespace BeeEngine::Runtime
             if (e.GetKey() == Key::F4)
             {
                 m_RenderImGui = !m_RenderImGui;
+                auto& console = m_ImGuiLayer->GetConsole();
+                if(!console.IsOpen())
+                    console.Toggle();
                 return true;
             }
             return false;

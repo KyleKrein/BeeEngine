@@ -29,6 +29,11 @@ namespace BeeEngine
             std::lock_guard<std::mutex> lock(m_Mutex);
             m_Messages.clear();
         }
+        String GetDump();
+        bool IsOpen() const
+        {
+            return m_IsOpen;
+        }
     private:
 
         std::string GetCurrentTimeFormatted();

@@ -40,4 +40,8 @@ namespace BeeEngine
     {
         s_OutputProvider = provider;
     }
+    IConsoleOutputProvider *ConsoleOutput::GetOutputProvider()
+    {
+        return s_OutputProvider;
+    }
 }

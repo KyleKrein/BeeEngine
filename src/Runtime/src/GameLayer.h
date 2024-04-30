@@ -1,6 +1,8 @@
+#pragma once
 #include <BeeEngine.h>
 #include <Renderer/FrameBuffer.h>
 #include <Scene/Scene.h>
+#include "DebugLayer.h"
 
 namespace BeeEngine::Runtime
 {
@@ -28,7 +30,7 @@ namespace BeeEngine::Runtime
         Ref<Scene> m_ActiveScene;
         Ref<FrameBuffer> m_FrameBuffer;
         Locale::Domain& m_LocaleDomain;
-        Ref<Layer> m_ImGuiLayer;
+        Ref<Runtime::DebugLayer> m_ImGuiLayer;
         bool m_RenderImGui = false;
     };
 }

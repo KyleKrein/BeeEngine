@@ -15,6 +15,7 @@ namespace BeeEngine
         enum class Input {Engine, App};
         static void Log(const String& message, Level level, Input input = Input::App);
         static void SetOutputProvider(IConsoleOutputProvider* provider);
+        static IConsoleOutputProvider* GetOutputProvider();
     private:
         static void LogToNativeConsole(const String &message, ConsoleOutput::Level level
                 , ConsoleOutput::Input input);

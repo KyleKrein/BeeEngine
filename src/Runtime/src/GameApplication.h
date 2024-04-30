@@ -1,3 +1,4 @@
+#pragma once
 #include <BeeEngine.h>
 #include <Core/GameConfig.h>
 #include <Core/AssetManagement/EditorAssetManager.h>

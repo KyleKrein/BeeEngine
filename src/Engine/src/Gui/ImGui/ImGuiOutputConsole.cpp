@@ -42,9 +42,13 @@ namespace BeeEngine
         ImGui::Checkbox("Show Information",&m_ShowInformation);
         ImGui::SameLine();
         ImGui::Checkbox("Show Trace",&m_ShowTrace);
+        if (ImGui::Button("Clear"))
+        {
+            Clean();
+        }
         {
             std::lock_guard<std::mutex> lock(m_Mutex);
-            for (auto &message: m_Messages)
+            for (const auto &message: m_Messages | std::views::reverse)
             {
                 if (message.Level == ConsoleOutput::Level::Error and not m_ShowErrors)
                     continue;
@@ -76,5 +80,17 @@ namespace BeeEngine
         std::strftime(buffer.data(), buffer.size(), "[%T]", timeInfo);
 
         return {buffer.data()};
+    }
+
+    String ImGuiOutputConsole::GetDump()
+    {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        std::ostringstream dump;
+        for (auto &message: m_Messages)
+        {
+            dump << message.TimeFormatted << (message.Input == ConsoleOutput::Input::Engine ? "Engine: " : "App: ") << message.Text << '\n';
+        }
+        dump.flush();
+        return dump.str();
     }
 }

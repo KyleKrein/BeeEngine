@@ -67,6 +67,9 @@ namespace BeeEngine
         g_Restart = true;
     }
 }
+#if defined(WINDOWS) && defined(DEBUG)
+#pragma comment(linker, "/SUBSYSTEM:WINDOWS" " /ENTRY:mainCRTStartup")
+#endif
 int main(int argc, char *argv[])
 {
     return BeeEngine::Main(argc, argv);

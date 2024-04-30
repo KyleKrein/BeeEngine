@@ -6,8 +6,6 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
         src/AssetScanner.h
         src/Panels/AssetPanel.cpp
         src/Panels/AssetPanel.h
-        src/Panels/ImGuiOutputConsole.cpp
-        src/Panels/ImGuiOutputConsole.h
         src/Panels/AssetEditPanel.cpp
         src/Panels/AssetEditPanel.h
         src/ImGuiNativeDragAndDrop.h)

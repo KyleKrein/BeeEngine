@@ -144,6 +144,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Renderer/MaterialData.h
         src/Core/GameConfig.h
         src/Core/GameConfig.cpp
+        src/Gui/ImGui/ImGuiOutputConsole.cpp
+        src/Gui/ImGui/ImGuiOutputConsole.h
 )
 
 

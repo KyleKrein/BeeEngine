@@ -3,7 +3,7 @@ project(GameRuntime)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h" "src/*.hpp")
 
-add_executable(GameRuntime WIN32 MACOSX_BUNDLE Start.cpp ${SOURCES})
+add_executable(GameRuntime MACOSX_BUNDLE Start.cpp ${SOURCES})
 
 set_property(TARGET GameRuntime PROPERTY CXX_STANDARD 23)
 

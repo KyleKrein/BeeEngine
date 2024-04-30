@@ -79,6 +79,6 @@ namespace BeeEngine{
 }
 
 #ifdef __cplusplus
-extern "C" int main(int argc, char* argv[]);
+//extern "C" int main(int argc, char* argv[]);
 #endif
 

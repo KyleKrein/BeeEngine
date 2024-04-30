@@ -20,7 +20,7 @@
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Panels/AssetPanel.h"
 #include "Core/Logging/ConsoleOutput.h"
-#include "Panels/ImGuiOutputConsole.h"
+#include "Gui/ImGui/ImGuiOutputConsole.h"
 #include "Locale/Locale.h"
 #include "Locale/ImGuiLocalizationPanel.h"
 #include "ImGuiNativeDragAndDrop.h"
