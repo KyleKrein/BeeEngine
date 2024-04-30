@@ -29,7 +29,8 @@ namespace BeeEngine::Internal
         VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
         VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME
+        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+        VK_KHR_COPY_COMMANDS_2_EXTENSION_NAME
 };
     VulkanGraphicsDevice* VulkanGraphicsDevice::s_Instance = nullptr;
     PFN_vkCmdTraceRaysKHR CmdTraceRaysKHR = nullptr;
@@ -815,7 +816,7 @@ namespace BeeEngine::Internal
         blitInfo.pRegions = &region;
         blitInfo.filter = vk::Filter::eLinear;
 
-        cmd.blitImage2(blitInfo);
+        cmd.blitImage2KHR(blitInfo, g_vkDynamicLoader); //TODO: on mac this segfaults
     }
 
     void VulkanGraphicsDevice::CopyImageToImage(vk::Image source, vk::Image destination, vk::Extent2D srcSize,

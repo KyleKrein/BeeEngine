@@ -59,7 +59,7 @@ namespace BeeEngine::Internal
         m_Height = properties.WindowHeight;
         m_Title = properties.Title;
 
-        m_Window = SDL_CreateWindow(properties.Title, gsl::narrow_cast<int>(m_Width), gsl::narrow_cast<int>(m_Height), windowFlags);
+        m_Window = SDL_CreateWindow(properties.Title.c_str(), gsl::narrow_cast<int>(m_Width), gsl::narrow_cast<int>(m_Height), windowFlags);
         if(m_Window == nullptr)
         {
             BeeCoreError("Failed to create SDL3 window! {}", SDL_GetError());

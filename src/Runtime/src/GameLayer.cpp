@@ -14,7 +14,8 @@ namespace BeeEngine::Runtime
         m_ImGuiLayer->OnUpdate(frameData);
         float32_t mouseX = Input::GetMouseX(), mouseY = Input::GetMouseY();
         ScriptingEngine::SetMousePosition(static_cast<int32_t>(mouseX), static_cast<int32_t>(mouseY));
-        m_ActiveScene->UpdateRuntime();
+        if(m_ActiveScene->IsRuntime()) [[likely]]
+            m_ActiveScene->UpdateRuntime();
         auto cmd = m_FrameBuffer->Bind();
         SceneRenderer::RenderScene(*m_ActiveScene, cmd, m_LocaleDomain.GetLocale());
         m_FrameBuffer->Unbind(cmd);
@@ -35,6 +36,11 @@ namespace BeeEngine::Runtime
                 m_RenderImGui = !m_RenderImGui;
                 return true;
             }
+            return false;
+        });
+        e.Dispatch<WindowCloseEvent>([this](WindowCloseEvent& e)
+        {
+            m_ActiveScene->StopRuntime();
             return false;
         });
     }

@@ -215,6 +215,9 @@ namespace BeeEngine::Editor
             case OSPlatform::Windows:
                 gameFilesPath = BuildWindowsGame(gameLibraryPath, platformOutputPath);
                 break;
+            case OSPlatform::Mac:
+                gameFilesPath = BuildMacOSGame(gameLibraryPath, platformOutputPath);
+                break;
             default:
                 BeeCoreWarn("Cannot build for platform {0}", platform);
                 continue;
@@ -322,6 +325,22 @@ namespace BeeEngine::Editor
         File::CopyFile(gameLibraryPath, outputDirectory / "libs" / "GameLibrary.dll");
         std::filesystem::rename((outputDirectory / "GameRuntime.exe").ToStdPath(), (outputDirectory / (GetProjectName() + ".exe")).ToStdPath());
         return outputDirectory;
+    }
+    Path ProjectFile::BuildMacOSGame(const Path &gameLibraryPath, const Path &outputDirectory)
+    {
+        const Path runtimePath = outputDirectory / (GetProjectName() + ".app");
+        std::filesystem::rename((outputDirectory / "GameRuntime.app").ToStdPath(), runtimePath.ToStdPath());
+        const Path contentsPath = runtimePath / "Contents";
+        //std::filesystem::rename((contentsPath / "MacOS" / "GameRuntime").ToStdPath(), (contentsPath / "MacOS" / m_ProjectName).ToStdPath());
+        //TODO: add info.plist generation
+
+        Path resourcesPath = contentsPath / "Resources";
+        if(!File::Exists(resourcesPath / "libs"))
+        {
+            File::CreateDirectory(resourcesPath / "libs");
+        }
+        File::CopyFile(gameLibraryPath, resourcesPath / "libs" / "GameLibrary.dll");
+        return resourcesPath;
     }
 
     void ProjectFile::OnAppAssemblyFileSystemEvent(const Path &path, const FileWatcher::Event changeType)

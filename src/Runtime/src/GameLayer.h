@@ -15,7 +15,7 @@ namespace BeeEngine::Runtime
         }
         void OnDetach() override
         {
-            m_ActiveScene->StopRuntime();
+            
         }
         void OnUpdate(FrameData& frameData) override;
         void OnEvent(EventDispatcher& e) override;

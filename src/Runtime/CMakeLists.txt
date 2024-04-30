@@ -3,7 +3,7 @@ project(GameRuntime)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h" "src/*.hpp")
 
-add_executable(GameRuntime Start.cpp ${SOURCES})
+add_executable(GameRuntime WIN32 MACOSX_BUNDLE Start.cpp ${SOURCES})
 
 set_property(TARGET GameRuntime PROPERTY CXX_STANDARD 23)
 
@@ -22,4 +22,4 @@ add_compile_definitions($<$<CONFIG:Debug>:BEE_ENABLE_PROFILING>)
 
 include(InstallRequiredSystemLibraries)
 install(TARGETS GameRuntime DESTINATION bin)
-install(FILES "${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}" DESTINATION bin)
+#install(FILES "${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}" DESTINATION bin)

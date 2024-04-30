@@ -83,6 +83,7 @@ namespace BeeEngine::Editor
     private:
         std::vector<std::pair<OSPlatform, Path>> CheckForAvailablePlatforms();
         Path BuildWindowsGame(const Path& gameLibraryPath, const Path& outputDirectory);
+        Path BuildMacOSGame(const Path& gameLibraryPath, const Path& outputDirectory);
         void OnAppAssemblyFileSystemEvent(const Path& path, FileWatcher::Event changeType);
         void OnAssetFileSystemEvent(const Path& path, FileWatcher::Event changeType);
 

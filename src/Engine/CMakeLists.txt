@@ -179,7 +179,10 @@ elseif(APPLE)
             src/Platform/MacOS/FileDialogsMacOS.mm
             src/Platform/MacOS/MacOSDragDrop.h
             src/Platform/MacOS/MacOSDragDrop.mm
-            src/Platform/MacOS/MacOSThreads.cpp)
+            src/Platform/MacOS/MacOSThreads.cpp
+            src/Platform/MacOS/MacOSPlatform.cpp
+            src/Platform/MacOS/MacOSInternal.h
+            src/Platform/MacOS/MacOSInternal.mm)
     list(APPEND SOURCE_FILES ${MACOS_SOURCE_FILES})
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU OFF)
