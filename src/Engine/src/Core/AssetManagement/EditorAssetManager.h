@@ -14,6 +14,8 @@ namespace BeeEngine
 
         Asset* GetAsset(AssetHandle handle) const final;
 
+        AssetMetadata& GetAssetMetadata(const AssetHandle& handle);
+
         const AssetHandle*  GetAssetHandleByName(std::string_view name) const;
 
         void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type) final;

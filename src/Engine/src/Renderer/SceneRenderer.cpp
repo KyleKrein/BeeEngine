@@ -201,23 +201,7 @@ namespace BeeEngine
             for( auto entity : spriteView )
             {
                 Entity e = {entity, &scene};
-                //Math::Cameras::Sphere sphere{};
-                //sphere.center = glm::vec3{0.0f};
                 glm::mat4 transform = Math::ToGlobalTransform(e);
-                //auto[translation, rotation, scale] = Math::DecomposeTransform(transform);
-                //sphere.radius = 1.f * std::max(std::max(scale.x, scale.y), scale.z);
-                //sphere.center = translation;
-                auto mvp = viewProjectionMatrix * transform;
-                const std::vector<glm::vec3> vertices = {
-                        glm::vec3{mvp * glm::vec4{-0.5f, -0.5f, 0.0f, 1.0f}},
-                        glm::vec3{mvp * glm::vec4{0.5f, -0.5f, 0.0f, 1.0f}},
-                        glm::vec3{mvp * glm::vec4{0.5f, 0.5f, 0.0f, 1.0f}},
-                        glm::vec3{mvp * glm::vec4{-0.5f, 0.5f, 0.0f, 1.0f}}
-                };
-                if(!IsInFrustum(frustumPlanes, CreateAABB(vertices))/*!IsSphereInFrustum(sphere, frustum)*/)
-                {
-                    //continue;
-                }
                 auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
                 SpriteInstanceBufferData data {transform, spriteComponent.Color, spriteComponent.TilingFactor,
                                                static_cast<int32_t>(entity)+1};
@@ -231,13 +215,7 @@ namespace BeeEngine
             {
                 Entity e = {entity, &scene};
                 auto& transformComponent = e.GetComponent<TransformComponent>();
-                Math::Cameras::Sphere sphere{};
-                sphere.radius = 0.5f * transformComponent.Scale.x;
                 glm::mat4 transform = Math::ToGlobalTransform(e);
-                //if(!sphere.IsOnFrustum(frustum, transform))
-                //{
-                //    continue;
-                //}
                 auto& circleComponent = circleGroup.get<CircleRendererComponent>(entity);
                 CircleInstanceBufferData data {transform, circleComponent.Color, circleComponent.Thickness, circleComponent.Fade,
                                                static_cast<int32_t>(entity)+1};

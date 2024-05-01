@@ -110,7 +110,7 @@ namespace BeeEngine::Editor
                     {
                         if(ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.editAsset").c_str()))
                         {
-                            m_AssetEditPanel = CreateScope<AssetEditPanel>(m_Project->GetProjectLocaleDomain(), handle);
+                            m_AssetEditPanel = CreateScope<AssetEditPanel>(*m_EditorDomain, handle, *m_AssetManager);
                         }
                         if(ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.deleteAsset").c_str()))
                         {
@@ -162,7 +162,7 @@ namespace BeeEngine::Editor
                 String serialized = LocalizedAssetSerializer::Serialize(localizedAsset);
                 Path assetPath = m_Project->GetProjectPath() / (assetName + ".beelocalizedasset");
                 File::WriteFile(assetPath, serialized);
-                m_AssetEditPanel = CreateScope<AssetEditPanel>(m_Project->GetProjectLocaleDomain(), handle);
+                m_AssetEditPanel = CreateScope<AssetEditPanel>(*m_EditorDomain, handle, *m_AssetManager);
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();

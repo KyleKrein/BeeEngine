@@ -12,6 +12,7 @@ buildProject.defaultLocale: Локализация по умолчанию
 inspector.circleRenderer.fade: Дымка
 sceneHierarchyPanel.toTopLevel: На верхний уровень
 menubar.build.reloadScripts: Перезагрузить скрипты
+assetEditPanel.name: "Имя: {name}"
 menubar.file.saveSceneAs: Сохранить сцену как...
 inspector.textRenderer: Текст
 texture: Текстура
@@ -62,3 +63,7 @@ buildProject.buildtype: Тип
 buildProject.outputPath: Путь сборки
 buildProject.outputPath.invalidError: Путь сборки не должен быть пустым, а также должен указывать на существующую папку
 buildProject.defaultLocale.tooltip: Выберите язык локализации, который будет выбран, если язык системы у пользователя не поддерживается в игре
+assetEditPanel: Информация об Ассете
+assetEditPanel.type: "Тип: {type}"
+assetPanel.editAsset: Свойства
+menubar.build.rebuildGameLibrary: Пересобрать библиотеку скриптов

@@ -388,22 +388,35 @@ namespace BeeEngine::Editor
             p = m_ProjectPath / p;
         std::string name = p.GetFileNameWithoutExtension();
         const AssetHandle* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+        bool changed = false;
         if(!handlePtr and changeType != FileWatcher::Event::RenamedNewName)
         {
-            return;
+            if(changeType == FileWatcher::Event::Added)
+            {
+                m_AssetManager->LoadAsset(p, {m_AssetRegistryID});   
+                changed = true;
+            }
+            goto CHANGED;
         }
+        {
         static Path oldNameOnRenamed;
         if(changeType == FileWatcher::Event::RenamedNewName)
         {
             BeeCoreTrace("Renamed {0} to {1}", oldNameOnRenamed.AsUTF8(), p.AsUTF8());
-            Application::SubmitToMainThread([oldPath = p, newPath = oldNameOnRenamed]()
-                                            {
-                                                //m_AssetManager->RenameAsset(oldPath, newPath, handle);
-                                            });
+            Application::SubmitToMainThread([oldPath = oldNameOnRenamed, newPath = p, this]()
+                {
+                    //Renaming
+                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(oldPath.GetFileNameWithoutExtension().AsUTF8());
+                    BeeExpects(handlePtr);
+                    AssetHandle handle = *handlePtr;
+                    m_AssetManager->RemoveAsset(handle);
+                    m_AssetManager->LoadAsset(newPath, handle);
+                    AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
+                    serializer.Serialize(m_ProjectAssetRegistryPath);
+                });
             return;
         }
         AssetHandle handle = *handlePtr;
-        bool changed = false;
 
         switch (changeType)
         {
@@ -411,10 +424,16 @@ namespace BeeEngine::Editor
                 Application::SubmitToMainThread([this, p, handle]()
                 {
                     m_AssetManager->LoadAsset(p, handle);
+                    AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
+                    serializer.Serialize(m_ProjectAssetRegistryPath);
                 });
                 changed = true;
                 break;
             case FileWatcher::Event::Removed:
+                Application::SubmitToMainThread([this, handle]()
+                {
+                    m_OnAssetRemoved(handle);
+                });
                 break;
             case FileWatcher::Event::Modified:
                 if(m_AssetManager->IsAssetLoaded(handle))
@@ -430,14 +449,15 @@ namespace BeeEngine::Editor
                 oldNameOnRenamed = p;
                 break;
         }
+        }
+        CHANGED:
         if(changed)
         {
             Application::SubmitToMainThread([this]()
-                                            {
-                                                AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
-                                                serializer.Serialize(m_ProjectAssetRegistryPath);
-                                            });
-
+                {
+                    AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
+                    serializer.Serialize(m_ProjectAssetRegistryPath);
+                });
         }
     }
 

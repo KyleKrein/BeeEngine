@@ -17,10 +17,10 @@
 namespace BeeEngine::Internal
 {
 #if defined(WINDOWS)
-    void ProcessDirectoryChanges(const std::function<void(const Path&, FileWatcher::Event)> &callback, wchar_t *filename, const FILE_NOTIFY_INFORMATION *Buffer);
+    void ProcessDirectoryChanges(const std::function<void(const Path&, FileWatcher::Event)> &callback, wchar_t *filename, BYTE *Buffer);
 
     void
-    ReadDirectoryChangesCustom(HANDLE hDir, FILE_NOTIFY_INFORMATION *Buffer, DWORD &BytesReturned,
+    ReadDirectoryChangesCustom(HANDLE hDir, BYTE *Buffer, size_t BufferSize, DWORD &BytesReturned,
                                OVERLAPPED &Overlapped);
 #endif
 
@@ -35,8 +35,8 @@ namespace BeeEngine::Internal
                                  FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,         // file attributes
                                  NULL                                // file with attributes to copy
         );
-        wchar_t filename[MAX_PATH];
-        FILE_NOTIFY_INFORMATION Buffer[1024];
+        wchar_t filename[MAX_PATH * 2];
+        std::array<BYTE, 4096> Buffer;
         DWORD BytesReturned;
         OVERLAPPED Overlapped = {0};
         Overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -45,7 +45,7 @@ namespace BeeEngine::Internal
             BeeCoreError("CreateEvent failed with error code: {}", GetLastError());
             return;
         }
-        ReadDirectoryChangesCustom(hDir, Buffer, BytesReturned, Overlapped);
+        ReadDirectoryChangesCustom(hDir, Buffer.data(), Buffer.size(), BytesReturned, Overlapped);
         while (watcher.IsRunning())
         {
             DWORD dwWaitStatus = WaitForSingleObject(Overlapped.hEvent, 0);
@@ -56,9 +56,9 @@ namespace BeeEngine::Internal
                     break;
                 case WAIT_OBJECT_0:
                     GetOverlappedResult(hDir, &Overlapped, &BytesReturned, FALSE);
-                    ProcessDirectoryChanges(watcher.m_Callback, filename, Buffer);
+                    ProcessDirectoryChanges(watcher.m_Callback, filename, Buffer.data());
                     ResetEvent(Overlapped.hEvent);
-                    ReadDirectoryChangesCustom(hDir, Buffer, BytesReturned, Overlapped);
+                    ReadDirectoryChangesCustom(hDir, Buffer.data(), Buffer.size(), BytesReturned, Overlapped);
                     break;
                 default:
                     break;
@@ -70,13 +70,13 @@ namespace BeeEngine::Internal
     }
 #if defined(WINDOWS)
     void
-    ReadDirectoryChangesCustom(HANDLE hDir, FILE_NOTIFY_INFORMATION *Buffer, DWORD &BytesReturned,
+    ReadDirectoryChangesCustom(HANDLE hDir, BYTE *Buffer, size_t BufferSize, DWORD &BytesReturned,
                                OVERLAPPED &Overlapped)
     {
         ReadDirectoryChangesW(
                 hDir,                                  // handle to directory
                 Buffer,                                    // read results buffer
-                1024,                                // length of buffer
+                BufferSize,                                // length of buffer
                 TRUE,                                 // monitoring option
                 FILE_NOTIFY_CHANGE_SECURITY |
                 FILE_NOTIFY_CHANGE_CREATION |
@@ -93,35 +93,39 @@ namespace BeeEngine::Internal
     }
 
 
-    void ProcessDirectoryChanges(const std::function<void(const Path&, FileWatcher::Event)> &callback, wchar_t *filename, const FILE_NOTIFY_INFORMATION *Buffer)
+    void ProcessDirectoryChanges(const std::function<void(const Path&, FileWatcher::Event)> &callback, wchar_t *filename, BYTE *Buffer)
     {
-        int offset = 0;
-        FILE_NOTIFY_INFORMATION* pNotify;
-        pNotify = (FILE_NOTIFY_INFORMATION*)((char*)Buffer + offset);
-        wcscpy(filename, L"");
-
-        wcsncpy(filename, pNotify->FileName, pNotify->FileNameLength / 2);
-
-        filename[pNotify->FileNameLength / 2] = NULL;
-        Path path(WStringToUTF8(filename));
-
-        switch (Buffer[0].Action)
+        BYTE* p = Buffer;
+        while(true)
         {
-            case FILE_ACTION_MODIFIED:
-                callback(path, FileWatcher::Event::Modified);
-                break;
-            case FILE_ACTION_ADDED:
-                callback(path, FileWatcher::Event::Added);
-                break;
-            case FILE_ACTION_REMOVED:
-                callback(path, FileWatcher::Event::Removed);
-                break;
-            case FILE_ACTION_RENAMED_OLD_NAME:
-                callback(path, FileWatcher::Event::RenamedOldName);
-                break;
-            case FILE_ACTION_RENAMED_NEW_NAME:
-                callback(path, FileWatcher::Event::RenamedNewName);
-                break;
+            FILE_NOTIFY_INFORMATION* pNotify = (FILE_NOTIFY_INFORMATION*)p;
+            wcscpy(filename, L"");
+
+            wcsncpy(filename, pNotify->FileName, pNotify->FileNameLength / sizeof(wchar_t));
+            filename[pNotify->FileNameLength / sizeof(wchar_t)] = NULL;
+            Path path(WStringToUTF8(filename));
+
+            switch (pNotify->Action)
+            {
+                case FILE_ACTION_MODIFIED:
+                    callback(path, FileWatcher::Event::Modified);
+                    break;
+                case FILE_ACTION_ADDED:
+                    callback(path, FileWatcher::Event::Added);
+                    break;
+                case FILE_ACTION_REMOVED:
+                    callback(path, FileWatcher::Event::Removed);
+                    break;
+                case FILE_ACTION_RENAMED_OLD_NAME:
+                    callback(path, FileWatcher::Event::RenamedOldName);
+                    break;
+                case FILE_ACTION_RENAMED_NEW_NAME:
+                    callback(path, FileWatcher::Event::RenamedNewName);
+                    break;
+            }
+            if (!pNotify->NextEntryOffset) 
+                break;  // this was last entry
+            p += pNotify->NextEntryOffset;
         }
     }
 #endif

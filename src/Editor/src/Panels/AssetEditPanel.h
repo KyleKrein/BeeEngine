@@ -7,13 +7,14 @@
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/Application.h"
+#include <Core/AssetManagement/EditorAssetManager.h>
 
 namespace BeeEngine::Editor
 {
     class AssetEditPanel final
     {
     public:
-        AssetEditPanel(Locale::Domain& domain, const AssetHandle& handle);
+        AssetEditPanel(Locale::Domain& domain, const AssetHandle& handle, EditorAssetManager& assetManager);
 
         void Render();
         ~AssetEditPanel();
@@ -28,13 +29,10 @@ namespace BeeEngine::Editor
     private:
         AssetHandle m_Handle;
         Locale::Domain* m_Domain;
-        AssetType m_AssetType;
-        String m_AssetName;
-        bool m_NeedsToBeUnloaded = true;
+        EditorAssetManager& m_AssetManager;
         bool m_IsOpened = true;
 
         void RenderLocalizedAssetSettings();
-
         void HandleLocalizedAssetSave();
     };
 

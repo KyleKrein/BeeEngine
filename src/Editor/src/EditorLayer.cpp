@@ -20,6 +20,7 @@
 #include "JobSystem/JobScheduler.h"
 #include "Locale/LocalizationGenerator.h"
 #include "Gui/ImGui/ImGuiExtension.h"
+#include "AssetScanner.h"
 
 namespace BeeEngine::Editor
 {
@@ -159,6 +160,16 @@ namespace BeeEngine::Editor
                         {
                             AssetRegistrySerializer assetRegistrySerializer(&self.m_EditorAssetManager, self.m_ProjectFile->GetProjectPath(), self.m_ProjectFile->GetAssetRegistryID());
                             assetRegistrySerializer.Deserialize(self.m_ProjectFile->GetProjectAssetRegistryPath());
+                            std::vector<Path> assetPaths = AssetScanner::GetAllAssetFiles(self.m_ProjectFile->GetProjectPath());
+                            for(auto& path : assetPaths)
+                            {
+                                auto name = path.GetFileNameWithoutExtension().AsUTF8();
+                                auto* handlePtr = self.m_EditorAssetManager.GetAssetHandleByName(name);
+                                if(!handlePtr)
+                                {
+                                    self.m_EditorAssetManager.LoadAsset(path, {self.m_ProjectFile->GetAssetRegistryID()});
+                                }
+                            }
                         }
 
                         self.m_InspectorPanel.SetProjectAssetRegistryID(self.m_ProjectFile->GetAssetRegistryID());
@@ -166,6 +177,10 @@ namespace BeeEngine::Editor
                         self.m_AssetPanel.SetProject(self.m_ProjectFile.get());
                         self.m_ContentBrowserPanel.SetProject(self.m_ProjectFile.get());
                         self.m_AssetPanel.SetAssetDeletedCallback([self = static_cast<EditorLayer*>(data)](AssetHandle handle){
+                            self->DeleteAsset(handle);
+                        });
+                        self.m_ProjectFile->SetOnAssetRemovedCallback([self = static_cast<EditorLayer*>(data)](AssetHandle handle)
+                        {
                             self->DeleteAsset(handle);
                         });
                         self.m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(self.m_ProjectFile->GetProjectLocaleDomain(), self.m_ProjectFile->GetProjectPath());
@@ -206,6 +221,10 @@ namespace BeeEngine::Editor
 
                         m_AssetPanel.SetProject(m_ProjectFile.get());
                         m_AssetPanel.SetAssetDeletedCallback([this](AssetHandle handle){
+                            DeleteAsset(handle);
+                        });
+                        m_ProjectFile->SetOnAssetRemovedCallback([this](AssetHandle handle)
+                        {
                             DeleteAsset(handle);
                         });
                         SetupGameLibrary();
@@ -493,7 +512,8 @@ namespace BeeEngine::Editor
 
     void EditorLayer::DeleteAsset(const AssetHandle &handle)
     {
-        auto type = m_EditorAssetManager.GetAsset(handle)->GetType();
+        auto metadata = m_EditorAssetManager.GetAssetMetadata(handle);
+        auto type = metadata.Type;
         if(type == AssetType::Texture2D)
         {
             auto view = m_ActiveScene->m_Registry.view<SpriteRendererComponent>();
@@ -519,6 +539,10 @@ namespace BeeEngine::Editor
             }
         }
         m_EditorAssetManager.RemoveAsset(handle);
+        if(metadata.Location == AssetLocation::FileSystem && File::Exists(std::get<Path>(metadata.Data)))
+        {
+            std::filesystem::remove_all(std::get<Path>(metadata.Data).ToStdPath());
+        }
         SaveAssetRegistry();
     }
     

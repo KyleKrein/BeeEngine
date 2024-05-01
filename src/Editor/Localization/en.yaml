@@ -12,6 +12,7 @@ buildProject.defaultLocale: Default locale
 inspector.circleRenderer.fade: Fade
 sceneHierarchyPanel.toTopLevel: To Top Level
 menubar.build.reloadScripts: Reload Scripts
+assetEditPanel.name: "Name: {name}"
 menubar.file.saveSceneAs: Save Scene As...
 inspector.textRenderer: Text Renderer
 texture: Texture
@@ -62,3 +63,7 @@ buildProject.buildtype: Build Type
 buildProject.outputPath: Output path
 buildProject.outputPath.invalidError: Output path should be not empty and should point to an existing directory
 buildProject.defaultLocale.tooltip: Choose a language, that will be used if user's system language is not supported
+assetEditPanel: Asset Info
+assetEditPanel.type: "Type: {type}"
+assetPanel.editAsset: Properties
+menubar.build.rebuildGameLibrary: Rebuild game library

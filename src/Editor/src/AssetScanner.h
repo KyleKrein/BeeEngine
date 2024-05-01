@@ -5,11 +5,13 @@
 #pragma once
 #include <filesystem>
 #include <vector>
+#include "Core/Path.h"
 
 namespace BeeEngine::Editor
 {
     class AssetScanner
     {
-        static std::vector<std::filesystem::path> GetAllAssetFiles(const std::filesystem::path& workingDirectory);
+        public:
+        static std::vector<Path> GetAllAssetFiles(const Path& workingDirectory);
     };
 }

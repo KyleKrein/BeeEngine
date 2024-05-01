@@ -43,6 +43,7 @@ namespace BeeEngine
             if(path != std::get<Path>(metadata.Data))
             {
                 metadata.Data = path;
+                metadata.Name = path.GetFileNameWithoutExtension();
             }
             UnloadAsset(handle);
             return;
@@ -81,11 +82,17 @@ namespace BeeEngine
         BeeExpects(IsAssetHandleValid(handle));
         if(!IsAssetLoaded(handle))
         {
-            const auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
+            const AssetMetadata& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
             m_AssetMap.at(handle)->Name = metadata.Name;
         }
         return m_AssetMap.at(handle).get();
+    }
+
+    AssetMetadata &EditorAssetManager::GetAssetMetadata(const AssetHandle &handle)
+    {
+        BeeExpects(IsAssetHandleValid(handle));
+        return m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
     }
 
     const AssetHandle* EditorAssetManager::GetAssetHandleByName(std::string_view name) const

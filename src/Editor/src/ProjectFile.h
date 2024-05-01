@@ -80,6 +80,11 @@ namespace BeeEngine::Editor
 
         void ReloadAndRebuildGameLibrary();
 
+        void SetOnAssetRemovedCallback(std::function<void(AssetHandle)> callback) noexcept
+        {
+            m_OnAssetRemoved = std::move(callback);
+        }
+
     private:
         std::vector<std::pair<OSPlatform, Path>> CheckForAvailablePlatforms();
         Path BuildWindowsGame(const Path& gameLibraryPath, const Path& outputDirectory);
@@ -102,6 +107,7 @@ namespace BeeEngine::Editor
 
         Scope<FileWatcher> m_AssetFileWatcher = nullptr;
         EditorAssetManager* m_AssetManager;
+        std::function<void(AssetHandle)> m_OnAssetRemoved;
 
         void HandleChangedScriptFile(const Path &path, FileWatcher::Event event);
 
