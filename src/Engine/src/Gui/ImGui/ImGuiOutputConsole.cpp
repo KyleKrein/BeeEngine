@@ -35,18 +35,22 @@ namespace BeeEngine
         if(!m_IsOpen)
             return;
         ImGui::Begin("Output Console", &m_IsOpen);
-        ImGui::Checkbox("Show Errors",&m_ShowErrors);
+        ImGui::BeginChild("##OutputConsoleUp", ImVec2(0,0), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY);
+        ImGui::Checkbox("Errors",&m_ShowErrors);
         ImGui::SameLine();
-        ImGui::Checkbox("Show Warnings",&m_ShowWarnings);
+        ImGui::Checkbox("Warnings",&m_ShowWarnings);
         ImGui::SameLine();
-        ImGui::Checkbox("Show Information",&m_ShowInformation);
+        ImGui::Checkbox("Info",&m_ShowInformation);
         ImGui::SameLine();
-        ImGui::Checkbox("Show Trace",&m_ShowTrace);
+        ImGui::Checkbox("Trace",&m_ShowTrace);
+        ImGui::SameLine();
         if (ImGui::Button("Clear"))
         {
             Clean();
         }
+        ImGui::EndChild();
         {
+            ImGui::BeginChild("##OutputConsoleMiddle", ImVec2(0,ImGui::GetContentRegionAvail().y), ImGuiChildFlags_None);
             std::lock_guard<std::mutex> lock(m_Mutex);
             for (const auto &message: m_Messages | std::views::reverse)
             {
@@ -65,6 +69,7 @@ namespace BeeEngine
                 ImGui::SameLine();
                 ImGui::TextColored(Level2Color(message.Level), message.Text.c_str());
             }
+            ImGui::EndChild();
         }
 
         ImGui::End();

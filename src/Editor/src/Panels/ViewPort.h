@@ -31,6 +31,7 @@ namespace BeeEngine::Editor
         Ref<Scene>& GetScene() noexcept { return m_Scene; }
         void SetScene(const Ref<Scene>& scene) noexcept { m_Scene.reset(); m_Scene = scene; }
         void SetDomain(const Locale::Domain* domain) noexcept { m_GameDomain = domain; }
+        bool ShouldHandleEvents() const noexcept { return m_IsFocused && m_IsHovered; }
 
         [[nodiscard]] uint32_t GetHeight() const
         {

@@ -183,16 +183,16 @@ namespace BeeEngine::Editor
         {
             ImGui::ColorEdit4(m_EditorDomain->Translate("color").c_str(), sprite.Color.ValuePtr());
 
+            String textureLabel;
             if(sprite.HasTexture)
             {
                 auto* texture = sprite.Texture(m_Project->GetProjectLocaleDomain().GetLocale());
                 float aspectRatio = (float)texture->GetWidth() / (float)texture->GetHeight();
-                if(ImGui::ImageButton((void*)texture->GetRendererID(), ImVec2(100.0f * aspectRatio, 100.0f * aspectRatio), { 0, 1 }, { 1, 0 }))
+                if(ImGui::ImageButton((void*)texture->GetRendererID(), ImVec2(ImGui::GetContentRegionAvail().x * 0.95f, ImGui::GetContentRegionAvail().x * 0.95f / aspectRatio), { 0, 1 }, { 1, 0 }))
                 {
                     sprite.HasTexture = false;
                 }
                 auto& textureAsset = AssetManager::GetAsset<Asset>(sprite.TextureHandle);
-                String textureLabel;
                 if(textureAsset.GetType() == AssetType::Localized)
                 {
                     textureLabel = String(textureAsset.Name) + " (" + String(static_cast<LocalizedAsset&>(textureAsset).GetAsset(m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString()).Name) + ")";
@@ -201,11 +201,10 @@ namespace BeeEngine::Editor
                 {
                     textureLabel = textureAsset.Name;
                 }
-                ImGui::Text(textureLabel.c_str());
             }
             else
             {
-                ImGui::Button(m_EditorDomain->Translate("texture").c_str(), ImVec2(100.0f, 0.0f));
+                ImGui::Button(m_EditorDomain->Translate("texture").c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0.0f));
             }
             ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this, &sprite](void* data, size_t size){
                 Path texturePath = m_WorkingDirectory / static_cast<const char*>(data);
@@ -228,6 +227,11 @@ namespace BeeEngine::Editor
                 sprite.HasTexture = true;
                 sprite.TextureHandle = handle;
             });
+
+            if(sprite.HasTexture)
+            {
+                ImGui::TextUnformatted(textureLabel.c_str());
+            }
 
             ImGui::DragFloat(m_EditorDomain->Translate("sprite.tilingFactor").c_str(), &sprite.TilingFactor, 0.1f, 0.0f, 100.0f);
         });

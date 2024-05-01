@@ -5,6 +5,7 @@
 #pragma once
 #include <string>
 #include "Core/Reflection.h"
+#include "Core/ToString.h"
 #include "Serialization/ISerializer.h"
 
 namespace BeeEngine
@@ -24,6 +25,10 @@ namespace BeeEngine
         void Serialize(Archive& serializer)
         {
             serializer & m_UUID;
+        }
+        String ToString() const
+        {
+            return BeeEngine::ToString(m_UUID);
         }
     private:
         uint64_t m_UUID;

@@ -10,6 +10,7 @@
 #include "FileSystem/FileWatcher.h"
 #include "Locale/Locale.h"
 #include "Core/OsPlatform.h"
+#include "Core/Coroutines/Generator.h"
 
 namespace BeeEngine::Editor
 {
@@ -110,6 +111,8 @@ namespace BeeEngine::Editor
         std::function<void(AssetHandle)> m_OnAssetRemoved;
 
         void HandleChangedScriptFile(const Path &path, FileWatcher::Event event);
+
+        Generator<const AssetMetadata&> GetAssetsForDirectory(const Path& directory);
 
         bool m_MustReload;
     };

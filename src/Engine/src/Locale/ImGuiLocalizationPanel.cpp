@@ -204,7 +204,7 @@ namespace BeeEngine::Locale
     void ImGuiLocalizationPanel::RenderUpperPanel()
     {
         ImVec2 fixedUpperChildSize = {-1, ImGui::GetFontSize() * 3};
-        ImGui::BeginChild("##Upper", fixedUpperChildSize, false);
+        ImGui::BeginChild("##Upper", fixedUpperChildSize, ImGuiChildFlags_None);
         auto& locales = m_LocaleKeys;
         // Верхний переключатель локализаций
         if (ImGui::BeginCombo("Locales", m_SelectedLocale.GetLanguageString().c_str()))

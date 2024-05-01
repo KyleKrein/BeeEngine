@@ -243,8 +243,11 @@ namespace BeeEngine::Editor
             return;
         if(m_SceneState == SceneState::Play)
             return;
-        m_EditorCamera.OnEvent(event);
-        m_ViewPort.OnEvent(event);
+        if(m_ViewPort.ShouldHandleEvents())
+        {
+            m_EditorCamera.OnEvent(event);
+            m_ViewPort.OnEvent(event);
+        }
         m_SceneHierarchyPanel.OnEvent(event);
         m_DragAndDrop.OnEvent(event);
 

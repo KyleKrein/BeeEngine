@@ -102,7 +102,8 @@ namespace BeeEngine::Editor
                 //ImVec4 activeColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
                 //activeColor.w = 0.5f;
                 //ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
-                ImGui::ImageButton((ImTextureID) icon->GetRendererID(), {thumbnailSize, thumbnailSize}, {0, 1}, {1, 0});
+                float aspectRatio = (float)icon->GetWidth() / icon->GetHeight();
+                ImGui::ImageButton((ImTextureID) icon->GetRendererID(), {thumbnailSize, thumbnailSize / aspectRatio}, {0, 1}, {1, 0});
 
                 if(handle.RegistryID == m_Project->GetAssetRegistryID())
                 {

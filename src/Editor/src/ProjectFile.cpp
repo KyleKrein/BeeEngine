@@ -374,9 +374,59 @@ namespace BeeEngine::Editor
         return m_ProjectAssetRegistryPath;
     }
 
+    Generator<const AssetMetadata&> ProjectFile::GetAssetsForDirectory(const Path& directory)
+    {
+        auto& assets = m_AssetManager->GetAssetRegistry().at(m_AssetRegistryID);
+        for(const auto& [uuid, metadata] : assets)
+        {
+            if(metadata.Location == AssetLocation::Embedded)
+            {
+                continue;
+            }
+            if(std::get<Path>(metadata.Data).AsUTF8().contains(directory.AsUTF8()))
+            {
+                co_yield metadata;
+            }
+        }
+    }
+
     void ProjectFile::OnAssetFileSystemEvent(const Path &path, FileWatcher::Event changeType)
     {
         Path p = path;
+        if(p.IsRelative())
+            p = m_ProjectPath / p;
+        if(File::IsDirectory(p) || p.GetExtension().IsEmpty())
+        {
+            if(p.AsUTF8().contains(".git")|| p.AsUTF8().contains(".beeengine") || p.AsUTF8().contains("bin") || p.AsUTF8().contains("obj"))
+            {
+                return;
+            }
+            if(changeType == FileWatcher::Event::Modified)
+            {
+                return;
+            }
+            static Path oldDirPath;
+            if(changeType == FileWatcher::Event::RenamedOldName)
+            {
+                oldDirPath = p;
+                return;
+            }
+            if(changeType == FileWatcher::Event::RenamedNewName)
+            {
+                for(const auto& metadata : GetAssetsForDirectory(oldDirPath))
+                {
+                    OnAssetFileSystemEvent(std::get<Path>(metadata.Data), FileWatcher::Event::RenamedOldName);
+                    Path newPath = p / std::get<Path>(metadata.Data).GetRelativePath(oldDirPath);
+                    OnAssetFileSystemEvent(newPath, FileWatcher::Event::RenamedNewName);
+                }
+                return;
+            }
+            for(const auto& metadata : GetAssetsForDirectory(p))
+            {
+                OnAssetFileSystemEvent(std::get<Path>(metadata.Data), changeType);
+            }
+            return;
+        }
         if(ResourceManager::IsScriptExtension(p.GetExtension()))
         {
             HandleChangedScriptFile(path, changeType);
@@ -384,8 +434,6 @@ namespace BeeEngine::Editor
         }
         if(!ResourceManager::IsAssetExtension(p.GetExtension()))
             return;
-        if(p.IsRelative())
-            p = m_ProjectPath / p;
         std::string name = p.GetFileNameWithoutExtension();
         const AssetHandle* handlePtr = m_AssetManager->GetAssetHandleByName(name);
         bool changed = false;
@@ -432,6 +480,8 @@ namespace BeeEngine::Editor
             case FileWatcher::Event::Removed:
                 Application::SubmitToMainThread([this, handle]()
                 {
+                    if(!m_AssetManager->IsAssetHandleValid(handle))
+                        return;
                     m_OnAssetRemoved(handle);
                 });
                 break;
