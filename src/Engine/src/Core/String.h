@@ -3,10 +3,10 @@
 //
 
 #pragma once
-#include <string>
-#include <vector>
-#include <string_view>
 #include <filesystem>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace BeeEngine
 {
@@ -43,6 +43,7 @@ namespace BeeEngine
             bool operator==(const iterator& rhs) const;
             bool operator!=(const iterator& rhs) const;
             char32_t operator*() const;
+
         private:
             std::string::const_iterator m_StringIterator;
             mutable char32_t m_Codepoint = 0;
@@ -50,18 +51,12 @@ namespace BeeEngine
 
             void UpdateCodepoint() const;
         };
-        iterator begin() const
-        {
-            return iterator(m_String->cbegin());
-        }
-        iterator end() const
-        {
-            return iterator(m_String->cend());
-        }
+        iterator begin() const { return iterator(m_String->cbegin()); }
+        iterator end() const { return iterator(m_String->cend()); }
+
     private:
         const UTF8String* m_String;
     };
-
 
     constexpr std::size_t constexpr_strlen(const char* s)
     {
@@ -77,15 +72,17 @@ namespace BeeEngine
         return std::wstring::traits_type::length(s);
     }
 
-    constexpr std::vector<std::string_view> SplitString(std::string_view str, std::string_view delimiters) {
+    constexpr std::vector<std::string_view> SplitString(std::string_view str, std::string_view delimiters)
+    {
         std::vector<std::string_view> output;
         size_t first = 0;
 
-        while (first < str.size()) {
+        while (first < str.size())
+        {
             const auto second = str.find_first_of(delimiters, first);
 
             if (first != second)
-                output.emplace_back(str.substr(first, second-first));
+                output.emplace_back(str.substr(first, second - first));
 
             if (second == std::string_view::npos)
                 break;
@@ -95,19 +92,20 @@ namespace BeeEngine
 
         return output;
     }
-    constexpr void ReplaceAllSubstrings( std::string &s, const std::string &search, const std::string &replace )
+    constexpr void ReplaceAllSubstrings(std::string& s, const std::string& search, const std::string& replace)
     {
-        for( size_t pos = 0; ; pos += replace.length() )
+        for (size_t pos = 0;; pos += replace.length())
         {
             // Locate the substring to replace
-            pos = s.find( search, pos );
-            if( pos == std::string::npos ) break;
+            pos = s.find(search, pos);
+            if (pos == std::string::npos)
+                break;
             // Replace by erasing and inserting
-            s.erase( pos, search.length() );
-            s.insert( pos, replace );
+            s.erase(pos, search.length());
+            s.insert(pos, replace);
         }
     }
 
     UTF8String ToUppercase(std::string_view string);
     UTF8String ToLowercase(std::string_view string);
-}
+} // namespace BeeEngine

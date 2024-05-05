@@ -47,10 +47,8 @@ namespace BeeEngine
 
         constexpr explicit operator int32_t() const
         {
-            return static_cast<int32_t>(m_R * 255.0f) << 24 |
-                   static_cast<int32_t>(m_G * 255.0f) << 16 |
-                   static_cast<int32_t>(m_B * 255.0f) << 8 |
-                   static_cast<int32_t>(m_A * 255.0f);
+            return static_cast<int32_t>(m_R * 255.0f) << 24 | static_cast<int32_t>(m_G * 255.0f) << 16 |
+                   static_cast<int32_t>(m_B * 255.0f) << 8 | static_cast<int32_t>(m_A * 255.0f);
         }
 
         constexpr Color4(Color4&& other) noexcept = default;
@@ -64,67 +62,45 @@ namespace BeeEngine
         [[nodiscard]] inline constexpr float B() const { return m_B; }
         [[nodiscard]] inline constexpr float A() const { return m_A; }
 
-        [[nodiscard]] inline constexpr float* ValuePtr() { return static_cast<float *>(&m_R); }
+        [[nodiscard]] inline constexpr float* ValuePtr() { return static_cast<float*>(&m_R); }
 
 #if __has_include(<vec4.hpp>)
-        constexpr inline operator glm::vec4() const
-        {
-            return {m_R, m_G, m_B, m_A};
-        }
+        constexpr inline operator glm::vec4() const { return {m_R, m_G, m_B, m_A}; }
 #endif
 
 #if defined(BEE_COMPILE_WEBGPU)
         constexpr inline operator WGPUColor() const
         {
-            return {static_cast<double>(m_R), static_cast<double>(m_G), static_cast<double>(m_B), static_cast<double>(m_A)};
+            return {
+                static_cast<double>(m_R), static_cast<double>(m_G), static_cast<double>(m_B), static_cast<double>(m_A)};
         }
 #endif
 #if defined(BEE_COMPILE_VULKAN)
-        constexpr inline operator vk::ClearValue() const
-        {
-            return vk::ClearColorValue{m_R, m_G, m_B, m_A};
-        }
+        constexpr inline operator vk::ClearValue() const { return vk::ClearColorValue{m_R, m_G, m_B, m_A}; }
 #endif
 #if __has_include(<imgui.h>)
-        constexpr inline operator ImVec4() const
-        {
-            return {m_R, m_G, m_B, m_A};
-        }
+        constexpr inline operator ImVec4() const { return {m_R, m_G, m_B, m_A}; }
 #endif
-        constexpr bool operator == (const Color4& other) const
+        constexpr bool operator==(const Color4& other) const
         {
             return m_R == other.m_R && m_G == other.m_G && m_B == other.m_B && m_A == other.m_A;
         }
-        constexpr bool operator != (const Color4& other) const
-        {
-            return !(*this == other);
-        }
+        constexpr bool operator!=(const Color4& other) const { return !(*this == other); }
 
         struct Color4Init
         {
             float R, G, B, A;
-            constexpr operator Color4() const
-            {
-                return {R, G, B, A};
-            }
+            constexpr operator Color4() const { return {R, G, B, A}; }
             constexpr explicit operator int32_t() const
             {
-                return static_cast<int32_t>(R * 255.0f) << 24 |
-                       static_cast<int32_t>(G * 255.0f) << 16 |
-                       static_cast<int32_t>(B * 255.0f) << 8 |
-                       static_cast<int32_t>(A * 255.0f);
+                return static_cast<int32_t>(R * 255.0f) << 24 | static_cast<int32_t>(G * 255.0f) << 16 |
+                       static_cast<int32_t>(B * 255.0f) << 8 | static_cast<int32_t>(A * 255.0f);
             }
 #if __has_include(<imgui.h>)
-            constexpr operator ImVec4() const
-            {
-                return {R, G, B, A};
-            }
+            constexpr operator ImVec4() const { return {R, G, B, A}; }
 #endif
 #if defined(BEE_COMPILE_VULKAN)
-            constexpr operator vk::ClearValue() const
-            {
-                return vk::ClearColorValue{R, G, B, A};
-            }
+            constexpr operator vk::ClearValue() const { return vk::ClearColorValue{R, G, B, A}; }
 #endif
         };
 
@@ -267,7 +243,7 @@ namespace BeeEngine
         static constexpr Color4Init const Yellow = {1.0f, 1.0f, 0.0f, 1.0f};
         static constexpr Color4Init const YellowGreen = {0.6039216f, 0.8039216f, 0.19607843f, 1.0f};
 
-        //Non-metals (dielectrics)
+        // Non-metals (dielectrics)
         static constexpr Color4Init const Coal = {0.19f, 0.19f, 0.19f, 1.0f};
         static constexpr Color4Init const Rubber = {0.21f, 0.21f, 0.21f, 0.21f};
         static constexpr Color4Init const Mud = {0.33f, 0.24f, 0.19f, 1.0f};
@@ -277,7 +253,7 @@ namespace BeeEngine
         static constexpr Color4Init const Sand = {0.69f, 0.66f, 0.52f, 1.0f};
         static constexpr Color4Init const Concrete = {0.75f, 0.75f, 0.73f, 1.0f};
 
-        //Metals (conductors)
+        // Metals (conductors)
         static constexpr Color4Init const Silver = {0.97f, 0.96f, 0.91f, 1.0f};
         static constexpr Color4Init const Aluminum = {0.91f, 0.92f, 0.92f, 1.0f};
         static constexpr Color4Init const Titanium = {0.76f, 0.73f, 0.69f, 1.0f};
@@ -287,7 +263,7 @@ namespace BeeEngine
         static constexpr Color4Init const Brass = {0.98f, 0.90f, 0.59f, 1.0f};
         static constexpr Color4Init const Copper = {0.97f, 0.74f, 0.62f, 1.0f};
 
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
             serializer & m_R;
@@ -295,13 +271,12 @@ namespace BeeEngine
             serializer & m_B;
             serializer & m_A;
         }
+
     private:
         float m_R;
         float m_G;
         float m_B;
         float m_A;
-        constexpr Color4(float r, float g, float b, float a = 1.0f)
-                : m_R(r), m_G(g), m_B(b), m_A(a)
-        {}
+        constexpr Color4(float r, float g, float b, float a = 1.0f) : m_R(r), m_G(g), m_B(b), m_A(a) {}
     };
-}
+} // namespace BeeEngine

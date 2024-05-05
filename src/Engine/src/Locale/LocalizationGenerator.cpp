@@ -4,11 +4,11 @@
 
 #include "LocalizationGenerator.h"
 #include "FileSystem/File.h"
-#include <yaml-cpp/yaml.h>
 #include "Locale.h"
+#include <yaml-cpp/yaml.h>
 namespace BeeEngine::Locale
 {
-    String LocalizationGenerator::GenerateLocalization(const Domain &domain, const Localization &locale)
+    String LocalizationGenerator::GenerateLocalization(const Domain& domain, const Localization& locale)
     {
         // Проверка наличия локали в данных
         if (!domain.m_Languages.contains(locale.GetLanguageString()))
@@ -30,17 +30,18 @@ namespace BeeEngine::Locale
         return out.c_str();
     }
 
-    void LocalizationGenerator::CreateLocalizationFile(const Path &path, const String &content)
+    void LocalizationGenerator::CreateLocalizationFile(const Path& path, const String& content)
     {
         File::WriteFile(path, content);
     }
 
-    void LocalizationGenerator::CreateLocalizationFile(const Domain &domain, const Localization &locale, const Path &path)
+    void
+    LocalizationGenerator::CreateLocalizationFile(const Domain& domain, const Localization& locale, const Path& path)
     {
         CreateLocalizationFile(path, GenerateLocalization(domain, locale));
     }
 
-    std::vector<Path> LocalizationGenerator::GetLocalizationFiles(const Path &path)
+    std::vector<Path> LocalizationGenerator::GetLocalizationFiles(const Path& path)
     {
         std::vector<Path> result;
         for (const auto& file : std::filesystem::recursive_directory_iterator(path.ToStdPath()))
@@ -53,24 +54,24 @@ namespace BeeEngine::Locale
         return result;
     }
 
-    void LocalizationGenerator::ProcessLocalizationFile(Domain &domain, const Path &path)
+    void LocalizationGenerator::ProcessLocalizationFile(Domain& domain, const Path& path)
     {
         Localization locale = {path.GetFileNameWithoutExtension()};
         domain.AddLocale(locale);
         domain.AddLocalizationSource(locale, path);
         auto content = File::ReadFile(path);
         YAML::Node node = YAML::Load(content);
-        for(auto key : node)
+        for (auto key : node)
         {
             domain.AddLocaleKey(locale, key.first.as<std::string>(), key.second.as<std::string>());
         }
     }
 
-    void LocalizationGenerator::ProcessLocalizationFiles(Domain &domain, const std::vector<Path> &paths)
+    void LocalizationGenerator::ProcessLocalizationFiles(Domain& domain, const std::vector<Path>& paths)
     {
-        for(const auto& path : paths)
+        for (const auto& path : paths)
         {
             ProcessLocalizationFile(domain, path);
         }
     }
-}
+} // namespace BeeEngine::Locale

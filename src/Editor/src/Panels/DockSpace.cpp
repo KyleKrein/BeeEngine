@@ -4,7 +4,6 @@
 
 #include "DockSpace.h"
 
-
 namespace BeeEngine::Editor
 {
 
@@ -27,11 +26,13 @@ namespace BeeEngine::Editor
             ImGui::SetNextWindowViewport(viewport->ID);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-            window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+            window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                            ImGuiWindowFlags_NoMove;
             window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
         }
 
-        // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
+        // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the
+        // pass-thru hole, so we ask Begin() to not render a background.
         if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
             window_flags |= ImGuiWindowFlags_NoBackground;
 
@@ -60,4 +61,4 @@ namespace BeeEngine::Editor
     {
         ImGui::End();
     }
-}
+} // namespace BeeEngine::Editor

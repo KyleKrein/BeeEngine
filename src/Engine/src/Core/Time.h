@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include <chrono>
 #include "Core/Numbers.h"
+#include <chrono>
 namespace BeeEngine
 {
     class Time
@@ -17,8 +17,8 @@ namespace BeeEngine
         inline static secondsD AverageDeltaTime() { return m_AverageDeltaTime; }
 
         friend class WindowHandler;
-    private:
 
+    private:
         static void Update(secondsD currentTime);
         static void Set(secondsD deltaTime, secondsD totalTime);
         constexpr static secondsD SumFrameTimes();
@@ -26,10 +26,10 @@ namespace BeeEngine
         static secondsD m_DeltaTime;
         static secondsD m_AverageDeltaTime;
 
-        static constexpr uint32_t m_FrameSamples = 5; //For now 5 frames are enough to calculate average delta time
+        static constexpr uint32_t m_FrameSamples = 5; // For now 5 frames are enough to calculate average delta time
         static Time::secondsD m_FrameTimes[m_FrameSamples];
         static uint32_t m_FrameIndex;
 
         static void CalculateAverageDeltaTime();
     };
-}
+} // namespace BeeEngine

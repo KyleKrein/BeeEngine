@@ -3,9 +3,9 @@
 //
 #if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUSwapchain.h"
-#include "Windowing/WindowHandler/WindowHandler.h"
-#include "WebGPUGraphicsDevice.h"
 #include "Core/Application.h"
+#include "WebGPUGraphicsDevice.h"
+#include "Windowing/WindowHandler/WindowHandler.h"
 
 namespace BeeEngine::Internal
 {
@@ -21,11 +21,12 @@ namespace BeeEngine::Internal
         m_Width = swapChainDesc.width;
         m_Height = swapChainDesc.height;
 
-        m_Format = WGPUTextureFormat::WGPUTextureFormat_BGRA8Unorm;//wgpuSurfaceGetPreferredFormat(device.GetSurface(), device.GetAdapter());
+        m_Format = WGPUTextureFormat::WGPUTextureFormat_BGRA8Unorm; // wgpuSurfaceGetPreferredFormat(device.GetSurface(),
+                                                                    // device.GetAdapter());
         swapChainDesc.format = m_Format;
 
         swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
-        if(WindowHandler::GetInstance()->GetVSync() == VSync::On)
+        if (WindowHandler::GetInstance()->GetVSync() == VSync::On)
             swapChainDesc.presentMode = WGPUPresentMode_Fifo;
         else if constexpr (Application::GetOsPlatform() == OSPlatform::Mac)
             swapChainDesc.presentMode = WGPUPresentMode_Immediate;
@@ -33,7 +34,7 @@ namespace BeeEngine::Internal
             swapChainDesc.presentMode = WGPUPresentMode_Mailbox;
 
         m_SwapChain = wgpuDeviceCreateSwapChain(device.GetDevice(), device.GetSurface(), &swapChainDesc);
-        m_DepthFormat = WGPUTextureFormat_Depth24Plus; //TODO: make it not hardcoded
+        m_DepthFormat = WGPUTextureFormat_Depth24Plus; // TODO: make it not hardcoded
         WGPUTextureDescriptor depthTextureDesc;
         depthTextureDesc.nextInChain = nullptr;
         depthTextureDesc.label = "Depth Texture";
@@ -68,5 +69,5 @@ namespace BeeEngine::Internal
         wgpuTextureRelease(m_DepthTexture);
         wgpuSwapChainRelease(m_SwapChain);
     }
-}
+} // namespace BeeEngine::Internal
 #endif

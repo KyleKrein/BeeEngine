@@ -14,27 +14,20 @@ namespace BeeEngine::Editor
     {
     public:
         InspectorPanel(EditorAssetManager* assetManager, Locale::Domain& editorDomain)
-        : m_AssetManager(assetManager), m_EditorDomain(&editorDomain)
-        {}
+            : m_AssetManager(assetManager), m_EditorDomain(&editorDomain)
+        {
+        }
         explicit InspectorPanel(const Ref<Scene>& context, EditorAssetManager* assetManager);
 
-        void SetProject(ProjectFile* project)
-        {
-            m_Project = project;
-        }
+        void SetProject(ProjectFile* project) { m_Project = project; }
 
         void SetContext(const Ref<Scene>& context);
-        void SetProjectAssetRegistryID(UUID id)
-        {
-            m_ProjectAssetRegistryID = id;
-        }
+        void SetProjectAssetRegistryID(UUID id) { m_ProjectAssetRegistryID = id; }
 
         void OnGUIRender(Entity selectedEntity) noexcept;
 
-        void SetWorkingDirectory(const Path& path) noexcept
-        {
-            m_WorkingDirectory = path;
-        }
+        void SetWorkingDirectory(const Path& path) noexcept { m_WorkingDirectory = path; }
+
     private:
         UUID m_ProjectAssetRegistryID;
         Ref<Scene> m_Context;
@@ -48,13 +41,16 @@ namespace BeeEngine::Editor
 
         void DrawComponents(Entity entity);
 
-        template<typename T, typename UIFunction>
+        template <typename T, typename UIFunction>
         void DrawComponentUI(std::string_view label, Entity entity, UIFunction func);
-        template<typename T, typename UIFunction>
+        template <typename T, typename UIFunction>
         void DrawConsistentComponentUI(std::string_view label, Entity entity, UIFunction func);
 
-        template<typename T>
+        template <typename T>
         void AddComponentPopup(std::string_view label, Entity entity);
-        void DrawVec3ComponentUI(std::string_view label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
+        void DrawVec3ComponentUI(std::string_view label,
+                                 glm::vec3& values,
+                                 float resetValue = 0.0f,
+                                 float columnWidth = 100.0f);
     };
-}
+} // namespace BeeEngine::Editor

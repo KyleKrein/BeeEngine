@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Core/Events/Event.h"
-#include "Platform/ImGui/ImGuiController.h"
-#include "Debug/Instrumentor.h"
-#include "Core/AssetManagement/IAssetManager.h"
 #include "Core/AssetManagement/AssetManager.h"
+#include "Core/AssetManagement/IAssetManager.h"
+#include "Core/Events/Event.h"
+#include "Debug/Instrumentor.h"
+#include "Platform/ImGui/ImGuiController.h"
 #include "Renderer/Renderer.h"
-
 
 namespace BeeEngine
 {
@@ -19,14 +18,12 @@ namespace BeeEngine
         virtual void OnUpdate(FrameData& frameData) {}
         virtual void OnGUIRendering() {}
         virtual void OnEvent(EventDispatcher& e) {}
+
     protected:
-        void RegisterAssetManager(IAssetManager* assetManager)
-        {
-            AssetManager::s_AssetManager = assetManager;
-        }
+        void RegisterAssetManager(IAssetManager* assetManager) { AssetManager::s_AssetManager = assetManager; }
     };
 
-    class ImGuiLayer final: public Layer
+    class ImGuiLayer final : public Layer
     {
     public:
         ImGuiLayer()
@@ -49,12 +46,10 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             s_Controller->Shutdown();
         }
-        virtual void OnGUIRendering() override
-        {
-
-        }
+        virtual void OnGUIRendering() override {}
         static void Init();
+
     private:
         static Scope<ImGuiController> s_Controller;
     };
-}
+} // namespace BeeEngine

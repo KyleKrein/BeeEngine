@@ -4,20 +4,20 @@
 
 #pragma once
 #include <FileSystem/FileWatcher.h>
+#include <chrono>
 #include <filesystem>
+#include <thread>
 #include <unordered_map>
 #include <version>
-#include <thread>
-#include <chrono>
 
 namespace BeeEngine::Internal
 {
-    class STDFileWatcher: public FileWatcher
+    class STDFileWatcher : public FileWatcher
     {
         friend void STDFileWatcherThread(STDFileWatcher& watcher);
 
     public:
-        STDFileWatcher(const Path& path, const std::function<void(Path, Event)> &callback);
+        STDFileWatcher(const Path& path, const std::function<void(Path, Event)>& callback);
         void Start() override;
 
         void Stop() override;
@@ -26,12 +26,11 @@ namespace BeeEngine::Internal
 
         ~STDFileWatcher() override
         {
-            if(STDFileWatcher::IsRunning())
+            if (STDFileWatcher::IsRunning())
                 STDFileWatcher::Stop();
         }
 
     public:
-
     private:
         std::atomic<bool> m_Running = false;
         const std::filesystem::path m_Path;
@@ -42,4 +41,4 @@ namespace BeeEngine::Internal
         Scope<std::thread> m_Thread = nullptr;
 #endif
     };
-}
+} // namespace BeeEngine::Internal

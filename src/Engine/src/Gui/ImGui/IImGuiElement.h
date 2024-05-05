@@ -5,7 +5,6 @@
 #pragma once
 #include "BeeEngine.h"
 
-
 namespace BeeEngine::Internal
 {
     struct IImGuiElement
@@ -15,4 +14,4 @@ namespace BeeEngine::Internal
         virtual void OnEvent(EventDispatcher& event) = 0;
         virtual ~IImGuiElement() = default;
     };
-}
+} // namespace BeeEngine::Internal

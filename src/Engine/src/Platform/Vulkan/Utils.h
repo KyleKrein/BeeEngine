@@ -13,8 +13,7 @@ namespace BeeEngine::Internal
     extern PFN_vkCmdTraceRaysKHR CmdTraceRaysKHR;
     extern PFN_vkDestroyAccelerationStructureKHR DestroyAccelerationStructureKHR;
     extern PFN_vkGetRayTracingShaderGroupHandlesKHR GetRayTracingShaderGroupHandlesKHR;
-    extern PFN_vkCmdWriteAccelerationStructuresPropertiesKHR
-        CmdWriteAccelerationStructuresPropertiesKHR;
+    extern PFN_vkCmdWriteAccelerationStructuresPropertiesKHR CmdWriteAccelerationStructuresPropertiesKHR;
     extern PFN_vkCreateAccelerationStructureKHR CreateAccelerationStructureKHR;
     extern PFN_vkCmdBuildAccelerationStructuresKHR CmdBuildAccelerationStructuresKHR;
     extern PFN_vkCmdCopyAccelerationStructureKHR CmdCopyAccelerationStructureKHR;
@@ -34,13 +33,16 @@ namespace BeeEngine::Internal
 
     struct VulkanInitializer
     {
-        static vk::ImageCreateInfo ImageCreateInfo(vk::Format format, vk::ImageUsageFlags usageFlags, vk::Extent3D extent);
-        static vk::ImageViewCreateInfo ImageViewCreateInfo(vk::Format format, vk::Image image, vk::ImageAspectFlags aspectFlags);
-        static vk::PipelineDepthStencilStateCreateInfo DepthStencilCreateInfo(bool bDepthTest, bool bDepthWrite, vk::CompareOp compareOp);
+        static vk::ImageCreateInfo
+        ImageCreateInfo(vk::Format format, vk::ImageUsageFlags usageFlags, vk::Extent3D extent);
+        static vk::ImageViewCreateInfo
+        ImageViewCreateInfo(vk::Format format, vk::Image image, vk::ImageAspectFlags aspectFlags);
+        static vk::PipelineDepthStencilStateCreateInfo
+        DepthStencilCreateInfo(bool bDepthTest, bool bDepthWrite, vk::CompareOp compareOp);
 
         static vk::ImageSubresourceRange ImageSubresourceRange(vk::ImageAspectFlags aspectFlags);
         static vk::SemaphoreSubmitInfo SemaphoreSubmitInfo(vk::Semaphore semaphore, vk::PipelineStageFlags2 stageFlags);
         static vk::CommandBufferSubmitInfo CommandBufferSubmitInfo(vk::CommandBuffer commandBuffer);
     };
-}
+} // namespace BeeEngine::Internal
 #endif

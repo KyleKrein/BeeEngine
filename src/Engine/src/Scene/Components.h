@@ -4,30 +4,30 @@
 
 #pragma once
 
-#include "glm.hpp"
-#include "Renderer/Texture.h"
+#include "Core/AssetManagement/AssetManager.h"
+#include "Core/AssetManagement/EngineAssetRegistry.h"
+#include "Core/AssetManagement/MeshSource.h"
 #include "Core/Cameras/Camera.h"
+#include "Core/Color4.h"
+#include "Core/Math/Math.h"
+#include "Core/Reflection.h"
+#include "Core/TypeSequence.h"
+#include "Core/UUID.h"
+#include "NativeScriptFactory.h"
+#include "Renderer/Font.h"
+#include "Renderer/Material.h"
+#include "Renderer/MaterialData.h"
+#include "Renderer/Mesh.h"
+#include "Renderer/TextRenderingConfiguration.h"
+#include "Renderer/Texture.h"
 #include "SceneCamera.h"
 #include "ScriptableEntity.h"
-#include "ext/matrix_transform.hpp"
-#include "gtx/quaternion.hpp"
-#include "Core/Math/Math.h"
-#include "Core/Color4.h"
-#include "Renderer/Mesh.h"
-#include "Renderer/Material.h"
-#include "NativeScriptFactory.h"
-#include "Core/UUID.h"
-#include "Scripting/MObject.h"
 #include "Scripting/GameScript.h"
-#include "Renderer/TextRenderingConfiguration.h"
-#include "Core/AssetManagement/EngineAssetRegistry.h"
-#include "Renderer/Font.h"
-#include "Core/TypeSequence.h"
-#include "Core/AssetManagement/AssetManager.h"
-#include "Core/Reflection.h"
-#include "Core/AssetManagement/MeshSource.h"
-#include "Renderer/MaterialData.h"
+#include "Scripting/MObject.h"
 #include "Serialization/ISerializer.h"
+#include "ext/matrix_transform.hpp"
+#include "glm.hpp"
+#include "gtx/quaternion.hpp"
 
 namespace BeeEngine
 {
@@ -35,11 +35,12 @@ namespace BeeEngine
     {
         UUID ID;
 
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
-            serializer & Serialization::Key{"UUID"} & Serialization::Value{ID};
+            serializer& Serialization::Key{"UUID"} & Serialization::Value{ID};
         }
+
     private:
         REFLECT()
     };
@@ -49,16 +50,17 @@ namespace BeeEngine
 
         TagComponent() = default;
         TagComponent(const TagComponent&) = default;
-        explicit TagComponent(const std::string& tag): Tag(tag) {}
-        explicit TagComponent(std::string&& tag): Tag(std::move(tag)) {}
+        explicit TagComponent(const std::string& tag) : Tag(tag) {}
+        explicit TagComponent(std::string&& tag) : Tag(std::move(tag)) {}
 
         operator String&() { return Tag; }
         operator const String&() const { return Tag; }
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
             serializer & Tag;
         }
+
     private:
         REFLECT()
     };
@@ -71,7 +73,7 @@ namespace BeeEngine
 
         TransformComponent() = default;
         TransformComponent(const TransformComponent&) = default;
-        explicit TransformComponent(const glm::vec3& translate): Translation(translate) {}
+        explicit TransformComponent(const glm::vec3& translate) : Translation(translate) {}
 
         [[nodiscard]] glm::mat4 GetTransform() const
         {
@@ -79,21 +81,22 @@ namespace BeeEngine
             return glm::translate(glm::mat4(1.0f), Translation) * rotation * glm::scale(glm::mat4(1.0f), Scale);
         }
 
-        void SetTransform(const glm::mat4 &transform) noexcept
+        void SetTransform(const glm::mat4& transform) noexcept
         {
             auto [translation, rotation, scale] = Math::DecomposeTransform(transform);
             Translation = translation;
             Rotation += rotation - Rotation;
             Scale = scale;
         }
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
             using Serialization::Marker;
-            serializer & Serialization::Key{"Translation"} & Serialization::Value{Translation};
-            serializer & Serialization::Key{"Rotation"} & Serialization::Value{Rotation};
-            serializer & Serialization::Key{"Scale"} & Serialization::Value{Scale};
+            serializer& Serialization::Key{"Translation"} & Serialization::Value{Translation};
+            serializer& Serialization::Key{"Rotation"} & Serialization::Value{Rotation};
+            serializer& Serialization::Key{"Scale"} & Serialization::Value{Scale};
         }
+
     private:
         REFLECT()
     };
@@ -106,17 +109,18 @@ namespace BeeEngine
 
         CameraComponent() = default;
         CameraComponent(const CameraComponent&) = default;
-        //explicit CameraComponent(const glm::mat4& projection): Camera(projection) {}
+        // explicit CameraComponent(const glm::mat4& projection): Camera(projection) {}
 
-        operator class Camera&() { return Camera; }
-        operator const class Camera&() const { return Camera; }
-        template<typename Archive>
+        operator class Camera &() { return Camera; }
+        operator const class Camera &() const { return Camera; }
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
             serializer & Camera;
-            serializer & Serialization::Key{"Primary"} & Serialization::Value{Primary};
-            serializer & Serialization::Key{"Fixed Aspect Ratio"} & Serialization::Value{FixedAspectRatio};
+            serializer& Serialization::Key{"Primary"} & Serialization::Value{Primary};
+            serializer& Serialization::Key{"Fixed Aspect Ratio"} & Serialization::Value{FixedAspectRatio};
         }
+
     private:
         REFLECT()
     };
@@ -138,13 +142,13 @@ namespace BeeEngine
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
 
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
-            serializer & Serialization::Key{"Color"} & Serialization::Value{Color};
-            serializer & Serialization::Key{"Texture Handle"} & Serialization::Value{TextureHandle};
-            serializer & Serialization::Key{"Tiling Factor"} & Serialization::Value{TilingFactor};
-            serializer & Serialization::Key{"Has Texture"} & Serialization::Value{HasTexture};
+            serializer& Serialization::Key{"Color"} & Serialization::Value{Color};
+            serializer& Serialization::Key{"Texture Handle"} & Serialization::Value{TextureHandle};
+            serializer& Serialization::Key{"Tiling Factor"} & Serialization::Value{TilingFactor};
+            serializer& Serialization::Key{"Has Texture"} & Serialization::Value{HasTexture};
         }
     };
 
@@ -153,12 +157,12 @@ namespace BeeEngine
         Color4 Color = Color4::White;
         float Thickness = 1.0f;
         float Fade = 0.005f;
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
-            serializer & Serialization::Key{"Color"} & Serialization::Value{Color};
-            serializer & Serialization::Key{"Thickness"} & Serialization::Value{Thickness};
-            serializer & Serialization::Key{"Fade"} & Serialization::Value{Fade};
+            serializer& Serialization::Key{"Color"} & Serialization::Value{Color};
+            serializer& Serialization::Key{"Thickness"} & Serialization::Value{Thickness};
+            serializer& Serialization::Key{"Fade"} & Serialization::Value{Fade};
         }
     };
 
@@ -168,16 +172,13 @@ namespace BeeEngine
         AssetHandle FontHandle = EngineAssetRegistry::OpenSansRegular;
         std::string Text;
 
-        Font& Font(const String& locale) const
-        {
-            return AssetManager::GetAsset<BeeEngine::Font>(FontHandle, locale);
-        }
-        template<typename Archive>
+        Font& Font(const String& locale) const { return AssetManager::GetAsset<BeeEngine::Font>(FontHandle, locale); }
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
-            serializer & Serialization::Key{"Configuration"} & Serialization::Value{Configuration};
-            serializer & Serialization::Key{"Font Handle"} & Serialization::Value{FontHandle};
-            serializer & Serialization::Key{"Text"} & Serialization::Value{Text};
+            serializer& Serialization::Key{"Configuration"} & Serialization::Value{Configuration};
+            serializer& Serialization::Key{"Font Handle"} & Serialization::Value{FontHandle};
+            serializer& Serialization::Key{"Text"} & Serialization::Value{Text};
         }
     };
 
@@ -215,10 +216,16 @@ namespace BeeEngine
         std::string Name = "";
         ScriptableEntity* Instance = nullptr;
 
-        //ScriptableEntity*(*InstantiateScript)();
-        //void (*DestroyScript)();
-        std::function<ScriptableEntity*(const char*)> InstantiateScript = [](const char* name) { return NativeScriptFactory::GetInstance().Create(name); };;
-        std::function<void(NativeScriptComponent&)> DestroyScript = [](NativeScriptComponent& script) { delete script.Instance; script.Instance = nullptr; };
+        // ScriptableEntity*(*InstantiateScript)();
+        // void (*DestroyScript)();
+        std::function<ScriptableEntity*(const char*)> InstantiateScript = [](const char* name)
+        { return NativeScriptFactory::GetInstance().Create(name); };
+        ;
+        std::function<void(NativeScriptComponent&)> DestroyScript = [](NativeScriptComponent& script)
+        {
+            delete script.Instance;
+            script.Instance = nullptr;
+        };
 
         /*
         std::function<void()> OnCreateFunction;
@@ -226,12 +233,16 @@ namespace BeeEngine
         std::function<void()> OnUpdateFunction;
          */
 
-        template<typename T>
-        requires std::derived_from<T, ScriptableEntity>
+        template <typename T>
+            requires std::derived_from<T, ScriptableEntity>
         void Bind()
         {
-            InstantiateScript = [](const char* name) { return new T();};
-            DestroyScript = [](NativeScriptComponent& script) { delete script.Instance; script.Instance = nullptr; };
+            InstantiateScript = [](const char* name) { return new T(); };
+            DestroyScript = [](NativeScriptComponent& script)
+            {
+                delete script.Instance;
+                script.Instance = nullptr;
+            };
             /*
             OnCreateFunction = [&]() { ((T*)Instance)->OnCreate();};
             OnDestroyFunction = [&]() { ((T*)Instance)->OnDestroy();};
@@ -248,7 +259,7 @@ namespace BeeEngine
         }
     };
 
-    //Physics
+    // Physics
     struct RigidBody2DComponent
     {
         enum class BodyType
@@ -261,11 +272,11 @@ namespace BeeEngine
         bool FixedRotation = false;
 
         void* RuntimeBody = nullptr;
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
-            serializer & Serialization::Key{"Type"} & Serialization::Value{Type};
-            serializer & Serialization::Key{"Fixed Rotation"} & Serialization::Value{FixedRotation};
+            serializer& Serialization::Key{"Type"} & Serialization::Value{Type};
+            serializer& Serialization::Key{"Fixed Rotation"} & Serialization::Value{FixedRotation};
         }
         /*float Mass = 1.0f;
         float Friction = 0.5f;
@@ -292,23 +303,23 @@ namespace BeeEngine
         glm::vec2 Offset = glm::vec2(0.0f);
         glm::vec2 Size = glm::vec2(0.5f);
 
-        //move to physics material
+        // move to physics material
         float Density = 1.0f;
         float Friction = 0.5f;
         float Restitution = 0.0f;
         float RestitutionThreshold = 0.5f;
 
         void* RuntimeFixture = nullptr;
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
-            serializer & Serialization::Key{"Type"} & Serialization::Value{Type};
-            serializer & Serialization::Key{"Offset"} & Serialization::Value{Offset};
-            serializer & Serialization::Key{"Size"} & Serialization::Value{Size};
-            serializer & Serialization::Key{"Density"} & Serialization::Value{Density};
-            serializer & Serialization::Key{"Friction"} & Serialization::Value{Friction};
-            serializer & Serialization::Key{"Restitution"} & Serialization::Value{Restitution};
-            serializer & Serialization::Key{"Restitution Threshold"} & Serialization::Value{RestitutionThreshold};
+            serializer& Serialization::Key{"Type"} & Serialization::Value{Type};
+            serializer& Serialization::Key{"Offset"} & Serialization::Value{Offset};
+            serializer& Serialization::Key{"Size"} & Serialization::Value{Size};
+            serializer& Serialization::Key{"Density"} & Serialization::Value{Density};
+            serializer& Serialization::Key{"Friction"} & Serialization::Value{Friction};
+            serializer& Serialization::Key{"Restitution"} & Serialization::Value{Restitution};
+            serializer& Serialization::Key{"Restitution Threshold"} & Serialization::Value{RestitutionThreshold};
         }
     };
 
@@ -324,8 +335,8 @@ namespace BeeEngine
 
     struct MeshComponent
     {
-        //Ref<Mesh> Mesh = nullptr;
-        //Ref<Material> Material = nullptr;
+        // Ref<Mesh> Mesh = nullptr;
+        // Ref<Material> Material = nullptr;
         AssetHandle MeshSourceHandle;
         bool HasMeshes = false;
         MaterialInstance MaterialInstance;
@@ -338,8 +349,17 @@ namespace BeeEngine
         }
     };
 
-    using AllComponents =
-            TypeSequence<TransformComponent, TagComponent, UUIDComponent, CameraComponent,
-            SpriteRendererComponent, CircleRendererComponent, TextRendererComponent, ScriptComponent, NativeScriptComponent,
-            RigidBody2DComponent, BoxCollider2DComponent, HierarchyComponent, MeshComponent>;
-}
+    using AllComponents = TypeSequence<TransformComponent,
+                                       TagComponent,
+                                       UUIDComponent,
+                                       CameraComponent,
+                                       SpriteRendererComponent,
+                                       CircleRendererComponent,
+                                       TextRendererComponent,
+                                       ScriptComponent,
+                                       NativeScriptComponent,
+                                       RigidBody2DComponent,
+                                       BoxCollider2DComponent,
+                                       HierarchyComponent,
+                                       MeshComponent>;
+} // namespace BeeEngine

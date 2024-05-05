@@ -14,4 +14,4 @@ namespace BeeEngine::Editor
         void Start() noexcept;
         void End() noexcept;
     };
-}
+} // namespace BeeEngine::Editor

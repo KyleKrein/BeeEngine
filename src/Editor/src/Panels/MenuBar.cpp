@@ -4,7 +4,6 @@
 
 #include "MenuBar.h"
 
-
 namespace BeeEngine::Editor
 {
 
@@ -12,11 +11,11 @@ namespace BeeEngine::Editor
     {
         if (ImGui::BeginMenuBar())
         {
-            for (auto& MenuElement: m_Elements)
+            for (auto& MenuElement : m_Elements)
             {
                 if (ImGui::BeginMenu(MenuElement.Name.c_str()))
                 {
-                    for (auto& ChildElement: MenuElement.Children)
+                    for (auto& ChildElement : MenuElement.Children)
                     {
                         if (ImGui::MenuItem(ChildElement.Name.c_str()))
                         {
@@ -30,18 +29,12 @@ namespace BeeEngine::Editor
         }
     }
 
-    void MenuBar::Update()
-    {
+    void MenuBar::Update() {}
 
-    }
-
-    void MenuBar::AddElement(const MenuBarElement &element)
+    void MenuBar::AddElement(const MenuBarElement& element)
     {
         m_Elements.push_back(element);
     }
 
-    void MenuBar::OnEvent(EventDispatcher &event)
-    {
-
-    }
-}
+    void MenuBar::OnEvent(EventDispatcher& event) {}
+} // namespace BeeEngine::Editor

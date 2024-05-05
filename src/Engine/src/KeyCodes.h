@@ -6,8 +6,8 @@
 namespace BeeEngine
 {
     /// <summary>
-/// Specifies key codes and modifiers in US keyboard layout.
-/// </summary>
+    /// Specifies key codes and modifiers in US keyboard layout.
+    /// </summary>
     enum class Key
     {
         /// <summary>An unknown key.</summary>
@@ -373,21 +373,24 @@ namespace BeeEngine
     enum class MouseButton
     {
         /// <summary>The first button.</summary>
-        //Button1 = 0,
+        // Button1 = 0,
         /// <summary>
-        ///     The left mouse button. This corresponds to <see cref="F:OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Button1" />.
+        ///     The left mouse button. This corresponds to <see
+        ///     cref="F:OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Button1" />.
         /// </summary>
         Left = 0,
         /// <summary>The second button.</summary>
-        //Button2 = 1,
+        // Button2 = 1,
         /// <summary>
-        ///     The right mouse button. This corresponds to <see cref="F:OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Button2" />.
+        ///     The right mouse button. This corresponds to <see
+        ///     cref="F:OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Button2" />.
         /// </summary>
         Right = 1,
         /// <summary>The third button.</summary>
-        //Button3 = 2,
+        // Button3 = 2,
         /// <summary>
-        ///     The middle mouse button. This corresponds to <see cref="F:OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Button3" />.
+        ///     The middle mouse button. This corresponds to <see
+        ///     cref="F:OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Button3" />.
         /// </summary>
         Middle = 2,
         /// <summary>The fourth button.</summary>
@@ -403,4 +406,4 @@ namespace BeeEngine
         /// <summary>The highest mouse button available.</summary>
         Last = 7,
     };
-}
+} // namespace BeeEngine

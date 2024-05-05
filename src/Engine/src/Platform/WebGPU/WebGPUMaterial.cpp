@@ -7,8 +7,8 @@
 namespace BeeEngine::Internal
 {
 
-    WebGPUMaterial::WebGPUMaterial(const std::filesystem::path &vertexShader,
-                                   const std::filesystem::path &fragmentShader,
+    WebGPUMaterial::WebGPUMaterial(const std::filesystem::path& vertexShader,
+                                   const std::filesystem::path& fragmentShader,
                                    bool loadFromCache)
     {
         auto vertexShaderModule = ShaderModule::Create(vertexShader.string(), ShaderType::Vertex, loadFromCache);
@@ -17,13 +17,10 @@ namespace BeeEngine::Internal
         m_Pipeline = Pipeline::Create(vertexShaderModule, fragmentShaderModule);
     }
 
-    WebGPUMaterial::~WebGPUMaterial()
-    {
+    WebGPUMaterial::~WebGPUMaterial() {}
 
-    }
-
-    InstancedBuffer &WebGPUMaterial::GetInstancedBuffer() const
+    InstancedBuffer& WebGPUMaterial::GetInstancedBuffer() const
     {
         return *m_InstancedBuffer;
     }
-}
+} // namespace BeeEngine::Internal

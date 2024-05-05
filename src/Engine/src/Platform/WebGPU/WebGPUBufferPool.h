@@ -4,8 +4,8 @@
 
 #pragma once
 #if defined(BEE_COMPILE_WEBGPU)
-#include <webgpu/webgpu.h>
 #include <vector>
+#include <webgpu/webgpu.h>
 namespace BeeEngine::Internal
 {
     enum class WebGPUBufferUsage
@@ -23,15 +23,12 @@ namespace BeeEngine::Internal
         {
             return Buffer == other.Buffer && Size == other.Size && Offset == other.Offset && Usage == other.Usage;
         }
-        bool operator!=(const WebGPUBuffer& other) const
-        {
-            return !(*this == other);
-        }
+        bool operator!=(const WebGPUBuffer& other) const { return !(*this == other); }
+
     private:
         WebGPUBuffer(WGPUBuffer buffer, uint32_t size, uint32_t offset, WebGPUBufferUsage usage, bool isDestroyed)
-        : Buffer(buffer), Size(size), Offset(offset), Usage(usage), m_IsDestroyed(isDestroyed)
+            : Buffer(buffer), Size(size), Offset(offset), Usage(usage), m_IsDestroyed(isDestroyed)
         {
-
         }
         bool m_IsDestroyed;
         friend class WebGPUBufferPool;
@@ -49,10 +46,11 @@ namespace BeeEngine::Internal
         const WebGPUBuffer& RequestBuffer(uint32_t size, WebGPUBufferUsage usage);
 
         void ReleaseBuffer(const WebGPUBuffer& buffer);
+
     private:
         WGPUBuffer CreateBuffer(uint32_t size, WebGPUBufferUsage usage);
         void DestroyBuffer(const WebGPUBuffer& buffer);
         std::vector<WebGPUBuffer> m_Buffers;
     };
-}
+} // namespace BeeEngine::Internal
 #endif

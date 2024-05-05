@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "Core/String.h"
 #include "Core/Path.h"
+#include "Core/String.h"
 
 class TestFileDialogs;
 
@@ -22,9 +22,7 @@ namespace BeeEngine
             friend class ::TestFileDialogs;
             const char* name;
             const char* filter;
-            Filter(const char* name, const char* filter)
-                    : name(name), filter(filter)
-            {}
+            Filter(const char* name, const char* filter) : name(name), filter(filter) {}
 #if defined(WINDOWS)
         private:
             std::string WindowsFilter()
@@ -32,12 +30,13 @@ namespace BeeEngine
                 return std::string(name + std::string(" (") + filter + std::string(")") + '\0' + filter + '\0');
             }
 #endif
-
         };
+
     public:
         static Path OpenFile(Filter filter);
         static Path SaveFile(Filter filter);
         static Path OpenFolder();
+
     private:
         /*static void CheckFilter(Filter& filter)
         {
@@ -51,4 +50,4 @@ namespace BeeEngine
             //TODO: finish writing this
         }*/
     };
-}
+} // namespace BeeEngine

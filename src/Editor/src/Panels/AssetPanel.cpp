@@ -3,25 +3,23 @@
 //
 
 #include "AssetPanel.h"
-#include "imgui.h"
-#include "Renderer/Texture.h"
-#include "Core/AssetManagement/AssetManager.h"
-#include "Renderer/Font.h"
-#include "Core/AssetManagement/EngineAssetRegistry.h"
 #include "Core/Application.h"
-#include "Core/ResourceManager.h"
+#include "Core/AssetManagement/AssetManager.h"
+#include "Core/AssetManagement/EngineAssetRegistry.h"
 #include "Core/Path.h"
-#include "Gui/ImGui/ImGuiExtension.h"
+#include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
-
+#include "Gui/ImGui/ImGuiExtension.h"
+#include "Renderer/Font.h"
+#include "Renderer/Texture.h"
+#include "imgui.h"
 
 namespace BeeEngine::Editor
 {
 
-    AssetPanel::AssetPanel(EditorAssetManager *assetManager, Locale::Domain& domain)
-    : m_AssetManager(assetManager), m_EditorDomain(&domain)
+    AssetPanel::AssetPanel(EditorAssetManager* assetManager, Locale::Domain& domain)
+        : m_AssetManager(assetManager), m_EditorDomain(&domain)
     {
-
     }
 
     void AssetPanel::SetProject(ProjectFile* project)
@@ -31,30 +29,32 @@ namespace BeeEngine::Editor
 
     void AssetPanel::Render()
     {
-        if(m_AssetEditPanel)
+        if (m_AssetEditPanel)
         {
             m_AssetEditPanel->Render();
-            if(!m_AssetEditPanel->IsOpened())
+            if (!m_AssetEditPanel->IsOpened())
                 m_AssetEditPanel.reset();
         }
         ImGui::Begin(m_EditorDomain->Translate("assetPanel").c_str());
-        if(ImGui::IsDragAndDropPayloadInProcess("CONTENT_BROWSER_ITEM"))
+        if (ImGui::IsDragAndDropPayloadInProcess("CONTENT_BROWSER_ITEM"))
         {
             auto width = ImGui::GetContentRegionAvail().x;
             ImGui::Button(m_EditorDomain->Translate("assetPanel.dropAssetsButton").c_str(), {width, 0});
-            ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM", [this](void* data, size_t size)
-                {
-                    Path assetPath = m_Project->GetProjectPath() / (const char*)data;
-                    if(ResourceManager::IsAssetExtension(assetPath.GetExtension()))
-                    {
-                        auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
-                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                        if(!handlePtr)
-                        {
-                            m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
-                        }
-                    }
-                });
+            ImGui::AcceptDragAndDrop("CONTENT_BROWSER_ITEM",
+                                     [this](void* data, size_t size)
+                                     {
+                                         Path assetPath = m_Project->GetProjectPath() / (const char*)data;
+                                         if (ResourceManager::IsAssetExtension(assetPath.GetExtension()))
+                                         {
+                                             auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
+                                             auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                             if (!handlePtr)
+                                             {
+                                                 m_AssetManager->LoadAsset(assetPath,
+                                                                           {m_Project->GetAssetRegistryID()});
+                                             }
+                                         }
+                                     });
         }
 
         auto& registry = m_AssetManager->GetAssetRegistry();
@@ -72,7 +72,7 @@ namespace BeeEngine::Editor
 
         for (auto& [registryID, registryMap] : registry)
         {
-            for(auto& [assetID, metadata] : registryMap)
+            for (auto& [assetID, metadata] : registryMap)
             {
                 ImGui::PushID(metadata.Name.c_str());
                 Texture2D* icon = nullptr;
@@ -81,44 +81,45 @@ namespace BeeEngine::Editor
                 {
                     case AssetType::Texture2D:
                     {
-                        icon = &AssetManager::GetAsset<Texture2D>(handle, m_Project->GetProjectLocaleDomain().GetLocale());
+                        icon =
+                            &AssetManager::GetAsset<Texture2D>(handle, m_Project->GetProjectLocaleDomain().GetLocale());
                         break;
                     }
                     case AssetType::Font:
                     {
-                        icon = &AssetManager::GetAsset<Font>(handle, m_Project->GetProjectLocaleDomain().GetLocale()).GetAtlasTexture();
+                        icon = &AssetManager::GetAsset<Font>(handle, m_Project->GetProjectLocaleDomain().GetLocale())
+                                    .GetAtlasTexture();
                         break;
                     }
                     default:
                     {
-                        icon = &AssetManager::GetAsset<Texture2D>(EngineAssetRegistry::FileTexture, Locale::Localization::Default);
+                        icon = &AssetManager::GetAsset<Texture2D>(EngineAssetRegistry::FileTexture,
+                                                                  Locale::Localization::Default);
                         break;
                     }
                 }
                 ImGui::PushStyleColor(ImGuiCol_Button, {0, 0, 0, 0});
                 // ImVec4 hoveredColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
-                //hoveredColor.w = 0.3f;
-                //ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
-                //ImVec4 activeColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
-                //activeColor.w = 0.5f;
-                //ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
+                // hoveredColor.w = 0.3f;
+                // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, hoveredColor);
+                // ImVec4 activeColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
+                // activeColor.w = 0.5f;
+                // ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
                 float aspectRatio = (float)icon->GetWidth() / icon->GetHeight();
-                ImGui::ImageButton((ImTextureID) icon->GetRendererID(), {thumbnailSize, thumbnailSize / aspectRatio}, {0, 1}, {1, 0});
+                ImGui::ImageButton(
+                    (ImTextureID)icon->GetRendererID(), {thumbnailSize, thumbnailSize / aspectRatio}, {0, 1}, {1, 0});
 
-                if(handle.RegistryID == m_Project->GetAssetRegistryID())
+                if (handle.RegistryID == m_Project->GetAssetRegistryID())
                 {
-                    if(ImGui::BeginPopupContextItem("AssetPanelPopupMenu", ImGuiPopupFlags_MouseButtonRight))
+                    if (ImGui::BeginPopupContextItem("AssetPanelPopupMenu", ImGuiPopupFlags_MouseButtonRight))
                     {
-                        if(ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.editAsset").c_str()))
+                        if (ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.editAsset").c_str()))
                         {
                             m_AssetEditPanel = CreateScope<AssetEditPanel>(*m_EditorDomain, handle, *m_AssetManager);
                         }
-                        if(ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.deleteAsset").c_str()))
+                        if (ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.deleteAsset").c_str()))
                         {
-                            Application::SubmitToMainThread([this, handle]()
-                                                            {
-                                                                m_OnAssetDeleted(handle);
-                                                            });
+                            Application::SubmitToMainThread([this, handle]() { m_OnAssetDeleted(handle); });
                         }
                         ImGui::EndPopup();
                     }
@@ -127,7 +128,6 @@ namespace BeeEngine::Editor
                 ImGui::StartDragAndDrop(GetDragAndDropTypeName(metadata.Type), handle);
 
                 ImGui::PopStyleColor();
-
 
                 ImGui::TextWrapped(metadata.Name.c_str());
 
@@ -139,7 +139,8 @@ namespace BeeEngine::Editor
 
         ImGui::Columns(1);
 
-        if (ImGui::BeginPopupContextWindow("AssetPanelPopupMenu", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
+        if (ImGui::BeginPopupContextWindow("AssetPanelPopupMenu",
+                                           ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight))
         {
             if (ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.createLocalizedAsset").c_str()))
             {
@@ -147,19 +148,19 @@ namespace BeeEngine::Editor
             }
             ImGui::EndPopup();
         }
-        if(ImGui::BeginPopup("CreateLocalizedAssetPopup"))
+        if (ImGui::BeginPopup("CreateLocalizedAssetPopup"))
         {
             static String assetName;
             ImGui::InputText(m_EditorDomain->Translate("name").c_str(), &assetName, 256);
-            if(ImGui::Button(m_EditorDomain->Translate("create").c_str()))
+            if (ImGui::Button(m_EditorDomain->Translate("create").c_str()))
             {
                 AssetHandle handle = {};
                 std::unordered_map<String, AssetHandle> handles;
-                for(auto& locale : m_Project->GetProjectLocaleDomain().GetLocales())
+                for (auto& locale : m_Project->GetProjectLocaleDomain().GetLocales())
                 {
-                    handles[locale] = {0,0};
+                    handles[locale] = {0, 0};
                 }
-                LocalizedAsset localizedAsset {std::move(handles)};
+                LocalizedAsset localizedAsset{std::move(handles)};
                 String serialized = LocalizedAssetSerializer::Serialize(localizedAsset);
                 Path assetPath = m_Project->GetProjectPath() / (assetName + ".beelocalizedasset");
                 File::WriteFile(assetPath, serialized);
@@ -172,7 +173,7 @@ namespace BeeEngine::Editor
         ImGui::End();
     }
 
-    const char *AssetPanel::GetDragAndDropTypeName(AssetType type)
+    const char* AssetPanel::GetDragAndDropTypeName(AssetType type)
     {
         switch (type)
         {
@@ -188,4 +189,4 @@ namespace BeeEngine::Editor
                 return "ASSET_BROWSER_UNKNOWN_ITEM";
         }
     }
-}
+} // namespace BeeEngine::Editor

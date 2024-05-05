@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "Core/String.h"
 #include "Core/Path.h"
+#include "Core/String.h"
 
 namespace BeeEngine::Locale
 {
@@ -20,4 +20,4 @@ namespace BeeEngine::Locale
         static void ProcessLocalizationFile(Domain& domain, const Path& path);
         static void ProcessLocalizationFiles(Domain& domain, const std::vector<Path>& paths);
     };
-}
+} // namespace BeeEngine::Locale

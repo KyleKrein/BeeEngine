@@ -3,11 +3,11 @@
 //
 #include "Layer.h"
 
-#include <memory>
-#include "Windowing/WindowHandler/WindowHandler.h"
 #include "Platform/ImGui/ImGuiControllerVulkan.h"
-#include "Renderer/Renderer.h"
 #include "Platform/ImGui/ImGuiControllerWebGPU.h"
+#include "Renderer/Renderer.h"
+#include "Windowing/WindowHandler/WindowHandler.h"
+#include <memory>
 
 namespace BeeEngine
 {
@@ -40,4 +40,4 @@ namespace BeeEngine
                                  WindowHandler::GetInstance()->GetHeight(),
                                  WindowHandler::GetInstance()->GetWindow());
     }
-}
+} // namespace BeeEngine

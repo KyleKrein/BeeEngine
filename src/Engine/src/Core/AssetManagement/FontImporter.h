@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "Renderer/Font.h"
 #include "AssetMetadata.h"
+#include "Renderer/Font.h"
 
 namespace BeeEngine
 {
@@ -13,4 +13,4 @@ namespace BeeEngine
     public:
         static Ref<Font> ImportFont(AssetHandle handle, const AssetMetadata& metadata);
     };
-}
+} // namespace BeeEngine

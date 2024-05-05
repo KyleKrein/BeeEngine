@@ -3,12 +3,12 @@
 //
 
 #pragma once
-#include <functional>
 #include <deque>
+#include <functional>
 #include <mutex>
 
-#include "JobSystem/SpinLock.h"
 #include "JobSystem/JobScheduler.h"
+#include "JobSystem/SpinLock.h"
 #include "Logging/Log.h"
 
 namespace BeeEngine
@@ -36,32 +36,37 @@ namespace BeeEngine
 
         void PushFunction(std::function<void()>&& function)
         {
-            //BeeCoreTrace("Trying to lock flush. Flush was locked: {0}, Push was locked: {1}",m_FlushLock.is_locked(), m_PushLock.is_locked());
-            if(m_FlushLock.try_lock())
+            // BeeCoreTrace("Trying to lock flush. Flush was locked: {0}, Push was locked: {1}",m_FlushLock.is_locked(),
+            // m_PushLock.is_locked());
+            if (m_FlushLock.try_lock())
             {
                 m_DeletionQueue.push_back(std::move(function));
                 m_FlushLock.unlock();
                 return;
             }
-            //BeeCoreTrace("Flush is locked. Locking Push. Flush was locked: {0}, Push was locked: {1}",m_FlushLock.is_locked(), m_PushLock.is_locked());
+            // BeeCoreTrace("Flush is locked. Locking Push. Flush was locked: {0}, Push was locked:
+            // {1}",m_FlushLock.is_locked(), m_PushLock.is_locked());
             std::unique_lock lock(m_PushLock);
             m_WaitQueue.push_back(std::move(function));
         }
         void Flush()
         {
-            //BeeCoreTrace("Locking flush. Flush was locked: {0}, Push was locked: {1}",m_FlushLock.is_locked(), m_PushLock.is_locked());
+            // BeeCoreTrace("Locking flush. Flush was locked: {0}, Push was locked: {1}",m_FlushLock.is_locked(),
+            // m_PushLock.is_locked());
             std::unique_lock lock(m_FlushLock);
-            if(false /*Jobs::this_job::IsInJob()*/) //TODO: find issues in Job System/DeletionQueue and uncomment this
+            if (false /*Jobs::this_job::IsInJob()*/) // TODO: find issues in Job System/DeletionQueue and uncomment this
             {
                 Jobs::Counter counter;
                 std::vector<Job> jobs;
-                for(auto& function : m_DeletionQueue)
+                for (auto& function : m_DeletionQueue)
                 {
                     Job job = {[](void* data)
-                    {
-                        auto* function = (std::function<void()>*)data;
-                        (*function)();
-                    }, &function, &counter};
+                               {
+                                   auto* function = (std::function<void()>*)data;
+                                   (*function)();
+                               },
+                               &function,
+                               &counter};
                     jobs.push_back(job);
                 }
                 Job::ScheduleAll(jobs.data(), jobs.size());
@@ -75,9 +80,10 @@ namespace BeeEngine
                 }
             }
             m_DeletionQueue.clear();
-            //BeeCoreTrace("Locking push. Flush was locked: {0}, Push was locked: {1}",m_FlushLock.is_locked(), m_PushLock.is_locked());
+            // BeeCoreTrace("Locking push. Flush was locked: {0}, Push was locked: {1}",m_FlushLock.is_locked(),
+            // m_PushLock.is_locked());
             std::unique_lock lock2(m_PushLock);
-            for(auto& function : m_WaitQueue)
+            for (auto& function : m_WaitQueue)
             {
                 m_DeletionQueue.push_back(std::move(function));
             }
@@ -95,5 +101,4 @@ namespace BeeEngine
         Jobs::SpinLock m_FlushLock;
         Jobs::SpinLock m_PushLock;
     };
-}
-
+} // namespace BeeEngine

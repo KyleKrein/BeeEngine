@@ -4,7 +4,7 @@
 
 namespace BeeEngine
 {
-    GameConfig GameConfig::Deserialize(const Path &path)
+    GameConfig GameConfig::Deserialize(const Path& path)
     {
         GameConfig config;
         String str = File::ReadFile(path);
@@ -14,7 +14,7 @@ namespace BeeEngine
         config.DefaultLocale = Locale::Localization(data["DefaultLocale"].as<String>());
         return config;
     }
-    void GameConfig::Serialize(const Path &path) const
+    void GameConfig::Serialize(const Path& path) const
     {
         YAML::Emitter out;
         out << YAML::BeginMap;
@@ -24,4 +24,4 @@ namespace BeeEngine
         out << YAML::EndMap;
         File::WriteFile(path, out.c_str());
     }
-}
+} // namespace BeeEngine

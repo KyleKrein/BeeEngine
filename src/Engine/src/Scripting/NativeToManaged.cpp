@@ -1,7 +1,7 @@
-    //
+//
 // Created by Aleksandr on 23.12.2023.
 //
-
+// clang-format off
 #include "NativeToManaged.h"
 
 #include "Utils/DynamicLibrary.h"

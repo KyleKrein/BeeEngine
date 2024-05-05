@@ -3,15 +3,15 @@
 //
 
 #pragma once
+#include "Core/Path.h"
 #include <filesystem>
 #include <vector>
-#include "Core/Path.h"
 
 namespace BeeEngine::Editor
 {
     class AssetScanner
     {
-        public:
+    public:
         static std::vector<Path> GetAllAssetFiles(const Path& workingDirectory);
     };
-}
+} // namespace BeeEngine::Editor

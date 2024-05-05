@@ -6,8 +6,8 @@
 #include "Core/TypeDefines.h"
 namespace BeeEngine
 {
-    template<typename Type, Type min, Type max>
-    requires (std::is_arithmetic_v<Type> || std::is_enum_v<Type>) && (min < max)
+    template <typename Type, Type min, Type max>
+        requires(std::is_arithmetic_v<Type> || std::is_enum_v<Type>) && (min < max)
     class ValueType
     {
     public:
@@ -22,10 +22,8 @@ namespace BeeEngine
             ApplyValue(value);
             return *this;
         }
-        operator Type() const
-        {
-            return m_Value;
-        }
+        operator Type() const { return m_Value; }
+
     private:
         Type m_Value;
 
@@ -35,4 +33,4 @@ namespace BeeEngine
             m_Value = value;
         }
     };
-}
+} // namespace BeeEngine

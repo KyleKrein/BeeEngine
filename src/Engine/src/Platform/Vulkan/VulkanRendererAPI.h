@@ -5,9 +5,9 @@
 #include "Renderer/RendererAPI.h"
 #include <vulkan/vulkan.hpp>
 
-#include "VulkanSwapChain.h"
-#include "VulkanGraphicsDevice.h"
 #include "Renderer/RenderingQueue.h"
+#include "VulkanGraphicsDevice.h"
+#include "VulkanSwapChain.h"
 
 namespace BeeEngine::Internal
 {
@@ -29,16 +29,21 @@ namespace BeeEngine::Internal
 
         [[nodiscard]] CommandBuffer GetCurrentCommandBuffer() override;
 
-        void DrawInstanced(CommandBuffer& commandBuffer, Model& model, InstancedBuffer& instancedBuffer, const std::vector<BindingSet*>& bindingSets,
-            uint32_t instanceCount) override;
+        void DrawInstanced(CommandBuffer& commandBuffer,
+                           Model& model,
+                           InstancedBuffer& instancedBuffer,
+                           const std::vector<BindingSet*>& bindingSets,
+                           uint32_t instanceCount) override;
 
         void SubmitCommandBuffer(const CommandBuffer& commandBuffer) override;
 
         void CopyFrameBufferImageToSwapchain(FrameBuffer& framebuffer, uint32_t attachmentIndex) override;
+
     private:
         void CreateCommandBuffers();
         void FreeCommandBuffers();
         void RecreateSwapChain();
+
     private:
         RenderingQueue m_RenderingQueue;
         std::vector<vk::CommandBuffer> m_CommandBuffers;
@@ -47,4 +52,4 @@ namespace BeeEngine::Internal
         vk::Device m_Device;
         WindowHandler* m_Window;
     };
-}
+} // namespace BeeEngine::Internal

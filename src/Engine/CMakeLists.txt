@@ -531,3 +531,5 @@ add_library(BeeEngine::WithScripting ALIAS BeeEngine)
 target_compile_definitions(BeeEngine PRIVATE BEE_ENABLE_SCRIPTING)
 
 target_compile_definitions(BeeEngine PUBLIC _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING) # for spdlog
+
+#clang_format(BeeEngine "${SOURCE_FILES}")

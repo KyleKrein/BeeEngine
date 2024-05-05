@@ -4,7 +4,6 @@
 
 #include "FramePtr.h"
 
-
 namespace BeeEngine
 {
 }

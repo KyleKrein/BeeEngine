@@ -4,13 +4,14 @@
 
 #include "VulkanComputePipeline.h"
 
-#include "VulkanShaderModule.h"
 #include "Renderer/CommandBuffer.h"
+#include "VulkanShaderModule.h"
 
 namespace BeeEngine::Internal
 {
     VulkanComputePipeline::VulkanComputePipeline(const Ref<ShaderModule>& computeShader)
-        : m_Device(VulkanGraphicsDevice::GetInstance()), m_ComputeShader(std::move(std::static_pointer_cast<VulkanShaderModule>(computeShader)))
+        : m_Device(VulkanGraphicsDevice::GetInstance()),
+          m_ComputeShader(std::move(std::static_pointer_cast<VulkanShaderModule>(computeShader)))
     {
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
 
@@ -48,10 +49,11 @@ namespace BeeEngine::Internal
 
     VulkanComputePipeline::~VulkanComputePipeline()
     {
-        DeletionQueue::Frame().PushFunction([device = m_Device.GetDevice(), pipeline = m_Pipeline, layout = m_PipelineLayout]()
-        {
-            device.destroyPipeline(pipeline);
-            device.destroyPipelineLayout(layout);
-        });
+        DeletionQueue::Frame().PushFunction(
+            [device = m_Device.GetDevice(), pipeline = m_Pipeline, layout = m_PipelineLayout]()
+            {
+                device.destroyPipeline(pipeline);
+                device.destroyPipelineLayout(layout);
+            });
     }
-}
+} // namespace BeeEngine::Internal

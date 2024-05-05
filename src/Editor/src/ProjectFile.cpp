@@ -3,32 +3,37 @@
 //
 
 #include "ProjectFile.h"
-#include "FileSystem/File.h"
-#include "Core/Logging/Log.h"
-#include "VSProjectGeneration.h"
-#include "Core/ResourceManager.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
-#include <yaml-cpp/yaml.h>
-#include <fstream>
-#include <filesystem>
+#include "Core/Logging/Log.h"
+#include "Core/ResourceManager.h"
+#include "FileSystem/File.h"
 #include "Locale/LocalizationGenerator.h"
 #include "Utils/Commands.h"
+#include "VSProjectGeneration.h"
 #include <Core/GameConfig.h>
+#include <filesystem>
+#include <fstream>
+#include <yaml-cpp/yaml.h>
 
 namespace BeeEngine::Editor
 {
     const String dotNetVersion = "net8.0";
-    ProjectFile::ProjectFile(const Path &projectPath, const std::string &projectName, EditorAssetManager* assetManager) noexcept
-    : m_ProjectName(projectName), m_ProjectPath(projectPath), m_AssetManager(assetManager), m_ProjectLocaleDomain(projectName)
+    ProjectFile::ProjectFile(const Path& projectPath,
+                             const std::string& projectName,
+                             EditorAssetManager* assetManager) noexcept
+        : m_ProjectName(projectName),
+          m_ProjectPath(projectPath),
+          m_AssetManager(assetManager),
+          m_ProjectLocaleDomain(projectName)
     {
         BeeCoreTrace("ProjectName: {0}", m_ProjectName);
         BeeCoreTrace("ProjectPath: {0}", m_ProjectPath.AsUTF8());
         LoadLocalizationFiles();
-        if(!File::Exists(m_ProjectPath / ".beeengine"))
+        if (!File::Exists(m_ProjectPath / ".beeengine"))
         {
             File::CreateDirectory(m_ProjectPath / ".beeengine");
         }
-        if(!File::Exists(m_ProjectPath / ".beeengine" /"build"))
+        if (!File::Exists(m_ProjectPath / ".beeengine" / "build"))
         {
             m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
             File::CreateDirectory(m_AppAssemblyPath);
@@ -36,17 +41,21 @@ namespace BeeEngine::Editor
             File::CreateDirectory(m_AppAssemblyPath);
         }
         else
-            m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build"/ dotNetVersion;
-        if(File::Exists(m_AppAssemblyPath))
-            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath, [this](const Path & path, FileWatcher::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build" / dotNetVersion;
+        if (File::Exists(m_AppAssemblyPath))
+            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath,
+                                                           [this](const Path& path, FileWatcher::Event event)
+                                                           { OnAppAssemblyFileSystemEvent(path, event); });
         m_AppAssemblyPath = m_AppAssemblyPath / "GameLibrary.dll";
-        std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll", m_ProjectPath.ToStdPath() / ".beeengine" / "BeeEngine.Core.dll", std::filesystem::copy_options::overwrite_existing);
-        if(!File::Exists(m_ProjectFilePath))
+        std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll",
+                                   m_ProjectPath.ToStdPath() / ".beeengine" / "BeeEngine.Core.dll",
+                                   std::filesystem::copy_options::overwrite_existing);
+        if (!File::Exists(m_ProjectFilePath))
         {
-            init:
+        init:
             Save();
             Path currentConfigFile = std::filesystem::current_path() / "projects.cfg";
-            if(!File::Exists(currentConfigFile))
+            if (!File::Exists(currentConfigFile))
             {
                 /*std::ofstream fout(currentConfigFile, std::ios::out);
                 YAML::Emitter out;
@@ -78,7 +87,9 @@ namespace BeeEngine::Editor
             File::CreateDirectory(m_ProjectPath / "Scenes");
 
             RegenerateSolution();
-            m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath, [this](const Path & path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
+            m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath,
+                                                     [this](const Path& path, FileWatcher::Event event)
+                                                     { OnAssetFileSystemEvent(path, event); });
             return;
         }
         else
@@ -88,28 +99,35 @@ namespace BeeEngine::Editor
         std::ifstream ifs(m_ProjectFilePath.ToStdPath());
         YAML::Node data = YAML::Load(ifs);
         ifs.close();
-        if(!data["ProjectName"])
+        if (!data["ProjectName"])
         {
             goto init;
         }
         m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
         SetLastUsedScenePath(data["LastUsedScene"].as<std::string>());
-        m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath, [this](const Path & path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
+        m_AssetFileWatcher = FileWatcher::Create(
+            m_ProjectPath, [this](const Path& path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
     }
 
-    const Path &ProjectFile::GetProjectPath() const noexcept
+    const Path& ProjectFile::GetProjectPath() const noexcept
     {
         return m_ProjectPath;
     }
 
-    const std::string &ProjectFile::GetProjectName() const noexcept
+    const std::string& ProjectFile::GetProjectName() const noexcept
     {
         return m_ProjectName;
     }
 
-    void ProjectFile::RenameProject(const std::string &newName) noexcept
+    void ProjectFile::RenameProject(const std::string& newName) noexcept
     {
-
+        m_ProjectName = newName;
+        std::filesystem::remove(m_ProjectPath.ToStdPath());
+        std::filesystem::rename(m_ProjectAssetRegistryPath.ToStdPath(),
+                                (m_ProjectPath / (newName + ".beeassetregistry")).ToStdPath());
+        m_ProjectFilePath = m_ProjectPath / (newName + ".beeproj");
+        m_ProjectAssetRegistryPath = m_ProjectPath / (newName + ".beeassetregistry");
+        Save();
     }
 
     void ProjectFile::Save() noexcept
@@ -125,12 +143,12 @@ namespace BeeEngine::Editor
         File::WriteFile(m_ProjectFilePath, out.c_str());
     }
 
-    void ProjectFile::SetLastUsedScenePath(const Path &path) noexcept
+    void ProjectFile::SetLastUsedScenePath(const Path& path) noexcept
     {
         auto p = path;
-        if(path.IsAbsolute())
+        if (path.IsAbsolute())
             p = path.GetRelativePath(m_ProjectPath);
-        if(!File::Exists(m_ProjectPath / p))
+        if (!File::Exists(m_ProjectPath / p))
         {
             BeeCoreWarn("Scene file {0} does not exist!", p.AsUTF8());
             m_LastUsedScenePath = "";
@@ -151,34 +169,28 @@ namespace BeeEngine::Editor
     {
         std::vector<std::pair<OSPlatform, Path>> result;
         const Path windowsPath = std::filesystem::current_path() / "Platforms" / "Windows";
-        if(File::Exists(windowsPath))
+        if (File::Exists(windowsPath))
             result.emplace_back(OSPlatform::Windows, windowsPath);
         const Path linuxPath = std::filesystem::current_path() / "Platforms" / "Linux";
-        if(File::Exists(linuxPath))
+        if (File::Exists(linuxPath))
             result.emplace_back(OSPlatform::Linux, linuxPath);
         const Path macPath = std::filesystem::current_path() / "Platforms" / "MacOS";
-        if(File::Exists(macPath))
+        if (File::Exists(macPath))
             result.emplace_back(OSPlatform::Mac, macPath);
         const Path iosPath = std::filesystem::current_path() / "Platforms" / "iOS";
-        if(File::Exists(iosPath))
+        if (File::Exists(iosPath))
             result.emplace_back(OSPlatform::iOS, iosPath);
         const Path androidPath = std::filesystem::current_path() / "Platforms" / "Android";
-        if(File::Exists(androidPath))
+        if (File::Exists(androidPath))
             result.emplace_back(OSPlatform::Android, androidPath);
         return result;
     }
 
     class BuildProjectAssetManager : public IAssetManager
     {
-        public:
-        Ref<Asset> GetAssetRef(AssetHandle handle) const
-        {
-            return nullptr;
-        }
-        Asset * GetAsset(AssetHandle handle) const
-        {
-            return nullptr;
-        }
+    public:
+        Ref<Asset> GetAssetRef(AssetHandle handle) const { return nullptr; }
+        Asset* GetAsset(AssetHandle handle) const { return nullptr; }
         void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type) {}
         void LoadAsset(const Path& path, AssetHandle handle) {}
         void UnloadAsset(AssetHandle handle) {}
@@ -186,41 +198,43 @@ namespace BeeEngine::Editor
         bool IsAssetHandleValid(AssetHandle handle) const { return false; }
         bool IsAssetLoaded(AssetHandle handle) const { return false; }
 
-        AssetRegistry& GetAssetRegistry()
-        {
-            return m_AssetRegistry;
-        }
-        private:
+        AssetRegistry& GetAssetRegistry() { return m_AssetRegistry; }
+
+    private:
         AssetRegistry m_AssetRegistry;
     };
 
     void ProjectFile::BuildProject(const BuildProjectOptions& options)
     {
-        const Path libraryOutputPath = m_ProjectPath.AsUTF8() + "/.beeengine/build/"  + ToString(options.BuildType);
-        RunCommand("dotnet build " + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln --configuration " + ToString(options.BuildType) + " --output " + libraryOutputPath.AsUTF8());
-        const Path gameLibraryPath = libraryOutputPath /"GameLibrary.dll";
+        const Path libraryOutputPath = m_ProjectPath.AsUTF8() + "/.beeengine/build/" + ToString(options.BuildType);
+        RunCommand("dotnet build " + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln --configuration " +
+                   ToString(options.BuildType) + " --output " + libraryOutputPath.AsUTF8());
+        const Path gameLibraryPath = libraryOutputPath / "GameLibrary.dll";
         const auto outputPath = options.OutputPath.ToStdPath();
         std::filesystem::remove_all(outputPath);
         std::filesystem::create_directory(outputPath);
-        
+
         const std::vector<std::pair<OSPlatform, Path>> availablePlatforms = CheckForAvailablePlatforms();
-        for(const auto& [platform, pathToTemplate] : availablePlatforms)
+        for (const auto& [platform, pathToTemplate] : availablePlatforms)
         {
             const auto platformOutputPath = outputPath / ToString(platform);
             std::filesystem::create_directory(platformOutputPath);
-            std::filesystem::copy(pathToTemplate.ToStdPath(), platformOutputPath, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+            std::filesystem::copy(pathToTemplate.ToStdPath(),
+                                  platformOutputPath,
+                                  std::filesystem::copy_options::recursive |
+                                      std::filesystem::copy_options::overwrite_existing);
             Path gameFilesPath;
             switch (platform)
             {
-            case OSPlatform::Windows:
-                gameFilesPath = BuildWindowsGame(gameLibraryPath, platformOutputPath);
-                break;
-            case OSPlatform::Mac:
-                gameFilesPath = BuildMacOSGame(gameLibraryPath, platformOutputPath);
-                break;
-            default:
-                BeeCoreWarn("Cannot build for platform {0}", platform);
-                continue;
+                case OSPlatform::Windows:
+                    gameFilesPath = BuildWindowsGame(gameLibraryPath, platformOutputPath);
+                    break;
+                case OSPlatform::Mac:
+                    gameFilesPath = BuildMacOSGame(gameLibraryPath, platformOutputPath);
+                    break;
+                default:
+                    BeeCoreWarn("Cannot build for platform {0}", platform);
+                    continue;
             }
             const Path gameConfigPath = gameFilesPath / "Game.cfg";
             const Path assetRegistryPath = gameFilesPath / (GetProjectName() + ".beeassetregistry");
@@ -240,15 +254,15 @@ namespace BeeEngine::Editor
             File::CreateDirectory(fontPath);
 
             AssetRegistry assetRegistry;
-            for(const auto& [registryUuid, assetMap] : m_AssetManager->GetAssetRegistry())
+            for (const auto& [registryUuid, assetMap] : m_AssetManager->GetAssetRegistry())
             {
-                if(registryUuid != m_AssetRegistryID)
+                if (registryUuid != m_AssetRegistryID)
                 {
-                    continue; //TODO add support for multiple asset registries
+                    continue; // TODO add support for multiple asset registries
                 }
-                for(const auto& [uuid, metadata] : assetMap)
+                for (const auto& [uuid, metadata] : assetMap)
                 {
-                    if(metadata.Location == AssetLocation::Embedded)
+                    if (metadata.Location == AssetLocation::Embedded)
                     {
                         continue;
                     }
@@ -257,17 +271,17 @@ namespace BeeEngine::Editor
                     {
                         switch (meta.Type)
                         {
-                        case AssetType::Scene:
-                            return scenePath;
-                        case AssetType::Texture2D:
-                            return texturePath;
-                        case AssetType::Prefab:
-                            return prefabPath;
-                        case AssetType::Font:
-                            return fontPath;
-                        default:
-                            BeeCoreWarn("Unsupported asset type in project build{0}", meta.Type);
-                            return assetPath;
+                            case AssetType::Scene:
+                                return scenePath;
+                            case AssetType::Texture2D:
+                                return texturePath;
+                            case AssetType::Prefab:
+                                return prefabPath;
+                            case AssetType::Font:
+                                return fontPath;
+                            default:
+                                BeeCoreWarn("Unsupported asset type in project build{0}", meta.Type);
+                                return assetPath;
                         }
                     };
                     const Path assetOutputPath = choosePath() / std::get<Path>(meta.Data).GetFileName();
@@ -281,15 +295,15 @@ namespace BeeEngine::Editor
             AssetRegistrySerializer serializer(&assetManager, gameFilesPath, m_AssetRegistryID);
             serializer.Serialize(assetRegistryPath);
 
-            for(const auto& entry : std::filesystem::recursive_directory_iterator(GetProjectPath().ToStdPath()))
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(GetProjectPath().ToStdPath()))
             {
                 auto extension = entry.path().extension();
-                if(ResourceManager::IsSceneExtension(extension))
+                if (ResourceManager::IsSceneExtension(extension))
                 {
                     File::CopyFile(entry.path(), scenePath / entry.path().filename());
                     continue;
                 }
-                if(extension == ".yaml")
+                if (extension == ".yaml")
                 {
                     File::CopyFile(entry.path(), localePath / entry.path().filename());
                     continue;
@@ -300,10 +314,10 @@ namespace BeeEngine::Editor
             config.Name = GetProjectName();
             config.DefaultLocale = options.DefaultLocale;
             const auto startingSceneName = GetLastUsedScenePath().GetFileName();
-            
-            for(const auto& entry : std::filesystem::directory_iterator(scenePath.ToStdPath()))
+
+            for (const auto& entry : std::filesystem::directory_iterator(scenePath.ToStdPath()))
             {
-                if(startingSceneName == entry.path().filename())
+                if (startingSceneName == entry.path().filename())
                 {
                     Path scenePath = entry.path();
                     config.StartingScene = scenePath.GetRelativePath(gameFilesPath);
@@ -316,26 +330,28 @@ namespace BeeEngine::Editor
         BeeCoreInfo("Project {0} built successfully in {1} mode!", GetProjectName(), options.BuildType);
     }
 
-    Path ProjectFile::BuildWindowsGame(const Path &gameLibraryPath, const Path &outputDirectory)
+    Path ProjectFile::BuildWindowsGame(const Path& gameLibraryPath, const Path& outputDirectory)
     {
-        if(!File::Exists(outputDirectory / "libs"))
+        if (!File::Exists(outputDirectory / "libs"))
         {
             File::CreateDirectory(outputDirectory / "libs");
         }
         File::CopyFile(gameLibraryPath, outputDirectory / "libs" / "GameLibrary.dll");
-        std::filesystem::rename((outputDirectory / "GameRuntime.exe").ToStdPath(), (outputDirectory / (GetProjectName() + ".exe")).ToStdPath());
+        std::filesystem::rename((outputDirectory / "GameRuntime.exe").ToStdPath(),
+                                (outputDirectory / (GetProjectName() + ".exe")).ToStdPath());
         return outputDirectory;
     }
-    Path ProjectFile::BuildMacOSGame(const Path &gameLibraryPath, const Path &outputDirectory)
+    Path ProjectFile::BuildMacOSGame(const Path& gameLibraryPath, const Path& outputDirectory)
     {
         const Path runtimePath = outputDirectory / (GetProjectName() + ".app");
         std::filesystem::rename((outputDirectory / "GameRuntime.app").ToStdPath(), runtimePath.ToStdPath());
         const Path contentsPath = runtimePath / "Contents";
-        //std::filesystem::rename((contentsPath / "MacOS" / "GameRuntime").ToStdPath(), (contentsPath / "MacOS" / m_ProjectName).ToStdPath());
-        //TODO: add info.plist generation
+        // std::filesystem::rename((contentsPath / "MacOS" / "GameRuntime").ToStdPath(), (contentsPath / "MacOS" /
+        // m_ProjectName).ToStdPath());
+        // TODO: add info.plist generation
 
         Path resourcesPath = contentsPath / "Resources";
-        if(!File::Exists(resourcesPath / "libs"))
+        if (!File::Exists(resourcesPath / "libs"))
         {
             File::CreateDirectory(resourcesPath / "libs");
         }
@@ -343,9 +359,10 @@ namespace BeeEngine::Editor
         return resourcesPath;
     }
 
-    void ProjectFile::OnAppAssemblyFileSystemEvent(const Path &path, const FileWatcher::Event changeType)
+    void ProjectFile::OnAppAssemblyFileSystemEvent(const Path& path, const FileWatcher::Event changeType)
     {
-        if(!m_AssemblyReloadPending && (changeType == FileWatcher::Event::Modified || changeType == FileWatcher::Event::Added ))
+        if (!m_AssemblyReloadPending &&
+            (changeType == FileWatcher::Event::Modified || changeType == FileWatcher::Event::Added))
         {
             m_AssemblyReloadPending = true;
         }
@@ -353,23 +370,25 @@ namespace BeeEngine::Editor
 
     void ProjectFile::Update() noexcept
     {
-        if(!m_AppAssemblyFileWatcher && File::Exists(m_AppAssemblyPath))
+        if (!m_AppAssemblyFileWatcher && File::Exists(m_AppAssemblyPath))
         {
-            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath, [this](const Path & path, FileWatcher::Event event) { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath,
+                                                           [this](const Path& path, FileWatcher::Event event)
+                                                           { OnAppAssemblyFileSystemEvent(path, event); });
         }
-        if(m_MustReload)
+        if (m_MustReload)
         {
             m_MustReload = false;
             ReloadAndRebuildGameLibrary();
         }
     }
 
-    const Path &ProjectFile::GetProjectFilePath() const noexcept
+    const Path& ProjectFile::GetProjectFilePath() const noexcept
     {
         return m_ProjectFilePath;
     }
 
-    const Path &ProjectFile::GetProjectAssetRegistryPath() const noexcept
+    const Path& ProjectFile::GetProjectAssetRegistryPath() const noexcept
     {
         return m_ProjectAssetRegistryPath;
     }
@@ -377,43 +396,44 @@ namespace BeeEngine::Editor
     Generator<const AssetMetadata&> ProjectFile::GetAssetsForDirectory(const Path& directory)
     {
         auto& assets = m_AssetManager->GetAssetRegistry().at(m_AssetRegistryID);
-        for(const auto& [uuid, metadata] : assets)
+        for (const auto& [uuid, metadata] : assets)
         {
-            if(metadata.Location == AssetLocation::Embedded)
+            if (metadata.Location == AssetLocation::Embedded)
             {
                 continue;
             }
-            if(std::get<Path>(metadata.Data).AsUTF8().contains(directory.AsUTF8()))
+            if (std::get<Path>(metadata.Data).AsUTF8().contains(directory.AsUTF8()))
             {
                 co_yield metadata;
             }
         }
     }
 
-    void ProjectFile::OnAssetFileSystemEvent(const Path &path, FileWatcher::Event changeType)
+    void ProjectFile::OnAssetFileSystemEvent(const Path& path, FileWatcher::Event changeType)
     {
         Path p = path;
-        if(p.IsRelative())
+        if (p.IsRelative())
             p = m_ProjectPath / p;
-        if(File::IsDirectory(p) || p.GetExtension().IsEmpty())
+        if (File::IsDirectory(p) || p.GetExtension().IsEmpty())
         {
-            if(p.AsUTF8().contains(".git")|| p.AsUTF8().contains(".beeengine") || p.AsUTF8().contains("bin") || p.AsUTF8().contains("obj"))
+            if (p.AsUTF8().contains(".git") || p.AsUTF8().contains(".beeengine") || p.AsUTF8().contains("bin") ||
+                p.AsUTF8().contains("obj"))
             {
                 return;
             }
-            if(changeType == FileWatcher::Event::Modified)
+            if (changeType == FileWatcher::Event::Modified)
             {
                 return;
             }
             static Path oldDirPath;
-            if(changeType == FileWatcher::Event::RenamedOldName)
+            if (changeType == FileWatcher::Event::RenamedOldName)
             {
                 oldDirPath = p;
                 return;
             }
-            if(changeType == FileWatcher::Event::RenamedNewName)
+            if (changeType == FileWatcher::Event::RenamedNewName)
             {
-                for(const auto& metadata : GetAssetsForDirectory(oldDirPath))
+                for (const auto& metadata : GetAssetsForDirectory(oldDirPath))
                 {
                     OnAssetFileSystemEvent(std::get<Path>(metadata.Data), FileWatcher::Event::RenamedOldName);
                     Path newPath = p / std::get<Path>(metadata.Data).GetRelativePath(oldDirPath);
@@ -421,89 +441,95 @@ namespace BeeEngine::Editor
                 }
                 return;
             }
-            for(const auto& metadata : GetAssetsForDirectory(p))
+            for (const auto& metadata : GetAssetsForDirectory(p))
             {
                 OnAssetFileSystemEvent(std::get<Path>(metadata.Data), changeType);
             }
             return;
         }
-        if(ResourceManager::IsScriptExtension(p.GetExtension()))
+        if (ResourceManager::IsScriptExtension(p.GetExtension()))
         {
             HandleChangedScriptFile(path, changeType);
             return;
         }
-        if(!ResourceManager::IsAssetExtension(p.GetExtension()))
+        if (!ResourceManager::IsAssetExtension(p.GetExtension()))
             return;
         std::string name = p.GetFileNameWithoutExtension();
         const AssetHandle* handlePtr = m_AssetManager->GetAssetHandleByName(name);
         bool changed = false;
-        if(!handlePtr and changeType != FileWatcher::Event::RenamedNewName)
+        if (!handlePtr and changeType != FileWatcher::Event::RenamedNewName)
         {
-            if(changeType == FileWatcher::Event::Added)
+            if (changeType == FileWatcher::Event::Added)
             {
-                m_AssetManager->LoadAsset(p, {m_AssetRegistryID});   
+                m_AssetManager->LoadAsset(p, {m_AssetRegistryID});
                 changed = true;
             }
             goto CHANGED;
         }
         {
-        static Path oldNameOnRenamed;
-        if(changeType == FileWatcher::Event::RenamedNewName)
-        {
-            BeeCoreTrace("Renamed {0} to {1}", oldNameOnRenamed.AsUTF8(), p.AsUTF8());
-            Application::SubmitToMainThread([oldPath = oldNameOnRenamed, newPath = p, this]()
-                {
-                    //Renaming
-                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(oldPath.GetFileNameWithoutExtension().AsUTF8());
-                    BeeExpects(handlePtr);
-                    AssetHandle handle = *handlePtr;
-                    m_AssetManager->RemoveAsset(handle);
-                    m_AssetManager->LoadAsset(newPath, handle);
-                    AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
-                    serializer.Serialize(m_ProjectAssetRegistryPath);
-                });
-            return;
-        }
-        AssetHandle handle = *handlePtr;
-
-        switch (changeType)
-        {
-            case FileWatcher::Event::Added:
-                Application::SubmitToMainThread([this, p, handle]()
-                {
-                    m_AssetManager->LoadAsset(p, handle);
-                    AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
-                    serializer.Serialize(m_ProjectAssetRegistryPath);
-                });
-                changed = true;
-                break;
-            case FileWatcher::Event::Removed:
-                Application::SubmitToMainThread([this, handle]()
-                {
-                    if(!m_AssetManager->IsAssetHandleValid(handle))
-                        return;
-                    m_OnAssetRemoved(handle);
-                });
-                break;
-            case FileWatcher::Event::Modified:
-                if(m_AssetManager->IsAssetLoaded(handle))
-                {
-                    Application::SubmitToMainThread([this, handle]()
+            static Path oldNameOnRenamed;
+            if (changeType == FileWatcher::Event::RenamedNewName)
+            {
+                BeeCoreTrace("Renamed {0} to {1}", oldNameOnRenamed.AsUTF8(), p.AsUTF8());
+                Application::SubmitToMainThread(
+                    [oldPath = oldNameOnRenamed, newPath = p, this]()
                     {
-                        if(m_AssetManager->IsAssetLoaded(handle))
-                            m_AssetManager->UnloadAsset(handle);
+                        // Renaming
+                        auto* handlePtr =
+                            m_AssetManager->GetAssetHandleByName(oldPath.GetFileNameWithoutExtension().AsUTF8());
+                        BeeExpects(handlePtr);
+                        AssetHandle handle = *handlePtr;
+                        m_AssetManager->RemoveAsset(handle);
+                        m_AssetManager->LoadAsset(newPath, handle);
+                        AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
+                        serializer.Serialize(m_ProjectAssetRegistryPath);
                     });
-                }
-                break;
-            case FileWatcher::Event::RenamedOldName:
-                oldNameOnRenamed = p;
-                break;
+                return;
+            }
+            AssetHandle handle = *handlePtr;
+
+            switch (changeType)
+            {
+                case FileWatcher::Event::Added:
+                    Application::SubmitToMainThread(
+                        [this, p, handle]()
+                        {
+                            m_AssetManager->LoadAsset(p, handle);
+                            AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
+                            serializer.Serialize(m_ProjectAssetRegistryPath);
+                        });
+                    changed = true;
+                    break;
+                case FileWatcher::Event::Removed:
+                    Application::SubmitToMainThread(
+                        [this, handle]()
+                        {
+                            if (!m_AssetManager->IsAssetHandleValid(handle))
+                                return;
+                            m_OnAssetRemoved(handle);
+                        });
+                    break;
+                case FileWatcher::Event::Modified:
+                    if (m_AssetManager->IsAssetLoaded(handle))
+                    {
+                        Application::SubmitToMainThread(
+                            [this, handle]()
+                            {
+                                if (m_AssetManager->IsAssetLoaded(handle))
+                                    m_AssetManager->UnloadAsset(handle);
+                            });
+                    }
+                    break;
+                case FileWatcher::Event::RenamedOldName:
+                    oldNameOnRenamed = p;
+                    break;
+            }
         }
-        }
-        CHANGED:
-        if(changed)
+    CHANGED:
+        if (changed)
         {
-            Application::SubmitToMainThread([this]()
+            Application::SubmitToMainThread(
+                [this]()
                 {
                     AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
                     serializer.Serialize(m_ProjectAssetRegistryPath);
@@ -518,15 +544,14 @@ namespace BeeEngine::Editor
         m_ProjectLocaleDomain.Build();
     }
 
-    void ProjectFile::HandleChangedScriptFile(const Path &path, FileWatcher::Event event)
+    void ProjectFile::HandleChangedScriptFile(const Path& path, FileWatcher::Event event)
     {
-        if(event == FileWatcher::Event::RenamedOldName || 
-        event == FileWatcher::Event::Added || 
-        path.GetFileName().AsUTF8().contains("AssemblyInfo.cs"))
+        if (event == FileWatcher::Event::RenamedOldName || event == FileWatcher::Event::Added ||
+            path.GetFileName().AsUTF8().contains("AssemblyInfo.cs"))
         {
             return;
         }
-        if(!Application::GetInstance().IsFocused())
+        if (!Application::GetInstance().IsFocused())
         {
             m_MustReload = true;
             return;
@@ -540,4 +565,4 @@ namespace BeeEngine::Editor
         RunCommand("dotnet build " + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln --configuration Debug");
         m_AssemblyReloadPending = true;
     }
-}
+} // namespace BeeEngine::Editor

@@ -6,10 +6,10 @@
 #if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L
 #include <stacktrace>
 #endif
-#include <vector>
-#include "source_location.h"
 #include "Core/String.h"
+#include "source_location.h"
 #include <sstream>
+#include <vector>
 namespace BeeEngine
 {
     class StackTrace
@@ -21,9 +21,13 @@ namespace BeeEngine
             const String FileName;
             const size_t LineNumber;
             Entry(String&& description, String&& fileName, size_t lineNumber) noexcept
-                : Description(std::move(description)), FileName(std::move(fileName)), LineNumber(lineNumber) {}
+                : Description(std::move(description)), FileName(std::move(fileName)), LineNumber(lineNumber)
+            {
+            }
             Entry(const String& description, const String& fileName, size_t lineNumber) noexcept
-                : Description(description), FileName(fileName), LineNumber(lineNumber) {}
+                : Description(description), FileName(fileName), LineNumber(lineNumber)
+            {
+            }
         };
 #if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L
         StackTrace(const std::stacktrace& stacktrace = std::stacktrace::current());
@@ -36,39 +40,16 @@ namespace BeeEngine
         }
 #endif
         [[nodiscard]] String ToString() const;
-        auto begin() noexcept
-        {
-            return m_Entries.begin();
-        }
-        auto end() noexcept
-        {
-            return m_Entries.end();
-        }
-        auto cbegin() const noexcept
-        {
-            return m_Entries.cbegin();
-        }
-        auto cend() const noexcept
-        {
-            return m_Entries.cend();
-        }
-        auto rbegin() noexcept
-        {
-            return m_Entries.rbegin();
-        }
-        auto rend() noexcept
-        {
-            return m_Entries.rend();
-        }
-        size_t size() const noexcept
-        {
-            return m_Entries.size();
-        }
-        bool empty() const noexcept
-        {
-            return m_Entries.empty();
-        }
+        auto begin() noexcept { return m_Entries.begin(); }
+        auto end() noexcept { return m_Entries.end(); }
+        auto cbegin() const noexcept { return m_Entries.cbegin(); }
+        auto cend() const noexcept { return m_Entries.cend(); }
+        auto rbegin() noexcept { return m_Entries.rbegin(); }
+        auto rend() noexcept { return m_Entries.rend(); }
+        size_t size() const noexcept { return m_Entries.size(); }
+        bool empty() const noexcept { return m_Entries.empty(); }
+
     private:
         std::vector<Entry> m_Entries;
     };
-} // BeeEngine
+} // namespace BeeEngine

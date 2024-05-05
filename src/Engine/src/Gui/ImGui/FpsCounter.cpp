@@ -11,7 +11,7 @@ namespace BeeEngine::Internal
     void FpsCounter::Update()
     {
         auto now = Time::TotalTime();
-        if(now - m_LastTime >= 1s)
+        if (now - m_LastTime >= 1s)
         {
             m_CurrentFps = m_Fps;
             m_LastTime = now;
@@ -29,8 +29,5 @@ namespace BeeEngine::Internal
         ImGui::End();
     }
 
-    void FpsCounter::OnEvent(EventDispatcher &event)
-    {
-
-    }
-}
+    void FpsCounter::OnEvent(EventDispatcher& event) {}
+} // namespace BeeEngine::Internal

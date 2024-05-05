@@ -5,26 +5,25 @@
 #include "VulkanMesh.h"
 
 #include "Hardware.h"
+#include "Renderer/CommandBuffer.h"
 #include "Utils.h"
 #include "VulkanGraphicsDevice.h"
-#include "Renderer/CommandBuffer.h"
 
 namespace BeeEngine::Internal
 {
     VulkanMesh::~VulkanMesh()
     {
         m_Device.DestroyBuffer(m_VertexBuffer);
-        if(VulkanMesh::IsIndexed())
+        if (VulkanMesh::IsIndexed())
         {
             m_Device.DestroyBuffer(m_IndexBuffer);
         }
-        if(!Hardware::HasRayTracingSupport())
+        if (!Hardware::HasRayTracingSupport())
             return;
         m_Device.DestroyBuffer(m_AccelerationStructure.Buffer);
-        DeletionQueue::Frame().PushFunction([accelerationStructure = m_AccelerationStructure.AccelerationStructure, device = m_Device.GetDevice()]()
-        {
-            device.destroyAccelerationStructureKHR(accelerationStructure, nullptr, g_vkDynamicLoader);
-        });
+        DeletionQueue::Frame().PushFunction(
+            [accelerationStructure = m_AccelerationStructure.AccelerationStructure, device = m_Device.GetDevice()]()
+            { device.destroyAccelerationStructureKHR(accelerationStructure, nullptr, g_vkDynamicLoader); });
     }
 
     uint32_t VulkanMesh::GetVertexCount() const
@@ -43,7 +42,7 @@ namespace BeeEngine::Internal
         vk::Buffer vertexBuffers[] = {m_VertexBuffer.Buffer};
         vk::DeviceSize offsets[] = {0};
         cmd.bindVertexBuffers(0, 1, vertexBuffers, offsets, g_vkDynamicLoader);
-        if(IsIndexed())
+        if (IsIndexed())
         {
             cmd.bindIndexBuffer(m_IndexBuffer.Buffer, 0, vk::IndexType::eUint32, g_vkDynamicLoader);
         }
@@ -62,7 +61,7 @@ namespace BeeEngine::Internal
     }
 
     VulkanMesh::VulkanMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
-    : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexCount(indices.size())
+        : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexCount(indices.size())
     {
         CreateVertexBuffer(vertices);
         CreateIndexBuffer(indices);
@@ -70,27 +69,31 @@ namespace BeeEngine::Internal
     }
 
     VulkanMesh::VulkanMesh(void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices)
-    : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertexCount), m_IndexCount(indices.size())
+        : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertexCount), m_IndexCount(indices.size())
     {
         CreateVertexBuffer(verticesData, size, vertexCount);
         CreateIndexBuffer(indices);
-        CreateAccelerationStructure(size/vertexCount);
+        CreateAccelerationStructure(size / vertexCount);
     }
 
     void VulkanMesh::CreateVertexBuffer(const std::vector<Vertex>& vertices)
     {
-        CreateVertexBuffer(const_cast<void*>(static_cast<const void*>(vertices.data())), vertices.size() * sizeof(Vertex), vertices.size());
+        CreateVertexBuffer(const_cast<void*>(static_cast<const void*>(vertices.data())),
+                           vertices.size() * sizeof(Vertex),
+                           vertices.size());
     }
 
     void VulkanMesh::CreateVertexBuffer(void* verticesData, size_t size, size_t vertexCount)
     {
-        vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eShaderDeviceAddress;
-        if(Hardware::HasRayTracingSupport())
+        vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst |
+                                     vk::BufferUsageFlagBits::eShaderDeviceAddress;
+        if (Hardware::HasRayTracingSupport())
         {
             usage |= vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR;
         }
         m_VertexBuffer = m_Device.CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
-        VulkanBuffer bufferForMapping = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
+        VulkanBuffer bufferForMapping =
+            m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
         void* mappedData = nullptr;
         vmaMapMemory(GetVulkanAllocator(), bufferForMapping.Memory, &mappedData);
         memcpy(mappedData, verticesData, size);
@@ -104,13 +107,15 @@ namespace BeeEngine::Internal
         auto size = indices.size() * sizeof(uint32_t);
         auto indicesData = const_cast<void*>(static_cast<const void*>(indices.data()));
 
-        vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eShaderDeviceAddress;
-        if(Hardware::HasRayTracingSupport())
+        vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst |
+                                     vk::BufferUsageFlagBits::eShaderDeviceAddress;
+        if (Hardware::HasRayTracingSupport())
         {
             usage |= vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR;
         }
         m_IndexBuffer = m_Device.CreateBuffer(size, usage, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
-        VulkanBuffer bufferForMapping = m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
+        VulkanBuffer bufferForMapping =
+            m_Device.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
         void* mappedData = nullptr;
         vmaMapMemory(GetVulkanAllocator(), bufferForMapping.Memory, &mappedData);
         memcpy(mappedData, indicesData, size);
@@ -121,7 +126,7 @@ namespace BeeEngine::Internal
 
     void VulkanMesh::CreateAccelerationStructure(size_t vertexStride)
     {
-        if(!Hardware::HasRayTracingSupport())
+        if (!Hardware::HasRayTracingSupport())
             return;
         auto device = m_Device.GetDevice();
         vk::BufferDeviceAddressInfo vertexBufferAddressInfo = {};
@@ -158,16 +163,23 @@ namespace BeeEngine::Internal
         vk::AccelerationStructureBuildSizesInfoKHR buildSizesInfo = device.getAccelerationStructureBuildSizesKHR(
             vk::AccelerationStructureBuildTypeKHR::eDevice, buildInfo, primitiveCount, g_vkDynamicLoader);
 
-        m_AccelerationStructure.Buffer = m_Device.CreateBuffer(buildSizesInfo.accelerationStructureSize, vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+        m_AccelerationStructure.Buffer = m_Device.CreateBuffer(
+            buildSizesInfo.accelerationStructureSize,
+            vk::BufferUsageFlagBits::eAccelerationStructureStorageKHR | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+            VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
         vk::AccelerationStructureCreateInfoKHR createInfo = {};
         createInfo.sType = vk::StructureType::eAccelerationStructureCreateInfoKHR;
         createInfo.buffer = m_AccelerationStructure.Buffer.Buffer;
         createInfo.setSize(buildSizesInfo.accelerationStructureSize);
         createInfo.setType(vk::AccelerationStructureTypeKHR::eBottomLevel);
-        m_AccelerationStructure.AccelerationStructure = device.createAccelerationStructureKHR(createInfo, nullptr, g_vkDynamicLoader);
+        m_AccelerationStructure.AccelerationStructure =
+            device.createAccelerationStructureKHR(createInfo, nullptr, g_vkDynamicLoader);
 
-        VulkanBuffer scratchBuffer = m_Device.CreateBuffer(buildSizesInfo.buildScratchSize, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eShaderDeviceAddress, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+        VulkanBuffer scratchBuffer = m_Device.CreateBuffer(buildSizesInfo.buildScratchSize,
+                                                           vk::BufferUsageFlagBits::eStorageBuffer |
+                                                               vk::BufferUsageFlagBits::eShaderDeviceAddress,
+                                                           VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
 
         vk::CommandBufferAllocateInfo allocInfo{};
         allocInfo.commandPool = m_Device.GetCommandPool();
@@ -208,4 +220,4 @@ namespace BeeEngine::Internal
 
         m_Device.DestroyBuffer(scratchBuffer);
     }
-}
+} // namespace BeeEngine::Internal

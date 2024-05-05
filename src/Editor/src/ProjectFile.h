@@ -3,14 +3,14 @@
 //
 
 #pragma once
-#include <filesystem>
+#include "Core/AssetManagement/EditorAssetManager.h"
+#include "Core/Coroutines/Generator.h"
+#include "Core/OsPlatform.h"
 #include "Core/TypeDefines.h"
 #include "Core/UUID.h"
-#include "Core/AssetManagement/EditorAssetManager.h"
 #include "FileSystem/FileWatcher.h"
 #include "Locale/Locale.h"
-#include "Core/OsPlatform.h"
-#include "Core/Coroutines/Generator.h"
+#include <filesystem>
 
 namespace BeeEngine::Editor
 {
@@ -54,10 +54,7 @@ namespace BeeEngine::Editor
             return temp;
         }
 
-        UUID GetAssetRegistryID() const noexcept
-        {
-            return m_AssetRegistryID;
-        }
+        UUID GetAssetRegistryID() const noexcept { return m_AssetRegistryID; }
 
         void RenameProject(const std::string& newName) noexcept;
 
@@ -69,15 +66,9 @@ namespace BeeEngine::Editor
 
         void Update() noexcept;
 
-        Locale::Domain& GetProjectLocaleDomain() noexcept
-        {
-            return m_ProjectLocaleDomain;
-        }
+        Locale::Domain& GetProjectLocaleDomain() noexcept { return m_ProjectLocaleDomain; }
 
-        const Path& GetAssemblyPath() const
-        {
-            return m_AppAssemblyPath;
-        }
+        const Path& GetAssemblyPath() const { return m_AppAssemblyPath; }
 
         void ReloadAndRebuildGameLibrary();
 
@@ -97,9 +88,9 @@ namespace BeeEngine::Editor
 
         Path m_ProjectPath;
         std::string m_ProjectName;
-        const Path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
-        const Path m_ProjectAssetRegistryPath = m_ProjectPath / (m_ProjectName + ".beeassetregistry");
-        Path m_LastUsedScenePath {""};
+        Path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
+        Path m_ProjectAssetRegistryPath = m_ProjectPath / (m_ProjectName + ".beeassetregistry");
+        Path m_LastUsedScenePath{""};
         Scope<FileWatcher> m_AppAssemblyFileWatcher = nullptr;
         mutable bool m_AssemblyReloadPending = false;
         Path m_AppAssemblyPath;
@@ -110,10 +101,10 @@ namespace BeeEngine::Editor
         EditorAssetManager* m_AssetManager;
         std::function<void(AssetHandle)> m_OnAssetRemoved;
 
-        void HandleChangedScriptFile(const Path &path, FileWatcher::Event event);
+        void HandleChangedScriptFile(const Path& path, FileWatcher::Event event);
 
         Generator<const AssetMetadata&> GetAssetsForDirectory(const Path& directory);
 
         bool m_MustReload;
     };
-}
+} // namespace BeeEngine::Editor

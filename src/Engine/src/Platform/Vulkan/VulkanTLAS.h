@@ -10,18 +10,21 @@
 
 namespace BeeEngine::Internal
 {
-    class VulkanTLAS final: public TopLevelAccelerationStructure
+    class VulkanTLAS final : public TopLevelAccelerationStructure
     {
     public:
         VulkanTLAS();
         ~VulkanTLAS() override;
 
         void UpdateInstances(std::vector<SceneTreeRenderer::Entity>&& entities) final;
+
     private:
-        std::vector<vk::AccelerationStructureInstanceKHR> GenerateInstancedData(std::vector<SceneTreeRenderer::Entity>&& entities);
+        std::vector<vk::AccelerationStructureInstanceKHR>
+        GenerateInstancedData(std::vector<SceneTreeRenderer::Entity>&& entities);
+
     private:
         VulkanGraphicsDevice& m_Device;
         vk::AccelerationStructureKHR m_TLAS;
     };
 
-}
+} // namespace BeeEngine::Internal

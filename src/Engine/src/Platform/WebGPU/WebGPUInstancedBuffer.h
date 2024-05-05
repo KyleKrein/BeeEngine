@@ -9,18 +9,19 @@
 
 namespace BeeEngine::Internal
 {
-    class WebGPUInstancedBuffer: public InstancedBuffer
+    class WebGPUInstancedBuffer : public InstancedBuffer
     {
     public:
         WebGPUInstancedBuffer(in<WGPUVertexBufferLayout> shaderModule, size_t maxInstances);
         WebGPUInstancedBuffer(size_t size);
         ~WebGPUInstancedBuffer() override;
         WebGPUInstancedBuffer(const WebGPUInstancedBuffer& other) = delete;
-        WebGPUInstancedBuffer& operator=(const WebGPUInstancedBuffer& other ) = delete;
+        WebGPUInstancedBuffer& operator=(const WebGPUInstancedBuffer& other) = delete;
         void SetData(void* data, size_t size) override;
         void Bind(void* cmd) override;
 
         virtual size_t GetSize() override { return m_Size; }
+
     private:
         class WebGPUGraphicsDevice& m_GraphicsDevice;
         size_t m_Size;
@@ -28,5 +29,5 @@ namespace BeeEngine::Internal
         size_t m_OneInstanceSize;
         WebGPUBuffer m_Buffer;
     };
-}
+} // namespace BeeEngine::Internal
 #endif

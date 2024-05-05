@@ -10,14 +10,13 @@
 namespace BeeEngine
 {
 
-    std::vector <Path>
-    BeeEngine::VSProjectGeneration::GetSourceFiles(const Path &path)
+    std::vector<Path> BeeEngine::VSProjectGeneration::GetSourceFiles(const Path& path)
     {
-        std::vector <Path> sources;
+        std::vector<Path> sources;
         auto stdpath = path.ToStdPath();
-        for (const auto &entry : std::filesystem::recursive_directory_iterator(stdpath))
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(stdpath))
         {
-            if(entry.path().string().contains(".beeengine"))
+            if (entry.path().string().contains(".beeengine"))
                 continue;
             if (entry.path().extension() == ".cs")
             {
@@ -27,8 +26,8 @@ namespace BeeEngine
         return sources;
     }
 
-    void BeeEngine::VSProjectGeneration::GenerateProject(const Path &path,
-                                                         const std::vector <Path> &sources,
+    void BeeEngine::VSProjectGeneration::GenerateProject(const Path& path,
+                                                         const std::vector<Path>& sources,
                                                          const std::string& projectName)
     {
         BeeExpects(IsValidString(String(projectName)));
@@ -70,7 +69,7 @@ namespace BeeEngine
         csproj << "  </ItemGroup>\n";
         csproj << "  <ItemGroup>\n";
         auto stdpath = path.ToStdPath();
-        for (const auto &sourcePath: sources)
+        for (const auto& sourcePath : sources)
         {
             auto source = sourcePath.ToStdPath();
             if (source.is_absolute())
@@ -111,7 +110,8 @@ namespace BeeEngine
         sln << "# Visual Studio Version 17\n";
         sln << "VisualStudioVersion = 17.6.33829.357\n";
         sln << "MinimumVisualStudioVersion = 10.0.40219.1\n";
-        sln << "Project(\"{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}\") = \"" << projectName << "\", \"" << projectName << ".csproj\", \"{877FEBCD-BDEB-41C4-9887-F072CB32A77D}\"\n"; //TODO: GUID
+        sln << "Project(\"{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}\") = \"" << projectName << "\", \"" << projectName
+            << ".csproj\", \"{877FEBCD-BDEB-41C4-9887-F072CB32A77D}\"\n"; // TODO: GUID
         sln << "EndProject\n";
         sln << "Global\n";
         sln << "	GlobalSection(SolutionConfigurationPlatforms) = preSolution\n";
@@ -135,9 +135,9 @@ namespace BeeEngine
         sln.flush();
         {
             std::ofstream ofs((path / (projectName + ".sln")).ToStdPath());
-            ofs.write((char *) bom, sizeof(bom));
+            ofs.write((char*)bom, sizeof(bom));
             ofs << sln.str();
             ofs.close();
         }
     }
-}
+} // namespace BeeEngine

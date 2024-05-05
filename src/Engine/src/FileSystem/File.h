@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
+#include "Core/Path.h"
 #include "gsl/span"
 #include <filesystem>
-#include "Core/Path.h"
+#include <string>
+#include <vector>
 #undef CreateDirectory
 #undef CopyFile
 namespace BeeEngine
@@ -28,4 +28,4 @@ namespace BeeEngine
         static bool CopyFile(const Path& from, const Path& to);
         static bool IsDirectory(const Path& path);
     };
-}
+} // namespace BeeEngine

@@ -14,12 +14,15 @@ namespace BeeEngine
     struct INativeScriptRegistry
     {
         virtual ~INativeScriptRegistry() = default;
-        virtual void RegisterScript(const char* name, NativeScriptFieldInfo* fields, unsigned long long fieldsCount) = 0;
+        virtual void
+        RegisterScript(const char* name, NativeScriptFieldInfo* fields, unsigned long long fieldsCount) = 0;
     };
-}
+} // namespace BeeEngine
 
 struct BeeEngineNativeScriptRegistryData
 {
-    void(*RegisterScript_HostOwned)(const char* name, BeeEngine::NativeScriptFieldInfo* fields, unsigned long long fieldsCount) = nullptr;
-    void*(*CreateNativeScript_ClientOwned)(const char* name) = nullptr;
+    void (*RegisterScript_HostOwned)(const char* name,
+                                     BeeEngine::NativeScriptFieldInfo* fields,
+                                     unsigned long long fieldsCount) = nullptr;
+    void* (*CreateNativeScript_ClientOwned)(const char* name) = nullptr;
 };

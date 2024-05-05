@@ -4,7 +4,6 @@
 
 #include "DeviceID.h"
 
-
 namespace BeeEngine
 {
 

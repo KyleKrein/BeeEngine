@@ -5,30 +5,30 @@
 #pragma once
 
 #include "BeeEngine.h"
-#include "Panels/ViewPort.h"
-#include "Panels/DockSpace.h"
-#include "Gui/ImGui/FpsCounter.h"
-#include "Panels/SceneHierarchyPanel.h"
-#include "Panels/InspectorPanel.h"
-#include "Panels/MenuBar.h"
-#include "Scene/SceneSerializer.h"
-#include "Panels/ContentBrowserPanel.h"
-#include "ProjectFile.h"
-#include "Utils/DynamicLibrary.h"
-#include "Scene/NativeScriptFactory.h"
-#include "NativeScripting/GameBuilder.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
-#include "Panels/AssetPanel.h"
 #include "Core/Logging/ConsoleOutput.h"
+#include "Gui/ImGui/FpsCounter.h"
 #include "Gui/ImGui/ImGuiOutputConsole.h"
-#include "Locale/Locale.h"
-#include "Locale/ImGuiLocalizationPanel.h"
 #include "ImGuiNativeDragAndDrop.h"
 #include "JobSystem/AdaptiveMutex.h"
+#include "Locale/ImGuiLocalizationPanel.h"
+#include "Locale/Locale.h"
+#include "NativeScripting/GameBuilder.h"
+#include "Panels/AssetPanel.h"
+#include "Panels/ContentBrowserPanel.h"
+#include "Panels/DockSpace.h"
+#include "Panels/InspectorPanel.h"
+#include "Panels/MenuBar.h"
+#include "Panels/SceneHierarchyPanel.h"
+#include "Panels/ViewPort.h"
+#include "ProjectFile.h"
+#include "Scene/NativeScriptFactory.h"
+#include "Scene/SceneSerializer.h"
+#include "Utils/DynamicLibrary.h"
 
 namespace BeeEngine::Editor
 {
-    class EditorLayer: public Layer
+    class EditorLayer : public Layer
     {
     public:
         ~EditorLayer() noexcept override = default;
@@ -38,22 +38,23 @@ namespace BeeEngine::Editor
         void OnUpdate(FrameData& frameData) noexcept override;
         void OnGUIRendering() noexcept override;
         void OnEvent(EventDispatcher& event) noexcept override;
+
     private:
-        Jobs::SpinLock m_BigLock {};
-        ImGuiNativeDragAndDrop m_DragAndDrop {};
-        Locale::Domain m_EditorLocaleDomain {"Editor"};
-        ImGuiOutputConsole m_Console {};
-        EditorAssetManager m_EditorAssetManager {};
+        Jobs::SpinLock m_BigLock{};
+        ImGuiNativeDragAndDrop m_DragAndDrop{};
+        Locale::Domain m_EditorLocaleDomain{"Editor"};
+        ImGuiOutputConsole m_Console{};
+        EditorAssetManager m_EditorAssetManager{};
         EditorCamera m_EditorCamera = {};
-        DockSpace m_DockSpace {};
-        MenuBar m_MenuBar {};
-        AssetPanel m_AssetPanel {&m_EditorAssetManager, m_EditorLocaleDomain};
-        ContentBrowserPanel m_ContentBrowserPanel {std::filesystem::current_path(), m_EditorLocaleDomain};
-        SceneHierarchyPanel m_SceneHierarchyPanel {m_EditorLocaleDomain};
-        ViewPort m_ViewPort {100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
+        DockSpace m_DockSpace{};
+        MenuBar m_MenuBar{};
+        AssetPanel m_AssetPanel{&m_EditorAssetManager, m_EditorLocaleDomain};
+        ContentBrowserPanel m_ContentBrowserPanel{std::filesystem::current_path(), m_EditorLocaleDomain};
+        SceneHierarchyPanel m_SceneHierarchyPanel{m_EditorLocaleDomain};
+        ViewPort m_ViewPort{100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
         Path m_ScenePath;
-        BeeEngine::Internal::FpsCounter m_FpsCounter {};
-        InspectorPanel m_InspectorPanel {&m_EditorAssetManager, m_EditorLocaleDomain};
+        BeeEngine::Internal::FpsCounter m_FpsCounter{};
+        InspectorPanel m_InspectorPanel{&m_EditorAssetManager, m_EditorLocaleDomain};
         Scope<ProjectFile> m_ProjectFile = nullptr;
         Scope<Locale::ImGuiLocalizationPanel> m_LocalizationPanel = nullptr;
 
@@ -62,16 +63,16 @@ namespace BeeEngine::Editor
         Ref<Scene> m_ActiveScene = nullptr;
         Ref<Scene> m_EditorScene = nullptr;
 
-        //Scope<DynamicLibrary> m_GameLibrary = nullptr;
-        //Scope<GameBuilder> m_GameBuilder = nullptr;
-        //Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
-        //BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
-        //void*(*InitFunction)(void*) = nullptr;
+        // Scope<DynamicLibrary> m_GameLibrary = nullptr;
+        // Scope<GameBuilder> m_GameBuilder = nullptr;
+        // Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
+        // BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
+        // void*(*InitFunction)(void*) = nullptr;
 
         Ref<Texture2D> m_PlayButtonTexture = nullptr;
         Ref<Texture2D> m_StopButtonTexture = nullptr;
 
-        //std::vector<NativeScriptInfo> m_NativeScripts = {};
+        // std::vector<NativeScriptInfo> m_NativeScripts = {};
 
         void SetUpMenuBar();
 
@@ -99,13 +100,13 @@ namespace BeeEngine::Editor
 
         void ReloadAssembly();
 
-        void SetScene(const Ref <Scene> &sharedPtr);
+        void SetScene(const Ref<Scene>& sharedPtr);
 
         void SaveScene();
 
         void SaveAssetRegistry();
 
-        void DeleteAsset(const AssetHandle &handle);
+        void DeleteAsset(const AssetHandle& handle);
 
         String GenerateImGuiINIFile() const;
 
@@ -114,4 +115,4 @@ namespace BeeEngine::Editor
         void DrawBuildProjectPopup();
         bool m_ShowBuildProjectPopup = false;
     };
-}
+} // namespace BeeEngine::Editor

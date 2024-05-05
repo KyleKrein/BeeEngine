@@ -3,20 +3,19 @@
 //
 
 #include "FrameBuffer.h"
-#include "Renderer.h"
 #include "Platform/Vulkan/VulkanFrameBuffer.h"
 #include "Platform/WebGPU/WebGPUFramebuffer.h"
-
+#include "Renderer.h"
 
 namespace BeeEngine
 {
 
-    Scope<FrameBuffer> FrameBuffer::Create(const FrameBufferPreferences &preferences)
+    Scope<FrameBuffer> FrameBuffer::Create(const FrameBufferPreferences& preferences)
     {
         BEE_PROFILE_FUNCTION();
         BeeExpects(preferences.Width > 0 && preferences.Height > 0 &&
-            preferences.Width < std::numeric_limits<uint32_t>::max() &&
-            preferences.Height < std::numeric_limits<uint32_t>::max());
+                   preferences.Width < std::numeric_limits<uint32_t>::max() &&
+                   preferences.Height < std::numeric_limits<uint32_t>::max());
         switch (Renderer::GetAPI())
         {
 #if defined(BEE_COMPILE_WEBGPU)
@@ -32,7 +31,7 @@ namespace BeeEngine
         }
     }
 
-    Scope<FrameBuffer> FrameBuffer::Create(FrameBufferPreferences &&preferences)
+    Scope<FrameBuffer> FrameBuffer::Create(FrameBufferPreferences&& preferences)
     {
         return FrameBuffer::Create(preferences);
     }
@@ -48,5 +47,4 @@ namespace BeeEngine
         }
     }
 
-
-}
+} // namespace BeeEngine

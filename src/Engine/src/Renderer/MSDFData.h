@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include <vector>
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
+#include <vector>
 namespace BeeEngine::Internal
 {
     struct MSDFData
@@ -12,4 +12,4 @@ namespace BeeEngine::Internal
         std::vector<msdf_atlas::GlyphGeometry> Glyphs;
         msdf_atlas::FontGeometry FontGeometry;
     };
-}
+} // namespace BeeEngine::Internal

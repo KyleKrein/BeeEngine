@@ -3,11 +3,11 @@
 //
 
 #pragma once
-#include <filesystem>
 #include "Asset.h"
+#include "Core/Path.h"
 #include "Core/TypeDefines.h"
 #include "gsl/span"
-#include "Core/Path.h"
+#include <filesystem>
 #include <variant>
 
 namespace BeeEngine
@@ -21,4 +21,4 @@ namespace BeeEngine
 
         operator bool() const { return Type != AssetType::None; }
     };
-}
+} // namespace BeeEngine

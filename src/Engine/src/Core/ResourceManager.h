@@ -4,16 +4,16 @@
 
 #pragma once
 
-#include <gsl/gsl>
+#include "Core/Application.h"
+#include "Core/AssetManagement/Asset.h"
+#include "Debug/Instrumentor.h"
+#include "Path.h"
+#include "String.h"
 #include "TypeDefines.h"
 #include "algorithm"
-#include "Debug/Instrumentor.h"
-#include "Core/Application.h"
+#include <gsl/gsl>
 #include <sstream>
-#include "Core/AssetManagement/Asset.h"
-#include "Path.h"
 #include <string_view>
-#include "String.h"
 
 namespace BeeEngine
 {
@@ -34,22 +34,22 @@ namespace BeeEngine
             String result = ResourceManager::ProcessFilePath(filepath);
             size_t lastDot = result.find_last_of('.');
             size_t lastSlash = result.find_last_of('/') + 1;
-            size_t count = lastDot == -1ul? result.size() - lastSlash: lastDot - lastSlash;
+            size_t count = lastDot == -1ul ? result.size() - lastSlash : lastDot - lastSlash;
             return String(result.substr(lastSlash, count));
         }
 
         inline static std::string GetDynamicLibraryName(const std::string& name, OSPlatform os)
         {
             std::string fullName;
-            if(os == OSPlatform::Windows)
+            if (os == OSPlatform::Windows)
             {
                 fullName = "lib" + name + ".dll";
             }
-            else if(os == OSPlatform::Mac)
+            else if (os == OSPlatform::Mac)
             {
                 fullName = "lib" + name + ".dylib";
             }
-            else if(os == OSPlatform::Linux)
+            else if (os == OSPlatform::Linux)
             {
                 fullName = "lib" + name + ".so";
             }
@@ -59,15 +59,15 @@ namespace BeeEngine
         inline static std::string GetDynamicLibraryName(const std::string& name)
         {
             std::string fullName;
-            if(Application::GetOsPlatform() == OSPlatform::Windows)
+            if (Application::GetOsPlatform() == OSPlatform::Windows)
             {
                 fullName = "lib" + name + ".dll";
             }
-            else if(Application::GetOsPlatform() == OSPlatform::Mac)
+            else if (Application::GetOsPlatform() == OSPlatform::Mac)
             {
                 fullName = "lib" + name + ".dylib";
             }
-            else if(Application::GetOsPlatform() == OSPlatform::Linux)
+            else if (Application::GetOsPlatform() == OSPlatform::Linux)
             {
                 fullName = "lib" + name + ".so";
             }
@@ -77,15 +77,15 @@ namespace BeeEngine
         inline static std::string GetStaticLibraryName(const std::string& name, OSPlatform os)
         {
             std::string fullName;
-            if(os == OSPlatform::Windows)
+            if (os == OSPlatform::Windows)
             {
                 fullName = "lib" + name + ".a";
             }
-            else if(os == OSPlatform::Mac)
+            else if (os == OSPlatform::Mac)
             {
                 fullName = "lib" + name + ".a";
             }
-            else if(os == OSPlatform::Linux)
+            else if (os == OSPlatform::Linux)
             {
                 fullName = "lib" + name + ".a";
             }
@@ -95,15 +95,15 @@ namespace BeeEngine
         inline static std::string GetStaticLibraryName(const std::string& name)
         {
             std::string fullName;
-            if(Application::GetOsPlatform() == OSPlatform::Windows)
+            if (Application::GetOsPlatform() == OSPlatform::Windows)
             {
                 fullName = "lib" + name + ".a";
             }
-            else if(Application::GetOsPlatform() == OSPlatform::Mac)
+            else if (Application::GetOsPlatform() == OSPlatform::Mac)
             {
                 fullName = "lib" + name + ".a";
             }
-            else if(Application::GetOsPlatform() == OSPlatform::Linux)
+            else if (Application::GetOsPlatform() == OSPlatform::Linux)
             {
                 fullName = "lib" + name + ".a";
             }
@@ -130,59 +130,57 @@ namespace BeeEngine
             return script.str();
         }
 
-        static bool IsTexture2DExtension(const Path &extension)
+        static bool IsTexture2DExtension(const Path& extension)
         {
             auto ext = ToLowercase(extension.AsUTF8());
-            return ext == ".png" or
-                   ext == ".jpg" or
-                   ext == ".jpeg" or
-                   ext == ".bmp";
+            return ext == ".png" or ext == ".jpg" or ext == ".jpeg" or ext == ".bmp";
         }
 
-        static bool IsSceneExtension(const Path &extension) noexcept
+        static bool IsSceneExtension(const Path& extension) noexcept
         {
             auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".beescene";
         }
 
-        static bool IsFontExtension(const Path &extension) noexcept
+        static bool IsFontExtension(const Path& extension) noexcept
         {
             auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".ttf";
         }
 
-        static bool IsPrefabExtension(const Path &extension) noexcept
+        static bool IsPrefabExtension(const Path& extension) noexcept
         {
             auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".beeprefab";
         }
 
-        static bool IsMeshSourceExtension(const Path &extension) noexcept
+        static bool IsMeshSourceExtension(const Path& extension) noexcept
         {
             auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".gltf" or ext == ".glb";
         }
 
-        static bool IsAssetExtension(const Path &extension) noexcept
+        static bool IsAssetExtension(const Path& extension) noexcept
         {
-            return IsTexture2DExtension(extension) || IsFontExtension(extension) || IsPrefabExtension(extension) || IsMeshSourceExtension(extension);
+            return IsTexture2DExtension(extension) || IsFontExtension(extension) || IsPrefabExtension(extension) ||
+                   IsMeshSourceExtension(extension);
         }
 
-        static AssetType GetAssetTypeFromExtension(const Path &extension)
+        static AssetType GetAssetTypeFromExtension(const Path& extension)
         {
-            if(IsTexture2DExtension(extension))
+            if (IsTexture2DExtension(extension))
             {
                 return AssetType::Texture2D;
             }
-            if(IsFontExtension(extension))
+            if (IsFontExtension(extension))
             {
                 return AssetType::Font;
             }
-            if(IsPrefabExtension(extension))
+            if (IsPrefabExtension(extension))
             {
                 return AssetType::Prefab;
             }
-            if(IsMeshSourceExtension(extension))
+            if (IsMeshSourceExtension(extension))
             {
                 return AssetType::MeshSource;
             }
@@ -195,4 +193,4 @@ namespace BeeEngine
             return ext == ".cs";
         }
     };
-}
+} // namespace BeeEngine

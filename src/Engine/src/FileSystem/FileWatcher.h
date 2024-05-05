@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "Core/TypeDefines.h"
 #include "Core/Path.h"
+#include "Core/TypeDefines.h"
 
 namespace BeeEngine
 {
@@ -29,4 +29,4 @@ namespace BeeEngine
 
         static Scope<FileWatcher> Create(const Path& path, const std::function<void(Path, Event)>& callback);
     };
-}
+} // namespace BeeEngine

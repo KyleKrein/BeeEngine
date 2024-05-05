@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "Renderer/Texture.h"
 #include "AssetMetadata.h"
+#include "Renderer/Texture.h"
 namespace BeeEngine
 {
     class TextureImporter
@@ -12,4 +12,4 @@ namespace BeeEngine
     public:
         static Ref<Texture2D> ImportTexture2D(AssetHandle handle, const AssetMetadata& metadata);
     };
-}
+} // namespace BeeEngine

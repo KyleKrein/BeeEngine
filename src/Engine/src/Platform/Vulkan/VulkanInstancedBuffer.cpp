@@ -6,7 +6,8 @@
 
 #include "Renderer/CommandBuffer.h"
 
-namespace BeeEngine::Internal {
+namespace BeeEngine::Internal
+{
     VulkanInstancedBuffer::VulkanInstancedBuffer(size_t size)
         : m_GraphicsDevice(VulkanGraphicsDevice::GetInstance()), m_Size(size)
     {
@@ -35,4 +36,4 @@ namespace BeeEngine::Internal {
     {
         return m_Size;
     }
-}
+} // namespace BeeEngine::Internal

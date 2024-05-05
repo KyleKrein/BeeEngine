@@ -2,11 +2,11 @@
 // Created by alexl on 15.07.2023.
 //
 
+#include "Core/DeletionQueue.h"
 #include "Renderer/Material.h"
 #include "Renderer/Mesh.h"
 #include "Renderer/Renderer.h"
 #include "WebGPUMaterial.h"
-#include "Core/DeletionQueue.h"
 
 namespace BeeEngine::Internal
 {
@@ -28,12 +28,13 @@ namespace BeeEngine::Internal
         if (!isErased)
         {
             isErased = true;
-            DeletionQueue::RendererFlush().PushFunction([&]()
-            {
-                lastMaterial = nullptr;
-                lastMesh = nullptr;
-                isErased = false;
-            });
+            DeletionQueue::RendererFlush().PushFunction(
+                [&]()
+                {
+                    lastMaterial = nullptr;
+                    lastMesh = nullptr;
+                    isErased = false;
+                });
         }
     }
-}
+} // namespace BeeEngine::Internal

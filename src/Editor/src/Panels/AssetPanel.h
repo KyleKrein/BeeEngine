@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include "ProjectFile.h"
+#include "AssetEditPanel.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Locale/Locale.h"
-#include "AssetEditPanel.h"
+#include "ProjectFile.h"
 
 namespace BeeEngine::Editor
 {
@@ -17,12 +17,10 @@ namespace BeeEngine::Editor
         AssetPanel(EditorAssetManager* assetManager, Locale::Domain& domain);
         void SetProject(ProjectFile* project);
 
-        void SetAssetDeletedCallback(const std::function<void(AssetHandle)>& callback)
-        {
-            m_OnAssetDeleted = callback;
-        }
+        void SetAssetDeletedCallback(const std::function<void(AssetHandle)>& callback) { m_OnAssetDeleted = callback; }
 
         void Render();
+
     private:
         Scope<AssetEditPanel> m_AssetEditPanel;
         EditorAssetManager* m_AssetManager;
@@ -30,6 +28,6 @@ namespace BeeEngine::Editor
         ProjectFile* m_Project;
         std::function<void(AssetHandle)> m_OnAssetDeleted;
 
-        const char *GetDragAndDropTypeName(AssetType type);
+        const char* GetDragAndDropTypeName(AssetType type);
     };
-}
+} // namespace BeeEngine::Editor

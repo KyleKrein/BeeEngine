@@ -4,7 +4,6 @@
 
 #include "Instance.h"
 
-
 namespace BeeEngine
 {
 

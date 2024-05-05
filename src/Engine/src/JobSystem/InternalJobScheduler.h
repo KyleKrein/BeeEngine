@@ -19,36 +19,21 @@ namespace BeeEngine
 
             Fiber(Job* job);
 
-            Fiber(Fiber &&other) noexcept;
+            Fiber(Fiber&& other) noexcept;
 
-            Fiber &operator=(Fiber &&other) noexcept;
+            Fiber& operator=(Fiber&& other) noexcept;
 
             // Запускает или возобновляет выполнение файбера
             void Resume();
 
-            bool isCompleted() const
-            {
-                return m_IsCompleted;
-            }
+            bool isCompleted() const { return m_IsCompleted; }
 
-            void MarkIncomplete()
-            {
-                m_IsCompleted = false;
-            }
-            void MarkCompleted()
-            {
-                m_IsCompleted = true;
-            }
+            void MarkIncomplete() { m_IsCompleted = false; }
+            void MarkCompleted() { m_IsCompleted = true; }
 
-            Job* GetJob()
-            {
-                return m_Job;
-            }
+            Job* GetJob() { return m_Job; }
 
-            boost::context::continuation &GetContext()
-            {
-                return m_Continuation;
-            }
+            boost::context::continuation& GetContext() { return m_Continuation; }
 
         private:
             Job* m_Job = nullptr;
@@ -66,17 +51,18 @@ namespace BeeEngine
                 WaitingContext(::BeeEngine::Ref<::BeeEngine::Internal::Fiber>&& fiber, Jobs::Counter* counter);
                 WaitingContext(const Ref<::BeeEngine::Internal::Fiber>& fiber, ::BeeEngine::Jobs::Counter* counter);
             };
+
         public:
             JobScheduler(uint32_t numberOfThreads = Hardware::GetNumberOfCores());
             ~JobScheduler()
             {
-                if(!m_Done)
+                if (!m_Done)
                     Stop();
             }
             void Schedule(Job* job);
             void ScheduleAll(std::ranges::range auto& jobs)
             {
-                if(std::ranges::size(jobs) == 0)
+                if (std::ranges::size(jobs) == 0)
                 {
                     return;
                 }
@@ -84,7 +70,7 @@ namespace BeeEngine
                 for (auto& job : jobs)
                 {
                     auto& queue = GetQueue(job.Priority);
-                    if(jobs.Counter)
+                    if (jobs.Counter)
                     {
                         jobs.Counter->Increment();
                     }
@@ -94,7 +80,7 @@ namespace BeeEngine
             }
             void ScheduleAll(Job* jobs, size_t count)
             {
-                if(count == 0)
+                if (count == 0)
                 {
                     return;
                 }
@@ -102,7 +88,7 @@ namespace BeeEngine
                 for (size_t i = 0; i < count; ++i)
                 {
                     auto& queue = GetQueue(jobs[i].Priority);
-                    if(jobs[i].Counter)
+                    if (jobs[i].Counter)
                     {
                         jobs[i].Counter->Increment();
                     }
@@ -117,22 +103,26 @@ namespace BeeEngine
                     m_Done = true;
                 }
                 m_ConditionVariable.notify_all();
-                for (auto &thread : m_Threads)
+                for (auto& thread : m_Threads)
                 {
                     thread.join();
                 }
             }
             void WaitForJobsToComplete(Jobs::Counter& counter);
+
         private:
-            //void Schedule(Ref<Internal::Fiber>&& fiber);
+            // void Schedule(Ref<Internal::Fiber>&& fiber);
 
             std::queue<Job*>& GetQueue(Jobs::Priority priority)
             {
                 switch (priority)
                 {
-                    case Jobs::Priority::High: return m_HighPriorityJobs;
-                    case Jobs::Priority::Low: return m_LowPriorityJobs;
-                    default: return m_MediumPriorityJobs;
+                    case Jobs::Priority::High:
+                        return m_HighPriorityJobs;
+                    case Jobs::Priority::Low:
+                        return m_LowPriorityJobs;
+                    default:
+                        return m_MediumPriorityJobs;
                 }
             }
 
@@ -158,5 +148,5 @@ namespace BeeEngine
             thread_local static Ref<::BeeEngine::Internal::Fiber> s_CurrentFiber;
             thread_local static boost::context::continuation s_MainContext;
         };
-    }
-}
+    } // namespace Internal
+} // namespace BeeEngine

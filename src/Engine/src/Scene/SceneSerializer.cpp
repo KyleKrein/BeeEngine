@@ -2,23 +2,23 @@
 // Created by alexl on 04.06.2023.
 //
 
-#include <fstream>
 #include "SceneSerializer.h"
-#include "Core/Logging/Log.h"
-#include "yaml-cpp/yaml.h"
-#include "Entity.h"
 #include "Components.h"
 #include "Core/Color4.h"
-#include "Scripting/MClass.h"
-#include "Scripting/ScriptingEngine.h"
-#include <vector>
-#include "Scripting/GameScript.h"
-#include "Scripting/MUtils.h"
+#include "Core/Logging/Log.h"
+#include "Entity.h"
 #include "FileSystem/File.h"
+#include "Scripting/GameScript.h"
+#include "Scripting/MClass.h"
+#include "Scripting/MUtils.h"
+#include "Scripting/ScriptingEngine.h"
+#include "yaml-cpp/yaml.h"
+#include <fstream>
+#include <vector>
 
 namespace YAML
 {
-    template<>
+    template <>
     struct convert<glm::vec2>
     {
         static Node encode(const glm::vec2& rhs)
@@ -38,7 +38,7 @@ namespace YAML
             return true;
         }
     };
-    template<>
+    template <>
     struct convert<glm::vec3>
     {
         static Node encode(const glm::vec3& rhs)
@@ -61,7 +61,7 @@ namespace YAML
         }
     };
 
-    template<>
+    template <>
     struct convert<glm::vec4>
     {
         static Node encode(const glm::vec4& rhs)
@@ -86,7 +86,7 @@ namespace YAML
         }
     };
 
-    template<>
+    template <>
     struct convert<BeeEngine::Color4>
     {
         static Node encode(const BeeEngine::Color4& rhs)
@@ -103,12 +103,13 @@ namespace YAML
         {
             if (!node.IsSequence() || node.size() != 4)
                 return false;
-            rhs = BeeEngine::Color4::FromNormalized(node[0].as<float>(), node[1].as<float>(), node[2].as<float>(), node[3].as<float>());
+            rhs = BeeEngine::Color4::FromNormalized(
+                node[0].as<float>(), node[1].as<float>(), node[2].as<float>(), node[3].as<float>());
             return true;
         }
     };
 
-    template<>
+    template <>
     struct convert<BeeEngine::AssetHandle>
     {
         static Node encode(const BeeEngine::AssetHandle& rhs)
@@ -128,7 +129,7 @@ namespace YAML
         }
     };
 
-    template<>
+    template <>
     struct convert<BeeEngine::UUID>
     {
         static Node encode(const BeeEngine::UUID& uuid)
@@ -144,47 +145,53 @@ namespace YAML
             return true;
         }
     };
-}
+} // namespace YAML
 
 namespace BeeEngine
 {
 
-#define WRITE_SCRIPT_FIELD(FieldType, Type)           \
-			case MType::FieldType:          \
-				out << field.GetData<Type>();  \
-				break
+#define WRITE_SCRIPT_FIELD(FieldType, Type)                                                                            \
+    case MType::FieldType:                                                                                             \
+        out << field.GetData<Type>();                                                                                  \
+        break
 
-#define READ_SCRIPT_FIELD(FieldType, Type)             \
-    case MType::FieldType:                   \
-	{                                                  \
-		Type fieldData = scriptField["Data"].as<Type>();    \
-		field->SetData(fieldData);                  \
-		break;                                         \
-	}
+#define READ_SCRIPT_FIELD(FieldType, Type)                                                                             \
+    case MType::FieldType:                                                                                             \
+    {                                                                                                                  \
+        Type fieldData = scriptField["Data"].as<Type>();                                                               \
+        field->SetData(fieldData);                                                                                     \
+        break;                                                                                                         \
+    }
 
     static std::string RigidBodyTypeToString(RigidBody2DComponent::BodyType type)
     {
         switch (type)
         {
-            case RigidBody2DComponent::BodyType::Static: return "Static";
-            case RigidBody2DComponent::BodyType::Dynamic: return "Dynamic";
-            case RigidBody2DComponent::BodyType::Kinematic: return "Kinematic";
+            case RigidBody2DComponent::BodyType::Static:
+                return "Static";
+            case RigidBody2DComponent::BodyType::Dynamic:
+                return "Dynamic";
+            case RigidBody2DComponent::BodyType::Kinematic:
+                return "Kinematic";
         }
         return "Unknown";
     }
     static RigidBody2DComponent::BodyType RigidBodyTypeFromString(const std::string& type)
     {
-        if (type == "Static") return RigidBody2DComponent::BodyType::Static;
-        if (type == "Dynamic") return RigidBody2DComponent::BodyType::Dynamic;
-        if (type == "Kinematic") return RigidBody2DComponent::BodyType::Kinematic;
+        if (type == "Static")
+            return RigidBody2DComponent::BodyType::Static;
+        if (type == "Dynamic")
+            return RigidBody2DComponent::BodyType::Dynamic;
+        if (type == "Kinematic")
+            return RigidBody2DComponent::BodyType::Kinematic;
         return RigidBody2DComponent::BodyType::Static;
     }
 
     static BoxCollider2DComponent::ColliderType BoxCollider2DTypeFromString(std::string basicString)
     {
-        if(basicString == "Box")
+        if (basicString == "Box")
             return BoxCollider2DComponent::ColliderType::Box;
-        if(basicString == "Circle")
+        if (basicString == "Circle")
             return BoxCollider2DComponent::ColliderType::Circle;
         /*if(basicString == "Polygon")
             return BoxCollider2DComponent::ColliderType::Polygon;
@@ -213,10 +220,7 @@ namespace BeeEngine
         return "Box";
     }
 
-
-    SceneSerializer::SceneSerializer(Ref<Scene> &scene)
-            : m_Scene(scene)
-    {}
+    SceneSerializer::SceneSerializer(Ref<Scene>& scene) : m_Scene(scene) {}
 
     void SceneSerializer::Serialize(const Path& filepath)
     {
@@ -271,10 +275,10 @@ namespace BeeEngine
         return out;
     }
 
-    void SceneSerializer::SerializeEntity(YAML::Emitter &out, Entity entity)
+    void SceneSerializer::SerializeEntity(YAML::Emitter& out, Entity entity)
     {
         BeeCoreAssert(entity.HasComponent<UUIDComponent>(), "Entity has no UUID component");
-        out << YAML::BeginMap; //Entity
+        out << YAML::BeginMap; // Entity
         out << YAML::Key << "Entity" << YAML::Value << (uint64_t)entity.GetUUID();
         if (entity.HasComponent<TagComponent>())
         {
@@ -285,7 +289,7 @@ namespace BeeEngine
             out << YAML::EndMap;
         }
 
-        if(entity.HasComponent<TransformComponent>())
+        if (entity.HasComponent<TransformComponent>())
         {
             out << YAML::Key << "TransformComponent";
             out << YAML::BeginMap;
@@ -296,14 +300,14 @@ namespace BeeEngine
             out << YAML::EndMap;
         }
 
-        if(entity.HasComponent<CameraComponent>())
+        if (entity.HasComponent<CameraComponent>())
         {
             out << YAML::Key << "CameraComponent";
             out << YAML::BeginMap;
             auto& camera = entity.GetComponent<CameraComponent>();
             out << YAML::Key << "Camera" << YAML::Value;
 
-            out << YAML::BeginMap;//Camera
+            out << YAML::BeginMap; // Camera
             out << YAML::Key << "ProjectionType" << YAML::Value << (int)camera.Camera.GetProjectionType();
             out << YAML::Key << "PerspectiveVerticalFOV" << YAML::Value << camera.Camera.GetPerspectiveVerticalFOV();
             out << YAML::Key << "PerspectiveNearClip" << YAML::Value << camera.Camera.GetPerspectiveNearClip();
@@ -312,33 +316,32 @@ namespace BeeEngine
             out << YAML::Key << "OrthographicNearClip" << YAML::Value << camera.Camera.GetOrthographicNearClip();
             out << YAML::Key << "OrthographicFarClip" << YAML::Value << camera.Camera.GetOrthographicFarClip();
             out << YAML::Key << "AspectRatio" << YAML::Value << camera.Camera.GetAspectRatio();
-            out << YAML::EndMap;//Camera
+            out << YAML::EndMap; // Camera
 
             out << YAML::Key << "Primary" << YAML::Value << camera.Primary;
             out << YAML::Key << "FixedAspectRatio" << YAML::Value << camera.FixedAspectRatio;
             out << YAML::EndMap;
         }
 #if defined(BEE_ENABLE_SCRIPTING)
-        if(entity.HasComponent<ScriptComponent>())
+        if (entity.HasComponent<ScriptComponent>())
         {
             out << YAML::Key << "ScriptComponent";
             out << YAML::BeginMap;
             auto& scriptComponent = entity.GetComponent<ScriptComponent>();
-            out << YAML::Key << "FullName" << YAML::Value << (scriptComponent.Class ? scriptComponent.Class->GetFullName() : "");
+            out << YAML::Key << "FullName" << YAML::Value
+                << (scriptComponent.Class ? scriptComponent.Class->GetFullName() : "");
             auto& fields = scriptComponent.EditableFields;
-            if(fields.size() > 0)
+            if (fields.size() > 0)
             {
                 out << YAML::Key << "Fields" << YAML::Value;
                 out << YAML::BeginSeq;
-                for(auto& field : fields)
+                for (auto& field : fields)
                 {
                     auto& mField = field.GetMField();
                     MType type = mField.GetType();
-                    if(mField.IsStatic() ||
-                    type == MType::None || type == MType::Object
-                    || type == MType::String || type == MType::Array
-                    || type == MType::List || type == MType::Dictionary
-                    || type == MType::Ptr || type == MType::Void)
+                    if (mField.IsStatic() || type == MType::None || type == MType::Object || type == MType::String ||
+                        type == MType::Array || type == MType::List || type == MType::Dictionary ||
+                        type == MType::Ptr || type == MType::Void)
                         continue;
                     out << YAML::BeginMap;
                     out << YAML::Key << "Name" << YAML::Value << mField.GetName();
@@ -367,7 +370,7 @@ namespace BeeEngine
                         WRITE_SCRIPT_FIELD(Texture2D, AssetHandle);
                         WRITE_SCRIPT_FIELD(Font, AssetHandle);
                         WRITE_SCRIPT_FIELD(Prefab, AssetHandle);
-                        //WRITE_SCRIPT_FIELD(Entity, UUID);
+                        // WRITE_SCRIPT_FIELD(Entity, UUID);
                     }
                     out << YAML::EndMap;
                 }
@@ -377,7 +380,7 @@ namespace BeeEngine
             out << YAML::EndMap;
         }
 #endif
-        if(entity.HasComponent<SpriteRendererComponent>())
+        if (entity.HasComponent<SpriteRendererComponent>())
         {
             out << YAML::Key << "SpriteRendererComponent";
             out << YAML::BeginMap;
@@ -388,7 +391,7 @@ namespace BeeEngine
             out << YAML::Key << "Tiling Factor" << YAML::Value << spriteRenderer.TilingFactor;
             out << YAML::EndMap;
         }
-        if(entity.HasComponent<CircleRendererComponent>())
+        if (entity.HasComponent<CircleRendererComponent>())
         {
             out << YAML::Key << "CircleRendererComponent";
             out << YAML::BeginMap;
@@ -398,7 +401,7 @@ namespace BeeEngine
             out << YAML::Key << "Fade" << YAML::Value << circleRenderer.Fade;
             out << YAML::EndMap;
         }
-        if(entity.HasComponent<TextRendererComponent>())
+        if (entity.HasComponent<TextRendererComponent>())
         {
             out << YAML::Key << "TextRendererComponent";
             out << YAML::BeginMap;
@@ -412,7 +415,7 @@ namespace BeeEngine
             out << YAML::EndMap;
         }
 
-        if(entity.HasComponent<RigidBody2DComponent>())
+        if (entity.HasComponent<RigidBody2DComponent>())
         {
             out << YAML::Key << "RigidBody2DComponent";
             out << YAML::BeginMap;
@@ -422,7 +425,7 @@ namespace BeeEngine
             out << YAML::EndMap;
         }
 
-        if(entity.HasComponent<BoxCollider2DComponent>())
+        if (entity.HasComponent<BoxCollider2DComponent>())
         {
             out << YAML::Key << "BoxCollider2DComponent";
             out << YAML::BeginMap;
@@ -436,19 +439,19 @@ namespace BeeEngine
             out << YAML::Key << "RestitutionThreshold" << YAML::Value << boxCollider2dComponent.RestitutionThreshold;
             out << YAML::EndMap;
         }
-        if(entity.HasComponent<HierarchyComponent>())
+        if (entity.HasComponent<HierarchyComponent>())
         {
             out << YAML::Key << "HierarchyComponent";
             out << YAML::BeginSeq;
             auto& hierarchyComponent = entity.GetComponent<HierarchyComponent>();
-            for(auto& child : hierarchyComponent.Children)
+            for (auto& child : hierarchyComponent.Children)
             {
                 out << YAML::Value << (uint64_t)child.GetUUID();
             }
             out << YAML::EndSeq;
         }
 
-        out << YAML::EndMap; //Entity
+        out << YAML::EndMap; // Entity
         for (auto child : entity.GetChildren())
         {
             SerializeEntity(out, child);
@@ -461,19 +464,20 @@ namespace BeeEngine
         out << YAML::BeginMap;
         out << YAML::Key << "Scene" << YAML::Value << "Untitled";
         out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
-        m_Scene->m_Registry.each([&](auto entityID)
-                                 {
-                                     Entity entity = {EntityID{entityID}, m_Scene.get()};
-                                     if (!entity || entity.HasParent())
-                                         return;
-                                     SerializeEntity(out, entity);
-                                 });
+        m_Scene->m_Registry.each(
+            [&](auto entityID)
+            {
+                Entity entity = {EntityID{entityID}, m_Scene.get()};
+                if (!entity || entity.HasParent())
+                    return;
+                SerializeEntity(out, entity);
+            });
         out << YAML::EndSeq;
         out << YAML::EndMap;
         return out.c_str();
     }
 
-    void SceneSerializer::DeserializeFromString(const String &string)
+    void SceneSerializer::DeserializeFromString(const String& string)
     {
         YAML::Node data = YAML::Load(string);
         if (!data["Scene"])
@@ -487,7 +491,7 @@ namespace BeeEngine
         }
     }
 
-    Entity SceneSerializer::DeserializeEntity(YAML::Node &entities)
+    Entity SceneSerializer::DeserializeEntity(YAML::Node& entities)
     {
         std::unordered_map<UUID, std::vector<UUID>> childrenMap;
         Entity result = Entity::Null;
@@ -504,7 +508,7 @@ namespace BeeEngine
             BeeCoreTrace("Deserialized entity with ID = {0}, name = {1}", uuid, name);
 
             Entity deserializedEntity = m_Scene->CreateEntityWithUUID({uuid}, name);
-            if(!result)
+            if (!result)
                 result = deserializedEntity;
             auto transformComponent = entity["TransformComponent"];
             if (transformComponent)
@@ -516,7 +520,7 @@ namespace BeeEngine
             }
 
             auto cameraComponent = entity["CameraComponent"];
-            if(cameraComponent)
+            if (cameraComponent)
             {
                 auto& camera = deserializedEntity.AddComponent<CameraComponent>();
                 auto& cameraProps = camera.Camera;
@@ -536,11 +540,11 @@ namespace BeeEngine
             }
 #if defined(BEE_ENABLE_SCRIPTING)
             auto scriptComponent = entity["ScriptComponent"];
-            if(scriptComponent)
+            if (scriptComponent)
             {
                 auto& script = deserializedEntity.AddComponent<ScriptComponent>();
                 auto className = scriptComponent["FullName"].as<std::string>();
-                if(ScriptingEngine::HasGameScript(className))
+                if (ScriptingEngine::HasGameScript(className))
                 {
                     script.SetClass(&ScriptingEngine::GetGameScript(className));
 
@@ -551,10 +555,10 @@ namespace BeeEngine
                     {
                         fieldsMap[field.GetMField().GetName()] = &field;
                     }
-                    for( auto& scriptField : scriptFields)
+                    for (auto& scriptField : scriptFields)
                     {
                         std::string name = scriptField["Name"].as<std::string>();
-                        if(!fieldsMap.contains(name))
+                        if (!fieldsMap.contains(name))
                         {
                             BeeCoreWarn("Script field {0} not found in script {1}", name, className);
                             continue;
@@ -592,20 +596,20 @@ namespace BeeEngine
             }
 #endif
             auto spriteRendererComponent = entity["SpriteRendererComponent"];
-            if(spriteRendererComponent)
+            if (spriteRendererComponent)
             {
                 auto& spriteRenderer = deserializedEntity.AddComponent<SpriteRendererComponent>();
                 spriteRenderer.Color = spriteRendererComponent["Color"].as<Color4>();
                 spriteRenderer.HasTexture = spriteRendererComponent["Has Texture"].as<bool>();
                 spriteRenderer.TextureHandle = spriteRendererComponent["Texture"].as<AssetHandle>();
-                if(spriteRenderer.HasTexture && !AssetManager::IsAssetHandleValid(spriteRenderer.TextureHandle))
+                if (spriteRenderer.HasTexture && !AssetManager::IsAssetHandleValid(spriteRenderer.TextureHandle))
                 {
                     spriteRenderer.HasTexture = false;
                 }
                 spriteRenderer.TilingFactor = spriteRendererComponent["Tiling Factor"].as<float>();
             }
             auto circleRendererComponent = entity["CircleRendererComponent"];
-            if(circleRendererComponent)
+            if (circleRendererComponent)
             {
                 auto& circleRenderer = deserializedEntity.AddComponent<CircleRendererComponent>();
                 circleRenderer.Color = circleRendererComponent["Color"].as<Color4>();
@@ -613,12 +617,12 @@ namespace BeeEngine
                 circleRenderer.Fade = circleRendererComponent["Fade"].as<float>();
             }
             auto textRendererComponent = entity["TextRendererComponent"];
-            if(textRendererComponent)
+            if (textRendererComponent)
             {
                 auto& textRenderer = deserializedEntity.AddComponent<TextRendererComponent>();
                 textRenderer.Text = textRendererComponent["Text"].as<std::string>();
                 textRenderer.FontHandle = textRendererComponent["Font"].as<AssetHandle>();
-                if(!AssetManager::IsAssetHandleValid(textRenderer.FontHandle))
+                if (!AssetManager::IsAssetHandleValid(textRenderer.FontHandle))
                 {
                     textRenderer.FontHandle = EngineAssetRegistry::OpenSansRegular;
                 }
@@ -628,14 +632,14 @@ namespace BeeEngine
                 textRenderer.Configuration.LineSpacing = textRendererComponent["Line Spacing"].as<float>();
             }
             auto rigidBody2DComponent = entity["RigidBody2DComponent"];
-            if(rigidBody2DComponent)
+            if (rigidBody2DComponent)
             {
                 auto& rb2dcomp = deserializedEntity.AddComponent<RigidBody2DComponent>();
                 rb2dcomp.Type = RigidBodyTypeFromString(rigidBody2DComponent["Type"].as<std::string>());
                 rb2dcomp.FixedRotation = rigidBody2DComponent["FixedRotation"].as<bool>();
             }
             auto boxCollider2DComponent = entity["BoxCollider2DComponent"];
-            if(boxCollider2DComponent)
+            if (boxCollider2DComponent)
             {
                 auto& boxCollider = deserializedEntity.AddComponent<BoxCollider2DComponent>();
                 boxCollider.Type = BoxCollider2DTypeFromString(boxCollider2DComponent["Type"].as<std::string>());
@@ -647,7 +651,7 @@ namespace BeeEngine
                 boxCollider.RestitutionThreshold = boxCollider2DComponent["RestitutionThreshold"].as<float>();
             }
             auto hierarchyComponent = entity["HierarchyComponent"];
-            if(hierarchyComponent)
+            if (hierarchyComponent)
             {
                 for (auto child : hierarchyComponent)
                 {
@@ -674,7 +678,7 @@ namespace BeeEngine
     {
         BeeExpects(entity);
         BeeExpects(!entity.HasParent());
-        //BeeExpects(m_Scene->GetEntityByUUID(entity.GetUUID()) == entity);
+        // BeeExpects(m_Scene->GetEntityByUUID(entity.GetUUID()) == entity);
         YAML::Emitter out;
         out << YAML::BeginMap;
         out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
@@ -684,7 +688,7 @@ namespace BeeEngine
         return out.c_str();
     }
 
-    Entity SceneSerializer::DeserializeEntityFromString(const String &string)
+    Entity SceneSerializer::DeserializeEntityFromString(const String& string)
     {
         YAML::Node data = YAML::Load(string);
         auto entities = data["Entities"];
@@ -695,4 +699,4 @@ namespace BeeEngine
         BeeCoreError("Failed to deserialize entity from string");
         return Entity::Null;
     }
-}
+} // namespace BeeEngine

@@ -3,10 +3,10 @@
 //
 
 #pragma once
-#include <string>
 #include "Core/Reflection.h"
 #include "Core/ToString.h"
 #include "Serialization/ISerializer.h"
+#include <string>
 
 namespace BeeEngine
 {
@@ -15,35 +15,28 @@ namespace BeeEngine
         REFLECT()
     public:
         UUID();
-        constexpr UUID(uint64_t uuid)
-            : m_UUID(uuid)
-        {}
+        constexpr UUID(uint64_t uuid) : m_UUID(uuid) {}
         UUID(const UUID&) = default;
 
         operator uint64_t() const { return m_UUID; }
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
             serializer & m_UUID;
         }
-        String ToString() const
-        {
-            return BeeEngine::ToString(m_UUID);
-        }
+        String ToString() const { return BeeEngine::ToString(m_UUID); }
+
     private:
         uint64_t m_UUID;
     };
-}
+} // namespace BeeEngine
 
 namespace std
 {
-        template<>
-        struct hash<BeeEngine::UUID>
-        {
-            std::size_t operator()(const BeeEngine::UUID& uuid) const
-            {
-                return hash<uint64_t>()((uint64_t)uuid);
-            }
-        };
+    template <>
+    struct hash<BeeEngine::UUID>
+    {
+        std::size_t operator()(const BeeEngine::UUID& uuid) const { return hash<uint64_t>()((uint64_t)uuid); }
+    };
 
-}
+} // namespace std

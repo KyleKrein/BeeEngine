@@ -10,14 +10,12 @@ namespace BeeEngine
     {
     public:
         Camera() = default;
-        explicit Camera(const glm::mat4 &projection) noexcept
-        : m_ProjectionMatrix(projection)
-        {}
+        explicit Camera(const glm::mat4& projection) noexcept : m_ProjectionMatrix(projection) {}
 
         virtual ~Camera() = default;
-        [[nodiscard]] inline const glm::mat4& GetProjectionMatrix() const {return m_ProjectionMatrix;}
+        [[nodiscard]] inline const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 
     protected:
-        glm::mat4 m_ProjectionMatrix {1.0f};
+        glm::mat4 m_ProjectionMatrix{1.0f};
     };
-}
+} // namespace BeeEngine

@@ -3,14 +3,13 @@
 //
 
 #pragma once
-#include "VulkanGraphicsDevice.h"
 #include "Renderer/ShaderModule.h"
-
+#include "VulkanGraphicsDevice.h"
 
 namespace BeeEngine::Internal
 {
 
-    class VulkanShaderModule: public ShaderModule
+    class VulkanShaderModule : public ShaderModule
     {
     public:
         VulkanShaderModule(std::vector<uint32_t>& spirv, ShaderType type, BufferLayout&& layout);
@@ -20,14 +19,8 @@ namespace BeeEngine::Internal
 
         [[nodiscard]] Scope<InstancedBuffer> CreateInstancedBuffer() override;
 
-        [[nodiscard]] vk::ShaderModule GetShaderModule() const
-        {
-            return m_ShaderModule;
-        }
-        [[nodiscard]] vk::PipelineVertexInputStateCreateInfo GetVertexInputState() const
-        {
-            return m_VertexInputState;
-        }
+        [[nodiscard]] vk::ShaderModule GetShaderModule() const { return m_ShaderModule; }
+        [[nodiscard]] vk::PipelineVertexInputStateCreateInfo GetVertexInputState() const { return m_VertexInputState; }
         [[nodiscard]] const std::vector<vk::DescriptorSetLayout>& GetDescriptorSetLayouts() const
         {
             return m_DescriptorSetLayouts;
@@ -55,12 +48,12 @@ namespace BeeEngine::Internal
         vk::VertexInputBindingDescription& m_VertexBindingDescription = m_BindingDescriptions[0];
         std::vector<vk::VertexInputAttributeDescription> m_VertexAttributeDescriptions;
         vk::VertexInputBindingDescription& m_InstanceBindingDescription = m_BindingDescriptions[1];
-        //std::vector<vk::VertexInputAttributeDescription> m_InstanceAttributeDescriptions;
+        // std::vector<vk::VertexInputAttributeDescription> m_InstanceAttributeDescriptions;
         vk::PipelineVertexInputStateCreateInfo m_VertexInputState;
         std::vector<vk::DescriptorSetLayout> m_DescriptorSetLayouts;
         std::vector<vk::Format> m_ColorAttachmentFormats;
         std::vector<vk::PipelineColorBlendAttachmentState> m_ColorBlendAttachments;
     };
 
-} // Internal
+} // namespace BeeEngine::Internal
 // BeeEngine

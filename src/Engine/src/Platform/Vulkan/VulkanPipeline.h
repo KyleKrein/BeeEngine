@@ -10,7 +10,7 @@
 
 namespace BeeEngine::Internal
 {
-    class VulkanPipeline final: public Pipeline
+    class VulkanPipeline final : public Pipeline
     {
     public:
         VulkanPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader);
@@ -20,6 +20,7 @@ namespace BeeEngine::Internal
         ~VulkanPipeline() override;
         vk::PipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
         static VulkanPipeline& GetCurrentPipeline() { return *s_CurrentPipeline; }
+
     private:
         VulkanGraphicsDevice& m_Device;
         Ref<VulkanShaderModule> m_VertexShader;
@@ -28,4 +29,4 @@ namespace BeeEngine::Internal
         vk::PipelineLayout m_PipelineLayout;
         static VulkanPipeline* s_CurrentPipeline;
     };
-}
+} // namespace BeeEngine::Internal

@@ -4,13 +4,13 @@
 
 #pragma once
 
-#include "entt/entt.hpp"
 #include "Renderer/EditorCamera.h"
-#include "Renderer/UniformBuffer.h"
 #include "Renderer/Model.h"
-#include "Renderer/Texture.h"
 #include "Renderer/SceneTreeRenderer.h"
+#include "Renderer/Texture.h"
 #include "Renderer/TopLevelAccelerationStructure.h"
+#include "Renderer/UniformBuffer.h"
+#include "entt/entt.hpp"
 
 class b2World;
 class b2Body;
@@ -23,7 +23,7 @@ namespace BeeEngine
         class SceneHierarchyPanel;
         class InspectorPanel;
         class EditorLayer;
-    }
+    } // namespace Editor
     class Entity;
     class Prefab;
     class Scene
@@ -35,8 +35,10 @@ namespace BeeEngine
         friend class SceneSerializer;
         friend class PrefabImporter;
         friend class SceneRenderer;
+
     public:
-        struct GPUSceneData {
+        struct GPUSceneData
+        {
             glm::mat4 view;
             glm::mat4 proj;
             glm::mat4 viewproj;
@@ -54,7 +56,6 @@ namespace BeeEngine
         };
 
         static Ref<Scene> Copy(Scene& scene);
-
 
         Scene();
         void UpdateRuntime();
@@ -82,11 +83,12 @@ namespace BeeEngine
         TopLevelAccelerationStructure& GetTLAS() { return *m_TLAS; }
 
         SceneRendererData& GetSceneRendererData() { return m_SceneRendererData; }
+
     private:
         entt::registry m_Registry;
 
         bool m_IsRuntime = false;
-        //void ResetScene();
+        // void ResetScene();
         b2World* m_2DPhysicsWorld;
 
         SceneRendererData m_SceneRendererData;
@@ -95,7 +97,7 @@ namespace BeeEngine
 
         void UpdateScripts();
 
-        std::unordered_map<uint64_t , entt::entity> m_UUIDMap;
+        std::unordered_map<uint64_t, entt::entity> m_UUIDMap;
 
         const std::vector<struct NativeScriptInfo>* m_NativeScripts = nullptr;
 
@@ -111,11 +113,11 @@ namespace BeeEngine
 
         Entity CopyEntity(Entity entity, Scene& targetScene, Entity parent, bool preserveUUID);
 
-        void *
-        CreateRuntimeRigidBody2D(class RigidBody2DComponent &rigidBody,
-                                 const class TransformComponent &transform);
+        void* CreateRuntimeRigidBody2D(class RigidBody2DComponent& rigidBody,
+                                       const class TransformComponent& transform);
 
-        void CreateRuntimeBoxCollider2DFixture(const class TransformComponent &transform, b2Body *body,
-                                               class BoxCollider2DComponent &boxCollider) const;
+        void CreateRuntimeBoxCollider2DFixture(const class TransformComponent& transform,
+                                               b2Body* body,
+                                               class BoxCollider2DComponent& boxCollider) const;
     };
-}
+} // namespace BeeEngine

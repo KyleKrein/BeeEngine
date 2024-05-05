@@ -8,6 +8,5 @@ namespace BeeEngine
 {
     class FileStream
     {
-
     };
-}
+} // namespace BeeEngine

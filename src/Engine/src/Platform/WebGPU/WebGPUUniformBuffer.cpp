@@ -3,14 +3,14 @@
 //
 #if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUUniformBuffer.h"
-#include "WebGPUGraphicsDevice.h"
 #include "Core/DeletionQueue.h"
+#include "WebGPUGraphicsDevice.h"
 
 namespace BeeEngine::Internal
 {
 
     WebGPUUniformBuffer::WebGPUUniformBuffer(size_t size)
-    : m_Size(size), m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance())
+        : m_Size(size), m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance())
     {
         m_Buffer = m_GraphicsDevice.CreateBuffer(WGPUBufferUsage_CopyDst | WGPUBufferUsage_Uniform, m_Size);
     }
@@ -18,21 +18,20 @@ namespace BeeEngine::Internal
     WebGPUUniformBuffer::~WebGPUUniformBuffer()
     {
         auto buffer = m_Buffer;
-        DeletionQueue::Frame().PushFunction([buffer](){
-            wgpuBufferDestroy(buffer);
-            wgpuBufferRelease(buffer);
-        });
+        DeletionQueue::Frame().PushFunction(
+            [buffer]()
+            {
+                wgpuBufferDestroy(buffer);
+                wgpuBufferRelease(buffer);
+            });
     }
 
-    void WebGPUUniformBuffer::SetData(void *data, size_t size)
+    void WebGPUUniformBuffer::SetData(void* data, size_t size)
     {
         m_GraphicsDevice.CopyDataToBuffer({(byte*)data, size}, m_Buffer);
     }
 
-    void WebGPUUniformBuffer::Bind(uint32_t binding)
-    {
-
-    }
+    void WebGPUUniformBuffer::Bind(uint32_t binding) {}
 
     std::vector<IBindable::BindGroupLayoutEntryType> WebGPUUniformBuffer::GetBindGroupLayoutEntry() const
     {
@@ -51,5 +50,5 @@ namespace BeeEngine::Internal
         entry.size = m_Size;
         return {entry};
     }
-}
+} // namespace BeeEngine::Internal
 #endif

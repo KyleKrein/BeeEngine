@@ -6,7 +6,7 @@
 #include "IAssetManager.h"
 namespace BeeEngine
 {
-    class EditorAssetManager final: public IAssetManager
+    class EditorAssetManager final : public IAssetManager
     {
     public:
         EditorAssetManager();
@@ -16,11 +16,11 @@ namespace BeeEngine
 
         AssetMetadata& GetAssetMetadata(const AssetHandle& handle);
 
-        const AssetHandle*  GetAssetHandleByName(std::string_view name) const;
+        const AssetHandle* GetAssetHandleByName(std::string_view name) const;
 
         void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type) final;
 
-        void LoadAsset(const Path &path, AssetHandle handle) final;
+        void LoadAsset(const Path& path, AssetHandle handle) final;
 
         void UnloadAsset(AssetHandle handle) final;
 
@@ -37,4 +37,4 @@ namespace BeeEngine
         AssetRegistry m_AssetRegistry;
         std::map<std::string, AssetHandle> m_AssetNameMap;
     };
-}
+} // namespace BeeEngine

@@ -9,17 +9,16 @@
 namespace BeeEngine::Editor
 {
 
-    AssetEditPanel::AssetEditPanel(Locale::Domain &domain, const AssetHandle& handle, EditorAssetManager& assetManager)
-    : m_Handle(handle), m_Domain(&domain), m_AssetManager(assetManager)
+    AssetEditPanel::AssetEditPanel(Locale::Domain& domain, const AssetHandle& handle, EditorAssetManager& assetManager)
+        : m_Handle(handle), m_Domain(&domain), m_AssetManager(assetManager)
     {
-        
     }
 
     void AssetEditPanel::Render()
     {
-        if(!m_IsOpened)
+        if (!m_IsOpened)
             return;
-        if(!m_AssetManager.IsAssetHandleValid(m_Handle))
+        if (!m_AssetManager.IsAssetHandleValid(m_Handle))
         {
             m_IsOpened = false;
             return;
@@ -28,10 +27,10 @@ namespace BeeEngine::Editor
         ImGui::Begin(m_Domain->Translate("assetEditPanel").c_str(), &m_IsOpened);
         ImGui::Text(m_Domain->Translate("assetEditPanel.name", "name", metadata.Name.c_str()).c_str());
         ImGui::Text(m_Domain->Translate("assetEditPanel.type", "type", ToString(metadata.Type).c_str()).c_str());
-        if(metadata.Type == AssetType::Localized)
+        if (metadata.Type == AssetType::Localized)
         {
             RenderLocalizedAssetSettings();
-            if(ImGui::Button(m_Domain->Translate("save").c_str()))
+            if (ImGui::Button(m_Domain->Translate("save").c_str()))
             {
                 HandleLocalizedAssetSave();
             }
@@ -39,18 +38,9 @@ namespace BeeEngine::Editor
         ImGui::End();
     }
 
-    AssetEditPanel::~AssetEditPanel()
-    {
-        
-    }
+    AssetEditPanel::~AssetEditPanel() {}
 
-    void AssetEditPanel::RenderLocalizedAssetSettings()
-    {
+    void AssetEditPanel::RenderLocalizedAssetSettings() {}
 
-    }
-
-    void AssetEditPanel::HandleLocalizedAssetSave()
-    {
-
-    }
-} // BeeEngine
+    void AssetEditPanel::HandleLocalizedAssetSave() {}
+} // namespace BeeEngine::Editor

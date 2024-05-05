@@ -21,5 +21,5 @@ namespace BeeEngine::Internal
     {
         wgpuInstanceRelease(m_Instance);
     }
-}
+} // namespace BeeEngine::Internal
 #endif

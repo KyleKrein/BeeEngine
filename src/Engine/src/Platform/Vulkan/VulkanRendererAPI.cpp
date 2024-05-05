@@ -4,18 +4,16 @@
 
 #include "VulkanRendererAPI.h"
 
-#include "Utils.h"
-#include "VulkanMaterial.h"
 #include "Core/Application.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/Renderer.h"
+#include "Utils.h"
 #include "VulkanFrameBuffer.h"
+#include "VulkanMaterial.h"
 
 namespace BeeEngine::Internal
 {
-    VulkanRendererAPI::VulkanRendererAPI()
-    {
-    }
+    VulkanRendererAPI::VulkanRendererAPI() {}
 
     VulkanRendererAPI::~VulkanRendererAPI()
     {
@@ -32,7 +30,7 @@ namespace BeeEngine::Internal
 
     CommandBuffer VulkanRendererAPI::BeginFrame()
     {
-        BeginFrame:
+    BeginFrame:
         if (m_GraphicsDevice->SwapChainRequiresRebuild())
         {
             BeeCoreTrace("Rebuilding swapchain");
@@ -40,12 +38,12 @@ namespace BeeEngine::Internal
         }
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
         auto result = swapchain.AcquireNextImage(&m_CurrentImageIndex);
-        if(result == vk::Result::eErrorOutOfDateKHR)
+        if (result == vk::Result::eErrorOutOfDateKHR)
         {
             m_GraphicsDevice->RequestSwapChainRebuild();
             goto BeginFrame;
         }
-        else if(result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
+        else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
         {
             BeeCoreError("Failed to acquire next image");
         }
@@ -53,7 +51,7 @@ namespace BeeEngine::Internal
         vk::CommandBufferBeginInfo beginInfo{};
         beginInfo.sType = vk::StructureType::eCommandBufferBeginInfo;
         beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-        if(cmd.begin(&beginInfo) != vk::Result::eSuccess)
+        if (cmd.begin(&beginInfo) != vk::Result::eSuccess)
         {
             BeeCoreError("Failed to begin recording command buffer");
         }
@@ -68,8 +66,11 @@ namespace BeeEngine::Internal
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
         auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
 
-        m_GraphicsDevice->TransitionImageLayout(cmd, swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
-            vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+        m_GraphicsDevice->TransitionImageLayout(cmd,
+                                                swapchain.GetImage(m_CurrentImageIndex),
+                                                swapchain.GetFormat(),
+                                                vk::ImageLayout::eUndefined,
+                                                vk::ImageLayout::eColorAttachmentOptimal);
         vk::RenderingInfo renderingInfo{};
 
         vk::RenderingAttachmentInfo colorAttachment{};
@@ -93,7 +94,7 @@ namespace BeeEngine::Internal
         renderingInfo.pColorAttachments = &colorAttachment;
         renderingInfo.pDepthAttachment = nullptr;
 
-        //m_GraphicsDevice->GetGraphicsQueue().waitIdle();
+        // m_GraphicsDevice->GetGraphicsQueue().waitIdle();
         cmd.beginRendering(&renderingInfo, g_vkDynamicLoader);
         vk::Viewport viewport{};
         viewport.x = 0.0f;
@@ -103,7 +104,7 @@ namespace BeeEngine::Internal
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         vk::Rect2D scissor{};
-        scissor.offset = vk::Offset2D{0,0};
+        scissor.offset = vk::Offset2D{0, 0};
         scissor.extent = swapchain.GetExtent();
         cmd.setViewport(0, 1, &viewport);
         cmd.setScissor(0, 1, &scissor);
@@ -124,15 +125,18 @@ namespace BeeEngine::Internal
     {
         auto cmd = GetCurrentCommandBuffer().GetBufferHandleAs<vk::CommandBuffer>();
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
-        m_GraphicsDevice->TransitionImageLayout(cmd, swapchain.GetImage(m_CurrentImageIndex), swapchain.GetFormat(),
-            vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR);
+        m_GraphicsDevice->TransitionImageLayout(cmd,
+                                                swapchain.GetImage(m_CurrentImageIndex),
+                                                swapchain.GetFormat(),
+                                                vk::ImageLayout::eColorAttachmentOptimal,
+                                                vk::ImageLayout::ePresentSrcKHR);
         SubmitCommandBuffer(GetCurrentCommandBuffer());
         auto result = swapchain.PresentImage(&m_CurrentImageIndex);
-        if(result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
+        if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR)
         {
             m_GraphicsDevice->RequestSwapChainRebuild();
         }
-        else if(result != vk::Result::eSuccess)
+        else if (result != vk::Result::eSuccess)
         {
             BeeCoreError("Failed to present swap chain image");
         }
@@ -143,18 +147,21 @@ namespace BeeEngine::Internal
         return CommandBuffer{m_CommandBuffers[m_CurrentImageIndex], &m_RenderingQueue};
     }
 
-    void VulkanRendererAPI::DrawInstanced(CommandBuffer& commandBuffer, Model& model, InstancedBuffer& instancedBuffer,
-        const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
+    void VulkanRendererAPI::DrawInstanced(CommandBuffer& commandBuffer,
+                                          Model& model,
+                                          InstancedBuffer& instancedBuffer,
+                                          const std::vector<BindingSet*>& bindingSets,
+                                          uint32_t instanceCount)
     {
         model.Bind(commandBuffer);
         instancedBuffer.Bind(commandBuffer);
         auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         int32_t index = 0;
-        for(auto& bindingSet : bindingSets)
+        for (auto& bindingSet : bindingSets)
         {
             bindingSet->Bind(commandBuffer, index++, ((VulkanMaterial&)model.GetMaterial()).GetPipeline());
         }
-        if(model.IsIndexed()) [[likely]]
+        if (model.IsIndexed()) [[likely]]
             cmd.drawIndexed(model.GetIndexCount(), instanceCount, 0, 0, 0);
         else
             cmd.draw(model.GetVertexCount(), instanceCount, 0, 0);
@@ -168,22 +175,38 @@ namespace BeeEngine::Internal
         swapchain.SubmitCommandBuffers(&cmd, 1, &m_CurrentImageIndex);
     }
 
-    void VulkanRendererAPI::CopyFrameBufferImageToSwapchain(FrameBuffer &framebuffer, uint32_t attachmentIndex)
+    void VulkanRendererAPI::CopyFrameBufferImageToSwapchain(FrameBuffer& framebuffer, uint32_t attachmentIndex)
     {
         auto& fb = static_cast<Internal::VulkanFrameBuffer&>(framebuffer);
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
         VulkanImage image = fb.GetColorAttachment(attachmentIndex);
-        //vk::CommandBuffer cmd = m_GraphicsDevice->BeginSingleTimeCommands();
+        // vk::CommandBuffer cmd = m_GraphicsDevice->BeginSingleTimeCommands();
         CommandBuffer commandBuffer = GetCurrentCommandBuffer();
         auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
         cmd.endRendering(g_vkDynamicLoader);
-        m_GraphicsDevice->TransitionImageLayout(cmd, image.Image, image.Format, vk::ImageLayout::eShaderReadOnlyOptimal, vk::ImageLayout::eTransferSrcOptimal);
+        m_GraphicsDevice->TransitionImageLayout(cmd,
+                                                image.Image,
+                                                image.Format,
+                                                vk::ImageLayout::eShaderReadOnlyOptimal,
+                                                vk::ImageLayout::eTransferSrcOptimal);
         vk::Image swapchainImage = swapchain.GetImage(m_CurrentImageIndex);
-        m_GraphicsDevice->TransitionImageLayout(cmd, swapchainImage, swapchain.GetFormat(), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        m_GraphicsDevice->TransitionImageLayout(cmd,
+                                                swapchainImage,
+                                                swapchain.GetFormat(),
+                                                vk::ImageLayout::eUndefined,
+                                                vk::ImageLayout::eTransferDstOptimal);
         m_GraphicsDevice->CopyImageToImage(cmd, image.Image, swapchainImage, image.Extent, swapchain.GetExtent());
-        m_GraphicsDevice->TransitionImageLayout(cmd, image.Image, image.Format, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-        m_GraphicsDevice->TransitionImageLayout(cmd, swapchainImage, swapchain.GetFormat(), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eColorAttachmentOptimal);
-        //m_GraphicsDevice->EndSingleTimeCommands(cmd);
+        m_GraphicsDevice->TransitionImageLayout(cmd,
+                                                image.Image,
+                                                image.Format,
+                                                vk::ImageLayout::eTransferSrcOptimal,
+                                                vk::ImageLayout::eShaderReadOnlyOptimal);
+        m_GraphicsDevice->TransitionImageLayout(cmd,
+                                                swapchainImage,
+                                                swapchain.GetFormat(),
+                                                vk::ImageLayout::eTransferDstOptimal,
+                                                vk::ImageLayout::eColorAttachmentOptimal);
+        // m_GraphicsDevice->EndSingleTimeCommands(cmd);
         vk::RenderingInfo renderingInfo{};
 
         vk::RenderingAttachmentInfo colorAttachment{};
@@ -208,7 +231,7 @@ namespace BeeEngine::Internal
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         vk::Rect2D scissor{};
-        scissor.offset = vk::Offset2D{0,0};
+        scissor.offset = vk::Offset2D{0, 0};
         scissor.extent = swapchain.GetExtent();
         cmd.setViewport(0, 1, &viewport);
         cmd.setScissor(0, 1, &scissor);
@@ -224,7 +247,7 @@ namespace BeeEngine::Internal
         allocInfo.commandPool = m_GraphicsDevice->GetCommandPool();
         allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
 
-        if(m_Device.allocateCommandBuffers(&allocInfo, m_CommandBuffers.data()) != vk::Result::eSuccess)
+        if (m_Device.allocateCommandBuffers(&allocInfo, m_CommandBuffers.data()) != vk::Result::eSuccess)
         {
             BeeCoreError("Failed to allocate command buffers");
         }
@@ -232,7 +255,9 @@ namespace BeeEngine::Internal
 
     void VulkanRendererAPI::FreeCommandBuffers()
     {
-        m_Device.freeCommandBuffers(m_GraphicsDevice->GetCommandPool(), static_cast<uint32_t>(m_CommandBuffers.size()), m_CommandBuffers.data());
+        m_Device.freeCommandBuffers(m_GraphicsDevice->GetCommandPool(),
+                                    static_cast<uint32_t>(m_CommandBuffers.size()),
+                                    m_CommandBuffers.data());
         m_CommandBuffers.clear();
     }
 
@@ -241,10 +266,10 @@ namespace BeeEngine::Internal
         uint32_t width = m_Window->GetWidthInPixels(), height = m_Window->GetHeightInPixels();
         m_GraphicsDevice->WindowResized(width, height);
 
-        if(m_GraphicsDevice->GetSwapChain().ImageCount() != m_CommandBuffers.size())
+        if (m_GraphicsDevice->GetSwapChain().ImageCount() != m_CommandBuffers.size())
         {
             FreeCommandBuffers();
             CreateCommandBuffers();
         }
     }
-}
+} // namespace BeeEngine::Internal

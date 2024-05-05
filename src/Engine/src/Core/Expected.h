@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include <utility>
 #include <string>
+#include <utility>
 #include <version>
 #ifdef __cpp_lib_source_location
 #include "source_location"
@@ -21,12 +21,14 @@ namespace BeeEngine
     public:
         Error(std::source_location location = std::source_location::current())
         {
-            m_Message = "Error at " + std::string(location.file_name()) + ":" + std::to_string(location.line()) + " in function " + std::string(location.function_name());
+            m_Message = "Error at " + std::string(location.file_name()) + ":" + std::to_string(location.line()) +
+                        " in function " + std::string(location.function_name());
         }
 
         Error(std::string_view format, std::source_location location = std::source_location::current())
         {
-            m_Message = "Error at " + std::string(location.file_name()) + ":" + std::to_string(location.line())  + " in function " + std::string(location.function_name()) + " Message: ";
+            m_Message = "Error at " + std::string(location.file_name()) + ":" + std::to_string(location.line()) +
+                        " in function " + std::string(location.function_name()) + " Message: ";
         }
 
         Error(Error&& other) = default;
@@ -35,14 +37,9 @@ namespace BeeEngine
         Error& operator=(const Error& other) = default;
         ~Error() = default;
 
-        const std::string& GetMessage() const
-        {
-            return m_Message;
-        }
-        operator const std::string& () const
-        {
-            return m_Message;
-        }
+        const std::string& GetMessage() const { return m_Message; }
+        operator const std::string&() const { return m_Message; }
+
     private:
         std::string m_Message;
     };
@@ -53,7 +50,14 @@ namespace BeeEngine
         E Error;
     };
 
-#define ErrorHappened(...) Unexpected<Error>{Error{fmt::format(__VA_ARGS__)}}
+#define ErrorHappened(...)                                                                                             \
+    Unexpected<Error>                                                                                                  \
+    {                                                                                                                  \
+        Error                                                                                                          \
+        {                                                                                                              \
+            fmt::format(__VA_ARGS__)                                                                                   \
+        }                                                                                                              \
+    }
 
     template <typename T, typename E>
     class Expected
@@ -69,25 +73,21 @@ namespace BeeEngine
         Expected& operator=(const Expected& other) = default;
         Expected& operator=(Expected&& other) noexcept = default;
 
-        bool HasValue() const
-        {
-            return m_HasValue;
-        }
-        operator bool() const
-        {
-            return m_HasValue;
-        }
+        bool HasValue() const { return m_HasValue; }
+        operator bool() const { return m_HasValue; }
 
         const T&& Value() const
         {
-            if(!m_HasValue) throw std::get<E>(m_Data);
+            if (!m_HasValue)
+                throw std::get<E>(m_Data);
             return std::move(std::get<T>(m_Data));
         }
         const E&& Error() const
         {
-            //if(m_HasValue) throw;
+            // if(m_HasValue) throw;
             return std::move(std::get<E>(m_Data));
         }
+
     private:
         std::variant<T, E> m_Data;
         bool m_HasValue;
@@ -96,7 +96,7 @@ namespace BeeEngine
     class Expected<void, E>
     {
     public:
-        Expected(): m_HasValue(true) {}
+        Expected() : m_HasValue(true) {}
         Expected(const Unexpected<E>& error) : m_Data({error.Error}), m_HasValue(false) {}
         Expected(Unexpected<E>&& error) : m_Data({std::move(error.Error)}), m_HasValue(false) {}
 
@@ -105,21 +105,16 @@ namespace BeeEngine
         Expected& operator=(const Expected& other) = default;
         Expected& operator=(Expected&& other) noexcept = default;
 
-        bool HasValue() const
-        {
-            return m_HasValue;
-        }
-        operator bool() const
-        {
-            return m_HasValue;
-        }
+        bool HasValue() const { return m_HasValue; }
+        operator bool() const { return m_HasValue; }
         const E&& Error() const
         {
-            //if(m_HasValue) throw;
+            // if(m_HasValue) throw;
             return std::move(m_Data);
         }
+
     private:
         E m_Data;
         bool m_HasValue;
     };
-}
+} // namespace BeeEngine

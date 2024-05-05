@@ -3,16 +3,15 @@
 //
 
 #include "ScriptGlue.h"
-#include "ScriptingEngine.h"
-#include "Scene/Scene.h"
-#include "Scene/Entity.h"
-#include "Scene/Components.h"
-#include "Scene/Prefab.h"
 #include "Core/Input.h"
+#include "Core/Logging/GameLogger.h"
 #include "MAssembly.h"
 #include "NativeToManaged.h"
-#include "Core/Logging/GameLogger.h"
-
+#include "Scene/Components.h"
+#include "Scene/Entity.h"
+#include "Scene/Prefab.h"
+#include "Scene/Scene.h"
+#include "ScriptingEngine.h"
 
 #define BEE_NATIVE_FUNCTION(name) ScriptingEngine::RegisterNativeFunction(#name, (void*)&name)
 
@@ -26,51 +25,56 @@ namespace BeeEngine
 
     std::optional<ScriptGlue::ComponentType> ManagedNameToComponentType(const String& name)
     {
-        if(name == "BeeEngine.TransformComponent")
+        if (name == "BeeEngine.TransformComponent")
             return ScriptGlue::ComponentType::Transform;
-        if(name == "BeeEngine.SpriteRendererComponent")
+        if (name == "BeeEngine.SpriteRendererComponent")
             return ScriptGlue::ComponentType::SpriteRenderer;
-        if(name == "BeeEngine.TextRendererComponent")
+        if (name == "BeeEngine.TextRendererComponent")
             return ScriptGlue::ComponentType::TextRenderer;
-        if(name == "BeeEngine.BoxCollider2DComponent")
+        if (name == "BeeEngine.BoxCollider2DComponent")
             return ScriptGlue::ComponentType::BoxCollider2D;
-        if(name == "BeeEngine.Rigidbody2DComponent")
+        if (name == "BeeEngine.Rigidbody2DComponent")
             return ScriptGlue::ComponentType::Rigidbody2D;
-        if(name == "BeeEngine.CircleRendererComponent")
+        if (name == "BeeEngine.CircleRendererComponent")
             return ScriptGlue::ComponentType::CircleRenderer;
         return std::nullopt;
     }
 
-    template<typename ...Component>
+    template <typename... Component>
     void ScriptGlue::RegisterComponent()
     {
-        ([](){
-            auto typeName = TypeName<Component>();
-            size_t pos = typeName.find_last_of(':');
-            std::string managedTypeName = FormatString("BeeEngine.{}", typeName.substr(pos + 1));
-            std::optional<ScriptGlue::ComponentType> managedType = ManagedNameToComponentType(managedTypeName);
-            if(!managedType.has_value())
+        (
+            []()
             {
-                BeeCoreTrace("Could not find C# component type {}", managedTypeName);
-                return;
-            }
-            s_CreateComponentFunctions[managedType.value()] = [](Entity entity) {return &entity.AddComponent<Component>();};
-            s_GetComponentFunctions[managedType.value()] = [](Entity entity) {return &entity.GetComponent<Component>();};
-            s_HasComponentFunctions[managedType.value()] = [](Entity entity) {return entity.HasComponent<Component>();};
-            s_RemoveComponentFunctions[managedType.value()] = [](Entity entity) {entity.RemoveComponent<Component>();};
-
-        }(), ...);
+                auto typeName = TypeName<Component>();
+                size_t pos = typeName.find_last_of(':');
+                std::string managedTypeName = FormatString("BeeEngine.{}", typeName.substr(pos + 1));
+                std::optional<ScriptGlue::ComponentType> managedType = ManagedNameToComponentType(managedTypeName);
+                if (!managedType.has_value())
+                {
+                    BeeCoreTrace("Could not find C# component type {}", managedTypeName);
+                    return;
+                }
+                s_CreateComponentFunctions[managedType.value()] = [](Entity entity)
+                { return &entity.AddComponent<Component>(); };
+                s_GetComponentFunctions[managedType.value()] = [](Entity entity)
+                { return &entity.GetComponent<Component>(); };
+                s_HasComponentFunctions[managedType.value()] = [](Entity entity)
+                { return entity.HasComponent<Component>(); };
+                s_RemoveComponentFunctions[managedType.value()] = [](Entity entity)
+                { entity.RemoveComponent<Component>(); };
+            }(),
+            ...);
     }
 
-    template<typename ...Component>
+    template <typename... Component>
     void ScriptGlue::RegisterComponent(TypeSequence<Component...>)
     {
         RegisterComponent<Component...>();
     }
     void ScriptGlue::Register()
     {
-        
-        if(!s_CreateComponentFunctions.empty())
+        if (!s_CreateComponentFunctions.empty())
         {
             s_CreateComponentFunctions.clear();
             s_GetComponentFunctions.clear();
@@ -80,7 +84,7 @@ namespace BeeEngine
         {
             RegisterComponent(AllComponents{});
         }
-        {//Internal Calls
+        { // Internal Calls
             BEE_NATIVE_FUNCTION(Log_Warn);
             BEE_NATIVE_FUNCTION(Log_Info);
             BEE_NATIVE_FUNCTION(Log_Error);
@@ -124,38 +128,38 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(Locale_TranslateDynamic);
         }
     }
-    void ScriptGlue::Log_Warn(void *message)
+    void ScriptGlue::Log_Warn(void* message)
     {
         auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeWarn(msg);
     }
 
-    void ScriptGlue::Log_Info(void *message)
+    void ScriptGlue::Log_Info(void* message)
     {
         auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeInfo(msg);
     }
 
-    void ScriptGlue::Log_Error(void *message)
+    void ScriptGlue::Log_Error(void* message)
     {
         auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeError(msg);
     }
 
-    void ScriptGlue::Log_Trace(void *message)
+    void ScriptGlue::Log_Trace(void* message)
     {
         auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeCoreTrace(msg);
     }
 
-    void ScriptGlue::Entity_GetTranslation(uint64_t id, glm::vec3 *outTranslation)
+    void ScriptGlue::Entity_GetTranslation(uint64_t id, glm::vec3* outTranslation)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         Entity entity = scene->GetEntityByUUID(id);
         *outTranslation = entity.GetComponent<TransformComponent>().Translation;
     }
 
-    void ScriptGlue::Entity_SetTranslation(uint64_t id, glm::vec3 *inTranslation)
+    void ScriptGlue::Entity_SetTranslation(uint64_t id, glm::vec3* inTranslation)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         Entity entity = scene->GetEntityByUUID(id);
@@ -172,7 +176,7 @@ namespace BeeEngine
         return Input::MouseKeyPressed(button);
     }
 
-    void *ScriptGlue::Entity_GetTransformComponent(uint64_t id)
+    void* ScriptGlue::Entity_GetTransformComponent(uint64_t id)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         Entity entity = scene->GetEntityByUUID(id);
@@ -184,7 +188,7 @@ namespace BeeEngine
         return scene->GetEntityByUUID(id);
     }
 
-    void *ScriptGlue::Entity_CreateComponent(uint64_t id, ComponentType componentType)
+    void* ScriptGlue::Entity_CreateComponent(uint64_t id, ComponentType componentType)
     {
         auto entity = GetEntity(id);
         BeeExpects(entity);
@@ -205,20 +209,19 @@ namespace BeeEngine
         s_RemoveComponentFunctions.at(componentType)(entity);
     }
 
-    void *ScriptGlue::Entity_GetComponent(uint64_t id, ComponentType componentType)
+    void* ScriptGlue::Entity_GetComponent(uint64_t id, ComponentType componentType)
     {
         auto entity = GetEntity(id);
         BeeExpects(entity);
         return s_GetComponentFunctions.at(componentType)(entity);
     }
 
-
-    uint64_t ScriptGlue::Entity_FindEntityByName(void *name)
+    uint64_t ScriptGlue::Entity_FindEntityByName(void* name)
     {
         auto nameStr = NativeToManaged::StringGetFromManagedString(name);
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByName(nameStr);
-        if(!entity)
+        if (!entity)
         {
             BeeCoreTrace("Could not find entity with name {}", nameStr);
             return 0;
@@ -242,11 +245,11 @@ namespace BeeEngine
         return handle;
     }
 
-    void ScriptGlue::TextRendererComponent_SetText(uint64_t id, void *text)
+    void ScriptGlue::TextRendererComponent_SetText(uint64_t id, void* text)
     {
         auto textStr = NativeToManaged::StringGetFromManagedString(text);
         auto entity = GetEntity(id);
-        if(!entity)
+        if (!entity)
         {
             BeeError("Could not find entity with id {}", id);
             return;
@@ -278,7 +281,7 @@ namespace BeeEngine
     {
         auto entity = GetEntity(id);
         auto parent = entity.GetParent();
-        if(parent)
+        if (parent)
         {
             return parent.GetUUID();
         }
@@ -288,7 +291,7 @@ namespace BeeEngine
     void ScriptGlue::Entity_SetParent(uint64_t childId, uint64_t parentId)
     {
         auto child = GetEntity(childId);
-        if(parentId == 0)
+        if (parentId == 0)
         {
             child.RemoveParent();
             return;
@@ -301,17 +304,17 @@ namespace BeeEngine
     {
         auto entity = GetEntity(id);
         auto& children = entity.GetComponent<HierarchyComponent>().Children;
-        if(prevChildId == 0)
+        if (prevChildId == 0)
         {
-            if(children.empty())
+            if (children.empty())
                 return 0;
             return children.at(0).GetUUID();
         }
-        for(size_t i = 0; i < children.size(); i++)
+        for (size_t i = 0; i < children.size(); i++)
         {
-            if(children.at(i).GetUUID() == prevChildId)
+            if (children.at(i).GetUUID() == prevChildId)
             {
-                if(i + 1 < children.size())
+                if (i + 1 < children.size())
                     return children.at(i + 1).GetUUID();
                 return 0;
             }
@@ -341,18 +344,18 @@ namespace BeeEngine
         child.RemoveParent();
     }
 
-    void *ScriptGlue::Entity_GetName(uint64_t id)
+    void* ScriptGlue::Entity_GetName(uint64_t id)
     {
         auto entity = GetEntity(id);
         GCHandle handle = NativeToManaged::StringCreateManaged(entity.GetComponent<TagComponent>().Tag);
         return handle;
     }
 
-    void ScriptGlue::Entity_SetName(uint64_t id, void *name)
+    void ScriptGlue::Entity_SetName(uint64_t id, void* name)
     {
         auto nameStr = NativeToManaged::StringGetFromManagedString(name);
         auto entity = GetEntity(id);
-        if(!entity)
+        if (!entity)
         {
             BeeError("Could not find entity with id {}", id);
             return;
@@ -368,7 +371,7 @@ namespace BeeEngine
         return newEntity.GetUUID();
     }
 
-    uint64_t ScriptGlue::Entity_InstantiatePrefab(AssetHandle *handlePtr, uint64_t parentId)
+    uint64_t ScriptGlue::Entity_InstantiatePrefab(AssetHandle* handlePtr, uint64_t parentId)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         auto parentEntity = parentId == 0 ? Entity::Null : scene->GetEntityByUUID(parentId);
@@ -377,21 +380,21 @@ namespace BeeEngine
         return entity.GetUUID();
     }
 
-    uint64_t ScriptGlue::Physics2D_CastRay(glm::vec2 *start, glm::vec2 *end)
+    uint64_t ScriptGlue::Physics2D_CastRay(glm::vec2* start, glm::vec2* end)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         auto result = scene->RayCast2D(*start, *end);
-        if(!result)
+        if (!result)
             return 0;
         return result.GetUUID();
     }
 
-    void ScriptGlue::Input_GetMousePosition(glm::vec2 *outPosition)
+    void ScriptGlue::Input_GetMousePosition(glm::vec2* outPosition)
     {
         *outPosition = ScriptingEngine::GetMousePosition();
     }
 
-    void ScriptGlue::Input_GetMousePositionInWorldSpace(uint64_t id, glm::vec2 *outPosition)
+    void ScriptGlue::Input_GetMousePositionInWorldSpace(uint64_t id, glm::vec2* outPosition)
     {
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByUUID(id);
@@ -410,32 +413,33 @@ namespace BeeEngine
         *outPosition = {worldCoords.x, worldCoords.y};
     }
 
-    void *ScriptGlue::Locale_GetLocale()
+    void* ScriptGlue::Locale_GetLocale()
     {
         GCHandle handle = NativeToManaged::StringCreateManaged(ScriptingEngine::GetScriptingLocale());
         return handle;
     }
 
-    void ScriptGlue::Locale_SetLocale(void *locale)
+    void ScriptGlue::Locale_SetLocale(void* locale)
     {
         auto localeStr = NativeToManaged::StringGetFromManagedString(locale);
         ScriptingEngine::GetLocaleDomain().SetLocale(localeStr);
     }
 
-    void *ScriptGlue::Locale_TranslateStatic(void *key)
+    void* ScriptGlue::Locale_TranslateStatic(void* key)
     {
         auto keyStr = NativeToManaged::StringGetFromManagedString(key);
         String translated = ScriptingEngine::GetLocaleDomain().Translate(keyStr.c_str());
         GCHandle handle = NativeToManaged::StringCreateManaged(translated);
         return handle;
     }
-    using VariantType = std::variant<String, bool, int32_t, int16_t, int64_t, uint32_t, uint16_t, uint64_t, float32_t, float64_t>;
+    using VariantType =
+        std::variant<String, bool, int32_t, int16_t, int64_t, uint32_t, uint16_t, uint64_t, float32_t, float64_t>;
 
     /**
-     * @brief Struct that holds information about the type of the argument 
-     * and the pointer to the argument or the data itself if it is a value type, 
+     * @brief Struct that holds information about the type of the argument
+     * and the pointer to the argument or the data itself if it is a value type,
      * that is less than 8 bytes
-     * 
+     *
      * IMPORTANT: If this type is changed, the corresponding C# type in
      * InternalCalls.cs MUST be changed as well
      */
@@ -445,16 +449,16 @@ namespace BeeEngine
         void* Ptr;
     };
 
-    void* ScriptGlue::Locale_TranslateDynamic(void *keyM, ArrayInfo argsM)
+    void* ScriptGlue::Locale_TranslateDynamic(void* keyM, ArrayInfo argsM)
     {
         String key = NativeToManaged::StringGetFromManagedString(keyM);
         std::vector<VariantType> args;
         std::span<ReflectionTypeInfo> argsSpan{reinterpret_cast<ReflectionTypeInfo*>(argsM.data), argsM.size};
         args.reserve(argsM.size);
 
-        for(auto& arg : argsSpan)
+        for (auto& arg : argsSpan)
         {
-            switch(arg.Type)
+            switch (arg.Type)
             {
                 case MType::String:
                     args.push_back(NativeToManaged::StringGetFromManagedString(arg.Ptr));
@@ -497,9 +501,9 @@ namespace BeeEngine
                     break;
             }
         }
-        
+
         String translated = ScriptingEngine::GetLocaleDomain().TranslateRuntime(key.c_str(), args);
         BeeCoreTrace("Translated key {} to {}", key, translated);
         return NativeToManaged::StringCreateManaged(translated);
     }
-}
+} // namespace BeeEngine

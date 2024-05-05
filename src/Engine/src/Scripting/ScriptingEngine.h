@@ -3,15 +3,15 @@
 //
 
 #pragma once
-#include "Core/TypeDefines.h"
-#include "Core/Path.h"
-#include "Core/UUID.h"
 #include "Core/AssetManagement/Asset.h"
-#include "MTypes.h"
-#include "Locale/Locale.h"
-#include <glm/glm.hpp>
+#include "Core/Path.h"
 #include "Core/Time.h"
+#include "Core/TypeDefines.h"
+#include "Core/UUID.h"
+#include "Locale/Locale.h"
+#include "MTypes.h"
 #include "MUtils.h"
+#include <glm/glm.hpp>
 
 namespace BeeEngine
 {
@@ -43,7 +43,7 @@ namespace BeeEngine
         static const std::unordered_map<String, Ref<MClass>>& GetGameScripts();
         static void RegisterNativeFunction(const String& name, void* function);
 
-        static void OnEntityCreated(Entity entity, MClass *pClass);
+        static void OnEntityCreated(Entity entity, MClass* pClass);
 
         static void OnEntityDestroyed(UUID uuid);
         static void OnEntityUpdate(Entity entity);
@@ -59,7 +59,7 @@ namespace BeeEngine
         static std::vector<class GameScriptField>& GetDefaultScriptFields(MClass* klass);
         static void SetAssetHandle(MObject& obj, MField& field, AssetHandle& handle, MType type);
 
-        static void GetAssetHandle(void* monoObject, AssetHandle &handle);
+        static void GetAssetHandle(void* monoObject, AssetHandle& handle);
 
         static void UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime);
 
@@ -83,4 +83,4 @@ namespace BeeEngine
 
         static void CreateAppDomain();
     };
-}
+} // namespace BeeEngine

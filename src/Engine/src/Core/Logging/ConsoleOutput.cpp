@@ -8,17 +8,18 @@
 namespace BeeEngine
 {
     IConsoleOutputProvider* ConsoleOutput::s_OutputProvider = nullptr;
-    void ConsoleOutput::Log(const String &message, ConsoleOutput::Level level, Input input)
+    void ConsoleOutput::Log(const String& message, ConsoleOutput::Level level, Input input)
     {
-        if(s_OutputProvider)
-            s_OutputProvider->AddMessage(message,level, input);
-        LogToNativeConsole(message,level, input);
+        if (s_OutputProvider)
+            s_OutputProvider->AddMessage(message, level, input);
+        LogToNativeConsole(message, level, input);
     }
 
-    void ConsoleOutput::LogToNativeConsole(const String &message, ConsoleOutput::Level level
-            , ConsoleOutput::Input input)
+    void
+    ConsoleOutput::LogToNativeConsole(const String& message, ConsoleOutput::Level level, ConsoleOutput::Input input)
     {
-        std::shared_ptr<spdlog::logger>& logger = input == Input::Engine ? Log::GetCoreLogger() : Log::GetClientLogger();
+        std::shared_ptr<spdlog::logger>& logger =
+            input == Input::Engine ? Log::GetCoreLogger() : Log::GetClientLogger();
         switch (level)
         {
             case Level::Error:
@@ -36,12 +37,12 @@ namespace BeeEngine
         }
     }
 
-    void ConsoleOutput::SetOutputProvider(IConsoleOutputProvider *provider)
+    void ConsoleOutput::SetOutputProvider(IConsoleOutputProvider* provider)
     {
         s_OutputProvider = provider;
     }
-    IConsoleOutputProvider *ConsoleOutput::GetOutputProvider()
+    IConsoleOutputProvider* ConsoleOutput::GetOutputProvider()
     {
         return s_OutputProvider;
     }
-}
+} // namespace BeeEngine

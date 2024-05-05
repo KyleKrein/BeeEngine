@@ -9,7 +9,7 @@
 
 namespace BeeEngine::Internal
 {
-    class WebGPUMesh: public Mesh
+    class WebGPUMesh : public Mesh
     {
     public:
         WebGPUMesh(in<std::vector<Vertex>> vertices);
@@ -18,22 +18,14 @@ namespace BeeEngine::Internal
         WebGPUMesh(void* data, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices);
         ~WebGPUMesh() override;
         WebGPUMesh(const WebGPUMesh& other) = delete;
-        WebGPUMesh& operator=(const WebGPUMesh& other ) = delete;
+        WebGPUMesh& operator=(const WebGPUMesh& other) = delete;
         WebGPUMesh(WebGPUMesh&& other) noexcept = default;
         WebGPUMesh& operator=(WebGPUMesh&& other) noexcept = default;
-        [[nodiscard]] bool IsIndexed() const override
-        {
-            return m_IndexBuffer != nullptr;
-        }
-        [[nodiscard]] uint32_t GetVertexCount() const override
-        {
-            return m_VertexCount;
-        }
-        [[nodiscard]] uint32_t GetIndexCount() const override
-        {
-            return m_IndexCount;
-        }
+        [[nodiscard]] bool IsIndexed() const override { return m_IndexBuffer != nullptr; }
+        [[nodiscard]] uint32_t GetVertexCount() const override { return m_VertexCount; }
+        [[nodiscard]] uint32_t GetIndexCount() const override { return m_IndexCount; }
         void Bind(void* commandBuffer) override;
+
     private:
         void CreateVertexBuffers(void* data);
         void CreateIndexBuffers(in<std::vector<uint32_t>> data);
@@ -48,5 +40,5 @@ namespace BeeEngine::Internal
         BufferLayout m_Layout;
         class WebGPUGraphicsDevice& m_GraphicsDevice;
     };
-}
+} // namespace BeeEngine::Internal
 #endif

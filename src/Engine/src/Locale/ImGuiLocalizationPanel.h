@@ -4,13 +4,13 @@
 
 #pragma once
 
-#include "Core/String.h"
 #include "Core/Path.h"
-#include <unordered_map>
-#include <vector>
-#include <utility>
-#include <Gui/ImGui/ImGuiExtension.h>
+#include "Core/String.h"
 #include "Locale.h"
+#include <Gui/ImGui/ImGuiExtension.h>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace BeeEngine::Locale
 {
@@ -19,11 +19,13 @@ namespace BeeEngine::Locale
     {
         using KeyToValuePair = std::pair<String, String>;
         using LocaleToKeyMap = std::unordered_map<String, std::vector<KeyToValuePair>>;
+
     public:
         ImGuiLocalizationPanel(Domain& domain, const Path& path);
         void Render(ImGuiWindowFlags flags = ImGuiWindowFlags_None, bool canBeClosed = true);
         void SwitchOpened() { m_IsOpened = !m_IsOpened; }
         void UpdateLocaleKeys();
+
     private:
         Domain* m_Domain;
         Path m_WorkingDirectory;
@@ -34,6 +36,6 @@ namespace BeeEngine::Locale
 
         void RenderUpperPanel();
 
-        void RenderKeysAndValues(bool &removeKey);
+        void RenderKeysAndValues(bool& removeKey);
     };
-}
+} // namespace BeeEngine::Locale

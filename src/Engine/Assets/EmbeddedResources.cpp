@@ -3,11 +3,15 @@
 //
 
 #include "EmbeddedResources.h"
-#if 0//!defined(_MSC_VER)
+#if 0 //! defined(_MSC_VER)
 #define INCBIN_SILENCE_BITCODE_WARNING
 #include "incbin.h"
 
-#define EmbedResource(name, path) extern "C" {INCBIN(name, ASSETS_PATH path); }
+#define EmbedResource(name, path)                                                                                      \
+    extern "C"                                                                                                         \
+    {                                                                                                                  \
+        INCBIN(name, ASSETS_PATH path);                                                                                \
+    }
 
 EmbedResource(OpenSansRegular, "Fonts/OpenSans/static/OpenSans-Regular.ttf");
 EmbedResource(OpenSansBold, "Fonts/OpenSans/static/OpenSans-Bold.ttf");
@@ -58,18 +62,18 @@ namespace BeeEngine::Internal
 #else
 extern "C"
 {
-#include <directory_png.h>
-#include <file_png.h>
 #include <Manrope_Bold_ttf.h>
 #include <Manrope_Regular_ttf.h>
 #include <OpenSans_Bold_ttf.h>
 #include <OpenSans_Regular_ttf.h>
 #include <PauseButton_png.h>
 #include <PlayButton_png.h>
+#include <SimulateButton_png.h>
 #include <Standart2DFragment_glsl.h>
 #include <Standart2DVertex_glsl.h>
 #include <StopButton_png.h>
-#include <SimulateButton_png.h>
+#include <directory_png.h>
+#include <file_png.h>
 }
 
 namespace BeeEngine::Internal
@@ -104,6 +108,5 @@ namespace BeeEngine::Internal
                 return {};
         }
     }
-}
+} // namespace BeeEngine::Internal
 #endif
-

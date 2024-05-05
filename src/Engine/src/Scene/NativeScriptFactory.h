@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "INativeScriptRegistry.h"
 #include "INativeScriptFactory.h"
+#include "INativeScriptRegistry.h"
+#include <string>
 #include <unordered_set>
 #include <vector>
-#include <string>
 
 namespace BeeEngine
 {
@@ -18,14 +18,10 @@ namespace BeeEngine
         std::vector<NativeScriptFieldInfo> Fields;
     };
 
-    class NativeScriptFactory: public INativeScriptFactory, public INativeScriptRegistry
+    class NativeScriptFactory : public INativeScriptFactory, public INativeScriptRegistry
     {
     public:
-
-        static NativeScriptFactory& GetInstance()
-        {
-            return *s_Instance;
-        }
+        static NativeScriptFactory& GetInstance() { return *s_Instance; }
         NativeScriptFactory(BeeEngineNativeScriptRegistryData& data);
         ~NativeScriptFactory() override = default;
         void RegisterScript(const char* name, NativeScriptFieldInfo* fields, unsigned long long fieldsCount) override;
@@ -33,6 +29,7 @@ namespace BeeEngine
         const std::vector<NativeScriptInfo>& GetNativeScripts() override;
         void Reload() override;
         bool IsScriptRegistered(const std::string& name) override;
+
     private:
         std::vector<NativeScriptInfo> m_NativeScripts;
         std::unordered_set<std::string> m_Hash;
@@ -40,4 +37,4 @@ namespace BeeEngine
 
         static NativeScriptFactory* s_Instance;
     };
-}
+} // namespace BeeEngine

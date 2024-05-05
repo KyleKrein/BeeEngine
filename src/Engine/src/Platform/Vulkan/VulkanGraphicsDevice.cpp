@@ -1,8 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
-
+// clang-format off
 
 #if defined(BEE_COMPILE_VULKAN)
 #include "Platform/ImGui/ImGuiControllerVulkan.h"
@@ -21,29 +20,26 @@
 #include "Core/DeletionQueue.h"
 #include "Utils.h"
 
+// clang-format on
 namespace BeeEngine::Internal
 {
-    static std::vector<const char *> requiredExtensions = {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
-        VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-        VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-        VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
-        VK_KHR_COPY_COMMANDS_2_EXTENSION_NAME
-};
+    static std::vector<const char*> requiredExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+                                                          VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+                                                          VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+                                                          VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+                                                          VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+                                                          VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+                                                          VK_KHR_COPY_COMMANDS_2_EXTENSION_NAME};
     VulkanGraphicsDevice* VulkanGraphicsDevice::s_Instance = nullptr;
     PFN_vkCmdTraceRaysKHR CmdTraceRaysKHR = nullptr;
     PFN_vkDestroyAccelerationStructureKHR DestroyAccelerationStructureKHR = nullptr;
     PFN_vkGetRayTracingShaderGroupHandlesKHR GetRayTracingShaderGroupHandlesKHR = nullptr;
-    PFN_vkCmdWriteAccelerationStructuresPropertiesKHR CmdWriteAccelerationStructuresPropertiesKHR =
-        nullptr;
+    PFN_vkCmdWriteAccelerationStructuresPropertiesKHR CmdWriteAccelerationStructuresPropertiesKHR = nullptr;
     PFN_vkCreateAccelerationStructureKHR CreateAccelerationStructureKHR = nullptr;
     PFN_vkCmdBuildAccelerationStructuresKHR CmdBuildAccelerationStructuresKHR = nullptr;
     PFN_vkCmdCopyAccelerationStructureKHR CmdCopyAccelerationStructureKHR = nullptr;
     PFN_vkCreateRayTracingPipelinesKHR CreateRayTracingPipelinesKHR = nullptr;
-    PFN_vkGetAccelerationStructureDeviceAddressKHR GetAccelerationStructureDeviceAddressKHR =
-        nullptr;
+    PFN_vkGetAccelerationStructureDeviceAddressKHR GetAccelerationStructureDeviceAddressKHR = nullptr;
     PFN_vkGetAccelerationStructureBuildSizesKHR GetAccelerationStructureBuildSizesKHR = nullptr;
 
     static std::atomic<size_t> VulkanBufferCount = 0;
@@ -51,36 +47,30 @@ namespace BeeEngine::Internal
     void VulkanGraphicsDevice::LoadKHRRayTracing()
     {
         VkDevice device = m_Device;
-        CmdTraceRaysKHR = reinterpret_cast<PFN_vkCmdTraceRaysKHR>(
-            vkGetDeviceProcAddr(device, "vkCmdTraceRaysKHR"));
+        CmdTraceRaysKHR = reinterpret_cast<PFN_vkCmdTraceRaysKHR>(vkGetDeviceProcAddr(device, "vkCmdTraceRaysKHR"));
         DestroyAccelerationStructureKHR = reinterpret_cast<PFN_vkDestroyAccelerationStructureKHR>(
             vkGetDeviceProcAddr(device, "vkDestroyAccelerationStructureKHR"));
-        GetRayTracingShaderGroupHandlesKHR =
-            reinterpret_cast<PFN_vkGetRayTracingShaderGroupHandlesKHR>(
-                vkGetDeviceProcAddr(device, "vkGetRayTracingShaderGroupHandlesKHR"));
+        GetRayTracingShaderGroupHandlesKHR = reinterpret_cast<PFN_vkGetRayTracingShaderGroupHandlesKHR>(
+            vkGetDeviceProcAddr(device, "vkGetRayTracingShaderGroupHandlesKHR"));
         CmdWriteAccelerationStructuresPropertiesKHR =
             reinterpret_cast<PFN_vkCmdWriteAccelerationStructuresPropertiesKHR>(
                 vkGetDeviceProcAddr(device, "vkCmdWriteAccelerationStructuresPropertiesKHR"));
         CreateAccelerationStructureKHR = reinterpret_cast<PFN_vkCreateAccelerationStructureKHR>(
             vkGetDeviceProcAddr(device, "vkCreateAccelerationStructureKHR"));
-        CmdBuildAccelerationStructuresKHR =
-            reinterpret_cast<PFN_vkCmdBuildAccelerationStructuresKHR>(
-                vkGetDeviceProcAddr(device, "vkCmdBuildAccelerationStructuresKHR"));
+        CmdBuildAccelerationStructuresKHR = reinterpret_cast<PFN_vkCmdBuildAccelerationStructuresKHR>(
+            vkGetDeviceProcAddr(device, "vkCmdBuildAccelerationStructuresKHR"));
         CmdCopyAccelerationStructureKHR = reinterpret_cast<PFN_vkCmdCopyAccelerationStructureKHR>(
             vkGetDeviceProcAddr(device, "vkCmdCopyAccelerationStructureKHR"));
         CreateRayTracingPipelinesKHR = reinterpret_cast<PFN_vkCreateRayTracingPipelinesKHR>(
             vkGetDeviceProcAddr(device, "vkCreateRayTracingPipelinesKHR"));
-        GetAccelerationStructureDeviceAddressKHR =
-            reinterpret_cast<PFN_vkGetAccelerationStructureDeviceAddressKHR>(
-                vkGetDeviceProcAddr(device, "vkGetAccelerationStructureDeviceAddressKHR"));
-        GetAccelerationStructureBuildSizesKHR =
-            reinterpret_cast<PFN_vkGetAccelerationStructureBuildSizesKHR>(
-                vkGetDeviceProcAddr(device, "vkGetAccelerationStructureBuildSizesKHR"));
-        if(!CmdTraceRaysKHR || !DestroyAccelerationStructureKHR || !GetRayTracingShaderGroupHandlesKHR
-           || !CmdWriteAccelerationStructuresPropertiesKHR || !CreateAccelerationStructureKHR
-           || !CmdBuildAccelerationStructuresKHR || !CmdCopyAccelerationStructureKHR
-           || !CreateRayTracingPipelinesKHR || !GetAccelerationStructureDeviceAddressKHR
-           || !GetAccelerationStructureBuildSizesKHR)
+        GetAccelerationStructureDeviceAddressKHR = reinterpret_cast<PFN_vkGetAccelerationStructureDeviceAddressKHR>(
+            vkGetDeviceProcAddr(device, "vkGetAccelerationStructureDeviceAddressKHR"));
+        GetAccelerationStructureBuildSizesKHR = reinterpret_cast<PFN_vkGetAccelerationStructureBuildSizesKHR>(
+            vkGetDeviceProcAddr(device, "vkGetAccelerationStructureBuildSizesKHR"));
+        if (!CmdTraceRaysKHR || !DestroyAccelerationStructureKHR || !GetRayTracingShaderGroupHandlesKHR ||
+            !CmdWriteAccelerationStructuresPropertiesKHR || !CreateAccelerationStructureKHR ||
+            !CmdBuildAccelerationStructuresKHR || !CmdCopyAccelerationStructureKHR || !CreateRayTracingPipelinesKHR ||
+            !GetAccelerationStructureDeviceAddressKHR || !GetAccelerationStructureBuildSizesKHR)
         {
             BeeCoreError("Failed to load KHR Ray Tracing functions");
         }
@@ -89,9 +79,9 @@ namespace BeeEngine::Internal
             BeeCoreTrace("Loaded KHR Ray Tracing functions");
         }
     }
-    VulkanGraphicsDevice::VulkanGraphicsDevice(VulkanInstance &instance)
+    VulkanGraphicsDevice::VulkanGraphicsDevice(VulkanInstance& instance)
     {
-        if(s_Instance != nullptr)
+        if (s_Instance != nullptr)
         {
             BeeCoreFatalError("Can't create two graphics devices at once");
         }
@@ -101,11 +91,8 @@ namespace BeeEngine::Internal
         SelectPhysicalDevice(instance);
         CreateLogicalDevice();
 
-        DeletionQueue::Main().PushFunction([device = m_Device]
-        {
-            device.waitIdle();
-        });
-        if(HasRayTracingSupport())
+        DeletionQueue::Main().PushFunction([device = m_Device] { device.waitIdle(); });
+        if (HasRayTracingSupport())
             LoadKHRRayTracing();
 
         InitializeVulkanMemoryAllocator(instance);
@@ -113,7 +100,7 @@ namespace BeeEngine::Internal
         g_vkDynamicLoader.init(instance.GetHandle(), m_Device);
 
         m_GraphicsQueue = m_Device.getQueue(m_QueueFamilyIndices.GraphicsFamily.value(), 0);
-        if(m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
+        if (m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
         {
             m_PresentQueue = m_Device.getQueue(m_QueueFamilyIndices.PresentFamily.value(), 0);
         }
@@ -122,7 +109,8 @@ namespace BeeEngine::Internal
             m_PresentQueue = m_GraphicsQueue;
         }
         CreateSwapChainSupportDetails();
-        m_SwapChain = CreateScope<VulkanSwapChain>(*this, WindowHandler::GetInstance()->GetWidth(),WindowHandler::GetInstance()->GetHeight());
+        m_SwapChain = CreateScope<VulkanSwapChain>(
+            *this, WindowHandler::GetInstance()->GetWidth(), WindowHandler::GetInstance()->GetHeight());
         CreateCommandPool();
         CreateDescriptorPool();
     }
@@ -141,7 +129,7 @@ namespace BeeEngine::Internal
         m_Device.destroyCommandPool(m_CommandPool);
     }
 
-    void VulkanGraphicsDevice::LogDeviceProperties(vk::PhysicalDevice &device) const
+    void VulkanGraphicsDevice::LogDeviceProperties(vk::PhysicalDevice& device) const
     {
         vk::PhysicalDeviceProperties deviceProperties = device.getProperties();
 
@@ -164,7 +152,7 @@ namespace BeeEngine::Internal
         deviceVulkan12Features.pNext = &deviceVulkan13Features;
         vkGetPhysicalDeviceFeatures2(device, (VkPhysicalDeviceFeatures2*)&deviceFeatures2);
 
-        if(deviceFeatures2.features.samplerAnisotropy == vk::True &&
+        if (deviceFeatures2.features.samplerAnisotropy == vk::True &&
             deviceVulkan12Features.bufferDeviceAddress == vk::True &&
 #if !defined(MACOS) && !defined(IOS)
             deviceVulkan13Features.dynamicRendering == vk::True &&
@@ -175,36 +163,36 @@ namespace BeeEngine::Internal
             return true;
         }
 #if !defined(MACOS) && !defined(IOS)
-        if(deviceVulkan13Features.synchronization2 != vk::True)
+        if (deviceVulkan13Features.synchronization2 != vk::True)
         {
             BeeCoreError("Device does not support synchronization2");
         }
-        if(deviceVulkan13Features.dynamicRendering != vk::True)
+        if (deviceVulkan13Features.dynamicRendering != vk::True)
         {
             BeeCoreError("Device does not support dynamic rendering");
         }
 #endif
-        if(deviceVulkan12Features.descriptorIndexing != vk::True)
+        if (deviceVulkan12Features.descriptorIndexing != vk::True)
         {
             BeeCoreError("Device does not support descriptor indexing");
         }
-        if(deviceVulkan12Features.bufferDeviceAddress != vk::True)
+        if (deviceVulkan12Features.bufferDeviceAddress != vk::True)
         {
             BeeCoreError("Device does not support buffer device address");
         }
         return false;
     }
 
-    bool VulkanGraphicsDevice::IsSuitableDevice(const vk::PhysicalDevice &device) const
+    bool VulkanGraphicsDevice::IsSuitableDevice(const vk::PhysicalDevice& device) const
     {
-        if(!CheckDeviceExtensionSupport(device, requiredExtensions))
+        if (!CheckDeviceExtensionSupport(device, requiredExtensions))
         {
             BeeCoreInfo("Device {} does not support all required extensions", device.getProperties().deviceName.data());
             return false;
         }
         BeeCoreInfo("Device {} supports all required extensions", device.getProperties().deviceName.data());
 
-        if(!CheckDeviceFeaturesSupport(device))
+        if (!CheckDeviceFeaturesSupport(device))
         {
             BeeCoreInfo("Device {} does not support all required features", device.getProperties().deviceName.data());
             return false;
@@ -217,8 +205,7 @@ namespace BeeEngine::Internal
     {
         return ext == VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME ||
                ext == VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME ||
-               ext == VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME ||
-               ext == VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME ||
+               ext == VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME || ext == VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME ||
                ext == VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME ||
                ext == VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME;
     }
@@ -228,7 +215,7 @@ namespace BeeEngine::Internal
         return std::ranges::all_of(set, IsRayTracingExtension);
     }
 
-    bool VulkanGraphicsDevice::CheckDeviceExtensionSupport(const vk::PhysicalDevice &device,
+    bool VulkanGraphicsDevice::CheckDeviceExtensionSupport(const vk::PhysicalDevice& device,
                                                            std::vector<const char*>& extensions) const
     {
         std::vector<vk::ExtensionProperties> availableExtensions = device.enumerateDeviceExtensionProperties();
@@ -241,21 +228,21 @@ namespace BeeEngine::Internal
             BeeCoreTrace("- {}", extension);
         }
 
-        for (const auto& extension:availableExtensions)
+        for (const auto& extension : availableExtensions)
         {
             requiredExtensions.erase(extension.extensionName);
         }
 
-        if(!requiredExtensions.empty())
+        if (!requiredExtensions.empty())
         {
-            if(AreRayTracingOnlyExtensionsPresent(requiredExtensions))
+            if (AreRayTracingOnlyExtensionsPresent(requiredExtensions))
             {
                 m_HasRayTracingSupport = false;
-                for(auto& ext : requiredExtensions)
+                for (auto& ext : requiredExtensions)
                 {
                     for (auto it = extensions.begin(); it != extensions.end();)
                     {
-                        if(strcmp(*it, ext.c_str()) == 0)
+                        if (strcmp(*it, ext.c_str()) == 0)
                         {
                             it = extensions.erase(it);
                         }
@@ -286,7 +273,7 @@ namespace BeeEngine::Internal
         uint32_t i = 0;
         for (auto& queueFamily : queueFamilies)
         {
-            if(queueFamily.queueFlags & vk::QueueFlagBits::eGraphics)
+            if (queueFamily.queueFlags & vk::QueueFlagBits::eGraphics)
             {
                 BeeCoreInfo("Queue family {} supports graphics operations", i);
                 indices.GraphicsFamily = i;
@@ -294,20 +281,20 @@ namespace BeeEngine::Internal
             }
             i++;
         }
-        if(m_PhysicalDevice.getSurfaceSupportKHR(indices.GraphicsFamily.value(), m_DeviceHandle.surface))
+        if (m_PhysicalDevice.getSurfaceSupportKHR(indices.GraphicsFamily.value(), m_DeviceHandle.surface))
         {
             BeeCoreInfo("Queue family {} supports presentation", indices.GraphicsFamily.value());
             indices.PresentFamily = indices.GraphicsFamily;
         }
 
-        if(!indices.IsComplete())
+        if (!indices.IsComplete())
         {
             BeeCoreError("Could not find suitable queue family");
         }
         return indices;
     }
 
-    void VulkanGraphicsDevice::SelectPhysicalDevice(const VulkanInstance &instance)
+    void VulkanGraphicsDevice::SelectPhysicalDevice(const VulkanInstance& instance)
     {
         /*
          * Choose a suitable physical device from a list of available devices
@@ -326,15 +313,15 @@ namespace BeeEngine::Internal
             uint64_t vram = 0;
         };
         DeviceScore bestDevice = {nullptr, 0};
-        for (auto& device:physicalDevices)
+        for (auto& device : physicalDevices)
         {
 #if defined(DEBUG)
             LogDeviceProperties(device);
 #endif
-            if(IsSuitableDevice(device))
+            if (IsSuitableDevice(device))
             {
                 auto vram = device.getMemoryProperties().memoryHeaps[0].size;
-                if(bestDevice.device == nullptr || vram > bestDevice.vram)
+                if (bestDevice.device == nullptr || vram > bestDevice.vram)
                 {
                     bestDevice = {device, vram};
                 }
@@ -344,7 +331,7 @@ namespace BeeEngine::Internal
         m_PhysicalDevice = bestDevice.device;
         m_VRAM = bestDevice.vram;
 
-        if(!m_PhysicalDevice)
+        if (!m_PhysicalDevice)
         {
             BeeCoreError("No suitable physical device found");
         }
@@ -354,23 +341,17 @@ namespace BeeEngine::Internal
     {
         m_QueueFamilyIndices = FindQueueFamilies();
 
-        float queuePriority[] {1.0f};
+        float queuePriority[]{1.0f};
         vk::DeviceQueueCreateInfo graphicsQueueCreateInfo = {
-            vk::DeviceQueueCreateFlags(),
-            m_QueueFamilyIndices.GraphicsFamily.value(),
-            1,
-            queuePriority};
+            vk::DeviceQueueCreateFlags(), m_QueueFamilyIndices.GraphicsFamily.value(), 1, queuePriority};
         vk::DeviceQueueCreateInfo presentQueueCreateInfo = graphicsQueueCreateInfo;
 
         uint32_t numberOfQueuesToCreate = 1;
 
-        if(m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
+        if (m_QueueFamilyIndices.GraphicsFamily.value() != m_QueueFamilyIndices.PresentFamily.value())
         {
             presentQueueCreateInfo = {
-                vk::DeviceQueueCreateFlags(),
-                m_QueueFamilyIndices.PresentFamily.value(),
-                1,
-                queuePriority};
+                vk::DeviceQueueCreateFlags(), m_QueueFamilyIndices.PresentFamily.value(), 1, queuePriority};
             numberOfQueuesToCreate++;
         }
         else
@@ -380,7 +361,7 @@ namespace BeeEngine::Internal
 
         std::vector<const char*> deviceExtensions = requiredExtensions;
 
-        if(BeeEngine::Application::GetOsPlatform() == OSPlatform::Mac)
+        if (BeeEngine::Application::GetOsPlatform() == OSPlatform::Mac)
         {
             deviceExtensions.push_back("VK_KHR_portability_subset");
         }
@@ -420,18 +401,19 @@ namespace BeeEngine::Internal
 #endif
         std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
         queueCreateInfos.push_back(graphicsQueueCreateInfo);
-        if(numberOfQueuesToCreate > 1)
+        if (numberOfQueuesToCreate > 1)
         {
             queueCreateInfos.push_back(presentQueueCreateInfo);
         }
 
-        vk::DeviceCreateInfo deviceInfo(
-                vk::DeviceCreateFlags(),
-                numberOfQueuesToCreate, queueCreateInfos.data(),
-                enabledLayers.size(), enabledLayers.data()
-                , deviceExtensions.size(), deviceExtensions.data(),
-                nullptr
-                );
+        vk::DeviceCreateInfo deviceInfo(vk::DeviceCreateFlags(),
+                                        numberOfQueuesToCreate,
+                                        queueCreateInfos.data(),
+                                        enabledLayers.size(),
+                                        enabledLayers.data(),
+                                        deviceExtensions.size(),
+                                        deviceExtensions.data(),
+                                        nullptr);
         deviceInfo.pNext = &deviceFeatures2;
 
         try
@@ -457,12 +439,12 @@ namespace BeeEngine::Internal
             {
                 auto sdlWindow = (SDL_Window*)WindowHandler::GetInstance()->GetWindow();
                 auto result = SDL_Vulkan_CreateSurface(sdlWindow, instance.GetHandle(), nullptr, &cSurface);
-                if(result != SDL_TRUE)
+                if (result != SDL_TRUE)
                 {
                     BeeCoreFatalError("Failed to create Vulkan surface!");
                 }
             }
-                break;
+            break;
 #endif
 #if defined(WINDOWS)
             case WindowHandlerAPI::WinAPI:
@@ -473,12 +455,12 @@ namespace BeeEngine::Internal
                 createInfo.hinstance = (HINSTANCE)nativeData.instance;
                 createInfo.hwnd = (HWND)nativeData.window;
                 auto result = vkCreateWin32SurfaceKHR(instance.GetHandle(), &createInfo, nullptr, &cSurface);
-                if(result != VK_SUCCESS)
+                if (result != VK_SUCCESS)
                 {
                     BeeCoreFatalError("Failed to create Vulkan surface!");
                 }
             }
-                break;
+            break;
 #endif
         }
         m_DeviceHandle.surface = vk::SurfaceKHR(cSurface);
@@ -494,131 +476,151 @@ namespace BeeEngine::Internal
         return false;
     }
 
-    void VulkanGraphicsDevice::TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout,
+    void VulkanGraphicsDevice::TransitionImageLayout(vk::Image image,
+                                                     vk::Format format,
+                                                     vk::ImageLayout oldLayout,
                                                      vk::ImageLayout newLayout)
     {
-         vk::CommandBufferAllocateInfo allocInfo{};
-         allocInfo.level = vk::CommandBufferLevel::ePrimary;
-         allocInfo.commandPool = m_CommandPool;
-         allocInfo.commandBufferCount = 1;
+        vk::CommandBufferAllocateInfo allocInfo{};
+        allocInfo.level = vk::CommandBufferLevel::ePrimary;
+        allocInfo.commandPool = m_CommandPool;
+        allocInfo.commandBufferCount = 1;
 
-         vk::CommandBuffer commandBuffer;
-         CheckVkResult(m_Device.allocateCommandBuffers(&allocInfo, &commandBuffer));
+        vk::CommandBuffer commandBuffer;
+        CheckVkResult(m_Device.allocateCommandBuffers(&allocInfo, &commandBuffer));
 
-         vk::CommandBufferBeginInfo beginInfo{};
-         beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        vk::CommandBufferBeginInfo beginInfo{};
+        beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 
-         CheckVkResult(commandBuffer.begin(&beginInfo));
+        CheckVkResult(commandBuffer.begin(&beginInfo));
 
-         TransitionImageLayout(commandBuffer, image, format, oldLayout, newLayout);
+        TransitionImageLayout(commandBuffer, image, format, oldLayout, newLayout);
 
-         commandBuffer.end();
+        commandBuffer.end();
 
-         vk::SubmitInfo submitInfo{};
-         submitInfo.commandBufferCount = 1;
-         submitInfo.pCommandBuffers = &commandBuffer;
+        vk::SubmitInfo submitInfo{};
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
 
-         m_GraphicsQueue.submit(submitInfo, vk::Fence(nullptr));
-         m_GraphicsQueue.waitIdle();
+        m_GraphicsQueue.submit(submitInfo, vk::Fence(nullptr));
+        m_GraphicsQueue.waitIdle();
 
-         m_Device.freeCommandBuffers(m_CommandPool, commandBuffer);
+        m_Device.freeCommandBuffers(m_CommandPool, commandBuffer);
     }
 
-    void VulkanGraphicsDevice::TransitionImageLayout(vk::CommandBuffer cmd, vk::Image image, vk::Format format,
-        vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+    void VulkanGraphicsDevice::TransitionImageLayout(
+        vk::CommandBuffer cmd, vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
     {
         vk::ImageMemoryBarrier2 barrier{};
-         barrier.oldLayout = oldLayout;
-         barrier.newLayout = newLayout;
-         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-         barrier.image = image;
-         barrier.subresourceRange.aspectMask = IsDepthFormat(format)?vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
-         barrier.subresourceRange.baseMipLevel = 0;
-         barrier.subresourceRange.levelCount = 1;
-         barrier.subresourceRange.baseArrayLayer = 0;
-         barrier.subresourceRange.layerCount = 1;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = image;
+        barrier.subresourceRange.aspectMask =
+            IsDepthFormat(format) ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
 
-         //vk::PipelineStageFlags2 sourceStage;
-         //vk::PipelineStageFlags2 destinationStage;
+        // vk::PipelineStageFlags2 sourceStage;
+        // vk::PipelineStageFlags2 destinationStage;
 
-         if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal) {
-             barrier.srcAccessMask = vk::AccessFlagBits2::eNone;
-             barrier.dstAccessMask = vk::AccessFlagBits2::eTransferWrite;
+        if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
+        {
+            barrier.srcAccessMask = vk::AccessFlagBits2::eNone;
+            barrier.dstAccessMask = vk::AccessFlagBits2::eTransferWrite;
 
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eTransfer;
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+            barrier.dstStageMask = vk::PipelineStageFlagBits2::eTransfer;
 
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eTransfer;
-         } else if (oldLayout == vk::ImageLayout::eTransferDstOptimal && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-         {
-             barrier.srcAccessMask = vk::AccessFlagBits2::eTransferWrite;
-             barrier.dstAccessMask = vk::AccessFlagBits2::eShaderRead;
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+            barrier.dstStageMask = vk::PipelineStageFlagBits2::eTransfer;
+        }
+        else if (oldLayout == vk::ImageLayout::eTransferDstOptimal &&
+                 newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+        {
+            barrier.srcAccessMask = vk::AccessFlagBits2::eTransferWrite;
+            barrier.dstAccessMask = vk::AccessFlagBits2::eShaderRead;
 
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTransfer;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader | vk::PipelineStageFlagBits2::eComputeShader;
-             if(HasRayTracingSupport())
-                 barrier.dstStageMask |= vk::PipelineStageFlagBits2::eRayTracingShaderKHR;
-         } else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
-         {
-             barrier.setSrcAccessMask({});
-             barrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eTransfer;
+            barrier.dstStageMask =
+                vk::PipelineStageFlagBits2::eFragmentShader | vk::PipelineStageFlagBits2::eComputeShader;
+            if (HasRayTracingSupport())
+                barrier.dstStageMask |= vk::PipelineStageFlagBits2::eRayTracingShaderKHR;
+        }
+        else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
+        {
+            barrier.setSrcAccessMask({});
+            barrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
 
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-         } else if(oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::ePresentSrcKHR)
-         {
-             barrier.setSrcAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
-             barrier.setDstAccessMask(vk::AccessFlagBits2::eMemoryRead);
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+            barrier.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+        }
+        else if (oldLayout == vk::ImageLayout::eColorAttachmentOptimal && newLayout == vk::ImageLayout::ePresentSrcKHR)
+        {
+            barrier.setSrcAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
+            barrier.setDstAccessMask(vk::AccessFlagBits2::eMemoryRead);
 
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
-         }   else if (oldLayout == vk::ImageLayout::ePresentSrcKHR && newLayout == vk::ImageLayout::eColorAttachmentOptimal) {
-             barrier.setSrcAccessMask(vk::AccessFlagBits2::eMemoryRead);
-             barrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+            barrier.dstStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
+        }
+        else if (oldLayout == vk::ImageLayout::ePresentSrcKHR && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
+        {
+            barrier.setSrcAccessMask(vk::AccessFlagBits2::eMemoryRead);
+            barrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
 
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-         } else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
-         {
-             barrier.setSrcAccessMask({});
-             barrier.setDstAccessMask(vk::AccessFlagBits2::eDepthStencilAttachmentRead | vk::AccessFlagBits2::eDepthStencilAttachmentWrite);
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
+            barrier.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+        }
+        else if (oldLayout == vk::ImageLayout::eUndefined &&
+                 newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+        {
+            barrier.setSrcAccessMask({});
+            barrier.setDstAccessMask(vk::AccessFlagBits2::eDepthStencilAttachmentRead |
+                                     vk::AccessFlagBits2::eDepthStencilAttachmentWrite);
 
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests;
-         }else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eAttachmentOptimal)
-         {
-             barrier.setSrcAccessMask({});
-             barrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+            barrier.dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests;
+        }
+        else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eAttachmentOptimal)
+        {
+            barrier.setSrcAccessMask({});
+            barrier.setDstAccessMask(vk::AccessFlagBits2::eColorAttachmentWrite);
 
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-         }else if(oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-         {
-             barrier.setSrcAccessMask({});
-             barrier.setDstAccessMask(vk::AccessFlagBits2::eShaderRead);
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+            barrier.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+        }
+        else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+        {
+            barrier.setSrcAccessMask({});
+            barrier.setDstAccessMask(vk::AccessFlagBits2::eShaderRead);
 
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
-         }else{
-             static std::vector<std::pair<vk::ImageLayout, vk::ImageLayout>> unsupportedTransitions;
-             auto pair = std::make_pair(oldLayout, newLayout);
-             if(std::ranges::find(unsupportedTransitions, pair) == unsupportedTransitions.end())
-             {
-                 unsupportedTransitions.push_back(pair);
-                 BeeCoreWarn("Unsupported image layout transition! From {} to {}. Fallback to default", vk::to_string(oldLayout), vk::to_string(newLayout));
-             }
-             barrier.srcStageMask = vk::PipelineStageFlagBits2::eAllCommands;
-             barrier.srcAccessMask = vk::AccessFlagBits2::eMemoryWrite;
-             barrier.dstStageMask = vk::PipelineStageFlagBits2::eAllCommands;
-             barrier.dstAccessMask = vk::AccessFlagBits2::eMemoryRead | vk::AccessFlagBits2::eMemoryWrite;
-         }
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe;
+            barrier.dstStageMask = vk::PipelineStageFlagBits2::eFragmentShader;
+        }
+        else
+        {
+            static std::vector<std::pair<vk::ImageLayout, vk::ImageLayout>> unsupportedTransitions;
+            auto pair = std::make_pair(oldLayout, newLayout);
+            if (std::ranges::find(unsupportedTransitions, pair) == unsupportedTransitions.end())
+            {
+                unsupportedTransitions.push_back(pair);
+                BeeCoreWarn("Unsupported image layout transition! From {} to {}. Fallback to default",
+                            vk::to_string(oldLayout),
+                            vk::to_string(newLayout));
+            }
+            barrier.srcStageMask = vk::PipelineStageFlagBits2::eAllCommands;
+            barrier.srcAccessMask = vk::AccessFlagBits2::eMemoryWrite;
+            barrier.dstStageMask = vk::PipelineStageFlagBits2::eAllCommands;
+            barrier.dstAccessMask = vk::AccessFlagBits2::eMemoryRead | vk::AccessFlagBits2::eMemoryWrite;
+        }
         vk::DependencyInfo dependencyInfo{};
         dependencyInfo.imageMemoryBarrierCount = 1;
         dependencyInfo.pImageMemoryBarriers = &barrier;
 
-         cmd.pipelineBarrier2(dependencyInfo, g_vkDynamicLoader);
+        cmd.pipelineBarrier2(dependencyInfo, g_vkDynamicLoader);
     }
 
     void VulkanGraphicsDevice::CreateDescriptorSet(vk::DescriptorSetAllocateInfo& info,
@@ -630,41 +632,40 @@ namespace BeeEngine::Internal
 
     void VulkanGraphicsDevice::DestroyDescriptorSet(vk::DescriptorSet descriptorSet) const
     {
-        DeletionQueue::Frame().PushFunction([descriptorSet, pool = m_DescriptorPool, device = m_Device] ()
-        {
-            device.freeDescriptorSets(pool, descriptorSet);
-        });
+        DeletionQueue::Frame().PushFunction([descriptorSet, pool = m_DescriptorPool, device = m_Device]()
+                                            { device.freeDescriptorSets(pool, descriptorSet); });
     }
 
     VulkanBuffer VulkanGraphicsDevice::CreateBuffer(vk::DeviceSize size,
                                                     vk::BufferUsageFlags usage,
                                                     VmaMemoryUsage memoryUsage) const
     {
-        //allocate vertex buffer
+        // allocate vertex buffer
         VkBufferCreateInfo bufferInfo = {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        //this is the total size, in bytes, of the buffer we are allocating
+        // this is the total size, in bytes, of the buffer we are allocating
         bufferInfo.size = size;
-        //this buffer is going to be used as a Vertex Buffer
+        // this buffer is going to be used as a Vertex Buffer
         bufferInfo.usage = (VkBufferUsageFlags)usage;
-        //bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        // bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-
-        //let the VMA library know that this data should be writeable by CPU, but also readable by GPU
+        // let the VMA library know that this data should be writeable by CPU, but also readable by GPU
         VmaAllocationCreateInfo vmaallocInfo = {};
         vmaallocInfo.usage = memoryUsage;
-        //vmaallocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-        if(memoryUsage == VMA_MEMORY_USAGE_AUTO)
+        // vmaallocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        if (memoryUsage == VMA_MEMORY_USAGE_AUTO)
         {
             vmaallocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
         }
-        //allocate the buffer
+        // allocate the buffer
         VulkanBuffer buffer;
-        auto result = vmaCreateBuffer(m_DeviceHandle.allocator, &bufferInfo, &vmaallocInfo,
+        auto result = vmaCreateBuffer(m_DeviceHandle.allocator,
+                                      &bufferInfo,
+                                      &vmaallocInfo,
                                       (VkBuffer*)&buffer.Buffer,
                                       &buffer.Memory,
                                       &buffer.Info);
-        if(result != VK_SUCCESS)
+        if (result != VK_SUCCESS)
         {
             throw std::runtime_error("failed to allocate buffer!");
         }
@@ -674,30 +675,33 @@ namespace BeeEngine::Internal
 
     void VulkanGraphicsDevice::DestroyBuffer(VulkanBuffer& buffer) const
     {
-        DeletionQueue::Frame().PushFunction([buf = buffer] ()
-        {
-            vmaDestroyBuffer(GetVulkanAllocator(), buf.Buffer, buf.Memory);
-            BeeCoreTrace("Destroyed Vulkan VMA buffer successfully! Buffer count: {}", --VulkanBufferCount);
-        });
+        DeletionQueue::Frame().PushFunction(
+            [buf = buffer]()
+            {
+                vmaDestroyBuffer(GetVulkanAllocator(), buf.Buffer, buf.Memory);
+                BeeCoreTrace("Destroyed Vulkan VMA buffer successfully! Buffer count: {}", --VulkanBufferCount);
+            });
     }
 
     void VulkanGraphicsDevice::DestroyImage(VulkanImage& image) const
     {
-        DeletionQueue::Frame().PushFunction([im = image] ()
-        {
-            vmaDestroyImage(GetVulkanAllocator(), im.Image, im.Memory);
-            BeeCoreTrace("Destroyed Vulkan VMA Image successfully! Image count: {}", --VulkanImageCount);
-        });
+        DeletionQueue::Frame().PushFunction(
+            [im = image]()
+            {
+                vmaDestroyImage(GetVulkanAllocator(), im.Image, im.Memory);
+                BeeCoreTrace("Destroyed Vulkan VMA Image successfully! Image count: {}", --VulkanImageCount);
+            });
     }
 
     void VulkanGraphicsDevice::DestroyImageWithView(VulkanImage& image, vk::ImageView imageView) const
     {
-        DeletionQueue::Frame().PushFunction([im = image, imView = imageView, device = m_Device] ()
-        {
-            vmaDestroyImage(GetVulkanAllocator(), im.Image, im.Memory);
-            device.destroyImageView(imView);
-            BeeCoreTrace("Destroyed Vulkan VMA Image successfully! Image count: {}", --VulkanImageCount);
-        });
+        DeletionQueue::Frame().PushFunction(
+            [im = image, imView = imageView, device = m_Device]()
+            {
+                vmaDestroyImage(GetVulkanAllocator(), im.Image, im.Memory);
+                device.destroyImageView(imView);
+                BeeCoreTrace("Destroyed Vulkan VMA Image successfully! Image count: {}", --VulkanImageCount);
+            });
     }
 
     void VulkanGraphicsDevice::CopyToBuffer(gsl::span<byte> data, VulkanBuffer& outBuffer) const
@@ -749,16 +753,16 @@ namespace BeeEngine::Internal
         vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
 
         vk::BufferCopy copyRegion{};
-        copyRegion.srcOffset = 0;  // Optional
-        copyRegion.dstOffset = 0;  // Optional
+        copyRegion.srcOffset = 0; // Optional
+        copyRegion.dstOffset = 0; // Optional
         copyRegion.size = size;
         commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 
         EndSingleTimeCommands(commandBuffer);
     }
 
-    void VulkanGraphicsDevice::CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height,
-                                                 uint32_t layerCount)
+    void VulkanGraphicsDevice::CopyBufferToImage(
+        vk::Buffer buffer, vk::Image image, uint32_t width, uint32_t height, uint32_t layerCount)
     {
         vk::CommandBuffer commandBuffer = BeginSingleTimeCommands();
 
@@ -775,17 +779,12 @@ namespace BeeEngine::Internal
         region.imageOffset = vk::Offset3D{0, 0, 0};
         region.imageExtent = vk::Extent3D{width, height, 1};
 
-        commandBuffer.copyBufferToImage(
-                buffer,
-                image,
-                vk::ImageLayout::eTransferDstOptimal,
-                1,
-                &region);
+        commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, 1, &region);
         EndSingleTimeCommands(commandBuffer);
     }
 
-    void VulkanGraphicsDevice::CopyImageToImage(vk::CommandBuffer cmd, vk::Image source, vk::Image destination,
-        vk::Extent2D srcSize, vk::Extent2D dstSize)
+    void VulkanGraphicsDevice::CopyImageToImage(
+        vk::CommandBuffer cmd, vk::Image source, vk::Image destination, vk::Extent2D srcSize, vk::Extent2D dstSize)
     {
         vk::ImageBlit2 region{};
 
@@ -816,32 +815,38 @@ namespace BeeEngine::Internal
         blitInfo.pRegions = &region;
         blitInfo.filter = vk::Filter::eLinear;
 
-        cmd.blitImage2KHR(blitInfo, g_vkDynamicLoader); //TODO: on mac this segfaults
+        cmd.blitImage2KHR(blitInfo, g_vkDynamicLoader); // TODO: on mac this segfaults
     }
 
-    void VulkanGraphicsDevice::CopyImageToImage(vk::Image source, vk::Image destination, vk::Extent2D srcSize,
-        vk::Extent2D dstSize)
+    void VulkanGraphicsDevice::CopyImageToImage(vk::Image source,
+                                                vk::Image destination,
+                                                vk::Extent2D srcSize,
+                                                vk::Extent2D dstSize)
     {
         auto cmd = BeginSingleTimeCommands();
         CopyImageToImage(cmd, source, destination, srcSize, dstSize);
         EndSingleTimeCommands(cmd);
     }
 
-    void
-    VulkanGraphicsDevice::CreateImageWithInfo(const vk::ImageCreateInfo& imageInfo,
-                 const vk::ImageViewCreateInfo& imageViewInfo,
-                 vk::MemoryPropertyFlags memoryProperties,
-                 const VmaMemoryUsage& memoryUsage,
-                 VulkanImage& outImage,
-                 vk::ImageView& outImageView) const
+    void VulkanGraphicsDevice::CreateImageWithInfo(const vk::ImageCreateInfo& imageInfo,
+                                                   const vk::ImageViewCreateInfo& imageViewInfo,
+                                                   vk::MemoryPropertyFlags memoryProperties,
+                                                   const VmaMemoryUsage& memoryUsage,
+                                                   VulkanImage& outImage,
+                                                   vk::ImageView& outImageView) const
     {
         VmaAllocationCreateInfo allocInfo = {};
         allocInfo.usage = memoryUsage;
         allocInfo.requiredFlags = (VkMemoryPropertyFlags)memoryProperties;
 
-        //allocate and create the image
-        vk::Result result = (vk::Result)vmaCreateImage(m_DeviceHandle.allocator, (VkImageCreateInfo*)&imageInfo, &allocInfo, (VkImage*)&outImage.Image, &outImage.Memory, nullptr);
-        if(result != vk::Result::eSuccess)
+        // allocate and create the image
+        vk::Result result = (vk::Result)vmaCreateImage(m_DeviceHandle.allocator,
+                                                       (VkImageCreateInfo*)&imageInfo,
+                                                       &allocInfo,
+                                                       (VkImage*)&outImage.Image,
+                                                       &outImage.Memory,
+                                                       nullptr);
+        if (result != vk::Result::eSuccess)
         {
             BeeCoreError("Failed to create image! {}", vk::to_string(result));
         }
@@ -849,7 +854,7 @@ namespace BeeEngine::Internal
         copiedImageViewInfo.image = outImage.Image;
         result = m_Device.createImageView(&copiedImageViewInfo, nullptr, &outImageView);
 
-        if(result != vk::Result::eSuccess)
+        if (result != vk::Result::eSuccess)
         {
             BeeCoreError("Failed to create image view!");
         }
@@ -862,9 +867,10 @@ namespace BeeEngine::Internal
     {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
-        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-            if ((typeFilter & (1 << i)) &&
-                (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
                 return i;
             }
         }
@@ -880,31 +886,39 @@ namespace BeeEngine::Internal
         uint32_t formatCount;
         CheckVkResult(m_PhysicalDevice.getSurfaceFormatsKHR(surface, &formatCount, nullptr));
 
-        if (formatCount != 0) {
+        if (formatCount != 0)
+        {
             m_SwapChainSupportDetails.formats.resize(formatCount);
-            CheckVkResult(m_PhysicalDevice.getSurfaceFormatsKHR(surface, &formatCount, m_SwapChainSupportDetails.formats.data()));
+            CheckVkResult(
+                m_PhysicalDevice.getSurfaceFormatsKHR(surface, &formatCount, m_SwapChainSupportDetails.formats.data()));
         }
 
         uint32_t presentModeCount;
         CheckVkResult(m_PhysicalDevice.getSurfacePresentModesKHR(surface, &presentModeCount, nullptr));
 
-        if (presentModeCount != 0) {
+        if (presentModeCount != 0)
+        {
             m_SwapChainSupportDetails.presentModes.resize(presentModeCount);
-            CheckVkResult(m_PhysicalDevice.getSurfacePresentModesKHR(surface, &presentModeCount, m_SwapChainSupportDetails.presentModes.data()));
+            CheckVkResult(m_PhysicalDevice.getSurfacePresentModesKHR(
+                surface, &presentModeCount, m_SwapChainSupportDetails.presentModes.data()));
         }
     }
 
-    vk::Format VulkanGraphicsDevice::FindSupportedFormat(const std::vector<vk::Format> &candidates, vk::ImageTiling tiling,
-                                                       vk::FormatFeatureFlags features)
+    vk::Format VulkanGraphicsDevice::FindSupportedFormat(const std::vector<vk::Format>& candidates,
+                                                         vk::ImageTiling tiling,
+                                                         vk::FormatFeatureFlags features)
     {
-        for (vk::Format format : candidates) {
+        for (vk::Format format : candidates)
+        {
             vk::FormatProperties props;
             m_PhysicalDevice.getFormatProperties(format, &props);
 
-            if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features) {
+            if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & features) == features)
+            {
                 return format;
-            } else if (tiling == vk::ImageTiling::eOptimal &&
-                       (props.optimalTilingFeatures & features) == features) {
+            }
+            else if (tiling == vk::ImageTiling::eOptimal && (props.optimalTilingFeatures & features) == features)
+            {
                 return format;
             }
         }
@@ -914,14 +928,16 @@ namespace BeeEngine::Internal
 
     vk::Viewport VulkanGraphicsDevice::CreateVKViewport(uint32_t width, uint32_t height, float depthMin, float depthMax)
     {
-        return {
-            0.0f, static_cast<float>(height),//y is flipped https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
-            static_cast<float>(width), -static_cast<float>(height),//y is flipped
-            depthMin, depthMax
-        };
+        return {0.0f,
+                static_cast<float>(
+                    height), // y is flipped https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
+                static_cast<float>(width),
+                -static_cast<float>(height), // y is flipped
+                depthMin,
+                depthMax};
     }
 
-    void VulkanGraphicsDevice::InitializeVulkanMemoryAllocator(VulkanInstance &instance)
+    void VulkanGraphicsDevice::InitializeVulkanMemoryAllocator(VulkanInstance& instance)
     {
         VmaVulkanFunctions vulkanFunctions = {};
         vulkanFunctions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
@@ -948,7 +964,7 @@ namespace BeeEngine::Internal
         BeeEnsures(m_SwapChain->GetHandle() != oldSwapChain);
     }
 
-    VulkanGraphicsDevice &VulkanGraphicsDevice::GetInstance()
+    VulkanGraphicsDevice& VulkanGraphicsDevice::GetInstance()
     {
         return *s_Instance;
     }
@@ -963,7 +979,7 @@ namespace BeeEngine::Internal
         {
             m_CommandPool = m_Device.createCommandPool(commandPoolCreateInfo);
         }
-        catch (vk::SystemError &e)
+        catch (vk::SystemError& e)
         {
             BeeCoreError("Failed to create command pool: {0}", e.what());
         }
@@ -975,12 +991,11 @@ namespace BeeEngine::Internal
 
     void VulkanGraphicsDevice::CreateDescriptorPool()
     {
-        std::vector<vk::DescriptorPoolSize> poolSizes =
-            {
+        std::vector<vk::DescriptorPoolSize> poolSizes = {
             {vk::DescriptorType::eUniformBuffer, 1000},
             {vk::DescriptorType::eSampler, 1000},
             {vk::DescriptorType::eSampledImage, 1000},
-            };
+        };
         vk::DescriptorPoolCreateInfo poolInfo = {};
         poolInfo.flags = vk::DescriptorPoolCreateFlags() | vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
         poolInfo.poolSizeCount = poolSizes.size();
@@ -1029,5 +1044,5 @@ namespace BeeEngine::Internal
         vmaUnmapMemory(m_DeviceHandle.allocator, mesh.VertexBuffer.Memory);
 
     }*/
-}
+} // namespace BeeEngine::Internal
 #endif

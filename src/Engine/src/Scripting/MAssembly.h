@@ -11,6 +11,7 @@ namespace BeeEngine
     {
         friend class ScriptGlue;
         friend class ScriptingEngine;
+
     public:
         MAssembly();
         MAssembly(uint64_t contextID, const Path& path, bool debug);
@@ -18,7 +19,7 @@ namespace BeeEngine
         MAssembly(const MAssembly&) = delete;
         MAssembly& operator=(const MAssembly&) = delete;
         MAssembly(MAssembly&& other) noexcept;
-        MAssembly& operator=(MAssembly&&other) noexcept;
+        MAssembly& operator=(MAssembly&& other) noexcept;
         std::vector<Ref<class MClass>>& GetClasses();
 
     private:
@@ -30,4 +31,4 @@ namespace BeeEngine
         void LoadAssembly();
         void GetClassesFromAssembly();
     };
-}
+} // namespace BeeEngine

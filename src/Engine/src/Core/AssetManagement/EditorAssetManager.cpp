@@ -3,8 +3,8 @@
 //
 
 #include "EditorAssetManager.h"
-#include "Core/ResourceManager.h"
 #include "AssetImporter.h"
+#include "Core/ResourceManager.h"
 #include "EngineAssetRegistry.h"
 
 namespace BeeEngine
@@ -13,7 +13,7 @@ namespace BeeEngine
     Ref<Asset> EditorAssetManager::GetAssetRef(AssetHandle handle) const
     {
         BeeExpects(IsAssetHandleValid(handle));
-        if(!IsAssetLoaded(handle))
+        if (!IsAssetLoaded(handle))
         {
             const auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
@@ -22,7 +22,8 @@ namespace BeeEngine
         return m_AssetMap.at(handle);
     }
 
-    void EditorAssetManager::LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type)
+    void
+    EditorAssetManager::LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type)
     {
         BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
         AssetMetadata metadata;
@@ -34,13 +35,13 @@ namespace BeeEngine
         BeeEnsures(IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
     }
 
-    void EditorAssetManager::LoadAsset(const Path &path, AssetHandle handle)
+    void EditorAssetManager::LoadAsset(const Path& path, AssetHandle handle)
     {
-        //BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
-        if(IsAssetHandleValid(handle) && IsAssetLoaded(handle))
+        // BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
+        if (IsAssetHandleValid(handle) && IsAssetLoaded(handle))
         {
             auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
-            if(path != std::get<Path>(metadata.Data))
+            if (path != std::get<Path>(metadata.Data))
             {
                 metadata.Data = path;
                 metadata.Name = path.GetFileNameWithoutExtension();
@@ -69,7 +70,8 @@ namespace BeeEngine
 
     bool EditorAssetManager::IsAssetHandleValid(AssetHandle handle) const
     {
-        return m_AssetRegistry.contains(handle.RegistryID) && m_AssetRegistry.at(handle.RegistryID).contains(handle.AssetID);
+        return m_AssetRegistry.contains(handle.RegistryID) &&
+               m_AssetRegistry.at(handle.RegistryID).contains(handle.AssetID);
     }
 
     bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const
@@ -77,10 +79,10 @@ namespace BeeEngine
         return m_AssetMap.contains(handle);
     }
 
-    Asset * EditorAssetManager::GetAsset(AssetHandle handle) const
+    Asset* EditorAssetManager::GetAsset(AssetHandle handle) const
     {
         BeeExpects(IsAssetHandleValid(handle));
-        if(!IsAssetLoaded(handle))
+        if (!IsAssetLoaded(handle))
         {
             const AssetMetadata& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
@@ -89,7 +91,7 @@ namespace BeeEngine
         return m_AssetMap.at(handle).get();
     }
 
-    AssetMetadata &EditorAssetManager::GetAssetMetadata(const AssetHandle &handle)
+    AssetMetadata& EditorAssetManager::GetAssetMetadata(const AssetHandle& handle)
     {
         BeeExpects(IsAssetHandleValid(handle));
         return m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
@@ -97,7 +99,7 @@ namespace BeeEngine
 
     const AssetHandle* EditorAssetManager::GetAssetHandleByName(std::string_view name) const
     {
-        if(!m_AssetNameMap.contains(name.data()))
+        if (!m_AssetNameMap.contains(name.data()))
         {
             return nullptr;
         }
@@ -113,16 +115,17 @@ namespace BeeEngine
     void EditorAssetManager::RemoveAsset(AssetHandle handle)
     {
         BeeExpects(IsAssetHandleValid(handle));
-        if(IsAssetLoaded(handle))
+        if (IsAssetLoaded(handle))
         {
             UnloadAsset(handle);
         }
         auto metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
         m_AssetRegistry.at(handle.RegistryID).erase(handle.AssetID);
         m_AssetNameMap.erase(metadata.Name);
-        /*if(m_AssetRegistry.at(handle.RegistryID).empty()) //Commented out because deleting of last element in project's asset registry makes it impossible to save registry correctly
+        /*if(m_AssetRegistry.at(handle.RegistryID).empty()) //Commented out because deleting of last element in
+        project's asset registry makes it impossible to save registry correctly
         {
             m_AssetRegistry.erase(handle.RegistryID);
         }*/
     }
-}
+} // namespace BeeEngine

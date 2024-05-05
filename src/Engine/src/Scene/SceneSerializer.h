@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include "Scene.h"
-#include "Core/TypeDefines.h"
-#include "yaml-cpp/emitter.h"
 #include "Core/Path.h"
+#include "Core/TypeDefines.h"
+#include "Scene.h"
+#include "yaml-cpp/emitter.h"
 namespace BeeEngine
 {
     class SceneSerializer
@@ -22,11 +22,12 @@ namespace BeeEngine
         void DeserializeFromString(const String& string);
         Entity DeserializeEntityFromString(const String& string);
         void DeserializeBinary(const Path& filepath);
+
     private:
         Ref<Scene> m_Scene;
 
         void SerializeEntity(YAML::Emitter& emitter, Entity entity);
 
-        Entity DeserializeEntity(YAML::Node &entities);
+        Entity DeserializeEntity(YAML::Node& entities);
     };
-}
+} // namespace BeeEngine

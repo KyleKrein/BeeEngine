@@ -5,11 +5,10 @@
 #include "WindowsString.h"
 #include <codecvt>
 
-
 namespace BeeEngine::Internal
 {
     // convert char* string to wstring WARNING: NOT TESTED
-    std::wstring GetWString(const char *str)
+    std::wstring GetWString(const char* str)
     {
         const size_t size = strlen(str) + 1;
         std::wstring wstr;
@@ -18,7 +17,7 @@ namespace BeeEngine::Internal
         return wstr;
     }
     // convert UTF-8 string to wstring
-    std::wstring WStringFromUTF8(const UTF8String &utf8string)
+    std::wstring WStringFromUTF8(const UTF8String& utf8string)
     {
         std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
         return myconv.from_bytes(utf8string);
@@ -30,4 +29,4 @@ namespace BeeEngine::Internal
         std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
         return myconv.to_bytes(widestring);
     }
-}
+} // namespace BeeEngine::Internal

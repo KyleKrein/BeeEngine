@@ -4,11 +4,11 @@
 
 #include "VulkanMaterial.h"
 
-
 namespace BeeEngine::Internal
 {
     VulkanMaterial::VulkanMaterial(const std::filesystem::path& vertexShader,
-        const std::filesystem::path& fragmentShader, bool loadFromCache)
+                                   const std::filesystem::path& fragmentShader,
+                                   bool loadFromCache)
     {
         auto vertexShaderModule = ShaderModule::Create(vertexShader.string(), ShaderType::Vertex, loadFromCache);
         auto fragmentShaderModule = ShaderModule::Create(fragmentShader.string(), ShaderType::Fragment, loadFromCache);
@@ -16,12 +16,10 @@ namespace BeeEngine::Internal
         m_Pipeline = Pipeline::Create(vertexShaderModule, fragmentShaderModule);
     }
 
-    VulkanMaterial::~VulkanMaterial()
-    {
-    }
+    VulkanMaterial::~VulkanMaterial() {}
 
     InstancedBuffer& VulkanMaterial::GetInstancedBuffer() const
     {
         return *m_InstancedBuffer;
     }
-}
+} // namespace BeeEngine::Internal

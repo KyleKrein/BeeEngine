@@ -11,12 +11,14 @@
 //
 // Instrumentor::Get().BeginSession("Session Name");        // Begin session
 // {
-//     InstrumentationTimer timer("Profiled Scope Name");   // Place code like this in scopes you'd like to include in profiling
+//     InstrumentationTimer timer("Profiled Scope Name");   // Place code like this in scopes you'd like to include in
+//     profiling
 //     // Code
 // }
 // Instrumentor::Get().EndSession();                        // End Session
 //
-// You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile name.
+// You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile
+// name.
 //
 #include "version"
 
@@ -26,7 +28,8 @@
 #else
 #include "source_location.h"
 #endif
-#define BEE_DEBUG_START_PROFILING_SESSION(name, filename) ::BeeEngine::Debug::Instrumentor::Get().BeginSession(name, filename)
+#define BEE_DEBUG_START_PROFILING_SESSION(name, filename)                                                              \
+    ::BeeEngine::Debug::Instrumentor::Get().BeginSession(name, filename)
 #define BEE_DEBUG_END_PROFILING_SESSION() ::BeeEngine::Debug::Instrumentor::Get().EndSession()
 #define BEE_PROFILE_SCOPE(name) ::BeeEngine::Debug::InstrumentationTimer timer##__LINE__(name)
 #define BEE_PROFILE_FUNCTION() BEE_PROFILE_SCOPE(std::source_location::current().function_name())
@@ -37,16 +40,13 @@
 #define BEE_PROFILE_FUNCTION()
 #endif
 
-
-
-
 #pragma once
 
-#include <string>
-#include <chrono>
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <gsl/gsl>
+#include <string>
 
 #include <thread>
 
@@ -72,20 +72,15 @@ namespace BeeEngine
             InstrumentationSession* m_CurrentSession;
             std::ofstream m_OutputStream;
             int m_ProfileCount;
+
         public:
-            Instrumentor()
-                    : m_CurrentSession(nullptr), m_ProfileCount(0)
-            {
-            }
-            inline bool IsSessionActive()
-            {
-                return m_CurrentSession != nullptr;
-            }
+            Instrumentor() : m_CurrentSession(nullptr), m_ProfileCount(0) {}
+            inline bool IsSessionActive() { return m_CurrentSession != nullptr; }
             void BeginSession(const std::string& name, const std::string& filepath = "results.json")
             {
                 m_OutputStream.open(filepath);
                 WriteHeader();
-                m_CurrentSession = new InstrumentationSession{ name };
+                m_CurrentSession = new InstrumentationSession{name};
             }
 
             void EndSession()
@@ -140,8 +135,7 @@ namespace BeeEngine
         class InstrumentationTimer
         {
         public:
-            InstrumentationTimer(const char* name)
-                    : m_Name(name), m_Stopped(false)
+            InstrumentationTimer(const char* name) : m_Name(name), m_Stopped(false)
             {
                 m_StartTimepoint = std::chrono::high_resolution_clock::now();
             }
@@ -154,22 +148,27 @@ namespace BeeEngine
 
             void Stop()
             {
-                if(!Instrumentor::Get().IsSessionActive())
+                if (!Instrumentor::Get().IsSessionActive())
                     return;
                 auto endTimepoint = std::chrono::high_resolution_clock::now();
 
-                auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint).time_since_epoch().count();
-                auto end = std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
+                auto start = std::chrono::time_point_cast<std::chrono::microseconds>(m_StartTimepoint)
+                                 .time_since_epoch()
+                                 .count();
+                auto end =
+                    std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
 
-                uint32_t threadID = gsl::narrow_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
-                Instrumentor::Get().WriteProfile({ m_Name, start, end, threadID });
+                uint32_t threadID =
+                    gsl::narrow_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+                Instrumentor::Get().WriteProfile({m_Name, start, end, threadID});
 
                 m_Stopped = true;
             }
+
         private:
             const char* m_Name;
             std::chrono::time_point<std::chrono::high_resolution_clock> m_StartTimepoint;
             bool m_Stopped;
         };
-    }
-}
+    } // namespace Debug
+} // namespace BeeEngine

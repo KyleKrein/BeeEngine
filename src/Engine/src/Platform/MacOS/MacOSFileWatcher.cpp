@@ -7,27 +7,26 @@
 namespace BeeEngine::Internal
 {
 #if defined(MACOS)
-    void FileSystemEventCallback(
-            ConstFSEventStreamRef streamRef,
-            void *clientCallBackInfo,
-            size_t numEvents,
-            void *eventPaths,
-            const FSEventStreamEventFlags eventFlags[],
-            const FSEventStreamEventId eventIds[]
-    ) {
-        char **paths = (char **)eventPaths;
+    void FileSystemEventCallback(ConstFSEventStreamRef streamRef,
+                                 void* clientCallBackInfo,
+                                 size_t numEvents,
+                                 void* eventPaths,
+                                 const FSEventStreamEventFlags eventFlags[],
+                                 const FSEventStreamEventId eventIds[])
+    {
+        char** paths = (char**)eventPaths;
         bool oldRenamed = true;
         for (int i = 0; i < numEvents; i++)
         {
             Path path = paths[i];
-            MacOSFileWatcher *watcher = (MacOSFileWatcher *)clientCallBackInfo;
+            MacOSFileWatcher* watcher = (MacOSFileWatcher*)clientCallBackInfo;
             if (eventFlags[i] & kFSEventStreamEventFlagItemCreated)
                 watcher->m_Callback(path, FileWatcher::Event::Added);
             else if (eventFlags[i] & kFSEventStreamEventFlagItemRemoved)
                 watcher->m_Callback(path, FileWatcher::Event::Removed);
             else if (eventFlags[i] & kFSEventStreamEventFlagItemRenamed)
             {
-                if(oldRenamed)
+                if (oldRenamed)
                     watcher->m_Callback(path, FileWatcher::Event::RenamedOldName);
                 else
                     watcher->m_Callback(path, FileWatcher::Event::RenamedNewName);
@@ -38,21 +37,20 @@ namespace BeeEngine::Internal
         }
     }
 #endif
-    void MacOSFileWatcherThread(MacOSFileWatcher &watcher)
+    void MacOSFileWatcherThread(MacOSFileWatcher& watcher)
     {
 #if defined(MACOS)
         CFStringRef mypath = CFStringCreateWithCString(NULL, watcher.m_Path.AsCString(), kCFStringEncodingUTF8);
-        CFArrayRef pathsToWatch = CFArrayCreate(NULL, (const void **)&mypath, 1, NULL);
-        void *callbackInfo = &watcher;
+        CFArrayRef pathsToWatch = CFArrayCreate(NULL, (const void**)&mypath, 1, NULL);
+        void* callbackInfo = &watcher;
         FSEventStreamContext context = {0, callbackInfo, nullptr, nullptr, nullptr};
         watcher.m_Stream = FSEventStreamCreate(NULL,
-                                     &FileSystemEventCallback,
-                                     &context,
-                                     pathsToWatch,
-                                     kFSEventStreamEventIdSinceNow,
-                                     0.1,
-                                     kFSEventStreamCreateFlagFileEvents
-                                     );
+                                               &FileSystemEventCallback,
+                                               &context,
+                                               pathsToWatch,
+                                               kFSEventStreamEventIdSinceNow,
+                                               0.1,
+                                               kFSEventStreamCreateFlagFileEvents);
         watcher.m_RunLoop = CFRunLoopGetCurrent();
         FSEventStreamScheduleWithRunLoop(watcher.m_Stream, watcher.m_RunLoop, kCFRunLoopDefaultMode);
         FSEventStreamStart(watcher.m_Stream);
@@ -62,7 +60,7 @@ namespace BeeEngine::Internal
 #endif
     }
 
-    MacOSFileWatcher::MacOSFileWatcher(const Path& path, const std::function<void(Path, Event)> &callback)
+    MacOSFileWatcher::MacOSFileWatcher(const Path& path, const std::function<void(Path, Event)>& callback)
         : m_Path(path), m_Callback(callback)
     {
     }
@@ -86,8 +84,9 @@ namespace BeeEngine::Internal
         FSEventStreamStop(m_Stream);
         FSEventStreamInvalidate(m_Stream);
         FSEventStreamRelease(m_Stream);
-        if (m_RunLoop) {
-            CFRunLoopStop(m_RunLoop);  // Останавливаем RunLoop
+        if (m_RunLoop)
+        {
+            CFRunLoopStop(m_RunLoop); // Останавливаем RunLoop
         }
 #endif
 #if !defined(__cpp_lib_jthread)
@@ -96,4 +95,4 @@ namespace BeeEngine::Internal
 #endif
         m_Thread = nullptr;
     }
-}
+} // namespace BeeEngine::Internal

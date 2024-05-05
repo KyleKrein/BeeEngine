@@ -19,6 +19,7 @@ namespace BeeEngine::Internal
         [[nodiscard]] WGPUTextureView GetDepthTextureView() const { return m_DepthTextureView; }
         [[nodiscard]] WGPUTextureFormat GetDepthFormat() const { return m_DepthFormat; }
         [[nodiscard]] WGPUTextureFormat GetFormat() const { return m_Format; }
+
     private:
         WGPUSwapChain m_SwapChain;
         WGPUTexture m_DepthTexture;
@@ -28,5 +29,5 @@ namespace BeeEngine::Internal
         uint32_t m_Width;
         uint32_t m_Height;
     };
-}
+} // namespace BeeEngine::Internal
 #endif

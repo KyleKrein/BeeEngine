@@ -7,19 +7,15 @@
 #include "Renderer/Renderer.h"
 #include <ranges>
 
+namespace BeeEngine
+{
 
-namespace BeeEngine{
-
-    LayerStack::LayerStack()
-    :m_layers()
-    {
-
-    }
+    LayerStack::LayerStack() : m_layers() {}
 
     LayerStack::~LayerStack()
     {
         BEE_PROFILE_FUNCTION();
-        for (auto& layer: m_layers)
+        for (auto& layer : m_layers)
         {
             layer->OnDetach();
         }
@@ -72,14 +68,14 @@ namespace BeeEngine{
         overlay->OnDetach();
     }
 
-    void LayerStack::OnEvent(EventDispatcher &dispatcher)
+    void LayerStack::OnEvent(EventDispatcher& dispatcher)
     {
         using std::views::reverse;
         BEE_PROFILE_FUNCTION();
         for (auto& layer : m_layers | reverse)
         {
             layer->OnEvent(dispatcher);
-            if(dispatcher.IsHandled())
+            if (dispatcher.IsHandled())
             {
                 break;
             }
@@ -93,17 +89,17 @@ namespace BeeEngine{
         {
             {
                 BEE_PROFILE_SCOPE("Layers::Update");
-                for (auto& layer: m_layers)
+                for (auto& layer : m_layers)
                 {
                     layer->OnUpdate(frameData);
                 }
             }
-            //if(Application::GetInstance().IsMinimized())
-                //return;
+            // if(Application::GetInstance().IsMinimized())
+            // return;
             {
                 BEE_PROFILE_SCOPE("Layers::GUIRendering");
                 m_guiLayer->OnBegin();
-                for (auto& layer: m_layers)
+                for (auto& layer : m_layers)
                 {
                     layer->OnGUIRendering();
                 }
@@ -117,4 +113,4 @@ namespace BeeEngine{
     {
         m_guiLayer.reset(guiLayer);
     }
-}
+} // namespace BeeEngine

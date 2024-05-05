@@ -4,28 +4,26 @@
 
 #pragma once
 #if defined(WINDOWS)
+#include "Core/TypeDefines.h"
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 #include "Platform/Vulkan/VulkanInstance.h"
 #include "WindowHandler.h"
-#include "Core/TypeDefines.h"
 #include <vulkan/vulkan.hpp>
 #include <windows.h>
 
 namespace BeeEngine::Internal
 {
-    class WinAPIWindowHandler final: public WindowHandler
+    class WinAPIWindowHandler final : public WindowHandler
     {
         friend LRESULT CALLBACK win32_process_message(HWND hwnd, uint32_t msg, WPARAM w_param, LPARAM l_param);
+
     public:
         WinAPIWindowHandler(const ApplicationProperties& properties, EventQueue& eventQueue);
         ~WinAPIWindowHandler() override;
 
         GlobalMouseState GetGlobalMouseState() const override;
 
-        WindowNativeInfo GetNativeInfo() override
-        {
-            return { m_Window, m_WindowsInstance };
-        }
+        WindowNativeInfo GetNativeInfo() override { return {m_Window, m_WindowsInstance}; }
 
         void SetWidth(uint16_t width) override;
 
@@ -49,24 +47,16 @@ namespace BeeEngine::Internal
 
         void Close() override;
 
-        GraphicsDevice& GetGraphicsDevice() override
-        {
-            return *m_GraphicsDevice;
-        }
+        GraphicsDevice& GetGraphicsDevice() override { return *m_GraphicsDevice; }
 
-        Instance& GetAPIInstance() override
-        {
-            return *m_Instance;
-        }
+        Instance& GetAPIInstance() override { return *m_Instance; }
 
-        EventQueue& GetEventQueue()
-        {
-            return m_Events;
-        }
+        EventQueue& GetEventQueue() { return m_Events; }
 
     private:
         void InitializeDragDrop();
         HMONITOR GetCurrentMonitor();
+
     private:
         HINSTANCE m_WindowsInstance;
         HWND m_Window;
@@ -79,11 +69,11 @@ namespace BeeEngine::Internal
                 ::DestroyWindow(m_WindowHandler->m_Window);
                 ::UnregisterClassW(m_WindowHandler->m_WindowClassName, m_WindowHandler->m_WindowsInstance);
             }
-        }m_WindowDeleter{this};
+        } m_WindowDeleter{this};
         Scope<VulkanInstance> m_Instance;
         Scope<VulkanGraphicsDevice> m_GraphicsDevice;
         mutable bool m_IsRunning = false;
         mutable bool m_IsClosing = false;
     };
-}
+} // namespace BeeEngine::Internal
 #endif

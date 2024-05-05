@@ -8,17 +8,16 @@
 #include "FileSystem/File.h"
 
 #if defined(WINDOWS)
-    #include <Windows.h>
+#include <Windows.h>
 #elif defined(MACOS)
-    #include <dlfcn.h>
+#include <dlfcn.h>
 #elif defined(LINUX)
-    #include <dlfcn.h>
+#include <dlfcn.h>
 #endif
 namespace BeeEngine
 {
 
-    DynamicLibrary::DynamicLibrary(const Path &path, const std::string &name)
-    : m_Handle(nullptr)
+    DynamicLibrary::DynamicLibrary(const Path& path, const std::string& name) : m_Handle(nullptr)
     {
         std::string fullName;
 #if defined(WINDOWS) || defined(MACOS) || defined(LINUX)
@@ -30,8 +29,7 @@ namespace BeeEngine
         Reload();
     }
 
-    DynamicLibrary::DynamicLibrary(const Path& path)
-        :m_Path(path)
+    DynamicLibrary::DynamicLibrary(const Path& path) : m_Path(path)
     {
         Reload();
     }
@@ -41,15 +39,15 @@ namespace BeeEngine
         Unload();
     }
 
-    void *DynamicLibrary::GetFunction(const char *name)
+    void* DynamicLibrary::GetFunction(const char* name)
     {
         void* ptr = nullptr;
 #if defined(WINDOWS)
-        ptr = reinterpret_cast<void *>(GetProcAddress((HINSTANCE) m_Handle, TEXT(name)));
+        ptr = reinterpret_cast<void*>(GetProcAddress((HINSTANCE)m_Handle, TEXT(name)));
 #elif defined(MACOS) || defined(LINUX)
         ptr = dlsym(m_Handle, name);
 #endif
-        if(ptr)
+        if (ptr)
             return ptr;
 #if defined(WINDOWS)
         BeeCoreError("Failed to get function {0}", name);
@@ -63,7 +61,7 @@ namespace BeeEngine
     {
         Unload();
         BeeCoreTrace("Loading library {0}", m_Path);
-        if(!File::Exists(m_Path))
+        if (!File::Exists(m_Path))
         {
             BeeCoreError("Failed to load library {}: File doesn't exist", m_Path);
             return;
@@ -73,7 +71,7 @@ namespace BeeEngine
 #elif defined(MACOS) || defined(LINUX)
         m_Handle = dlopen(m_Path.AsCString(), RTLD_LAZY);
 #endif
-        if(!m_Handle)
+        if (!m_Handle)
         {
 #if defined(WINDOWS)
             BeeCoreError("Failed to load library {0}", m_Path);
@@ -87,7 +85,7 @@ namespace BeeEngine
 
     void DynamicLibrary::Unload()
     {
-        if(!m_Handle)
+        if (!m_Handle)
             return;
         BeeCoreTrace("Unloading library {0}", m_Path);
 #if defined(WINDOWS)
@@ -97,4 +95,4 @@ namespace BeeEngine
 #endif
         m_Handle = nullptr;
     }
-}
+} // namespace BeeEngine

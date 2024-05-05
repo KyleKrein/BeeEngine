@@ -3,10 +3,10 @@
 //
 
 #pragma once
-#include "Locale/Locale.h"
+#include "Core/Application.h"
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetManager.h"
-#include "Core/Application.h"
+#include "Locale/Locale.h"
 #include <Core/AssetManagement/EditorAssetManager.h>
 
 namespace BeeEngine::Editor
@@ -18,14 +18,9 @@ namespace BeeEngine::Editor
 
         void Render();
         ~AssetEditPanel();
-        void ToggleOpened() noexcept
-        {
-            m_IsOpened = !m_IsOpened;
-        }
-        bool IsOpened() const noexcept
-        {
-            return m_IsOpened;
-        }
+        void ToggleOpened() noexcept { m_IsOpened = !m_IsOpened; }
+        bool IsOpened() const noexcept { return m_IsOpened; }
+
     private:
         AssetHandle m_Handle;
         Locale::Domain* m_Domain;
@@ -36,4 +31,4 @@ namespace BeeEngine::Editor
         void HandleLocalizedAssetSave();
     };
 
-} // BeeEngine
+} // namespace BeeEngine::Editor

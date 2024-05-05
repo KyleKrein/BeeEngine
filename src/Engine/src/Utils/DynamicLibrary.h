@@ -3,9 +3,8 @@
 //
 
 #pragma once
-#include <filesystem>
 #include "Core/Path.h"
-
+#include <filesystem>
 
 namespace BeeEngine
 {
@@ -15,15 +14,13 @@ namespace BeeEngine
         DynamicLibrary(const Path& path, const std::string& name);
         DynamicLibrary(const Path& path);
         ~DynamicLibrary();
-        bool IsLoaded()
-        {
-            return m_Handle != nullptr;
-        }
+        bool IsLoaded() { return m_Handle != nullptr; }
         void* GetFunction(const char* name);
         void Reload();
         void Unload();
+
     private:
         void* m_Handle = nullptr;
         Path m_Path;
     };
-}
+} // namespace BeeEngine
