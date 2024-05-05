@@ -51,8 +51,8 @@ namespace BeeEngine
 
             void UpdateCodepoint() const;
         };
-        iterator begin() const { return iterator(m_String->cbegin()); }
-        iterator end() const { return iterator(m_String->cend()); }
+        iterator begin() const { return {m_String->cbegin()}; }
+        iterator end() const { return {m_String->cend()}; }
 
     private:
         const UTF8String* m_String;

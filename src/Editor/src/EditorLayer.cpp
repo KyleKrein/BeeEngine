@@ -379,7 +379,9 @@ namespace BeeEngine::Editor
         // builds
         ScriptingEngine::Init();
         ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
-        ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetAssemblyPath());
+        Path debugSymbolsPath = m_ProjectFile->GetAssemblyPath();
+        debugSymbolsPath.ReplaceExtension(".pdb");
+        ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetAssemblyPath(), debugSymbolsPath);
         ScriptGlue::Register();
         ScriptingEngine::SetLocaleDomain(m_ProjectFile->GetProjectLocaleDomain());
         // auto& gameAssembly =

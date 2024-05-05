@@ -7,7 +7,6 @@
 #include "Core/Path.h"
 #include "Renderer/Texture.h"
 #include "Scene/Scene.h"
-#include <atomic>
 
 namespace BeeEngine::Editor
 {
@@ -37,7 +36,7 @@ namespace BeeEngine::Editor
         Path m_WorkingDirectory;
         Path m_CurrentDirectory;
         Ref<Scene> m_Context;
-        ProjectFile* m_Project;
+        ProjectFile* m_Project = nullptr;
         Locale::Domain* m_EditorDomain = nullptr;
 
         Ref<Texture2D> m_DirectoryIcon;

@@ -27,7 +27,7 @@ namespace BeeEngine::Editor
         if (ImGui::BeginPopup(name))
         {
             static std::array<char, 256> buffer;
-            ImGui::Text(domain->Translate("name").c_str());
+            ImGui::Text("%s", domain->Translate("name").c_str());
             ImGui::InputText("##Name", buffer.data(), buffer.size());
 
             if (ImGui::Button(domain->Translate("create").c_str(), {120, 0}))
@@ -103,7 +103,9 @@ namespace BeeEngine::Editor
         float panelWidth = ImGui::GetContentRegionAvail().x;
         int columnCount = (int)(panelWidth / cellSize);
         if (columnCount < 1)
+        {
             columnCount = 1;
+        }
 
         ImGui::Columns(columnCount, "retbsfbd", false);
 
@@ -117,7 +119,9 @@ namespace BeeEngine::Editor
             if (extension == ".csproj" || extension == ".sln" || filename == ".DS_Store" ||
                 (File::IsDirectory(path) &&
                  (filename == "beeengine" || filename == ".vs" || filename == ".beeengine" || filename == ".idea")))
+            {
                 continue;
+            }
             auto relativePath = path.GetRelativePath(m_WorkingDirectory);
             String filenameString = relativePath.GetFileName().AsUTF8();
             ImGui::PushID(filenameString.c_str());
@@ -248,7 +252,7 @@ namespace BeeEngine::Editor
                 ImGui::EndPopup();
             }
 
-            ImGui::TextWrapped(filenameString.c_str());
+            ImGui::TextWrapped("%s", filenameString.c_str());
 
             ImGui::NextColumn();
 
@@ -294,7 +298,9 @@ namespace BeeEngine::Editor
                         {
                             std::string scriptName = name;
                             if (scriptName.empty())
+                            {
                                 scriptName = "NewScript";
+                            }
                             Path scriptPath = m_CurrentDirectory / (scriptName + ".cs");
                             auto templ = ResourceManager::GetScriptTemplate(scriptName);
                             File::WriteFile(scriptPath, templ);
@@ -354,7 +360,9 @@ namespace BeeEngine::Editor
                     }
                 }
                 else
+                {
                     BeeCoreError("Failed to copy file: {0}", error.message());
+                }
             }
             ImGui::EndDragDropTarget();
         }
@@ -377,7 +385,9 @@ namespace BeeEngine::Editor
                                                    std::filesystem::copy_options::overwrite_existing,
                                                error);
                     if (error)
+                    {
                         BeeCoreError("Failed to copy file: {0}", error.message());
+                    }
                 }
             });
     }

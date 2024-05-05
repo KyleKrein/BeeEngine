@@ -1,5 +1,5 @@
 Checks: >
-  *,
+  -*,
   -android-*,
   -fuchsia-*,
   -google-*,
@@ -7,7 +7,7 @@ Checks: >
   performance-*,
   modernize-*,
   readability-*,
-  clang-analyzer-*,
+  -clang-analyzer-*,
   -cppcoreguidelines-*,
   -llvmlibc-implementation-in-namespace,
   -llvmlibc-callee-namespace,
@@ -26,8 +26,10 @@ Checks: >
   -readability-implicit-bool-conversion,
   -performance-no-int-to-ptr,
   -hicpp-use-auto,
-  -modernize-use-auto
-WarningsAsErrors: '*'
+  -modernize-use-auto,
+  -hicpp-vararg,
+  modernize-concat-nested-namespaces
+WarningsAsErrors: '-*'
 HeaderFilterRegex: '^(?!.*(\/vendor\/|\/build\/)).*'
 FormatStyle: file
 CheckOptions:

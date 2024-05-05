@@ -4,6 +4,7 @@
 
 #pragma once
 #include "Core/Path.h"
+#include <optional>
 
 namespace BeeEngine
 {
@@ -38,7 +39,9 @@ namespace BeeEngine
         static ManagedAssemblyContextID CreateContext(const String& contextName, bool canBeUnloaded);
         static void UnloadContext(ManagedAssemblyContextID contextID);
         static void Shutdown();
-        static ManagedAssemblyID LoadAssemblyFromPath(ManagedAssemblyContextID contextID, const Path& path);
+        static ManagedAssemblyID LoadAssemblyFromPath(ManagedAssemblyContextID contextID,
+                                                      const Path& path,
+                                                      const std::optional<Path>& debugSymbolsPath);
         static std::vector<ManagedClassID> GetClassesFromAssembly(ManagedAssemblyContextID contextID,
                                                                   ManagedAssemblyID assemblyID);
         static String

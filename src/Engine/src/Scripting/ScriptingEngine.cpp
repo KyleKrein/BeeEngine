@@ -75,6 +75,8 @@ namespace BeeEngine
 
         Path GameAssemblyPath = "";
         Path CoreAssemblyPath = "";
+        Path GameAssemblyDebugSymbolsPath = "";
+        Path CoreAssemblyDebugSymbolsPath = "";
 
         Locale::Domain* LocaleDomain = nullptr;
 
@@ -150,12 +152,12 @@ namespace BeeEngine
         BeeEnsures(s_Data.AppDomain);
     }
 
-    MAssembly& ScriptingEngine::LoadAssembly(const Path& path)
+    MAssembly& ScriptingEngine::LoadAssembly(const Path& path, const Path& debugSymbolsPath)
     {
         auto name = path.GetFileNameWithoutExtension().AsUTF8();
 
         s_Data.Assemblies[name] = {
-            s_Data.AppDomain, path.IsAbsolute() ? path : path.GetAbsolutePath(), s_Data.EnableDebugging};
+            s_Data.AppDomain, path.IsAbsolute() ? path : path.GetAbsolutePath(), debugSymbolsPath};
         return s_Data.Assemblies.at(name);
     }
 
@@ -179,13 +181,18 @@ namespace BeeEngine
     }
     void ScriptingEngine::LoadGameAssembly(const Path& path)
     {
+        LoadGameAssembly(path, {});
+    }
+    void ScriptingEngine::LoadGameAssembly(const Path& path, const Path& debugSymbolsPath)
+    {
         s_Data.GameAssemblyPath = path;
+        s_Data.GameAssemblyDebugSymbolsPath = debugSymbolsPath;
         if (!File::Exists(path))
         {
             BeeCoreWarn("Game assembly not found!");
             return;
         }
-        auto& assembly = LoadAssembly(path);
+        auto& assembly = LoadAssembly(path, debugSymbolsPath);
         for (auto& klass : assembly.GetClasses())
         {
             if (IsGameScript(*klass))
@@ -226,11 +233,15 @@ namespace BeeEngine
         }
         return true;
     }
-
     void ScriptingEngine::LoadCoreAssembly(const Path& path)
     {
+        LoadCoreAssembly(path, {});
+    }
+    void ScriptingEngine::LoadCoreAssembly(const Path& path, const Path& debugSymbolsPath)
+    {
         s_Data.CoreAssemblyPath = path;
-        auto& assembly = LoadAssembly(path);
+        s_Data.CoreAssemblyDebugSymbolsPath = debugSymbolsPath;
+        auto& assembly = LoadAssembly(path, debugSymbolsPath);
         for (auto& mClass : assembly.GetClasses())
         {
             if (mClass->GetName() == "Behaviour")
@@ -411,8 +422,8 @@ namespace BeeEngine
         UnloadAppContext();
 
         CreateAppDomain();
-        LoadCoreAssembly(s_Data.CoreAssemblyPath);
-        LoadGameAssembly(s_Data.GameAssemblyPath);
+        LoadCoreAssembly(s_Data.CoreAssemblyPath, s_Data.CoreAssemblyDebugSymbolsPath);
+        LoadGameAssembly(s_Data.GameAssemblyPath, s_Data.GameAssemblyDebugSymbolsPath);
 
         ScriptGlue::Register();
     }

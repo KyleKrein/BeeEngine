@@ -35,7 +35,7 @@ namespace BeeEngine
     };
     using SetupLoggerFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* info, void* warn, void* trace, void* error);
     using CreateAssemblyContextFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(void* name, int32_t canBeUnloaded);
-    using LoadAssemblyFromPathFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, void* path);
+    using LoadAssemblyFromPathFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, void* path, void* debugSymbolsPath);
     using GetClassesFromAssemblyFunction = ArrayInfo(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId);
     using FreeIntPtrFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* ptr);
     using GetClassNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
@@ -240,9 +240,9 @@ namespace BeeEngine
         delete s_Data;
     }
 
-    ManagedAssemblyID NativeToManaged::LoadAssemblyFromPath(ManagedAssemblyContextID contextID, const Path& path)
+    ManagedAssemblyID NativeToManaged::LoadAssemblyFromPath(ManagedAssemblyContextID contextID, const Path& path, const std::optional<Path>& debugSymbolsPath)
     {
-        return s_Data->LoadAssemblyFromPath(contextID, const_cast<char*>(path.AsCString()));
+        return s_Data->LoadAssemblyFromPath(contextID, const_cast<char*>(path.AsCString()), debugSymbolsPath.has_value() ? const_cast<char*>(debugSymbolsPath->AsCString()) : nullptr);
     }
 
     std::vector<ManagedClassID> NativeToManaged::GetClassesFromAssembly(ManagedAssemblyContextID contextID,

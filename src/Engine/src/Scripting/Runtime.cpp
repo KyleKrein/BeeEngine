@@ -142,21 +142,10 @@ namespace BeeEngine
 
     MAssembly::MAssembly() {}
 
-    MAssembly::MAssembly(uint64_t contextId, const Path& path, bool debug) : m_Path(path), m_ContextID(contextId)
+    MAssembly::MAssembly(uint64_t contextId, const Path& path, const Path& debugSymbolsPath)
+        : m_Path(path), m_DebugSymbolsPath(debugSymbolsPath), m_ContextID(contextId)
     {
         LoadAssembly();
-        /*if(debug)
-        {
-            Path pdbPath = path;
-            pdbPath.ReplaceExtension(".pdb");
-
-            if (File::Exists(pdbPath))
-            {
-                auto pdbFile = File::ReadBinaryFile(pdbPath);
-                mono_debug_open_image_from_memory(m_MonoImage, (const mono_byte*)pdbFile.data(), pdbFile.size());
-                BeeCoreInfo("Loaded PDB {}", pdbPath.AsUTF8());
-            }
-        }*/
         GetClassesFromAssembly();
     }
 
@@ -182,7 +171,10 @@ namespace BeeEngine
 
     void MAssembly::LoadAssembly()
     {
-        m_AssemblyID = NativeToManaged::LoadAssemblyFromPath(m_ContextID, m_Path);
+        std::optional<Path> debugSymbolsPath;
+        if (!m_DebugSymbolsPath.IsEmpty())
+            debugSymbolsPath = m_DebugSymbolsPath;
+        m_AssemblyID = NativeToManaged::LoadAssemblyFromPath(m_ContextID, m_Path, debugSymbolsPath);
         BeeCoreAssert(m_AssemblyID, "Failed to load assembly {}", m_Path.AsUTF8());
     }
 

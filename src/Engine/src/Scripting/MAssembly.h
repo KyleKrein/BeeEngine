@@ -14,7 +14,7 @@ namespace BeeEngine
 
     public:
         MAssembly();
-        MAssembly(uint64_t contextID, const Path& path, bool debug);
+        MAssembly(uint64_t contextID, const Path& path, const Path& debugSymbolsPath);
         ~MAssembly();
         MAssembly(const MAssembly&) = delete;
         MAssembly& operator=(const MAssembly&) = delete;
@@ -24,6 +24,7 @@ namespace BeeEngine
 
     private:
         Path m_Path;
+        Path m_DebugSymbolsPath;
         std::vector<Ref<class MClass>> m_Classes;
         uint64_t m_ContextID = 0;
         uint64_t m_AssemblyID = 0;

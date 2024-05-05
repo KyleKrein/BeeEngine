@@ -30,8 +30,10 @@ namespace BeeEngine
         static void EnableDebugging();
 
         static void LoadGameAssembly(const Path& path);
+        static void LoadGameAssembly(const Path& path, const Path& debugSymbolsPath);
 
         static void LoadCoreAssembly(const Path& path);
+        static void LoadCoreAssembly(const Path& path, const Path& debugSymbolsPath);
         static void ReloadAssemblies();
         static class MAssembly& GetCoreAssembly();
         static void OnRuntimeStart(class Scene* scene);
@@ -73,7 +75,7 @@ namespace BeeEngine
 
     private:
         static void InitDotNetHost();
-        static class MAssembly& LoadAssembly(const Path& path);
+        static class MAssembly& LoadAssembly(const Path& path, const Path& debugSymbolsPath);
         static void InitMono();
         static bool IsGameScript(const MClass& klass);
         static bool AreAllManagedHandlesLoaded();
