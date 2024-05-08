@@ -249,6 +249,7 @@ namespace BeeEngine::Editor
             }
             ImGui::End();
         }
+        m_UIEditor.Render();
         m_DockSpace.End();
     }
 
@@ -533,6 +534,10 @@ namespace BeeEngine::Editor
         {
             Application::SubmitToMainThread([this]() { SaveScene(); });
             return true;
+        }
+        if (Input::KeyPressed(Key::F3))
+        {
+            m_UIEditor.Toggle();
         }
         return false;
     }

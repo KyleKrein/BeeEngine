@@ -8,7 +8,9 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
         src/Panels/AssetPanel.h
         src/Panels/AssetEditPanel.cpp
         src/Panels/AssetEditPanel.h
-        src/ImGuiNativeDragAndDrop.h)
+        src/ImGuiNativeDragAndDrop.h
+        src/Panels/ImGuiUIEditor.h
+        src/Panels/ImGuiUIEditor.cpp)
 # files for native scripting: src/NativeScripting/ScriptParser.cpp src/NativeScripting/ScriptParser.h src/NativeScripting/ScriptScanner.cpp src/NativeScripting/ScriptScanner.h src/NativeScripting/CodeGenerators.cpp src/NativeScripting/CodeGenerators.h src/NativeScripting/GameBuilder.cpp src/NativeScripting/GameBuilder.h src/NativeScripting/StdioLogSystem.cpp
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 

@@ -1,7 +1,7 @@
-#include "Utils/Commands.h"
-#include <cstdlib>
 #include "Core/Logging/Log.h"
 #include "Platform/Platform.h"
+#include "Utils/Commands.h"
+#include <cstdlib>
 #include <mach/mach_time.h>
 
 namespace BeeEngine
@@ -9,15 +9,12 @@ namespace BeeEngine
     struct TimeInfo
     {
         mach_timebase_info_data_t info = {0, 0};
-        TimeInfo()
-        {
-            mach_timebase_info(&info);
-        }
+        TimeInfo() { mach_timebase_info(&info); }
     };
     void RunCommand(const String& command)
     {
         int result = system(command.c_str());
-        if(result != 0)
+        if (result != 0)
         {
             BeeCoreError("Command failed: {0}. Error code: {1}", command, result);
         }
@@ -47,6 +44,6 @@ namespace BeeEngine
         static TimeInfo info;
         uint64_t time = mach_absolute_time();
         float64_t nanoseconds = (float64_t)time * (float64_t)info.info.numer / (float64_t)info.info.denom;
-        return nanoseconds / 1e9;  // Конвертация наносекунд в секунды
+        return nanoseconds / 1e9; // Конвертация наносекунд в секунды
     }
-}
+} // namespace BeeEngine

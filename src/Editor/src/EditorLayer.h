@@ -17,6 +17,7 @@
 #include "Panels/AssetPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/DockSpace.h"
+#include "Panels/ImGuiUIEditor.h"
 #include "Panels/InspectorPanel.h"
 #include "Panels/MenuBar.h"
 #include "Panels/SceneHierarchyPanel.h"
@@ -114,5 +115,6 @@ namespace BeeEngine::Editor
 
         void DrawBuildProjectPopup();
         bool m_ShowBuildProjectPopup = false;
+        ImGuiUIEditor m_UIEditor{};
     };
 } // namespace BeeEngine::Editor

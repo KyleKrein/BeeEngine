@@ -5,6 +5,7 @@
 #include "Path.h"
 #include "Core/Application.h"
 #include "Core/CodeSafety/Expects.h"
+#include "Core/Move.h"
 
 #if defined(WINDOWS)
 #include "Platform/Windows/WindowsString.h"
@@ -35,13 +36,13 @@ namespace BeeEngine
     Path::Path(const std::filesystem::path& path)
     {
         auto utf8 = StringFromStdPath(path);
-        RefactorApplyAndCheck(std::move(utf8));
+        RefactorApplyAndCheck(BeeMove(utf8));
     }
 
     Path::Path(const UTF16String& path)
     {
         auto utf8 = ConvertUTF16ToUTF8(path);
-        RefactorApplyAndCheck(std::move(utf8));
+        RefactorApplyAndCheck(BeeMove(utf8));
     }
 
     Path::Path(const char* path)
@@ -61,26 +62,26 @@ namespace BeeEngine
 
     Path::Path(UTF8String&& path) noexcept
     {
-        RefactorApplyAndCheck(std::move(path));
+        RefactorApplyAndCheck(BeeMove(path));
     }
 
     Path::Path(std::filesystem::path&& path) noexcept
     {
         auto utf8 = StringFromStdPath(path);
-        RefactorApplyAndCheck(std::move(utf8));
+        RefactorApplyAndCheck(BeeMove(utf8));
     }
 
     void Path::RefactorApplyAndCheck(UTF8String&& utf8)
     {
         std::replace(utf8.begin(), utf8.end(), '\\', '/');
-        m_Path = std::move(utf8);
+        m_Path = BeeMove(utf8);
         BeeEnsures(IsValidString(m_Path));
     }
 
     Path::Path(UTF16String&& path) noexcept
     {
         auto utf8 = ConvertUTF16ToUTF8(path);
-        RefactorApplyAndCheck(std::move(utf8));
+        RefactorApplyAndCheck(BeeMove(utf8));
     }
 
     Path& Path::operator=(const UTF8String& path)
@@ -94,14 +95,14 @@ namespace BeeEngine
     Path& Path::operator=(const std::filesystem::path& path)
     {
         auto utf8 = StringFromStdPath(path);
-        RefactorApplyAndCheck(std::move(utf8));
+        RefactorApplyAndCheck(BeeMove(utf8));
         return *this;
     }
 
     Path& Path::operator=(const UTF16String& path)
     {
         auto utf8 = ConvertUTF16ToUTF8(path);
-        RefactorApplyAndCheck(std::move(utf8));
+        RefactorApplyAndCheck(BeeMove(utf8));
         return *this;
     }
 
@@ -121,21 +122,21 @@ namespace BeeEngine
 
     Path& Path::operator=(UTF8String&& path) noexcept
     {
-        RefactorApplyAndCheck(std::move(path));
+        RefactorApplyAndCheck(BeeMove(path));
         return *this;
     }
 
     Path& Path::operator=(std::filesystem::path&& path) noexcept
     {
         auto utf8 = StringFromStdPath(path);
-        RefactorApplyAndCheck(std::move(utf8));
+        RefactorApplyAndCheck(BeeMove(utf8));
         return *this;
     }
 
     Path& Path::operator=(UTF16String&& path) noexcept
     {
         auto utf8 = ConvertUTF16ToUTF8(path);
-        RefactorApplyAndCheck(std::move(utf8));
+        RefactorApplyAndCheck(BeeMove(utf8));
         return *this;
     }
 
@@ -250,7 +251,7 @@ namespace BeeEngine
     {
         if (other.IsAbsolute())
         {
-            m_Path = std::move(other.m_Path);
+            m_Path = BeeMove(other).m_Path;
         }
         else
         {
