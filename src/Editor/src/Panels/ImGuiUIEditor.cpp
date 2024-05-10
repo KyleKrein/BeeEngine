@@ -265,13 +265,22 @@ namespace BeeEngine
         ImGui::DragFloat("WindowBorderSize", &style.WindowBorderSize, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat2("WindowMinSize", &style.WindowMinSize.x, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat2("WindowTitleAlign", &style.WindowTitleAlign.x, 0.1f, 0.0f, 1.0f);
-        ImGui::BeginCombo("WindowMenuButtonPosition", ToString(style.WindowMenuButtonPosition).c_str());
-        for (int i = -1; i < ImGuiDir_COUNT; i++)
+        if (ImGui::BeginCombo("WindowMenuButtonPosition", ToString(style.WindowMenuButtonPosition).c_str()))
         {
-            if (ImGui::Selectable(ToString((ImGuiDir_)i).c_str(), style.WindowMenuButtonPosition == i))
-                style.WindowMenuButtonPosition = static_cast<ImGuiDir_>(i);
+            for (int i = -1; i < ImGuiDir_COUNT; i++)
+            {
+                bool isSelected = style.WindowMenuButtonPosition == i;
+                if (ImGui::Selectable(ToString((ImGuiDir_)i).c_str(), isSelected))
+                {
+                    style.WindowMenuButtonPosition = static_cast<ImGuiDir_>(i);
+                }
+                if (isSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
         }
-        ImGui::EndCombo();
         ImGui::DragFloat("ChildRounding", &style.ChildRounding, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("ChildBorderSize", &style.ChildBorderSize, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("PopupRounding", &style.PopupRounding, 0.1f, 0.0f, 100.0f);
@@ -292,15 +301,22 @@ namespace BeeEngine
         ImGui::DragFloat("TabRounding", &style.TabRounding, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("TabBorderSize", &style.TabBorderSize, 0.1f, 0.0f, 100.0f);
         ImGui::DragFloat("TabMinWidthForCloseButton", &style.TabMinWidthForCloseButton, 0.1f, 0.0f, 100.0f);
-        ImGui::BeginCombo("ColorButtonPosition", ToString(style.ColorButtonPosition).c_str());
-        for (int i = -1; i < ImGuiDir_COUNT; i++)
+        if (ImGui::BeginCombo("ColorButtonPosition", ToString(style.ColorButtonPosition).c_str()))
         {
-            if (ImGui::Selectable(ToString((ImGuiDir_)i).c_str(), style.ColorButtonPosition == i))
+            for (int i = -1; i < ImGuiDir_COUNT; i++)
             {
-                style.ColorButtonPosition = static_cast<ImGuiDir_>(i);
+                bool isSelected = style.ColorButtonPosition == i;
+                if (ImGui::Selectable(ToString((ImGuiDir_)i).c_str(), isSelected))
+                {
+                    style.ColorButtonPosition = static_cast<ImGuiDir_>(i);
+                }
+                if (isSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
             }
+            ImGui::EndCombo();
         }
-        ImGui::EndCombo();
         ImGui::DragFloat2("ButtonTextAlign", &style.ButtonTextAlign.x, 0.1f, 0.0f, 1.0f);
         ImGui::DragFloat2("SelectableTextAlign", &style.SelectableTextAlign.x, 0.1f, 0.0f, 1.0f);
 
