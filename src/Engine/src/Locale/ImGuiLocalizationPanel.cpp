@@ -7,6 +7,7 @@
 #include "Gui/ImGui/ImGuiExtension.h"
 #include "Locale.h"
 #include "LocalizationGenerator.h"
+#include <Core/Move.h>
 #include <algorithm>
 #include <array>
 #include <imgui_internal.h>
@@ -16,9 +17,21 @@ namespace BeeEngine::Locale
     {
         return ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.x * 2.0f;
     }
+    static Localization GetLocaleFromPath(const Path& path)
+    {
+        auto filename = path.GetFileName();
+        auto locale = filename.AsUTF8().substr(0, filename.AsUTF8().find('.'));
+        return {locale};
+    }
     ImGuiLocalizationPanel::ImGuiLocalizationPanel(Domain& domain, const Path& path)
         : m_Domain(&domain), m_SelectedLocale(domain.m_Locale), m_WorkingDirectory(path)
     {
+        std::vector<Path> files = LocalizationGenerator::GetLocalizationFiles(m_WorkingDirectory);
+        for (auto&& file : files)
+        {
+            auto loc = GetLocaleFromPath(file);
+            m_LocaleFiles[loc] = BeeMoveAlways(file);
+        }
         UpdateLocaleKeys();
     }
     void ImGuiLocalizationPanel::Render(ImGuiWindowFlags flags, bool canBeClosed)
@@ -111,8 +124,24 @@ namespace BeeEngine::Locale
                     m_Domain->m_LocalizationSources[locale].end())
                 {
                     m_Domain->AddLocalizationSource(loc, path);
+                    m_LocaleFiles[loc] = path;
                 }
             }
+            for (const auto& locale : m_LocalesToDelete)
+            {
+                m_Domain->m_LocalizationSources.erase(locale);
+                m_Domain->m_Languages.erase(locale.GetLanguageString());
+                if (m_LocaleFiles.contains(locale) && std::filesystem::exists(m_LocaleFiles[locale].ToStdPath()))
+                {
+                    std::filesystem::remove(m_LocaleFiles[locale].ToStdPath());
+                    m_LocaleFiles.erase(locale);
+                }
+                if (m_Domain->GetLocale() == locale)
+                {
+                    m_Domain->SetLocale(m_Domain->m_Languages.begin()->first);
+                }
+            }
+            m_LocalesToDelete.clear();
             m_Domain->Build();
         }
         ImGui::End();
@@ -251,9 +280,29 @@ namespace BeeEngine::Locale
                     isIncorrectLocale = true;
                     goto endPopup;
                 }
+                if (newLocale.size() != 2)
+                {
+                    ImGui::OpenPopup("Error");
+                    isIncorrectLocale = true;
+                    goto endPopup;
+                }
                 isIncorrectLocale = false;
                 m_LocaleKeys.insert({newLocale, {}});
                 auto& newLocaleKeys = m_LocaleKeys[newLocale];
+                if (m_LocaleKeys.size() > 1)
+                {
+                    for (auto& [locale, keys] : m_LocaleKeys)
+                    {
+                        if (locale != newLocale)
+                        {
+                            for (auto& [key, value] : keys)
+                            {
+                                newLocaleKeys.emplace_back(key, "");
+                            }
+                            break;
+                        }
+                    }
+                }
                 newLocale = "";
                 ImGui::CloseCurrentPopup();
             }
@@ -261,8 +310,9 @@ namespace BeeEngine::Locale
             if (isIncorrectLocale)
             {
                 ImGui::TextColored(Color4::Red,
-                                   newLocale.empty()
-                                       ? "Locale name cannot be empty"
+                                   newLocale.empty() ? "Locale name cannot be empty"
+                                   : newLocale.size() != 2
+                                       ? "Locale name must be 2 characters long"
                                        : FormatString("Locale with name {} already exists", newLocale).c_str());
             }
             ImGui::EndPopup();
@@ -276,9 +326,11 @@ namespace BeeEngine::Locale
             }
             if (ImGui::BeginPopup("Remove Locale"))
             {
-                ImGui::Text("Are you sure, that you want to delete locale %s?", m_SelectedLocale.GetLocale().c_str());
+                ImGui::Text("Are you sure, that you want to delete locale %s?",
+                            m_SelectedLocale.GetLanguageString().c_str());
                 if (ImGui::Button("Yes"))
                 {
+                    m_LocalesToDelete.push_back(m_SelectedLocale);
                     m_LocaleKeys.erase(m_SelectedLocale.GetLanguageString());
                     m_SelectedLocale = m_LocaleKeys.begin()->first;
                     ImGui::CloseCurrentPopup();

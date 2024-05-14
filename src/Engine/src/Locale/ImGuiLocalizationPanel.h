@@ -32,6 +32,8 @@ namespace BeeEngine::Locale
         Localization m_SelectedLocale;
         LocaleToKeyMap m_LocaleKeys;
         std::pair<Localization, String> m_KeyToRemove;
+        std::unordered_map<Localization, Path> m_LocaleFiles;
+        std::vector<Localization> m_LocalesToDelete;
         bool m_IsOpened = false;
 
         void RenderUpperPanel();
