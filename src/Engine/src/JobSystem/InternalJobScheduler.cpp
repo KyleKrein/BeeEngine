@@ -7,7 +7,7 @@
 // This code needs to be in this file to awoid bugs
 namespace BeeEngine
 {
-    Internal::JobScheduler* Job::s_Instance = nullptr;
+    Internal::JobScheduler* Internal::Job::s_Instance = nullptr;
 
     namespace Internal
     {

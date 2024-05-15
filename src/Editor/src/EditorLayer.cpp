@@ -22,6 +22,7 @@
 #include "Utils/FileDialogs.h"
 #include "imgui.h"
 #include <../../Engine/Assets/EmbeddedResources.h>
+#include <Core/Move.h>
 
 namespace BeeEngine::Editor
 {
@@ -135,10 +136,9 @@ namespace BeeEngine::Editor
             ImGui::Begin("Project");
             if (ImGui::Button("Load project"))
             {
-                static Job loadProjectJob{
-                    [](void* data)
+                auto loadProjectJob = Jobs::CreateJob(
+                    [this]()
                     {
-                        auto& self = *static_cast<EditorLayer*>(data);
                         auto projectPath = FileDialogs::OpenFile({"BeeEngine Project", "*.beeproj"});
                         if (projectPath.IsEmpty())
                         {
@@ -150,65 +150,59 @@ namespace BeeEngine::Editor
                         pathString = projectPath.RemoveFileName().AsUTF8();
                         Jobs::Counter counter;
                         {
-                            std::unique_lock lock(self.m_BigLock);
-                            self.m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &self.m_EditorAssetManager);
-                            self.m_ContentBrowserPanel.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
-                            self.m_ViewPort.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
-                            self.m_ViewPort.SetDomain(&self.m_ProjectFile->GetProjectLocaleDomain());
-                            self.m_InspectorPanel.SetWorkingDirectory(self.m_ProjectFile->GetProjectPath());
-                            ResourceManager::ProjectName = self.m_ProjectFile->GetProjectName();
+                            std::unique_lock lock(m_BigLock);
+                            m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &m_EditorAssetManager);
+                            m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                            m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                            m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
+                            m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
+                            ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
                             counter.Increment();
                             Application::SubmitToMainThread(
-                                [data, &counter]()
+                                [this, &counter]()
                                 {
-                                    auto& self = *static_cast<EditorLayer*>(data);
-                                    self.SetupGameLibrary();
+                                    SetupGameLibrary();
                                     counter.Decrement();
                                 });
 
-                            if (File::Exists(self.m_ProjectFile->GetProjectAssetRegistryPath()))
+                            if (File::Exists(m_ProjectFile->GetProjectAssetRegistryPath()))
                             {
-                                AssetRegistrySerializer assetRegistrySerializer(
-                                    &self.m_EditorAssetManager,
-                                    self.m_ProjectFile->GetProjectPath(),
-                                    self.m_ProjectFile->GetAssetRegistryID());
-                                assetRegistrySerializer.Deserialize(self.m_ProjectFile->GetProjectAssetRegistryPath());
+                                AssetRegistrySerializer assetRegistrySerializer(&m_EditorAssetManager,
+                                                                                m_ProjectFile->GetProjectPath(),
+                                                                                m_ProjectFile->GetAssetRegistryID());
+                                assetRegistrySerializer.Deserialize(m_ProjectFile->GetProjectAssetRegistryPath());
                                 std::vector<Path> assetPaths =
-                                    AssetScanner::GetAllAssetFiles(self.m_ProjectFile->GetProjectPath());
+                                    AssetScanner::GetAllAssetFiles(m_ProjectFile->GetProjectPath());
                                 for (auto& path : assetPaths)
                                 {
                                     auto name = path.GetFileNameWithoutExtension().AsUTF8();
-                                    const auto* handlePtr = self.m_EditorAssetManager.GetAssetHandleByName(name);
+                                    const auto* handlePtr = m_EditorAssetManager.GetAssetHandleByName(name);
                                     if (!handlePtr)
                                     {
-                                        self.m_EditorAssetManager.LoadAsset(path,
-                                                                            {self.m_ProjectFile->GetAssetRegistryID()});
+                                        m_EditorAssetManager.LoadAsset(path, {m_ProjectFile->GetAssetRegistryID()});
                                     }
                                 }
                             }
 
-                            self.m_InspectorPanel.SetProjectAssetRegistryID(self.m_ProjectFile->GetAssetRegistryID());
-                            self.m_InspectorPanel.SetProject(self.m_ProjectFile.get());
-                            self.m_AssetPanel.SetProject(self.m_ProjectFile.get());
-                            self.m_ContentBrowserPanel.SetProject(self.m_ProjectFile.get());
-                            self.m_AssetPanel.SetAssetDeletedCallback(
-                                [self = static_cast<EditorLayer*>(data)](const AssetHandle& handle)
-                                { self->DeleteAsset(handle); });
-                            self.m_ProjectFile->SetOnAssetRemovedCallback(
-                                [self = static_cast<EditorLayer*>(data)](const AssetHandle& handle)
-                                { self->DeleteAsset(handle); });
-                            self.m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(
-                                self.m_ProjectFile->GetProjectLocaleDomain(), self.m_ProjectFile->GetProjectPath());
+                            m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
+                            m_InspectorPanel.SetProject(m_ProjectFile.get());
+                            m_AssetPanel.SetProject(m_ProjectFile.get());
+                            m_ContentBrowserPanel.SetProject(m_ProjectFile.get());
+                            m_AssetPanel.SetAssetDeletedCallback([this](const AssetHandle& handle)
+                                                                 { DeleteAsset(handle); });
+                            m_ProjectFile->SetOnAssetRemovedCallback([this](const AssetHandle& handle)
+                                                                     { DeleteAsset(handle); });
+                            m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(
+                                m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
                         }
-                        Job::WaitForJobsToComplete(counter);
-                        auto scenePath = self.m_ProjectFile->GetLastUsedScenePath();
+                        Jobs::WaitForJobsToComplete(counter);
+                        auto scenePath = m_ProjectFile->GetLastUsedScenePath();
                         if (!scenePath.IsEmpty())
                         {
-                            self.LoadScene(scenePath);
+                            LoadScene(scenePath);
                         }
-                    },
-                    this};
-                Job::Schedule(loadProjectJob);
+                    });
+                Jobs::Schedule(BeeMove(loadProjectJob));
             }
             if (ImGui::Button("New project"))
             {
@@ -333,13 +327,9 @@ namespace BeeEngine::Editor
         buildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.rebuildGameLibrary"),
                             [this]()
                             {
-                                static Job reloadJob{[](void* data)
-                                                     {
-                                                         auto& self = *static_cast<EditorLayer*>(data);
-                                                         self.m_ProjectFile->ReloadAndRebuildGameLibrary();
-                                                     }};
-                                reloadJob.Data = this;
-                                Job::Schedule(reloadJob);
+                                auto reloadJob =
+                                    Jobs::CreateJob([this]() { m_ProjectFile->ReloadAndRebuildGameLibrary(); });
+                                Jobs::Schedule(BeeMove(reloadJob));
                             }});
         buildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.buildProject"),
                             [this]() { m_ShowBuildProjectPopup = true; }});
@@ -764,28 +754,18 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
         ImGui::SameLine();
         if (ImGui::Button("..."))
         {
-            struct JobData
-            {
-                std::string& StringPath;
-                Path& Path;
-            };
-            static JobData getOutputPathJobData{outputPath, options.OutputPath};
-            static Job getOutputPathJob{
-                .Function =
-                    [](void* data)
+            auto getOutputPathJob = Jobs::CreateJob(
+                []()
                 {
-                    auto& jobData = *static_cast<JobData*>(data);
-                    Path path = FileDialogs::OpenFolder();
-                    if (path.IsEmpty())
+                    Path chosenPath = FileDialogs::OpenFolder();
+                    if (chosenPath.IsEmpty())
                     {
                         return;
                     }
-                    jobData.StringPath = path.AsUTF8();
-                    jobData.Path = std::move(path);
-                },
-                .Data = &getOutputPathJobData,
-            };
-            Job::Schedule(getOutputPathJob);
+                    outputPath = chosenPath.AsUTF8();
+                    options.OutputPath = std::move(chosenPath);
+                });
+            Jobs::Schedule(BeeMove(getOutputPathJob));
         }
         static std::string customError;
         auto areAllFieldsFilled = [this]() -> bool

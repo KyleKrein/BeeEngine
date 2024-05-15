@@ -47,14 +47,14 @@ namespace BeeEngine
             g_Restart = false;
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
             Internal::InitEngine();
-            Job::Initialize();
+            BeeEngine::Internal::Job::Initialize();
             Internal::WindowsUTF8ConsoleOutput consoleOutput;
             Application* application = CreateApplication({argc, argv});
             BEE_DEBUG_END_PROFILING_SESSION();
             application->Run();
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineShutdown", "shutdown.json");
             delete application;
-            Job::Shutdown();
+            BeeEngine::Internal::Job::Shutdown();
             Internal::ShutDownEngine();
             BEE_DEBUG_END_PROFILING_SESSION();
         }

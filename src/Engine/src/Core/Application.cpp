@@ -25,49 +25,39 @@ namespace BeeEngine
             m_Window->GetWidth(), m_Window->GetHeight(), m_Window->GetWidthInPixels(), m_Window->GetHeightInPixels()));
         std::condition_variable cv;
         std::mutex mutex;
-        struct FrameJobInfo
-        {
-            std::condition_variable* cv;
-            Application* self;
-        } frameJobInfo = {&cv, this};
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
             ExecuteMainThreadQueue();
             m_Window->ProcessEvents();
             std::unique_lock lock(mutex);
-            Job frameJob{[](void* data)
-                         {
-                             auto& frameJobInfo = *reinterpret_cast<FrameJobInfo*>(data);
-                             auto& self = *frameJobInfo.self;
+            auto frameJob = Jobs::CreateJob<Jobs::Priority::Normal, 1024 * 1024>(
+                [this](std::condition_variable& cv)
+                {
+                    m_EventQueue.Dispatch();
+                    auto deltaTime = m_Window->UpdateTime();
+                    // if(!self.IsMinimized())
+                    //{
+                    auto frameData = Renderer::BeginFrame();
+                    frameData.SetDeltaTime(deltaTime);
+                    Renderer::StartMainCommandBuffer(frameData);
+                    m_Layers.Update(frameData);
+                    Update(frameData);
+                    Renderer::EndMainCommandBuffer(frameData);
+                    Renderer::EndFrame(frameData);
+                    //}
+                    // else
+                    //{
+                    //    self.m_Layers.Update();
+                    //    self.Update();
+                    //}
 
-                             self.m_EventQueue.Dispatch();
-                             auto deltaTime = self.m_Window->UpdateTime();
-                             // if(!self.IsMinimized())
-                             //{
-                             auto frameData = Renderer::BeginFrame();
-                             frameData.SetDeltaTime(deltaTime);
-                             Renderer::StartMainCommandBuffer(frameData);
-                             self.m_Layers.Update(frameData);
-                             self.Update(frameData);
-                             Renderer::EndMainCommandBuffer(frameData);
-                             Renderer::EndFrame(frameData);
-                             //}
-                             // else
-                             //{
-                             //    self.m_Layers.Update();
-                             //    self.Update();
-                             //}
+                    DeletionQueue::Frame().Flush();
 
-                             DeletionQueue::Frame().Flush();
-
-                             frameJobInfo.cv->notify_one();
-                         },
-                         &frameJobInfo,
-                         nullptr,
-                         Jobs::Priority::High,
-                         1024 * 1024};
-            Job::Schedule(frameJob);
+                    cv.notify_one();
+                },
+                cv);
+            Jobs::Schedule(frameJob);
             cv.wait(lock);
         }
         DeletionQueue::Main().Flush();

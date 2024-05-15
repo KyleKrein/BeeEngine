@@ -5,8 +5,10 @@
 #pragma once
 #include <mutex>
 #include <queue>
+#include <vector>
 
 #include "Core/TypeDefines.h"
+#include "JobSystem/JobScheduler.h"
 
 namespace BeeEngine
 {
@@ -15,13 +17,9 @@ namespace BeeEngine
         class Fiber
         {
         public:
-            Fiber() = default;
-
-            Fiber(Job* job);
+            Fiber(JobWrapper&& job);
 
             Fiber(Fiber&& other) noexcept;
-
-            Fiber& operator=(Fiber&& other) noexcept;
 
             // Запускает или возобновляет выполнение файбера
             void Resume();
@@ -31,12 +29,12 @@ namespace BeeEngine
             void MarkIncomplete() { m_IsCompleted = false; }
             void MarkCompleted() { m_IsCompleted = true; }
 
-            Job* GetJob() { return m_Job; }
+            JobWrapper GetJob() { return m_Job; }
 
             boost::context::continuation& GetContext() { return m_Continuation; }
 
         private:
-            Job* m_Job = nullptr;
+            JobWrapper m_Job;
             boost::context::continuation m_Continuation;
             std::atomic<bool> m_IsCompleted = false;
         };
@@ -59,7 +57,7 @@ namespace BeeEngine
                 if (!m_Done)
                     Stop();
             }
-            void Schedule(Job* job);
+            void Schedule(JobWrapper&& job);
             void ScheduleAll(std::ranges::range auto& jobs)
             {
                 if (std::ranges::size(jobs) == 0)
@@ -78,21 +76,21 @@ namespace BeeEngine
                 }
                 m_ConditionVariable.notify_all();
             }
-            void ScheduleAll(Job* jobs, size_t count)
+            void ScheduleAll(std::vector<JobWrapper> jobs)
             {
-                if (count == 0)
+                if (jobs.empty())
                 {
                     return;
                 }
                 std::unique_lock lock(m_QueueMutex);
-                for (size_t i = 0; i < count; ++i)
+                for (auto& job : jobs)
                 {
-                    auto& queue = GetQueue(jobs[i].Priority);
-                    if (jobs[i].Counter)
+                    auto& queue = GetQueue(job.Priority);
+                    if (job.Counter)
                     {
-                        jobs[i].Counter->Increment();
+                        job.Counter->Increment();
                     }
-                    queue.push(&jobs[i]);
+                    queue.push(job);
                 }
                 m_ConditionVariable.notify_all();
             }
@@ -113,7 +111,7 @@ namespace BeeEngine
         private:
             // void Schedule(Ref<Internal::Fiber>&& fiber);
 
-            std::queue<Job*>& GetQueue(Jobs::Priority priority)
+            std::queue<JobWrapper>& GetQueue(Jobs::Priority priority)
             {
                 switch (priority)
                 {
@@ -133,11 +131,11 @@ namespace BeeEngine
                        m_WaitingJobs.empty();
             }
             bool GetNextFiber(Ref<::BeeEngine::Internal::Fiber>& fiber);
-            Ref<::BeeEngine::Internal::Fiber> PopJob(std::queue<Job*>& queue);
+            Ref<::BeeEngine::Internal::Fiber> PopJob(std::queue<JobWrapper>& queue);
             std::vector<std::thread> m_Threads;
-            std::queue<Job*> m_LowPriorityJobs;
-            std::queue<Job*> m_MediumPriorityJobs;
-            std::queue<Job*> m_HighPriorityJobs;
+            std::queue<JobWrapper> m_LowPriorityJobs;
+            std::queue<JobWrapper> m_MediumPriorityJobs;
+            std::queue<JobWrapper> m_HighPriorityJobs;
             std::mutex m_QueueMutex;
             std::vector<WaitingContext> m_WaitingJobs;
             std::mutex m_WaitingJobsMutex;

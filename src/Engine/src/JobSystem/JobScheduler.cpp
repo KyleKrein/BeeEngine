@@ -10,6 +10,7 @@
 
 #include "Core/TypeDefines.h"
 #include "Platform/Platform.h"
+#include <Core/Move.h>
 
 namespace BeeEngine
 {
@@ -18,17 +19,17 @@ namespace BeeEngine
         if (!m_Continuation)
         {
             // Первый запуск
-            boost::context::fixedsize_stack stack_alloc(m_Job->StackSize);
+            boost::context::fixedsize_stack stack_alloc(m_Job.StackSize);
             m_Continuation = boost::context::callcc(std::allocator_arg,
                                                     stack_alloc,
                                                     [this](boost::context::continuation&& c)
                                                     {
                                                         m_Continuation = std::move(c);
                                                         m_IsCompleted = true;
-                                                        m_Job->Function(m_Job->Data);
-                                                        if (m_Job->Counter && m_IsCompleted)
+                                                        m_Job();
+                                                        if (m_Job.Counter && m_IsCompleted)
                                                         {
-                                                            m_Job->Counter->Decrement();
+                                                            m_Job.Counter->Decrement();
                                                         }
                                                         return std::move(m_Continuation);
                                                     });
@@ -41,7 +42,7 @@ namespace BeeEngine
         }
     }
 
-    Internal::Fiber::Fiber(Job* job) : m_Job(job), m_IsCompleted(false)
+    Internal::Fiber::Fiber(JobWrapper&& job) : m_Job(BeeMove(job)), m_IsCompleted(false)
     {
         /*if (auto counter = job->Counter)
         {
@@ -49,16 +50,16 @@ namespace BeeEngine
         }*/
     }
 
-    void Internal::JobScheduler::Schedule(Job* job)
+    void Internal::JobScheduler::Schedule(JobWrapper&& job)
     {
         {
             std::unique_lock<std::mutex> lock(m_QueueMutex);
-            auto& queue = GetQueue(job->Priority);
-            if (job->Counter)
+            auto& queue = GetQueue(job.Priority);
+            if (job.Counter)
             {
-                job->Counter->Increment();
+                job.Counter->Increment();
             }
-            queue.push(job);
+            queue.push(BeeMove(job));
         }
         m_ConditionVariable.notify_one();
     }
@@ -93,52 +94,48 @@ namespace BeeEngine
                 return std::move(GetMainContext());
             });
     }
-    void Job::Initialize(uint32_t numberOfThreads)
+    void Internal::Schedule(JobWrapper&& job)
+    {
+        Internal::Job::s_Instance->Schedule(BeeMove(job));
+    }
+    void Internal::ScheduleAll(std::vector<JobWrapper> jobs)
+    {
+        Internal::Job::s_Instance->ScheduleAll(BeeMove(jobs));
+    }
+    void Internal::Job::Initialize(uint32_t numberOfThreads)
     {
         s_Instance = new Internal::JobScheduler(numberOfThreads);
     }
-
-    void Job::Schedule(Job& job)
-    {
-        s_Instance->Schedule(&job);
-    }
     namespace Internal
     {
-        Ref<Internal::Fiber> JobScheduler::PopJob(std::queue<Job*>& queue)
+        Ref<Internal::Fiber> JobScheduler::PopJob(std::queue<JobWrapper>& queue)
         {
-            auto job = CreateRef<Internal::Fiber>(queue.front());
+            auto job = CreateRef<Internal::Fiber>(std::move(queue.front()));
             queue.pop();
             return job;
         }
     } // namespace Internal
 
-    void Job::WaitForJobsToComplete(Jobs::Counter& counter)
+    void Jobs::WaitForJobsToComplete(Jobs::Counter& counter)
     {
-        s_Instance->WaitForJobsToComplete(counter);
+        Internal::Job::s_Instance->WaitForJobsToComplete(counter);
     }
 
-    void Job::Shutdown()
+    void Internal::Job::Shutdown()
     {
-        delete s_Instance;
+        delete Internal::Job::s_Instance;
     }
 
     Internal::Fiber::Fiber(BeeEngine::Internal::Fiber&& other) noexcept
-        : m_Continuation(std::move(other.m_Continuation)), m_IsCompleted(other.m_IsCompleted.load())
+        : m_Job(BeeMove(other).m_Job),
+          m_Continuation(std::move(other.m_Continuation)),
+          m_IsCompleted(other.m_IsCompleted.load())
     {
-        std::swap(m_Job, other.m_Job);
-    }
-
-    BeeEngine::Internal::Fiber& Internal::Fiber::operator=(BeeEngine::Internal::Fiber&& other) noexcept
-    {
-        std::swap(m_Job, other.m_Job);
-        m_Continuation = std::move(other.m_Continuation);
-        m_IsCompleted = other.m_IsCompleted.load();
-        return *this;
     }
 
     Internal::JobScheduler::WaitingContext::WaitingContext(BeeEngine::Ref<BeeEngine::Internal::Fiber>&& fiber,
                                                            Jobs::Counter* counter)
-        : fiber(std::move(fiber)), counter(counter)
+        : fiber(BeeMove(fiber)), counter(counter)
     {
     }
 
@@ -212,25 +209,20 @@ namespace BeeEngine
         return false;
     }
 
-    void Job::ScheduleAll(Job* jobs, size_t count)
-    {
-        s_Instance->ScheduleAll(jobs, count);
-    }
-
     void Jobs::this_job::yield()
     {
-        auto ptr = Job::s_Instance->GetCurrentFiber();
-        auto& ref = Job::s_Instance->GetCurrentFiber();
+        auto ptr = Internal::Job::s_Instance->GetCurrentFiber();
+        auto& context = ptr->GetContext();
         {
-            auto* counter = ref->GetJob()->Counter;
-            std::unique_lock lock(Job::s_Instance->m_WaitingJobsMutex);
-            Job::s_Instance->m_WaitingJobs.emplace_back(std::move(ptr), counter);
+            auto* counter = ptr->GetJob().Counter;
+            std::unique_lock lock(Internal::Job::s_Instance->m_WaitingJobsMutex);
+            Internal::Job::s_Instance->m_WaitingJobs.emplace_back(std::move(ptr), counter);
         }
-        ref->GetContext() = std::move(ref->GetContext().resume());
+        context = std::move(context.resume());
     }
     bool Jobs::this_job::IsInJob()
     {
-        return Job::s_Instance->GetCurrentFiber() != nullptr;
+        return Internal::Job::s_Instance->GetCurrentFiber() != nullptr;
     }
 
 } // namespace BeeEngine

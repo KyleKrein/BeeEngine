@@ -54,31 +54,28 @@ namespace BeeEngine
             // BeeCoreTrace("Locking flush. Flush was locked: {0}, Push was locked: {1}",m_FlushLock.is_locked(),
             // m_PushLock.is_locked());
             std::unique_lock lock(m_FlushLock);
-            if (false /*Jobs::this_job::IsInJob()*/) // TODO: find issues in Job System/DeletionQueue and uncomment this
-            {
+            // if (false /*Jobs::this_job::IsInJob()*/) // TODO: find issues in Job System/DeletionQueue and uncomment
+            // this
+            /*{
                 Jobs::Counter counter;
-                std::vector<Job> jobs;
+                constexpr auto lambda = [](std::function<void()>& function) mutable { function(); };
+                using job_t = std::invoke_result_t<decltype(Jobs::CreateJob<decltype(lambda), std::function<void()>>)>;
+                std::vector<job_t> jobs;
                 for (auto& function : m_DeletionQueue)
                 {
-                    Job job = {[](void* data)
-                               {
-                                   auto* function = (std::function<void()>*)data;
-                                   (*function)();
-                               },
-                               &function,
-                               &counter};
-                    jobs.push_back(job);
+                    auto job = Jobs::CreateJob(lambda, function);
+                    jobs.push_back(std::move(job));
                 }
-                Job::ScheduleAll(jobs.data(), jobs.size());
-                Job::WaitForJobsToComplete(counter);
-            }
-            else
+                Jobs::ScheduleAll<job_t>({jobs.data(), jobs.size()});
+                Jobs::WaitForJobsToComplete(counter);
+            }*/
+            // else
+            //{
+            for (auto& function : m_DeletionQueue)
             {
-                for (auto& function : m_DeletionQueue)
-                {
-                    function();
-                }
+                function();
             }
+            //}
             m_DeletionQueue.clear();
             // BeeCoreTrace("Locking push. Flush was locked: {0}, Push was locked: {1}",m_FlushLock.is_locked(),
             // m_PushLock.is_locked());

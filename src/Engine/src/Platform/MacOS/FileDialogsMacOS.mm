@@ -61,7 +61,7 @@ BeeEngine::Path BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
         }
         counter.Decrement();
     });
-    Job::WaitForJobsToComplete(counter);
+    Jobs::WaitForJobsToComplete(counter);
     return result;
 }
 
@@ -96,7 +96,7 @@ BeeEngine::Path BeeEngine::FileDialogs::SaveFile(Filter filter)
         }
         counter.Decrement();
     });
-    Job::WaitForJobsToComplete(counter);
+    Jobs::WaitForJobsToComplete(counter);
     return result;
 }
 
@@ -136,7 +136,7 @@ BeeEngine::Path BeeEngine::FileDialogs::OpenFolder()
         }
         counter.Decrement();
     });
-    Job::WaitForJobsToComplete(counter);
+    Jobs::WaitForJobsToComplete(counter);
     return result;
 }
 #pragma clang diagnostic pop
