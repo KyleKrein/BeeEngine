@@ -245,7 +245,7 @@ namespace BeeEngine
             << ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg].y << "f, "
             << ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg].z << "f, "
             << ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg].w << "f);\n";
-        return oss.str();
+        return String{oss.str()};
     }
     void ImGuiUIEditor::Render()
     {

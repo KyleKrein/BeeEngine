@@ -20,7 +20,7 @@ namespace BeeEngine
     UTF16String ConvertUTF8ToUTF16(const UTF8String& string)
     {
         BeeExpects(IsValidString(string));
-        return utf8::utf8to16(string);
+        return utf8::utf8to16(static_cast<std::string_view>(string));
     }
 
     UTF8String ConvertUTF16ToUTF8(const UTF16String& string)
@@ -37,7 +37,7 @@ namespace BeeEngine
     const unsigned char kFourthBitMask = 16; // 0001000
     const unsigned char kFifthBitMask = 8;   // 0000100
 
-    UTF8StringView::iterator::iterator(std::string::const_iterator it) : m_StringIterator(it) {}
+    UTF8StringView::iterator::iterator(String::const_iterator it) : m_StringIterator(it) {}
 
     UTF8StringView::iterator::iterator(const UTF8StringView::iterator& source)
         : m_StringIterator(source.m_StringIterator)

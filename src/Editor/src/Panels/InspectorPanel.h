@@ -42,13 +42,13 @@ namespace BeeEngine::Editor
         void DrawComponents(Entity entity);
 
         template <typename T, typename UIFunction>
-        void DrawComponentUI(std::string_view label, Entity entity, UIFunction func);
+        void DrawComponentUI(const String& label, Entity entity, UIFunction func);
         template <typename T, typename UIFunction>
-        void DrawConsistentComponentUI(std::string_view label, Entity entity, UIFunction func);
+        void DrawConsistentComponentUI(const String& label, Entity entity, UIFunction func);
 
         template <typename T>
-        void AddComponentPopup(std::string_view label, Entity entity);
-        void DrawVec3ComponentUI(std::string_view label,
+        void AddComponentPopup(const String& label, Entity entity);
+        void DrawVec3ComponentUI(const String& label,
                                  glm::vec3& values,
                                  float resetValue = 0.0f,
                                  float columnWidth = 100.0f);

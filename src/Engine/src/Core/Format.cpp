@@ -19,9 +19,9 @@ namespace BeeEngine::Internal
             if (format_str[pos] == '{')
             {
                 std::size_t end_pos = format_str.find('}', pos);
-                if (end_pos != std::string::npos)
+                if (end_pos != String::npos)
                 {
-                    std::string index_str = format_str.substr(pos + 1, end_pos - pos - 1);
+                    String index_str = format_str.substr(pos + 1, end_pos - pos - 1);
                     if (index_str.empty())
                     {
                         // Handle unindexed placeholders like {}
@@ -37,7 +37,7 @@ namespace BeeEngine::Internal
                     else if (std::all_of(index_str.begin(), index_str.end(), ::isdigit))
                     {
                         // Handle indexed placeholders like {0}, {1}, etc.
-                        int index = std::stoi(index_str);
+                        int index = std::stoi(index_str.c_str());
                         if (index < static_cast<int>(args.size()))
                         {
                             result << args[index];
@@ -65,6 +65,6 @@ namespace BeeEngine::Internal
                 ++pos;
             }
         }
-        return result.str();
+        return String{result.str()};
     }
 } // namespace BeeEngine::Internal

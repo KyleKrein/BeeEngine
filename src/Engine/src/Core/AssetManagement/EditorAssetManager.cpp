@@ -17,13 +17,12 @@ namespace BeeEngine
         {
             const auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
-            m_AssetMap.at(handle)->Name = metadata.Name;
+            m_AssetMap.at(handle)->Name = static_cast<std::string_view>(metadata.Name);
         }
         return m_AssetMap.at(handle);
     }
 
-    void
-    EditorAssetManager::LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type)
+    void EditorAssetManager::LoadAsset(gsl::span<byte> data, AssetHandle handle, const String& name, AssetType type)
     {
         BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
         AssetMetadata metadata;
@@ -86,7 +85,7 @@ namespace BeeEngine
         {
             const AssetMetadata& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
             m_AssetMap[handle] = AssetImporter::ImportAsset(handle, metadata);
-            m_AssetMap.at(handle)->Name = metadata.Name;
+            m_AssetMap.at(handle)->Name = static_cast<std::string_view>(metadata.Name);
         }
         return m_AssetMap.at(handle).get();
     }
@@ -97,7 +96,7 @@ namespace BeeEngine
         return m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
     }
 
-    const AssetHandle* EditorAssetManager::GetAssetHandleByName(std::string_view name) const
+    const AssetHandle* EditorAssetManager::GetAssetHandleByName(const String& name) const
     {
         if (!m_AssetNameMap.contains(name.data()))
         {

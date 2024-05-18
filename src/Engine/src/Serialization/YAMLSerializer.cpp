@@ -42,7 +42,7 @@ namespace BeeEngine::Serialization
 
     YAMLSerializer& operator&(YAMLSerializer& serializer, UTF8String& value)
     {
-        serializer.m_Data->Out << value;
+        serializer.m_Data->Out << value.c_str();
         return serializer;
     }
 
@@ -150,7 +150,7 @@ namespace BeeEngine::Serialization
 
     void YAMLSerializer::SerializeString(const String& string)
     {
-        m_Data->Out << string;
+        m_Data->Out << string.c_str();
     }
 
     YAMLSerializer& operator&(YAMLSerializer& serializer, Serialization::Key key)

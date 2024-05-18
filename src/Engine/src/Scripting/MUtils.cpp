@@ -59,7 +59,7 @@ namespace BeeEngine
 
     MType MUtils::StringToMType(const String& name)
     {
-        static std::unordered_map<std::string_view, MType> MTypeMap = {
+        static std::unordered_map<String, MType> MTypeMap = {
             {"Void", MType::Void},
             {"Boolean", MType::Boolean},
             {"Char", MType::Char},

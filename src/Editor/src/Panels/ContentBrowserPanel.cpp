@@ -179,7 +179,7 @@ namespace BeeEngine::Editor
             }
             if (ImGui::BeginPopupModal(m_EditorDomain->Translate("contentBrowserPanel.renamePopup").c_str()))
             {
-                static std::string newName;
+                static String newName;
                 ImGui::InputText("##NewName", &newName);
                 if (ImGui::Button(m_EditorDomain->Translate("rename").c_str()))
                 {
@@ -296,7 +296,7 @@ namespace BeeEngine::Editor
                         m_EditorDomain,
                         [&](const char* name)
                         {
-                            std::string scriptName = name;
+                            String scriptName = name;
                             if (scriptName.empty())
                             {
                                 scriptName = "NewScript";

@@ -77,7 +77,7 @@ namespace BeeEngine::Internal
                         const Color4& color,
                         BindingSet& cameraBindingSet,
                         float lineWidth);
-        void SubmitText(const std::string& text,
+        void SubmitText(const String& text,
                         Font& font,
                         BindingSet& cameraBindingSet,
                         const glm::mat4& transform,

@@ -23,16 +23,16 @@ namespace BeeEngine
         switch (level)
         {
             case Level::Error:
-                logger->error(message);
+                logger->error(message.c_str());
                 break;
             case Level::Warning:
-                logger->warn(message);
+                logger->warn(message.c_str());
                 break;
             case Level::Information:
-                logger->info(message);
+                logger->info(message.c_str());
                 break;
             case Level::Trace:
-                logger->trace(message);
+                logger->trace(message.c_str());
                 break;
         }
     }

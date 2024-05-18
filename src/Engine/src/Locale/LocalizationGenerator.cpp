@@ -22,8 +22,8 @@ namespace BeeEngine::Locale
         const auto& keyMap = domain.m_Languages.at(locale.GetLanguageString());
         for (const auto& [key, value] : keyMap)
         {
-            out << YAML::Key << key;
-            out << YAML::Value << value;
+            out << YAML::Key << key.c_str();
+            out << YAML::Value << value.c_str();
         }
 
         out << YAML::EndMap;
@@ -60,10 +60,10 @@ namespace BeeEngine::Locale
         domain.AddLocale(locale);
         domain.AddLocalizationSource(locale, path);
         auto content = File::ReadFile(path);
-        YAML::Node node = YAML::Load(content);
+        YAML::Node node = YAML::Load(content.c_str());
         for (auto key : node)
         {
-            domain.AddLocaleKey(locale, key.first.as<std::string>(), key.second.as<std::string>());
+            domain.AddLocaleKey(locale, String{key.first.as<std::string>()}, String{key.second.as<std::string>()});
         }
     }
 

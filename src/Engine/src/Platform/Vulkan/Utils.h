@@ -27,7 +27,7 @@ namespace BeeEngine::Internal
     {
         if (result != vk::Result::eSuccess)
         {
-            BeeCoreError("Vulkan error: " + vk::to_string(result));
+            BeeCoreError("Vulkan error: {0}", vk::to_string(result));
         }
     }
 

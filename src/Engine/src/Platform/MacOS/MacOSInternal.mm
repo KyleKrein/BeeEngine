@@ -6,6 +6,6 @@ namespace BeeEngine::Internal::MacOS
     {
         NSBundle *mainBundle = [NSBundle mainBundle];
         NSString *resourcePath = [mainBundle resourcePath];
-        return Path(std::string([resourcePath UTF8String]));
+        return Path(String([resourcePath UTF8String]));
     }
 }

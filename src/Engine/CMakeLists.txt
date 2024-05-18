@@ -67,6 +67,7 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/AssetManagement/PrefabImporter.cpp
         src/Core/AssetManagement/PrefabImporter.h
         src/Gui/ImGui/ImGuiExtension.h
+        src/Gui/ImGui/ImGuiExtension.cpp
         src/Core/Hash.cpp
         src/Core/Hash.h
         src/Serialization/ISerializer.h
@@ -146,6 +147,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/GameConfig.cpp
         src/Gui/ImGui/ImGuiOutputConsole.cpp
         src/Gui/ImGui/ImGuiOutputConsole.h
+        vendor/SIMDString/SIMDString.h
+        vendor/SIMDString/SIMDString.cpp
 )
 
 

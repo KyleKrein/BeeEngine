@@ -30,7 +30,7 @@ namespace BeeEngine
         bool IsOpen() const { return m_IsOpen; }
 
     private:
-        std::string GetCurrentTimeFormatted();
+        String GetCurrentTimeFormatted();
         struct Message
         {
             String Text;

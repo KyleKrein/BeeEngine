@@ -927,7 +927,7 @@ namespace BeeEngine::Editor
     }
 
     void
-    InspectorPanel::DrawVec3ComponentUI(std::string_view label, glm::vec3& values, float resetValue, float columnWidth)
+    InspectorPanel::DrawVec3ComponentUI(const String& label, glm::vec3& values, float resetValue, float columnWidth)
     {
         ImGuiIO& io = ImGui::GetIO();
 
@@ -997,7 +997,7 @@ namespace BeeEngine::Editor
     }
 
     template <typename T>
-    void InspectorPanel::AddComponentPopup(std::string_view label, Entity entity)
+    void InspectorPanel::AddComponentPopup(const String& label, Entity entity)
     {
         if (entity.HasComponent<T>())
             return;
@@ -1009,7 +1009,7 @@ namespace BeeEngine::Editor
     }
 
     template <typename T, typename UIFunction>
-    void InspectorPanel::DrawConsistentComponentUI(std::string_view label, Entity entity, UIFunction func)
+    void InspectorPanel::DrawConsistentComponentUI(const String& label, Entity entity, UIFunction func)
     {
         const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
                                                  ImGuiTreeNodeFlags_SpanAvailWidth |
@@ -1032,7 +1032,7 @@ namespace BeeEngine::Editor
     }
 
     template <typename T, typename UIFunction>
-    void InspectorPanel::DrawComponentUI(std::string_view label, Entity entity, UIFunction func)
+    void InspectorPanel::DrawComponentUI(const String& label, Entity entity, UIFunction func)
     {
         const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
                                                  ImGuiTreeNodeFlags_SpanAvailWidth |

@@ -19,7 +19,7 @@ namespace BeeEngine
         int Width, Height;
     };
     template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
-    static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName,
+    static Ref<Texture2D> CreateAndCacheAtlas(const String& fontName,
                                               float fontSize,
                                               const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
                                               const msdf_atlas::FontGeometry& fontGeometry,
@@ -78,7 +78,7 @@ namespace BeeEngine
         delete m_Data;
     }
 
-    Font::Font(const std::string& name, gsl::span<byte> data) : m_Data(new Internal::MSDFData())
+    Font::Font(const String& name, gsl::span<byte> data) : m_Data(new Internal::MSDFData())
     {
         msdfgen::FreetypeHandle* ft = msdfgen::initializeFreetype();
         if (!ft)
@@ -94,7 +94,7 @@ namespace BeeEngine
         msdfgen::deinitializeFreetype(ft);
     }
 
-    void Font::LoadFont(void* handle, const std::string& name)
+    void Font::LoadFont(void* handle, const String& name)
     {
         msdfgen::FontHandle* font = (msdfgen::FontHandle*)handle;
         m_Data->FontGeometry = msdf_atlas::FontGeometry(&m_Data->Glyphs);

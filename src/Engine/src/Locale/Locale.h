@@ -51,7 +51,8 @@ namespace BeeEngine::Locale
             BeeExpects(m_Locale.size() == 2 || m_Locale.size() == 5);
             if (m_Locale.size() != 5) // does not contain both language and country
             {
-                m_Locale += '_' + ToUppercase({m_Locale.begin(), m_Locale.begin() + 1}) + *(m_Locale.begin() + 1);
+                m_Locale += '_' + ToUppercase(std::string_view{m_Locale.begin(), m_Locale.begin() + 1}) +
+                            *(m_Locale.begin() + 1);
             }
         }
         Localization(Localization&& other) noexcept
@@ -106,7 +107,7 @@ namespace BeeEngine::Locale
          * @param seed The seed value for the hash calculation. Default is 0. Unused.
          * @return The hash value of the object.
          */
-        uint64_t Hash(uint64_t seed = 0) const { return std::hash<std::string>{}(m_Locale); }
+        uint64_t Hash(uint64_t seed = 0) const { return std::hash<UTF8String>{}(m_Locale); }
         /**
          * Converts the object to a string representation.
          *
@@ -273,7 +274,7 @@ namespace BeeEngine::Locale
             const UTF8String& pattern = keyData->second;
             UErrorCode status = U_ZERO_ERROR;
             icu::MessageFormat msgFmt(
-                icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.GetLocale().c_str()), status);
+                icu::UnicodeString::fromUTF8(pattern.c_str()), icu::Locale(m_Locale.GetLocale().c_str()), status);
 
             if (!U_SUCCESS(status))
             {
@@ -293,7 +294,7 @@ namespace BeeEngine::Locale
                     {
                         if (index % 2 == 0)
                         {
-                            keys[index++ / 2] = icu::UnicodeString::fromUTF8(ToString(arg));
+                            keys[index++ / 2] = icu::UnicodeString::fromUTF8(ToString(arg).c_str());
                         }
                         else
                         {
@@ -302,7 +303,7 @@ namespace BeeEngine::Locale
                     }(kv),
                     ...);
                 //(((index % 2 == 0 ? keys : values)[index++ / 2] =
-                //icu::Formattable(icu::UnicodeString::fromUTF8(ToString(kv)))), ...);
+                // icu::Formattable(icu::UnicodeString::fromUTF8(ToString(kv)))), ...);
             };
 
             fill_arrays(std::forward<Args>(args)...);
@@ -319,7 +320,7 @@ namespace BeeEngine::Locale
             std::string icuOutput;
             icuResult.toUTF8String(icuOutput);
 
-            return icuOutput;
+            return String(icuOutput);
         }
 
     private:
@@ -344,7 +345,7 @@ namespace BeeEngine::Locale
             const UTF8String& pattern = keyData->second;
             UErrorCode status = U_ZERO_ERROR;
             icu::MessageFormat msgFmt(
-                icu::UnicodeString::fromUTF8(pattern), icu::Locale(m_Locale.GetLocale().c_str()), status);
+                icu::UnicodeString::fromUTF8(pattern.c_str()), icu::Locale(m_Locale.GetLocale().c_str()), status);
 
             if (!U_SUCCESS(status))
             {
@@ -365,7 +366,7 @@ namespace BeeEngine::Locale
                         using T = std::decay_t<decltype(arg)>;
                         if constexpr (std::is_same_v<T, UTF8String>)
                         {
-                            keys.push_back(icu::UnicodeString::fromUTF8(arg));
+                            keys.push_back(icu::UnicodeString::fromUTF8(arg.c_str()));
                         }
                         else if constexpr (std::is_same_v<T, uint32_t> || std::is_same_v<T, uint64_t>)
                         {
@@ -391,7 +392,7 @@ namespace BeeEngine::Locale
             std::string icuOutput;
             icuResult.toUTF8String(icuOutput);
 
-            return icuOutput;
+            return String(icuOutput);
         }
 
         template <typename... Args, size_t... Indices>

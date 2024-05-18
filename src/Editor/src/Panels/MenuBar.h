@@ -10,12 +10,12 @@ namespace BeeEngine::Editor
 {
     struct MenuBarItem
     {
-        std::string Name;
+        String Name;
         std::function<void()> Action;
     };
     struct MenuBarElement
     {
-        std::string Name;
+        String Name;
         std::vector<MenuBarItem> Children;
 
         void AddChild(const MenuBarItem& element) { Children.push_back(element); }

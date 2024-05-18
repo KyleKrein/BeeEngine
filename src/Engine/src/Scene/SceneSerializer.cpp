@@ -285,7 +285,7 @@ namespace BeeEngine
             out << YAML::Key << "TagComponent";
             out << YAML::BeginMap;
             auto& tag = entity.GetComponent<TagComponent>().Tag;
-            out << YAML::Key << "Tag" << YAML::Value << tag;
+            out << YAML::Key << "Tag" << YAML::Value << tag.c_str();
             out << YAML::EndMap;
         }
 
@@ -329,7 +329,7 @@ namespace BeeEngine
             out << YAML::BeginMap;
             auto& scriptComponent = entity.GetComponent<ScriptComponent>();
             out << YAML::Key << "FullName" << YAML::Value
-                << (scriptComponent.Class ? scriptComponent.Class->GetFullName() : "");
+                << (scriptComponent.Class ? scriptComponent.Class->GetFullName().c_str() : "");
             auto& fields = scriptComponent.EditableFields;
             if (fields.size() > 0)
             {
@@ -344,7 +344,7 @@ namespace BeeEngine
                         type == MType::Ptr || type == MType::Void)
                         continue;
                     out << YAML::BeginMap;
-                    out << YAML::Key << "Name" << YAML::Value << mField.GetName();
+                    out << YAML::Key << "Name" << YAML::Value << std::string{mField.GetName().c_str()};
                     out << YAML::Key << "Type" << YAML::Value << MUtils::MTypeToString(type);
                     out << YAML::Key << "Data" << YAML::Value;
 
@@ -406,7 +406,7 @@ namespace BeeEngine
             out << YAML::Key << "TextRendererComponent";
             out << YAML::BeginMap;
             auto& textRenderer = entity.GetComponent<TextRendererComponent>();
-            out << YAML::Key << "Text" << YAML::Value << textRenderer.Text;
+            out << YAML::Key << "Text" << YAML::Value << textRenderer.Text.c_str();
             out << YAML::Key << "Font" << YAML::Value << textRenderer.FontHandle;
             out << YAML::Key << "Foreground Color" << YAML::Value << textRenderer.Configuration.ForegroundColor;
             out << YAML::Key << "Background Color" << YAML::Value << textRenderer.Configuration.BackgroundColor;
@@ -479,7 +479,7 @@ namespace BeeEngine
 
     void SceneSerializer::DeserializeFromString(const String& string)
     {
-        YAML::Node data = YAML::Load(string);
+        YAML::Node data = YAML::Load(string.c_str());
         if (!data["Scene"])
             return;
         std::string sceneName = data["Scene"].as<std::string>();
@@ -498,11 +498,11 @@ namespace BeeEngine
         for (auto entity : entities)
         {
             uint64_t uuid = entity["Entity"].as<uint64_t>();
-            std::string name;
+            String name;
             auto tagComponent = entity["TagComponent"];
             if (tagComponent)
             {
-                name = tagComponent["Tag"].as<std::string>();
+                name = String{tagComponent["Tag"].as<std::string>()};
             }
 
             BeeCoreTrace("Deserialized entity with ID = {0}, name = {1}", uuid, name);
@@ -543,7 +543,7 @@ namespace BeeEngine
             if (scriptComponent)
             {
                 auto& script = deserializedEntity.AddComponent<ScriptComponent>();
-                auto className = scriptComponent["FullName"].as<std::string>();
+                auto className = String{scriptComponent["FullName"].as<std::string>()};
                 if (ScriptingEngine::HasGameScript(className))
                 {
                     script.SetClass(&ScriptingEngine::GetGameScript(className));
@@ -553,7 +553,7 @@ namespace BeeEngine
                     std::unordered_map<std::string_view, GameScriptField*> fieldsMap;
                     for (auto& field : fields)
                     {
-                        fieldsMap[field.GetMField().GetName()] = &field;
+                        fieldsMap[std::string_view{field.GetMField().GetName()}] = &field;
                     }
                     for (auto& scriptField : scriptFields)
                     {
@@ -563,7 +563,7 @@ namespace BeeEngine
                             BeeCoreWarn("Script field {0} not found in script {1}", name, className);
                             continue;
                         }
-                        std::string typeString = scriptField["Type"].as<std::string>();
+                        String typeString = String{scriptField["Type"].as<std::string>()};
                         auto type = MUtils::StringToMType(typeString);
                         auto* field = fieldsMap.at(name);
 
@@ -690,7 +690,7 @@ namespace BeeEngine
 
     Entity SceneSerializer::DeserializeEntityFromString(const String& string)
     {
-        YAML::Node data = YAML::Load(string);
+        YAML::Node data = YAML::Load(string.c_str());
         auto entities = data["Entities"];
         if (entities)
         {

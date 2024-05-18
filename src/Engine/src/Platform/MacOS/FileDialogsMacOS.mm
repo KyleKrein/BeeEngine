@@ -30,7 +30,7 @@ BeeEngine::Path BeeEngine::FileDialogs::OpenFile(FileDialogs::Filter filter)
             NSURL *nsurl = [[openDlg URLs] objectAtIndex:0];
             // nsurl.path contains the NSString I want to return as std::string
             NSString *path = [[nsurl absoluteURL] path];
-            return std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+            return String([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
         }
         return {};
     }
@@ -76,7 +76,7 @@ BeeEngine::Path BeeEngine::FileDialogs::SaveFile(Filter filter)
         if ([saveDlg runModal] == NSModalResponseOK) {
             NSString *path = [[saveDlg URL] path];
             // nsurl.path contains the NSString I want to return as std::string
-            return std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+            return String([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
         }
         return {};
     }
@@ -116,7 +116,7 @@ BeeEngine::Path BeeEngine::FileDialogs::OpenFolder()
             NSURL *nsurl = [[openDlg URLs] objectAtIndex:0];
             // nsurl.path contains the NSString I want to return as std::string
             NSString *path = [[nsurl absoluteURL] path];
-            return std::string([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
+            return String([path UTF8String], [path lengthOfBytesUsingEncoding:NSUTF8StringEncoding]);
         }
         return {};
     }

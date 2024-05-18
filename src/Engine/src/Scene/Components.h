@@ -170,7 +170,7 @@ namespace BeeEngine
     {
         TextRenderingConfiguration Configuration;
         AssetHandle FontHandle = EngineAssetRegistry::OpenSansRegular;
-        std::string Text;
+        String Text;
 
         Font& Font(const String& locale) const { return AssetManager::GetAsset<BeeEngine::Font>(FontHandle, locale); }
         template <typename Archive>

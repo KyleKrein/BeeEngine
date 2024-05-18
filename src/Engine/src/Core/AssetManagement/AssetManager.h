@@ -77,7 +77,7 @@ namespace BeeEngine
             BeeExpects(s_AssetManager);
             s_AssetManager->UnloadAsset(handle);
         }
-        static void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type)
+        static void LoadAsset(gsl::span<byte> data, AssetHandle handle, const String& name, AssetType type)
         {
             BeeExpects(s_AssetManager);
             s_AssetManager->LoadAsset(data, std::move(handle), name, type);

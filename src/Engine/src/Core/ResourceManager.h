@@ -20,7 +20,7 @@ namespace BeeEngine
     class ResourceManager
     {
     public:
-        static std::string ProjectName;
+        static String ProjectName;
         inline static String ProcessFilePath(std::string_view filepath)
         {
             BEE_PROFILE_FUNCTION();
@@ -38,9 +38,9 @@ namespace BeeEngine
             return String(result.substr(lastSlash, count));
         }
 
-        inline static std::string GetDynamicLibraryName(const std::string& name, OSPlatform os)
+        inline static String GetDynamicLibraryName(const String& name, OSPlatform os)
         {
-            std::string fullName;
+            String fullName;
             if (os == OSPlatform::Windows)
             {
                 fullName = "lib" + name + ".dll";
@@ -56,23 +56,22 @@ namespace BeeEngine
 
             return fullName;
         }
-        inline static std::string GetDynamicLibraryName(const std::string& name)
+        inline static String GetDynamicLibraryName(const String& name)
         {
-            std::string fullName;
             if (Application::GetOsPlatform() == OSPlatform::Windows)
             {
-                fullName = "lib" + name + ".dll";
+                return "lib" + name + ".dll";
             }
             else if (Application::GetOsPlatform() == OSPlatform::Mac)
             {
-                fullName = "lib" + name + ".dylib";
+                return "lib" + name + ".dylib";
             }
             else if (Application::GetOsPlatform() == OSPlatform::Linux)
             {
-                fullName = "lib" + name + ".so";
+                return "lib" + name + ".so";
             }
 
-            return fullName;
+            return "";
         }
         inline static std::string GetStaticLibraryName(const std::string& name, OSPlatform os)
         {
@@ -111,7 +110,7 @@ namespace BeeEngine
             return fullName;
         }
 
-        static std::string GetScriptTemplate(const std::string& scriptName)
+        static String GetScriptTemplate(const String& scriptName)
         {
             std::ostringstream script;
             script << "using BeeEngine;\n";
@@ -127,36 +126,36 @@ namespace BeeEngine
             script << "\t\t}\n";
             script << "\t}\n";
             script << "}\n";
-            return script.str();
+            return String{script.str()};
         }
 
         static bool IsTexture2DExtension(const Path& extension)
         {
-            auto ext = ToLowercase(extension.AsUTF8());
+            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
             return ext == ".png" or ext == ".jpg" or ext == ".jpeg" or ext == ".bmp";
         }
 
         static bool IsSceneExtension(const Path& extension) noexcept
         {
-            auto ext = ToLowercase(extension.AsUTF8());
+            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
             return ext == ".beescene";
         }
 
         static bool IsFontExtension(const Path& extension) noexcept
         {
-            auto ext = ToLowercase(extension.AsUTF8());
+            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
             return ext == ".ttf";
         }
 
         static bool IsPrefabExtension(const Path& extension) noexcept
         {
-            auto ext = ToLowercase(extension.AsUTF8());
+            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
             return ext == ".beeprefab";
         }
 
         static bool IsMeshSourceExtension(const Path& extension) noexcept
         {
-            auto ext = ToLowercase(extension.AsUTF8());
+            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
             return ext == ".gltf" or ext == ".glb";
         }
 
@@ -189,7 +188,7 @@ namespace BeeEngine
 
         static bool IsScriptExtension(const Path& extension)
         {
-            auto ext = ToLowercase(extension.AsUTF8());
+            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
             return ext == ".cs";
         }
     };

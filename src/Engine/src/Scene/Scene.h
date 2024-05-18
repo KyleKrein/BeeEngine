@@ -61,7 +61,7 @@ namespace BeeEngine
         void UpdateRuntime();
         void OnViewPortResize(uint32_t width, uint32_t height);
 
-        Entity CreateEntity(const std::string& name = "Entity");
+        Entity CreateEntity(const String& name = "Entity");
         void DestroyEntity(Entity entity);
         Entity DuplicateEntity(Entity entity);
 
@@ -103,7 +103,7 @@ namespace BeeEngine
 
         void DestroyScripts();
 
-        Entity CreateEntityWithUUID(struct UUID uuid, const std::string& name);
+        Entity CreateEntityWithUUID(struct UUID uuid, const String& name);
 
         void StartPhysicsWorld();
 

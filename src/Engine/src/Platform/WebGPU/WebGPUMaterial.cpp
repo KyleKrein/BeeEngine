@@ -11,8 +11,10 @@ namespace BeeEngine::Internal
                                    const std::filesystem::path& fragmentShader,
                                    bool loadFromCache)
     {
-        auto vertexShaderModule = ShaderModule::Create(vertexShader.string(), ShaderType::Vertex, loadFromCache);
-        auto fragmentShaderModule = ShaderModule::Create(fragmentShader.string(), ShaderType::Fragment, loadFromCache);
+        auto vertexShaderModule =
+            ShaderModule::Create(String{vertexShader.string()}, ShaderType::Vertex, loadFromCache);
+        auto fragmentShaderModule =
+            ShaderModule::Create(String{fragmentShader.string()}, ShaderType::Fragment, loadFromCache);
         m_InstancedBuffer = vertexShaderModule->CreateInstancedBuffer();
         m_Pipeline = Pipeline::Create(vertexShaderModule, fragmentShaderModule);
     }

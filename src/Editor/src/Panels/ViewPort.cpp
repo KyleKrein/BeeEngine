@@ -298,9 +298,9 @@ namespace BeeEngine::Editor
 
     void ViewPort::OpenScene(const Path& path)
     {
-        BeeCoreTrace("Opening scene {0}", path.AsUTF8());
+        BeeCoreTrace("Opening scene {0}", path);
         m_NewSceneWasLoaded = true;
-        m_ScenePath = path.AsUTF8();
+        m_ScenePath = path;
     }
 
     void ViewPort::RenderCameraFrustum(CommandBuffer& commandBuffer)

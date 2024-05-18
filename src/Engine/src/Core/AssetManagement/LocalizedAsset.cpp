@@ -63,7 +63,7 @@ namespace BeeEngine
         out << YAML::BeginMap;
         for (auto& [locale, handle] : asset.m_Assets)
         {
-            out << YAML::Key << locale;
+            out << YAML::Key << locale.c_str();
             out << YAML::Value << handle;
         }
         out << YAML::EndMap;
@@ -73,10 +73,10 @@ namespace BeeEngine
     Ref<LocalizedAsset> LocalizedAssetSerializer::Deserialize(const String& data)
     {
         std::unordered_map<LocalizedAsset::Locale, AssetHandle> assets;
-        YAML::Node node = YAML::Load(data);
+        YAML::Node node = YAML::Load(data.c_str());
         for (const auto& pair : node)
         {
-            auto locale = pair.first.as<LocalizedAsset::Locale>();
+            auto locale = LocalizedAsset::Locale{pair.first.as<std::string>()};
             auto handle = pair.second.as<AssetHandle>();
 
             assets.emplace(std::move(locale), std::move(handle));

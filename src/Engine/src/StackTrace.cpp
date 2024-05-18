@@ -46,12 +46,9 @@ namespace BeeEngine
                 {
                     demangled = abi::__cxa_demangle(info.dli_sname, nullptr, 0, &status);
                 }
-                std::string caller = status == 0                 ? demangled
-                                     : info.dli_sname == nullptr ? symbolList[i]
-                                                                 : info.dli_sname;
-                m_Entries.emplace_back(std::move(caller),
-                                       info.dli_fname ? std::string(info.dli_fname) : std::string(),
-                                       0 /* No line number */);
+                String caller = status == 0 ? demangled : info.dli_sname == nullptr ? symbolList[i] : info.dli_sname;
+                m_Entries.emplace_back(
+                    std::move(caller), info.dli_fname ? String(info.dli_fname) : String(), 0 /* No line number */);
                 free(demangled);
             }
             else
@@ -70,6 +67,6 @@ namespace BeeEngine
             const auto& entry = m_Entries[i];
             stream << i << ": " << entry.Description << " at " << entry.FileName << ":" << entry.LineNumber << "\n";
         }
-        return stream.str();
+        return String{stream.str()};
     }
 } // namespace BeeEngine

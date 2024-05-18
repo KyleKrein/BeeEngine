@@ -28,10 +28,10 @@ namespace BeeEngine::Editor
     class ProjectFile
     {
     public:
-        ProjectFile(const Path& projectPath, const std::string& projectName, EditorAssetManager* assetManager) noexcept;
+        ProjectFile(const Path& projectPath, const String& projectName, EditorAssetManager* assetManager) noexcept;
 
         [[nodiscard]] const Path& GetProjectPath() const noexcept;
-        [[nodiscard]] const std::string& GetProjectName() const noexcept;
+        [[nodiscard]] const String& GetProjectName() const noexcept;
         [[nodiscard]] const Path& GetProjectFilePath() const noexcept;
         [[nodiscard]] const Path& GetProjectAssetRegistryPath() const noexcept;
 
@@ -56,7 +56,7 @@ namespace BeeEngine::Editor
 
         UUID GetAssetRegistryID() const noexcept { return m_AssetRegistryID; }
 
-        void RenameProject(const std::string& newName) noexcept;
+        void RenameProject(const String& newName) noexcept;
 
         void RegenerateSolution();
 
@@ -87,7 +87,7 @@ namespace BeeEngine::Editor
         void LoadLocalizationFiles();
 
         Path m_ProjectPath;
-        std::string m_ProjectName;
+        String m_ProjectName;
         Path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
         Path m_ProjectAssetRegistryPath = m_ProjectPath / (m_ProjectName + ".beeassetregistry");
         Path m_LastUsedScenePath{""};

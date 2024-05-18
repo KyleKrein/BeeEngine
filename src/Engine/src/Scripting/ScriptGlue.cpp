@@ -48,7 +48,7 @@ namespace BeeEngine
             {
                 auto typeName = TypeName<Component>();
                 size_t pos = typeName.find_last_of(':');
-                std::string managedTypeName = FormatString("BeeEngine.{}", typeName.substr(pos + 1));
+                String managedTypeName = FormatString("BeeEngine.{}", typeName.substr(pos + 1));
                 std::optional<ScriptGlue::ComponentType> managedType = ManagedNameToComponentType(managedTypeName);
                 if (!managedType.has_value())
                 {
@@ -220,7 +220,7 @@ namespace BeeEngine
     {
         auto nameStr = NativeToManaged::StringGetFromManagedString(name);
         auto* scene = ScriptingEngine::GetSceneContext();
-        auto entity = scene->GetEntityByName(nameStr);
+        auto entity = scene->GetEntityByName(std::string_view(nameStr));
         if (!entity)
         {
             BeeCoreTrace("Could not find entity with name {}", nameStr);

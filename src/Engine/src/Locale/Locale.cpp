@@ -38,14 +38,14 @@ namespace BeeEngine::Locale
             {
                 char lang[256];
                 CFStringGetCString(langRef, lang, sizeof(lang), kCFStringEncodingUTF8);
-                return {std::string(lang)};
+                return {String(lang)};
             }
         }
 #elif defined(LINUX)
         const char* lang = std::getenv("LANG");
         if (lang)
         {
-            return {std::string(lang)};
+            return {String(lang)};
         }
 #endif
         return Localization::Default; // Fallback to English

@@ -2,45 +2,55 @@
 // Created by Александр Лебедев on 21.10.2023.
 //
 
-#include <gtest/gtest.h>
 #include <BeeEngine.h>
 #include <Locale/Locale.h>
+#include <gtest/gtest.h>
 #include <unicode/udata.h>
 #include <unicode/ulocdata.h>
 
 using namespace BeeEngine;
 using namespace BeeEngine::Locale;
-class TranslationTests : public ::testing::Test {
+const Localization locale = {"ru_RU"};
+class TranslationTests : public ::testing::Test
+{
 protected:
     Domain domain{"test"};
 
-    TranslationTests() {
-        domain.SetLocale("ru_Ru");
-        domain.AddLocaleKey("ru_RU", "hello", "привет");
-        domain.AddLocaleKey("ru_RU", "greeting", "Привет, {name}!");
-        domain.AddLocaleKey("ru_RU", "apples_test", "У {name} есть {apples, plural, one {# яблоко} few {# яблока} many {# яблок} other {# яблока}}");
+    TranslationTests()
+    {
+        domain.SetLocale(locale);
+        domain.AddLocaleKey(locale, "hello", "привет");
+        domain.AddLocaleKey(locale, "greeting", "Привет, {name}!");
+        domain.AddLocaleKey(
+            locale,
+            "apples_test",
+            "У {name} есть {apples, plural, one {# яблоко} few {# яблока} many {# яблок} other {# яблока}}");
     }
 
-    ~TranslationTests() override {
+    ~TranslationTests() override
+    {
         // Тут можешь сделать деинициализацию после каждого теста, если требуется
     }
 };
 
-TEST_F(TranslationTests, BasicTranslationTest) {
+TEST_F(TranslationTests, BasicTranslationTest)
+{
     // предположим, у тебя есть перевод для "hello" как "привет" на русском
-    domain.SetLocale("ru_RU");
+    domain.SetLocale(locale);
     ASSERT_EQ(domain.Translate("hello"), "привет");
 }
 
-TEST_F(TranslationTests, FormatTranslationTest) {
+TEST_F(TranslationTests, FormatTranslationTest)
+{
     // предположим, у тебя есть перевод для "greeting" как "Привет, {0}!" на русском
-    domain.SetLocale("ru_RU");
+    domain.SetLocale(locale);
     ASSERT_EQ(domain.Translate("greeting", "name", "Денис"), "Привет, Денис!");
 }
 
-TEST_F(TranslationTests, PluralTranslationTest) {
+TEST_F(TranslationTests, PluralTranslationTest)
+{
     // предположим, у тебя есть перевод для "apples" на русском с разными формами слова в зависимости от числа
-    domain.SetLocale("ru_RU");
+    domain.SetLocale(locale);
     ASSERT_EQ(domain.Translate("apples_test", "name", "Саши", "apples", 1), "У Саши есть 1 яблоко");
     ASSERT_EQ(domain.Translate("apples_test", "name", "Саши", "apples", 2), "У Саши есть 2 яблока");
     ASSERT_EQ(domain.Translate("apples_test", "name", "Саши", "apples", 5), "У Саши есть 5 яблок");
@@ -50,7 +60,8 @@ TEST_F(TranslationTests, PluralTranslationTest) {
 TEST_F(TranslationTests, ICUTest)
 {
     UErrorCode status = U_ZERO_ERROR;
-    icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8("У {name} есть {apples} яблок"), icu::Locale("ru_RU"), status);
+    icu::MessageFormat msgFmt(icu::UnicodeString::fromUTF8("У {name} есть {apples} яблок"), icu::Locale("ru_RU"),
+status);
 
     icu::UnicodeString keys[] = { "name", "apples" };
     icu::Formattable values[] = { "Алексей", icu::Formattable(5) };

@@ -17,9 +17,9 @@
 namespace BeeEngine
 {
 
-    DynamicLibrary::DynamicLibrary(const Path& path, const std::string& name) : m_Handle(nullptr)
+    DynamicLibrary::DynamicLibrary(const Path& path, const String& name) : m_Handle(nullptr)
     {
-        std::string fullName;
+        String fullName;
 #if defined(WINDOWS) || defined(MACOS) || defined(LINUX)
         fullName = ResourceManager::GetDynamicLibraryName(name);
 #else

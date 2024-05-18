@@ -57,6 +57,11 @@ namespace BeeEngine
         return hash;
     }
 
+    inline uint64_t Hash(const String& value, uint64_t seed = 0)
+    {
+        return HashAlgorithm::MurmurHash2_64(value.data(), value.size(), seed);
+    }
+
     template <PrimitiveType T>
     uint64_t Hash(const T& value, uint64_t seed = 0)
     {

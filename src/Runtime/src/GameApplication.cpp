@@ -3,7 +3,9 @@
 namespace BeeEngine::Runtime
 {
     GameApplication::GameApplication(RuntimeConfiguration config)
-        : Application(config.ApplicationProperties), m_Config(std::move(config)), m_LocaleDomain(m_Config.GameConfig.Name)
+        : Application(config.ApplicationProperties),
+          m_Config(std::move(config)),
+          m_LocaleDomain(m_Config.GameConfig.Name)
     {
         LoadLocalizationFiles();
         InitializeScripting();
@@ -15,20 +17,22 @@ namespace BeeEngine::Runtime
         preferences.Width = window.GetWidthInPixels();
         preferences.Height = window.GetHeightInPixels();
         preferences.SwapChainTarget = true;
-        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
+        preferences.Attachments = {
+            FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 
-        preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; //RedInteger
-            
+        preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; // RedInteger
+
         m_FrameBuffer = FrameBuffer::Create(preferences);
 
         PushLayer(CreateRef<GameLayer>(m_ActiveScene, m_FrameBuffer, m_LocaleDomain));
     }
     void GameApplication::LoadLocalizationFiles()
     {
-        auto paths = Locale::LocalizationGenerator::GetLocalizationFiles(std::filesystem::current_path() / "Assets" / "Localization");
+        auto paths = Locale::LocalizationGenerator::GetLocalizationFiles(std::filesystem::current_path() / "Assets" /
+                                                                         "Localization");
         Locale::LocalizationGenerator::ProcessLocalizationFiles(m_LocaleDomain, paths);
         m_LocaleDomain.Build();
-        
+
         bool useDefaultLocale = true;
         Locale::Localization userLocale = Locale::GetSystemLocale();
         for (const auto& locale : m_LocaleDomain.GetLocales())
@@ -56,7 +60,8 @@ namespace BeeEngine::Runtime
     void GameApplication::LoadAssetRegistry()
     {
         AssetRegistrySerializer serializer(&m_AssetManager, std::filesystem::current_path(), {});
-        serializer.Deserialize(std::filesystem::current_path() /  (m_Config.GameConfig.Name + ".beeassetregistry"));
+        serializer.Deserialize(std::filesystem::current_path() /
+                               (m_Config.GameConfig.Name + ".beeassetregistry").c_str());
     }
     void GameApplication::LoadStartingScene()
     {

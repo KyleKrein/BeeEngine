@@ -79,7 +79,7 @@ namespace BeeEngine
                 continue;
             }
             out << YAML::BeginMap;
-            out << YAML::Key << "Name" << YAML::Value << metadata.Name;
+            out << YAML::Key << "Name" << YAML::Value << metadata.Name.c_str();
             out << YAML::Key << "Type" << YAML::Value << AssetTypeToString(metadata.Type);
             out << YAML::Key << "Handle" << YAML::Value << handle;
             auto filepath = std::get<Path>(metadata.Data);
@@ -87,13 +87,13 @@ namespace BeeEngine
             {
                 filepath = filepath.GetRelativePath(m_ProjectPath);
             }
-            out << YAML::Key << "FilePath" << YAML::Value << filepath.AsUTF8();
+            out << YAML::Key << "FilePath" << YAML::Value << filepath.AsUTF8().c_str();
             out << YAML::EndMap;
         }
         out << YAML::EndSeq;
         out << YAML::EndMap;
 
-        File::WriteFile(path, out.c_str());
+        File::WriteFile(path, String{out.c_str()});
     }
 
     void AssetRegistrySerializer::Deserialize(const Path& path)
@@ -104,7 +104,7 @@ namespace BeeEngine
         UUID registryID = data["Registry ID"].as<uint64_t>();
         for (auto asset : data["Assets"])
         {
-            Path filePath = asset["FilePath"].as<std::string>();
+            Path filePath = String{asset["FilePath"].as<std::string>()};
             if (filePath.IsRelative())
             {
                 filePath = m_ProjectPath / filePath;

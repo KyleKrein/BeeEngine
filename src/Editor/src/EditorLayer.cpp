@@ -176,7 +176,8 @@ namespace BeeEngine::Editor
                                 for (auto& path : assetPaths)
                                 {
                                     auto name = path.GetFileNameWithoutExtension().AsUTF8();
-                                    const auto* handlePtr = m_EditorAssetManager.GetAssetHandleByName(name);
+                                    const auto* handlePtr =
+                                        m_EditorAssetManager.GetAssetHandleByName(name);
                                     if (!handlePtr)
                                     {
                                         m_EditorAssetManager.LoadAsset(path, {m_ProjectFile->GetAssetRegistryID()});
@@ -684,7 +685,7 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
       DockNode    ID=0x0000000A Parent=0x00000008 SizeRef=370,97 Selected=0x6108FA95
 )";
         result << '\n' << '\n';
-        return result.str();
+        return String{result.str()};
     }
 
     void EditorLayer::SetDefaultImGuiWindowLayoutIfNotPresent()
@@ -710,7 +711,7 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
             m_EditorLocaleDomain.Translate("buildProject").c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
         static BuildProjectOptions options;
-        static std::string outputPath;
+        static String outputPath;
         ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("buildProject.buildtype").c_str());
         ImGui::RadioButton("Debug",
                            reinterpret_cast<int*>(&options.BuildType),
@@ -767,7 +768,7 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
                 });
             Jobs::Schedule(BeeMove(getOutputPathJob));
         }
-        static std::string customError;
+        static String customError;
         auto areAllFieldsFilled = [this]() -> bool
         {
             customError.clear();

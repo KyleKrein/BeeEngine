@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <SIMDString/SIMDString.h>
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -10,7 +11,7 @@
 
 namespace BeeEngine
 {
-    using String = std::string;
+    using String = SIMDString<>;
     using UTF8String = String;
     using UTF16String = std::u16string;
 
@@ -31,7 +32,7 @@ namespace BeeEngine
             using pointer = const char32_t*;
             using reference = const char32_t&;
 
-            iterator(std::string::const_iterator it);
+            iterator(UTF8String::const_iterator it);
             iterator(const iterator& source);
             iterator& operator=(const iterator& rhs);
             ~iterator();
@@ -45,7 +46,7 @@ namespace BeeEngine
             char32_t operator*() const;
 
         private:
-            std::string::const_iterator m_StringIterator;
+            UTF8String::const_iterator m_StringIterator;
             mutable char32_t m_Codepoint = 0;
             mutable bool m_IsDirty = true;
 
@@ -92,7 +93,7 @@ namespace BeeEngine
 
         return output;
     }
-    constexpr void ReplaceAllSubstrings(std::string& s, const std::string& search, const std::string& replace)
+    constexpr void ReplaceAllSubstrings(String& s, const String& search, const String& replace)
     {
         for (size_t pos = 0;; pos += replace.length())
         {

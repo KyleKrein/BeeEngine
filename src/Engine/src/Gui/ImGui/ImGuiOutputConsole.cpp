@@ -74,7 +74,7 @@ namespace BeeEngine
         ImGui::End();
     }
 
-    std::string ImGuiOutputConsole::GetCurrentTimeFormatted()
+    String ImGuiOutputConsole::GetCurrentTimeFormatted()
     {
         std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
         std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
@@ -96,6 +96,6 @@ namespace BeeEngine
                  << message.Text << '\n';
         }
         dump.flush();
-        return dump.str();
+        return String{dump.str()};
     }
 } // namespace BeeEngine

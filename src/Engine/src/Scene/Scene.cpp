@@ -35,9 +35,9 @@ namespace BeeEngine
         return b2BodyType::b2_staticBody;
     }
 
-    Entity Scene::CreateEntity(const std::string& name)
+    Entity Scene::CreateEntity(const String& name)
     {
-        return CreateEntityWithUUID(UUID(), std::string(name));
+        return CreateEntityWithUUID(UUID(), name);
     }
 
     void Scene::OnViewPortResize(uint32_t width, uint32_t height)
@@ -173,7 +173,7 @@ namespace BeeEngine
         }
     }
 
-    Entity Scene::CreateEntityWithUUID(UUID uuid, const std::string& name)
+    Entity Scene::CreateEntityWithUUID(UUID uuid, const String& name)
     {
         Entity entity(EntityID{m_Registry.create()}, this);
         entity.AddComponent<UUIDComponent>(uuid);
@@ -326,17 +326,17 @@ namespace BeeEngine
         dst.emplace_or_replace<Component>(dstEntity, component);
     }
     template <>
-    static void CopyComponent<HierarchyComponent>(entt::registry& dst,
-                                                  const entt::registry& src,
-                                                  entt::entity srcEntity,
-                                                  entt::entity dstEntity)
+    void CopyComponent<HierarchyComponent>(entt::registry& dst,
+                                           const entt::registry& src,
+                                           entt::entity srcEntity,
+                                           entt::entity dstEntity)
     {
     }
     template <>
-    static void CopyComponent<UUIDComponent>(entt::registry& dst,
-                                             const entt::registry& src,
-                                             entt::entity srcEntity,
-                                             entt::entity dstEntity)
+    void CopyComponent<UUIDComponent>(entt::registry& dst,
+                                      const entt::registry& src,
+                                      entt::entity srcEntity,
+                                      entt::entity dstEntity)
     {
     }
 

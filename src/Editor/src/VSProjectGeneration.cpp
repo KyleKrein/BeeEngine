@@ -28,9 +28,9 @@ namespace BeeEngine
 
     void BeeEngine::VSProjectGeneration::GenerateProject(const Path& path,
                                                          const std::vector<Path>& sources,
-                                                         const std::string& projectName)
+                                                         const String& projectName)
     {
-        BeeExpects(IsValidString(String(projectName)));
+        BeeExpects(IsValidString(projectName));
         static constexpr unsigned char bom[] = {0xEF, 0xBB, 0xBF};
 
         std::ostringstream csproj;

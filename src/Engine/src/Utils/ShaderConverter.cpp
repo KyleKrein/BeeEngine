@@ -251,7 +251,7 @@ namespace BeeEngine
         glslang::FinalizeProcess();
     }
 
-    bool ShaderConverter::SPVtoWGSL(const std::vector<uint32_t>& spirv, std::string& wgsl)
+    bool ShaderConverter::SPVtoWGSL(const std::vector<uint32_t>& spirv, String& wgsl)
     {
 #if !defined(BEE_COMPILE_WEBGPU)
         BeeCoreError("WGSL is only supported on WebGPU");
@@ -369,7 +369,7 @@ namespace BeeEngine
                                  input.location_attribute);
 #else
                 builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),
-                                 input.name,
+                                 String{input.name},
                                  input.attributes.location.value());
 #endif
             }
@@ -378,7 +378,7 @@ namespace BeeEngine
             for (auto& output : outputs)
             {
                 builder.AddOutput(GetShaderDataType(output.component_type, output.composition_type),
-                                  output.name,
+                                  String{output.name},
                                   output.attributes.location.value());
             }
 
@@ -402,8 +402,7 @@ namespace BeeEngine
         }*/
         return builder.Build();
     }
-    BufferLayout
-    ShaderConverter::GenerateLayout(in<std::string> wgsl, in<std::string> path, BufferLayoutBuilder& builder)
+    BufferLayout ShaderConverter::GenerateLayout(in<String> wgsl, in<std::string> path, BufferLayoutBuilder& builder)
     {
 #if defined(BEE_COMPILE_WEBGPU)
         BeeCoreTrace("Generating buffer layout for wgsl shader");
@@ -457,7 +456,7 @@ namespace BeeEngine
 #endif
         return builder.Build();
     }
-    int extractIntegerWords(const std::string& str)
+    int extractIntegerWords(const String& str)
     {
         std::stringstream ss;
 
@@ -482,7 +481,7 @@ namespace BeeEngine
         return -1;
     }
 
-    bool ShaderConverter::AnalyzeGLSL(const ShaderType& stage, out<BufferLayoutBuilder> layout, out<std::string> glsl)
+    bool ShaderConverter::AnalyzeGLSL(const ShaderType& stage, out<BufferLayoutBuilder> layout, out<String> glsl)
     {
         BeeCoreTrace("Analyzing GLSL shader");
         size_t pos = 0;
@@ -490,23 +489,23 @@ namespace BeeEngine
         do
         {
             pos = glsl.find("instanced", pos + 1);
-            if (pos == std::string::npos)
+            if (pos == String::npos)
             {
                 break;
             }
             size_t location = glsl.find('=', pos);
-            if (location == std::string::npos)
+            if (location == String::npos)
             {
                 BeeCoreError("Failed to find '=' after 'instanced'");
                 return false;
             }
             size_t closeBracket = glsl.find(')', location);
-            if (closeBracket == std::string::npos)
+            if (closeBracket == String::npos)
             {
                 BeeCoreError("Failed to find ')' after '='");
                 return false;
             }
-            std::string locationStr = glsl.substr(location, closeBracket - location);
+            String locationStr = glsl.substr(location, closeBracket - location);
             int locationInt = extractIntegerWords(locationStr);
             if (locationInt == -1)
             {
@@ -522,7 +521,7 @@ namespace BeeEngine
         {
             /* Locate the substring to replace. */
             index = glsl.find("instanced", index);
-            if (index == std::string::npos)
+            if (index == String::npos)
                 break;
 
             /* Make the replacement. */

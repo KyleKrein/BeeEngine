@@ -19,7 +19,7 @@ namespace BeeEngine::Editor
 {
     const String dotNetVersion = "net8.0";
     ProjectFile::ProjectFile(const Path& projectPath,
-                             const std::string& projectName,
+                             const String& projectName,
                              EditorAssetManager* assetManager) noexcept
         : m_ProjectName(projectName),
           m_ProjectPath(projectPath),
@@ -104,7 +104,7 @@ namespace BeeEngine::Editor
             goto init;
         }
         m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
-        SetLastUsedScenePath(data["LastUsedScene"].as<std::string>());
+        SetLastUsedScenePath(String(data["LastUsedScene"].as<std::string>()));
         m_AssetFileWatcher = FileWatcher::Create(
             m_ProjectPath, [this](const Path& path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
     }
@@ -114,12 +114,12 @@ namespace BeeEngine::Editor
         return m_ProjectPath;
     }
 
-    const std::string& ProjectFile::GetProjectName() const noexcept
+    const String& ProjectFile::GetProjectName() const noexcept
     {
         return m_ProjectName;
     }
 
-    void ProjectFile::RenameProject(const std::string& newName) noexcept
+    void ProjectFile::RenameProject(const String& newName) noexcept
     {
         m_ProjectName = newName;
         std::filesystem::remove(m_ProjectPath.ToStdPath());
@@ -135,12 +135,12 @@ namespace BeeEngine::Editor
         YAML::Emitter out;
         out << YAML::BeginMap;
 
-        out << YAML::Key << "ProjectName" << YAML::Value << m_ProjectName;
+        out << YAML::Key << "ProjectName" << YAML::Value << m_ProjectName.c_str();
         out << YAML::Key << "Asset Registry ID" << YAML::Value << (uint64_t)m_AssetRegistryID;
-        out << YAML::Key << "LastUsedScene" << YAML::Value << m_LastUsedScenePath.AsUTF8();
+        out << YAML::Key << "LastUsedScene" << YAML::Value << m_LastUsedScenePath.AsUTF8().c_str();
         out << YAML::EndMap;
 
-        File::WriteFile(m_ProjectFilePath, out.c_str());
+        File::WriteFile(m_ProjectFilePath, String{out.c_str()});
     }
 
     void ProjectFile::SetLastUsedScenePath(const Path& path) noexcept
@@ -191,7 +191,7 @@ namespace BeeEngine::Editor
     public:
         Ref<Asset> GetAssetRef(AssetHandle handle) const { return nullptr; }
         Asset* GetAsset(AssetHandle handle) const { return nullptr; }
-        void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type) {}
+        void LoadAsset(gsl::span<byte> data, AssetHandle handle, const String& name, AssetType type) {}
         void LoadAsset(const Path& path, AssetHandle handle) {}
         void UnloadAsset(AssetHandle handle) {}
 
@@ -217,7 +217,7 @@ namespace BeeEngine::Editor
         const std::vector<std::pair<OSPlatform, Path>> availablePlatforms = CheckForAvailablePlatforms();
         for (const auto& [platform, pathToTemplate] : availablePlatforms)
         {
-            const auto platformOutputPath = outputPath / ToString(platform);
+            const auto platformOutputPath = outputPath / ToString(platform).c_str();
             std::filesystem::create_directory(platformOutputPath);
             std::filesystem::copy(pathToTemplate.ToStdPath(),
                                   platformOutputPath,
@@ -402,7 +402,7 @@ namespace BeeEngine::Editor
             {
                 continue;
             }
-            if (std::get<Path>(metadata.Data).AsUTF8().contains(directory.AsUTF8()))
+            if (std::get<Path>(metadata.Data).AsUTF8().contains(std::string_view(directory.AsUTF8())))
             {
                 co_yield metadata;
             }
@@ -454,7 +454,7 @@ namespace BeeEngine::Editor
         }
         if (!ResourceManager::IsAssetExtension(p.GetExtension()))
             return;
-        std::string name = p.GetFileNameWithoutExtension();
+        String name = p.GetFileNameWithoutExtension();
         const AssetHandle* handlePtr = m_AssetManager->GetAssetHandleByName(name);
         bool changed = false;
         if (!handlePtr and changeType != FileWatcher::Event::RenamedNewName)

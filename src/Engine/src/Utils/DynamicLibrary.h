@@ -11,7 +11,7 @@ namespace BeeEngine
     class DynamicLibrary
     {
     public:
-        DynamicLibrary(const Path& path, const std::string& name);
+        DynamicLibrary(const Path& path, const String& name);
         DynamicLibrary(const Path& path);
         ~DynamicLibrary();
         bool IsLoaded() { return m_Handle != nullptr; }

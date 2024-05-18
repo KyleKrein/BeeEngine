@@ -26,13 +26,13 @@ namespace BeeEngine::Internal
         // make sure to output the warnings to the console, in case there are issues with the file
         if (!warn.empty())
         {
-            BeeCoreWarn(warn);
+            BeeCoreWarn(String{warn});
         }
         // if we have any error, print it to the console, and break the mesh loading.
         // This happens if the file can't be found or is malformed
         if (!err.empty())
         {
-            BeeCoreError(err);
+            BeeCoreError(String{err});
             return false;
         }
 

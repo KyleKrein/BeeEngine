@@ -186,7 +186,7 @@ namespace BeeEngine
             }
             auto result = CreateRef<MeshSource>(std::move(meshes));
             result->Handle = handle;
-            result->Name = metadata.Name;
+            result->Name = std::string_view{metadata.Name};
             return result;
         }
         BeeCoreError("Unable to import mesh source from file: {0}", path);

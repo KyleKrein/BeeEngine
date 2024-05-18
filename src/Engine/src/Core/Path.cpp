@@ -20,7 +20,7 @@ namespace BeeEngine
 #if defined(WINDOWS)
         return Internal::WStringToUTF8(path.wstring());
 #else
-        return path.string();
+        return UTF8String{path.string()};
 #endif
     }
 
@@ -219,7 +219,7 @@ namespace BeeEngine
         {
             return *this;
         }
-        return {std::filesystem::current_path() / m_Path};
+        return {std::filesystem::current_path() / m_Path.c_str()};
     }
 
     Path Path::GetAbsolutePath(const Path& relativeTo) const
@@ -318,7 +318,7 @@ namespace BeeEngine
 #if defined(WINDOWS)
         return {Internal::WStringFromUTF8(m_Path)};
 #else
-        return {m_Path};
+        return {m_Path.c_str()};
 #endif
     }
 } // namespace BeeEngine

@@ -52,7 +52,7 @@ namespace BeeEngine::Editor
             return tmp;
         }
 
-        const std::string& GetScenePath() { return m_ScenePath; }
+        const Path& GetScenePath() { return m_ScenePath; }
 
     private:
         uint32_t m_Width;
@@ -74,7 +74,7 @@ namespace BeeEngine::Editor
 
         Path m_WorkingDirectory;
 
-        std::string m_ScenePath;
+        Path m_ScenePath;
 
         Ref<UniformBuffer> m_CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
         Ref<BindingSet> m_CameraBindingSet = BindingSet::Create({{0, *m_CameraUniformBuffer}});

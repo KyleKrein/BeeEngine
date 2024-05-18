@@ -147,7 +147,7 @@ namespace BeeEngine::Internal
         Color4 ForegroundColor;
         Color4 BackgroundColor;
     };
-    void RenderingQueue::SubmitText(const std::string& text,
+    void RenderingQueue::SubmitText(const String& text,
                                     Font& font,
                                     BindingSet& cameraBindingSet,
                                     const glm::mat4& transform,
