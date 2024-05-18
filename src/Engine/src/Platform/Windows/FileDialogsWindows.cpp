@@ -68,7 +68,7 @@ namespace BeeEngine
                 OpenFileWindowImpl(wFilter, result);
                 counter.Decrement();
             });
-        Job::WaitForJobsToComplete(counter);
+        Jobs::WaitForJobsToComplete(counter);
         return result;
     }
     void SaveFileImpl(std::wstring& wFilter, Path& result)
@@ -120,7 +120,7 @@ namespace BeeEngine
                 SaveFileImpl(wFilter, result);
                 counter.Decrement();
             });
-        Job::WaitForJobsToComplete(counter);
+        Jobs::WaitForJobsToComplete(counter);
         return result;
     }
 
@@ -176,7 +176,7 @@ namespace BeeEngine
                 OpenFolderImpl(result);
                 counter.Decrement();
             });
-        Job::WaitForJobsToComplete(counter);
+        Jobs::WaitForJobsToComplete(counter);
         return result;
     }
 } // namespace BeeEngine
