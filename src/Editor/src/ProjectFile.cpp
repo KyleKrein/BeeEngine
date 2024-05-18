@@ -96,15 +96,34 @@ namespace BeeEngine::Editor
         {
             RegenerateSolution();
         }
-        std::ifstream ifs(m_ProjectFilePath.ToStdPath());
-        YAML::Node data = YAML::Load(ifs);
-        ifs.close();
-        if (!data["ProjectName"])
         {
-            goto init;
+            std::ifstream ifs(m_ProjectFilePath.ToStdPath());
+            YAML::Node data = YAML::Load(ifs);
+            ifs.close();
+            if (!data["ProjectName"])
+            {
+                goto init;
+            }
+            m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
+            if (data["DefaultLocale"])
+            {
+                m_DefaultLocale = Locale::Localization(String{data["DefaultLocale"].as<std::string>()});
+            }
+            if (data["StartingScene"])
+            {
+                SetStartingScene(String(data["StartingScene"].as<std::string>()));
+            }
         }
-        m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
-        SetLastUsedScenePath(String(data["LastUsedScene"].as<std::string>()));
+        {
+            Path userConfigPath = m_ProjectPath / ".beeengine" / "usersettings.cfg";
+            if (File::Exists(userConfigPath))
+            {
+                std::ifstream ifs(userConfigPath.ToStdPath());
+                YAML::Node data = YAML::Load(ifs);
+                ifs.close();
+                SetLastUsedScenePath(String(data["LastUsedScene"].as<std::string>()));
+            }
+        }
         m_AssetFileWatcher = FileWatcher::Create(
             m_ProjectPath, [this](const Path& path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
     }
@@ -122,7 +141,7 @@ namespace BeeEngine::Editor
     void ProjectFile::RenameProject(const String& newName) noexcept
     {
         m_ProjectName = newName;
-        std::filesystem::remove(m_ProjectPath.ToStdPath());
+        std::filesystem::remove(m_ProjectFilePath.ToStdPath());
         std::filesystem::rename(m_ProjectAssetRegistryPath.ToStdPath(),
                                 (m_ProjectPath / (newName + ".beeassetregistry")).ToStdPath());
         m_ProjectFilePath = m_ProjectPath / (newName + ".beeproj");
@@ -130,20 +149,31 @@ namespace BeeEngine::Editor
         Save();
     }
 
-    void ProjectFile::Save() noexcept
+    void ProjectFile::Save()
     {
-        YAML::Emitter out;
-        out << YAML::BeginMap;
+        {
+            YAML::Emitter out;
+            out << YAML::BeginMap;
 
-        out << YAML::Key << "ProjectName" << YAML::Value << m_ProjectName.c_str();
-        out << YAML::Key << "Asset Registry ID" << YAML::Value << (uint64_t)m_AssetRegistryID;
-        out << YAML::Key << "LastUsedScene" << YAML::Value << m_LastUsedScenePath.AsUTF8().c_str();
-        out << YAML::EndMap;
+            out << YAML::Key << "ProjectName" << YAML::Value << m_ProjectName.c_str();
+            out << YAML::Key << "Asset Registry ID" << YAML::Value << (uint64_t)m_AssetRegistryID;
+            out << YAML::Key << "DefaultLocale" << YAML::Value << m_DefaultLocale.GetLanguageString().c_str();
+            out << YAML::Key << "StartingScene" << YAML::Value << m_LastUsedScenePath.AsUTF8().c_str();
+            out << YAML::EndMap;
 
-        File::WriteFile(m_ProjectFilePath, String{out.c_str()});
+            File::WriteFile(m_ProjectFilePath, String{out.c_str()});
+        }
+
+        {
+            YAML::Emitter out;
+            out << YAML::BeginMap;
+            out << YAML::Key << "LastUsedScene" << YAML::Value << m_LastUsedScenePath.AsUTF8().c_str();
+            out << YAML::EndMap;
+            File::WriteFile(m_ProjectPath / ".beeengine" / "usersettings.cfg", String{out.c_str()});
+        }
     }
 
-    void ProjectFile::SetLastUsedScenePath(const Path& path) noexcept
+    void ProjectFile::SetLastUsedScenePath(const Path& path)
     {
         auto p = path;
         if (path.IsAbsolute())
@@ -313,11 +343,11 @@ namespace BeeEngine::Editor
             GameConfig config;
             config.Name = GetProjectName();
             config.DefaultLocale = options.DefaultLocale;
-            const auto startingSceneName = GetLastUsedScenePath().GetFileName();
+            const auto startingSceneName = GetStartingSceneName() + ".beescene";
 
             for (const auto& entry : std::filesystem::directory_iterator(scenePath.ToStdPath()))
             {
-                if (startingSceneName == entry.path().filename())
+                if (startingSceneName.c_str() == entry.path().filename())
                 {
                     Path scenePath = entry.path();
                     config.StartingScene = scenePath.GetRelativePath(gameFilesPath);
@@ -562,7 +592,7 @@ namespace BeeEngine::Editor
     void ProjectFile::ReloadAndRebuildGameLibrary()
     {
         RegenerateSolution();
-        RunCommand("dotnet build " + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln --configuration Debug");
+        RunCommand("dotnet build \"" + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln\" --configuration Debug");
         m_AssemblyReloadPending = true;
     }
 } // namespace BeeEngine::Editor

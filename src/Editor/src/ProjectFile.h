@@ -39,9 +39,9 @@ namespace BeeEngine::Editor
         {
             return m_LastUsedScenePath.IsEmpty() ? m_LastUsedScenePath : m_ProjectPath / m_LastUsedScenePath;
         }
-        void SetLastUsedScenePath(const Path& path) noexcept;
+        void SetLastUsedScenePath(const Path& path);
 
-        void SetLastUsedSceneToNull() noexcept
+        void SetLastUsedSceneToNull()
         {
             m_LastUsedScenePath = "";
             Save();
@@ -62,7 +62,7 @@ namespace BeeEngine::Editor
 
         void BuildProject(const BuildProjectOptions& options);
 
-        void Save() noexcept;
+        void Save();
 
         void Update() noexcept;
 
@@ -76,6 +76,18 @@ namespace BeeEngine::Editor
         {
             m_OnAssetRemoved = std::move(callback);
         }
+        const Locale::Localization& GetDefaultLocale() const noexcept { return m_DefaultLocale; }
+        void SetDefaultLocale(const Locale::Localization& locale)
+        {
+            m_DefaultLocale = locale;
+            Save();
+        }
+
+        String GetStartingSceneName() const
+        {
+            return m_StartingScenePath.IsEmpty() ? m_LastUsedScenePath.GetFileNameWithoutExtension().AsUTF8()
+                                                 : m_StartingScenePath.GetFileNameWithoutExtension().AsUTF8();
+        }
 
     private:
         std::vector<std::pair<OSPlatform, Path>> CheckForAvailablePlatforms();
@@ -86,16 +98,20 @@ namespace BeeEngine::Editor
 
         void LoadLocalizationFiles();
 
+        void SetStartingScene(const Path& path) { m_StartingScenePath = path; }
+
         Path m_ProjectPath;
         String m_ProjectName;
         Path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
         Path m_ProjectAssetRegistryPath = m_ProjectPath / (m_ProjectName + ".beeassetregistry");
         Path m_LastUsedScenePath{""};
+        Path m_StartingScenePath{""};
         Scope<FileWatcher> m_AppAssemblyFileWatcher = nullptr;
         mutable bool m_AssemblyReloadPending = false;
         Path m_AppAssemblyPath;
         BeeEngine::UUID m_AssetRegistryID;
         Locale::Domain m_ProjectLocaleDomain;
+        Locale::Localization m_DefaultLocale = Locale::Localization::Default;
 
         Scope<FileWatcher> m_AssetFileWatcher = nullptr;
         EditorAssetManager* m_AssetManager;

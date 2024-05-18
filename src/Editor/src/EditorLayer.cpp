@@ -126,6 +126,7 @@ namespace BeeEngine::Editor
             m_Console.RenderGUI();
             m_LocalizationPanel->Render();
             m_DragAndDrop.ImGuiRender();
+            m_ProjectSettings->Render();
             DrawBuildProjectPopup();
             ImGui::Begin("Settings");
             ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
@@ -152,6 +153,7 @@ namespace BeeEngine::Editor
                         {
                             std::unique_lock lock(m_BigLock);
                             m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &m_EditorAssetManager);
+                            m_ProjectSettings = CreateScope<ProjectSettings>(*m_ProjectFile, m_EditorLocaleDomain);
                             m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
@@ -176,8 +178,7 @@ namespace BeeEngine::Editor
                                 for (auto& path : assetPaths)
                                 {
                                     auto name = path.GetFileNameWithoutExtension().AsUTF8();
-                                    const auto* handlePtr =
-                                        m_EditorAssetManager.GetAssetHandleByName(name);
+                                    const auto* handlePtr = m_EditorAssetManager.GetAssetHandleByName(name);
                                     if (!handlePtr)
                                     {
                                         m_EditorAssetManager.LoadAsset(path, {m_ProjectFile->GetAssetRegistryID()});
@@ -221,6 +222,7 @@ namespace BeeEngine::Editor
                         {
                             std::unique_lock lock(m_BigLock);
                             m_ProjectFile = CreateScope<ProjectFile>(projectPath, name, &m_EditorAssetManager);
+                            m_ProjectSettings = CreateScope<ProjectSettings>(*m_ProjectFile, m_EditorLocaleDomain);
                             m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
@@ -271,6 +273,14 @@ namespace BeeEngine::Editor
 
     void EditorLayer::SetUpMenuBar()
     {
+        MenuBarElement projectMenu = {m_EditorLocaleDomain.Translate("menubar.project")};
+        projectMenu.AddChild(
+            {m_EditorLocaleDomain.Translate("menubar.project.settings"), [this]() { m_ProjectSettings->Toggle(); }});
+        projectMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.buildProject"),
+                              [this]() { m_ShowBuildProjectPopup = true; }});
+
+        m_MenuBar.AddElement(projectMenu);
+
         MenuBarElement fileMenu = {m_EditorLocaleDomain.Translate("menubar.file")};
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.newScene"),
                            [this]()
@@ -332,8 +342,6 @@ namespace BeeEngine::Editor
                                     Jobs::CreateJob([this]() { m_ProjectFile->ReloadAndRebuildGameLibrary(); });
                                 Jobs::Schedule(BeeMove(reloadJob));
                             }});
-        buildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.buildProject"),
-                            [this]() { m_ShowBuildProjectPopup = true; }});
         m_MenuBar.AddElement(buildMenu);
 
         MenuBarElement viewMenu = {m_EditorLocaleDomain.Translate("menubar.view")};
@@ -724,7 +732,7 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
         // Choose a default locale from the project locale domain
         ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("buildProject.defaultLocale").c_str());
         ImGui::SameLine();
-        if (ImGui::BeginCombo("##defaultLocale", options.DefaultLocale.GetLanguageString().c_str()))
+        if (ImGui::BeginCombo("##defaultLocale", m_ProjectFile->GetDefaultLocale().GetLanguageString().c_str()))
         {
             if (ImGui::BeginTooltip())
             {
@@ -733,7 +741,7 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
             }
             for (const auto& locale : m_ProjectFile->GetProjectLocaleDomain().GetLocales())
             {
-                bool isSelected = options.DefaultLocale.GetLanguageString() == locale;
+                bool isSelected = m_ProjectFile->GetDefaultLocale().GetLanguageString() == locale;
                 if (ImGui::Selectable(locale.c_str(), isSelected))
                 {
                     options.DefaultLocale = locale;
@@ -745,6 +753,9 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
             }
             ImGui::EndCombo();
         }
+        ImGui::TextUnformatted((m_EditorLocaleDomain.Translate("buildProject.startingScene") + ": " +
+                                m_ProjectFile->GetStartingSceneName())
+                                   .c_str());
 
         ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("buildProject.outputPath").c_str());
         ImGui::SameLine();
@@ -798,6 +809,10 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
             bool isEverythingFilled = !isOutputPathEmpty && isOutputPathValid && isDefaultLocaleValid;
             return isEverythingFilled;
         };
+        if (options.DefaultLocale != m_ProjectFile->GetDefaultLocale())
+        {
+            options.DefaultLocale = m_ProjectFile->GetDefaultLocale();
+        }
         bool disabled = !areAllFieldsFilled();
         if (disabled)
         {

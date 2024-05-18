@@ -20,6 +20,7 @@
 #include "Panels/ImGuiUIEditor.h"
 #include "Panels/InspectorPanel.h"
 #include "Panels/MenuBar.h"
+#include "Panels/ProjectSettings.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ViewPort.h"
 #include "ProjectFile.h"
@@ -58,6 +59,7 @@ namespace BeeEngine::Editor
         InspectorPanel m_InspectorPanel{&m_EditorAssetManager, m_EditorLocaleDomain};
         Scope<ProjectFile> m_ProjectFile = nullptr;
         Scope<Locale::ImGuiLocalizationPanel> m_LocalizationPanel = nullptr;
+        Scope<ProjectSettings> m_ProjectSettings = nullptr;
 
         bool m_RenderPhysicsColliders = false;
 
