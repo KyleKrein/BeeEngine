@@ -137,7 +137,7 @@ namespace BeeEngine::Internal
         InitializeDragDrop();
 
         BeeExpects(properties.PreferredRenderAPI == RenderAPI::Vulkan);
-        m_Instance = CreateScope<VulkanInstance>(properties.Title, WindowHandlerAPI::WinAPI);
+        m_Instance = CreateScope<VulkanInstance>(std::string_view{properties.Title}, WindowHandlerAPI::WinAPI);
         m_GraphicsDevice = CreateScope<VulkanGraphicsDevice>(*m_Instance);
         ShowWindow(m_Window, showWindowCommandFlags);
         UpdateWindow(m_Window);

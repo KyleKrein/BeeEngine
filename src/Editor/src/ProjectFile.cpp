@@ -402,7 +402,7 @@ namespace BeeEngine::Editor
             {
                 continue;
             }
-            if (std::get<Path>(metadata.Data).AsUTF8().contains(std::string_view(directory.AsUTF8())))
+            if (std::get<Path>(metadata.Data).AsUTF8().contains(directory.AsUTF8()))
             {
                 co_yield metadata;
             }

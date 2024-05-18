@@ -59,7 +59,8 @@ typedef uint64x2_t u64x2_t;
 #else
 #define TEMPLATE template <size_t INTERNAL_SIZE = 64, class Allocator = ::std::allocator<char>>
 #endif
-
+#undef max
+#undef min
 bool inConstSegment(const char* c);
 
 constexpr size_t SSO_ALIGNMENT = 16;
@@ -1855,6 +1856,8 @@ public:
     }
 
     constexpr bool contains(std::string_view sv) const { return find(sv.begin(), 0) != npos; }
+
+    constexpr bool contains(const SIMDString& str) const { return find(str) != npos; }
 
     constexpr bool contains(value_type c) const { return find(c, 0) != npos; }
 

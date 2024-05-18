@@ -124,7 +124,7 @@ namespace BeeEngine
         return result;
     }
 
-    std::string FileDialogs::GetFilter(void* filter)
+    String FileDialogs::GetFilter(void* filter)
     {
         return ((FileDialogs::Filter*)filter)->WindowsFilter();
     }

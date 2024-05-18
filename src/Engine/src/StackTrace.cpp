@@ -18,7 +18,8 @@ namespace BeeEngine
         m_Entries.reserve(stacktrace.size());
         for (const auto& entry : stacktrace)
         {
-            m_Entries.emplace_back(std::move(entry.description()), std::move(entry.source_file()), entry.source_line());
+            m_Entries.emplace_back(
+                String(std::move(entry.description())), String(std::move(entry.source_file())), entry.source_line());
         }
     }
 
