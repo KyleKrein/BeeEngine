@@ -7,16 +7,19 @@
 #include "version"
 
 #include "StackTrace.h"
+#include <exception>
 
-inline void BeeExpects(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
+[[noreturn]] inline void BeeExpects(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
 {
     BeeCoreError("Expected result {0} is incorrect\nStacktrace:\n{1}", expr, stackTrace);
     debug_break();
+    std::terminate();
 }
-inline void BeeEnsures(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
+[[noreturn]] inline void BeeEnsures(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
 {
     BeeCoreError("Expectations {0} failed\nStacktrace:\n{1}", expr, stackTrace);
     debug_break();
+    std::terminate();
 }
 
 #if defined(BEE_ENABLE_CHECKS)

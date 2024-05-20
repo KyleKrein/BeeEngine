@@ -4,6 +4,7 @@
 
 #pragma once
 #include <SIMDString/SIMDString.h>
+#include <cstddef>
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -61,16 +62,32 @@ namespace BeeEngine
 
     constexpr std::size_t constexpr_strlen(const char* s)
     {
-        return std::char_traits<char>::length(s);
-        // or
-        return std::string::traits_type::length(s);
+        if consteval
+        {
+            size_t len = 0;
+            for (const char* str = s; *str; ++str)
+            {
+                ++len;
+            }
+            return len;
+        }
+
+        return ::strlen(s);
     }
 
     constexpr std::size_t constexpr_wcslen(const wchar_t* s)
     {
-        return std::char_traits<wchar_t>::length(s);
-        // or
-        return std::wstring::traits_type::length(s);
+        if consteval
+        {
+            size_t len = 0;
+            for (const wchar_t* str = s; *str; ++str)
+            {
+                ++len;
+            }
+            return len;
+        }
+
+        return ::wcslen(s);
     }
 
     constexpr std::vector<std::string_view> SplitString(std::string_view str, std::string_view delimiters)

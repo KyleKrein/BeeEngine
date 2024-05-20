@@ -100,9 +100,9 @@ BeeEngine::Path BeeEngine::FileDialogs::SaveFile(Filter filter)
     return result;
 }
 
-std::string BeeEngine::FileDialogs::GetFilter(void* filter)
+BeeEngine::String BeeEngine::FileDialogs::GetFilter(void* filter)
 {
-    return std::string(((FileDialogs::Filter*)filter)->filter + 2);
+    return BeeEngine::String(((FileDialogs::Filter*)filter)->filter + 2);
 }
 
 BeeEngine::Path BeeEngine::FileDialogs::OpenFolder()
