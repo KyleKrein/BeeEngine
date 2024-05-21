@@ -55,6 +55,8 @@ namespace BeeEngine
     using MethodInvokeFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t methodId, void* instanceGcHandle, void** args);
     using UnloadContextFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId);
     using StringCreateManagedFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(void* str);
+    using GetGCInfoFunction = NativeToManaged::GCInfo(CORECLR_DELEGATE_CALLTYPE *)();
+    using GCCollectFunction = void(CORECLR_DELEGATE_CALLTYPE *)();
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -92,6 +94,8 @@ namespace BeeEngine
         UnloadContextFunction UnloadContext = nullptr;
         StringCreateManagedFunction StringCreateManaged = nullptr;
         SetupLoggerFunction SetupLogger = nullptr;
+        GetGCInfoFunction GetGCInfo = nullptr;
+        GCCollectFunction GCCollect = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -223,6 +227,8 @@ namespace BeeEngine
         ObtainDelegate(UnloadContext);
         ObtainDelegate(StringCreateManaged);
         ObtainDelegate(SetupLogger);
+        ObtainDelegate(GetGCInfo);
+        ObtainDelegate(GCCollect);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -380,5 +386,14 @@ namespace BeeEngine
     void NativeToManaged::SetupLogger()
     {
         s_Data->SetupLogger((void*)Log_Info, (void*)Log_Warn, (void*)Log_Trace, (void*)Log_Error);
+    }
+
+    NativeToManaged::GCInfo NativeToManaged::GetGCInfo()
+    {
+        return s_Data->GetGCInfo();
+    }
+    void NativeToManaged::GCCollect()
+    {
+        s_Data->GCCollect();
     }
 }

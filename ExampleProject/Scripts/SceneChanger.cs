@@ -11,20 +11,12 @@ namespace Example
 		public Scene FourthScene;
 
 		public Scene FifthScene;
-
-		private Scene[] m_Scenes;
-
-		void OnCreate()
-		{
-			m_Scenes = new Scene[]
-			{
-				FirstScene, SecondScene, ThirdScene, FourthScene, FifthScene
-			};
-		}
 		void OnUpdate()
 		{
-			//if(Input.IsKeyDown(Key.D1))
-				//SceneManager.LoadScene(m_Scenes[0]);
+			if(Input.IsKeyDown(Key.D1))
+				FirstScene.SetActive();
+			if(Input.IsKeyDown(Key.D2))
+				SecondScene.SetActive();
 		}
 	}
 }

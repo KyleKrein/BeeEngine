@@ -5,6 +5,7 @@
 #include "ScriptingEngine.h"
 #include "Allocator/AllocatorStatistics.h"
 #include "Core/Logging/Log.h"
+#include "Core/Move.h"
 #include "Core/Reflection.h"
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
@@ -87,12 +88,15 @@ namespace BeeEngine
         glm::vec2 ViewportSize = {-1, -1};
 
         ManagedHandles Handles = {};
+
+        std::function<void(AssetHandle)> OnSceneChangeCallback = nullptr;
     };
     ScriptingEngineData ScriptingEngine::s_Data = {};
 
-    void ScriptingEngine::Init()
+    void ScriptingEngine::Init(std::function<void(AssetHandle)> onSceneChangeCallback)
     {
         // InitMono();
+        s_Data.OnSceneChangeCallback = BeeMove(onSceneChangeCallback);
         InitDotNetHost();
     }
 
@@ -580,5 +584,10 @@ namespace BeeEngine
     Locale::Domain& ScriptingEngine::GetLocaleDomain()
     {
         return *s_Data.LocaleDomain;
+    }
+
+    void ScriptingEngine::RequestSceneChange(AssetHandle sceneHandle)
+    {
+        s_Data.OnSceneChangeCallback(sceneHandle);
     }
 } // namespace BeeEngine

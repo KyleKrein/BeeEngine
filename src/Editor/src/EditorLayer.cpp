@@ -4,6 +4,7 @@
 #include "EditorLayer.h"
 #include "AssetScanner.h"
 #include "ConfigFile.h"
+#include "Core/Application.h"
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
@@ -18,6 +19,7 @@
 #include "Scene/Entity.h"
 #include "Scripting/MAssembly.h"
 #include "Scripting/MClass.h"
+#include "Scripting/NativeToManaged.h"
 #include "Scripting/ScriptGlue.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Utils/FileDialogs.h"
@@ -131,6 +133,10 @@ namespace BeeEngine::Editor
             DrawBuildProjectPopup();
             ImGui::Begin("Settings");
             ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
+            if (ImGui::Button("GC Collect"))
+            {
+                NativeToManaged::GCCollect();
+            }
             ImGui::End();
         }
         else
@@ -154,7 +160,8 @@ namespace BeeEngine::Editor
                         {
                             std::unique_lock lock(m_BigLock);
                             m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &m_EditorAssetManager);
-                            m_ProjectSettings = CreateScope<ProjectSettings>(*m_ProjectFile, m_EditorLocaleDomain);
+                            m_ProjectSettings = CreateScope<ProjectSettings>(
+                                *m_ProjectFile, m_EditorLocaleDomain, m_EditorAssetManager);
                             m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
@@ -202,7 +209,7 @@ namespace BeeEngine::Editor
                         auto sceneHandle = m_ProjectFile->GetLastUsedScene();
                         if (sceneHandle != AssetHandle{0, 0})
                         {
-                            LoadScene(sceneHandle);
+                            Application::SubmitToMainThread([this, sceneHandle]() { LoadScene(sceneHandle); });
                         }
                     });
                 Jobs::Schedule(BeeMove(loadProjectJob));
@@ -223,7 +230,8 @@ namespace BeeEngine::Editor
                         {
                             std::unique_lock lock(m_BigLock);
                             m_ProjectFile = CreateScope<ProjectFile>(projectPath, name, &m_EditorAssetManager);
-                            m_ProjectSettings = CreateScope<ProjectSettings>(*m_ProjectFile, m_EditorLocaleDomain);
+                            m_ProjectSettings = CreateScope<ProjectSettings>(
+                                *m_ProjectFile, m_EditorLocaleDomain, m_EditorAssetManager);
                             m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
@@ -390,7 +398,13 @@ namespace BeeEngine::Editor
         }*/
         // ScriptingEngine::EnableDebugging(); //TODO: enable only in debug
         // builds
-        ScriptingEngine::Init();
+        ScriptingEngine::Init(
+            [this](AssetHandle handle)
+            {
+                m_ActiveScene->StopRuntime();
+                LoadScene(handle);
+                m_ActiveScene->StartRuntime();
+            });
         ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
         Path debugSymbolsPath = m_ProjectFile->GetAssemblyPath();
         debugSymbolsPath.ReplaceExtension(".pdb");
@@ -532,6 +546,10 @@ namespace BeeEngine::Editor
             }
             m_ScenePath = filepath;
         }*/
+        if (!m_ActiveScene || m_ActiveScene->Handle == AssetHandle{0, 0})
+        {
+            return;
+        }
         SceneSerializer serializer(m_ActiveScene);
         serializer.Serialize(std::get<Path>(m_EditorAssetManager.GetAssetMetadata(m_ActiveScene->Handle).Data));
     }

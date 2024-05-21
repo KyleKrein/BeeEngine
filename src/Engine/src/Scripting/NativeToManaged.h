@@ -34,6 +34,21 @@ namespace BeeEngine
     class NativeToManaged
     {
     public:
+        /**
+         * @brief This structure contains information about the current state of the garbage collector.
+         * IMPORTANT: This structure is used to pass data from the managed side to the native side.
+         * If this structure is changed, the corresponding structure on the managed side must be changed as well.
+         *
+         */
+        struct GCInfo
+        {
+            int32_t Generation0Count;
+            int32_t Generation1Count;
+            int32_t Generation2Count;
+            int64_t HeapSize;
+            int64_t PinnedObjects;
+            int64_t TotalAvailableMemory;
+        };
         struct NativeToManagedData;
         static void Init(const Path& pathToNativeBridgeDll);
         static ManagedAssemblyContextID CreateContext(const String& contextName, bool canBeUnloaded);
@@ -105,6 +120,9 @@ namespace BeeEngine
         static GCHandle StringCreateManaged(const String& string);
         static void FreeIntPtr(void* ptr);
         static void SetupLogger();
+
+        static GCInfo GetGCInfo();
+        static void GCCollect();
 
     private:
         static NativeToManagedData* s_Data;

@@ -5,8 +5,13 @@
 
 namespace BeeEngine::Editor
 {
-    ProjectSettings::ProjectSettings(ProjectFile& currentProject, Locale::Domain& domain)
-        : m_CurrentProject(currentProject), m_Domain(domain), m_ProjectName(m_CurrentProject.GetProjectName())
+    ProjectSettings::ProjectSettings(ProjectFile& currentProject,
+                                     Locale::Domain& domain,
+                                     EditorAssetManager& assetManager)
+        : m_CurrentProject(currentProject),
+          m_Domain(domain),
+          m_AssetManager(assetManager),
+          m_ProjectName(m_CurrentProject.GetProjectName())
     {
     }
 
@@ -45,6 +50,37 @@ namespace BeeEngine::Editor
                 if (isSelected)
                 {
                     ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::TextUnformatted(m_Domain.Translate("buildProject.startingScene").c_str());
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##StartingScene", m_CurrentProject.GetStartingSceneName().c_str()))
+        {
+            if (ImGui::BeginTooltip())
+            {
+                ImGui::TextUnformatted(m_Domain.Translate("buildProject.startingScene.tooltip").c_str());
+                ImGui::EndTooltip();
+            }
+            for (auto& [registryID, assets] : m_AssetManager.GetAssetRegistry())
+            {
+                for (auto& [uuid, metadata] : assets)
+                {
+                    if (metadata.Type != AssetType::Scene)
+                    {
+                        continue;
+                    }
+                    bool isSelected = m_CurrentProject.GetStartingSceneName() == metadata.Name;
+                    if (ImGui::Selectable(metadata.Name.c_str(), isSelected))
+                    {
+                        m_CurrentProject.SetStartingScene({registryID, uuid});
+                        m_CurrentProject.Save();
+                    }
+                    if (isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
                 }
             }
             ImGui::EndCombo();

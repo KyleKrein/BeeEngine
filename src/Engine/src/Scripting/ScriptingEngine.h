@@ -11,6 +11,7 @@
 #include "Locale/Locale.h"
 #include "MTypes.h"
 #include "MUtils.h"
+#include <functional>
 #include <glm/glm.hpp>
 
 namespace BeeEngine
@@ -21,7 +22,7 @@ namespace BeeEngine
     class ScriptingEngine
     {
     public:
-        static void Init();
+        static void Init(std::function<void(AssetHandle)> onSceneChangeCallback);
         static void Shutdown();
         static bool IsInitialized();
         static void SetLocaleDomain(Locale::Domain& domain);
@@ -72,6 +73,8 @@ namespace BeeEngine
         static void SetViewportSize(float width, float height);
 
         static void UnloadAppContext();
+
+        static void RequestSceneChange(AssetHandle sceneHandle);
 
     private:
         static void InitDotNetHost();

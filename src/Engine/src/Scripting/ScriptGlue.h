@@ -83,5 +83,7 @@ namespace BeeEngine
         static void Locale_SetLocale(void* locale);
         static void* Locale_TranslateStatic(void* key);
         static void* Locale_TranslateDynamic(void* key, ArrayInfo args);
+        static void* Scene_GetActive();
+        static void Scene_SetActive(void* scene);
     };
 } // namespace BeeEngine

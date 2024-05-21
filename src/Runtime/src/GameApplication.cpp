@@ -1,5 +1,9 @@
 #include "GameApplication.h"
+#include "Core/AssetManagement/Asset.h"
+#include "Core/AssetManagement/AssetManager.h"
+#include "Core/Move.h"
 #include "GameLayer.h"
+#include "Scene/Scene.h"
 namespace BeeEngine::Runtime
 {
     GameApplication::GameApplication(RuntimeConfiguration config)
@@ -24,7 +28,9 @@ namespace BeeEngine::Runtime
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
 
-        PushLayer(CreateRef<GameLayer>(m_ActiveScene, m_FrameBuffer, m_LocaleDomain));
+        m_GameLayer = CreateRef<GameLayer>(m_ActiveScene, m_FrameBuffer, m_LocaleDomain);
+
+        PushLayer(m_GameLayer);
     }
     void GameApplication::LoadLocalizationFiles()
     {
@@ -51,7 +57,14 @@ namespace BeeEngine::Runtime
     }
     void GameApplication::InitializeScripting()
     {
-        ScriptingEngine::Init();
+        ScriptingEngine::Init(
+            [this](AssetHandle handle)
+            {
+                m_ActiveScene->StopRuntime();
+                m_ActiveScene = std::move(Scene::Copy(AssetManager::GetAsset<Scene>(handle)));
+                m_GameLayer->SetScene(m_ActiveScene);
+                m_ActiveScene->StartRuntime();
+            });
         ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
         ScriptingEngine::LoadGameAssembly("libs/GameLibrary.dll");
         ScriptGlue::Register();
@@ -65,9 +78,7 @@ namespace BeeEngine::Runtime
     }
     void GameApplication::LoadStartingScene()
     {
-        m_ActiveScene = CreateRef<Scene>();
-        SceneSerializer serializer(m_ActiveScene);
-        serializer.Deserialize(Path(std::filesystem::current_path()) / m_Config.GameConfig.StartingScene);
+        m_ActiveScene = Scene::Copy(AssetManager::GetAsset<Scene>(m_Config.GameConfig.StartingScene));
     }
     GameApplication::~GameApplication()
     {

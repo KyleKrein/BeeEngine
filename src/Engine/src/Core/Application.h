@@ -78,6 +78,8 @@ namespace BeeEngine
         inline void PushOverlay(Ref<Layer> overlay) { m_Layers.PushOverlay(std::move(overlay)); }
         inline void PushLayer(Layer&& layer) { m_Layers.PushLayer(std::move(layer)); }
         inline void PushOverlay(Layer&& overlay) { m_Layers.PushOverlay(std::move(overlay)); }
+        void PopLayer(Ref<Layer> layer) { m_Layers.PopLayer(std::move(layer)); }
+        void PopOverlay(Ref<Layer> overlay) { m_Layers.PopOverlay(std::move(overlay)); }
 
     private:
         void OnEvent(EventDispatcher& dispatcher)

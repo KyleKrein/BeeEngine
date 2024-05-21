@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <vector>
 
 namespace BeeEngine
@@ -53,8 +54,8 @@ namespace BeeEngine
 
             void UpdateCodepoint() const;
         };
-        iterator begin() const { return {m_String->cbegin()}; }
-        iterator end() const { return {m_String->cend()}; }
+        iterator begin() const { return {m_String->begin()}; }
+        iterator end() const { return {m_String->end()}; }
 
     private:
         const UTF8String* m_String;
@@ -62,7 +63,11 @@ namespace BeeEngine
 
     constexpr std::size_t constexpr_strlen(const char* s)
     {
+#if defined(_MSC_VER)
+        if constexpr (std::is_constant_evaluated())
+#else
         if consteval
+#endif
         {
             size_t len = 0;
             for (const char* str = s; *str; ++str)
@@ -77,7 +82,11 @@ namespace BeeEngine
 
     constexpr std::size_t constexpr_wcslen(const wchar_t* s)
     {
+#if defined(_MSC_VER)
+        if constexpr (std::is_constant_evaluated())
+#else
         if consteval
+#endif
         {
             size_t len = 0;
             for (const wchar_t* str = s; *str; ++str)

@@ -3,6 +3,8 @@
 //
 
 #include "ScriptGlue.h"
+#include "Core/Application.h"
+#include "Core/AssetManagement/Asset.h"
 #include "Core/Input.h"
 #include "Core/Logging/GameLogger.h"
 #include "MAssembly.h"
@@ -11,6 +13,7 @@
 #include "Scene/Entity.h"
 #include "Scene/Prefab.h"
 #include "Scene/Scene.h"
+#include "Scripting/ScriptingEngine.h"
 #include "ScriptingEngine.h"
 
 #define BEE_NATIVE_FUNCTION(name) ScriptingEngine::RegisterNativeFunction(#name, (void*)&name)
@@ -126,6 +129,9 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(Locale_SetLocale);
             BEE_NATIVE_FUNCTION(Locale_TranslateStatic);
             BEE_NATIVE_FUNCTION(Locale_TranslateDynamic);
+
+            BEE_NATIVE_FUNCTION(Scene_GetActive);
+            BEE_NATIVE_FUNCTION(Scene_SetActive);
         }
     }
     void ScriptGlue::Log_Warn(void* message)
@@ -508,5 +514,15 @@ namespace BeeEngine
         String translated = ScriptingEngine::GetLocaleDomain().TranslateRuntime(key.c_str(), args);
         BeeCoreTrace("Translated key {} to {}", key, translated);
         return NativeToManaged::StringCreateManaged(translated);
+    }
+
+    void* ScriptGlue::Scene_GetActive()
+    {
+        return &ScriptingEngine::GetSceneContext()->Handle;
+    }
+    void ScriptGlue::Scene_SetActive(void* scene)
+    {
+        AssetHandle handle = *static_cast<AssetHandle*>(scene);
+        Application::SubmitToMainThread([handle]() { ScriptingEngine::RequestSceneChange(handle); });
     }
 } // namespace BeeEngine

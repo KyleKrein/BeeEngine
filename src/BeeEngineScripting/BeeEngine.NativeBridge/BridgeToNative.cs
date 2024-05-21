@@ -1005,4 +1005,38 @@ internal static class BridgeToNative
         GCHandle handle = GCHandle.Alloc(str, GCHandleType.Pinned);
         return GCHandle.ToIntPtr(handle);
     }
+
+    [UnmanagedCallersOnly]
+    public static void GCCollect()
+    {
+        GC.Collect();
+    }
+    /// <summary>
+    /// GCInfo is a struct that contains information about the current state of the garbage collector.
+    /// IMPORTANT: If this type is changed, the corresponding C++ type GCInfo in NativeToManaged.h must be changed as well
+    /// </summary>
+    public struct GCInfo
+    {
+        public int Generation0Count;
+        public int Generation1Count;
+        public int Generation2Count;
+        public long HeapSize;
+        public long PinnedObjects;
+        public long TotalAvailableMemory;
+    }
+
+    [UnmanagedCallersOnly]
+    public static GCInfo GetGCInfo()
+    {
+        var memoryInfo = GC.GetGCMemoryInfo();
+        return new GCInfo
+        {
+            Generation0Count = GC.CollectionCount(0),
+            Generation1Count = GC.CollectionCount(1),
+            Generation2Count = GC.CollectionCount(2),
+            HeapSize = memoryInfo.HeapSizeBytes,
+            PinnedObjects = memoryInfo.PinnedObjectsCount,
+            TotalAvailableMemory = memoryInfo.TotalAvailableMemoryBytes
+        };
+    }
 }

@@ -90,6 +90,7 @@ namespace BeeEngine::Editor
             }
             return m_AssetManager->GetAssetMetadata(m_StartingScene).Name;
         }
+        void SetStartingScene(const AssetHandle& handle) { m_StartingScene = handle; }
 
     private:
         std::vector<std::pair<OSPlatform, Path>> CheckForAvailablePlatforms();
@@ -99,8 +100,6 @@ namespace BeeEngine::Editor
         void OnAssetFileSystemEvent(const Path& path, FileWatcher::Event changeType);
 
         void LoadLocalizationFiles();
-
-        void SetStartingScene(const AssetHandle& handle) { m_StartingScene = handle; }
 
         Path m_ProjectPath;
         String m_ProjectName;
