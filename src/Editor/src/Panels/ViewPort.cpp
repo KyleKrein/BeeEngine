@@ -3,9 +3,15 @@
 //
 
 #include "ViewPort.h"
+#include "AssetPanel.h"
+#include "Core/AssetManagement/Asset.h"
+#include "Core/AssetManagement/AssetManager.h"
+#include "Core/AssetManagement/EditorAssetManager.h"
+#include "Core/CodeSafety/Expects.h"
 #include "Core/Events/Event.h"
 #include "Core/ResourceManager.h"
 #include "Debug/Instrumentor.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 #include "Renderer/SceneRenderer.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
@@ -15,7 +21,11 @@
 namespace BeeEngine::Editor
 {
 
-    ViewPort::ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity, const Color4& clearColor) noexcept
+    ViewPort::ViewPort(uint32_t width,
+                       uint32_t height,
+                       Entity& selectedEntity,
+                       const Color4& clearColor,
+                       EditorAssetManager& assetManager) noexcept
         : m_Width(width),
           m_Height(height),
           m_FrameBuffer(nullptr),
@@ -23,7 +33,8 @@ namespace BeeEngine::Editor
           m_IsHovered(false),
           m_Scene(std::move(CreateRef<Scene>())),
           m_SelectedEntity(selectedEntity),
-          m_ClearColor(clearColor)
+          m_ClearColor(clearColor),
+          m_AssetManager(assetManager)
     {
         FrameBufferPreferences preferences;
         preferences.Width = m_Width * WindowHandler::GetInstance()->GetScaleFactor();
@@ -232,6 +243,15 @@ namespace BeeEngine::Editor
             ImGui::EndDragDropTarget();
         }
 
+        ImGui::AcceptDragAndDrop<AssetHandle>(AssetPanel::GetDragAndDropTypeName(AssetType::Scene),
+                                              [this](const AssetHandle& handle)
+                                              {
+                                                  BeeExpects(m_AssetManager.IsAssetHandleValid(handle));
+                                                  const auto& sceneMetadata = m_AssetManager.GetAssetMetadata(handle);
+                                                  BeeExpects(sceneMetadata.Location == AssetLocation::FileSystem);
+                                                  OpenScene(std::get<Path>(sceneMetadata.Data));
+                                              });
+
         if (m_SelectedEntity != Entity::Null && m_GuizmoOperation != GuizmoOperation::None)
         {
             RenderImGuizmo(camera);
@@ -300,7 +320,9 @@ namespace BeeEngine::Editor
     {
         BeeCoreTrace("Opening scene {0}", path);
         m_NewSceneWasLoaded = true;
-        m_ScenePath = path;
+        const auto* handlePtr = m_AssetManager.GetAssetHandleByName(path.GetFileNameWithoutExtension());
+        BeeExpects(handlePtr);
+        m_SceneHandle = *handlePtr;
     }
 
     void ViewPort::RenderCameraFrustum(CommandBuffer& commandBuffer)

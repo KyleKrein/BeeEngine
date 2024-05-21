@@ -21,13 +21,13 @@ namespace BeeEngine::Editor
 
         void Render();
 
+        static const char* GetDragAndDropTypeName(AssetType type);
+
     private:
         Scope<AssetEditPanel> m_AssetEditPanel;
         EditorAssetManager* m_AssetManager;
         Locale::Domain* m_EditorDomain;
         ProjectFile* m_Project;
         std::function<void(AssetHandle)> m_OnAssetDeleted;
-
-        const char* GetDragAndDropTypeName(AssetType type);
     };
 } // namespace BeeEngine::Editor

@@ -140,6 +140,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Platform/Vulkan/VulkanComputePipeline.h
         src/Core/AssetManagement/MeshSourceImporter.cpp
         src/Core/AssetManagement/MeshSourceImporter.h
+        src/Core/AssetManagement/SceneImporter.h
+        src/Core/AssetManagement/SceneImporter.cpp
         src/Core/AssetManagement/MeshSource.cpp
         src/Core/AssetManagement/MeshSource.h
         src/Renderer/MaterialData.h

@@ -4,6 +4,7 @@
 #include "EditorLayer.h"
 #include "AssetScanner.h"
 #include "ConfigFile.h"
+#include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
 #include "Core/AssetManagement/EngineAssetRegistry.h"
@@ -104,7 +105,7 @@ namespace BeeEngine::Editor
                 m_SceneState = SceneState::Edit;
                 OnSceneStop();
             }
-            LoadScene(m_ViewPort.GetScenePath());
+            LoadScene(m_ViewPort.GetSceneHandle());
         }
         m_FpsCounter.Update();
     }
@@ -198,10 +199,10 @@ namespace BeeEngine::Editor
                                 m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
                         }
                         Jobs::WaitForJobsToComplete(counter);
-                        auto scenePath = m_ProjectFile->GetLastUsedScenePath();
-                        if (!scenePath.IsEmpty())
+                        auto sceneHandle = m_ProjectFile->GetLastUsedScene();
+                        if (sceneHandle != AssetHandle{0, 0})
                         {
-                            LoadScene(scenePath);
+                            LoadScene(sceneHandle);
                         }
                     });
                 Jobs::Schedule(BeeMove(loadProjectJob));
@@ -282,12 +283,12 @@ namespace BeeEngine::Editor
         m_MenuBar.AddElement(projectMenu);
 
         MenuBarElement fileMenu = {m_EditorLocaleDomain.Translate("menubar.file")};
+        /*
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.newScene"),
                            [this]()
                            {
                                m_SceneHierarchyPanel.ClearSelection();
                                m_ViewPort.GetScene()->Clear();
-                               m_ScenePath.Clear();
                            }});
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.openScene"),
                            [this]()
@@ -317,7 +318,7 @@ namespace BeeEngine::Editor
                                m_ScenePath = filepath;
                                SceneSerializer serializer(m_ActiveScene);
                                serializer.Serialize(m_ScenePath);
-                           }});
+                           }});*/
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.exit"),
                            []() { BeeEngine::Application::GetInstance().Close(); }});
         m_MenuBar.AddElement(fileMenu);
@@ -357,12 +358,24 @@ namespace BeeEngine::Editor
         const Path tempPath = m_ProjectFile->GetProjectPath() / ".beeengine" / "temp.beescene";
         SceneSerializer serializer(m_ActiveScene);
         serializer.Serialize(tempPath);
+        m_SceneHierarchyPanel.ClearSelection();
+        m_ActiveScene->Clear();
+        // Unloads all scenes in order to reload the scripts in Script components
+        for (auto& [registryID, assets] : m_EditorAssetManager.GetAssetRegistry())
+        {
+            for (auto& [uuid, metadata] : assets)
+            {
+                if (metadata.Type != AssetType::Scene || !m_EditorAssetManager.IsAssetLoaded({registryID, uuid}))
+                {
+                    continue;
+                }
+                m_EditorAssetManager.UnloadAsset({registryID, uuid});
+            }
+        }
         if (ScriptingEngine::IsInitialized())
         {
             ScriptingEngine::ReloadAssemblies();
         }
-        m_SceneHierarchyPanel.ClearSelection();
-        m_ActiveScene->Clear();
         serializer.Deserialize(tempPath);
         m_ActiveScene->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
     }
@@ -476,8 +489,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnSceneStop() noexcept
     {
-        m_ViewPort.GetScene()->StopRuntime();
-        m_ActiveScene.reset();
+        m_ActiveScene->StopRuntime();
         m_ActiveScene = m_EditorScene;
         SetScene(m_ActiveScene);
         m_ActiveScene->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
@@ -485,15 +497,13 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnSceneSimulate() noexcept {}
 
-    void EditorLayer::LoadScene(const Path& path)
+    void EditorLayer::LoadScene(const AssetHandle& handle)
     {
         m_SceneHierarchyPanel.ClearSelection();
-        m_ViewPort.GetScene()->Clear();
-        m_ScenePath = path;
-        SceneSerializer serializer(m_ActiveScene);
-        serializer.Deserialize(m_ScenePath);
-        m_ViewPort.GetScene()->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
-        m_ProjectFile->SetLastUsedScenePath(m_ScenePath);
+        m_ActiveScene = Scene::Copy(AssetManager::GetAsset<Scene>(handle));
+        SetScene(m_ActiveScene);
+        m_ActiveScene->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
+        m_ProjectFile->SetLastUsedScene(handle);
     }
 
     void EditorLayer::SetScene(const Ref<Scene>& sharedPtr)
@@ -508,7 +518,7 @@ namespace BeeEngine::Editor
     void EditorLayer::SaveScene()
     {
         SaveAssetRegistry();
-        if (m_ScenePath.IsEmpty())
+        /*if (m_ScenePath.IsEmpty())
         {
             auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
             if (filepath.IsEmpty())
@@ -521,9 +531,9 @@ namespace BeeEngine::Editor
                 filepath.ReplaceExtension(".beescene");
             }
             m_ScenePath = filepath;
-        }
+        }*/
         SceneSerializer serializer(m_ActiveScene);
-        serializer.Serialize(m_ScenePath);
+        serializer.Serialize(std::get<Path>(m_EditorAssetManager.GetAssetMetadata(m_ActiveScene->Handle).Data));
     }
 
     bool EditorLayer::OnKeyPressed(KeyPressedEvent* event) noexcept

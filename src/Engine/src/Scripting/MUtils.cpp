@@ -45,6 +45,7 @@ namespace BeeEngine
             {"BeeEngine.Texture2D", MType::Texture2D},
             {"BeeEngine.Font", MType::Font},
             {"BeeEngine.Prefab", MType::Prefab},
+            {"BeeEngine.Scene", MType::Scene},
         };
         if (MTypeMap.contains(name))
             return MTypeMap.at(name);
@@ -90,6 +91,7 @@ namespace BeeEngine
             {"Texture2D", MType::Texture2D},
             {"Font", MType::Font},
             {"Prefab", MType::Prefab},
+            {"Scene", MType::Scene},
 
             {"int", MType::Int32},
             {"float", MType::Single},
@@ -188,6 +190,8 @@ namespace BeeEngine
                 return "Font";
             case MType::Prefab:
                 return "Prefab";
+            case MType::Scene:
+                return "Scene";
 
             case MType::None:
                 break;
@@ -253,6 +257,7 @@ namespace BeeEngine
             case MType::Texture2D:
             case MType::Font:
             case MType::Prefab:
+            case MType::Scene:
                 return sizeof(AssetHandle);
 
             case MType::None:
@@ -267,7 +272,7 @@ namespace BeeEngine
         MType type = field.GetType();
         return type == MType::String || type == MType::Array || type == MType::Dictionary || type == MType::List ||
                type == MType::Object || type == MType::Asset || type == MType::Texture2D || type == MType::Font ||
-               type == MType::Prefab;
+               type == MType::Prefab || type == MType::Scene || type == MType::Entity;
     }
 
     bool MUtils::IsValueType(MType type)

@@ -264,17 +264,20 @@ namespace BeeEngine
 
     void ScriptGlue::Asset_Unload(AssetHandle* handle)
     {
-        AssetManager::UnloadAsset(*handle);
+        if (AssetManager::IsAssetLoaded(*handle))
+        {
+            AssetManager::UnloadAsset(*handle);
+        }
     }
 
     int32_t ScriptGlue::Asset_IsLoaded(AssetHandle* handle)
     {
-        return AssetManager::IsAssetHandleValid(*handle);
+        return AssetManager::IsAssetLoaded(*handle);
     }
 
     int32_t ScriptGlue::Asset_IsValid(AssetHandle* handle)
     {
-        return AssetManager::IsAssetLoaded(*handle);
+        return AssetManager::IsAssetHandleValid(*handle);
     }
 
     uint64_t ScriptGlue::Entity_GetParent(uint64_t id)

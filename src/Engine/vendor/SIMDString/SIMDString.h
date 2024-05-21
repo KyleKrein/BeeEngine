@@ -1333,6 +1333,11 @@ public:
         if (count < m_length)
         {
             m_length = count;
+            if (inConst())
+            {
+                pointer ptr = maybeReallocate(m_length + 1);
+                ::memcpy(ptr, data(), m_length + 1);
+            }
             data()[m_length] = '\0';
         }
         else if (count > m_length)

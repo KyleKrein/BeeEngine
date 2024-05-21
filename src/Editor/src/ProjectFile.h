@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Core/Coroutines/Generator.h"
 #include "Core/OsPlatform.h"
@@ -35,15 +36,12 @@ namespace BeeEngine::Editor
         [[nodiscard]] const Path& GetProjectFilePath() const noexcept;
         [[nodiscard]] const Path& GetProjectAssetRegistryPath() const noexcept;
 
-        Path GetLastUsedScenePath() const noexcept
-        {
-            return m_LastUsedScenePath.IsEmpty() ? m_LastUsedScenePath : m_ProjectPath / m_LastUsedScenePath;
-        }
-        void SetLastUsedScenePath(const Path& path);
+        AssetHandle GetLastUsedScene() const noexcept { return m_LastUsedScene; }
+        void SetLastUsedScene(const AssetHandle& handle);
 
         void SetLastUsedSceneToNull()
         {
-            m_LastUsedScenePath = "";
+            m_LastUsedScene = {0, 0};
             Save();
         }
 
@@ -83,10 +81,14 @@ namespace BeeEngine::Editor
             Save();
         }
 
-        String GetStartingSceneName() const
+        const String& GetStartingSceneName() const
         {
-            return m_StartingScenePath.IsEmpty() ? m_LastUsedScenePath.GetFileNameWithoutExtension().AsUTF8()
-                                                 : m_StartingScenePath.GetFileNameWithoutExtension().AsUTF8();
+            if (m_StartingScene == AssetHandle{0, 0})
+            {
+                static String notAvailable = "Not available";
+                return notAvailable;
+            }
+            return m_AssetManager->GetAssetMetadata(m_StartingScene).Name;
         }
 
     private:
@@ -98,14 +100,14 @@ namespace BeeEngine::Editor
 
         void LoadLocalizationFiles();
 
-        void SetStartingScene(const Path& path) { m_StartingScenePath = path; }
+        void SetStartingScene(const AssetHandle& handle) { m_StartingScene = handle; }
 
         Path m_ProjectPath;
         String m_ProjectName;
         Path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
         Path m_ProjectAssetRegistryPath = m_ProjectPath / (m_ProjectName + ".beeassetregistry");
-        Path m_LastUsedScenePath{""};
-        Path m_StartingScenePath{""};
+        AssetHandle m_LastUsedScene{0, 0};
+        AssetHandle m_StartingScene{0, 0};
         Scope<FileWatcher> m_AppAssemblyFileWatcher = nullptr;
         mutable bool m_AssemblyReloadPending = false;
         Path m_AppAssemblyPath;

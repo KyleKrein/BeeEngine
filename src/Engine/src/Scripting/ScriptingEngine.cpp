@@ -39,6 +39,7 @@ namespace BeeEngine
         MClass* Texture2DClass = nullptr;
         MClass* FontClass = nullptr;
         MClass* PrefabClass = nullptr;
+        MClass* SceneClass = nullptr;
 
         MClass* InternalCallsClass = nullptr;
 
@@ -55,6 +56,7 @@ namespace BeeEngine
     REFLECT_STRUCT_MEMBER(Texture2DClass)
     REFLECT_STRUCT_MEMBER(FontClass)
     REFLECT_STRUCT_MEMBER(PrefabClass)
+    REFLECT_STRUCT_MEMBER(SceneClass)
     REFLECT_STRUCT_MEMBER(InternalCallsClass)
     REFLECT_STRUCT_MEMBER(DeltaTimeField)
     REFLECT_STRUCT_MEMBER(TotalTimeField)
@@ -269,6 +271,11 @@ namespace BeeEngine
                 s_Data.Handles.PrefabClass = mClass.get();
                 continue;
             }
+            if (mClass->GetName() == "Scene")
+            {
+                s_Data.Handles.SceneClass = mClass.get();
+                continue;
+            }
             if (mClass->GetName() == "Time")
             {
                 // s_Data.TimeVTable = mono_class_vtable(mono_domain_get(), mClass->m_MonoClass);
@@ -447,11 +454,10 @@ namespace BeeEngine
 
     void ScriptingEngine::SetAssetHandle(MObject& obj, MField& field, AssetHandle& handle, MType type)
     {
-        BeeExpects(type == MType::Texture2D || type == MType::Font || type == MType::Prefab);
+        BeeExpects(type == MType::Texture2D || type == MType::Font || type == MType::Prefab || type == MType::Scene);
         if (type == MType::Texture2D)
         {
             MObject assetObj = s_Data.Handles.Texture2DClass->Instantiate();
-            // auto* assetMonoObj = assetObj.GetMonoObject();
             assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
             obj.SetFieldValue(field, assetObj.GetHandle());
             return;
@@ -459,7 +465,6 @@ namespace BeeEngine
         if (type == MType::Font)
         {
             MObject assetObj = s_Data.Handles.FontClass->Instantiate();
-            // auto* assetMonoObj = assetObj.GetMonoObject();
             assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
             obj.SetFieldValue(field, assetObj.GetHandle());
             return;
@@ -467,7 +472,13 @@ namespace BeeEngine
         if (type == MType::Prefab)
         {
             MObject assetObj = s_Data.Handles.PrefabClass->Instantiate();
-            // auto* assetMonoObj = assetObj.GetMonoObject();
+            assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
+            obj.SetFieldValue(field, assetObj.GetHandle());
+            return;
+        }
+        if (type == MType::Scene)
+        {
+            MObject assetObj = s_Data.Handles.SceneClass->Instantiate();
             assetObj.SetFieldValue(*s_Data.Handles.AssetHandleField, &handle);
             obj.SetFieldValue(field, assetObj.GetHandle());
             return;

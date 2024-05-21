@@ -26,7 +26,7 @@ namespace BeeEngine
     } // namespace Editor
     class Entity;
     class Prefab;
-    class Scene
+    class Scene : public Asset
     {
         friend class Entity;
         friend class BeeEngine::Editor::SceneHierarchyPanel;
@@ -37,6 +37,7 @@ namespace BeeEngine
         friend class SceneRenderer;
 
     public:
+        [[nodiscard]] constexpr AssetType GetType() const final { return AssetType::Scene; }
         struct GPUSceneData
         {
             glm::mat4 view;

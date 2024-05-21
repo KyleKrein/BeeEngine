@@ -5,6 +5,8 @@
 #pragma once
 
 #include "BeeEngine.h"
+#include "Core/AssetManagement/Asset.h"
+#include "Core/AssetManagement/EditorAssetManager.h"
 #include "Gui/ImGui/IImGuiElement.h"
 #include "Locale/Locale.h"
 #include "Scene/Entity.h"
@@ -26,7 +28,8 @@ namespace BeeEngine::Editor
         ViewPort(uint32_t width,
                  uint32_t height,
                  Entity& selectedEntity,
-                 const Color4& clearColor = Color4::CornflowerBlue) noexcept;
+                 const Color4& clearColor,
+                 EditorAssetManager& assetManager) noexcept;
         void OnEvent(EventDispatcher& event) noexcept;
         void UpdateRuntime(bool renderPhysicsColliders) noexcept;
         void UpdateEditor(EditorCamera& camera, bool renderPhysicsColliders) noexcept;
@@ -52,7 +55,7 @@ namespace BeeEngine::Editor
             return tmp;
         }
 
-        const Path& GetScenePath() { return m_ScenePath; }
+        const AssetHandle& GetSceneHandle() { return m_SceneHandle; }
 
     private:
         uint32_t m_Width;
@@ -70,11 +73,12 @@ namespace BeeEngine::Editor
         mutable bool m_NewSceneWasLoaded = false;
         glm::vec2 m_ViewportBounds[2]{glm::vec2(0.0f), glm::vec2(0.0f)};
         Color4 m_ClearColor = Color4::CornflowerBlue;
+        EditorAssetManager& m_AssetManager;
         Entity m_HoveredEntity = Entity::Null;
 
         Path m_WorkingDirectory;
 
-        Path m_ScenePath;
+        AssetHandle m_SceneHandle;
 
         Ref<UniformBuffer> m_CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
         Ref<BindingSet> m_CameraBindingSet = BindingSet::Create({{0, *m_CameraUniformBuffer}});

@@ -1,9 +1,9 @@
 #pragma once
 
+#include "Core/AssetManagement/Asset.h"
 #include "Locale/Locale.h"
 #include "Path.h"
 #include "String.h"
-#include "UUID.h"
 namespace BeeEngine
 {
     /// @brief Configuration for a game
@@ -13,7 +13,7 @@ namespace BeeEngine
     {
         /// @brief Name of the game. Should be shown in the window title.
         String Name;
-        Path StartingScene; // TODO: change to UUID
+        AssetHandle StartingScene;
         /// @brief Default locale for the game. Will be used if current user locale is not supported.
         Locale::Localization DefaultLocale;
         /**

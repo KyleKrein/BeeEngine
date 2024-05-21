@@ -5,6 +5,7 @@
 #pragma once
 
 #include "BeeEngine.h"
+#include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Core/Logging/ConsoleOutput.h"
 #include "Gui/ImGui/FpsCounter.h"
@@ -53,8 +54,8 @@ namespace BeeEngine::Editor
         AssetPanel m_AssetPanel{&m_EditorAssetManager, m_EditorLocaleDomain};
         ContentBrowserPanel m_ContentBrowserPanel{std::filesystem::current_path(), m_EditorLocaleDomain};
         SceneHierarchyPanel m_SceneHierarchyPanel{m_EditorLocaleDomain};
-        ViewPort m_ViewPort{100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef()};
-        Path m_ScenePath;
+        ViewPort m_ViewPort{
+            100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef(), Color4::White, m_EditorAssetManager};
         BeeEngine::Internal::FpsCounter m_FpsCounter{};
         InspectorPanel m_InspectorPanel{&m_EditorAssetManager, m_EditorLocaleDomain};
         Scope<ProjectFile> m_ProjectFile = nullptr;
@@ -83,7 +84,7 @@ namespace BeeEngine::Editor
 
         void SetupGameLibrary();
 
-        void LoadScene(const Path& path);
+        void LoadScene(const AssetHandle& handle);
 
         bool OnKeyPressed(KeyPressedEvent* e) noexcept;
 

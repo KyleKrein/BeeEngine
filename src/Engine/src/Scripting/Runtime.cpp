@@ -14,6 +14,7 @@
 #include "NativeToManaged.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
+#include "Scripting/MTypes.h"
 #include "ScriptingEngine.h"
 
 namespace BeeEngine
@@ -114,6 +115,10 @@ namespace BeeEngine
                 return MType::Texture2D;
             case AssetType::Font:
                 return MType::Font;
+            case AssetType::Prefab:
+                return MType::Prefab;
+            case AssetType::Scene:
+                return MType::Scene;
             default:
                 return MType::Asset;
         }
@@ -125,7 +130,8 @@ namespace BeeEngine
         {
             auto& mField = field.GetMField();
             auto type = mField.GetType();
-            if (type == MType::Asset || type == MType::Texture2D || type == MType::Font || type == MType::Prefab)
+            if (type == MType::Asset || type == MType::Texture2D || type == MType::Font || type == MType::Prefab ||
+                type == MType::Scene)
             {
                 AssetHandle handle = field.GetData<AssetHandle>();
                 if (AssetManager::IsAssetHandleValid(handle))

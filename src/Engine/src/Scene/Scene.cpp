@@ -353,6 +353,9 @@ namespace BeeEngine
     Ref<Scene> Scene::Copy(Scene& scene)
     {
         Ref<Scene> newScene = CreateRef<Scene>();
+        newScene->Name = scene.Name;
+        newScene->Handle = scene.Handle;
+        newScene->Location = scene.Location;
 
         auto& srcRegistry = scene.m_Registry;
         auto& dstRegistry = newScene->m_Registry;

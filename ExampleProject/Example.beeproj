@@ -1,4 +1,4 @@
 ProjectName: Example
 Asset Registry ID: 3753192931707503016
 DefaultLocale: en
-StartingScene: Scenes/TestScene.beescene
+StartingScene: [0, 0]

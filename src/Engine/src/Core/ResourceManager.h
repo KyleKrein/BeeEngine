@@ -162,7 +162,7 @@ namespace BeeEngine
         static bool IsAssetExtension(const Path& extension) noexcept
         {
             return IsTexture2DExtension(extension) || IsFontExtension(extension) || IsPrefabExtension(extension) ||
-                   IsMeshSourceExtension(extension);
+                   IsMeshSourceExtension(extension) || IsSceneExtension(extension);
         }
 
         static AssetType GetAssetTypeFromExtension(const Path& extension)
@@ -182,6 +182,10 @@ namespace BeeEngine
             if (IsMeshSourceExtension(extension))
             {
                 return AssetType::MeshSource;
+            }
+            if (IsSceneExtension(extension))
+            {
+                return AssetType::Scene;
             }
             return AssetType::None;
         }

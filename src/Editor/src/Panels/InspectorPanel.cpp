@@ -3,15 +3,19 @@
 //
 
 #include "InspectorPanel.h"
+#include "Core/AssetManagement/Asset.h"
+#include "Core/AssetManagement/LocalizedAsset.h"
 #include "Core/ResourceManager.h"
 #include "Gui/ImGui/ImGuiExtension.h"
 #include "Gui/ImGuiFonts.h"
+#include "Panels/AssetPanel.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scripting/GameScript.h"
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptingEngine.h"
 #include "gtc/type_ptr.hpp"
+#include "imgui.h"
 #include "imgui_internal.h"
 #include <misc/cpp/imgui_stdlib.h>
 #include <ranges>
@@ -449,6 +453,84 @@ namespace BeeEngine::Editor
                 {
                     auto& mField = field.GetMField();
                     auto* name = mField.GetName().c_str();
+                    auto handleAssetField =
+                        [mObject, name, &mField, this](AssetType assetType,
+                                                       GameScriptField& field,
+                                                       bool (*checkExtensionFunc)(const Path& extension))
+                    {
+                        AssetHandle value;
+                        ImGui::Text(name);
+                        ImGui::SameLine();
+                        if (mObject)
+                        {
+                            auto object = mObject->GetFieldValue(mField);
+                            ScriptingEngine::GetAssetHandle(object, value);
+                        }
+                        else
+                        {
+                            value = field.GetData<AssetHandle>();
+                        }
+                        bool isValid = AssetManager::IsAssetHandleValid(value);
+                        String assetName;
+                        if (isValid)
+                        {
+                            auto& asset = m_AssetManager->GetAssetMetadata(value);
+                            if (asset.Type == AssetType::Localized)
+                            {
+                                assetName =
+                                    String(asset.Name) + " (" +
+                                    String(AssetManager::GetAsset<LocalizedAsset>(value)
+                                               .GetAsset(
+                                                   m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString())
+                                               .Name) +
+                                    ")";
+                            }
+                            else
+                            {
+                                assetName = asset.Name;
+                            }
+                        }
+                        else
+                        {
+                            assetName = "null";
+                        }
+                        if (ImGui::Button(assetName.c_str()))
+                        {
+                            value = {0, 0};
+                            if (!m_Context->IsRuntime())
+                                SetFieldData(mField, &value, mObject, field);
+                        }
+                        if (m_Context->IsRuntime())
+                            return;
+                        if (ImGui::BeginDragDropTarget())
+                        {
+                            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                            {
+                                Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
+                                if (checkExtensionFunc(assetPath.GetExtension()))
+                                {
+                                    auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
+                                    auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    if (!handlePtr)
+                                    {
+                                        m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
+                                    }
+                                    handlePtr = m_AssetManager->GetAssetHandleByName(name);
+                                    value = *handlePtr;
+                                    SetFieldData(mField, &value, mObject, field);
+                                }
+                            }
+                            ImGui::EndDragDropTarget();
+                        }
+                        ImGui::AcceptDragAndDrop<AssetHandle>(
+                            AssetPanel::GetDragAndDropTypeName(assetType),
+                            [this, &value, &mField, &mObject, &field](const auto& handle)
+                            {
+                                BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
+                                value = handle;
+                                SetFieldData(mField, &value, mObject, field);
+                            });
+                    };
                     switch (mField.GetType())
                     {
                         case MType::Boolean:
@@ -597,233 +679,22 @@ namespace BeeEngine::Editor
                         }
                         case MType::Texture2D:
                         {
-                            AssetHandle value;
-                            ImGui::Text(name);
-                            ImGui::SameLine();
-                            if (mObject)
-                            {
-                                auto object = mObject->GetFieldValue(mField);
-                                ScriptingEngine::GetAssetHandle(object, value);
-                            }
-                            else
-                            {
-                                value = field.GetData<AssetHandle>();
-                            }
-                            bool isValid = AssetManager::IsAssetHandleValid(value);
-                            String textureName;
-                            if (isValid)
-                            {
-                                auto& textureAsset = AssetManager::GetAsset<Asset>(value);
-                                if (textureAsset.GetType() == AssetType::Localized)
-                                {
-                                    textureName =
-                                        String(textureAsset.Name) + " (" +
-                                        String(
-                                            static_cast<LocalizedAsset&>(textureAsset)
-                                                .GetAsset(
-                                                    m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString())
-                                                .Name) +
-                                        ")";
-                                }
-                                else
-                                {
-                                    textureName = textureAsset.Name;
-                                }
-                            }
-                            else
-                            {
-                                textureName = "null";
-                            }
-                            if (ImGui::Button(textureName.c_str()))
-                            {
-                                value = {0, 0};
-                                if (!m_Context->IsRuntime())
-                                    SetFieldData(mField, &value, mObject, field);
-                            }
-                            if (m_Context->IsRuntime())
-                                break;
-                            if (ImGui::BeginDragDropTarget())
-                            {
-                                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-                                {
-                                    Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
-                                    if (ResourceManager::IsTexture2DExtension(assetPath.GetExtension()))
-                                    {
-                                        auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
-                                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                                        if (!handlePtr)
-                                        {
-                                            m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
-                                        }
-                                        handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                                        value = *handlePtr;
-                                        SetFieldData(mField, &value, mObject, field);
-                                    }
-                                }
-                                ImGui::EndDragDropTarget();
-                            }
-                            ImGui::AcceptDragAndDrop<AssetHandle>(
-                                "ASSET_BROWSER_TEXTURE2D_ITEM",
-                                [this, &value, &mField, &mObject, &field](const auto& handle)
-                                {
-                                    BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
-                                    value = handle;
-                                    SetFieldData(mField, &value, mObject, field);
-                                });
+                            handleAssetField(AssetType::Texture2D, field, ResourceManager::IsTexture2DExtension);
                             break;
                         }
                         case MType::Font:
                         {
-                            AssetHandle value;
-                            ImGui::Text(name);
-                            ImGui::SameLine();
-                            if (mObject)
-                            {
-                                auto object = mObject->GetFieldValue(mField);
-                                ScriptingEngine::GetAssetHandle(object, value);
-                            }
-                            else
-                            {
-                                value = field.GetData<AssetHandle>();
-                            }
-                            bool isValid = AssetManager::IsAssetHandleValid(value);
-                            String fontName;
-                            if (isValid)
-                            {
-                                auto& fontAsset = AssetManager::GetAsset<Asset>(value);
-                                if (fontAsset.GetType() == AssetType::Localized)
-                                {
-                                    fontName =
-                                        String(fontAsset.Name) + " (" +
-                                        String(
-                                            static_cast<LocalizedAsset&>(fontAsset)
-                                                .GetAsset(
-                                                    m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString())
-                                                .Name) +
-                                        ")";
-                                }
-                                else
-                                {
-                                    fontName = fontAsset.Name;
-                                }
-                            }
-                            else
-                            {
-                                fontName = "null";
-                            }
-                            if (ImGui::Button(fontName.c_str()))
-                            {
-                                value = {0, 0};
-                                if (!m_Context->IsRuntime())
-                                    SetFieldData(mField, &value, mObject, field);
-                            }
-                            if (m_Context->IsRuntime())
-                                break;
-                            if (ImGui::BeginDragDropTarget())
-                            {
-                                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-                                {
-                                    Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
-                                    if (ResourceManager::IsFontExtension(assetPath.GetExtension()))
-                                    {
-                                        auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
-                                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                                        if (!handlePtr)
-                                        {
-                                            m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
-                                        }
-                                        handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                                        value = *handlePtr;
-                                        SetFieldData(mField, &value, mObject, field);
-                                    }
-                                }
-                                ImGui::EndDragDropTarget();
-                            }
-                            ImGui::AcceptDragAndDrop<AssetHandle>(
-                                "ASSET_BROWSER_FONT_ITEM",
-                                [this, &value, &mField, &mObject, &field](const auto& handle)
-                                {
-                                    BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
-                                    value = handle;
-                                    SetFieldData(mField, &value, mObject, field);
-                                });
+                            handleAssetField(AssetType::Font, field, ResourceManager::IsFontExtension);
                             break;
                         }
                         case MType::Prefab:
                         {
-                            AssetHandle value;
-                            ImGui::Text(name);
-                            ImGui::SameLine();
-                            if (mObject)
-                            {
-                                auto object = mObject->GetFieldValue(mField);
-                                ScriptingEngine::GetAssetHandle(object, value);
-                            }
-                            else
-                            {
-                                value = field.GetData<AssetHandle>();
-                            }
-                            bool isValid = AssetManager::IsAssetHandleValid(value);
-                            String prefabName;
-                            if (isValid)
-                            {
-                                auto& prefabAsset = AssetManager::GetAsset<Asset>(value);
-                                if (prefabAsset.GetType() == AssetType::Localized)
-                                {
-                                    prefabName =
-                                        String(prefabAsset.Name) + " (" +
-                                        String(
-                                            static_cast<LocalizedAsset&>(prefabAsset)
-                                                .GetAsset(
-                                                    m_Project->GetProjectLocaleDomain().GetLocale().GetLanguageString())
-                                                .Name) +
-                                        ")";
-                                }
-                                else
-                                {
-                                    prefabName = prefabAsset.Name;
-                                }
-                            }
-                            else
-                            {
-                                prefabName = "null";
-                            }
-                            if (ImGui::Button(prefabName.c_str()))
-                            {
-                                value = {0, 0};
-                                if (!m_Context->IsRuntime())
-                                    SetFieldData(mField, &value, mObject, field);
-                            }
-                            if (m_Context->IsRuntime())
-                                break;
-                            if (ImGui::BeginDragDropTarget())
-                            {
-                                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-                                {
-                                    Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
-                                    if (ResourceManager::IsPrefabExtension(assetPath.GetExtension()))
-                                    {
-                                        auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
-                                        auto* handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                                        if (!handlePtr)
-                                        {
-                                            m_AssetManager->LoadAsset(assetPath, {m_Project->GetAssetRegistryID()});
-                                        }
-                                        handlePtr = m_AssetManager->GetAssetHandleByName(name);
-                                        value = *handlePtr;
-                                        SetFieldData(mField, &value, mObject, field);
-                                    }
-                                }
-                                ImGui::EndDragDropTarget();
-                            }
-                            ImGui::AcceptDragAndDrop<AssetHandle>(
-                                "ASSET_BROWSER_PREFAB_ITEM",
-                                [this, &value, &mField, &mObject, &field](const auto& handle)
-                                {
-                                    BeeExpects(m_AssetManager->IsAssetHandleValid(handle));
-                                    value = handle;
-                                    SetFieldData(mField, &value, mObject, field);
-                                });
+                            handleAssetField(AssetType::Prefab, field, ResourceManager::IsPrefabExtension);
+                            break;
+                        }
+                        case MType::Scene:
+                        {
+                            handleAssetField(AssetType::Scene, field, ResourceManager::IsSceneExtension);
                             break;
                         }
                     }

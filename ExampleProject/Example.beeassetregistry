@@ -1,5 +1,9 @@
 Registry ID: 3753192931707503016
 Assets:
+  - Name: Face
+    Type: AssetType::Prefab
+    Handle: 581710187337384309
+    FilePath: Prefabs/Face.beeprefab
   - Name: bee-png
     Type: AssetType::Texture2D
     Handle: 2492935997162504003
@@ -8,15 +12,47 @@ Assets:
     Type: AssetType::Prefab
     Handle: 3914033094796980827
     FilePath: Prefabs/Bee Prefab.beeprefab
+  - Name: HierarchyTest
+    Type: AssetType::Scene
+    Handle: 4034300644273578974
+    FilePath: Scenes/HierarchyTest.beescene
+  - Name: TestScene
+    Type: AssetType::Scene
+    Handle: 4396845291111867722
+    FilePath: Scenes/TestScene.beescene
+  - Name: PhysicsTest
+    Type: AssetType::Scene
+    Handle: 7586138150448856676
+    FilePath: Scenes/PhysicsTest.beescene
   - Name: pc
     Type: AssetType::Texture2D
     Handle: 7772243033513047726
     FilePath: Assets/pc.png
+  - Name: DotNetTest
+    Type: AssetType::Scene
+    Handle: 10886364208689763219
+    FilePath: Scenes/DotNetTest.beescene
   - Name: TemplateForRayCastTest
     Type: AssetType::Prefab
     Handle: 13275030511268767488
     FilePath: Prefabs/TemplateForRayCastTest.beeprefab
+  - Name: Circles
+    Type: AssetType::Scene
+    Handle: 13295074674533560124
+    FilePath: Scenes/Circles.beescene
+  - Name: Bees
+    Type: AssetType::Scene
+    Handle: 13448237300006342104
+    FilePath: Scenes/Bees.beescene
+  - Name: RaycastScene
+    Type: AssetType::Scene
+    Handle: 13898491786219666524
+    FilePath: Scenes/RaycastScene.beescene
   - Name: google_logo
     Type: AssetType::Texture2D
     Handle: 13987028760561915515
     FilePath: Assets/google_logo.png
+  - Name: Textures
+    Type: AssetType::Scene
+    Handle: 14163096334939169538
+    FilePath: Scenes/Textures.beescene

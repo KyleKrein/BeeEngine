@@ -96,9 +96,9 @@ namespace BeeEngine
                     /// cref="M:System.Type.InvokeMember(System.String,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object,System.Object[],System.Reflection.ParameterModifier[],System.Globalization.CultureInfo,System.String[])"
                     /// />.<br /><br />Parameters with default values are used only in calls where trailing arguments
                     /// are omitted. They must be the last arguments.</summary>
-        ManagedBindingFlags_OptionalParamBinding = 262144, // 0x00040000
-                                                           /// <summary>Used in COM interop to specify that the return
-                                                           /// value of the member can be ignored.</summary>
+        ManagedBindingFlags_OptionalParamBinding = 262144,  // 0x00040000
+                                                            /// <summary>Used in COM interop to specify that the return
+                                                            /// value of the member can be ignored.</summary>
         ManagedBindingFlags_IgnoreReturn = 16777216,        // 0x01000000
         ManagedBindingFlags_DoNotWrapExceptions = 33554432, // 0x02000000
     };
@@ -129,7 +129,7 @@ namespace BeeEngine
             MFieldFlags_Family | MFieldFlags_FamANDAssem, // 0x00000006
                                                           /// <summary>Specifies that the field represents the defined
                                                           /// type, or else it is per-instance.</summary>
-        MFieldFlags_Static = 16, // 0x00000010
+        MFieldFlags_Static = 16,                          // 0x00000010
                                  /// <summary>Specifies that the field is initialized only, and can be set only in the
                                  /// body of a constructor.</summary>
         MFieldFlags_InitOnly =
@@ -142,16 +142,16 @@ namespace BeeEngine
         NotSerialized =
             128, // 0x00000080 //DO NOT USE
                  /// <summary>Specifies a special method, with the name describing how the method is special.</summary>
-        MFieldFlags_SpecialName = 512, // 0x00000200
-                                       /// <summary>Reserved for future use.</summary>
+        MFieldFlags_SpecialName = 512,  // 0x00000200
+                                        /// <summary>Reserved for future use.</summary>
         MFieldFlags_PinvokeImpl = 8192, // 0x00002000
                                         /// <summary>Specifies that the common language runtime (metadata internal APIs)
                                         /// should check the name encoding.</summary>
-        MFieldFlags_RTSpecialName = 1024, // 0x00000400
-                                          /// <summary>Specifies that the field has marshaling information.</summary>
+        MFieldFlags_RTSpecialName = 1024,   // 0x00000400
+                                            /// <summary>Specifies that the field has marshaling information.</summary>
         MFieldFlags_HasFieldMarshal = 4096, // 0x00001000
                                             /// <summary>Specifies that the field has a default value.</summary>
-        MFieldFlags_HasDefault = 32768, // 0x00008000
+        MFieldFlags_HasDefault = 32768,     // 0x00008000
                                         /// <summary>Specifies that the field has a relative virtual address (RVA). The
                                         /// RVA is the location of the method body in the current image, as an address
                                         /// relative to the start of the image file in which it is located.</summary>
@@ -217,6 +217,7 @@ namespace BeeEngine
         Texture2D = 0x27,
         Font = 0x28,
         Prefab = 0x29,
+        Scene = 0x2a,
         /*I1 = 0x04,
         U1 = 0x05,
         I2 = 0x06,

@@ -5,8 +5,8 @@
 #include "AssetRegistrySerializer.h"
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
+#include "Serialization/YAMLHelper.h"
 #include <fstream>
-#include <yaml-cpp/yaml.h>
 
 namespace BeeEngine
 {
@@ -101,7 +101,7 @@ namespace BeeEngine
         std::ifstream ifs(path.ToStdPath());
         YAML::Node data = YAML::Load(ifs);
         ifs.close();
-        UUID registryID = data["Registry ID"].as<uint64_t>();
+        UUID registryID = data["Registry ID"].as<UUID>();
         for (auto asset : data["Assets"])
         {
             Path filePath = String{asset["FilePath"].as<std::string>()};
