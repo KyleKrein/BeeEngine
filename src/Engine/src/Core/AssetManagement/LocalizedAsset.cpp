@@ -5,21 +5,10 @@
 #include "LocalizedAsset.h"
 #include "AssetManager.h"
 #include "FileSystem/File.h"
-#include <yaml-cpp/yaml.h>
+#include "Serialization/YAMLHelper.h"
 
-namespace YAML
-{
-    template <>
-    struct convert<BeeEngine::AssetHandle>
-    {
-        static Node encode(const BeeEngine::AssetHandle& rhs);
-
-        static bool decode(const Node& node, BeeEngine::AssetHandle& rhs);
-    };
-} // namespace YAML
 namespace BeeEngine
 {
-    YAML::Emitter& operator<<(YAML::Emitter& out, const AssetHandle& handle);
     Ref<Asset> LocalizedAsset::GetAssetRef(const LocalizedAsset::Locale& locale) const
     {
         if (m_CurrentLocale != locale || !m_CachedAsset)

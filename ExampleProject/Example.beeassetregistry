@@ -28,6 +28,10 @@ Assets:
     Type: AssetType::Texture2D
     Handle: 7772243033513047726
     FilePath: Assets/pc.png
+  - Name: Scene Changer
+    Type: AssetType::Prefab
+    Handle: 10162596410429172432
+    FilePath: Prefabs/Scene Changer.beeprefab
   - Name: DotNetTest
     Type: AssetType::Scene
     Handle: 10886364208689763219
