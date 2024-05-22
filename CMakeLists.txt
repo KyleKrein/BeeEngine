@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 include(cmake/UniversalAppleBuild.cmake)
+set(VCPKG_LIBRARY_LINKAGE static)
 include(src/Engine/vendor/vcpkg/scripts/buildsystems/vcpkg.cmake)
 project(
         BeeEngine_CPP

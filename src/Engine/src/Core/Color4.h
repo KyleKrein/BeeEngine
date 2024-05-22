@@ -3,7 +3,9 @@
 //
 
 #pragma once
-#include "Serialization/ISerializer.h"
+#if defined(BEE_COMPILE_VULKAN)
+#include <vulkan/vulkan.hpp>
+#endif
 #if __has_include(<vec4.hpp>)
 #include <vec4.hpp>
 #endif
@@ -16,10 +18,6 @@
 
 #if defined(BEE_COMPILE_WEBGPU)
 #include <webgpu/webgpu.h>
-#endif
-
-#if defined(BEE_COMPILE_VULKAN)
-#include <vulkan/vulkan.hpp>
 #endif
 
 namespace BeeEngine
