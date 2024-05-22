@@ -1,6 +1,21 @@
 cmake_minimum_required(VERSION 3.25)
 include(cmake/UniversalAppleBuild.cmake)
-set(VCPKG_LIBRARY_LINKAGE static)
+set(VCPKG_LIBRARY_LINKAGE static CACHE STRING "Linkage of vcpkg libraries" FORCE)
+set(VCPKG_CRT_LINKAGE static CACHE STRING "Linkage of vcpkg libraries" FORCE)
+#TODO: make this only for distribution builds, when dist builds are implemented
+if(WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+        set(VCPKG_TARGET_TRIPLET x64-windows-static)
+        if(POLICY CMP0091)
+                cmake_policy(SET CMP0091 NEW) 
+        endif()
+        if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+                set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebug")
+        else()
+                set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+        endif()
+        add_compile_options(/O2)
+        add_link_options(/LTCG:STATUS)
+endif()
 include(src/Engine/vendor/vcpkg/scripts/buildsystems/vcpkg.cmake)
 project(
         BeeEngine_CPP

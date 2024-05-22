@@ -151,6 +151,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Gui/ImGui/ImGuiOutputConsole.h
         vendor/SIMDString/SIMDString.h
         vendor/SIMDString/SIMDString.cpp
+        src/Gui/MessageBox.h
+        src/Gui/MessageBox.cpp
 )
 
 

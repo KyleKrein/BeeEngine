@@ -3,6 +3,7 @@
 //
 // clang-format off
 
+#include "Gui/MessageBox.h"
 #if defined(BEE_COMPILE_VULKAN)
 #include "Platform/ImGui/ImGuiControllerVulkan.h"
 #if defined(WINDOWS)
@@ -260,6 +261,11 @@ namespace BeeEngine::Internal
             m_HasRayTracingSupport = true;
         }
 
+        for (auto& ext : requiredExtensions)
+        {
+            BeeCoreTrace("Extension: {} is unsupported", ext);
+        }
+
         return requiredExtensions.empty();
     }
 
@@ -334,6 +340,10 @@ namespace BeeEngine::Internal
         if (!m_PhysicalDevice)
         {
             BeeCoreError("No suitable physical device found");
+            ShowMessageBox("Unable to choose GPU",
+                           "It's likely that your graphics driver is outdated. Please update it and try again",
+                           MessageBoxType::Error);
+            throw std::runtime_error("No suitable physical device found");
         }
     }
 

@@ -4,6 +4,7 @@
 // clang-format off
 #include "NativeToManaged.h"
 
+#include "Gui/MessageBox.h"
 #include "Utils/DynamicLibrary.h"
 #include "Core/String.h"
 #include "MTypes.h"
@@ -127,7 +128,10 @@ namespace BeeEngine
         size_t buffer_size = sizeof(buffer) / sizeof(char_t);
         const int rc = get_hostfxr_path(buffer, &buffer_size, &params);
         if (rc != 0)
+        {
+            BeeCoreError("get_hostfxr_path failed: {0}", rc);
             return false;
+        }
 
         // Load hostfxr and get desired exports
         s_Data = new NativeToManagedData(std::filesystem::path{buffer});
@@ -192,6 +196,8 @@ namespace BeeEngine
         if(!init_hostfxr(nullptr))
         {
             BeeCoreError("Unable to initialize .NET Host!");
+            ShowMessageBox("Unable to initialize .NET Host!", "This program is unable to find .Net Runtime on your device. Please download and install it from dotnet.microsoft.com", MessageBoxType::Error);
+            throw std::runtime_error("Unable to initialize .NET Host!");
         }
         //
         // STEP 2: Initialize and start the .NET Core runtime
@@ -201,6 +207,8 @@ namespace BeeEngine
         if(!load_assembly_and_get_function_pointer)
         {
             BeeCoreError("Unable to load .NET Core runtime!");
+            ShowMessageBox("Unable to load .NET Core runtime!", "This program is unable to find .Net Runtime on your device. Please download and install it from dotnet.microsoft.com", MessageBoxType::Error);
+            throw std::runtime_error("Unable to initialize .NET Host!");
         }
         //Obtain function pointers
         std::filesystem::path path = pathToNativeBridgeDll.ToStdPath();
