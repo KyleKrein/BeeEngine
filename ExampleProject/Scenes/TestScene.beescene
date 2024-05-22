@@ -13,18 +13,18 @@ Entities:
         - Name: FourthScene
           Type: Scene
           Data: [3753192931707503016, 7586138150448856676]
-        - Name: ThirdScene
+        - Name: FirstScene
           Type: Scene
-          Data: [3753192931707503016, 4396845291111867722]
+          Data: [3753192931707503016, 14163096334939169538]
         - Name: SecondScene
           Type: Scene
           Data: [3753192931707503016, 13448237300006342104]
         - Name: FifthScene
           Type: Scene
           Data: [3753192931707503016, 13295074674533560124]
-        - Name: FirstScene
+        - Name: ThirdScene
           Type: Scene
-          Data: [3753192931707503016, 14163096334939169538]
+          Data: [3753192931707503016, 4396845291111867722]
     HierarchyComponent:
       []
   - Entity: 1822372434052717332
@@ -41,7 +41,7 @@ Entities:
     TagComponent:
       Tag: Eyes
     TransformComponent:
-      Translation: [-0.929759026, 0.0592357516, 0]
+      Translation: [0.0840547085, 0.0302693248, 0]
       Rotation: [0, -0, 2.23517151e-08]
       Scale: [1.00000119, 1.00000119, 1]
     HierarchyComponent:
@@ -51,9 +51,9 @@ Entities:
     TagComponent:
       Tag: Right
     TransformComponent:
-      Translation: [3.90234232, 1.88381112, -9.53674032e-07]
-      Rotation: [0, -0, 0.0122172581]
-      Scale: [1.30000114, 1.30000114, 0.999999404]
+      Translation: [4.27064419, 1.86965156, -9.53673862e-07]
+      Rotation: [0, -0, 0.012217246]
+      Scale: [1.30000114, 1.30000114, 0.999999225]
     ScriptComponent:
       FullName: Example.RandomColor
     SpriteRendererComponent:
@@ -67,9 +67,9 @@ Entities:
     TagComponent:
       Tag: Left
     TransformComponent:
-      Translation: [-3.03001451, 1.81509268, 0]
-      Rotation: [0, -0, 0.0122172581]
-      Scale: [1.30000114, 1.30000114, 0.999999404]
+      Translation: [-2.66171217, 1.800933, 0]
+      Rotation: [0, -0, 0.012217246]
+      Scale: [1.30000114, 1.30000114, 0.999999225]
     ScriptComponent:
       FullName: Example.Helper
     CircleRendererComponent:
@@ -114,7 +114,7 @@ Entities:
         OrthographicSize: 10
         OrthographicNearClip: -1
         OrthographicFarClip: 1
-        AspectRatio: 1.7025317
+        AspectRatio: 1.87762237
       Primary: true
       FixedAspectRatio: false
     ScriptComponent:
@@ -135,12 +135,12 @@ Entities:
     ScriptComponent:
       FullName: Example.SetScore
       Fields:
-        - Name: Offset
-          Type: Vector3
-          Data: [-4, 2, 0]
         - Name: Score
           Type: int
           Data: 0
+        - Name: Offset
+          Type: Vector3
+          Data: [-4, 2, 0]
     TextRendererComponent:
       Text: "Score: 0"
       Font: [0, 328465234592345234]

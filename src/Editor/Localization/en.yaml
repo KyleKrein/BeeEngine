@@ -1,52 +1,53 @@
-menubar.file.openScene: Open Scene
-inspector.textRenderer.foreground: Foreground
 buildProject.build.tooltip: Fill all fields before building
 transform.scale: Scale
 camera.projection.orthographic: Orthographic
 inspector.circleRenderer.thickness: Thickness
+inspector.textRenderer.foreground: Foreground
+menubar.file.openScene: Open Scene
 text: Text
-primary: Primary
-camera.projection.perspective: Perspective
 sceneHierarchyPanel.createCamera: Create Camera
-buildProject.defaultLocale: Default locale
+camera.projection.perspective: Perspective
+primary: Primary
 inspector.circleRenderer.fade: Fade
-sceneHierarchyPanel.toTopLevel: To Top Level
-menubar.build.reloadScripts: Reload Scripts
+buildProject.defaultLocale: Default locale
 assetEditPanel.name: "Name: {name}"
 menubar.file.saveSceneAs: Save Scene As...
+sceneHierarchyPanel.toTopLevel: To Top Level
+menubar.build.reloadScripts: Reload Scripts
 inspector.textRenderer: Text Renderer
 texture: Texture
+sceneHierarchyPanel.duplicateEntity: Duplicate Entity
 sceneHierarchyPanel.createEmptyEntity: Create Empty Entity
 menubar.file.saveScene: Save Scene
-sceneHierarchyPanel.duplicateEntity: Duplicate Entity
-size: Size
 sprite: Sprite
 assetPanel.deleteAsset: Delete Asset
+size: Size
 camera.nearClip: Near Clip
 camera.farClip: Far Clip
 camera.fov: FOV
 camera.projection: Projection
-camera: Camera
 buildProject.startingScene: Starting Scene
 inspector: Inspector
+camera: Camera
 transform.rotation: Rotation
 createFolder: Create Folder
 transform: Transform
-menubar.file: File
 camera.fixedAspectRatio: Fixed Aspect Ratio
+menubar.file: File
+newProject: Create project
 menubar.view: View
 color: Color
-inspector.circleRenderer: Circle Renderer
 assetPanel.dropAssetsButton: Drop here to load asset
+inspector.circleRenderer: Circle Renderer
 menubar.file.newScene: New Scene
-buildProject.defaultLocale.invalidError: Currently chosen default locale does not exist in the current project
 contentBrowserPanel.exportPrefab: Export Prefab
-sprite.tilingFactor: Tiling Factor
+buildProject.defaultLocale.invalidError: Currently chosen default locale does not exist in the current project
 menubar.view.outputConsole: Output Console
+sprite.tilingFactor: Tiling Factor
 createScene: Create Scene
 assetPanel: Assets
-createScript: Create Script
 buildProject.build: Build
+createScript: Create Script
 menubar.build: Build
 create: Create
 menubar.view.localization: Localization
@@ -55,8 +56,8 @@ name: Name
 transform.translation: Translation
 menubar.build.regenerateVSSolution: Regenerate VS Solution
 cancel: Cancel
-contentBrowserPanel: Content Browser
 sceneHierarchyPanel: Scene Hierarchy
+contentBrowserPanel: Content Browser
 sceneHierarchyPanel.deleteEntity: Delete Entity
 menubar.build.buildProject: Build project
 buildProject: Build project
@@ -78,3 +79,8 @@ contentBrowserPanel.copyFiles: Drop here to copy files
 projectSettings: Project Settings
 menubar.project: Project
 menubar.project.settings: Settings
+saveScene.invalidPathError.title: Invalid filepath
+saveScene.invalidPathError.body: File must be saved inside of the project folder
+settings: Settings
+projectSelection: Project
+loadProject: Load project

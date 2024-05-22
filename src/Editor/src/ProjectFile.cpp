@@ -432,13 +432,17 @@ namespace BeeEngine::Editor
         Path p = path;
         if (p.IsRelative())
             p = m_ProjectPath / p;
+        if (p.AsUTF8().contains(".git") || p.AsUTF8().contains(".beeengine"))
+        {
+            return;
+        }
+
         if (File::IsDirectory(p) || p.GetExtension().IsEmpty())
         {
-            if (p.AsUTF8().contains(".git") || p.AsUTF8().contains(".beeengine") || p.AsUTF8().contains("bin") ||
-                p.AsUTF8().contains("obj"))
+            /*if (p.AsUTF8().contains("bin") || p.AsUTF8().contains("obj"))
             {
                 return;
-            }
+            }*/
             if (changeType == FileWatcher::Event::Modified)
             {
                 return;

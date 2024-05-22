@@ -36,6 +36,16 @@ namespace BeeEngine::Locale
         std::vector<Localization> m_LocalesToDelete;
         bool m_IsOpened = false;
 
+        String searchField;
+        String searchFieldLowerCase;
+
+        String newKey;
+        String errorMessage;
+        std::vector<String>* valuesPtr = nullptr;
+        size_t variationIndex = 0;
+        String newLocale;
+        bool isIncorrectLocale = false;
+
         void RenderUpperPanel();
 
         void RenderKeysAndValues(bool& removeKey);

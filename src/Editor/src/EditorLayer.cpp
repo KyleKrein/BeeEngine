@@ -13,6 +13,7 @@
 #include "Debug/Instrumentor.h"
 #include "FileSystem/File.h"
 #include "Gui/ImGui/ImGuiExtension.h"
+#include "Gui/MessageBox.h"
 #include "JobSystem/JobScheduler.h"
 #include "Locale/LocalizationGenerator.h"
 #include "Scene/Components.h"
@@ -26,6 +27,7 @@
 #include "imgui.h"
 #include <../../Engine/Assets/EmbeddedResources.h>
 #include <Core/Move.h>
+#include <string_view>
 
 namespace BeeEngine::Editor
 {
@@ -107,7 +109,12 @@ namespace BeeEngine::Editor
                 m_SceneState = SceneState::Edit;
                 OnSceneStop();
             }
-            LoadScene(m_ViewPort.GetSceneHandle());
+            Jobs::Schedule(Jobs::CreateJob(
+                [this]()
+                {
+                    // SaveScene();
+                    LoadScene(m_ViewPort.GetSceneHandle());
+                }));
         }
         m_FpsCounter.Update();
     }
@@ -131,7 +138,7 @@ namespace BeeEngine::Editor
             m_DragAndDrop.ImGuiRender();
             m_ProjectSettings->Render();
             DrawBuildProjectPopup();
-            ImGui::Begin("Settings");
+            ImGui::Begin(m_EditorLocaleDomain.Translate("settings").c_str());
             ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
             if (ImGui::Button("GC Collect"))
             {
@@ -141,8 +148,8 @@ namespace BeeEngine::Editor
         }
         else
         {
-            ImGui::Begin("Project");
-            if (ImGui::Button("Load project"))
+            ImGui::Begin(m_EditorLocaleDomain.Translate("projectSelection").c_str());
+            if (ImGui::Button(m_EditorLocaleDomain.Translate("loadProject").c_str()))
             {
                 auto loadProjectJob = Jobs::CreateJob(
                     [this]()
@@ -150,7 +157,6 @@ namespace BeeEngine::Editor
                         auto projectPath = FileDialogs::OpenFile({"BeeEngine Project", "*.beeproj"});
                         if (projectPath.IsEmpty())
                         {
-                            BeeCoreError("Unable to open file");
                             return;
                         }
                         String pathString = projectPath.AsUTF8();
@@ -209,12 +215,31 @@ namespace BeeEngine::Editor
                         auto sceneHandle = m_ProjectFile->GetLastUsedScene();
                         if (sceneHandle != AssetHandle{0, 0})
                         {
-                            Application::SubmitToMainThread([this, sceneHandle]() { LoadScene(sceneHandle); });
+                            Application::SubmitToMainThread(
+                                [this, sceneHandle]()
+                                {
+                                    m_ProjectFile->ReloadAndRebuildGameLibrary();
+                                    m_ProjectFile->IsAssemblyReloadPending(); // To disable automatic reloading on next
+                                                                              // frame. We are handling this now
+                                    ScriptingEngine::ReloadAssemblies();
+                                    LoadScene(sceneHandle);
+                                });
+                        }
+                        else
+                        {
+                            Application::SubmitToMainThread(
+                                [this]()
+                                {
+                                    m_ProjectFile->ReloadAndRebuildGameLibrary();
+                                    m_ProjectFile->IsAssemblyReloadPending(); // To disable automatic reloading on next
+                                                                              // frame. We are handling this now
+                                    ScriptingEngine::ReloadAssemblies();
+                                });
                         }
                     });
                 Jobs::Schedule(BeeMove(loadProjectJob));
             }
-            if (ImGui::Button("New project"))
+            if (ImGui::Button(m_EditorLocaleDomain.Translate("newProject").c_str()))
             {
                 Application::SubmitToMainThread(
                     [this]()
@@ -223,7 +248,6 @@ namespace BeeEngine::Editor
                             /*{"BeeEngine Project", "*.beeproj"}*/);
                         if (projectPath.IsEmpty())
                         {
-                            BeeCoreError("Unable to open folder");
                             return;
                         }
                         auto name = projectPath.GetFileName().AsUTF8();
@@ -250,6 +274,10 @@ namespace BeeEngine::Editor
                             SetupGameLibrary();
                             m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(
                                 m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
+                            m_ProjectFile->ReloadAndRebuildGameLibrary();
+                            m_ProjectFile->IsAssemblyReloadPending(); // To disable automatic reloading on next
+                                                                      // frame. We are handling this now
+                            ScriptingEngine::ReloadAssemblies();
                         }
                     });
             }
@@ -291,42 +319,17 @@ namespace BeeEngine::Editor
         m_MenuBar.AddElement(projectMenu);
 
         MenuBarElement fileMenu = {m_EditorLocaleDomain.Translate("menubar.file")};
-        /*
+
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.newScene"),
                            [this]()
                            {
                                m_SceneHierarchyPanel.ClearSelection();
-                               m_ViewPort.GetScene()->Clear();
-                           }});
-        fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.openScene"),
-                           [this]()
-                           {
-                               auto filepath = BeeEngine::FileDialogs::OpenFile({"BeeEngine Scene", "*.beescene"});
-                               if (filepath.IsEmpty())
-                               {
-                                   BeeCoreError("Unable to open file");
-                                   return;
-                               }
-                               LoadScene(filepath);
+                               SaveScene();
+                               m_ActiveScene = CreateRef<Scene>();
+                               SetScene(m_ActiveScene);
                            }});
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.saveScene"), [this]() { SaveScene(); }});
-        fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.saveSceneAs"),
-                           [this]()
-                           {
-                               auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
-                               if (filepath.IsEmpty())
-                               {
-                                   BeeCoreError("Unable to save to file");
-                                   return;
-                               }
-                               if (filepath.GetExtension() != ".beescene")
-                               {
-                                   filepath.ReplaceExtension(".beescene");
-                               }
-                               m_ScenePath = filepath;
-                               SceneSerializer serializer(m_ActiveScene);
-                               serializer.Serialize(m_ScenePath);
-                           }});*/
+        fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.saveSceneAs"), [this]() { SaveSceneAs(); }});
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.exit"),
                            []() { BeeEngine::Application::GetInstance().Close(); }});
         m_MenuBar.AddElement(fileMenu);
@@ -529,23 +532,83 @@ namespace BeeEngine::Editor
         m_InspectorPanel.SetContext(sharedPtr);
     }
 
+    void EditorLayer::SaveSceneAs()
+    {
+        auto job = Jobs::CreateJob(
+            [this, scene = m_ActiveScene]() mutable
+            {
+                TryToGetFile:
+                    auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
+                    if (filepath.IsEmpty())
+                    {
+                        return;
+                    }
+                    constexpr static auto isSubPath =
+                        [](const std::filesystem::path& base, const std::filesystem::path& potentialSubPath)
+                    {
+                        // Получаем абсолютные пути для сравнения
+                        const auto& absBase = base; // std::filesystem::canonical(base);
+                        const auto& absPotentialSubPath = potentialSubPath;
+
+                        // Проверяем, является ли путь potentialSubPath частью base
+                        return std::search(absPotentialSubPath.begin(),
+                                           absPotentialSubPath.end(),
+                                           absBase.begin(),
+                                           absBase.end()) == absPotentialSubPath.begin();
+                    };
+                    if (!isSubPath(m_ProjectFile->GetProjectPath().ToStdPath(), filepath.ToStdPath()))
+                    {
+                        ShowMessageBox(m_EditorLocaleDomain.Translate("saveScene.invalidPathError.title"),
+                                       m_EditorLocaleDomain.Translate("saveScene.invalidPathError.body"),
+                                       MessageBoxType::Error);
+                        goto TryToGetFile;
+                    }
+                    if (filepath.GetExtension() != ".beescene")
+                    {
+                        filepath.ReplaceExtension(".beescene");
+                    }
+                    SceneSerializer serializer(scene);
+                    serializer.Serialize(filepath);
+                    Jobs::Counter counter;
+                    auto waitForTheAssetToBeAdded =
+                        Jobs::CreateJob(counter,
+                                        [this, name = filepath.GetFileNameWithoutExtension().AsUTF8()]()
+                                        {
+                                            const AssetHandle* handlePtr =
+                                                m_EditorAssetManager.GetAssetHandleByName(name);
+                                            while (!handlePtr)
+                                            {
+                                                Jobs::this_job::yield();
+                                                handlePtr = m_EditorAssetManager.GetAssetHandleByName(name);
+                                            }
+                                        });
+                    Jobs::Schedule(BeeMove(waitForTheAssetToBeAdded));
+                    Jobs::WaitForJobsToComplete(counter);
+                    AssetHandle newSceneHandle =
+                        *m_EditorAssetManager.GetAssetHandleByName(filepath.GetFileNameWithoutExtension().AsUTF8());
+                    scene->Handle = newSceneHandle;
+                    auto& metadata = m_EditorAssetManager.GetAssetMetadata(newSceneHandle);
+                    scene->Name = std::string_view(metadata.Name);
+                    m_ProjectFile->SetLastUsedScene(newSceneHandle);
+                    if (m_ProjectFile->GetStartingSceneName() == "Not available")
+                    {
+                        m_ProjectFile->SetStartingScene(newSceneHandle);
+                    }
+                    m_ProjectFile->Save();
+            });
+        Jobs::Schedule(BeeMove(job));
+    }
+
     void EditorLayer::SaveScene()
     {
         SaveAssetRegistry();
-        /*if (m_ScenePath.IsEmpty())
+        if (!m_EditorAssetManager.IsAssetHandleValid(m_ActiveScene->Handle))
         {
-            auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
-            if (filepath.IsEmpty())
-            {
-                BeeCoreError("Unable to save to file");
-                return;
-            }
-            if (filepath.GetExtension() != ".beescene")
-            {
-                filepath.ReplaceExtension(".beescene");
-            }
-            m_ScenePath = filepath;
-        }*/
+            ShowMessageBox(m_EditorLocaleDomain.Translate("saveScene.currentSceneIsNotSaved.title"),
+                           m_EditorLocaleDomain.Translate("saveScene.currentSceneIsNotSaved.body"));
+            SaveSceneAs();
+            return;
+        }
         if (!m_ActiveScene || m_ActiveScene->Handle == AssetHandle{0, 0})
         {
             return;
@@ -625,7 +688,7 @@ Pos=60,60
 Size=400,400
 Collapsed=0)";
         result << '\n' << '\n';
-        result << R"([Window][Project]
+        result << "[Window][" << m_EditorLocaleDomain.Translate("projectSelection") << R"(]
 Pos=0,34
 Size=908,686
 Collapsed=0
@@ -697,7 +760,7 @@ Size=536,339
 Collapsed=0
 DockId=0x00000005,1)";
         result << '\n' << '\n';
-        result << R"([Window][Settings]
+        result << "[Window][" << m_EditorLocaleDomain.Translate("settings") << R"(]
 Pos=910,522
 Size=370,99
 Collapsed=0

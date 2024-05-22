@@ -12,6 +12,7 @@
 #include "Renderer/SceneRenderer.h"
 #include "Scene/Prefab.h"
 #include "Scripting/ScriptingEngine.h"
+#include <mutex>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -149,7 +150,7 @@ namespace BeeEngine
 
     void Application::SubmitToMainThread_Impl(const std::function<void()>& function)
     {
-        std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+        std::unique_lock lock(m_MainThreadQueueMutex);
         m_MainThreadQueue.push_back(function);
     }
 

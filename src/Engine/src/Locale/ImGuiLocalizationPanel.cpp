@@ -4,13 +4,16 @@
 
 #include "ImGuiLocalizationPanel.h"
 #include "Core/Color4.h"
+#include "Core/String.h"
 #include "Gui/ImGui/ImGuiExtension.h"
 #include "Locale.h"
 #include "LocalizationGenerator.h"
+#include "imgui.h"
 #include <Core/Move.h>
 #include <algorithm>
 #include <array>
 #include <imgui_internal.h>
+#include <string_view>
 namespace BeeEngine::Locale
 {
     static float GetButtonWidth()
@@ -72,9 +75,8 @@ namespace BeeEngine::Locale
         {
             ImGui::Text("Name");
             ImGui::SameLine();
-            static std::string newKey;
+
             ImGui::InputText("##New Key 123", &newKey);
-            static String errorMessage;
             if (!errorMessage.empty())
             {
                 ImGui::TextColored(Color4::Red, errorMessage.c_str());
@@ -87,7 +89,7 @@ namespace BeeEngine::Locale
                     goto endPopup;
                 }
                 auto& keysVec = m_LocaleKeys[m_SelectedLocale.GetLanguageString()];
-                if (std::ranges::find_if(keysVec, [](auto& pair) { return pair.first == newKey; }) != keysVec.end())
+                if (std::ranges::find_if(keysVec, [this](auto& pair) { return pair.first == newKey; }) != keysVec.end())
                 {
                     errorMessage = "Key with this name already exists";
                     goto endPopup;
@@ -151,17 +153,28 @@ namespace BeeEngine::Locale
     { // Отображение текущих ключей и их локализаций
         ImGui::BeginChild("##Lower", {-1, ImGui::GetContentRegionAvail().y - 60}, false);
         {
+            ImGui::TextUnformatted("Search: ");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::InputText("##Search", &searchField, ImGuiInputTextFlags_AutoSelectAll))
+            {
+                searchFieldLowerCase = ToLowercase(std::string_view(searchField));
+            }
+
             auto& locale = m_SelectedLocale.GetLanguageString();
             auto& keys = m_LocaleKeys[locale];
             size_t i = 0;
-            static std::vector<String>* valuesPtr = nullptr;
-            static size_t variationIndex = 0;
             ImGui::BeginTable("localization_table", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders);
             ImGui::TableSetupColumn("Keys");
             ImGui::TableSetupColumn("Value");
             ImGui::TableHeadersRow();
             for (auto& [key, value] : keys)
             {
+                if (!searchField.empty() && !ToLowercase(std::string_view(key)).contains(searchFieldLowerCase) &&
+                    !ToLowercase(std::string_view(value)).contains(searchFieldLowerCase))
+                {
+                    continue;
+                }
                 float buttonWidth = GetButtonWidth();
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
@@ -263,8 +276,6 @@ namespace BeeEngine::Locale
         {
             ImGui::Text("Name");
             ImGui::SameLine();
-            static String newLocale;
-            static bool isIncorrectLocale = false;
             ImGui::InputText("##New Locale", &newLocale);
             if (ImGui::Button("Add"))
             {
