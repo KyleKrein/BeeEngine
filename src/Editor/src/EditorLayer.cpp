@@ -372,15 +372,11 @@ namespace BeeEngine::Editor
         m_SceneHierarchyPanel.ClearSelection();
         m_ActiveScene->Clear();
         // Unloads all scenes in order to reload the scripts in Script components
-        for (auto& [registryID, assets] : m_EditorAssetManager.GetAssetRegistry())
+        for (const auto& assetHandle : m_EditorAssetManager.GetAssetHandlesByType(AssetType::Scene))
         {
-            for (auto& [uuid, metadata] : assets)
+            if (m_EditorAssetManager.IsAssetLoaded(assetHandle))
             {
-                if (metadata.Type != AssetType::Scene || !m_EditorAssetManager.IsAssetLoaded({registryID, uuid}))
-                {
-                    continue;
-                }
-                m_EditorAssetManager.UnloadAsset({registryID, uuid});
+                m_EditorAssetManager.UnloadAsset(assetHandle);
             }
         }
         if (ScriptingEngine::IsInitialized())
@@ -543,20 +539,14 @@ namespace BeeEngine::Editor
                     {
                         return;
                     }
-                    constexpr static auto isSubPath =
-                        [](const std::filesystem::path& base, const std::filesystem::path& potentialSubPath)
+                    constexpr static auto isSubPath = [](const String& base, const String& potentialSubPath)
                     {
-                        // Получаем абсолютные пути для сравнения
-                        const auto& absBase = base; // std::filesystem::canonical(base);
-                        const auto& absPotentialSubPath = potentialSubPath;
-
                         // Проверяем, является ли путь potentialSubPath частью base
-                        return std::search(absPotentialSubPath.begin(),
-                                           absPotentialSubPath.end(),
-                                           absBase.begin(),
-                                           absBase.end()) == absPotentialSubPath.begin();
+                        return std::search(
+                                   potentialSubPath.begin(), potentialSubPath.end(), base.begin(), base.end()) ==
+                               potentialSubPath.begin();
                     };
-                    if (!isSubPath(m_ProjectFile->GetProjectPath().ToStdPath(), filepath.ToStdPath()))
+                    if (!isSubPath(m_ProjectFile->GetProjectPath().AsUTF8(), filepath.AsUTF8()))
                     {
                         ShowMessageBox(m_EditorLocaleDomain.Translate("saveScene.invalidPathError.title"),
                                        m_EditorLocaleDomain.Translate("saveScene.invalidPathError.body"),

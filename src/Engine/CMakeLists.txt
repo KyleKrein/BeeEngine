@@ -367,6 +367,15 @@ function(add_sdl_subdirectory)
 
     file(WRITE vendor/sdl/CMakeLists.txt "${MODIFIED_SDL_CMAKELISTS}")
 
+    if(NOT SDL3_PATCHED)
+    file(READ vendor/sdl/src/video/cocoa/SDL_cocoakeyboard.m SDL_cocoakeyboard)
+    string(REPLACE "![[data.fieldEdit superview] isEqual:parentView]"
+            "false"
+            MODIFIED_SDL_cocoakeyboard
+            "${SDL_cocoakeyboard}")
+    file(WRITE vendor/sdl/src/video/cocoa/SDL_cocoakeyboard.m "${MODIFIED_SDL_cocoakeyboard}") #This is a fix for crashes, that happen on MacOs when input text field is unfocused due to a double removal from superview
+    set(SDL3_PATCHED ON CACHE BOOL "SDL3 Patched" FORCE)
+    endif()
     add_subdirectory(vendor/sdl)
 
     file(READ vendor/sdl/CMakeLists.txt SDL_CMAKELISTS)

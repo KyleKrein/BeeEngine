@@ -3,7 +3,11 @@
 //
 
 #pragma once
+#include "Core/AssetManagement/Asset.h"
+#include "Core/Coroutines/Generator.h"
 #include "IAssetManager.h"
+#include <unordered_map>
+#include <vector>
 namespace BeeEngine
 {
     class EditorAssetManager final : public IAssetManager
@@ -32,9 +36,15 @@ namespace BeeEngine
 
         void RemoveAsset(AssetHandle handle);
 
+        std::span<const AssetHandle> GetAssetHandlesByType(AssetType type) const;
+
+        Generator<Asset&> GetAssetsOfType(AssetType type) const;
+        Generator<Asset&> IterateAssets() const;
+
     private:
         mutable AssetMap m_AssetMap;
         AssetRegistry m_AssetRegistry;
         std::map<String, AssetHandle> m_AssetNameMap;
+        std::unordered_map<AssetType, std::vector<AssetHandle>> m_TypeMap;
     };
 } // namespace BeeEngine

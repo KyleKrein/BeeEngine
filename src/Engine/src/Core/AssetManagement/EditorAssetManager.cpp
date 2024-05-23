@@ -30,6 +30,8 @@ namespace BeeEngine
         metadata.Type = type;
         metadata.Location = AssetLocation::Embedded;
         metadata.Data = data;
+        m_TypeMap[type].push_back(handle);
+        m_AssetNameMap[name] = handle;
         m_AssetRegistry[handle.RegistryID][handle.AssetID] = metadata;
         BeeEnsures(IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
     }
@@ -43,7 +45,9 @@ namespace BeeEngine
             if (path != std::get<Path>(metadata.Data))
             {
                 metadata.Data = path;
+                m_AssetNameMap.erase(metadata.Name);
                 metadata.Name = path.GetFileNameWithoutExtension();
+                m_AssetNameMap[metadata.Name] = handle;
             }
             UnloadAsset(handle);
             return;
@@ -55,6 +59,7 @@ namespace BeeEngine
         metadata.Location = AssetLocation::FileSystem;
         m_AssetRegistry[handle.RegistryID][handle.AssetID] = metadata;
         m_AssetNameMap[metadata.Name] = handle;
+        m_TypeMap[metadata.Type].push_back(handle);
         BeeEnsures(IsAssetHandleValid(handle));
 
         BeeCoreTrace("Loaded asset: {0}", metadata.Name);
@@ -121,10 +126,46 @@ namespace BeeEngine
         auto metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
         m_AssetRegistry.at(handle.RegistryID).erase(handle.AssetID);
         m_AssetNameMap.erase(metadata.Name);
+        auto it = std::find(m_TypeMap[metadata.Type].begin(), m_TypeMap[metadata.Type].end(), handle);
+        if (it != m_TypeMap[metadata.Type].end())
+        {
+            m_TypeMap[metadata.Type].erase(it);
+        }
         /*if(m_AssetRegistry.at(handle.RegistryID).empty()) //Commented out because deleting of last element in
         project's asset registry makes it impossible to save registry correctly
         {
             m_AssetRegistry.erase(handle.RegistryID);
         }*/
+    }
+
+    std::span<const AssetHandle> EditorAssetManager::GetAssetHandlesByType(AssetType type) const
+    {
+        if (m_TypeMap.contains(type))
+        {
+            return m_TypeMap.at(type);
+        }
+        return {};
+    }
+
+    Generator<Asset&> EditorAssetManager::GetAssetsOfType(AssetType type) const
+    {
+        if (m_TypeMap.contains(type))
+        {
+            for (const auto& handle : m_TypeMap.at(type))
+            {
+                co_yield *GetAsset(handle);
+            }
+        }
+    }
+
+    Generator<Asset&> EditorAssetManager::IterateAssets() const
+    {
+        for (const auto& [registryID, registryMap] : m_AssetRegistry)
+        {
+            for (const auto& [assetID, metadata] : registryMap)
+            {
+                co_yield *GetAsset({registryID, assetID});
+            }
+        }
     }
 } // namespace BeeEngine

@@ -63,24 +63,17 @@ namespace BeeEngine::Editor
                 ImGui::TextUnformatted(m_Domain.Translate("buildProject.startingScene.tooltip").c_str());
                 ImGui::EndTooltip();
             }
-            for (auto& [registryID, assets] : m_AssetManager.GetAssetRegistry())
+            for (const auto& scene : m_AssetManager.GetAssetsOfType(AssetType::Scene))
             {
-                for (auto& [uuid, metadata] : assets)
+                bool isSelected = m_CurrentProject.GetStartingSceneName() == scene.Name;
+                if (ImGui::Selectable(scene.Name.data(), isSelected))
                 {
-                    if (metadata.Type != AssetType::Scene)
-                    {
-                        continue;
-                    }
-                    bool isSelected = m_CurrentProject.GetStartingSceneName() == metadata.Name;
-                    if (ImGui::Selectable(metadata.Name.c_str(), isSelected))
-                    {
-                        m_CurrentProject.SetStartingScene({registryID, uuid});
-                        m_CurrentProject.Save();
-                    }
-                    if (isSelected)
-                    {
-                        ImGui::SetItemDefaultFocus();
-                    }
+                    m_CurrentProject.SetStartingScene(scene.Handle);
+                    m_CurrentProject.Save();
+                }
+                if (isSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
                 }
             }
             ImGui::EndCombo();
