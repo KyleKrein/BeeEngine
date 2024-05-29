@@ -449,7 +449,14 @@ namespace BeeEngine
     void ScriptingEngine::UpdateAllocatorStatistics()
     {
         auto& stats = BeeEngine::Internal::AllocatorStatistics::GetStatistics();
+        if (!IsInitialized())
+        {
+            return;
+        }
+        auto gcStats = NativeToManaged::GetGCInfo();
         stats.totalAllocatedMemory -= stats.gcHeapSize;
+        stats.gcHeapSize = gcStats.HeapSize;
+        stats.gcUsedMemory = gcStats.HeapSize - gcStats.TotalAvailableMemory;
         // stats.gcUsedMemory.store(mono_gc_get_used_size());
         // stats.gcGenerations.store(mono_gc_max_generation());
         // stats.gcHeapSize.store(mono_gc_get_heap_size());
