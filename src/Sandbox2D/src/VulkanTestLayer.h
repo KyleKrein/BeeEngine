@@ -4,9 +4,9 @@
 
 #pragma once
 #include "Core/Layer.h"
+#include "Renderer/Renderer.h"
 
-
-class VulkanTestLayer: public BeeEngine::Layer
+class VulkanTestLayer : public BeeEngine::Layer
 {
 public:
     ~VulkanTestLayer() override;
@@ -15,7 +15,7 @@ public:
 
     void OnDetach() override;
 
-    void OnUpdate() override;
+    void OnUpdate(BeeEngine::FrameData& data) override;
 
     void OnGUIRendering() override;
 
