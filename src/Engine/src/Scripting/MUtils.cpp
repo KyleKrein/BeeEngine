@@ -3,112 +3,114 @@
 //
 
 #include "MUtils.h"
-#include "MTypes.h"
+#include "Core/AssetManagement/Asset.h"
+#include "Core/Color4.h"
 #include "Core/TypeDefines.h"
 #include "MField.h"
+#include "MTypes.h"
 #include "vec2.hpp"
 #include "vec3.hpp"
 #include "vec4.hpp"
-#include "Core/Color4.h"
-#include "Core/AssetManagement/Asset.h"
 
 namespace BeeEngine
 {
     MType MUtils::ManagedNameToMType(const String& name)
     {
         static std::unordered_map<String, MType> MTypeMap = {
-                {"System.Void", MType::Void},
-                {"System.Boolean", MType::Boolean},
-                {"System.Char", MType::Char},
-                {"System.SByte", MType::SByte},
-                {"System.Byte", MType::Byte},
-                {"System.Int16", MType::Int16},
-                {"System.UInt16", MType::UInt16},
-                {"System.Int32", MType::Int32},
-                {"System.UInt32", MType::UInt32},
-                {"System.Int64", MType::Int64},
-                {"System.UInt64", MType::UInt64},
-                {"System.Single", MType::Single},
-                {"System.Double", MType::Double},
-                {"System.String", MType::String},
-                {"System.Object", MType::Object},
-                {"System.Array", MType::Array},
+            {"System.Void", MType::Void},
+            {"System.Boolean", MType::Boolean},
+            {"System.Char", MType::Char},
+            {"System.SByte", MType::SByte},
+            {"System.Byte", MType::Byte},
+            {"System.Int16", MType::Int16},
+            {"System.UInt16", MType::UInt16},
+            {"System.Int32", MType::Int32},
+            {"System.UInt32", MType::UInt32},
+            {"System.Int64", MType::Int64},
+            {"System.UInt64", MType::UInt64},
+            {"System.Single", MType::Single},
+            {"System.Double", MType::Double},
+            {"System.String", MType::String},
+            {"System.Object", MType::Object},
+            {"System.Array", MType::Array},
 
-                {"BeeEngine.Math.Vector2", MType::Vector2},
-                {"BeeEngine.Math.Vector3", MType::Vector3},
-                {"BeeEngine.Math.Vector4", MType::Vector4},
-                {"BeeEngine.Color", MType::Color},
-                {"BeeEngine.Entity", MType::Entity},
+            {"BeeEngine.Math.Vector2", MType::Vector2},
+            {"BeeEngine.Math.Vector3", MType::Vector3},
+            {"BeeEngine.Math.Vector4", MType::Vector4},
+            {"BeeEngine.Color", MType::Color},
+            {"BeeEngine.Entity", MType::Entity},
 
-                {"BeeEngine.Internal.AssetHandle", MType::AssetHandle},
-                {"BeeEngine.Asset", MType::Asset},
-                {"BeeEngine.Texture2D", MType::Texture2D},
-                {"BeeEngine.Font", MType::Font},
-                {"BeeEngine.Prefab", MType::Prefab},
+            {"BeeEngine.Internal.AssetHandle", MType::AssetHandle},
+            {"BeeEngine.Asset", MType::Asset},
+            {"BeeEngine.Texture2D", MType::Texture2D},
+            {"BeeEngine.Font", MType::Font},
+            {"BeeEngine.Prefab", MType::Prefab},
+            {"BeeEngine.Scene", MType::Scene},
         };
-        if(MTypeMap.contains(name))
+        if (MTypeMap.contains(name))
             return MTypeMap.at(name);
-        if(name.ends_with('*'))
+        if (name.ends_with('*'))
             return MType::Ptr;
-        if(name.starts_with("System.Collections.Generic.Dictionary"))
+        if (name.starts_with("System.Collections.Generic.Dictionary"))
             return MType::Dictionary;
-        if(name.starts_with("System.Collections.Generic.List"))
+        if (name.starts_with("System.Collections.Generic.List"))
             return MType::List;
         return MType::None;
     }
 
     MType MUtils::StringToMType(const String& name)
     {
-        static std::unordered_map<std::string_view, MType> MTypeMap = {
-                {"Void", MType::Void},
-                {"Boolean", MType::Boolean},
-                {"Char", MType::Char},
-                {"SByte", MType::SByte},
-                {"Byte", MType::Byte},
-                {"Int16", MType::Int16},
-                {"UInt16", MType::UInt16},
-                {"Int32", MType::Int32},
-                {"UInt32", MType::UInt32},
-                {"Int64", MType::Int64},
-                {"UInt64", MType::UInt64},
-                {"Single", MType::Single},
-                {"Double", MType::Double},
-                {"String", MType::String},
-                {"Object", MType::Object},
-                {"Array", MType::Array},
-                {"Dictionary", MType::Dictionary},
-                {"List", MType::List},
+        static std::unordered_map<String, MType> MTypeMap = {
+            {"Void", MType::Void},
+            {"Boolean", MType::Boolean},
+            {"Char", MType::Char},
+            {"SByte", MType::SByte},
+            {"Byte", MType::Byte},
+            {"Int16", MType::Int16},
+            {"UInt16", MType::UInt16},
+            {"Int32", MType::Int32},
+            {"UInt32", MType::UInt32},
+            {"Int64", MType::Int64},
+            {"UInt64", MType::UInt64},
+            {"Single", MType::Single},
+            {"Double", MType::Double},
+            {"String", MType::String},
+            {"Object", MType::Object},
+            {"Array", MType::Array},
+            {"Dictionary", MType::Dictionary},
+            {"List", MType::List},
 
-                {"Vector2", MType::Vector2},
-                {"Vector3", MType::Vector3},
-                {"Vector4", MType::Vector4},
-                {"Color", MType::Color},
-                {"Entity", MType::Entity},
+            {"Vector2", MType::Vector2},
+            {"Vector3", MType::Vector3},
+            {"Vector4", MType::Vector4},
+            {"Color", MType::Color},
+            {"Entity", MType::Entity},
 
-                {"AssetHandle", MType::AssetHandle},
-                {"Asset", MType::Asset},
-                {"Texture2D", MType::Texture2D},
-                {"Font", MType::Font},
-                {"Prefab", MType::Prefab},
+            {"AssetHandle", MType::AssetHandle},
+            {"Asset", MType::Asset},
+            {"Texture2D", MType::Texture2D},
+            {"Font", MType::Font},
+            {"Prefab", MType::Prefab},
+            {"Scene", MType::Scene},
 
-                {"int", MType::Int32},
-                {"float", MType::Single},
-                {"double", MType::Double},
-                {"bool", MType::Boolean},
-                {"char", MType::Char},
-                {"uint", MType::UInt32},
-                {"long", MType::Int64},
-                {"ulong", MType::UInt64},
-                {"short", MType::Int16},
-                {"ushort", MType::UInt16},
-                {"byte", MType::Byte},
-                {"sbyte", MType::SByte},
-                {"string", MType::String},
-                {"object", MType::Object},
+            {"int", MType::Int32},
+            {"float", MType::Single},
+            {"double", MType::Double},
+            {"bool", MType::Boolean},
+            {"char", MType::Char},
+            {"uint", MType::UInt32},
+            {"long", MType::Int64},
+            {"ulong", MType::UInt64},
+            {"short", MType::Int16},
+            {"ushort", MType::UInt16},
+            {"byte", MType::Byte},
+            {"sbyte", MType::SByte},
+            {"string", MType::String},
+            {"object", MType::Object},
         };
-        if(MTypeMap.contains(name))
+        if (MTypeMap.contains(name))
             return MTypeMap.at(name);
-        if(name.ends_with('*'))
+        if (name.ends_with('*'))
             return MType::Ptr;
         return MType::None;
     }
@@ -125,7 +127,7 @@ namespace BeeEngine
         return type;
     }*/
 
-    const char *MUtils::MTypeToString(MType type)
+    const char* MUtils::MTypeToString(MType type)
     {
         switch (type)
         {
@@ -188,6 +190,8 @@ namespace BeeEngine
                 return "Font";
             case MType::Prefab:
                 return "Prefab";
+            case MType::Scene:
+                return "Scene";
 
             case MType::None:
                 break;
@@ -197,11 +201,8 @@ namespace BeeEngine
 
     bool MUtils::IsSutableForEdit(const MField& field)
     {
-        return field.GetVisibility() == MVisibility_Public &&
-               !field.IsStatic() &&
-               field.GetType() != MType::None &&
-               field.GetType() != MType::Ptr &&
-               field.GetType() != MType::Void;
+        return field.GetVisibility() == MVisibility_Public && !field.IsStatic() && field.GetType() != MType::None &&
+               field.GetType() != MType::Ptr && field.GetType() != MType::Void;
     }
 
     size_t MUtils::SizeOfMType(MType type)
@@ -215,48 +216,49 @@ namespace BeeEngine
             case MType::Byte:
                 return 1;
             case MType::Int16:
-                return sizeof (int16_t);
+                return sizeof(int16_t);
             case MType::UInt16:
-                return sizeof (uint16_t);
+                return sizeof(uint16_t);
             case MType::Int32:
-                return sizeof (int32_t);
+                return sizeof(int32_t);
             case MType::UInt32:
-                return sizeof (uint32_t);
+                return sizeof(uint32_t);
             case MType::Int64:
-                return sizeof (int64_t);
+                return sizeof(int64_t);
             case MType::UInt64:
-                return sizeof (uint64_t);
+                return sizeof(uint64_t);
             case MType::Single:
-                return sizeof (float);
+                return sizeof(float);
             case MType::Double:
-                return sizeof (double);
+                return sizeof(double);
             case MType::String:
-                return sizeof (uint64_t);
+                return sizeof(uint64_t);
             case MType::Ptr:
-                return sizeof (void*);
+                return sizeof(void*);
             case MType::Dictionary:
-                return sizeof (uint64_t);
+                return sizeof(uint64_t);
             case MType::Array:
-                return sizeof (uint64_t);
+                return sizeof(uint64_t);
             case MType::List:
-                return sizeof (uint64_t);
+                return sizeof(uint64_t);
             case MType::Object:
-                return sizeof (uint64_t);
+                return sizeof(uint64_t);
             case MType::Vector2:
-                return sizeof (glm::vec2);
+                return sizeof(glm::vec2);
             case MType::Vector3:
-                return sizeof (glm::vec3);
+                return sizeof(glm::vec3);
             case MType::Vector4:
-                return sizeof (glm::vec4);
+                return sizeof(glm::vec4);
             case MType::Color:
-                return sizeof (Color4);
+                return sizeof(Color4);
             case MType::Entity:
-                return sizeof (uint64_t);
+                return sizeof(uint64_t);
             case MType::Asset:
             case MType::Texture2D:
             case MType::Font:
             case MType::Prefab:
-                return sizeof (AssetHandle);
+            case MType::Scene:
+                return sizeof(AssetHandle);
 
             case MType::None:
             case MType::Void:
@@ -268,34 +270,16 @@ namespace BeeEngine
     bool MUtils::ShouldFreeGCHandle(const MField& field)
     {
         MType type = field.GetType();
-        return type == MType::String ||
-               type == MType::Array ||
-               type == MType::Dictionary ||
-               type == MType::List ||
-               type == MType::Object ||
-               type == MType::Asset ||
-               type == MType::Texture2D ||
-               type == MType::Font ||
-               type == MType::Prefab;
+        return type == MType::String || type == MType::Array || type == MType::Dictionary || type == MType::List ||
+               type == MType::Object || type == MType::Asset || type == MType::Texture2D || type == MType::Font ||
+               type == MType::Prefab || type == MType::Scene || type == MType::Entity;
     }
-    
+
     bool MUtils::IsValueType(MType type)
     {
-        return type == MType::Char ||
-               type == MType::Boolean ||
-               type == MType::SByte ||
-               type == MType::Byte ||
-               type == MType::Int16 ||
-               type == MType::UInt16 ||
-               type == MType::Int32 ||
-               type == MType::UInt32 ||
-               type == MType::Int64 ||
-               type == MType::UInt64 ||
-               type == MType::Single ||
-               type == MType::Double ||
-               type == MType::Vector2 ||
-               type == MType::Vector3 ||
-               type == MType::Vector4 ||
-               type == MType::Color;
+        return type == MType::Char || type == MType::Boolean || type == MType::SByte || type == MType::Byte ||
+               type == MType::Int16 || type == MType::UInt16 || type == MType::Int32 || type == MType::UInt32 ||
+               type == MType::Int64 || type == MType::UInt64 || type == MType::Single || type == MType::Double ||
+               type == MType::Vector2 || type == MType::Vector3 || type == MType::Vector4 || type == MType::Color;
     }
-}
+} // namespace BeeEngine

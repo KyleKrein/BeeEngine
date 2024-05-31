@@ -3,14 +3,14 @@
 //
 
 #include "Font.h"
-#include "Core/Logging/Log.h"
 #include "Core/CodeSafety/Expects.h"
-#include "Texture.h"
-#include <msdf-atlas-gen/msdf-atlas-gen.h>
-#include <msdf-atlas-gen/GlyphGeometry.h>
-#include "MSDFData.h"
+#include "Core/Logging/Log.h"
 #include "FileSystem/File.h"
+#include "MSDFData.h"
+#include "Texture.h"
 #include <glm.hpp>
+#include <msdf-atlas-gen/GlyphGeometry.h>
+#include <msdf-atlas-gen/msdf-atlas-gen.h>
 
 namespace BeeEngine
 {
@@ -18,8 +18,9 @@ namespace BeeEngine
     {
         int Width, Height;
     };
-    template<typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
-    static Ref<Texture2D> CreateAndCacheAtlas(const std::string& fontName, float fontSize,
+    template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
+    static Ref<Texture2D> CreateAndCacheAtlas(const String& fontName,
+                                              float fontSize,
                                               const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
                                               const msdf_atlas::FontGeometry& fontGeometry,
                                               const Configuration& config)
@@ -28,15 +29,16 @@ namespace BeeEngine
         attributes.config.overlapSupport = true;
         attributes.scanlinePass = true;
 
-        msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T,N>> generator(config.Width, config.Height);
+        msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(
+            config.Width, config.Height);
         generator.setAttributes(attributes);
         generator.setThreadCount(8);
         generator.generate(glyphs.data(), glyphs.size());
         msdfgen::BitmapConstRef<T, N> bitmap = generator.atlasStorage();
 
-        //unsigned char* pixels = new unsigned char[bitmap.width * bitmap.height * N];
-        //memcpy(pixels, bitmap.pixels, bitmap.width * bitmap.height * N);
-#if 0 //flip image vertically
+        // unsigned char* pixels = new unsigned char[bitmap.width * bitmap.height * N];
+        // memcpy(pixels, bitmap.pixels, bitmap.width * bitmap.height * N);
+#if 0 // flip image vertically
         const size_t stride = bitmap.width * N;
         unsigned char *row = (decltype(row))malloc(stride);
         unsigned char *low = pixels;
@@ -49,19 +51,19 @@ namespace BeeEngine
         }
         free(row);
 #endif
-        //delete[] pixels;
-        return Texture2D::Create(bitmap.width, bitmap.height, {(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
+        // delete[] pixels;
+        return Texture2D::Create(
+            bitmap.width, bitmap.height, {(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
     }
 
-    Font::Font(const Path &path)
-    : m_Data(new Internal::MSDFData())
+    Font::Font(const Path& path) : m_Data(new Internal::MSDFData())
     {
         String pathStr = path;
-        msdfgen::FreetypeHandle *ft = msdfgen::initializeFreetype();
-        if(!ft)
+        msdfgen::FreetypeHandle* ft = msdfgen::initializeFreetype();
+        if (!ft)
             return;
         auto data = File::ReadBinaryFile(path);
-        msdfgen::FontHandle *font = msdfgen::loadFontData(ft, (const msdfgen::byte*)data.data(), data.size());
+        msdfgen::FontHandle* font = msdfgen::loadFontData(ft, (const msdfgen::byte*)data.data(), data.size());
         if (!font)
         {
             BeeCoreError("Failed to load font: {}", pathStr);
@@ -76,13 +78,13 @@ namespace BeeEngine
         delete m_Data;
     }
 
-    Font::Font(const std::string& name, gsl::span<byte> data)
-    : m_Data(new Internal::MSDFData())
+    Font::Font(const String& name, gsl::span<byte> data) : m_Data(new Internal::MSDFData())
     {
-        msdfgen::FreetypeHandle *ft = msdfgen::initializeFreetype();
-        if(!ft)
+        msdfgen::FreetypeHandle* ft = msdfgen::initializeFreetype();
+        if (!ft)
             return;
-        msdfgen::FontHandle *font = msdfgen::loadFontData(ft, reinterpret_cast<const msdfgen::byte *>(data.data()), data.size());
+        msdfgen::FontHandle* font =
+            msdfgen::loadFontData(ft, reinterpret_cast<const msdfgen::byte*>(data.data()), data.size());
         if (!font)
         {
             BeeCoreError("Failed to load font: {}", name);
@@ -92,9 +94,9 @@ namespace BeeEngine
         msdfgen::deinitializeFreetype(ft);
     }
 
-    void Font::LoadFont(void *handle, const std::string& name)
+    void Font::LoadFont(void* handle, const String& name)
     {
-        msdfgen::FontHandle *font = (msdfgen::FontHandle*)handle;
+        msdfgen::FontHandle* font = (msdfgen::FontHandle*)handle;
         m_Data->FontGeometry = msdf_atlas::FontGeometry(&m_Data->Glyphs);
         constexpr static float fontScale = 1.0f;
 
@@ -104,21 +106,20 @@ namespace BeeEngine
             uint32_t Last;
         };
 
-        //From imgui_draw.cpp:
-        static constexpr CharsetRange charsetRanges[] =
-                {
-                        {0x0020, 0x00FF}, // Basic Latin + Latin Supplement
-                        {0x0100, 0x017F}, //Latin Extended-A
-                        {0x0180, 0x024F}, //Latin Extended-B
-                        {0x0400, 0x052F}, //Cyrillic + Cyrillic Supplement
-                        {0x2DE0, 0x2DFF}, // Cyrillic Extended-A
-                        {0xA640, 0xA69F}, // Cyrillic Extended-B
-                };
+        // From imgui_draw.cpp:
+        static constexpr CharsetRange charsetRanges[] = {
+            {0x0020, 0x00FF}, // Basic Latin + Latin Supplement
+            {0x0100, 0x017F}, // Latin Extended-A
+            {0x0180, 0x024F}, // Latin Extended-B
+            {0x0400, 0x052F}, // Cyrillic + Cyrillic Supplement
+            {0x2DE0, 0x2DFF}, // Cyrillic Extended-A
+            {0xA640, 0xA69F}, // Cyrillic Extended-B
+        };
 
         msdf_atlas::Charset charset;
         for (CharsetRange range : charsetRanges)
         {
-            for(uint32_t i = range.First; i <= range.Last; ++i)
+            for (uint32_t i = range.First; i <= range.Last; ++i)
                 charset.add(i);
         }
         int glyphsLoaded = m_Data->FontGeometry.loadCharset(font, fontScale, charset);
@@ -127,7 +128,7 @@ namespace BeeEngine
         double emSize = 40.0;
 
         msdf_atlas::TightAtlasPacker atlasPacker;
-        //atlasPacker.setDimensionsConstraint();
+        // atlasPacker.setDimensionsConstraint();
         atlasPacker.setPixelRange(2.0f);
         atlasPacker.setMiterLimit(1.0f);
         atlasPacker.setPadding(0.0f);
@@ -144,33 +145,38 @@ namespace BeeEngine
 #define LCG_MULTIPLIER 6364136223846793005ULL
 #define LCG_INCREMENT 1442695040888963407ULL
 
-        //if MSDF or MTSDF
+        // if MSDF or MTSDF
 
         const uint64_t seed = 0;
         constexpr static uint64_t threadCount = 8;
         const bool expensiveColoring = false;
         constexpr static double defaultAngleThreshold = 3.0;
-        if(expensiveColoring)
+        if (expensiveColoring)
         {
-            msdf_atlas::Workload([&glyphs = m_Data->Glyphs, seed](int i, int threadNo) -> bool{
-                uint64_t  glyphSeed = (LCG_MULTIPLIER * (seed ^ i) + LCG_INCREMENT) * !!seed;
-                glyphs[i].edgeColoring(msdfgen::edgeColoringInkTrap, defaultAngleThreshold, glyphSeed);
-                return true;
-            }, m_Data->Glyphs.size()).finish(threadCount);
+            msdf_atlas::Workload(
+                [&glyphs = m_Data->Glyphs, seed](int i, int threadNo) -> bool
+                {
+                    uint64_t glyphSeed = (LCG_MULTIPLIER * (seed ^ i) + LCG_INCREMENT) * !!seed;
+                    glyphs[i].edgeColoring(msdfgen::edgeColoringInkTrap, defaultAngleThreshold, glyphSeed);
+                    return true;
+                },
+                m_Data->Glyphs.size())
+                .finish(threadCount);
         }
         else
         {
             uint64_t glyphSeed = seed;
-            for(msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs)
+            for (msdf_atlas::GlyphGeometry& glyph : m_Data->Glyphs)
             {
-                glyphSeed+= LCG_MULTIPLIER;
+                glyphSeed += LCG_MULTIPLIER;
                 glyph.edgeColoring(msdfgen::edgeColoringInkTrap, defaultAngleThreshold, glyphSeed);
             }
         }
 #undef LCG_MULTIPLIER
 #undef LCG_INCREMENT
 
-        m_AtlasTexture = CreateAndCacheAtlas<uint8_t , float, 4, msdf_atlas::mtsdfGenerator>(name, emSize, m_Data->Glyphs, m_Data->FontGeometry, {width, height});
+        m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 4, msdf_atlas::mtsdfGenerator>(
+            name, emSize, m_Data->Glyphs, m_Data->FontGeometry, {width, height});
 #if 0
         msdfgen::Shape shape;
         if(msdfgen::loadGlyph(shape, font, 'A'))
@@ -186,4 +192,4 @@ namespace BeeEngine
         msdfgen::loadGlyph(shape, font, 'A');
 #endif
     }
-}
+} // namespace BeeEngine

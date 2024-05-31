@@ -4,14 +4,13 @@
 
 #include "FontImporter.h"
 
-
 namespace BeeEngine
 {
     Ref<Font> FontImporter::ImportFont(AssetHandle handle, const AssetMetadata& metadata)
     {
         BeeExpects(metadata.Type == AssetType::Font);
         Ref<Font> result;
-        if(metadata.Location == AssetLocation::FileSystem)
+        if (metadata.Location == AssetLocation::FileSystem)
         {
             result = CreateRef<Font>(std::get<Path>(metadata.Data));
         }
@@ -23,4 +22,4 @@ namespace BeeEngine
         result->Location = metadata.Location;
         return result;
     }
-}
+} // namespace BeeEngine

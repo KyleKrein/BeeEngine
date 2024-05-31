@@ -10,7 +10,7 @@ namespace BeeEngine::Internal
     vk::ImageCreateInfo
     VulkanInitializer::ImageCreateInfo(vk::Format format, vk::ImageUsageFlags usageFlags, vk::Extent3D extent)
     {
-        vk::ImageCreateInfo info = { };
+        vk::ImageCreateInfo info = {};
         info.sType = vk::StructureType::eImageCreateInfo;
         info.pNext = nullptr;
 
@@ -31,7 +31,7 @@ namespace BeeEngine::Internal
     vk::ImageViewCreateInfo
     VulkanInitializer::ImageViewCreateInfo(vk::Format format, vk::Image image, vk::ImageAspectFlags aspectFlags)
     {
-        //build a image-view for the depth image to use for rendering
+        // build a image-view for the depth image to use for rendering
         vk::ImageViewCreateInfo info = {};
         info.sType = vk::StructureType::eImageViewCreateInfo;
         info.pNext = nullptr;
@@ -48,7 +48,8 @@ namespace BeeEngine::Internal
         return info;
     }
 
-    vk::PipelineDepthStencilStateCreateInfo VulkanInitializer::DepthStencilCreateInfo(bool bDepthTest, bool bDepthWrite, vk::CompareOp compareOp)
+    vk::PipelineDepthStencilStateCreateInfo
+    VulkanInitializer::DepthStencilCreateInfo(bool bDepthTest, bool bDepthWrite, vk::CompareOp compareOp)
     {
         vk::PipelineDepthStencilStateCreateInfo info = {};
         info.sType = vk::StructureType::ePipelineDepthStencilStateCreateInfo;
@@ -77,7 +78,7 @@ namespace BeeEngine::Internal
     }
 
     vk::SemaphoreSubmitInfo VulkanInitializer::SemaphoreSubmitInfo(vk::Semaphore semaphore,
-        vk::PipelineStageFlags2 stageFlags)
+                                                                   vk::PipelineStageFlags2 stageFlags)
     {
         vk::SemaphoreSubmitInfo info = {};
         info.semaphore = semaphore;
@@ -93,5 +94,5 @@ namespace BeeEngine::Internal
         info.commandBuffer = commandBuffer;
         return info;
     }
-}
+} // namespace BeeEngine::Internal
 #endif

@@ -1,54 +1,86 @@
-inspector.textRenderer.foreground: Передний план
-text: Текст
-inspector.circleRenderer.fade: Дымка
-inspector.textRenderer: Текст
+buildProject.build.tooltip: Заполните все поля перед сборкой проекта
+transform.scale: Scale
+camera.projection.orthographic: Ортографическая
 inspector.circleRenderer.thickness: Толщина
+inspector.textRenderer.foreground: Передний план
+menubar.file.openScene: Открыть сцену
+text: Текст
+sceneHierarchyPanel.createCamera: Создать камеру
+camera.projection.perspective: Перспективная
 primary: "{gender, select, male{Главный} female{Главная} other{Главное}}"
-texture: Текстура
+inspector.circleRenderer.fade: Дымка
+buildProject.defaultLocale: Локализация по умолчанию
+assetEditPanel.name: "Имя: {name}"
+menubar.file.saveSceneAs: Сохранить сцену как...
 sceneHierarchyPanel.toTopLevel: На верхний уровень
+menubar.build.reloadScripts: Перезагрузить скрипты
+inspector.textRenderer: Текст
+texture: Текстура
+sceneHierarchyPanel.duplicateEntity: Дублировать
 sceneHierarchyPanel.createEmptyEntity: Создать сущность
+menubar.file.saveScene: Сохранить сцену
+sprite: Спрайт
+assetPanel.deleteAsset: Удалить
 size: Размер
 camera.nearClip: Near Clip
 camera.farClip: Far Clip
 camera.fov: FOV
 camera.projection: Проекция
-camera.projection.perspective: Перспективная
+buildProject.startingScene: Начальная сцена
+inspector: Инспектор
 camera: Камера
 transform.rotation: Rotation
 createFolder: Создать папку
 transform: Transform
-camera.projection.orthographic: Ортографическая
+camera.fixedAspectRatio: Фиксированное соотношение сторон
 menubar.file: Файл
+newProject: Создать проект
 menubar.view: Вид
 color: Цвет
-menubar.file.openScene: Открыть сцену
-camera.fixedAspectRatio: Фиксированное соотношение сторон
-inspector.circleRenderer: Круг
 assetPanel.dropAssetsButton: Импортировать ассет
+inspector.circleRenderer: Круг
 menubar.file.newScene: Новая сцена
 contentBrowserPanel.exportPrefab: Экспортировать префаб
-sprite: Спрайт
+buildProject.defaultLocale.invalidError: Выбранная локализация по умолчанию не существует в текущем проекте
+menubar.view.outputConsole: Консоль вывода
 sprite.tilingFactor: Tiling Factor
-menubar.build.reloadScripts: Перезагрузить скрипты
-transform.scale: Scale
-menubar.file.saveSceneAs: Сохранить сцену как...
-menubar.file.saveScene: Сохранить сцену
 createScene: Создать сцену
-sceneHierarchyPanel.duplicateEntity: Дублировать
 assetPanel: Ресурсы игры
+buildProject.build: Собрать
 createScript: Создать скрипт
 menubar.build: Сборка
-assetPanel.deleteAsset: Удалить
 create: Создать
+menubar.view.localization: Локализация
 menubar.file.exit: Выход
 name: Название
-menubar.build.regenerateVSSolution: Пересоздать решение VS
 transform.translation: Translation
+menubar.build.regenerateVSSolution: Пересоздать решение VS
 cancel: Отмена
-menubar.view.outputConsole: Консоль вывода
-menubar.view.localization: Локализация
-sceneHierarchyPanel.createCamera: Создать камеру
+sceneHierarchyPanel: Сцена
 contentBrowserPanel: Файлы проекта
 sceneHierarchyPanel.deleteEntity: Удалить
-sceneHierarchyPanel: Сцена
-inspector: Инспектор
+menubar.build.buildProject: Сборка проекта
+buildProject: Сборка проекта
+buildProject.buildtype: Тип
+buildProject.outputPath: Путь сборки
+buildProject.outputPath.invalidError: Путь сборки не должен быть пустым, а также должен указывать на существующую папку
+buildProject.defaultLocale.tooltip: Выберите язык локализации, который будет выбран, если язык системы у пользователя не поддерживается в игре
+assetEditPanel: Информация об Ассете
+assetEditPanel.type: "Тип: {type}"
+assetPanel.editAsset: Свойства
+menubar.build.rebuildGameLibrary: Пересобрать библиотеку скриптов
+rename: Переименовать
+delete: Удалить
+contentBrowserPanel.renamePopup: ВЫберите новое имя (без расширения)
+contentBrowserPanel.deletePopup: Вы уверены, что хотите удалить {name}?
+contentBrowserPanel.thumbnailSize: Размер значков
+contentBrowserPanel.padding: Отступы
+contentBrowserPanel.copyFiles: Скопировать файлы
+projectSettings: Настройки проекта
+menubar.project: Проект
+menubar.project.settings: Параметры
+saveScene.invalidPathError.title: Неверный путь к файлу
+saveScene.invalidPathError.body: Сохраняемый файл должен располагаться внутри папки проекта
+settings: Параметры
+projectSelection: Проект
+loadProject: Открыть проект

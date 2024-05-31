@@ -4,7 +4,6 @@
 
 #pragma once
 
-
 #include "String.h"
 #include <version>
 
@@ -20,9 +19,9 @@ namespace BeeEngine
         Path(const char* path);
         Path(std::string_view path)
         {
-            if(path.data() == nullptr)
+            if (path.data() == nullptr)
                 return;
-            if(path.empty())
+            if (path.empty())
             {
                 return;
             }
@@ -42,51 +41,27 @@ namespace BeeEngine
         bool IsAbsolute() const noexcept;
         bool IsRelative() const noexcept;
 
-        bool IsEmpty() const noexcept
-        {
-            return m_Path.empty();
-        }
+        bool IsEmpty() const noexcept { return m_Path.empty(); }
 #if __has_cpp_attribute(__cpp_explicit_this_parameter)
-        template<typename Self>
+        template <typename Self>
         auto&& AsUTF8(this Self&& self) noexcept
         {
             return std::forward<Self>(self).m_Path;
         }
 #else
-        const UTF8String& AsUTF8() const noexcept
-        {
-            return m_Path;
-        }
+        const UTF8String& AsUTF8() const noexcept { return m_Path; }
 #endif
-        const char* AsCString() const noexcept
-        {
-            return m_Path.c_str();
-        }
-        UTF16String ToUTF16() const
-        {
-            return ConvertUTF8ToUTF16(m_Path);
-        }
+        const char* AsCString() const noexcept { return m_Path.c_str(); }
+        UTF16String ToUTF16() const { return ConvertUTF8ToUTF16(m_Path); }
 
-        String ToString() const
-        {
-            return m_Path;
-        }
+        String ToString() const { return m_Path; }
 
         std::filesystem::path ToStdPath() const;
 
-        operator UTF8String&()
-        {
-            return m_Path;
-        }
-        operator const UTF8String&() const
-        {
-            return m_Path;
-        }
+        operator UTF8String&() { return m_Path; }
+        operator const UTF8String&() const { return m_Path; }
 
-        void Clear() noexcept
-        {
-            m_Path.clear();
-        }
+        void Clear() noexcept { m_Path.clear(); }
 
         Path GetParent() const;
         Path GetFileName() const;
@@ -105,23 +80,18 @@ namespace BeeEngine
         Path& operator/=(Path&& other);
         Path operator/(const Path& other) const;
 
-        bool operator==(const Path& other) const noexcept
-        {
-            return m_Path == other.m_Path;
-        }
-        bool operator!=(const Path& other) const noexcept
-        {
-            return m_Path != other.m_Path;
-        }
+        bool operator==(const Path& other) const noexcept { return m_Path == other.m_Path; }
+        bool operator!=(const Path& other) const noexcept { return m_Path != other.m_Path; }
+
     private:
         UTF8String m_Path;
 
         void RefactorApplyAndCheck(UTF8String&& utf8);
     };
-}
+} // namespace BeeEngine
 namespace std
 {
-    template<>
+    template <>
     struct hash<BeeEngine::Path>
     {
         size_t operator()(const BeeEngine::Path& path) const noexcept
@@ -129,4 +99,4 @@ namespace std
             return hash<BeeEngine::UTF8String>()(path.AsUTF8());
         }
     };
-}
+} // namespace std

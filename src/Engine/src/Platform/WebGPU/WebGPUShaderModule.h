@@ -4,40 +4,26 @@
 
 #pragma once
 #if defined(BEE_COMPILE_WEBGPU)
-#include "Renderer/ShaderModule.h"
 #include "Renderer/BufferLayout.h"
+#include "Renderer/ShaderModule.h"
 #include <webgpu/webgpu.h>
 
 namespace BeeEngine::Internal
 {
-    class WebGPUShaderModule: public ShaderModule
+    class WebGPUShaderModule : public ShaderModule
     {
     public:
         ~WebGPUShaderModule() override;
         WebGPUShaderModule(in<std::string> wgsl, ShaderType type, in<BufferLayout> layout);
-        [[nodiscard]] ShaderType GetType() const override
-        {
-            return m_Type;
-        }
-        [[nodiscard]] WGPUShaderModule GetHandle() const
-        {
-            return m_ShaderModule;
-        }
-        [[nodiscard]] WGPUVertexBufferLayout GetPointBufferLayout() const
-        {
-            return m_PointBufferLayout;
-        }
-        [[nodiscard]] WGPUVertexBufferLayout GetInstanceBufferLayout() const
-        {
-            return m_InstanceBufferLayout;
-        }
+        [[nodiscard]] ShaderType GetType() const override { return m_Type; }
+        [[nodiscard]] WGPUShaderModule GetHandle() const { return m_ShaderModule; }
+        [[nodiscard]] WGPUVertexBufferLayout GetPointBufferLayout() const { return m_PointBufferLayout; }
+        [[nodiscard]] WGPUVertexBufferLayout GetInstanceBufferLayout() const { return m_InstanceBufferLayout; }
 
-        std::vector<std::pair<uint32_t,WGPUBindGroupLayout>>& GetBindGroupLayouts()
-        {
-            return m_BindGroupLayouts;
-        }
+        std::vector<std::pair<uint32_t, WGPUBindGroupLayout>>& GetBindGroupLayouts() { return m_BindGroupLayouts; }
 
         [[nodiscard]] Scope<InstancedBuffer> CreateInstancedBuffer() override;
+
     private:
         void InitResources(in<BufferLayout> layout);
 
@@ -47,8 +33,8 @@ namespace BeeEngine::Internal
         std::vector<WGPUVertexAttribute> m_PointAttributes;
         WGPUVertexBufferLayout m_InstanceBufferLayout;
         std::vector<WGPUVertexAttribute> m_InstanceAttributes;
-        std::vector<std::pair<uint32_t,WGPUBindGroupLayout>> m_BindGroupLayouts;
+        std::vector<std::pair<uint32_t, WGPUBindGroupLayout>> m_BindGroupLayouts;
         std::vector<WGPUBindGroupLayoutEntry> m_BindGroupLayoutEntries;
     };
-}
+} // namespace BeeEngine::Internal
 #endif

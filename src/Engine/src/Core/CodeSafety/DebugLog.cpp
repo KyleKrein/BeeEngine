@@ -4,7 +4,6 @@
 
 #include "DebugLog.h"
 
-
 namespace BeeEngine
 {
 

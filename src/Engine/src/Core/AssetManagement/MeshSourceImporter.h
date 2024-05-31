@@ -4,8 +4,8 @@
 
 #pragma once
 #include "AssetMetadata.h"
-#include "MeshSource.h"
 #include "Core/TypeDefines.h"
+#include "MeshSource.h"
 
 namespace BeeEngine
 {
@@ -14,4 +14,4 @@ namespace BeeEngine
     public:
         static Ref<MeshSource> ImportMeshSource(AssetHandle handle, const AssetMetadata& metadata);
     };
-}
+} // namespace BeeEngine

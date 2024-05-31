@@ -3,10 +3,8 @@
 //
 
 #include "BeeEngine.h"
-#include "src/EditorApplication.h"
 #include "src/ConfigFile.h"
-
-
+#include "src/EditorApplication.h"
 
 gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication(const BeeEngine::ApplicationArgs& args)
 {

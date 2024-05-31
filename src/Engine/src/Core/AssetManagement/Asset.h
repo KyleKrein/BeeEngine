@@ -9,21 +9,15 @@ namespace BeeEngine
 {
     struct AssetHandle
     {
-        UUID RegistryID {};
-        UUID AssetID {};
+        UUID RegistryID{};
+        UUID AssetID{};
         constexpr AssetHandle() = default;
-        constexpr AssetHandle(UUID registryID, UUID assetID)
-            : RegistryID(registryID), AssetID(assetID)
-        {}
-        AssetHandle(UUID registryID)
-                : RegistryID(registryID)
-        {}
-        constexpr AssetHandle(AssetHandle&& other) noexcept
-            : RegistryID(other.RegistryID), AssetID(other.AssetID)
-        {}
-        constexpr AssetHandle(const AssetHandle& other) noexcept
-            : RegistryID(other.RegistryID), AssetID(other.AssetID)
-        {}
+        constexpr AssetHandle(UUID registryID, UUID assetID) : RegistryID(registryID), AssetID(assetID) {}
+        AssetHandle(UUID registryID) : RegistryID(registryID) {}
+        constexpr AssetHandle(AssetHandle&& other) noexcept : RegistryID(other.RegistryID), AssetID(other.AssetID) {}
+        constexpr AssetHandle(const AssetHandle& other) noexcept : RegistryID(other.RegistryID), AssetID(other.AssetID)
+        {
+        }
         constexpr AssetHandle& operator=(AssetHandle&& other) noexcept
         {
             RegistryID = other.RegistryID;
@@ -37,23 +31,23 @@ namespace BeeEngine
             return *this;
         }
 
-        bool operator < (const AssetHandle& other) const
+        bool operator<(const AssetHandle& other) const
         {
             return RegistryID < other.RegistryID || (RegistryID == other.RegistryID && AssetID < other.AssetID);
         }
 
-        bool operator == (const AssetHandle& other) const
+        bool operator==(const AssetHandle& other) const
         {
             return RegistryID == other.RegistryID && AssetID == other.AssetID;
         }
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
             serializer & RegistryID;
             serializer & AssetID;
         }
     };
-    enum class AssetType: uint16_t
+    enum class AssetType : uint16_t
     {
         None = 0,
         Texture2D = 1,
@@ -69,7 +63,7 @@ namespace BeeEngine
         Model = 6,*/
         Localized = 100,
     };
-    enum class AssetLocation: uint16_t
+    enum class AssetLocation : uint16_t
     {
         FileSystem = 0,
         Embedded = 1
@@ -79,14 +73,14 @@ namespace BeeEngine
         AssetHandle Handle;
         AssetLocation Location = AssetLocation::FileSystem;
         std::string_view Name;
-        virtual constexpr AssetType GetType() const = 0;
+        [[nodiscard]] virtual constexpr AssetType GetType() const = 0;
 
         virtual ~Asset() = default;
     };
-}
+} // namespace BeeEngine
 namespace std
 {
-    template<>
+    template <>
     struct hash<BeeEngine::AssetHandle>
     {
         std::size_t operator()(const BeeEngine::AssetHandle& uuid) const
@@ -95,4 +89,4 @@ namespace std
         }
     };
 
-}
+} // namespace std

@@ -11,8 +11,8 @@ namespace BeeEngine
     {
     public:
         virtual ~TopLevelAccelerationStructure() = default;
-        virtual void UpdateInstances(std::vector<BeeEngine::SceneTreeRenderer::Entity> &&entities) = 0;
+        virtual void UpdateInstances(std::vector<BeeEngine::SceneTreeRenderer::Entity>&& entities) = 0;
 
         static Ref<TopLevelAccelerationStructure> Create();
     };
-}
+} // namespace BeeEngine

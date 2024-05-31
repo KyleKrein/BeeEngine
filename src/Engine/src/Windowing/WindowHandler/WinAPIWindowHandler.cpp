@@ -9,22 +9,21 @@
 #if defined(WINDOWS)
 #include "Core/Events/EventImplementations.h"
 
-
-#include <backends/imgui_impl_win32.h>
+#include "Platform/Vulkan/VulkanGraphicsDevice.h"
+#include "Platform/Vulkan/VulkanInstance.h"
 #include "Platform/Windows/WindowsDropSource.h"
 #include "Renderer/Renderer.h"
-#include "Platform/Vulkan/VulkanInstance.h"
-#include "Platform/Vulkan/VulkanGraphicsDevice.h"
+#include <backends/imgui_impl_win32.h>
 
 #include "Platform/Windows/WindowsString.h"
 #include <windowsx.h>
 // Forward declare message handler from imgui_impl_win32.cpp
-    extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 namespace BeeEngine::Internal
 {
     void GetMonitorRealResolution(HMONITOR monitor, int* pixelsWidth, int* pixelsHeight)
     {
-        MONITORINFOEX info = { sizeof(MONITORINFOEX) };
+        MONITORINFOEX info = {sizeof(MONITORINFOEX)};
         GetMonitorInfo(monitor, &info);
         DEVMODE devmode = {};
         devmode.dmSize = sizeof(DEVMODE);
@@ -34,7 +33,7 @@ namespace BeeEngine::Internal
     }
     float GetMonitorScalingRatio(HMONITOR monitor)
     {
-        MONITORINFOEX info = { sizeof(MONITORINFOEX) };
+        MONITORINFOEX info = {sizeof(MONITORINFOEX)};
         GetMonitorInfo(monitor, &info);
         DEVMODE devmode = {};
         devmode.dmSize = sizeof(DEVMODE);
@@ -59,23 +58,23 @@ namespace BeeEngine::Internal
         ::SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
         ImGui_ImplWin32_EnableDpiAwareness();
 
-        m_WindowsInstance = GetModuleHandleW(nullptr); //Get the current instance
+        m_WindowsInstance = GetModuleHandleW(nullptr); // Get the current instance
 
         std::wstring title = WStringFromUTF8(properties.Title);
 
         HICON icon = LoadIcon(m_WindowsInstance, IDI_APPLICATION);
         WNDCLASSW wc = {0};
-        wc.style = CS_DBLCLKS;//CS_HREDRAW | CS_VREDRAW;
+        wc.style = CS_DBLCLKS; // CS_HREDRAW | CS_VREDRAW;
         wc.lpfnWndProc = win32_process_message;
         wc.cbClsExtra = 0;
         wc.cbWndExtra = 0;
         wc.hInstance = m_WindowsInstance;
         wc.hIcon = icon;
-        wc.hCursor = LoadCursor(nullptr, IDC_ARROW);// nullptr to manage cursor manually
+        wc.hCursor = LoadCursor(nullptr, IDC_ARROW); // nullptr to manage cursor manually
         wc.hbrBackground = nullptr;
         wc.lpszClassName = m_WindowClassName;
 
-        if(!RegisterClassW(&wc))
+        if (!RegisterClassW(&wc))
         {
             BeeCoreError("Failed to register window class");
         }
@@ -96,10 +95,10 @@ namespace BeeEngine::Internal
 
         windowStyle |= WS_MAXIMIZEBOX;
         windowStyle |= WS_MINIMIZEBOX;
-        //windowStyle |= WS_SIZEBOX;
+        // windowStyle |= WS_SIZEBOX;
         windowStyle |= WS_THICKFRAME;
 
-        //Obtain the size of the window borders
+        // Obtain the size of the window borders
         RECT borderRect = {0, 0, 0, 0};
         AdjustWindowRectEx(&borderRect, windowStyle, FALSE, windowExStyle);
         windowWidth += borderRect.right - borderRect.left;
@@ -107,42 +106,45 @@ namespace BeeEngine::Internal
         windowX -= borderRect.left;
         windowY -= borderRect.top;
 
-        m_Window = CreateWindowExW(
-            windowExStyle, m_WindowClassName, title.c_str(),
-            windowStyle, windowX, windowY,
-            windowWidth, windowHeight,
-            nullptr, nullptr,
-            m_WindowsInstance, nullptr);
+        m_Window = CreateWindowExW(windowExStyle,
+                                   m_WindowClassName,
+                                   title.c_str(),
+                                   windowStyle,
+                                   windowX,
+                                   windowY,
+                                   windowWidth,
+                                   windowHeight,
+                                   nullptr,
+                                   nullptr,
+                                   m_WindowsInstance,
+                                   nullptr);
 
-        if(!m_Window)
+        if (!m_Window)
         {
             BeeCoreError("Window creation failed");
         }
 
-        //Show the window
-        bool32_t shouldActivate = true; //If the window should not accept input, this should be false
+        // Show the window
+        bool32_t shouldActivate = true; // If the window should not accept input, this should be false
         int32_t showWindowCommandFlags = shouldActivate ? SW_SHOW : SW_SHOWNOACTIVATE;
-        //if initially minimized, use SW_MINIMIZE : SW_SHOWMINNOACTIVATE
-        //if initially maximized, use SW_SHOWMAXIMIZED : SW_MAXIMIZE
+        // if initially minimized, use SW_MINIMIZE : SW_SHOWMINNOACTIVATE
+        // if initially maximized, use SW_SHOWMAXIMIZED : SW_MAXIMIZE
 
         m_ScaleFactor = GetRealDpiForMonitor(GetCurrentMonitor());
         m_WidthInPixels = m_ScaleFactor * m_Width;
         m_HeightInPixels = m_ScaleFactor * m_Height;
 
-
         InitializeDragDrop();
 
         BeeExpects(properties.PreferredRenderAPI == RenderAPI::Vulkan);
-        m_Instance = CreateScope<VulkanInstance>(properties.Title, WindowHandlerAPI::WinAPI);
+        m_Instance = CreateScope<VulkanInstance>(std::string_view{properties.Title}, WindowHandlerAPI::WinAPI);
         m_GraphicsDevice = CreateScope<VulkanGraphicsDevice>(*m_Instance);
         ShowWindow(m_Window, showWindowCommandFlags);
         UpdateWindow(m_Window);
         m_IsRunning = true;
     }
 
-    WinAPIWindowHandler::~WinAPIWindowHandler()
-    {
-    }
+    WinAPIWindowHandler::~WinAPIWindowHandler() {}
 
     GlobalMouseState WinAPIWindowHandler::GetGlobalMouseState() const
     {
@@ -172,7 +174,7 @@ namespace BeeEngine::Internal
 
     void WinAPIWindowHandler::SetVSync(VSync mode)
     {
-        if(mode == m_vsync)
+        if (mode == m_vsync)
             return;
         m_vsync = mode;
         m_GraphicsDevice->RequestSwapChainRebuild();
@@ -205,7 +207,7 @@ namespace BeeEngine::Internal
 
     bool WinAPIWindowHandler::IsRunning() const
     {
-        if(m_IsClosing) [[unlikely]]
+        if (m_IsClosing) [[unlikely]]
         {
             m_IsRunning = false;
             m_IsClosing = false;
@@ -248,28 +250,29 @@ namespace BeeEngine::Internal
     {
         return ::MonitorFromWindow(m_Window, MONITOR_DEFAULTTONEAREST);
     }
-    //https://stackoverflow.com/questions/15966642/how-do-you-tell-lshift-apart-from-rshift-in-wm-keydown-events
-    WPARAM MapLeftRightKeys( WPARAM vk, LPARAM lParam)
+    // https://stackoverflow.com/questions/15966642/how-do-you-tell-lshift-apart-from-rshift-in-wm-keydown-events
+    WPARAM MapLeftRightKeys(WPARAM vk, LPARAM lParam)
     {
         WPARAM new_vk = vk;
         UINT scancode = (lParam & 0x00ff0000) >> 16;
-        int extended  = (lParam & 0x01000000) != 0;
+        int extended = (lParam & 0x01000000) != 0;
 
-        switch (vk) {
+        switch (vk)
+        {
             case VK_SHIFT:
                 new_vk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK_EX);
-            break;
+                break;
             case VK_CONTROL:
                 new_vk = extended ? VK_RCONTROL : VK_LCONTROL;
-            break;
+                break;
             case VK_MENU:
                 new_vk = extended ? VK_RMENU : VK_LMENU;
-            break;
+                break;
             default:
                 // not a key we map from generic to left/right specialized
-                    //  just return it.
-                        new_vk = vk;
-            break;
+                //  just return it.
+                new_vk = vk;
+                break;
         }
 
         return new_vk;
@@ -278,140 +281,257 @@ namespace BeeEngine::Internal
     BeeEngine::Key ConvertKeyCode(WPARAM wParam, LPARAM lParam)
     {
         wParam = MapLeftRightKeys(wParam, lParam);
-        switch(wParam)
+        switch (wParam)
         {
-            case VK_SPACE: return BeeEngine::Key::Space;
-            case VK_OEM_7: return BeeEngine::Key::Apostrophe;
-            case VK_OEM_COMMA: return BeeEngine::Key::Comma;
-            case VK_OEM_MINUS: return BeeEngine::Key::Minus;
-            case VK_OEM_PERIOD: return BeeEngine::Key::Period;
-            case VK_OEM_2: return BeeEngine::Key::Slash;
-            case '0': return BeeEngine::Key::D0;
-            case '1': return BeeEngine::Key::D1;
-            case '2': return BeeEngine::Key::D2;
-            case '3': return BeeEngine::Key::D3;
-            case '4': return BeeEngine::Key::D4;
-            case '5': return BeeEngine::Key::D5;
-            case '6': return BeeEngine::Key::D6;
-            case '7': return BeeEngine::Key::D7;
-            case '8': return BeeEngine::Key::D8;
-            case '9': return BeeEngine::Key::D9;
-            case 'A': return BeeEngine::Key::A;
-            case 'B': return BeeEngine::Key::B;
-            case 'C': return BeeEngine::Key::C;
-            case 'D': return BeeEngine::Key::D;
-            case 'E': return BeeEngine::Key::E;
-            case 'F': return BeeEngine::Key::F;
-            case 'G': return BeeEngine::Key::G;
-            case 'H': return BeeEngine::Key::H;
-            case 'I': return BeeEngine::Key::I;
-            case 'J': return BeeEngine::Key::J;
-            case 'K': return BeeEngine::Key::K;
-            case 'L': return BeeEngine::Key::L;
-            case 'M': return BeeEngine::Key::M;
-            case 'N': return BeeEngine::Key::N;
-            case 'O': return BeeEngine::Key::O;
-            case 'P': return BeeEngine::Key::P;
-            case 'Q': return BeeEngine::Key::Q;
-            case 'R': return BeeEngine::Key::R;
-            case 'S': return BeeEngine::Key::S;
-            case 'T': return BeeEngine::Key::T;
-            case 'U': return BeeEngine::Key::U;
-            case 'V': return BeeEngine::Key::V;
-            case 'W': return BeeEngine::Key::W;
-            case 'X': return BeeEngine::Key::X;
-            case 'Y': return BeeEngine::Key::Y;
-            case 'Z': return BeeEngine::Key::Z;
-            case VK_OEM_1: return BeeEngine::Key::Semicolon;
-            case VK_OEM_PLUS: return BeeEngine::Key::Equal;
-            case VK_OEM_4: return BeeEngine::Key::LeftBracket;
-            case VK_OEM_5: return BeeEngine::Key::Backslash;
-            case VK_OEM_6: return BeeEngine::Key::RightBracket;
-            case VK_OEM_3: return BeeEngine::Key::GraveAccent;
-            case VK_ESCAPE: return BeeEngine::Key::Escape;
-            case VK_RETURN: return BeeEngine::Key::Enter;
-            case VK_TAB: return BeeEngine::Key::Tab;
-            case VK_BACK: return BeeEngine::Key::Backspace;
-            case VK_INSERT: return BeeEngine::Key::Insert;
-            case VK_DELETE: return BeeEngine::Key::Delete;
-            case VK_RIGHT: return BeeEngine::Key::Right;
-            case VK_LEFT: return BeeEngine::Key::Left;
-            case VK_DOWN: return BeeEngine::Key::Down;
-            case VK_UP: return BeeEngine::Key::Up;
-            case VK_PRIOR: return BeeEngine::Key::PageUp;
-            case VK_NEXT: return BeeEngine::Key::PageDown;
-            case VK_HOME: return BeeEngine::Key::Home;
-            case VK_END: return BeeEngine::Key::End;
-            case VK_CAPITAL: return BeeEngine::Key::CapsLock;
-            case VK_SCROLL: return BeeEngine::Key::ScrollLock;
-            case VK_NUMLOCK: return BeeEngine::Key::NumLock;
-            case VK_SNAPSHOT: return BeeEngine::Key::PrintScreen;
-            case VK_PAUSE: return BeeEngine::Key::Pause;
-            case VK_F1: return BeeEngine::Key::F1;
-            case VK_F2: return BeeEngine::Key::F2;
-            case VK_F3: return BeeEngine::Key::F3;
-            case VK_F4: return BeeEngine::Key::F4;
-            case VK_F5: return BeeEngine::Key::F5;
-            case VK_F6: return BeeEngine::Key::F6;
-            case VK_F7: return BeeEngine::Key::F7;
-            case VK_F8: return BeeEngine::Key::F8;
-            case VK_F9: return BeeEngine::Key::F9;
-            case VK_F10: return BeeEngine::Key::F10;
-            case VK_F11: return BeeEngine::Key::F11;
-            case VK_F12: return BeeEngine::Key::F12;
-            case VK_F13: return BeeEngine::Key::F13;
-            case VK_F14: return BeeEngine::Key::F14;
-            case VK_F15: return BeeEngine::Key::F15;
-            case VK_F16: return BeeEngine::Key::F16;
-            case VK_F17: return BeeEngine::Key::F17;
-            case VK_F18: return BeeEngine::Key::F18;
-            case VK_F19: return BeeEngine::Key::F19;
-            case VK_F20: return BeeEngine::Key::F20;
-            case VK_F21: return BeeEngine::Key::F21;
-            case VK_F22: return BeeEngine::Key::F22;
-            case VK_F23: return BeeEngine::Key::F23;
-            case VK_F24: return BeeEngine::Key::F24;
-            case VK_NUMPAD0: return BeeEngine::Key::KeyPad0;
-            case VK_NUMPAD1: return BeeEngine::Key::KeyPad1;
-            case VK_NUMPAD2: return BeeEngine::Key::KeyPad2;
-            case VK_NUMPAD3: return BeeEngine::Key::KeyPad3;
-            case VK_NUMPAD4: return BeeEngine::Key::KeyPad4;
-            case VK_NUMPAD5: return BeeEngine::Key::KeyPad5;
-            case VK_NUMPAD6: return BeeEngine::Key::KeyPad6;
-            case VK_NUMPAD7: return BeeEngine::Key::KeyPad7;
-            case VK_NUMPAD8: return BeeEngine::Key::KeyPad8;
-            case VK_NUMPAD9: return BeeEngine::Key::KeyPad9;
-            case VK_DECIMAL: return BeeEngine::Key::KeyPadDecimal;
-            case VK_DIVIDE: return BeeEngine::Key::KeyPadDivide;
-            case VK_MULTIPLY: return BeeEngine::Key::KeyPadMultiply;
-            case VK_SUBTRACT: return BeeEngine::Key::KeyPadSubtract;
-            case VK_ADD: return BeeEngine::Key::KeyPadAdd;
-            case VK_LSHIFT: return BeeEngine::Key::LeftShift;
-            case VK_RSHIFT: return BeeEngine::Key::RightShift;
-            case VK_LCONTROL: return BeeEngine::Key::LeftControl;
-            case VK_RCONTROL: return BeeEngine::Key::RightControl;
-            case VK_LMENU: return BeeEngine::Key::LeftAlt;
-            case VK_RMENU: return BeeEngine::Key::RightAlt;
-            case VK_LWIN: return BeeEngine::Key::LeftSuper;
-            case VK_RWIN: return BeeEngine::Key::RightSuper;
-            case VK_APPS: return BeeEngine::Key::Menu;
-            /*case VK_VOLUME_MUTE: return BeeEngine::Key::VolumeMute;
-            case VK_VOLUME_DOWN: return BeeEngine::Key::VolumeDown;
-            case VK_VOLUME_UP: return BeeEngine::Key::VolumeUp;
-            case VK_MEDIA_NEXT_TRACK: return BeeEngine::Key::MediaNextTrack;
-            case VK_MEDIA_PREV_TRACK: return BeeEngine::Key::MediaPrevTrack;
-            case VK_MEDIA_STOP: return BeeEngine::Key::MediaStop;
-            case VK_MEDIA_PLAY_PAUSE: return BeeEngine::Key::MediaPlayPause;
-            case VK_BROWSER_BACK: return BeeEngine::Key::BrowserBack;
-            case VK_BROWSER_FORWARD: return BeeEngine::Key::BrowserForward;
-            case VK_BROWSER_REFRESH: return BeeEngine::Key::BrowserRefresh;
-            case VK_BROWSER_STOP: return BeeEngine::Key::BrowserStop;*/
+            case VK_SPACE:
+                return BeeEngine::Key::Space;
+            case VK_OEM_7:
+                return BeeEngine::Key::Apostrophe;
+            case VK_OEM_COMMA:
+                return BeeEngine::Key::Comma;
+            case VK_OEM_MINUS:
+                return BeeEngine::Key::Minus;
+            case VK_OEM_PERIOD:
+                return BeeEngine::Key::Period;
+            case VK_OEM_2:
+                return BeeEngine::Key::Slash;
+            case '0':
+                return BeeEngine::Key::D0;
+            case '1':
+                return BeeEngine::Key::D1;
+            case '2':
+                return BeeEngine::Key::D2;
+            case '3':
+                return BeeEngine::Key::D3;
+            case '4':
+                return BeeEngine::Key::D4;
+            case '5':
+                return BeeEngine::Key::D5;
+            case '6':
+                return BeeEngine::Key::D6;
+            case '7':
+                return BeeEngine::Key::D7;
+            case '8':
+                return BeeEngine::Key::D8;
+            case '9':
+                return BeeEngine::Key::D9;
+            case 'A':
+                return BeeEngine::Key::A;
+            case 'B':
+                return BeeEngine::Key::B;
+            case 'C':
+                return BeeEngine::Key::C;
+            case 'D':
+                return BeeEngine::Key::D;
+            case 'E':
+                return BeeEngine::Key::E;
+            case 'F':
+                return BeeEngine::Key::F;
+            case 'G':
+                return BeeEngine::Key::G;
+            case 'H':
+                return BeeEngine::Key::H;
+            case 'I':
+                return BeeEngine::Key::I;
+            case 'J':
+                return BeeEngine::Key::J;
+            case 'K':
+                return BeeEngine::Key::K;
+            case 'L':
+                return BeeEngine::Key::L;
+            case 'M':
+                return BeeEngine::Key::M;
+            case 'N':
+                return BeeEngine::Key::N;
+            case 'O':
+                return BeeEngine::Key::O;
+            case 'P':
+                return BeeEngine::Key::P;
+            case 'Q':
+                return BeeEngine::Key::Q;
+            case 'R':
+                return BeeEngine::Key::R;
+            case 'S':
+                return BeeEngine::Key::S;
+            case 'T':
+                return BeeEngine::Key::T;
+            case 'U':
+                return BeeEngine::Key::U;
+            case 'V':
+                return BeeEngine::Key::V;
+            case 'W':
+                return BeeEngine::Key::W;
+            case 'X':
+                return BeeEngine::Key::X;
+            case 'Y':
+                return BeeEngine::Key::Y;
+            case 'Z':
+                return BeeEngine::Key::Z;
+            case VK_OEM_1:
+                return BeeEngine::Key::Semicolon;
+            case VK_OEM_PLUS:
+                return BeeEngine::Key::Equal;
+            case VK_OEM_4:
+                return BeeEngine::Key::LeftBracket;
+            case VK_OEM_5:
+                return BeeEngine::Key::Backslash;
+            case VK_OEM_6:
+                return BeeEngine::Key::RightBracket;
+            case VK_OEM_3:
+                return BeeEngine::Key::GraveAccent;
+            case VK_ESCAPE:
+                return BeeEngine::Key::Escape;
+            case VK_RETURN:
+                return BeeEngine::Key::Enter;
+            case VK_TAB:
+                return BeeEngine::Key::Tab;
+            case VK_BACK:
+                return BeeEngine::Key::Backspace;
+            case VK_INSERT:
+                return BeeEngine::Key::Insert;
+            case VK_DELETE:
+                return BeeEngine::Key::Delete;
+            case VK_RIGHT:
+                return BeeEngine::Key::Right;
+            case VK_LEFT:
+                return BeeEngine::Key::Left;
+            case VK_DOWN:
+                return BeeEngine::Key::Down;
+            case VK_UP:
+                return BeeEngine::Key::Up;
+            case VK_PRIOR:
+                return BeeEngine::Key::PageUp;
+            case VK_NEXT:
+                return BeeEngine::Key::PageDown;
+            case VK_HOME:
+                return BeeEngine::Key::Home;
+            case VK_END:
+                return BeeEngine::Key::End;
+            case VK_CAPITAL:
+                return BeeEngine::Key::CapsLock;
+            case VK_SCROLL:
+                return BeeEngine::Key::ScrollLock;
+            case VK_NUMLOCK:
+                return BeeEngine::Key::NumLock;
+            case VK_SNAPSHOT:
+                return BeeEngine::Key::PrintScreen;
+            case VK_PAUSE:
+                return BeeEngine::Key::Pause;
+            case VK_F1:
+                return BeeEngine::Key::F1;
+            case VK_F2:
+                return BeeEngine::Key::F2;
+            case VK_F3:
+                return BeeEngine::Key::F3;
+            case VK_F4:
+                return BeeEngine::Key::F4;
+            case VK_F5:
+                return BeeEngine::Key::F5;
+            case VK_F6:
+                return BeeEngine::Key::F6;
+            case VK_F7:
+                return BeeEngine::Key::F7;
+            case VK_F8:
+                return BeeEngine::Key::F8;
+            case VK_F9:
+                return BeeEngine::Key::F9;
+            case VK_F10:
+                return BeeEngine::Key::F10;
+            case VK_F11:
+                return BeeEngine::Key::F11;
+            case VK_F12:
+                return BeeEngine::Key::F12;
+            case VK_F13:
+                return BeeEngine::Key::F13;
+            case VK_F14:
+                return BeeEngine::Key::F14;
+            case VK_F15:
+                return BeeEngine::Key::F15;
+            case VK_F16:
+                return BeeEngine::Key::F16;
+            case VK_F17:
+                return BeeEngine::Key::F17;
+            case VK_F18:
+                return BeeEngine::Key::F18;
+            case VK_F19:
+                return BeeEngine::Key::F19;
+            case VK_F20:
+                return BeeEngine::Key::F20;
+            case VK_F21:
+                return BeeEngine::Key::F21;
+            case VK_F22:
+                return BeeEngine::Key::F22;
+            case VK_F23:
+                return BeeEngine::Key::F23;
+            case VK_F24:
+                return BeeEngine::Key::F24;
+            case VK_NUMPAD0:
+                return BeeEngine::Key::KeyPad0;
+            case VK_NUMPAD1:
+                return BeeEngine::Key::KeyPad1;
+            case VK_NUMPAD2:
+                return BeeEngine::Key::KeyPad2;
+            case VK_NUMPAD3:
+                return BeeEngine::Key::KeyPad3;
+            case VK_NUMPAD4:
+                return BeeEngine::Key::KeyPad4;
+            case VK_NUMPAD5:
+                return BeeEngine::Key::KeyPad5;
+            case VK_NUMPAD6:
+                return BeeEngine::Key::KeyPad6;
+            case VK_NUMPAD7:
+                return BeeEngine::Key::KeyPad7;
+            case VK_NUMPAD8:
+                return BeeEngine::Key::KeyPad8;
+            case VK_NUMPAD9:
+                return BeeEngine::Key::KeyPad9;
+            case VK_DECIMAL:
+                return BeeEngine::Key::KeyPadDecimal;
+            case VK_DIVIDE:
+                return BeeEngine::Key::KeyPadDivide;
+            case VK_MULTIPLY:
+                return BeeEngine::Key::KeyPadMultiply;
+            case VK_SUBTRACT:
+                return BeeEngine::Key::KeyPadSubtract;
+            case VK_ADD:
+                return BeeEngine::Key::KeyPadAdd;
+            case VK_LSHIFT:
+                return BeeEngine::Key::LeftShift;
+            case VK_RSHIFT:
+                return BeeEngine::Key::RightShift;
+            case VK_LCONTROL:
+                return BeeEngine::Key::LeftControl;
+            case VK_RCONTROL:
+                return BeeEngine::Key::RightControl;
+            case VK_LMENU:
+                return BeeEngine::Key::LeftAlt;
+            case VK_RMENU:
+                return BeeEngine::Key::RightAlt;
+            case VK_LWIN:
+                return BeeEngine::Key::LeftSuper;
+            case VK_RWIN:
+                return BeeEngine::Key::RightSuper;
+            case VK_APPS:
+                return BeeEngine::Key::Menu;
+                /*case VK_VOLUME_MUTE: return BeeEngine::Key::VolumeMute;
+                case VK_VOLUME_DOWN: return BeeEngine::Key::VolumeDown;
+                case VK_VOLUME_UP: return BeeEngine::Key::VolumeUp;
+                case VK_MEDIA_NEXT_TRACK: return BeeEngine::Key::MediaNextTrack;
+                case VK_MEDIA_PREV_TRACK: return BeeEngine::Key::MediaPrevTrack;
+                case VK_MEDIA_STOP: return BeeEngine::Key::MediaStop;
+                case VK_MEDIA_PLAY_PAUSE: return BeeEngine::Key::MediaPlayPause;
+                case VK_BROWSER_BACK: return BeeEngine::Key::BrowserBack;
+                case VK_BROWSER_FORWARD: return BeeEngine::Key::BrowserForward;
+                case VK_BROWSER_REFRESH: return BeeEngine::Key::BrowserRefresh;
+                case VK_BROWSER_STOP: return BeeEngine::Key::BrowserStop;*/
         }
         return BeeEngine::Key::Unknown;
     }
 
-    BeeEngine::MouseButton ConvertMouseButton(UINT message, WPARAM wParam) {
-        switch (message) {
+    BeeEngine::MouseButton ConvertMouseButton(UINT message, WPARAM wParam)
+    {
+        switch (message)
+        {
             case WM_LBUTTONDOWN:
             case WM_LBUTTONUP:
                 return BeeEngine::MouseButton::Left;
@@ -424,13 +544,16 @@ namespace BeeEngine::Internal
             case WM_XBUTTONDOWN:
             case WM_XBUTTONUP:
                 // Используйте GET_XBUTTON_WPARAM для определения конкретной кнопки
-                if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) {
+                if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
+                {
                     return BeeEngine::MouseButton::Button4;
-                } else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2) {
+                }
+                else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2)
+                {
                     return BeeEngine::MouseButton::Button5;
                 }
-            // Можно добавить больше условий, если ваша мышь поддерживает больше дополнительных кнопок
-            break;
+                // Можно добавить больше условий, если ваша мышь поддерживает больше дополнительных кнопок
+                break;
         }
         return static_cast<BeeEngine::MouseButton>(-1); // Нет соответствия или неизвестная кнопка
     }
@@ -443,8 +566,8 @@ namespace BeeEngine::Internal
         switch (msg)
         {
             case WM_ERASEBKGND:
-                //Notify the OS that erasing will be handled by the application
-                    return 1;
+                // Notify the OS that erasing will be handled by the application
+                return 1;
             case WM_CLOSE:
                 WindowHandler::GetInstance()->Close();
                 return 0;
@@ -464,15 +587,18 @@ namespace BeeEngine::Internal
                     case SC_MINIMIZE:
                     {
                         g_EventQueue->AddEvent(CreateScope<WindowMinimizedEvent>(true));
-                    }break;
+                    }
+                    break;
                     case SC_RESTORE:
                     {
                         g_EventQueue->AddEvent(CreateScope<WindowMinimizedEvent>(false));
-                    }break;
+                    }
+                    break;
                     default:
                         break;
                 }
-            }break;
+            }
+            break;
             case WM_SIZE:
             {
                 if (w_param != SIZE_MINIMIZED)
@@ -489,14 +615,21 @@ namespace BeeEngine::Internal
                     s_Instance->m_WidthInPixels = widthInPixels;
                     s_Instance->m_HeightInPixels = heightInPixels;
                     s_Instance->m_GraphicsDevice->RequestSwapChainRebuild();
-                    g_EventQueue->AddEvent(CreateScope<WindowResizeEvent>(width, height, widthInPixels, heightInPixels));
+                    g_EventQueue->AddEvent(
+                        CreateScope<WindowResizeEvent>(width, height, widthInPixels, heightInPixels));
                 }
-               break;
+                break;
             }
             case WM_DPICHANGED:
             {
                 RECT* suggestedRect = reinterpret_cast<RECT*>(l_param);
-                SetWindowPos(hwnd, nullptr, suggestedRect->left, suggestedRect->top, suggestedRect->right - suggestedRect->left, suggestedRect->bottom - suggestedRect->top, SWP_NOZORDER | SWP_NOACTIVATE);
+                SetWindowPos(hwnd,
+                             nullptr,
+                             suggestedRect->left,
+                             suggestedRect->top,
+                             suggestedRect->right - suggestedRect->left,
+                             suggestedRect->bottom - suggestedRect->top,
+                             SWP_NOZORDER | SWP_NOACTIVATE);
                 s_Instance->m_ScaleFactor = static_cast<float>(HIWORD(w_param)) / 96.0f;
                 s_Instance->m_WidthInPixels = s_Instance->m_ScaleFactor * s_Instance->m_Width;
                 s_Instance->m_HeightInPixels = s_Instance->m_ScaleFactor * s_Instance->m_Height;
@@ -510,23 +643,27 @@ namespace BeeEngine::Internal
             {
                 auto key = ConvertKeyCode(w_param, l_param);
                 bool8_t isKeyDown = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
-                if(isKeyDown)
-                    g_EventQueue->AddEvent(CreateScope<KeyPressedEvent>(key,IS_KEY_REPEAT(l_param) ? GET_KEY_REPEAT_COUNT(l_param) : 1));
+                if (isKeyDown)
+                    g_EventQueue->AddEvent(
+                        CreateScope<KeyPressedEvent>(key, IS_KEY_REPEAT(l_param) ? GET_KEY_REPEAT_COUNT(l_param) : 1));
                 else
                     g_EventQueue->AddEvent(CreateScope<KeyReleasedEvent>(key));
-            }break;
+            }
+            break;
             case WM_MOUSEMOVE:
             {
                 int32_t x = GET_X_LPARAM(l_param);
                 int32_t y = GET_Y_LPARAM(l_param);
                 g_EventQueue->AddEvent(CreateScope<MouseMovedEvent>(x, y));
-            }break;
+            }
+            break;
             case WM_MOUSEWHEEL:
             {
                 int32_t delta = GET_WHEEL_DELTA_WPARAM(w_param);
-                if(delta != 0)
+                if (delta != 0)
                     g_EventQueue->AddEvent(CreateScope<MouseScrolledEvent>(0, delta > 0 ? 1 : -1));
-            }break;
+            }
+            break;
             case WM_LBUTTONDOWN:
             case WM_RBUTTONDOWN:
             case WM_MBUTTONDOWN:
@@ -536,19 +673,22 @@ namespace BeeEngine::Internal
             case WM_XBUTTONDOWN:
             case WM_XBUTTONUP:
             {
-                bool8_t isDown = (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_XBUTTONDOWN);
+                bool8_t isDown =
+                    (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_XBUTTONDOWN);
                 auto button = ConvertMouseButton(msg, w_param);
-                if(isDown)
+                if (isDown)
                     g_EventQueue->AddEvent(CreateScope<MouseButtonPressedEvent>(button));
                 else
                     g_EventQueue->AddEvent(CreateScope<MouseButtonReleasedEvent>(button));
-            }break;
+            }
+            break;
             case WM_MOVE:
             {
                 s_Instance->m_XPosition = GET_X_LPARAM(l_param);
                 s_Instance->m_YPosition = GET_Y_LPARAM(l_param);
                 g_EventQueue->AddEvent(CreateScope<WindowMovedEvent>(s_Instance->m_XPosition, s_Instance->m_YPosition));
-            } break;
+            }
+            break;
             case WM_UNICHAR:
             {
                 if (w_param == UNICODE_NOCHAR)
@@ -558,10 +698,11 @@ namespace BeeEngine::Internal
                     return TRUE;
                 }
                 g_EventQueue->AddEvent(CreateScope<CharTypedEvent>(static_cast<char32_t>(w_param)));
-            }break;
+            }
+            break;
         }
 
         return ::DefWindowProcW(hwnd, msg, w_param, l_param);
     }
-}
+} // namespace BeeEngine::Internal
 #endif

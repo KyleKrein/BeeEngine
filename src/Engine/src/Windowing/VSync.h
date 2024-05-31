@@ -7,5 +7,5 @@ enum VSync
 {
     On = 1,
     Off = 0,
-    //Adaptive
+    // Adaptive
 };

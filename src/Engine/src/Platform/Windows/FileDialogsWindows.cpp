@@ -1,6 +1,7 @@
 //
 // Created by alexl on 05.06.2023.
 //
+// clang-format off
 #include "Core/Application.h"
 #include "JobSystem/JobScheduler.h"
 #if defined(WINDOWS)
@@ -14,15 +15,15 @@
 #include "SDL3/SDL.h"
 #endif
 #include "Windowing/WindowHandler/WindowHandler.h"
-
+// clang-format on
 constexpr int MAX_DIR_SIZE = 256;
 namespace BeeEngine
 {
     void OpenFileWindowImpl(std::wstring& wFilter, Path& result)
     {
         OPENFILENAMEW ofn;
-        WCHAR szFile[MAX_PATH] = { 0 };
-        WCHAR currentDir[MAX_DIR_SIZE] = { 0 };
+        WCHAR szFile[MAX_PATH] = {0};
+        WCHAR currentDir[MAX_DIR_SIZE] = {0};
 
         ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
         ofn.lStructSize = sizeof(OPENFILENAMEW);
@@ -53,7 +54,7 @@ namespace BeeEngine
 
         auto wFilter = Internal::WStringFromUTF8(strFilter);
 
-        if(Application::IsMainThread())
+        if (Application::IsMainThread())
         {
             OpenFileWindowImpl(wFilter, result);
             return result;
@@ -61,19 +62,20 @@ namespace BeeEngine
         BeeExpects(Jobs::this_job::IsInJob());
         Jobs::Counter counter;
         counter.Increment();
-        Application::SubmitToMainThread([&wFilter, &result, &counter]()
-        {
-            OpenFileWindowImpl(wFilter, result);
-            counter.Decrement();
-        });
-        Job::WaitForJobsToComplete(counter);
+        Application::SubmitToMainThread(
+            [&wFilter, &result, &counter]()
+            {
+                OpenFileWindowImpl(wFilter, result);
+                counter.Decrement();
+            });
+        Jobs::WaitForJobsToComplete(counter);
         return result;
     }
     void SaveFileImpl(std::wstring& wFilter, Path& result)
     {
         OPENFILENAMEW ofn;
-        WCHAR szFile[MAX_PATH] = { 0 };
-        WCHAR currentDir[MAX_DIR_SIZE] = { 0 };
+        WCHAR szFile[MAX_PATH] = {0};
+        WCHAR currentDir[MAX_DIR_SIZE] = {0};
 
         ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
         ofn.lStructSize = sizeof(OPENFILENAMEW);
@@ -104,7 +106,7 @@ namespace BeeEngine
         auto wFilter = Internal::WStringFromUTF8(strFilter);
 
         Path result;
-        if(Application::IsMainThread())
+        if (Application::IsMainThread())
         {
             SaveFileImpl(wFilter, result);
             return result;
@@ -112,16 +114,17 @@ namespace BeeEngine
         BeeExpects(Jobs::this_job::IsInJob());
         Jobs::Counter counter;
         counter.Increment();
-        Application::SubmitToMainThread([&wFilter, &result, &counter]()
-        {
-            SaveFileImpl(wFilter, result);
-            counter.Decrement();
-        });
-        Job::WaitForJobsToComplete(counter);
+        Application::SubmitToMainThread(
+            [&wFilter, &result, &counter]()
+            {
+                SaveFileImpl(wFilter, result);
+                counter.Decrement();
+            });
+        Jobs::WaitForJobsToComplete(counter);
         return result;
     }
 
-    std::string FileDialogs::GetFilter(void* filter)
+    String FileDialogs::GetFilter(void* filter)
     {
         return ((FileDialogs::Filter*)filter)->WindowsFilter();
     }
@@ -130,12 +133,12 @@ namespace BeeEngine
     {
         WCHAR path[MAX_PATH];
 
-        BROWSEINFOW bi = { 0 };
+        BROWSEINFOW bi = {0};
         ZeroMemory(&bi, sizeof(BROWSEINFOW));
-        //bi.lpszTitle  = L"Выберите папку:";
-        bi.ulFlags    = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-        bi.lpfn       = nullptr;
-        bi.lParam     = 0;
+        // bi.lpszTitle  = L"Выберите папку:";
+        bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+        bi.lpfn = nullptr;
+        bi.lParam = 0;
 
         LPITEMIDLIST pidl = SHBrowseForFolderW(&bi);
 
@@ -159,7 +162,7 @@ namespace BeeEngine
     Path FileDialogs::OpenFolder()
     {
         Path result;
-        if(Application::IsMainThread())
+        if (Application::IsMainThread())
         {
             OpenFolderImpl(result);
             return result;
@@ -167,13 +170,14 @@ namespace BeeEngine
         BeeExpects(Jobs::this_job::IsInJob());
         Jobs::Counter counter;
         counter.Increment();
-        Application::SubmitToMainThread([&result, &counter]()
-        {
-            OpenFolderImpl(result);
-            counter.Decrement();
-        });
-        Job::WaitForJobsToComplete(counter);
+        Application::SubmitToMainThread(
+            [&result, &counter]()
+            {
+                OpenFolderImpl(result);
+                counter.Decrement();
+            });
+        Jobs::WaitForJobsToComplete(counter);
         return result;
     }
-}
+} // namespace BeeEngine
 #endif

@@ -11,6 +11,5 @@ namespace BeeEngine
     public:
         Instance() = default;
         virtual ~Instance() = default;
-
     };
-}
+} // namespace BeeEngine

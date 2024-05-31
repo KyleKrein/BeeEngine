@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "IAssetManager.h"
 #include "Asset.h"
+#include "IAssetManager.h"
 
 namespace BeeEngine
 {
@@ -27,4 +27,4 @@ namespace BeeEngine
 
         static constexpr AssetHandle CheckerboardTexture = {0, 345643574357345345};
     };
-}
+} // namespace BeeEngine

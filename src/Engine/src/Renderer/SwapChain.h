@@ -9,7 +9,6 @@ namespace BeeEngine
     class SwapChain
     {
     public:
-
         virtual ~SwapChain() = default;
     };
-}
+} // namespace BeeEngine

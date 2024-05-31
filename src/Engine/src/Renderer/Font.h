@@ -12,21 +12,18 @@ namespace BeeEngine
     {
         struct MSDFData;
     }
-    class Font final: public Asset
+    class Font final : public Asset
     {
     public:
         Font(const Path& path);
-        Font(const std::string& name,gsl::span<byte> data);
+        Font(const String& name, gsl::span<byte> data);
         Font(const Font&) = delete;
         Font& operator=(const Font&) = delete;
         Font(Font&&) noexcept = default;
         Font& operator=(Font&&) noexcept = default;
         ~Font() final;
 
-        [[nodiscard]] constexpr AssetType GetType() const override
-        {
-            return AssetType::Font;
-        }
+        [[nodiscard]] constexpr AssetType GetType() const override { return AssetType::Font; }
 
         Texture2D& GetAtlasTexture() const { return *m_AtlasTexture; }
         const Internal::MSDFData& GetMSDFData() const { return *m_Data; }
@@ -35,6 +32,6 @@ namespace BeeEngine
         Internal::MSDFData* m_Data = nullptr;
         Ref<Texture2D> m_AtlasTexture;
 
-        void LoadFont(void *handle, const std::string& name);
+        void LoadFont(void* handle, const String& name);
     };
-}
+} // namespace BeeEngine

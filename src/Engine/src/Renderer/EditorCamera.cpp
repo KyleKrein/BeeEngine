@@ -3,17 +3,22 @@
 //
 
 #include "EditorCamera.h"
-#include "Debug/Instrumentor.h"
-#include "ext/matrix_clip_space.hpp"
-#include "detail/type_quat.hpp"
-#include "gtx/quaternion.hpp"
 #include "Core/Input.h"
+#include "Debug/Instrumentor.h"
+#include "detail/type_quat.hpp"
+#include "ext/matrix_clip_space.hpp"
+#include "gtx/quaternion.hpp"
 
 namespace BeeEngine
 {
 
     EditorCamera::EditorCamera(float fov, float aspectRatio, float nearClip, float farClip)
-            : m_Fov(fov), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip), Camera(glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip)), m_ViewMatrix(1.0f)
+        : m_Fov(fov),
+          m_AspectRatio(aspectRatio),
+          m_NearClip(nearClip),
+          m_FarClip(farClip),
+          Camera(glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip)),
+          m_ViewMatrix(1.0f)
     {
         UpdateView();
     }
@@ -22,7 +27,7 @@ namespace BeeEngine
     {
         if (Input::KeyPressed(Key::LeftAlt))
         {
-            const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
+            const glm::vec2& mouse{Input::GetMouseX(), Input::GetMouseY()};
             glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
             m_InitialMousePosition = mouse;
 
@@ -37,12 +42,10 @@ namespace BeeEngine
         UpdateView();
     }
 
-    void EditorCamera::OnEvent(EventDispatcher &dispatcher)
+    void EditorCamera::OnEvent(EventDispatcher& dispatcher)
     {
         dispatcher.Dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& event) -> bool
-        {
-            return OnMouseScrolled(&event);
-        });
+                                                { return OnMouseScrolled(&event); });
     }
 
     glm::vec3 EditorCamera::GetUpDirection() const noexcept
@@ -78,7 +81,7 @@ namespace BeeEngine
 
         glm::quat orientation = GetOrientation();
         m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
-        //m_ViewMatrix = glm::inverse(m_ViewMatrix);
+        // m_ViewMatrix = glm::inverse(m_ViewMatrix);
     }
 
     bool EditorCamera::OnMouseScrolled(MouseScrolledEvent* event)
@@ -89,14 +92,14 @@ namespace BeeEngine
         return false;
     }
 
-    void EditorCamera::MousePan(const glm::vec2 &delta)
+    void EditorCamera::MousePan(const glm::vec2& delta)
     {
         auto [xSpeed, ySpeed] = PanSpeed();
         m_FocalPoint += -GetRightDirection() * delta.x * xSpeed * m_Distance;
         m_FocalPoint += GetUpDirection() * delta.y * ySpeed * m_Distance;
     }
 
-    void EditorCamera::MouseRotate(const glm::vec2 &delta)
+    void EditorCamera::MouseRotate(const glm::vec2& delta)
     {
         float yawSign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
         m_Yaw += yawSign * delta.x * RotationSpeed();
@@ -126,7 +129,7 @@ namespace BeeEngine
         float y = std::min(m_ViewportHeight / 1000.0f, 2.4f); // max = 2.4f
         float yFactor = 0.0366f * (y * y) - 0.1778f * y + 0.3021f;
 
-        return { xFactor, yFactor };
+        return {xFactor, yFactor};
     }
 
     float EditorCamera::RotationSpeed() const noexcept
@@ -142,4 +145,4 @@ namespace BeeEngine
         speed = std::min(speed, 100.0f); // max speed = 100
         return speed;
     }
-}
+} // namespace BeeEngine

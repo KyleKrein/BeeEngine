@@ -1,54 +1,86 @@
-inspector.textRenderer.foreground: Foreground
-text: Text
-inspector.circleRenderer.fade: Fade
-inspector.textRenderer: Text Renderer
+buildProject.build.tooltip: Fill all fields before building
+transform.scale: Scale
+camera.projection.orthographic: Orthographic
 inspector.circleRenderer.thickness: Thickness
+inspector.textRenderer.foreground: Foreground
+menubar.file.openScene: Open Scene
+text: Text
+sceneHierarchyPanel.createCamera: Create Camera
+camera.projection.perspective: Perspective
 primary: Primary
-texture: Texture
+inspector.circleRenderer.fade: Fade
+buildProject.defaultLocale: Default locale
+assetEditPanel.name: "Name: {name}"
+menubar.file.saveSceneAs: Save Scene As...
 sceneHierarchyPanel.toTopLevel: To Top Level
+menubar.build.reloadScripts: Reload Scripts
+inspector.textRenderer: Text Renderer
+texture: Texture
+sceneHierarchyPanel.duplicateEntity: Duplicate Entity
 sceneHierarchyPanel.createEmptyEntity: Create Empty Entity
+menubar.file.saveScene: Save Scene
+sprite: Sprite
+assetPanel.deleteAsset: Delete Asset
 size: Size
 camera.nearClip: Near Clip
 camera.farClip: Far Clip
 camera.fov: FOV
 camera.projection: Projection
-camera.projection.perspective: Perspective
+buildProject.startingScene: Starting Scene
+inspector: Inspector
 camera: Camera
 transform.rotation: Rotation
 createFolder: Create Folder
 transform: Transform
-camera.projection.orthographic: Orthographic
+camera.fixedAspectRatio: Fixed Aspect Ratio
 menubar.file: File
+newProject: Create project
 menubar.view: View
 color: Color
-menubar.file.openScene: Open Scene
-camera.fixedAspectRatio: Fixed Aspect Ratio
-inspector.circleRenderer: Circle Renderer
 assetPanel.dropAssetsButton: Drop here to load asset
+inspector.circleRenderer: Circle Renderer
 menubar.file.newScene: New Scene
 contentBrowserPanel.exportPrefab: Export Prefab
-sprite: Sprite
+buildProject.defaultLocale.invalidError: Currently chosen default locale does not exist in the current project
+menubar.view.outputConsole: Output Console
 sprite.tilingFactor: Tiling Factor
-menubar.build.reloadScripts: Reload Scripts
-transform.scale: Scale
-menubar.file.saveSceneAs: Save Scene As...
-menubar.file.saveScene: Save Scene
 createScene: Create Scene
-sceneHierarchyPanel.duplicateEntity: Duplicate Entity
 assetPanel: Assets
+buildProject.build: Build
 createScript: Create Script
 menubar.build: Build
-assetPanel.deleteAsset: Delete Asset
 create: Create
+menubar.view.localization: Localization
 menubar.file.exit: Exit
 name: Name
-menubar.build.regenerateVSSolution: Regenerate VS Solution
 transform.translation: Translation
+menubar.build.regenerateVSSolution: Regenerate VS Solution
 cancel: Cancel
-menubar.view.outputConsole: Output Console
-menubar.view.localization: Localization
-sceneHierarchyPanel.createCamera: Create Camera
+sceneHierarchyPanel: Scene Hierarchy
 contentBrowserPanel: Content Browser
 sceneHierarchyPanel.deleteEntity: Delete Entity
-sceneHierarchyPanel: Scene Hierarchy
-inspector: Inspector
+menubar.build.buildProject: Build project
+buildProject: Build project
+buildProject.buildtype: Build Type
+buildProject.outputPath: Output path
+buildProject.outputPath.invalidError: Output path should be not empty and should point to an existing directory
+buildProject.defaultLocale.tooltip: Choose a language, that will be used if user's system language is not supported
+assetEditPanel: Asset Info
+assetEditPanel.type: "Type: {type}"
+assetPanel.editAsset: Properties
+menubar.build.rebuildGameLibrary: Rebuild game library
+rename: Rename
+delete: Delete
+contentBrowserPanel.renamePopup: Choose a new name (without extension)
+contentBrowserPanel.deletePopup: Are you sure, that you want to delete {name}?
+contentBrowserPanel.thumbnailSize: Thumbnail Size
+contentBrowserPanel.padding: Padding
+contentBrowserPanel.copyFiles: Drop here to copy files
+projectSettings: Project Settings
+menubar.project: Project
+menubar.project.settings: Settings
+saveScene.invalidPathError.title: Invalid filepath
+saveScene.invalidPathError.body: File must be saved inside of the project folder
+settings: Settings
+projectSelection: Project
+loadProject: Load project

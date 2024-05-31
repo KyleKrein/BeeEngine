@@ -3,29 +3,22 @@
 //
 #if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPURendererAPI.h"
-#include "WebGPUGraphicsDevice.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RenderingQueue.h"
+#include "WebGPUGraphicsDevice.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 namespace BeeEngine::Internal
 {
-    WebGPURendererAPI::WebGPURendererAPI()
-            : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance())
-    {
+    WebGPURendererAPI::WebGPURendererAPI() : m_GraphicsDevice(WebGPUGraphicsDevice::GetInstance()) {}
 
-    }
-
-    WebGPURendererAPI::~WebGPURendererAPI()
-    {
-
-    }
+    WebGPURendererAPI::~WebGPURendererAPI() {}
 
     CommandBuffer WebGPURendererAPI::BeginFrame()
     {
         wgpuDeviceTick(m_GraphicsDevice.GetDevice());
-        Begin:
+    Begin:
         if (m_GraphicsDevice.SwapChainRequiresRebuild())
         {
             BeeCoreTrace("Rebuilding swapchain");
@@ -51,10 +44,7 @@ namespace BeeEngine::Internal
         wgpuSwapChainPresent(m_GraphicsDevice.GetSwapChain().GetHandle());
     }
 
-    void WebGPURendererAPI::Init()
-    {
-
-    }
+    void WebGPURendererAPI::Init() {}
 
     void WebGPURendererAPI::StartMainRenderPass(BeeEngine::CommandBuffer commandBuffer)
     {
@@ -101,23 +91,25 @@ namespace BeeEngine::Internal
         return {m_RenderPassEncoder};
     }
 
-    void WebGPURendererAPI::DrawInstanced(Model &model, InstancedBuffer &instancedBuffer, const std::vector<BindingSet*>& bindingSets, uint32_t instanceCount)
+    void WebGPURendererAPI::DrawInstanced(Model& model,
+                                          InstancedBuffer& instancedBuffer,
+                                          const std::vector<BindingSet*>& bindingSets,
+                                          uint32_t instanceCount)
     {
         model.Bind();
         auto cmd = Renderer::GetCurrentRenderPass();
         instancedBuffer.Bind(&cmd);
         uint32_t index = 0;
-        for(auto& bindingSet : bindingSets)
+        for (auto& bindingSet : bindingSets)
         {
             bindingSet->Bind(&cmd, index++);
         }
         auto renderPass = reinterpret_cast<WGPURenderPassEncoder>(cmd.GetHandle());
-        if(model.IsIndexed())
+        if (model.IsIndexed())
             wgpuRenderPassEncoderDrawIndexed(renderPass, model.GetIndexCount(), instanceCount, 0, 0, 0);
         else
             wgpuRenderPassEncoderDraw(renderPass, model.GetVertexCount(), instanceCount, 0, 0);
-
     }
-}
+} // namespace BeeEngine::Internal
 #pragma clang diagnostic pop
 #endif

@@ -2,51 +2,47 @@
 // Created by alexl on 06.06.2023.
 //
 
-
 #include "Math.h"
+#include "Scene/Components.h"
 #include "ext/scalar_constants.hpp"
 #include "gtc/epsilon.hpp"
 #include "gtx/matrix_decompose.inl"
-#include "Scene/Components.h"
 
 namespace BeeEngine::Math
 {
 
-    DecomposedTransform DecomposeTransform(const glm::mat4 &transform)
+    DecomposedTransform DecomposeTransform(const glm::mat4& transform)
     {
-
         using namespace glm;
         using T = float;
 
         mat4 localTransform = transform;
 
-        //Normalize the matrix
+        // Normalize the matrix
         if (epsilonEqual(localTransform[3][3], static_cast<T>(0), epsilon<T>()))
         {
             return {};
         }
 
-        //First, isolate perspective.  This is the messiest.
-        if(
-            epsilonNotEqual(localTransform[0][3], static_cast<T>(0), epsilon<T>()) ||
+        // First, isolate perspective.  This is the messiest.
+        if (epsilonNotEqual(localTransform[0][3], static_cast<T>(0), epsilon<T>()) ||
             epsilonNotEqual(localTransform[1][3], static_cast<T>(0), epsilon<T>()) ||
-            epsilonNotEqual(localTransform[2][3], static_cast<T>(0), epsilon<T>())
-                )
+            epsilonNotEqual(localTransform[2][3], static_cast<T>(0), epsilon<T>()))
         {
-            //Clear the perspective partition
+            // Clear the perspective partition
             localTransform[0][3] = static_cast<T>(0);
             localTransform[1][3] = static_cast<T>(0);
             localTransform[2][3] = static_cast<T>(0);
             localTransform[3][3] = static_cast<T>(1);
         }
 
-        //Next take care of translation (easy).
+        // Next take care of translation (easy).
         vec3 translation(localTransform[3]);
         localTransform[3] = vec4(0, 0, 0, localTransform[3].w);
 
         vec3 row[3];
 
-        //Now get scale and shear.
+        // Now get scale and shear.
         for (length_t i = 0; i < 3; ++i)
         {
             for (length_t j = 0; j < 3; ++j)
@@ -83,11 +79,13 @@ namespace BeeEngine::Math
         // Now, get the rotations out, as described in the gem.
         glm::vec3 rotation;
         rotation.y = asin(-row[0][2]);
-        if (cos(rotation.y) != 0) {
+        if (cos(rotation.y) != 0)
+        {
             rotation.x = atan2(row[1][2], row[2][2]);
             rotation.z = atan2(row[0][1], row[0][0]);
         }
-        else {
+        else
+        {
             rotation.x = atan2(-row[2][0], row[1][1]);
             rotation.z = 0;
         }
@@ -103,7 +101,7 @@ namespace BeeEngine::Math
     glm::mat4 ToLocalTransform(Entity child, glm::mat4 localMatrix)
     {
         auto currentEntity = child;
-        while(currentEntity.HasParent())
+        while (currentEntity.HasParent())
         {
             currentEntity = currentEntity.GetParent();
             auto inverseMatrix = glm::inverse(currentEntity.GetComponent<TransformComponent>().GetTransform());
@@ -117,7 +115,7 @@ namespace BeeEngine::Math
         glm::mat4 globalMatrix(1.0f);
         auto currentEntity = child;
         globalMatrix = globalMatrix * child.GetComponent<TransformComponent>().GetTransform();
-        while(currentEntity.HasParent())
+        while (currentEntity.HasParent())
         {
             currentEntity = currentEntity.GetParent();
             auto matrix = currentEntity.GetComponent<TransformComponent>().GetTransform();
@@ -126,8 +124,11 @@ namespace BeeEngine::Math
         return globalMatrix;
     }
 
-    bool RayIntersectsTriangle(const glm::vec3 &rayOrigin, const glm::vec3 &rayVector, const glm::vec3 &vertex0,
-                               const glm::vec3 &vertex1, const glm::vec3 &vertex2)
+    bool RayIntersectsTriangle(const glm::vec3& rayOrigin,
+                               const glm::vec3& rayVector,
+                               const glm::vec3& vertex0,
+                               const glm::vec3& vertex1,
+                               const glm::vec3& vertex2)
     {
         // Compute vectors
         glm::vec3 edge1 = vertex1 - vertex0;
@@ -164,7 +165,7 @@ namespace BeeEngine::Math
             return false;
     }
 
-    glm::vec3 GetScaleFromMatrix(const glm::mat4 &mat)
+    glm::vec3 GetScaleFromMatrix(const glm::mat4& mat)
     {
         glm::vec3 globalScale;
         globalScale.x = glm::length(mat[0]); // Длина первой колонны
@@ -173,7 +174,7 @@ namespace BeeEngine::Math
         return globalScale;
     }
 
-    glm::mat4 GetTransformFromTo(const glm::vec3 &start, const glm::vec3 &end, float lineWidth)
+    glm::mat4 GetTransformFromTo(const glm::vec3& start, const glm::vec3& end, float lineWidth)
     {
         // Вычислить вектор направления и его длину
         glm::vec3 direction = glm::normalize(end - start);
@@ -190,15 +191,20 @@ namespace BeeEngine::Math
         glm::vec3 midpoint = (start + end) / 2.0f;
 
         // Создать матрицу трансформации
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), midpoint);  // Переместить к середине линии
-        transform *= rotationMatrix;  // Применить вращение
-        transform = glm::scale(transform, glm::vec3(lineWidth, length, lineWidth));  // Применить масштабирование
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), midpoint); // Переместить к середине линии
+        transform *= rotationMatrix;                                     // Применить вращение
+        transform = glm::scale(transform, glm::vec3(lineWidth, length, lineWidth)); // Применить масштабирование
 
         return transform;
     }
-    Cameras::Frustum
-    Cameras::CreateFrustumFromCamera(const glm::vec3 &position, const glm::vec3 &front, const glm::vec3 &right,
-                                           const glm::vec3 &up, float aspect, float fovY, float zNear, float zFar)
+    Cameras::Frustum Cameras::CreateFrustumFromCamera(const glm::vec3& position,
+                                                      const glm::vec3& front,
+                                                      const glm::vec3& right,
+                                                      const glm::vec3& up,
+                                                      float aspect,
+                                                      float fovY,
+                                                      float zNear,
+                                                      float zFar)
     {
         Cameras::Frustum frustum;
         float tangent = tan(glm::radians(fovY) / 2.0f);
@@ -208,7 +214,7 @@ namespace BeeEngine::Math
         float farWidth = farHeight * aspect;
 
         // Вычисление вершин фрустума в локальных координатах камеры
-        glm::vec3 ntl = glm::vec3(-nearWidth, nearHeight, -zNear); //TODO: must be -zNear and -zFar everywhere
+        glm::vec3 ntl = glm::vec3(-nearWidth, nearHeight, -zNear); // TODO: must be -zNear and -zFar everywhere
         glm::vec3 ntr = glm::vec3(nearWidth, nearHeight, -zNear);
         glm::vec3 nbl = glm::vec3(-nearWidth, -nearHeight, -zNear);
         glm::vec3 nbr = glm::vec3(nearWidth, -nearHeight, -zNear);
@@ -235,23 +241,23 @@ namespace BeeEngine::Math
         return frustum;
     }
 
-    bool Cameras::Sphere::IsOnFrustum(const Cameras::Frustum &camFrustum, const glm::mat4 &transform) const
+    bool Cameras::Sphere::IsOnFrustum(const Cameras::Frustum& camFrustum, const glm::mat4& transform) const
     {
-        //Get global scale is computed by doing the magnitude of
-        //X, Y and Z model matrix's column.
+        // Get global scale is computed by doing the magnitude of
+        // X, Y and Z model matrix's column.
         const glm::vec3 globalScale = Math::GetScaleFromMatrix(transform);
 
-        //Get our global center with process it with the global model matrix of our transform
-        const glm::vec3 globalCenter{ transform * glm::vec4(center, 1.f) };
+        // Get our global center with process it with the global model matrix of our transform
+        const glm::vec3 globalCenter{transform * glm::vec4(center, 1.f)};
 
-        //To wrap correctly our shape, we need the maximum scale scalar.
+        // To wrap correctly our shape, we need the maximum scale scalar.
         const float maxScale = std::max(std::max(globalScale.x, globalScale.y), globalScale.z);
 
-        //Max scale is assuming for the diameter. So, we need the half to apply it to our radius
+        // Max scale is assuming for the diameter. So, we need the half to apply it to our radius
         Cameras::Sphere globalSphere{globalCenter, radius * (maxScale * 0.5f)};
 
-        //Check Firstly the result that have the most chance
-        //to faillure to avoid to call all functions.
+        // Check Firstly the result that have the most chance
+        // to faillure to avoid to call all functions.
         return (globalSphere.IsOnOrForwardPlane(camFrustum.LeftFace) &&
                 globalSphere.IsOnOrForwardPlane(camFrustum.RightFace) &&
                 globalSphere.IsOnOrForwardPlane(camFrustum.FarFace) &&
@@ -260,38 +266,34 @@ namespace BeeEngine::Math
                 globalSphere.IsOnOrForwardPlane(camFrustum.BottomFace));
     }
 
-    Degrees::Degrees(const Radians &rad)
-    : degrees(rad.ToDegrees())
-    {
+    Degrees::Degrees(const Radians& rad) : degrees(rad.ToDegrees()) {}
 
-    }
-
-    Degrees &Degrees::operator=(const Radians &rad)
+    Degrees& Degrees::operator=(const Radians& rad)
     {
         degrees = rad.ToDegrees();
         return *this;
     }
 
-    Degrees &Degrees::operator=(float32_t deg)
+    Degrees& Degrees::operator=(float32_t deg)
     {
         degrees = deg;
         return *this;
     }
 
-    Radians::Radians(const Degrees &deg)
+    Radians::Radians(const Degrees& deg)
     {
         radians = deg.ToRadians();
     }
 
-    Radians &Radians::operator=(const Degrees &deg)
+    Radians& Radians::operator=(const Degrees& deg)
     {
         radians = deg.ToRadians();
         return *this;
     }
 
-    Radians &Radians::operator=(float32_t rad)
+    Radians& Radians::operator=(float32_t rad)
     {
         radians = rad;
         return *this;
     }
-}
+} // namespace BeeEngine::Math

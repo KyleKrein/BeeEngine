@@ -24,4 +24,4 @@ namespace BeeEngine
         static bool ShouldFreeGCHandle(const MField& field);
         static bool IsValueType(MType type);
     };
-}
+} // namespace BeeEngine

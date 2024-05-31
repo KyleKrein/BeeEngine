@@ -4,7 +4,7 @@ project(ImGuizmo)
 CPMAddPackage(
         NAME ImGuizmo
         GITHUB_REPOSITORY CedricGuillemet/ImGuizmo
-        GIT_TAG 822be7b44c37dbe98d328739ebe0d5a1ea87ecfc
+        GIT_TAG ba662b119d64f9ab700bb2cd7b2781f9044f5565
         DOWNLOAD_ONLY YES
 )
 

@@ -28,4 +28,4 @@ namespace BeeEngine
         static SystemTheme GetSystemTheme();
         static bool HasRayTracingSupport();
     };
-}
+} // namespace BeeEngine

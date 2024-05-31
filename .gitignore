@@ -58,6 +58,8 @@ obj
 docs/cs
 docs/cpp
 
+.cache
+
 BeeEngineScripting.sln.DotSettings.user
 
 [Bb][Uu][Ii][Ll][Dd]/

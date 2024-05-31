@@ -3,11 +3,11 @@
 //
 
 #pragma once
-#include "vec3.hpp"
+#include "Core/AssetManagement/AssetManager.h"
 #include "Core/UUID.h"
 #include "KeyCodes.h"
 #include "Scene/Components.h"
-#include "Core/AssetManagement/AssetManager.h"
+#include "vec3.hpp"
 
 namespace BeeEngine
 {
@@ -17,13 +17,13 @@ namespace BeeEngine
         static void Register();
         /**
          * @brief Component type enum to be sent to and from C# side
-         * 
-         * IMPORTANT: If you change this enum, you must also change 
+         *
+         * IMPORTANT: If you change this enum, you must also change
          * the corresponding enum in InternalCalls.cs and
          * add the corresponding case in the switch statement in
          * ScriptGlue.cpp
          */
-        enum class ComponentType: uint32_t
+        enum class ComponentType : uint32_t
         {
             Transform = 0x00,
             SpriteRenderer = 0x01,
@@ -32,6 +32,7 @@ namespace BeeEngine
             Rigidbody2D = 0x04,
             CircleRenderer = 0x05,
         };
+
     private:
         struct ArrayInfo
         {
@@ -39,9 +40,9 @@ namespace BeeEngine
             uint64_t size;
         };
         static inline class Entity GetEntity(UUID id);
-        template<typename ...Component>
+        template <typename... Component>
         static void RegisterComponent();
-        template<typename ...Component>
+        template <typename... Component>
         static void RegisterComponent(TypeSequence<Component...>);
 
         static void Log_Warn(void* message);
@@ -66,7 +67,7 @@ namespace BeeEngine
         static void Entity_Destroy(uint64_t id);
         static uint64_t Entity_Duplicate(uint64_t id);
         static uint64_t Entity_InstantiatePrefab(AssetHandle* handle, uint64_t parentId);
-        static void * TextRendererComponent_GetText(uint64_t id);
+        static void* TextRendererComponent_GetText(uint64_t id);
         static void TextRendererComponent_SetText(uint64_t id, void* text);
         static uint64_t Entity_FindEntityByName(void* name);
         static int32_t Input_IsKeyDown(Key key);
@@ -78,9 +79,11 @@ namespace BeeEngine
         static int32_t Asset_IsLoaded(AssetHandle* handle);
         static int32_t Asset_IsValid(AssetHandle* handle);
         static uint64_t Physics2D_CastRay(glm::vec2* start, glm::vec2* end);
-        static void * Locale_GetLocale();
+        static void* Locale_GetLocale();
         static void Locale_SetLocale(void* locale);
-        static void * Locale_TranslateStatic(void* key);
-        static void * Locale_TranslateDynamic(void* key, ArrayInfo args);
+        static void* Locale_TranslateStatic(void* key);
+        static void* Locale_TranslateDynamic(void* key, ArrayInfo args);
+        static void* Scene_GetActive();
+        static void Scene_SetActive(void* scene);
     };
-}
+} // namespace BeeEngine

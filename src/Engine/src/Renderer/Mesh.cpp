@@ -3,9 +3,9 @@
 //
 #include "Mesh.h"
 
-#include "Renderer.h"
 #include "Platform/Vulkan/VulkanMesh.h"
 #include "Platform/WebGPU/WebGPUMesh.h"
+#include "Renderer.h"
 
 namespace BeeEngine
 {
@@ -23,7 +23,7 @@ namespace BeeEngine
 #endif
             default:
                 BeeCoreError("Unknown API!");
-            return nullptr;
+                return nullptr;
         }
     }
     Ref<Mesh> Mesh::Create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
@@ -44,7 +44,7 @@ namespace BeeEngine
         }
     }
 
-    Ref<Mesh> Mesh::Create(void *verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t> &indices)
+    Ref<Mesh> Mesh::Create(void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices)
     {
         switch (Renderer::GetAPI())
         {
@@ -58,7 +58,7 @@ namespace BeeEngine
 #endif
             default:
                 BeeCoreError("Unknown API!");
-            return nullptr;
+                return nullptr;
         }
     }
-}
+} // namespace BeeEngine

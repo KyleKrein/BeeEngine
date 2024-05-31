@@ -19,4 +19,4 @@ namespace BeeEngine
     private:
         void* m_Handle = nullptr;
     };*/
-}
+} // namespace BeeEngine

@@ -5,70 +5,69 @@
 #include "Application.h"
 #include "Core/Logging/Log.h"
 #include "Debug/DebugLayer.h"
-//#include "Platform/Vulkan/VulkanRendererAPI.h"
-#include "Renderer/Renderer.h"
+// #include "Platform/Vulkan/VulkanRendererAPI.h"
 #include "DeletionQueue.h"
-#include "Scripting/ScriptingEngine.h"
-#include "Renderer/SceneRenderer.h"
 #include "JobSystem/JobScheduler.h"
+#include "Renderer/Renderer.h"
+#include "Renderer/SceneRenderer.h"
 #include "Scene/Prefab.h"
+#include "Scripting/ScriptingEngine.h"
+#include <mutex>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
-namespace BeeEngine{
+namespace BeeEngine
+{
     Application* Application::s_Instance = nullptr;
     std::thread::id Application::s_MainThreadID = {};
     void Application::Run()
     {
-        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(m_Window->GetWidth(), m_Window->GetHeight(), m_Window->GetWidthInPixels(), m_Window->GetHeightInPixels()));
+        m_EventQueue.AddEvent(CreateScope<WindowResizeEvent>(
+            m_Window->GetWidth(), m_Window->GetHeight(), m_Window->GetWidthInPixels(), m_Window->GetHeightInPixels()));
         std::condition_variable cv;
         std::mutex mutex;
-        struct FrameJobInfo
-        {
-            std::condition_variable* cv;
-            Application* self;
-        } frameJobInfo = {&cv, this};
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
             ExecuteMainThreadQueue();
             m_Window->ProcessEvents();
             std::unique_lock lock(mutex);
-            Job frameJob{[](void* data){
-                auto& frameJobInfo = *reinterpret_cast<FrameJobInfo*>(data);
-                auto& self = *frameJobInfo.self;
-
-                self.m_EventQueue.Dispatch();
-                auto deltaTime = self.m_Window->UpdateTime();
-                //if(!self.IsMinimized())
-                //{
+            auto frameJob = Jobs::CreateJob<Jobs::Priority::Normal, 1024 * 1024>(
+                [this](std::condition_variable& cv)
+                {
+                    m_EventQueue.Dispatch();
+                    auto deltaTime = m_Window->UpdateTime();
+                    // if(!self.IsMinimized())
+                    //{
                     auto frameData = Renderer::BeginFrame();
                     frameData.SetDeltaTime(deltaTime);
                     Renderer::StartMainCommandBuffer(frameData);
-                    self.m_Layers.Update(frameData);
-                    self.Update();
+                    m_Layers.Update(frameData);
+                    Update(frameData);
                     Renderer::EndMainCommandBuffer(frameData);
                     Renderer::EndFrame(frameData);
-                //}
-                //else
-                //{
-                //    self.m_Layers.Update();
-                //    self.Update();
-                //}
+                    //}
+                    // else
+                    //{
+                    //    self.m_Layers.Update();
+                    //    self.Update();
+                    //}
 
-                DeletionQueue::Frame().Flush();
+                    DeletionQueue::Frame().Flush();
 
-                frameJobInfo.cv->notify_one();
-            }, &frameJobInfo, nullptr,Jobs::Priority::High, 1024*1024};
-            Job::Schedule(frameJob);
+                    cv.notify_one();
+                },
+                cv);
+            Jobs::Schedule(frameJob);
             cv.wait(lock);
         }
         DeletionQueue::Main().Flush();
-        BeeEnsures(DeletionQueue::Main().IsEmpty() && DeletionQueue::Frame().IsEmpty() && DeletionQueue::RendererFlush().IsEmpty());
+        BeeEnsures(DeletionQueue::Main().IsEmpty() && DeletionQueue::Frame().IsEmpty() &&
+                   DeletionQueue::RendererFlush().IsEmpty());
     }
 
     Application::Application(const ApplicationProperties& properties)
-    : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers)
+        : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers)
     {
         BEE_PROFILE_FUNCTION();
         BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");
@@ -103,7 +102,7 @@ namespace BeeEngine{
 #endif
     }
 
-    void Application::Dispatch(EventDispatcher &dispatcher)
+    void Application::Dispatch(EventDispatcher& dispatcher)
     {
         OnEvent(dispatcher);
     }
@@ -118,7 +117,7 @@ namespace BeeEngine{
         m_Window->Close();
     }
 
-    void Application::CheckRendererAPIForCompatibility(ApplicationProperties &properties) noexcept
+    void Application::CheckRendererAPIForCompatibility(ApplicationProperties& properties) noexcept
     {
         switch (properties.PreferredRenderAPI)
         {
@@ -131,17 +130,16 @@ namespace BeeEngine{
 #endif
             default:
                 BeeCoreWarn("Unable to use {} as render API", ToString(properties.PreferredRenderAPI));
-                //properties.PreferredRenderAPI = RenderAPI::WebGPU;
+                // properties.PreferredRenderAPI = RenderAPI::WebGPU;
                 debug_break();
                 return;
         }
-
     }
 
-    bool Application::OnWindowResize(WindowResizeEvent *event)
+    bool Application::OnWindowResize(WindowResizeEvent* event)
     {
-        //m_Window->GetGraphicsDevice().WindowResized(event->GetWidth(), event->GetHeight());
-        if(event->GetWidthInPoints() == 0 || event->GetWidthInPoints() == 0)
+        // m_Window->GetGraphicsDevice().WindowResized(event->GetWidth(), event->GetHeight());
+        if (event->GetWidthInPoints() == 0 || event->GetWidthInPoints() == 0)
         {
             m_IsMinimized = true;
             return false;
@@ -150,16 +148,16 @@ namespace BeeEngine{
         return false;
     }
 
-    void Application::SubmitToMainThread_Impl(const std::function<void()> &function)
+    void Application::SubmitToMainThread_Impl(const std::function<void()>& function)
     {
-        std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+        std::unique_lock lock(m_MainThreadQueueMutex);
         m_MainThreadQueue.push_back(function);
     }
 
     void Application::ExecuteMainThreadQueue() noexcept
     {
         std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
-        for(auto& function : m_MainThreadQueue)
+        for (auto& function : m_MainThreadQueue)
         {
             function();
         }
@@ -168,7 +166,8 @@ namespace BeeEngine{
 
     RenderAPI GetPrefferedRenderAPI()
     {
-        switch (Application::GetOsPlatform()) {
+        switch (Application::GetOsPlatform())
+        {
             case OSPlatform::Windows:
                 return RenderAPI::Vulkan;
             case OSPlatform::Linux:
@@ -182,7 +181,6 @@ namespace BeeEngine{
         }
         return RenderAPI::NotAvailable;
     }
-}
-
+} // namespace BeeEngine
 
 #pragma clang diagnostic pop

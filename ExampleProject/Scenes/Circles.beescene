@@ -1,13 +1,42 @@
 Scene: Untitled
 Entities:
+  - Entity: 5294681584292577995
+    TagComponent:
+      Tag: Scene Changer
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.SceneChanger
+      Fields:
+        - Name: FourthScene
+          Type: Scene
+          Data: [3753192931707503016, 7586138150448856676]
+        - Name: ThirdScene
+          Type: Scene
+          Data: [3753192931707503016, 4396845291111867722]
+        - Name: SecondScene
+          Type: Scene
+          Data: [3753192931707503016, 13448237300006342104]
+        - Name: FifthScene
+          Type: Scene
+          Data: [3753192931707503016, 13295074674533560124]
+        - Name: FirstScene
+          Type: Scene
+          Data: [3753192931707503016, 14163096334939169538]
+    HierarchyComponent:
+      []
   - Entity: 3451285928844202304
     TagComponent:
       Tag: Circle
     TransformComponent:
       Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
+      Rotation: [0, -0, 0]
       Scale: [1, 1, 1]
     CircleRendererComponent:
       Color: [1, 1, 1, 1]
       Thickness: 0.425000012
       Fade: 0.577000022
+    HierarchyComponent:
+      []

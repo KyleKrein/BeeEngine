@@ -4,9 +4,9 @@
 
 #include "VulkanBindingSet.h"
 
-#include "VulkanPipeline.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/IBindable.h"
+#include "VulkanPipeline.h"
 
 namespace BeeEngine::Internal
 {
@@ -18,8 +18,8 @@ namespace BeeEngine::Internal
                 return vk::PipelineBindPoint::eGraphics;
             case PipelineType::Compute:
                 return vk::PipelineBindPoint::eCompute;
-            //case PipelineType::RayTracing:
-            //return vk::PipelineBindPoint::eRayTracingKHR;
+            // case PipelineType::RayTracing:
+            // return vk::PipelineBindPoint::eRayTracingKHR;
             default:
                 return vk::PipelineBindPoint::eGraphics;
         }
@@ -42,11 +42,11 @@ namespace BeeEngine::Internal
         }
         vk::DescriptorSetLayoutCreateInfo layoutInfo({}, (uint32_t)bindings.size(), bindings.data());
         m_DescriptorSetLayout = m_GraphicsDevice.GetDevice().createDescriptorSetLayout(layoutInfo);
-        vk::DescriptorSetAllocateInfo allocInfo {};
+        vk::DescriptorSetAllocateInfo allocInfo{};
         allocInfo.descriptorSetCount = 1;
         allocInfo.pSetLayouts = &m_DescriptorSetLayout;
         m_GraphicsDevice.CreateDescriptorSet(allocInfo, &m_DescriptorSet);
-        //update
+        // update
 
         std::vector<vk::WriteDescriptorSet> descriptorWrites;
         for (const auto& element : m_Elements)
@@ -59,11 +59,11 @@ namespace BeeEngine::Internal
                 writeDescriptorSet.dstSet = m_DescriptorSet;
                 writeDescriptorSet.dstBinding = bindingIndex++;
                 writeDescriptorSet.dstArrayElement = 0;
-                //writeDescriptorSet.descriptorType = vkEntry.descriptorType;
-                //writeDescriptorSet.descriptorCount = vkEntry.descriptorCount;
-                //writeDescriptorSet.pBufferInfo = vkEntry.pBufferInfo;
-                //writeDescriptorSet.pImageInfo = vkEntry.pImageInfo;
-                //writeDescriptorSet.pTexelBufferView = vkEntry.pTexelBufferView;
+                // writeDescriptorSet.descriptorType = vkEntry.descriptorType;
+                // writeDescriptorSet.descriptorCount = vkEntry.descriptorCount;
+                // writeDescriptorSet.pBufferInfo = vkEntry.pBufferInfo;
+                // writeDescriptorSet.pImageInfo = vkEntry.pImageInfo;
+                // writeDescriptorSet.pTexelBufferView = vkEntry.pTexelBufferView;
                 descriptorWrites.push_back(writeDescriptorSet);
             }
         }
@@ -73,16 +73,23 @@ namespace BeeEngine::Internal
     void VulkanBindingSet::Bind(CommandBuffer& cmd, uint32_t index, Pipeline& pipeline) const
     {
         auto commandBuffer = cmd.GetBufferHandleAs<vk::CommandBuffer>();
-        commandBuffer.bindDescriptorSets(GetPipelineBindPoint(pipeline.GetType()), ((VulkanPipeline&)pipeline).GetPipelineLayout(), index, 1, &m_DescriptorSet, 0, nullptr);
+        commandBuffer.bindDescriptorSets(GetPipelineBindPoint(pipeline.GetType()),
+                                         ((VulkanPipeline&)pipeline).GetPipelineLayout(),
+                                         index,
+                                         1,
+                                         &m_DescriptorSet,
+                                         0,
+                                         nullptr);
     }
 
     VulkanBindingSet::~VulkanBindingSet()
     {
-        DeletionQueue::Frame().PushFunction([descriptorSet = m_DescriptorSet, descriptorLayout = m_DescriptorSetLayout]()
-        {
-            auto& device = VulkanGraphicsDevice::GetInstance();
-            device.DestroyDescriptorSet(descriptorSet);
-            device.GetDevice().destroyDescriptorSetLayout(descriptorLayout);
-        });
+        DeletionQueue::Frame().PushFunction(
+            [descriptorSet = m_DescriptorSet, descriptorLayout = m_DescriptorSetLayout]()
+            {
+                auto& device = VulkanGraphicsDevice::GetInstance();
+                device.DestroyDescriptorSet(descriptorSet);
+                device.GetDevice().destroyDescriptorSetLayout(descriptorLayout);
+            });
     }
-}
+} // namespace BeeEngine::Internal

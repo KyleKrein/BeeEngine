@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "VulkanBuffer.h"
 #include "Renderer/Mesh.h"
+#include "VulkanBuffer.h"
 #include "VulkanGraphicsDevice.h"
 
 namespace BeeEngine::Internal
@@ -14,7 +14,7 @@ namespace BeeEngine::Internal
         vk::AccelerationStructureKHR AccelerationStructure;
         VulkanBuffer Buffer;
     };
-    class VulkanMesh: public Mesh
+    class VulkanMesh : public Mesh
     {
     public:
         ~VulkanMesh() override;
@@ -29,12 +29,14 @@ namespace BeeEngine::Internal
 
         VulkanMesh(const std::vector<Vertex>& vertices);
         VulkanMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
-        VulkanMesh(void *verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t> &indices);
+        VulkanMesh(void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices);
+
     private:
         void CreateVertexBuffer(const std::vector<Vertex>& vertices);
         void CreateVertexBuffer(void* verticesData, size_t size, size_t vertexCount);
         void CreateIndexBuffer(const std::vector<uint32_t>& indices);
         void CreateAccelerationStructure(size_t vertexStride);
+
     private:
         VulkanGraphicsDevice& m_Device;
         VulkanBuffer m_VertexBuffer;
@@ -43,4 +45,4 @@ namespace BeeEngine::Internal
         size_t m_IndexCount;
         VulkanAccelerationStructure m_AccelerationStructure;
     };
-}
+} // namespace BeeEngine::Internal

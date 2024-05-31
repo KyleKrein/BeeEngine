@@ -17,8 +17,9 @@ namespace BeeEngine
         static void Free(size_t size);
         static void Free(void* size);
         static size_t GetAllocatedSize();
+
     private:
         static std::unordered_map<void*, size_t> m_AllocatedMemory;
     };
 
-}
+} // namespace BeeEngine

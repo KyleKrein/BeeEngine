@@ -12,8 +12,9 @@ namespace BeeEngine::Internal
 {
     VulkanPipeline* VulkanPipeline::s_CurrentPipeline = nullptr;
     VulkanPipeline::VulkanPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader)
-        : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexShader(std::move(std::static_pointer_cast<VulkanShaderModule>(vertexShader))),
-        m_FragmentShader(std::move(std::static_pointer_cast<VulkanShaderModule>(fragmentShader)))
+        : m_Device(VulkanGraphicsDevice::GetInstance()),
+          m_VertexShader(std::move(std::static_pointer_cast<VulkanShaderModule>(vertexShader))),
+          m_FragmentShader(std::move(std::static_pointer_cast<VulkanShaderModule>(fragmentShader)))
     {
         vk::PipelineShaderStageCreateInfo shaderStages[2];
 
@@ -31,10 +32,7 @@ namespace BeeEngine::Internal
         inputAssembly.topology = vk::PrimitiveTopology::eTriangleList;
         inputAssembly.primitiveRestartEnable = vk::False;
 
-        std::array dynamicStates = {
-            vk::DynamicState::eViewport,
-            vk::DynamicState::eScissor
-        };
+        std::array dynamicStates = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
 
         vk::PipelineDynamicStateCreateInfo dynamicState{};
         dynamicState.dynamicStateCount = dynamicStates.size();
@@ -55,8 +53,8 @@ namespace BeeEngine::Internal
 
         auto descriptorSetLayouts = m_VertexShader->GetDescriptorSetLayouts();
         auto fragmentDescriptorSetLayouts = m_FragmentShader->GetDescriptorSetLayouts();
-        descriptorSetLayouts.insert(descriptorSetLayouts.end(), fragmentDescriptorSetLayouts.begin(),
-            fragmentDescriptorSetLayouts.end());
+        descriptorSetLayouts.insert(
+            descriptorSetLayouts.end(), fragmentDescriptorSetLayouts.begin(), fragmentDescriptorSetLayouts.end());
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.setLayoutCount = descriptorSetLayouts.size();
         pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
@@ -131,10 +129,11 @@ namespace BeeEngine::Internal
 
     VulkanPipeline::~VulkanPipeline()
     {
-        DeletionQueue::Frame().PushFunction([device = m_Device.GetDevice(), pipeline = m_Pipeline, layout = m_PipelineLayout]()
-        {
-            device.destroyPipeline(pipeline);
-            device.destroyPipelineLayout(layout);
-        });
+        DeletionQueue::Frame().PushFunction(
+            [device = m_Device.GetDevice(), pipeline = m_Pipeline, layout = m_PipelineLayout]()
+            {
+                device.destroyPipeline(pipeline);
+                device.destroyPipelineLayout(layout);
+            });
     }
-}
+} // namespace BeeEngine::Internal

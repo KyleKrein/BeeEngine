@@ -3,17 +3,16 @@
 //
 
 #include "FileWatcher.h"
-#include "Platform/Windows/WindowsFileWatcher.h"
-#include "Platform/MacOS/MacOSFileWatcher.h"
 #include "Core/Application.h"
-#include "Platform/STDFileWatcher.h"
 #include "File.h"
-
+#include "Platform/MacOS/MacOSFileWatcher.h"
+#include "Platform/STDFileWatcher.h"
+#include "Platform/Windows/WindowsFileWatcher.h"
 
 namespace BeeEngine
 {
 
-    Scope<FileWatcher> FileWatcher::Create(const Path &path, const std::function<void(Path, Event)> &callback)
+    Scope<FileWatcher> FileWatcher::Create(const Path& path, const std::function<void(Path, Event)>& callback)
     {
         BeeExpects(!path.IsEmpty());
         BeeExpects(path.IsAbsolute());
@@ -41,4 +40,4 @@ namespace BeeEngine
 
         return result;
     }
-}
+} // namespace BeeEngine

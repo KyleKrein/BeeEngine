@@ -4,16 +4,16 @@
 
 #pragma once
 #if defined(BEE_COMPILE_WEBGPU)
-#include "Renderer/FrameBuffer.h"
 #include "Renderer/CommandBuffer.h"
+#include "Renderer/FrameBuffer.h"
 #include "Renderer/RenderPass.h"
 
 namespace BeeEngine::Internal
 {
-    class WebGPUFrameBuffer: public FrameBuffer
+    class WebGPUFrameBuffer : public FrameBuffer
     {
     public:
-        WebGPUFrameBuffer(const FrameBufferPreferences &preferences);
+        WebGPUFrameBuffer(const FrameBufferPreferences& preferences);
         ~WebGPUFrameBuffer() override;
         void Bind() override;
         void Unbind() override;
@@ -24,12 +24,12 @@ namespace BeeEngine::Internal
         {
             BeeExpects(index < m_ColorAttachmentsTextureViews.size());
             auto textureView = m_ColorAttachmentsTextureViews[index];
-            //wgpuTextureViewReference(textureView);
+            // wgpuTextureViewReference(textureView);
             return (uintptr_t)textureView;
         }
         [[nodiscard]] uintptr_t GetDepthAttachmentRendererID() const override
         {
-            //wgpuTextureViewReference(m_DepthAttachmentTextureView);
+            // wgpuTextureViewReference(m_DepthAttachmentTextureView);
             return (uintptr_t)m_DepthAttachmentTextureView;
         }
         int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
@@ -38,14 +38,14 @@ namespace BeeEngine::Internal
         std::vector<FrameBufferTextureSpecification> m_ColorAttachmentSpecification;
         FrameBufferTextureSpecification m_DepthAttachmentSpecification;
         FrameBufferPreferences m_Preferences;
-        bool m_Initiated {false};
+        bool m_Initiated{false};
 
         std::vector<WGPUTexture> m_ColorAttachmentsTextures;
         std::vector<WGPUTextureView> m_ColorAttachmentsTextureViews;
-        WGPUTexture m_DepthAttachmentTexture {nullptr};
-        WGPUTextureView m_DepthAttachmentTextureView {nullptr};
+        WGPUTexture m_DepthAttachmentTexture{nullptr};
+        WGPUTextureView m_DepthAttachmentTextureView{nullptr};
 
-        bool m_Invalid {true};
+        bool m_Invalid{true};
 
         mutable CommandBuffer m_CurrentCommandBuffer;
         mutable RenderPass m_CurrentRenderPass;
@@ -57,8 +57,8 @@ namespace BeeEngine::Internal
         static WGPUTextureFormat ConvertToWebGPUTextureFormat(FrameBufferTextureFormat format);
         static bool IsDepthFormat(FrameBufferTextureFormat format);
 
-        mutable float m_ReadPixelValue {-1.0f};
-        mutable WGPUBuffer m_EntityIDBuffer {nullptr};
+        mutable float m_ReadPixelValue{-1.0f};
+        mutable WGPUBuffer m_EntityIDBuffer{nullptr};
 
         struct BufferContext
         {
@@ -66,19 +66,19 @@ namespace BeeEngine::Internal
             WGPUBuffer* Buffer;
             bool* Waiting;
         };
-        mutable CommandBuffer m_BufferCopyEncoder {nullptr};
+        mutable CommandBuffer m_BufferCopyEncoder{nullptr};
 
-        mutable bool m_WaitingForReadPixel {false};
-        mutable BufferContext m_EntityIDBufferContext {&m_ReadPixelValue, &m_EntityIDBuffer, &m_WaitingForReadPixel};
+        mutable bool m_WaitingForReadPixel{false};
+        mutable BufferContext m_EntityIDBufferContext{&m_ReadPixelValue, &m_EntityIDBuffer, &m_WaitingForReadPixel};
 
         std::function<void()> m_FlushCallback;
-        bool m_Flushed {true};
+        bool m_Flushed{true};
         struct FlushCallbackData
         {
             std::function<void()>* Callback;
             bool* Flushed;
         };
-        FlushCallbackData m_FlushCallbackData {&m_FlushCallback, &m_Flushed};
+        FlushCallbackData m_FlushCallbackData{&m_FlushCallback, &m_Flushed};
     };
-}
+} // namespace BeeEngine::Internal
 #endif

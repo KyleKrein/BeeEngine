@@ -3,9 +3,9 @@
 //
 #include "TopLevelAccelerationStructure.h"
 
-#include "Renderer.h"
 #include "Core/Application.h"
 #include "Platform/Vulkan/VulkanTLAS.h"
+#include "Renderer.h"
 
 namespace BeeEngine
 {
@@ -15,15 +15,15 @@ namespace BeeEngine
         {
             case WebGPU:
                 BeeCoreError("WebGPU does not support TopLevelAccelerationStructure");
-            return nullptr;
+                return nullptr;
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
                 return CreateRef<Internal::VulkanTLAS>();
 #endif
             case NotAvailable:
                 BeeCoreError("Renderer API is not available");
-            break;
+                break;
         }
         return nullptr;
     }
-}
+} // namespace BeeEngine

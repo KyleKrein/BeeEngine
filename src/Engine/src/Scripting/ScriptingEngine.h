@@ -3,15 +3,16 @@
 //
 
 #pragma once
-#include "Core/TypeDefines.h"
-#include "Core/Path.h"
-#include "Core/UUID.h"
 #include "Core/AssetManagement/Asset.h"
-#include "MTypes.h"
-#include "Locale/Locale.h"
-#include <glm/glm.hpp>
+#include "Core/Path.h"
 #include "Core/Time.h"
+#include "Core/TypeDefines.h"
+#include "Core/UUID.h"
+#include "Locale/Locale.h"
+#include "MTypes.h"
 #include "MUtils.h"
+#include <functional>
+#include <glm/glm.hpp>
 
 namespace BeeEngine
 {
@@ -21,7 +22,7 @@ namespace BeeEngine
     class ScriptingEngine
     {
     public:
-        static void Init();
+        static void Init(std::function<void(AssetHandle)> onSceneChangeCallback);
         static void Shutdown();
         static bool IsInitialized();
         static void SetLocaleDomain(Locale::Domain& domain);
@@ -30,8 +31,10 @@ namespace BeeEngine
         static void EnableDebugging();
 
         static void LoadGameAssembly(const Path& path);
+        static void LoadGameAssembly(const Path& path, const Path& debugSymbolsPath);
 
         static void LoadCoreAssembly(const Path& path);
+        static void LoadCoreAssembly(const Path& path, const Path& debugSymbolsPath);
         static void ReloadAssemblies();
         static class MAssembly& GetCoreAssembly();
         static void OnRuntimeStart(class Scene* scene);
@@ -43,7 +46,7 @@ namespace BeeEngine
         static const std::unordered_map<String, Ref<MClass>>& GetGameScripts();
         static void RegisterNativeFunction(const String& name, void* function);
 
-        static void OnEntityCreated(Entity entity, MClass *pClass);
+        static void OnEntityCreated(Entity entity, MClass* pClass);
 
         static void OnEntityDestroyed(UUID uuid);
         static void OnEntityUpdate(Entity entity);
@@ -59,7 +62,7 @@ namespace BeeEngine
         static std::vector<class GameScriptField>& GetDefaultScriptFields(MClass* klass);
         static void SetAssetHandle(MObject& obj, MField& field, AssetHandle& handle, MType type);
 
-        static void GetAssetHandle(void* monoObject, AssetHandle &handle);
+        static void GetAssetHandle(void* monoObject, AssetHandle& handle);
 
         static void UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime);
 
@@ -71,9 +74,11 @@ namespace BeeEngine
 
         static void UnloadAppContext();
 
+        static void RequestSceneChange(AssetHandle sceneHandle);
+
     private:
         static void InitDotNetHost();
-        static class MAssembly& LoadAssembly(const Path& path);
+        static class MAssembly& LoadAssembly(const Path& path, const Path& debugSymbolsPath);
         static void InitMono();
         static bool IsGameScript(const MClass& klass);
         static bool AreAllManagedHandlesLoaded();
@@ -83,4 +88,4 @@ namespace BeeEngine
 
         static void CreateAppDomain();
     };
-}
+} // namespace BeeEngine

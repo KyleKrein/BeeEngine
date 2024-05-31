@@ -6,7 +6,8 @@
 
 #include "Layer.h"
 
-namespace BeeEngine{
+namespace BeeEngine
+{
     struct LayerStack
     {
     public:
@@ -22,8 +23,9 @@ namespace BeeEngine{
 
         void OnEvent(EventDispatcher& dispatcher);
         void Update(FrameData& frameData);
+
     private:
         std::vector<Ref<Layer>> m_layers;
         Scope<ImGuiLayer> m_guiLayer;
     };
-}
+} // namespace BeeEngine

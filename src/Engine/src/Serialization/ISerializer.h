@@ -9,20 +9,14 @@ namespace BeeEngine::Serialization
 {
     struct Key
     {
-        Key(const char* key)
-        : String(key)
-        {
-
-        }
+        Key(const char* key) : String(key) {}
         const char* String;
     };
 
-    template<typename T>
+    template <typename T>
     struct Value
     {
-        Value(const T& val)
-        : Val(val)
-        {}
+        Value(const T& val) : Val(val) {}
         const T& Val;
     };
     enum class Marker
@@ -32,4 +26,4 @@ namespace BeeEngine::Serialization
         BeginSeq,
         EndSeq
     };
-}
+} // namespace BeeEngine::Serialization

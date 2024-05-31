@@ -5,9 +5,9 @@
 #pragma once
 #include <glm.hpp>
 
-#include "TextRenderingConfiguration.h"
 #include "Core/String.h"
 #include "Core/TypeDefines.h"
+#include "TextRenderingConfiguration.h"
 
 namespace BeeEngine
 {
@@ -25,36 +25,36 @@ namespace BeeEngine
         CommandBuffer() = default;
         CommandBuffer(void* handle, Internal::RenderingQueue* renderingQueue)
             : m_Handle(handle), m_RenderingQueue(renderingQueue)
-        {}
+        {
+        }
         ~CommandBuffer() = default;
-        //Mostly handled internally. Should be called before any drawing commands
+        // Mostly handled internally. Should be called before any drawing commands
         void BeginRecording();
 
-        void DrawString(const String& text, Font& font, BindingSet& cameraBindingSet, const glm::mat4& transform, const TextRenderingConfiguration& config);
+        void DrawString(const String& text,
+                        Font& font,
+                        BindingSet& cameraBindingSet,
+                        const glm::mat4& transform,
+                        const TextRenderingConfiguration& config);
         void DrawRect(const glm::mat4& transform, const Color4& color, BindingSet& cameraBindingSet, float lineWidth);
         void SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, gsl::span<byte> instanceData);
-        void SubmitLine(const glm::vec3& start, const glm::vec3& end, BindingSet& cameraBindingSet, const Color4& color = Color4::Black, float lineWidth = 0.1f);
+        void SubmitLine(const glm::vec3& start,
+                        const glm::vec3& end,
+                        BindingSet& cameraBindingSet,
+                        const Color4& color = Color4::Black,
+                        float lineWidth = 0.1f);
         void Flush();
 
-        //Mostly handled internally. Should be called after all drawing commands
+        // Mostly handled internally. Should be called after all drawing commands
         void EndRecording();
 
-        [[nodiscard]] bool IsValid() const
-        {
-            return m_Handle != nullptr && m_RenderingQueue != nullptr;
-        }
-        operator bool()
-        {
-            return IsValid();
-        }
-        void* GetBufferHandle() const
-        {
-            return m_Handle;
-        }
-        template<typename T>
+        [[nodiscard]] bool IsValid() const { return m_Handle != nullptr && m_RenderingQueue != nullptr; }
+        operator bool() { return IsValid(); }
+        void* GetBufferHandle() const { return m_Handle; }
+        template <typename T>
         T GetBufferHandleAs() const
         {
-            return *reinterpret_cast<T const *>(&m_Handle);
+            return *reinterpret_cast<T const*>(&m_Handle);
         }
 
         void Invalidate()
@@ -62,8 +62,9 @@ namespace BeeEngine
             m_Handle = nullptr;
             m_RenderingQueue = nullptr;
         }
+
     private:
         void* m_Handle = nullptr;
         Internal::RenderingQueue* m_RenderingQueue = nullptr;
     };
-}
+} // namespace BeeEngine

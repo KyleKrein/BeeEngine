@@ -22,22 +22,19 @@ namespace BeeEngine::Internal
         m_Window = (void*)window;
         Internal::VulkanGraphicsDevice& graphicsDevice = VulkanGraphicsDevice::GetInstance();
 
-        //1: create descriptor pool for IMGUI
-        // the size of the pool is very oversize, but it's copied from imgui demo itself.
-        VkDescriptorPoolSize pool_sizes[] =
-                {
-                        { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-                        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-                        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-                        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-                        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-                        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-                        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-                        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-                        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-                        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-                        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-                };
+        // 1: create descriptor pool for IMGUI
+        //  the size of the pool is very oversize, but it's copied from imgui demo itself.
+        VkDescriptorPoolSize pool_sizes[] = {{VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
+                                             {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000},
+                                             {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000},
+                                             {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000},
+                                             {VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000},
+                                             {VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000},
+                                             {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000},
+                                             {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
+                                             {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
+                                             {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
+                                             {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}};
 
         VkDescriptorPoolCreateInfo pool_info = {};
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -46,27 +43,27 @@ namespace BeeEngine::Internal
         pool_info.poolSizeCount = std::size(pool_sizes);
         pool_info.pPoolSizes = pool_sizes;
 
-
         vkCreateDescriptorPool(graphicsDevice.GetDevice(), &pool_info, nullptr, &g_DescriptorPool);
 
         // 2: initialize imgui library
 
-        //this initializes the core structures of imgui
+        // this initializes the core structures of imgui
         ImGui::CreateContext();
 
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-        //TODO: fix multiviewport and uncomment //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-        //io.ConfigViewportsNoAutoMerge = true;
-        //io.ConfigViewportsNoTaskBarIcon = true;
+        ImGuiIO& io = ImGui::GetIO();
+        (void)io;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
+        // TODO: fix multiviewport and uncomment //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable
+        // Multi-Viewport / Platform Windows io.ConfigViewportsNoAutoMerge = true; io.ConfigViewportsNoTaskBarIcon =
+        // true;
 
         // Setup Dear ImGui style
-        ImGui::StyleColorsDark();
-        //ImGui::StyleColorsLight();
+        // ImGui::StyleColorsLight();
 
-        // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+        // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular
+        // ones.
         ImGuiStyle& style = ImGui::GetStyle();
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
@@ -75,10 +72,10 @@ namespace BeeEngine::Internal
         }
 
         SetDefaultTheme();
-        //SetDarkThemeColors();
+        // SetDarkThemeColors();
 
         SetupFunctionsForBackend();
-        //this initializes imgui for Backend
+        // this initializes imgui for Backend
         switch (WindowHandler::GetAPI())
         {
             case WindowHandlerAPI::SDL:
@@ -92,7 +89,7 @@ namespace BeeEngine::Internal
 #endif
                 break;
         }
-        //this initializes imgui for Vulkan
+        // this initializes imgui for Vulkan
 
         auto& swapchain = graphicsDevice.GetSwapChain();
         ImGui_ImplVulkan_InitInfo init_info = {};
@@ -115,7 +112,7 @@ namespace BeeEngine::Internal
         pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
         pipelineRenderingCreateInfo.colorAttachmentCount = 1;
         pipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
-        VkFormat colorAttachmentFormats[] = { static_cast<VkFormat>(swapchain.GetFormat()) };
+        VkFormat colorAttachmentFormats[] = {static_cast<VkFormat>(swapchain.GetFormat())};
         pipelineRenderingCreateInfo.pColorAttachmentFormats = colorAttachmentFormats;
         pipelineRenderingCreateInfo.pNext = nullptr;
         pipelineRenderingCreateInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
@@ -136,7 +133,7 @@ namespace BeeEngine::Internal
 
     void ImGuiControllerVulkan::Render(CommandBuffer& commandBuffer)
     {
-        //return;
+        // return;
         auto& io = ImGui::GetIO();
         // Rendering
         ImGui::Render();
@@ -151,21 +148,22 @@ namespace BeeEngine::Internal
 
     void ImGuiControllerVulkan::Shutdown()
     {
-        //return;
-        // Cleanup
-        //Internal::VulkanGraphicsDevice& graphicsDevice = *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
-        //vkDestroyDescriptorPool(graphicsDevice.GetDevice(), g_DescriptorPool, nullptr);
-        //ImGui_ImplVulkan_Shutdown();
+        // return;
+        //  Cleanup
+        // Internal::VulkanGraphicsDevice& graphicsDevice =
+        // *(Internal::VulkanGraphicsDevice*)&WindowHandler::GetInstance()->GetGraphicsDevice();
+        // vkDestroyDescriptorPool(graphicsDevice.GetDevice(), g_DescriptorPool, nullptr);
+        // ImGui_ImplVulkan_Shutdown();
         auto& device = Internal::VulkanGraphicsDevice::GetInstance();
         auto err = vkDeviceWaitIdle(device.GetDevice());
         check_vk_result(err);
-        //ImGui::DestroyContext();
+        // ImGui::DestroyContext();
 
         s_ShutdownFunction = [device = device.GetDevice(), pool = g_DescriptorPool]
         {
             BeeCoreTrace("Imgui Vulkan Shutdown");
             ImGui_ImplVulkan_Shutdown();
-            switch(WindowHandler::GetAPI())
+            switch (WindowHandler::GetAPI())
             {
                 case WindowHandlerAPI::SDL:
 #if defined(BEE_COMPILE_SDL)
@@ -184,7 +182,8 @@ namespace BeeEngine::Internal
 
     void ImGuiControllerVulkan::SetupFunctionsForBackend()
     {
-        switch (WindowHandler::GetAPI()) {
+        switch (WindowHandler::GetAPI())
+        {
             case WindowHandlerAPI::SDL:
 #if defined(BEE_COMPILE_SDL)
                 m_NewFrameBackend = ImGui_ImplSDL3_NewFrame;
@@ -196,7 +195,6 @@ namespace BeeEngine::Internal
 #endif
                 break;
         }
-
     }
-}
+} // namespace BeeEngine::Internal
 #endif

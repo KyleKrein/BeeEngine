@@ -2,10 +2,9 @@
 // Created by alexl on 03.06.2023.
 //
 
-#include <gsl/gsl>
 #include "SceneCamera.h"
 #include "ext/matrix_clip_space.hpp"
-
+#include <gsl/gsl>
 
 namespace BeeEngine
 {
@@ -45,8 +44,8 @@ namespace BeeEngine
         switch (m_Type)
         {
             case CameraType::Perspective:
-                m_ProjectionMatrix = glm::perspective(m_VerticalFOV, m_AspectRatio,
-                                                        m_PerspectiveNear, m_PerspectiveFar);
+                m_ProjectionMatrix =
+                    glm::perspective(m_VerticalFOV, m_AspectRatio, m_PerspectiveNear, m_PerspectiveFar);
                 break;
             case CameraType::Orthographic:
                 const float orthoLeft = -m_OrthographicSize * m_AspectRatio * 0.5f;
@@ -54,9 +53,8 @@ namespace BeeEngine
                 const float orthoBottom = -m_OrthographicSize * 0.5f;
                 const float orthoTop = m_OrthographicSize * 0.5f;
 
-                m_ProjectionMatrix = glm::ortho(orthoLeft, orthoRight,
-                                                orthoBottom, orthoTop,
-                                                m_OrthographicNear, m_OrthographicFar);
+                m_ProjectionMatrix =
+                    glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, m_OrthographicNear, m_OrthographicFar);
                 break;
         }
     }
@@ -119,7 +117,7 @@ namespace BeeEngine
         return m_AspectRatio;
     }
 
-REFLECT_STRUCT_BEGIN(SceneCamera)
+    REFLECT_STRUCT_BEGIN(SceneCamera)
     REFLECT_STRUCT_MEMBER(m_Type)
     REFLECT_STRUCT_MEMBER(m_OrthographicSize)
     REFLECT_STRUCT_MEMBER(m_OrthographicNear)
@@ -150,7 +148,7 @@ REFLECT_STRUCT_BEGIN(SceneCamera)
     REFLECT_METHOD(GetPerspectiveNearClip)
     REFLECT_METHOD(GetPerspectiveFarClip)
     REFLECT_METHOD(GetProjectionMatrix)*/
-REFLECT_STRUCT_END()
+    REFLECT_STRUCT_END()
 
-REFLECT_ENUM(SceneCamera::CameraType)
-}
+    REFLECT_ENUM(SceneCamera::CameraType)
+} // namespace BeeEngine

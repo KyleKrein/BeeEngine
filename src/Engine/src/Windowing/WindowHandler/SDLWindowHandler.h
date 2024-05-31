@@ -4,15 +4,14 @@
 
 #pragma once
 
-
 #include "WindowHandler.h"
 #if defined(BEE_COMPILE_SDL)
-#include "SDL3/SDL.h"
 #include "KeyCodes.h"
+#include "SDL3/SDL.h"
 
 namespace BeeEngine::Internal
 {
-    class SDLWindowHandler: public WindowHandler
+    class SDLWindowHandler : public WindowHandler
     {
     public:
         SDLWindowHandler(const ApplicationProperties& properties, EventQueue& eventQueue);
@@ -21,10 +20,7 @@ namespace BeeEngine::Internal
         SDLWindowHandler& operator=(const SDLWindowHandler&) = delete;
         void SetWidth(uint16_t width) override;
         void SetHeight(uint16_t height) override;
-        uint64_t GetWindow() override
-        {
-            return (uint64_t)m_Window;
-        }
+        uint64_t GetWindow() override { return (uint64_t)m_Window; }
         void SetVSync(VSync mode) override;
 
         void HideCursor() override;
@@ -35,14 +31,8 @@ namespace BeeEngine::Internal
         Time::secondsD UpdateTime() override;
         void Close() override;
 
-        GraphicsDevice& GetGraphicsDevice() override
-        {
-            return *m_GraphicsDevice;
-        }
-        Instance& GetAPIInstance() override
-        {
-            return *m_Instance;
-        }
+        GraphicsDevice& GetGraphicsDevice() override { return *m_GraphicsDevice; }
+        Instance& GetAPIInstance() override { return *m_Instance; }
 
         WindowNativeInfo GetNativeInfo() override;
 
@@ -54,10 +44,9 @@ namespace BeeEngine::Internal
         void InitializeVulkan();
         void InitializeWebGPU();
 
-
         struct sdlFinalizer
         {
-            SDL_Window *window;
+            SDL_Window* window;
             ~sdlFinalizer()
             {
                 SDL_DestroyWindow(window);
@@ -73,5 +62,5 @@ namespace BeeEngine::Internal
 
         void InitializeDragDropOnWindows();
     };
-}
+} // namespace BeeEngine::Internal
 #endif

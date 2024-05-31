@@ -10,11 +10,15 @@ namespace BeeEngine::Internal
 {
     void VulkanTexture2D::CopyBufferToImageWithTransition(VulkanBuffer& buffer)
     {
-        m_Device.TransitionImageLayout(m_Image.Image, vk::Format::eR8G8B8A8Unorm,
-                                       vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        m_Device.TransitionImageLayout(m_Image.Image,
+                                       vk::Format::eR8G8B8A8Unorm,
+                                       vk::ImageLayout::eUndefined,
+                                       vk::ImageLayout::eTransferDstOptimal);
         m_Device.CopyBufferToImage(buffer.Buffer, m_Image.Image, m_Width, m_Height, 1);
-        m_Device.TransitionImageLayout(m_Image.Image, vk::Format::eR8G8B8A8Unorm,
-                                       vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+        m_Device.TransitionImageLayout(m_Image.Image,
+                                       vk::Format::eR8G8B8A8Unorm,
+                                       vk::ImageLayout::eTransferDstOptimal,
+                                       vk::ImageLayout::eShaderReadOnlyOptimal);
     }
 
     std::vector<IBindable::BindGroupLayoutEntryType> VulkanTexture2D::GetBindGroupLayoutEntry() const
@@ -58,10 +62,10 @@ namespace BeeEngine::Internal
     void VulkanTexture2D::SetData(gsl::span<std::byte> data, uint32_t numberOfChannels)
     {
         std::vector<std::byte> dataWithAlpha;
-        if(numberOfChannels == 3)
+        if (numberOfChannels == 3)
         {
             dataWithAlpha.resize(data.size() * 4 / 3);
-            for(int i = 0; i < data.size() / 3; i++)
+            for (int i = 0; i < data.size() / 3; i++)
             {
                 dataWithAlpha[i * 4] = data[i * 3];
                 dataWithAlpha[i * 4 + 1] = data[i * 3 + 1];
@@ -75,18 +79,16 @@ namespace BeeEngine::Internal
             std::memcpy(dataWithAlpha.data(), data.data(), data.size());
         }
         size_t imageSize = m_Width * m_Height * 4;
-         VulkanBuffer buffer = m_Device.CreateBuffer(imageSize,
-            vk::BufferUsageFlagBits::eTransferSrc,
-            VMA_MEMORY_USAGE_CPU_TO_GPU
-            );
+        VulkanBuffer buffer =
+            m_Device.CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_TO_GPU);
         void* mappedData = nullptr;
-        if(vmaMapMemory(GetVulkanAllocator(), buffer.Memory, &mappedData) != VK_SUCCESS)
+        if (vmaMapMemory(GetVulkanAllocator(), buffer.Memory, &mappedData) != VK_SUCCESS)
         {
             BeeCoreError("Failed to map memory");
         }
         std::memcpy(mappedData, dataWithAlpha.data(), imageSize);
         vmaUnmapMemory(GetVulkanAllocator(), buffer.Memory);
-        if(!ShouldFreeResources())
+        if (!ShouldFreeResources())
         {
             vk::ImageCreateInfo imageCreateInfo;
             imageCreateInfo.sType = vk::StructureType::eImageCreateInfo;
@@ -112,9 +114,12 @@ namespace BeeEngine::Internal
             imageViewCreateInfo.subresourceRange.levelCount = 1;
             imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
             imageViewCreateInfo.subresourceRange.layerCount = 1;
-            m_Device.CreateImageWithInfo(imageCreateInfo, imageViewCreateInfo,
-                vk::MemoryPropertyFlagBits::eDeviceLocal ,
-                VMA_MEMORY_USAGE_GPU_ONLY, m_Image, m_ImageView);
+            m_Device.CreateImageWithInfo(imageCreateInfo,
+                                         imageViewCreateInfo,
+                                         vk::MemoryPropertyFlagBits::eDeviceLocal,
+                                         VMA_MEMORY_USAGE_GPU_ONLY,
+                                         m_Image,
+                                         m_ImageView);
 
             CopyBufferToImageWithTransition(buffer);
 
@@ -136,13 +141,14 @@ namespace BeeEngine::Internal
             samplerCreateInfo.minLod = 0.0f;
             samplerCreateInfo.maxLod = 0.0f;
             m_Sampler = m_Device.GetDevice().createSampler(samplerCreateInfo);
-            m_RendererID = (uintptr_t)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            m_RendererID = (uintptr_t)ImGui_ImplVulkan_AddTexture(
+                m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
         else
         {
             CopyBufferToImageWithTransition(buffer);
         }
-        //buffer.Destroy();
+        // buffer.Destroy();
         m_Device.DestroyBuffer(buffer);
 
         m_ImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
@@ -151,28 +157,28 @@ namespace BeeEngine::Internal
         m_BindingSet = BindingSet::Create({{0, *this}});
     }
 
-    VulkanTexture2D::VulkanTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data,
-        uint32_t numberOfChannels): m_Device(VulkanGraphicsDevice::GetInstance())
+    VulkanTexture2D::VulkanTexture2D(uint32_t width,
+                                     uint32_t height,
+                                     gsl::span<std::byte> data,
+                                     uint32_t numberOfChannels)
+        : m_Device(VulkanGraphicsDevice::GetInstance())
     {
         m_Height = height;
         m_Width = width;
 
-       VulkanTexture2D::SetData(data, numberOfChannels);
+        VulkanTexture2D::SetData(data, numberOfChannels);
     }
 
     VulkanTexture2D::~VulkanTexture2D()
     {
-        if(ShouldFreeResources())
+        if (ShouldFreeResources())
             FreeResources();
     }
 
     void VulkanTexture2D::FreeResources()
     {
         auto device = m_Device.GetDevice();
-        DeletionQueue::Frame().PushFunction([device, sampler = m_Sampler]()
-        {
-            device.destroySampler(sampler);
-        });
+        DeletionQueue::Frame().PushFunction([device, sampler = m_Sampler]() { device.destroySampler(sampler); });
         m_Device.DestroyImageWithView(m_Image, m_ImageView);
         ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)m_RendererID);
         m_Sampler = nullptr;
@@ -184,4 +190,4 @@ namespace BeeEngine::Internal
     {
         return m_Sampler || m_ImageView || m_Image.Image || m_Image.Memory;
     }
-}
+} // namespace BeeEngine::Internal

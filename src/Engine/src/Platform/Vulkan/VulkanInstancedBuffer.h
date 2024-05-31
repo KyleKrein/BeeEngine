@@ -3,14 +3,14 @@
 //
 
 #pragma once
+#include "Renderer/InstancedBuffer.h"
 #include "VulkanBuffer.h"
 #include "VulkanGraphicsDevice.h"
-#include "Renderer/InstancedBuffer.h"
 
 namespace BeeEngine::Internal
 {
 
-    class VulkanInstancedBuffer final: public InstancedBuffer
+    class VulkanInstancedBuffer final : public InstancedBuffer
     {
     public:
         VulkanInstancedBuffer(size_t size);
@@ -21,10 +21,11 @@ namespace BeeEngine::Internal
         void Bind(CommandBuffer& cmd) override;
 
         size_t GetSize() override;
+
     private:
         VulkanGraphicsDevice& m_GraphicsDevice;
         size_t m_Size;
         VulkanBuffer m_Buffer;
     };
 
-}
+} // namespace BeeEngine::Internal

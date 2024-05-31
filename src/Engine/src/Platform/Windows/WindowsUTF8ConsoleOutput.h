@@ -13,8 +13,7 @@ namespace BeeEngine::Internal
     {
 #if defined(WINDOWS)
     public:
-        WindowsUTF8ConsoleOutput()
-        : m_OriginalCodePage(GetConsoleOutputCP())
+        WindowsUTF8ConsoleOutput() : m_OriginalCodePage(GetConsoleOutputCP())
         {
             ::SetConsoleOutputCP(CP_UTF8);
             BeeCoreTrace("Set console output code page to UTF-8");
@@ -24,8 +23,9 @@ namespace BeeEngine::Internal
             ::SetConsoleOutputCP(m_OriginalCodePage);
             BeeCoreTrace("Restored console output code page to {}", m_OriginalCodePage);
         }
+
     private:
         UINT m_OriginalCodePage;
 #endif
     };
-}
+} // namespace BeeEngine::Internal

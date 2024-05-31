@@ -2,8 +2,8 @@
 // Created by alexl on 08.10.2023.
 //
 
-#include <gtest/gtest.h>
 #include "BeeEngine.h"
+#include <gtest/gtest.h>
 using namespace BeeEngine;
 TEST(TestTypeDefines, TestToStringForInt)
 {
@@ -23,16 +23,17 @@ TEST(TestTypeDefines, TestTypeNameForInt)
 {
     int testValue = 0;
     UTF8String result = TypeName(testValue);
-    EXPECT_EQ(result, "int");  // Это может зависеть от вашей системы и компилятора
+    EXPECT_EQ(result, "int"); // Это может зависеть от вашей системы и компилятора
 }
 
 TEST(TestTypeDefines, TestTypeNameForFloat)
 {
     float testValue = 0.0f;
     UTF8String result = TypeName(testValue);
-    EXPECT_EQ(result, "float");  // Это может зависеть от вашей системы и компилятора
+    EXPECT_EQ(result, "float"); // Это может зависеть от вашей системы и компилятора
 }
-struct TestStruct {
+struct TestStruct
+{
     int x;
     TestStruct(int val) : x(val) {}
 };
@@ -45,7 +46,6 @@ TEST(TestTypeDefines, TestTypeNameForCustomStruct)
 }
 
 // Примеры структур для тестирования CreateScope и CreateRef
-
 
 TEST(TestTypeDefines, TestCreateFrameScope)
 {
@@ -66,7 +66,8 @@ TEST(TestTypeDefines, TestCreateRef)
 }
 
 // Enum для тестирования
-enum class TestEnum {
+enum class TestEnum
+{
     VALUE_ONE,
     VALUE_TWO
 };
@@ -74,32 +75,31 @@ enum class TestEnum {
 TEST(TestTypeDefines, TestEnumToString)
 {
     TestEnum testEnum = TestEnum::VALUE_ONE;
-    std::string result = BeeEngine::EnumToString(testEnum);
-    EXPECT_EQ(result, "VALUE_ONE");  // Это может зависеть от вашей реализации EnumToString
+    String result = BeeEngine::EnumToString(testEnum);
+    EXPECT_EQ(result, "VALUE_ONE"); // Это может зависеть от вашей реализации EnumToString
 }
 
 TEST(TestTypeDefines, TestToStringForString)
 {
-    std::string testValue = "TestString";
-    std::string result = BeeEngine::ToString(testValue);
+    String testValue = "TestString";
+    String result = BeeEngine::ToString(testValue);
     EXPECT_EQ(result, "TestString");
 }
 
 TEST(TestTypeDefines, TestToStringForVector)
 {
     std::vector<int> testVector = {1, 2, 3};
-    std::string result = BeeEngine::ToString(testVector);
+    String result = BeeEngine::ToString(testVector);
     EXPECT_EQ(result, "[1, 2, 3]");
 }
 
 TEST(TestTypeDefines, TestToStringForCustomTypeWithToString)
 {
-    struct TestStruct {
+    struct TestStruct
+    {
         int x;
         TestStruct(int val) : x(val) {}
-        UTF8String ToString() const {
-            return "TestStruct ToString";
-        }
+        UTF8String ToString() const { return "TestStruct ToString"; }
     };
     TestStruct testValue(0);
     UTF8String result = BeeEngine::ToString(testValue);

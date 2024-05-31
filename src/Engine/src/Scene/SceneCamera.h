@@ -11,7 +11,7 @@
 namespace BeeEngine
 {
 
-    class SceneCamera: public Camera
+    class SceneCamera : public Camera
     {
         REFLECT()
     public:
@@ -40,19 +40,19 @@ namespace BeeEngine
         float GetPerspectiveVerticalFOV() const noexcept { return m_VerticalFOV; }
         float GetVerticalFOV() const noexcept
         {
-            if(m_Type == CameraType::Perspective)
+            if (m_Type == CameraType::Perspective)
                 return GetPerspectiveVerticalFOV();
             return GetOrthographicSize();
         }
         float GetFarClip() const noexcept
         {
-            if(m_Type == CameraType::Perspective)
+            if (m_Type == CameraType::Perspective)
                 return GetPerspectiveFarClip();
             return GetOrthographicFarClip();
         }
         float GetNearClip() const noexcept
         {
-            if(m_Type == CameraType::Perspective)
+            if (m_Type == CameraType::Perspective)
                 return GetPerspectiveNearClip();
             return GetOrthographicNearClip();
         }
@@ -62,20 +62,19 @@ namespace BeeEngine
         float GetPerspectiveFarClip() const noexcept { return m_PerspectiveFar; }
         void SetPerspectiveFarClip(float farClip) noexcept;
 
-
         void SetAspectRatio(float d);
 
         float GetAspectRatio() const noexcept;
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
-            serializer & Serialization::Key("Projection Type") & Serialization::Value(m_Type);
-            serializer & Serialization::Key("Orthographic Size") & Serialization::Value(m_OrthographicSize);
-            serializer & Serialization::Key("Orthographic Near") & Serialization::Value(m_OrthographicNear);
-            serializer & Serialization::Key("Orthographic Far") & Serialization::Value(m_OrthographicFar);
-            serializer & Serialization::Key("Vertical FOV") & Serialization::Value(m_VerticalFOV);
-            serializer & Serialization::Key("Perspective Near") & Serialization::Value(m_PerspectiveNear);
-            serializer & Serialization::Key("Perspective Far") & Serialization::Value(m_PerspectiveFar);
+            serializer& Serialization::Key("Projection Type") & Serialization::Value(m_Type);
+            serializer& Serialization::Key("Orthographic Size") & Serialization::Value(m_OrthographicSize);
+            serializer& Serialization::Key("Orthographic Near") & Serialization::Value(m_OrthographicNear);
+            serializer& Serialization::Key("Orthographic Far") & Serialization::Value(m_OrthographicFar);
+            serializer& Serialization::Key("Vertical FOV") & Serialization::Value(m_VerticalFOV);
+            serializer& Serialization::Key("Perspective Near") & Serialization::Value(m_PerspectiveNear);
+            serializer& Serialization::Key("Perspective Far") & Serialization::Value(m_PerspectiveFar);
         }
 
     private:
@@ -88,8 +87,9 @@ namespace BeeEngine
         float m_AspectRatio = 0.0f;
 
         float m_VerticalFOV = glm::radians(45.0f);
-        //Near clip is more than far clip because of the reversed depth buffer in order to increase quality of depth testing https://vkguide.dev/docs/new_chapter_3/loading_meshes/
-        float m_PerspectiveNear = 10000;//0.01f;
-        float m_PerspectiveFar = 0.01f;//1000.0f;
+        // Near clip is more than far clip because of the reversed depth buffer in order to increase quality of depth
+        // testing https://vkguide.dev/docs/new_chapter_3/loading_meshes/
+        float m_PerspectiveNear = 10000; // 0.01f;
+        float m_PerspectiveFar = 0.01f;  // 1000.0f;
     };
-}
+} // namespace BeeEngine

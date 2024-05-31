@@ -4,7 +4,6 @@
 
 #include "SharedPointer.h"
 
-
 namespace
 {
 

@@ -3,10 +3,10 @@
 //
 
 #include "WindowsDropSource.h"
-#include "Windowing/WindowHandler/WindowHandler.h"
-#include "Core/Events/EventImplementations.h"
 #include "Core/Application.h"
+#include "Core/Events/EventImplementations.h"
 #include "Core/Input.h"
+#include "Windowing/WindowHandler/WindowHandler.h"
 #include "WindowsString.h"
 #include "imgui.h"
 
@@ -15,18 +15,18 @@ namespace BeeEngine
     namespace Internal
     {
 
-        IDropSource *WindowsDropSource::CreateInstance()
+        IDropSource* WindowsDropSource::CreateInstance()
         {
-            WindowsDropSource *pDropSource = new WindowsDropSource();
+            WindowsDropSource* pDropSource = new WindowsDropSource();
             pDropSource->AddRef();
             return pDropSource;
         }
 
-        HRESULT STDMETHODCALLTYPE WindowsDropSource::QueryInterface(REFIID riid, void **ppvObject)
+        HRESULT STDMETHODCALLTYPE WindowsDropSource::QueryInterface(REFIID riid, void** ppvObject)
         {
             if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IDropSource))
             {
-                *ppvObject = static_cast<IDropSource *>(this);
+                *ppvObject = static_cast<IDropSource*>(this);
                 AddRef();
                 return S_OK;
             }
@@ -67,19 +67,13 @@ namespace BeeEngine
             return DRAGDROP_S_USEDEFAULTCURSORS;
         }
 
-        WindowsDropSource::WindowsDropSource(): m_nRefCount(0)
-        {
+        WindowsDropSource::WindowsDropSource() : m_nRefCount(0) {}
 
-        }
-
-        WindowsDropSource::~WindowsDropSource()
+        WindowsDropSource::~WindowsDropSource() {}
+        IDataObject* GetFileDataObject(const TCHAR* pszFile, REFIID riid)
         {
-
-        }
-        IDataObject *GetFileDataObject(const TCHAR *pszFile, REFIID riid)
-        {
-            IDataObject *pDataObject = NULL;
-            IShellFolder *pShellFolder;
+            IDataObject* pDataObject = NULL;
+            IShellFolder* pShellFolder;
             PIDLIST_RELATIVE pidlRelative;
             PIDLIST_ABSOLUTE pidl;
             HRESULT hr;
@@ -88,14 +82,14 @@ namespace BeeEngine
             if (!pidl)
                 return NULL;
 
-            hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, (PCUITEMID_CHILD *)&pidlRelative);
+            hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, (PCUITEMID_CHILD*)&pidlRelative);
             if (FAILED(hr))
             {
                 ::CoTaskMemFree(pidl);
                 return NULL;
             }
 
-            const ITEMIDLIST *array[1] = { pidlRelative };
+            const ITEMIDLIST* array[1] = {pidlRelative};
             hr = pShellFolder->GetUIObjectOf(NULL, ARRAYSIZE(array), array, riid, NULL, (void**)&pDataObject);
 
             pShellFolder->Release();
@@ -108,7 +102,7 @@ namespace BeeEngine
             return pDataObject;
         }
 
-        HRESULT WindowsDropTarget::DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+        HRESULT WindowsDropTarget::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
         {
             HandleStartDrag();
             auto& io = ImGui::GetIO();
@@ -117,15 +111,15 @@ namespace BeeEngine
             return S_OK;
         }
 
-        HRESULT WindowsDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+        HRESULT WindowsDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
         {
             HandleStartDrag();
             int32_t x = pt.x, y = pt.y;
             bool isFocused = Application::GetInstance().IsFocused();
-            if(!isFocused)
+            if (!isFocused)
             {
-                x-= WindowHandler::GetInstance()->GetXPosition();
-                y-= WindowHandler::GetInstance()->GetYPosition();
+                x -= WindowHandler::GetInstance()->GetXPosition();
+                y -= WindowHandler::GetInstance()->GetYPosition();
             }
             Application::GetInstance().AddEvent(CreateScope<FileDragEvent>(x, y));
             return S_OK;
@@ -133,15 +127,15 @@ namespace BeeEngine
 
         HRESULT WindowsDropTarget::DragLeave(void)
         {
-            //HandleStartDrag();
-            Application::GetInstance().AddEvent(CreateScope<FileDragLeaveEvent>(0, 0));//position is unknown
+            // HandleStartDrag();
+            Application::GetInstance().AddEvent(CreateScope<FileDragLeaveEvent>(0, 0)); // position is unknown
             FinishDragEvent();
             return S_OK;
         }
 
-        HRESULT WindowsDropTarget::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+        HRESULT WindowsDropTarget::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
         {
-            FORMATETC fmtetc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+            FORMATETC fmtetc = {CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
             STGMEDIUM stgmed;
 
             if (FAILED(pDataObj->GetData(&fmtetc, &stgmed)))
@@ -178,11 +172,11 @@ namespace BeeEngine
             m_StartedDrag = false;
         }
 
-        HRESULT WindowsDropTarget::QueryInterface(const IID &riid, void **ppvObject)
+        HRESULT WindowsDropTarget::QueryInterface(const IID& riid, void** ppvObject)
         {
             if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IDropTarget))
             {
-                *ppvObject = static_cast<IDropTarget *>(this);
+                *ppvObject = static_cast<IDropTarget*>(this);
                 AddRef();
                 return S_OK;
             }
@@ -207,24 +201,21 @@ namespace BeeEngine
             return 0;
         }
 
-        IDropTarget *WindowsDropTarget::CreateInstance()
+        IDropTarget* WindowsDropTarget::CreateInstance()
         {
-            WindowsDropTarget *pDropTarget = new WindowsDropTarget();
+            WindowsDropTarget* pDropTarget = new WindowsDropTarget();
             pDropTarget->AddRef();
             return pDropTarget;
         }
 
-        WindowsDropTarget::WindowsDropTarget()
-        {
-
-        }
+        WindowsDropTarget::WindowsDropTarget() {}
 
         void WindowsDropTarget::HandleStartDrag()
         {
-            if(m_StartedDrag)
+            if (m_StartedDrag)
                 return;
             m_StartedDrag = true;
             Application::GetInstance().AddEvent(CreateScope<FileDragStartEvent>());
         }
-    } // BeeEngine
-} // Internal
+    } // namespace Internal
+} // namespace BeeEngine

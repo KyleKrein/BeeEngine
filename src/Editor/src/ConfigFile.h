@@ -13,4 +13,4 @@ namespace BeeEngine::Editor
         [[nodiscard("Config file is very important")]] static ApplicationProperties LoadWindowConfiguration() noexcept;
         static std::filesystem::path LoadCompilerConfiguration() noexcept;
     };
-}
+} // namespace BeeEngine::Editor

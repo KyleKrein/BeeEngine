@@ -3,11 +3,11 @@
 //
 
 #pragma once
-#include "Core/TypeDefines.h"
-#include "Vertex.h"
 #include "BufferLayout.h"
 #include "CommandBuffer.h"
 #include "Core/AssetManagement/Asset.h"
+#include "Core/TypeDefines.h"
+#include "Vertex.h"
 
 namespace BeeEngine
 {
@@ -24,13 +24,10 @@ namespace BeeEngine
         uint32_t startIndex;
         uint32_t count;
     };
-    class Mesh: public Asset
+    class Mesh : public Asset
     {
     public:
-        constexpr AssetType GetType() const override
-        {
-            return AssetType::Mesh;
-        }
+        constexpr AssetType GetType() const override { return AssetType::Mesh; }
 
         std::vector<GeoSurface> Surfaces;
         Mesh() = default;
@@ -41,9 +38,10 @@ namespace BeeEngine
         [[nodiscard]] virtual bool IsIndexed() const = 0;
 
         Mesh(const Mesh& other) = delete;
-        Mesh& operator=(const Mesh& other ) = delete;
+        Mesh& operator=(const Mesh& other) = delete;
         static Ref<Mesh> Create(in<std::vector<Vertex>> vertices);
         static Ref<Mesh> Create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
-        static Ref<Mesh> Create(void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices);
+        static Ref<Mesh>
+        Create(void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices);
     };
-}
+} // namespace BeeEngine

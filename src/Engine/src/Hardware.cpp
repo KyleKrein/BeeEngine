@@ -21,7 +21,8 @@ namespace BeeEngine
 
     bool Hardware::HasRayTracingSupport()
     {
-        switch (Renderer::GetAPI()) {
+        switch (Renderer::GetAPI())
+        {
             case WebGPU:
                 return false;
 #if defined(BEE_COMPILE_VULKAN)
@@ -87,4 +88,4 @@ namespace BeeEngine
         return SystemTheme::Unknown;
     }
 
-}
+} // namespace BeeEngine

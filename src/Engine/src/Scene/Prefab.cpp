@@ -4,7 +4,6 @@
 
 #include "Prefab.h"
 
-
 namespace BeeEngine
 {
     Ref<Scene> Prefab::s_PrefabScene = nullptr;
@@ -15,7 +14,7 @@ namespace BeeEngine
 
     Prefab::~Prefab()
     {
-        if(m_RootEntity && IsPrefabSceneInitialized())
+        if (m_RootEntity && IsPrefabSceneInitialized())
             GetPrefabScene()->DestroyEntity(m_RootEntity);
     }
-}
+} // namespace BeeEngine

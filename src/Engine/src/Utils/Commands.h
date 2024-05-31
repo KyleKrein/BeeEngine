@@ -15,4 +15,4 @@ namespace BeeEngine
         throw std::runtime_error("RunCommand is not implemented on mobile platforms!");
     }
 #endif
-}
+} // namespace BeeEngine

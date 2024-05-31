@@ -41,73 +41,53 @@ namespace BeeEngine
     {
     public:
         EventCategory Category;
-        inline void Handle()
-        {
-            m_Handled = true;
-        }
-        inline bool IsHandled() const
-        {
-            return m_Handled;
-        }
-        inline EventType GetType() const
-        {
-            return m_Type;
-        }
+        inline void Handle() { m_Handled = true; }
+        inline bool IsHandled() const { return m_Handled; }
+        inline EventType GetType() const { return m_Type; }
+
     protected:
         bool m_Handled = false;
         EventType m_Type;
 
     public:
-    /*    //Events pool
-        static void* operator new(size_t size);
-        static void operator delete(void* ptr, size_t size) noexcept;
-        static void* operator new[](size_t size);
-        static void operator delete[](void* ptr, size_t size) noexcept;
+        /*    //Events pool
+            static void* operator new(size_t size);
+            static void operator delete(void* ptr, size_t size) noexcept;
+            static void* operator new[](size_t size);
+            static void operator delete[](void* ptr, size_t size) noexcept;
 
-        static void ClearPool()
-        {
-            s_EventPool.Clear();
-        }
+            static void ClearPool()
+            {
+                s_EventPool.Clear();
+            }
 
-    private:
-        static ObjectPool s_EventPool;*/
+        private:
+            static ObjectPool s_EventPool;*/
     };
 
     class EventDispatcher
     {
     public:
-        explicit EventDispatcher(gsl::not_null<Event*> event)
-        : m_event(event)
-        {
+        explicit EventDispatcher(gsl::not_null<Event*> event) : m_event(event) {}
+        [[nodiscard]] inline EventCategory GetCategory() const { return m_event->Category; }
+        [[nodiscard]] inline EventType GetType() const { return m_event->GetType(); }
 
-        }
-        [[nodiscard]] inline EventCategory GetCategory() const
-        {
-            return m_event->Category;
-        }
-        [[nodiscard]] inline EventType GetType() const
-        {
-            return m_event->GetType();
-        }
-
-        template<typename EventType, typename Pred>
-        requires std::is_base_of_v<Event, EventType> && std::is_invocable_r_v<bool, Pred, EventType&>
+        template <typename EventType, typename Pred>
+            requires std::is_base_of_v<Event, EventType> && std::is_invocable_r_v<bool, Pred, EventType&>
         inline bool Dispatch(Pred func)
         {
-            if(m_event->GetType() != EventType::GetStaticType())
+            if (m_event->GetType() != EventType::GetStaticType())
                 return false;
             bool result = func(*static_cast<EventType*>(m_event));
-            if(result)
+            if (result)
             {
                 m_event->Handle();
             }
             return true;
         }
-        [[nodiscard]] inline bool IsHandled() const
-        {
-            return m_event->IsHandled();
-        }
+        [[nodiscard]] inline bool IsHandled() const { return m_event->IsHandled(); }
+
     private:
         Event* m_event;
     };
-}
+} // namespace BeeEngine

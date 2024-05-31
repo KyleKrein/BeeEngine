@@ -12,7 +12,7 @@ add_executable(BeeEngine_Tests tests_main.cpp GeneralPurposeAllocatorTest.cpp St
         HashTests.cpp
         LocaleTests.cpp)
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
+set_property(TARGET BeeEngine_Tests PROPERTY CXX_STANDARD 23)
 
 add_subdirectory(vendor/gtest)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
@@ -35,3 +35,7 @@ target_link_libraries(BeeEngine_Tests
 file(COPY AssetsForTests DESTINATION ${CMAKE_BINARY_DIR}/src/${PROJECT_NAME})
 
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+include(CTest)
+enable_testing()
+add_test(NAME BeeEngine_Tests COMMAND BeeEngine_Tests)

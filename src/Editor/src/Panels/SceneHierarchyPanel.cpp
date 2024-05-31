@@ -3,22 +3,21 @@
 //
 
 #include "SceneHierarchyPanel.h"
-#include "Scene/Components.h"
 #include "Core/DeletionQueue.h"
-#include "Scene/Prefab.h"
 #include "Core/Input.h"
 #include "Gui/ImGui/ImGuiExtension.h"
-
+#include "Scene/Components.h"
+#include "Scene/Prefab.h"
 
 namespace BeeEngine::Editor
 {
 
-    SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene> &context)
+    SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
     {
         SetContext(context);
     }
 
-    void SceneHierarchyPanel::SetContext(const Ref<Scene> &context)
+    void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
     {
         m_Context = context;
     }
@@ -26,29 +25,33 @@ namespace BeeEngine::Editor
     void SceneHierarchyPanel::OnGUIRender() noexcept
     {
         ImGui::Begin(m_EditorDomain->Translate("sceneHierarchyPanel").c_str());
-        if(ImGui::IsDragAndDropPayloadInProcess("ENTITY_ID") ||
-        ImGui::IsDragAndDropPayloadInProcess("ASSET_BROWSER_PREFAB_ITEM"))
+        if (ImGui::IsDragAndDropPayloadInProcess("ENTITY_ID") ||
+            ImGui::IsDragAndDropPayloadInProcess("ASSET_BROWSER_PREFAB_ITEM"))
         {
             auto width = ImGui::GetContentRegionAvail().x;
             ImGui::Button(m_EditorDomain->Translate("sceneHierarchyPanel.toTopLevel").c_str(), {width, 0});
-            ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this](auto& e)mutable {
-                Entity droppedEntity = {e, m_Context.get()};
-                droppedEntity.RemoveParent();
-            });
-            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM", [this](auto& e)mutable {
-                Prefab& prefab = AssetManager::GetAsset<Prefab>(e);
-                m_Context->InstantiatePrefab(prefab, Entity::Null);
-            });
+            ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID",
+                                                   [this](auto& e) mutable
+                                                   {
+                                                       Entity droppedEntity = {e, m_Context.get()};
+                                                       droppedEntity.RemoveParent();
+                                                   });
+            ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM",
+                                                  [this](auto& e) mutable
+                                                  {
+                                                      Prefab& prefab = AssetManager::GetAsset<Prefab>(e);
+                                                      m_Context->InstantiatePrefab(prefab, Entity::Null);
+                                                  });
         }
 
-        m_Context->m_Registry.view<HierarchyComponent>()
-                .each([&](auto entityID, auto& hierarchy)
-                     {
-                         if (hierarchy.Parent == Entity::Null) // Только для "главных" сущностей
-                         {
-                             DrawEntityNode({entityID, m_Context.get()});
-                         }
-                     });
+        m_Context->m_Registry.view<HierarchyComponent>().each(
+            [&](auto entityID, auto& hierarchy)
+            {
+                if (hierarchy.Parent == Entity::Null) // Только для "главных" сущностей
+                {
+                    DrawEntityNode({entityID, m_Context.get()});
+                }
+            });
 
         if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
         {
@@ -83,45 +86,48 @@ namespace BeeEngine::Editor
         bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
         entt::entity entityID = entity;
         ImGui::StartDragAndDrop("ENTITY_ID", entityID);
-        ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID", [this, currentEntity = entity](auto& e)mutable {
-            Entity droppedEntity = {e, m_Context.get()};
-            droppedEntity.SetParent(currentEntity);
-        });
-        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM", [this, currentEntity = entity](auto& e)mutable {
-            Prefab& prefab = AssetManager::GetAsset<Prefab>(e);
-            m_Context->InstantiatePrefab(prefab, currentEntity);
-        });
+        ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID",
+                                               [this, currentEntity = entity](auto& e) mutable
+                                               {
+                                                   Entity droppedEntity = {e, m_Context.get()};
+                                                   droppedEntity.SetParent(currentEntity);
+                                               });
+        ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM",
+                                              [this, currentEntity = entity](auto& e) mutable
+                                              {
+                                                  Prefab& prefab = AssetManager::GetAsset<Prefab>(e);
+                                                  m_Context->InstantiatePrefab(prefab, currentEntity);
+                                              });
         if (ImGui::IsItemClicked())
         {
             m_SelectedEntity = entity;
         }
 
-        if(ImGui::BeginPopupContextItem())
+        if (ImGui::BeginPopupContextItem())
         {
-            if(ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.deleteEntity").c_str()))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.deleteEntity").c_str()))
             {
-                DeletionQueue::Frame().PushFunction([this, entityToDelete = entity]() mutable
+                DeletionQueue::Frame().PushFunction(
+                    [this, entityToDelete = entity]() mutable
                     {
-                        if(m_SelectedEntity == entityToDelete || entityToDelete.HasChild(m_SelectedEntity))
+                        if (m_SelectedEntity == entityToDelete || entityToDelete.HasChild(m_SelectedEntity))
                         {
                             m_SelectedEntity = Entity::Null;
                         }
                         m_Context->DestroyEntity(entityToDelete);
                     });
             }
-            if(ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.duplicateEntity").c_str()))
+            if (ImGui::MenuItem(m_EditorDomain->Translate("sceneHierarchyPanel.duplicateEntity").c_str()))
             {
                 DeletionQueue::Frame().PushFunction([this, entityToDublicate = entity]() mutable
-                    {
-                        m_Context->DuplicateEntity(entityToDublicate);
-                    });
+                                                    { m_Context->DuplicateEntity(entityToDublicate); });
             }
             ImGui::EndPopup();
         }
 
-        if(opened)
+        if (opened)
         {
-            for(auto child : hierarchy.Children)
+            for (auto child : hierarchy.Children)
             {
                 DrawEntityNode(child); // Рекурсивный вызов
             }
@@ -134,20 +140,17 @@ namespace BeeEngine::Editor
         m_SelectedEntity = Entity::Null;
     }
 
-    void SceneHierarchyPanel::OnEvent(EventDispatcher &e) noexcept
+    void SceneHierarchyPanel::OnEvent(EventDispatcher& e) noexcept
     {
-        e.Dispatch<KeyPressedEvent>([this](auto& e) -> bool
-        {
-            return OnKeyPressedEvent(&e);
-        });
+        e.Dispatch<KeyPressedEvent>([this](auto& e) -> bool { return OnKeyPressedEvent(&e); });
     }
 
-    bool SceneHierarchyPanel::OnKeyPressedEvent(KeyPressedEvent *e) noexcept
+    bool SceneHierarchyPanel::OnKeyPressedEvent(KeyPressedEvent* e) noexcept
     {
         bool ctrl = Input::KeyPressed(Key::LeftControl) || Input::KeyPressed(Key::RightControl);
-        if(ctrl && Input::KeyPressed(Key::D))
+        if (ctrl && Input::KeyPressed(Key::D))
         {
-            if(m_SelectedEntity)
+            if (m_SelectedEntity)
             {
                 m_Context->DuplicateEntity(m_SelectedEntity);
                 return true;
@@ -155,4 +158,4 @@ namespace BeeEngine::Editor
         }
         return false;
     }
-}
+} // namespace BeeEngine::Editor

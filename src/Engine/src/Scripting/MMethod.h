@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Core/TypeDefines.h"
+#include "MTypes.h"
 
 namespace BeeEngine
 {
@@ -12,6 +13,7 @@ namespace BeeEngine
     class MMethod
     {
         friend class MObject;
+
     public:
         MMethod(MClass& mClass, const String& name, ManagedBindingFlags flags);
         ~MMethod();
@@ -21,11 +23,11 @@ namespace BeeEngine
 
         MClass& GetClass();
 
-        //operator MonoMethod*() const { return m_MonoMethod; }
+        // operator MonoMethod*() const { return m_MonoMethod; }
     private:
-        //MonoMethod* m_MonoMethod = nullptr;
+        // MonoMethod* m_MonoMethod = nullptr;
         uint64_t m_MethodID = 0;
         MClass* m_Class = nullptr;
         String m_Name;
     };
-}
+} // namespace BeeEngine

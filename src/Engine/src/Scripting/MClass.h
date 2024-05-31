@@ -21,6 +21,7 @@ namespace BeeEngine
         friend class MObject;
         friend class MMethod;
         friend class MField;
+
     public:
         [[nodiscard]] const String& GetName() const { return m_Name; }
         [[nodiscard]] const String& GetNamespace() const { return m_Namespace; }
@@ -41,6 +42,7 @@ namespace BeeEngine
         uint64_t GetContextID() const { return m_ContextID; }
         uint64_t GetAssemblyID() const { return m_AssemblyID; }
         uint64_t GetClassID() const { return m_ClassID; }
+
     private:
         String m_Name;
         String m_Namespace;
@@ -53,4 +55,4 @@ namespace BeeEngine
         bool m_IsEnum;
         bool m_IsValueType;
     };
-}
+} // namespace BeeEngine

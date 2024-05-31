@@ -1,10 +1,37 @@
 Scene: Untitled
 Entities:
+  - Entity: 1635267982073534492
+    TagComponent:
+      Tag: Scene Changer
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.SceneChanger
+      Fields:
+        - Name: FourthScene
+          Type: Scene
+          Data: [3753192931707503016, 7586138150448856676]
+        - Name: FirstScene
+          Type: Scene
+          Data: [3753192931707503016, 14163096334939169538]
+        - Name: SecondScene
+          Type: Scene
+          Data: [3753192931707503016, 13448237300006342104]
+        - Name: FifthScene
+          Type: Scene
+          Data: [3753192931707503016, 13295074674533560124]
+        - Name: ThirdScene
+          Type: Scene
+          Data: [3753192931707503016, 4396845291111867722]
+    HierarchyComponent:
+      []
   - Entity: 1822372434052717332
     TagComponent:
       Tag: Face
     TransformComponent:
-      Translation: [0.725465655, 1.49011612e-08, 0]
+      Translation: [0.689130664, -0.0363348722, 0]
       Rotation: [0, -0, 0.0122173037]
       Scale: [1.29999995, 1.29999995, 1]
     HierarchyComponent:
@@ -14,9 +41,9 @@ Entities:
     TagComponent:
       Tag: Eyes
     TransformComponent:
-      Translation: [0.387382567, 0.0047330074, 0]
-      Rotation: [0, -0, 1.39698235e-08]
-      Scale: [1.00000107, 1.00000107, 1]
+      Translation: [0.0840547085, 0.0302693248, 0]
+      Rotation: [0, -0, 2.23517151e-08]
+      Scale: [1.00000119, 1.00000119, 1]
     HierarchyComponent:
       - 7134635448999013620
       - 11146239361119753478
@@ -24,9 +51,9 @@ Entities:
     TagComponent:
       Tag: Right
     TransformComponent:
-      Translation: [4.41512346, 1.78671193, -9.53674771e-07]
-      Rotation: [0, -0, 0.0122172805]
-      Scale: [1.30000114, 1.30000114, 0.99999994]
+      Translation: [4.27064419, 1.86965156, -9.53673862e-07]
+      Rotation: [0, -0, 0.012217246]
+      Scale: [1.30000114, 1.30000114, 0.999999225]
     ScriptComponent:
       FullName: Example.RandomColor
     SpriteRendererComponent:
@@ -40,9 +67,9 @@ Entities:
     TagComponent:
       Tag: Left
     TransformComponent:
-      Translation: [-2.51723146, 1.71799386, 0]
-      Rotation: [0, -0, 0.0122172805]
-      Scale: [1.30000114, 1.30000114, 0.99999994]
+      Translation: [-2.66171217, 1.800933, 0]
+      Rotation: [0, -0, 0.012217246]
+      Scale: [1.30000114, 1.30000114, 0.999999225]
     ScriptComponent:
       FullName: Example.Helper
     CircleRendererComponent:
@@ -55,7 +82,7 @@ Entities:
     TagComponent:
       Tag: Mouth
     TransformComponent:
-      Translation: [-1.93069685, -1.46980274, 0]
+      Translation: [-1.96703184, -1.50613761, 0]
       Rotation: [0, -0, 0.0122173019]
       Scale: [1.30000007, 1.30000007, 1]
     ScriptComponent:
@@ -87,7 +114,7 @@ Entities:
         OrthographicSize: 10
         OrthographicNearClip: -1
         OrthographicFarClip: 1
-        AspectRatio: 2.31704092
+        AspectRatio: 1.87762237
       Primary: true
       FixedAspectRatio: false
     ScriptComponent:
@@ -108,6 +135,9 @@ Entities:
     ScriptComponent:
       FullName: Example.SetScore
       Fields:
+        - Name: Score
+          Type: int
+          Data: 0
         - Name: Offset
           Type: Vector3
           Data: [-4, 2, 0]

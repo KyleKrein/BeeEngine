@@ -8,12 +8,12 @@
 
 namespace BeeEngine::Internal
 {
-    class RendererStatisticsGUI final: public IImGuiElement
+    class RendererStatisticsGUI final : public IImGuiElement
     {
     public:
-        void Update() override{};
+        void Update() override {};
         void Render() override;
-        void OnEvent(EventDispatcher& event) override{};
+        void OnEvent(EventDispatcher& event) override {};
         ~RendererStatisticsGUI() override = default;
     };
-}
+} // namespace BeeEngine::Internal

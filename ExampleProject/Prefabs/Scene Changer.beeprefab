@@ -1,0 +1,28 @@
+Entities:
+  - Entity: 3431732934449381520
+    TagComponent:
+      Tag: Scene Changer
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.SceneChanger
+      Fields:
+        - Name: FourthScene
+          Type: Scene
+          Data: [3753192931707503016, 7586138150448856676]
+        - Name: ThirdScene
+          Type: Scene
+          Data: [3753192931707503016, 4396845291111867722]
+        - Name: SecondScene
+          Type: Scene
+          Data: [3753192931707503016, 13448237300006342104]
+        - Name: FifthScene
+          Type: Scene
+          Data: [3753192931707503016, 13295074674533560124]
+        - Name: FirstScene
+          Type: Scene
+          Data: [3753192931707503016, 14163096334939169538]
+    HierarchyComponent:
+      []

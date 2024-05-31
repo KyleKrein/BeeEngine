@@ -10,21 +10,16 @@
 
 namespace BeeEngine::Internal
 {
-    class WebGPUPipeline: public Pipeline
+    class WebGPUPipeline : public Pipeline
     {
     public:
         ~WebGPUPipeline() override;
-        WebGPUPipeline(const Ref<ShaderModule>&vertexShader, const Ref<ShaderModule>& fragmentShader);
+        WebGPUPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader);
         void Bind(void* commandBuffer) override;
-        WGPUBindGroupLayout GetBindGroupLayout(uint32_t index) const
-        {
-            return m_BindGroupLayouts.at(index);
-        }
+        WGPUBindGroupLayout GetBindGroupLayout(uint32_t index) const { return m_BindGroupLayouts.at(index); }
 
-        static const WebGPUPipeline& GetCurrentPipeline()
-        {
-            return *s_CurrentPipeline;
-        }
+        static const WebGPUPipeline& GetCurrentPipeline() { return *s_CurrentPipeline; }
+
     private:
         WGPURenderPipeline m_Pipeline;
         WGPUPipelineLayout m_PipelineLayout;
@@ -34,5 +29,5 @@ namespace BeeEngine::Internal
 
         static WebGPUPipeline* s_CurrentPipeline;
     };
-}
+} // namespace BeeEngine::Internal
 #endif

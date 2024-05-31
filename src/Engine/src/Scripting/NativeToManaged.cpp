@@ -1,9 +1,10 @@
-    //
+//
 // Created by Aleksandr on 23.12.2023.
 //
-
+// clang-format off
 #include "NativeToManaged.h"
 
+#include "Gui/MessageBox.h"
 #include "Utils/DynamicLibrary.h"
 #include "Core/String.h"
 #include "MTypes.h"
@@ -35,7 +36,7 @@ namespace BeeEngine
     };
     using SetupLoggerFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* info, void* warn, void* trace, void* error);
     using CreateAssemblyContextFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(void* name, int32_t canBeUnloaded);
-    using LoadAssemblyFromPathFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, void* path);
+    using LoadAssemblyFromPathFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, void* path, void* debugSymbolsPath);
     using GetClassesFromAssemblyFunction = ArrayInfo(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId);
     using FreeIntPtrFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* ptr);
     using GetClassNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
@@ -55,6 +56,8 @@ namespace BeeEngine
     using MethodInvokeFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t methodId, void* instanceGcHandle, void** args);
     using UnloadContextFunction = void(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId);
     using StringCreateManagedFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(void* str);
+    using GetGCInfoFunction = NativeToManaged::GCInfo(CORECLR_DELEGATE_CALLTYPE *)();
+    using GCCollectFunction = void(CORECLR_DELEGATE_CALLTYPE *)();
 
     struct NativeToManaged::NativeToManagedData
     {
@@ -92,6 +95,8 @@ namespace BeeEngine
         UnloadContextFunction UnloadContext = nullptr;
         StringCreateManagedFunction StringCreateManaged = nullptr;
         SetupLoggerFunction SetupLogger = nullptr;
+        GetGCInfoFunction GetGCInfo = nullptr;
+        GCCollectFunction GCCollect = nullptr;
     };
     NativeToManaged::NativeToManagedData* NativeToManaged::s_Data = nullptr;
 
@@ -123,7 +128,10 @@ namespace BeeEngine
         size_t buffer_size = sizeof(buffer) / sizeof(char_t);
         const int rc = get_hostfxr_path(buffer, &buffer_size, &params);
         if (rc != 0)
+        {
+            BeeCoreError("get_hostfxr_path failed: {0}", rc);
             return false;
+        }
 
         // Load hostfxr and get desired exports
         s_Data = new NativeToManagedData(std::filesystem::path{buffer});
@@ -188,6 +196,8 @@ namespace BeeEngine
         if(!init_hostfxr(nullptr))
         {
             BeeCoreError("Unable to initialize .NET Host!");
+            ShowMessageBox("Unable to initialize .NET Host!", "This program is unable to find .Net Runtime on your device. Please download and install it from dotnet.microsoft.com", MessageBoxType::Error);
+            throw std::runtime_error("Unable to initialize .NET Host!");
         }
         //
         // STEP 2: Initialize and start the .NET Core runtime
@@ -197,6 +207,8 @@ namespace BeeEngine
         if(!load_assembly_and_get_function_pointer)
         {
             BeeCoreError("Unable to load .NET Core runtime!");
+            ShowMessageBox("Unable to load .NET Core runtime!", "This program is unable to find .Net Runtime on your device. Please download and install it from dotnet.microsoft.com", MessageBoxType::Error);
+            throw std::runtime_error("Unable to initialize .NET Host!");
         }
         //Obtain function pointers
         std::filesystem::path path = pathToNativeBridgeDll.ToStdPath();
@@ -223,6 +235,8 @@ namespace BeeEngine
         ObtainDelegate(UnloadContext);
         ObtainDelegate(StringCreateManaged);
         ObtainDelegate(SetupLogger);
+        ObtainDelegate(GetGCInfo);
+        ObtainDelegate(GCCollect);
     }
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
@@ -240,9 +254,9 @@ namespace BeeEngine
         delete s_Data;
     }
 
-    ManagedAssemblyID NativeToManaged::LoadAssemblyFromPath(ManagedAssemblyContextID contextID, const Path& path)
+    ManagedAssemblyID NativeToManaged::LoadAssemblyFromPath(ManagedAssemblyContextID contextID, const Path& path, const std::optional<Path>& debugSymbolsPath)
     {
-        return s_Data->LoadAssemblyFromPath(contextID, const_cast<char*>(path.AsCString()));
+        return s_Data->LoadAssemblyFromPath(contextID, const_cast<char*>(path.AsCString()), debugSymbolsPath.has_value() ? const_cast<char*>(debugSymbolsPath->AsCString()) : nullptr);
     }
 
     std::vector<ManagedClassID> NativeToManaged::GetClassesFromAssembly(ManagedAssemblyContextID contextID,
@@ -380,5 +394,14 @@ namespace BeeEngine
     void NativeToManaged::SetupLogger()
     {
         s_Data->SetupLogger((void*)Log_Info, (void*)Log_Warn, (void*)Log_Trace, (void*)Log_Error);
+    }
+
+    NativeToManaged::GCInfo NativeToManaged::GetGCInfo()
+    {
+        return s_Data->GetGCInfo();
+    }
+    void NativeToManaged::GCCollect()
+    {
+        s_Data->GCCollect();
     }
 }

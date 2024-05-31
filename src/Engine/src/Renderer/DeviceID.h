@@ -8,6 +8,5 @@ namespace BeeEngine
 {
     class DeviceID
     {
-
     };
-}
+} // namespace BeeEngine

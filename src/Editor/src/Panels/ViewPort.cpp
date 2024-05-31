@@ -3,57 +3,63 @@
 //
 
 #include "ViewPort.h"
-#include "Debug/Instrumentor.h"
-#include "Scene/Entity.h"
-#include "Scene/Components.h"
-#include "gtc/type_ptr.hpp"
+#include "AssetPanel.h"
+#include "Core/AssetManagement/Asset.h"
+#include "Core/AssetManagement/AssetManager.h"
+#include "Core/AssetManagement/EditorAssetManager.h"
+#include "Core/CodeSafety/Expects.h"
 #include "Core/Events/Event.h"
-#include "Scene/SceneSerializer.h"
 #include "Core/ResourceManager.h"
+#include "Debug/Instrumentor.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 #include "Renderer/SceneRenderer.h"
-
+#include "Scene/Components.h"
+#include "Scene/Entity.h"
+#include "Scene/SceneSerializer.h"
+#include "gtc/type_ptr.hpp"
 
 namespace BeeEngine::Editor
 {
 
-    ViewPort::ViewPort(uint32_t width, uint32_t height, Entity& selectedEntity, const Color4& clearColor) noexcept
-    : m_Width(width),
-    m_Height(height),
-    m_FrameBuffer(nullptr),
-    m_IsFocused(false),
-    m_IsHovered(false),
-      m_Scene(std::move(CreateRef<Scene>())),
-        m_SelectedEntity(selectedEntity),
-        m_ClearColor(clearColor)
+    ViewPort::ViewPort(uint32_t width,
+                       uint32_t height,
+                       Entity& selectedEntity,
+                       const Color4& clearColor,
+                       EditorAssetManager& assetManager) noexcept
+        : m_Width(width),
+          m_Height(height),
+          m_FrameBuffer(nullptr),
+          m_IsFocused(false),
+          m_IsHovered(false),
+          m_Scene(std::move(CreateRef<Scene>())),
+          m_SelectedEntity(selectedEntity),
+          m_ClearColor(clearColor),
+          m_AssetManager(assetManager)
     {
         FrameBufferPreferences preferences;
         preferences.Width = m_Width * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Height = m_Height * WindowHandler::GetInstance()->GetScaleFactor();
-        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
+        preferences.Attachments = {
+            FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 
-        preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; //RedInteger
+        preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; // RedInteger
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
     }
 
-    void ViewPort::OnEvent(EventDispatcher &event) noexcept
+    void ViewPort::OnEvent(EventDispatcher& event) noexcept
     {
-        if(!m_IsFocused && !m_IsHovered)
+        if (!m_IsFocused && !m_IsHovered)
             return;
 
-        if(event.GetCategory() & EventCategory::App)
+        if (event.GetCategory() & EventCategory::App)
         {
             return;
         }
         event.Dispatch<MouseButtonPressedEvent>([this](MouseButtonPressedEvent& event) -> bool
-        {
-            return OnMouseButtonPressed(&event);
-        });
-        event.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) -> bool
-        {
-            return OnKeyButtonPressed(&event);
-        });
-        //m_CameraController.OnEvent(event);
+                                                { return OnMouseButtonPressed(&event); });
+        event.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) -> bool { return OnKeyButtonPressed(&event); });
+        // m_CameraController.OnEvent(event);
     }
 
     void ViewPort::UpdateRuntime(bool renderPhysicsColliders) noexcept
@@ -71,9 +77,8 @@ namespace BeeEngine::Editor
 
         m_MousePosition = {mx, my};
 
-        if(mouseX >= 0 && mouseY >= 0
-           && gsl::narrow_cast<float>(mouseX) < viewportSize.x
-           && gsl::narrow_cast<float>(mouseY) < viewportSize.y)
+        if (mouseX >= 0 && mouseY >= 0 && gsl::narrow_cast<float>(mouseX) < viewportSize.x &&
+            gsl::narrow_cast<float>(mouseY) < viewportSize.y)
         {
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
         }
@@ -82,7 +87,7 @@ namespace BeeEngine::Editor
         SceneRenderer::RenderScene(*m_Scene, cmd, m_GameDomain->GetLocale());
 
         auto primaryCameraEntity = m_Scene->GetPrimaryCameraEntity();
-        if(primaryCameraEntity)
+        if (primaryCameraEntity)
         {
             auto& cameraComponent = primaryCameraEntity.GetComponent<CameraComponent>();
             auto& camera = cameraComponent.Camera;
@@ -90,7 +95,7 @@ namespace BeeEngine::Editor
             auto viewProjection = camera.GetProjectionMatrix() * viewMatrix;
             m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjection)), sizeof(glm::mat4));
             RenderSelectedEntityOutline(cmd);
-            if(renderPhysicsColliders)
+            if (renderPhysicsColliders)
                 SceneRenderer::RenderPhysicsColliders(*m_Scene, cmd, *m_CameraBindingSet);
         }
         m_FrameBuffer->Unbind(cmd);
@@ -99,12 +104,21 @@ namespace BeeEngine::Editor
     {
         BEE_PROFILE_FUNCTION();
         auto cmd = m_FrameBuffer->Bind();
-        m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(camera.GetViewProjection())), sizeof(glm::mat4));
-        if(m_SelectedEntity && m_SelectedEntity.HasComponent<CameraComponent>())
+        m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(camera.GetViewProjection())),
+                                       sizeof(glm::mat4));
+        if (m_SelectedEntity && m_SelectedEntity.HasComponent<CameraComponent>())
             RenderCameraFrustum(cmd);
-        SceneRenderer::RenderScene(*m_Scene, cmd, m_GameDomain->GetLocale(), camera, camera.GetViewProjection(), camera.GetPosition(), camera.GetForwardDirection(), camera.GetUpDirection(), camera.GetRightDirection());
+        SceneRenderer::RenderScene(*m_Scene,
+                                   cmd,
+                                   m_GameDomain->GetLocale(),
+                                   camera,
+                                   camera.GetViewProjection(),
+                                   camera.GetPosition(),
+                                   camera.GetForwardDirection(),
+                                   camera.GetUpDirection(),
+                                   camera.GetRightDirection());
         RenderSelectedEntityOutline(cmd);
-        if(renderPhysicsColliders)
+        if (renderPhysicsColliders)
             SceneRenderer::RenderPhysicsColliders(*m_Scene, cmd, *m_CameraBindingSet);
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
@@ -115,14 +129,14 @@ namespace BeeEngine::Editor
         int mouseY = static_cast<int>(my);
         m_MousePosition = {mouseX, mouseY};
 
-        if(mouseX >= 0 && mouseY >= 0
-        && gsl::narrow_cast<float>(mouseX) < viewportSize.x
-        && gsl::narrow_cast<float>(mouseY) < viewportSize.y)
+        if (mouseX >= 0 && mouseY >= 0 && gsl::narrow_cast<float>(mouseX) < viewportSize.x &&
+            gsl::narrow_cast<float>(mouseY) < viewportSize.y)
         {
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
             int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
-            pixelData--; //I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I need to make invalid number -1 too, so in scene I make + 1
-            //BeeCoreTrace("Coords: {}, {}. Pixel data: {}", mouseX, mouseY, pixelData);
+            pixelData--; // I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I
+                         // need to make invalid number -1 too, so in scene I make + 1
+            // BeeCoreTrace("Coords: {}, {}. Pixel data: {}", mouseX, mouseY, pixelData);
             m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
         }
         m_FrameBuffer->Unbind(cmd);
@@ -130,14 +144,16 @@ namespace BeeEngine::Editor
 
     void ViewPort::RenderImGuizmo(EditorCamera& camera)
     {
-        //BeeCoreTrace("RenderImGuizmo. Mode: {}", m_GuizmoOperation == GuizmoOperation::None ? "None" : m_GuizmoOperation == GuizmoOperation::Translate ? "Translate" : m_GuizmoOperation == GuizmoOperation::Rotate ? "Rotate" : "Scale");
+        // BeeCoreTrace("RenderImGuizmo. Mode: {}", m_GuizmoOperation == GuizmoOperation::None ? "None" :
+        // m_GuizmoOperation == GuizmoOperation::Translate ? "Translate" : m_GuizmoOperation == GuizmoOperation::Rotate
+        // ? "Rotate" : "Scale");
 
         const glm::mat4* cameraProjection = nullptr;
         glm::mat4 cameraView;
-        if(m_Scene->IsRuntime())
+        if (m_Scene->IsRuntime())
         {
             Entity mainCamera = m_Scene->GetPrimaryCameraEntity();
-            if(!mainCamera)
+            if (!mainCamera)
                 return;
             auto& cameraComponent = mainCamera.GetComponent<CameraComponent>();
             cameraProjection = &cameraComponent.Camera.GetProjectionMatrix();
@@ -151,14 +167,16 @@ namespace BeeEngine::Editor
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::SetDrawlist();
 
-        ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
-
+        ImGuizmo::SetRect(m_ViewportBounds[0].x,
+                          m_ViewportBounds[0].y,
+                          m_ViewportBounds[1].x - m_ViewportBounds[0].x,
+                          m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
         auto& transformComponent = m_SelectedEntity.GetComponent<TransformComponent>();
 
         glm::mat4 transform = Math::ToGlobalTransform(m_SelectedEntity);
 
-        //Snapping
+        // Snapping
         const float snapValue = m_GuizmoOperation == GuizmoOperation::Rotate ? 45.0f : 0.5f;
 
         float snapValues[3] = {snapValue, snapValue, snapValue};
@@ -178,15 +196,18 @@ namespace BeeEngine::Editor
 
     void ViewPort::Render(EditorCamera& camera) noexcept
     {
-        //m_FrameBuffer->Bind();
+        // m_FrameBuffer->Bind();
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
-        ImGui::Begin("##Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+        ImGui::Begin("##Viewport",
+                     nullptr,
+                     ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse |
+                         ImGuiWindowFlags_NoTitleBar);
 
         auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
         auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
         auto viewportOffset = ImGui::GetWindowPos();
-        m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
-        m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+        m_ViewportBounds[0] = {viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y};
+        m_ViewportBounds[1] = {viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y};
 
         m_IsFocused = ImGui::IsWindowFocused();
         m_IsHovered = ImGui::IsWindowHovered();
@@ -194,31 +215,42 @@ namespace BeeEngine::Editor
         auto size = ImGui::GetContentRegionAvail();
         size.x = size.x > 0 ? size.x : 1;
         size.y = size.y > 0 ? size.y : 1;
-        if(gsl::narrow_cast<float>(m_Width) != size.x || gsl::narrow_cast<float>(m_Height) != size.y)
+        if (gsl::narrow_cast<float>(m_Width) != size.x || gsl::narrow_cast<float>(m_Height) != size.y)
         {
             m_Width = gsl::narrow_cast<uint32_t>(size.x);
             m_Height = gsl::narrow_cast<uint32_t>(size.y);
-            m_FrameBuffer->Resize(m_Width * WindowHandler::GetInstance()->GetScaleFactor(), m_Height * WindowHandler::GetInstance()->GetScaleFactor());
+            m_FrameBuffer->Resize(m_Width * WindowHandler::GetInstance()->GetScaleFactor(),
+                                  m_Height * WindowHandler::GetInstance()->GetScaleFactor());
             m_Scene->OnViewPortResize(m_Width, m_Height);
             camera.SetViewportSize(m_Width, m_Height);
             ScriptingEngine::SetViewportSize(m_Width, m_Height);
         }
         auto textureID = m_FrameBuffer->GetColorAttachmentRendererID(0);
         BeeExpects(textureID != 0);
-        ImGui::Image((ImTextureID)textureID, {static_cast<float>(m_Width), static_cast<float>(m_Height)}/*, ImVec2{0, 1}, ImVec2{1, 0}*/);
+        ImGui::Image((ImTextureID)textureID,
+                     {static_cast<float>(m_Width), static_cast<float>(m_Height)} /*, ImVec2{0, 1}, ImVec2{1, 0}*/);
 
         if (ImGui::BeginDragDropTarget())
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
             {
                 Path p = m_WorkingDirectory / (const char*)payload->Data;
-                if(ResourceManager::IsSceneExtension(p.GetExtension()))
+                if (ResourceManager::IsSceneExtension(p.GetExtension()))
                 {
                     OpenScene(p);
                 }
             }
             ImGui::EndDragDropTarget();
         }
+
+        ImGui::AcceptDragAndDrop<AssetHandle>(AssetPanel::GetDragAndDropTypeName(AssetType::Scene),
+                                              [this](const AssetHandle& handle)
+                                              {
+                                                  BeeExpects(m_AssetManager.IsAssetHandleValid(handle));
+                                                  const auto& sceneMetadata = m_AssetManager.GetAssetMetadata(handle);
+                                                  BeeExpects(sceneMetadata.Location == AssetLocation::FileSystem);
+                                                  OpenScene(std::get<Path>(sceneMetadata.Data));
+                                              });
 
         if (m_SelectedEntity != Entity::Null && m_GuizmoOperation != GuizmoOperation::None)
         {
@@ -227,29 +259,29 @@ namespace BeeEngine::Editor
 
         ImGui::End();
         ImGui::PopStyleVar();
-        //m_FrameBuffer->Unbind();
+        // m_FrameBuffer->Unbind();
     }
 
     bool ViewPort::OnKeyButtonPressed(KeyPressedEvent* event) noexcept
     {
         bool shift = Input::KeyPressed(Key::LeftShift) || Input::KeyPressed(Key::RightShift);
         bool control = Input::KeyPressed(Key::LeftControl) || Input::KeyPressed(Key::RightControl);
-        if(Input::KeyPressed(Key::T) && shift)
+        if (Input::KeyPressed(Key::T) && shift)
         {
             if (!ImGuizmo::IsUsing())
                 m_GuizmoOperation = GuizmoOperation::Translate;
         }
-        else if(Input::KeyPressed(Key::R) && shift)
+        else if (Input::KeyPressed(Key::R) && shift)
         {
             if (!ImGuizmo::IsUsing())
                 m_GuizmoOperation = GuizmoOperation::Rotate;
         }
-        else if(Input::KeyPressed(Key::E) && shift)
+        else if (Input::KeyPressed(Key::E) && shift)
         {
             if (!ImGuizmo::IsUsing())
                 m_GuizmoOperation = GuizmoOperation::Scale;
         }
-        else if(Input::KeyPressed(Key::Q) && shift)
+        else if (Input::KeyPressed(Key::Q) && shift)
         {
             if (!ImGuizmo::IsUsing())
                 m_GuizmoOperation = GuizmoOperation::None;
@@ -257,14 +289,15 @@ namespace BeeEngine::Editor
         if (control)
         {
             m_GuizmoSnap = true;
-        } else
+        }
+        else
         {
             m_GuizmoSnap = false;
         }
         return false;
     }
 
-    bool ViewPort::OnMouseButtonPressed(MouseButtonPressedEvent *event) noexcept
+    bool ViewPort::OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept
     {
         /*if(event->GetButton() == MouseButton::Left && !m_Scene->IsRuntime()
         && IsMouseInViewport() && !m_IsReadPixelTaskRunning && !ImGuizmo::IsOver()
@@ -273,9 +306,9 @@ namespace BeeEngine::Editor
             m_ReadPixelTask = m_FrameBuffer->ReadPixel(1, m_MousePosition.x, m_MousePosition.y);
             m_IsReadPixelTaskRunning = true;
         }*/
-        if(event->GetButton() == MouseButton::Left)
+        if (event->GetButton() == MouseButton::Left)
         {
-            if(!m_Scene->IsRuntime() && m_IsHovered && !ImGuizmo::IsOver() && !Input::KeyPressed(Key::LeftAlt))
+            if (!m_Scene->IsRuntime() && m_IsHovered && !ImGuizmo::IsOver() && !Input::KeyPressed(Key::LeftAlt))
             {
                 m_SelectedEntity = m_HoveredEntity;
             }
@@ -285,9 +318,11 @@ namespace BeeEngine::Editor
 
     void ViewPort::OpenScene(const Path& path)
     {
-        BeeCoreTrace("Opening scene {0}", path.AsUTF8());
+        BeeCoreTrace("Opening scene {0}", path);
         m_NewSceneWasLoaded = true;
-        m_ScenePath = path.AsUTF8();
+        const auto* handlePtr = m_AssetManager.GetAssetHandleByName(path.GetFileNameWithoutExtension());
+        BeeExpects(handlePtr);
+        m_SceneHandle = *handlePtr;
     }
 
     void ViewPort::RenderCameraFrustum(CommandBuffer& commandBuffer)
@@ -309,7 +344,8 @@ namespace BeeEngine::Editor
         float farWidth = farHeight * aspectRatio;
 
         // Вычисление вершин фрустума в локальных координатах камеры
-        glm::vec3 ntl = glm::vec3(-nearWidth / 2.0f, nearHeight / 2.0f, zNear); //TODO: must be -zNear and -zFar everywhere
+        glm::vec3 ntl =
+            glm::vec3(-nearWidth / 2.0f, nearHeight / 2.0f, zNear); // TODO: must be -zNear and -zFar everywhere
         glm::vec3 ntr = glm::vec3(nearWidth / 2.0f, nearHeight / 2.0f, zNear);
         glm::vec3 nbl = glm::vec3(-nearWidth / 2.0f, -nearHeight / 2.0f, zNear);
         glm::vec3 nbr = glm::vec3(nearWidth / 2.0f, -nearHeight / 2.0f, zNear);
@@ -352,7 +388,8 @@ namespace BeeEngine::Editor
 
     void ViewPort::RenderSelectedEntityOutline(CommandBuffer& commandBuffer)
     {
-        if(m_SelectedEntity && (m_SelectedEntity.HasComponent<SpriteRendererComponent>() || m_SelectedEntity.HasComponent<CircleRendererComponent>()))
+        if (m_SelectedEntity && (m_SelectedEntity.HasComponent<SpriteRendererComponent>() ||
+                                 m_SelectedEntity.HasComponent<CircleRendererComponent>()))
         {
             auto transform = Math::ToGlobalTransform(m_SelectedEntity);
             commandBuffer.DrawRect(transform, Color4::DarkOrange, *m_CameraBindingSet, 0.05f);
@@ -367,9 +404,9 @@ namespace BeeEngine::Editor
         }
         int pixelData = sync_await(std::move(m_ReadPixelTask));//m_ReadPixelTask.get();
         m_IsReadPixelTaskRunning = false;
-        pixelData--; //I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I need to make invalid number -1 too, so in scene I make + 1
-        auto hovered = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
-        if(hovered)
+        pixelData--; //I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I need
+        to make invalid number -1 too, so in scene I make + 1 auto hovered = pixelData == -1 ? Entity::Null :
+        Entity(EntityID{(entt::entity)pixelData}, m_Scene.get()); if(hovered)
         {
             m_SelectedEntity = hovered;
         }*/
@@ -378,8 +415,7 @@ namespace BeeEngine::Editor
     bool ViewPort::IsMouseInViewport()
     {
         const glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-        return m_MousePosition.x >= 0 && m_MousePosition.y >= 0
-               && m_MousePosition.x < viewportSize.x
-               && m_MousePosition.y < viewportSize.y;
+        return m_MousePosition.x >= 0 && m_MousePosition.y >= 0 && m_MousePosition.x < viewportSize.x &&
+               m_MousePosition.y < viewportSize.y;
     }
-}
+} // namespace BeeEngine::Editor

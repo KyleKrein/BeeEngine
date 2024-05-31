@@ -4,16 +4,18 @@
 
 #include "Material.h"
 
-#include "MaterialData.h"
-#include "Renderer.h"
 #include "Core/Application.h"
 #include "Core/AssetManagement/AssetManager.h"
+#include "MaterialData.h"
 #include "Platform/Vulkan/VulkanMaterial.h"
 #include "Platform/WebGPU/WebGPUMaterial.h"
+#include "Renderer.h"
 
 namespace BeeEngine
 {
-    Ref<Material> Material::Create(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, bool loadFromCache)
+    Ref<Material> Material::Create(const std::filesystem::path& vertexShader,
+                                   const std::filesystem::path& fragmentShader,
+                                   bool loadFromCache)
     {
         switch (Renderer::GetAPI())
         {
@@ -31,16 +33,15 @@ namespace BeeEngine
     static String defaultLocale = "en_En";
     Texture2D* MaterialInstance::GetColorTexture() const
     {
-        if(!AssetManager::IsAssetHandleValid(colorTexture))
+        if (!AssetManager::IsAssetHandleValid(colorTexture))
             return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
         return &AssetManager::GetAsset<Texture2D>(colorTexture, defaultLocale);
     }
     Texture2D* MaterialInstance::GetMetalRoughTexture() const
     {
-        if(!AssetManager::IsAssetHandleValid(metalRoughTexture))
+        if (!AssetManager::IsAssetHandleValid(metalRoughTexture))
             return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
         return &AssetManager::GetAsset<Texture2D>(metalRoughTexture, defaultLocale);
     }
 
-
-}
+} // namespace BeeEngine

@@ -8,7 +8,8 @@
 
 #include "Application.h"
 
-namespace BeeEngine{
+namespace BeeEngine
+{
     /**
      * @class ApplicationArgs
      * @brief Represents the arguments passed to the application.
@@ -20,10 +21,7 @@ namespace BeeEngine{
          * @brief Gets the arguments passed to the application.
          * @return A constant reference to the vector of arguments.
          */
-        const std::vector<UTF8String>& GetArguments() const
-        {
-            return m_Args;
-        }
+        const std::vector<UTF8String>& GetArguments() const { return m_Args; }
 
         /**
          * @brief Gets the number of arguments passed to the application.
@@ -52,8 +50,7 @@ namespace BeeEngine{
          * @param argc The number of arguments.
          * @param argv The array of arguments.
          */
-        ApplicationArgs(int argc, char** argv)
-        : argc(argc), argv(argv)
+        ApplicationArgs(int argc, char** argv) : argc(argc), argv(argv)
         {
             for (int i = 0; i < argc; ++i)
             {
@@ -61,6 +58,7 @@ namespace BeeEngine{
                 BeeExpects(IsValidString(m_Args.back()));
             }
         }
+
     private:
         int argc;
         char** argv;
@@ -76,9 +74,8 @@ namespace BeeEngine{
      * @return A non-null pointer to the created application instance.
      */
     extern gsl::not_null<Application*> CreateApplication(const ApplicationArgs& args);
-}
+} // namespace BeeEngine
 
 #ifdef __cplusplus
-extern "C" int main(int argc, char* argv[]);
+// extern "C" int main(int argc, char* argv[]);
 #endif
-

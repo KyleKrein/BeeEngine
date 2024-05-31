@@ -3,11 +3,11 @@
 //
 
 #include "BindingSet.h"
-#include "IBindable.h"
-#include "Renderer/Renderer.h"
-#include "Platform/WebGPU/WebGPUBindingSet.h"
 #include "Core/TypeDefines.h"
+#include "IBindable.h"
 #include "Platform/Vulkan/VulkanBindingSet.h"
+#include "Platform/WebGPU/WebGPUBindingSet.h"
+#include "Renderer/Renderer.h"
 
 namespace BeeEngine
 {
@@ -37,7 +37,7 @@ namespace BeeEngine
         {
 #if defined(BEE_COMPILE_WEBGPU)
             case WebGPU:
-                //return CreateFrameScope<Internal::WebGPUBindingSet>(elements);
+                // return CreateFrameScope<Internal::WebGPUBindingSet>(elements);
                 return FramePtr<Internal::WebGPUBindingSet>(new Internal::WebGPUBindingSet(elements));
 #endif
 #if defined(BEE_COMPILE_VULKAN)
@@ -50,4 +50,4 @@ namespace BeeEngine
         }
         return nullptr;
     }
-}
+} // namespace BeeEngine

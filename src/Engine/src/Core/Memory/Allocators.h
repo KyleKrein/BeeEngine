@@ -11,49 +11,37 @@ namespace BeeEngine
     class NullAllocator
     {
     public:
-        MemoryBlock Allocate(size_t size)
-        {
-            return MemoryBlock{nullptr, 0};
-        }
-        MemoryBlock AllocateAligned(size_t size, size_t alignment)
-        {
-            return MemoryBlock{nullptr, 0};
-        }
+        MemoryBlock Allocate(size_t size) { return MemoryBlock{nullptr, 0}; }
+        MemoryBlock AllocateAligned(size_t size, size_t alignment) { return MemoryBlock{nullptr, 0}; }
         void Deallocate(MemoryBlock block)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
         }
         void DeallocateAligned(MemoryBlock block, size_t alignment)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
         }
-        bool Owns(MemoryBlock block)
-        {
-            return false;
-        }
-        void DeallocateAll()
-        {}
+        bool Owns(MemoryBlock block) { return false; }
+        void DeallocateAll() {}
     };
-    template<size_t stackSize>
+    template <size_t stackSize>
     class StackAllocator
     {
     public:
-        MemoryBlock Allocate(size_t size)
-        {
-            return AllocateAligned(size, 1);
-        }
+        MemoryBlock Allocate(size_t size) { return AllocateAligned(size, 1); }
         MemoryBlock AllocateAligned(size_t size, size_t alignment)
         {
             size_t alignedOffset = AlignMemoryAddress(m_Offset + size, alignment);
-            if(alignedOffset > stackSize)
+            if (alignedOffset > stackSize)
             {
-                BeeCoreError("StackAllocator overflow [Stack size: {0}, Used: {1}, Requested: {2}]", stackSize, m_Offset, size);
+                BeeCoreError(
+                    "StackAllocator overflow [Stack size: {0}, Used: {1}, Requested: {2}]", stackSize, m_Offset, size);
                 return {nullptr, 0};
             }
             void* alignedPtr = AlignMemoryAddress(m_Data + m_Offset, alignment);
@@ -62,11 +50,11 @@ namespace BeeEngine
         }
         void Deallocate(MemoryBlock block)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
-            if(block.Ptr != (m_Data + m_Offset - block.Size))
+            if (block.Ptr != (m_Data + m_Offset - block.Size))
             {
                 return;
             }
@@ -74,29 +62,24 @@ namespace BeeEngine
         }
         void DeallocateAligned(MemoryBlock block, size_t alignment)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
-            if(block.Ptr != AlignMemoryAddress(m_Data + m_Offset - block.Size, alignment))
+            if (block.Ptr != AlignMemoryAddress(m_Data + m_Offset - block.Size, alignment))
             {
                 return;
             }
             m_Offset -= block.Size;
         }
-        bool Owns(MemoryBlock block)
-        {
-            return block.Ptr >= m_Data && block.Ptr < m_Data + stackSize;
-        }
-        void DeallocateAll()
-        {
-            m_Offset = 0;
-        }
+        bool Owns(MemoryBlock block) { return block.Ptr >= m_Data && block.Ptr < m_Data + stackSize; }
+        void DeallocateAll() { m_Offset = 0; }
+
     private:
         std::byte m_Data[stackSize];
         size_t m_Offset;
     };
-    template<bool trackAllocations = false>
+    template <bool trackAllocations = false>
     class Mallocator
     {
     public:
@@ -115,7 +98,7 @@ namespace BeeEngine
         }
         void Deallocate(MemoryBlock block)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
@@ -126,7 +109,7 @@ namespace BeeEngine
             else
             {
                 auto it = std::find(m_Allocations.begin(), m_Allocations.end(), block);
-                if(it != m_Allocations.end())
+                if (it != m_Allocations.end())
                 {
                     m_Allocations.erase(it);
                 }
@@ -136,7 +119,7 @@ namespace BeeEngine
         MemoryBlock AllocateAligned(size_t size, size_t alignment)
         {
 #if defined(_MSC_VER)
-            void *ptr = _aligned_malloc(size, alignment);
+            void* ptr = _aligned_malloc(size, alignment);
 #else
             void* ptr = aligned_alloc(alignment, size);
 #endif
@@ -148,7 +131,7 @@ namespace BeeEngine
         }
         void DeallocateAligned(MemoryBlock block, size_t alignment)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
@@ -160,7 +143,7 @@ namespace BeeEngine
             if constexpr (trackAllocations)
             {
                 auto it = std::find(m_Allocations.begin(), m_Allocations.end(), block);
-                if(it != m_Allocations.end())
+                if (it != m_Allocations.end())
                 {
                     m_Allocations.erase(it);
                 }
@@ -178,7 +161,7 @@ namespace BeeEngine
         {
             if constexpr (trackAllocations)
             {
-                for(auto& block : m_Allocations)
+                for (auto& block : m_Allocations)
                 {
                     free(block.Ptr);
 #if 0
@@ -195,23 +178,23 @@ namespace BeeEngine
 #endif
                     }
 #endif
-
                 }
                 m_Allocations.clear();
             }
         }
+
     private:
         std::vector<MemoryBlock> m_Allocations;
     };
 
-    template<MemoryAllocator Primary, MemoryAllocator Fallback>
-    class FallbackAllocator: private Primary, private Fallback
+    template <MemoryAllocator Primary, MemoryAllocator Fallback>
+    class FallbackAllocator : private Primary, private Fallback
     {
     public:
         MemoryBlock Allocate(size_t size)
         {
             MemoryBlock block = Primary::Allocate(size);
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 block = Fallback::Allocate(size);
             }
@@ -219,11 +202,11 @@ namespace BeeEngine
         }
         void Deallocate(MemoryBlock block)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
-            if(Primary::Owns(block))
+            if (Primary::Owns(block))
             {
                 Primary::Deallocate(block);
             }
@@ -235,7 +218,7 @@ namespace BeeEngine
         MemoryBlock AllocateAligned(size_t size, size_t alignment)
         {
             MemoryBlock block = Primary::AllocateAligned(size, alignment);
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 block = Fallback::AllocateAligned(size, alignment);
             }
@@ -243,11 +226,11 @@ namespace BeeEngine
         }
         void DeallocateAligned(MemoryBlock block, size_t alignment)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
-            if(Primary::Owns(block))
+            if (Primary::Owns(block))
             {
                 Primary::DeallocateAligned(block, alignment);
             }
@@ -256,42 +239,34 @@ namespace BeeEngine
                 Fallback::DeallocateAligned(block, alignment);
             }
         }
-        bool Owns(MemoryBlock block)
-        {
-            return Primary::Owns(block) || Fallback::Owns(block);
-        }
+        bool Owns(MemoryBlock block) { return Primary::Owns(block) || Fallback::Owns(block); }
         void DeallocateAll()
         {
             Primary::DeallocateAll();
             Fallback::DeallocateAll();
         }
     };
-    template<MemoryAllocator Allocator, size_t OnePageDefaultCapacity, size_t MaxPages>
-    class FreeListAllocator: private Allocator
+    template <MemoryAllocator Allocator, size_t OnePageDefaultCapacity, size_t MaxPages>
+    class FreeListAllocator : private Allocator
     {
     public:
-        FreeListAllocator()
-        : m_FreeList(AllocateNode())
-        {}
-        MemoryBlock Allocate(size_t size)
-        {
-            return AllocateAligned(size, 1);
-        }
+        FreeListAllocator() : m_FreeList(AllocateNode()) {}
+        MemoryBlock Allocate(size_t size) { return AllocateAligned(size, 1); }
         void Deallocate(MemoryBlock block)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
-            if(Owns(block))
+            if (Owns(block))
             {
                 Ptr<Node> prev = m_FreeList;
-                while(prev)
+                while (prev)
                 {
                     auto start = reinterpret_cast<uintptr_t>(prev->Memory.Ptr);
                     auto end = reinterpret_cast<uintptr_t>(prev->Memory.Ptr + prev->Offset);
                     auto blockPtr = reinterpret_cast<uintptr_t>(block.Ptr);
-                    if(blockPtr >= start && blockPtr < end)
+                    if (blockPtr >= start && blockPtr < end)
                     {
                         break;
                     }
@@ -306,16 +281,16 @@ namespace BeeEngine
         }
         MemoryBlock AllocateAligned(size_t size, size_t alignment)
         {
-            if(size > OnePageDefaultCapacity)
+            if (size > OnePageDefaultCapacity)
             {
                 return Allocator::AllocateAligned(size, alignment);
             }
             Ptr<Node> prev = m_FreeList;
-            while(size > prev->Memory.Size - prev->Offset - alignment)
+            while (size > prev->Memory.Size - prev->Offset - alignment)
             {
-                if(!prev->Next)
+                if (!prev->Next)
                 {
-                    if(m_PageCount == MaxPages)
+                    if (m_PageCount == MaxPages)
                     {
                         return Allocator::AllocateAligned(size, alignment);
                     }
@@ -329,15 +304,15 @@ namespace BeeEngine
         }
         void DeallocateAligned(MemoryBlock block, size_t alignment)
         {
-            if(Owns(block))
+            if (Owns(block))
             {
                 Ptr<Node> prev = m_FreeList;
-                while(prev)
+                while (prev)
                 {
                     auto start = reinterpret_cast<uintptr_t>(prev->Memory.Ptr);
                     auto end = reinterpret_cast<uintptr_t>(prev->Memory.Ptr + prev->Offset);
                     auto blockPtr = reinterpret_cast<uintptr_t>(block.Ptr);
-                    if(blockPtr >= start && blockPtr < end)
+                    if (blockPtr >= start && blockPtr < end)
                     {
                         break;
                     }
@@ -354,12 +329,12 @@ namespace BeeEngine
         bool Owns(MemoryBlock block)
         {
             Ptr<Node> prev = m_FreeList;
-            while(prev)
+            while (prev)
             {
                 auto start = reinterpret_cast<uintptr_t>(prev->Memory.Ptr);
                 auto end = reinterpret_cast<uintptr_t>(prev->Memory.Ptr + prev->Offset);
                 auto blockPtr = reinterpret_cast<uintptr_t>(block.Ptr);
-                if(blockPtr >= start && blockPtr < end)
+                if (blockPtr >= start && blockPtr < end)
                 {
                     return true;
                 }
@@ -370,7 +345,7 @@ namespace BeeEngine
         void DeallocateAll()
         {
             Ptr<Node> prev = m_FreeList;
-            while(prev)
+            while (prev)
             {
                 Ptr<Node> next = prev->Next;
                 DeallocateNode(prev);
@@ -404,13 +379,13 @@ namespace BeeEngine
             m_PageCount--;
         }
     };
-    template<size_t thresholdInBytes, MemoryAllocator FirstIfMore, MemoryAllocator SecondIfLessOrEqual>
-    class SegregatorAllocator: private FirstIfMore, private SecondIfLessOrEqual
+    template <size_t thresholdInBytes, MemoryAllocator FirstIfMore, MemoryAllocator SecondIfLessOrEqual>
+    class SegregatorAllocator : private FirstIfMore, private SecondIfLessOrEqual
     {
     public:
         MemoryBlock Allocate(size_t size)
         {
-            if(size > thresholdInBytes)
+            if (size > thresholdInBytes)
             {
                 return FirstIfMore::Allocate(size);
             }
@@ -418,11 +393,11 @@ namespace BeeEngine
         }
         void Deallocate(MemoryBlock block)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
-            if(FirstIfMore::Owns(block))
+            if (FirstIfMore::Owns(block))
             {
                 FirstIfMore::Deallocate(block);
             }
@@ -433,7 +408,7 @@ namespace BeeEngine
         }
         MemoryBlock AllocateAligned(size_t size, size_t alignment)
         {
-            if(size > thresholdInBytes)
+            if (size > thresholdInBytes)
             {
                 return SecondIfLessOrEqual::AllocateAligned(size, alignment);
             }
@@ -441,11 +416,11 @@ namespace BeeEngine
         }
         void DeallocateAligned(MemoryBlock block, size_t alignment)
         {
-            if(!block.Ptr)
+            if (!block.Ptr)
             {
                 BeeCoreFatalError("Trying to deallocate nullptr");
             }
-            if(FirstIfMore::Owns(block))
+            if (FirstIfMore::Owns(block))
             {
                 FirstIfMore::DeallocateAligned(block, alignment);
             }
@@ -454,10 +429,7 @@ namespace BeeEngine
                 SecondIfLessOrEqual::DeallocateAligned(block, alignment);
             }
         }
-        bool Owns(MemoryBlock block)
-        {
-            return FirstIfMore::Owns(block) || SecondIfLessOrEqual::Owns(block);
-        }
+        bool Owns(MemoryBlock block) { return FirstIfMore::Owns(block) || SecondIfLessOrEqual::Owns(block); }
         void DeallocateAll()
         {
             FirstIfMore::DeallocateAll();
@@ -466,7 +438,7 @@ namespace BeeEngine
     };
 
     template <typename T, MemoryAllocator Alloc>
-    class StdAllocator: private Alloc
+    class StdAllocator : private Alloc
     {
     public:
         using value_type = T;
@@ -478,14 +450,17 @@ namespace BeeEngine
         using difference_type = std::ptrdiff_t;
 
         template <typename U>
-        struct rebind {
+        struct rebind
+        {
             using other = StdAllocator<U, Alloc>;
         };
 
         StdAllocator() = default;
 
         template <typename U>
-        StdAllocator(const StdAllocator<U, Alloc>&) {}
+        StdAllocator(const StdAllocator<U, Alloc>&)
+        {
+        }
 
         pointer allocate(size_type n)
         {
@@ -496,15 +471,12 @@ namespace BeeEngine
             return reinterpret_cast<pointer>(block.Ptr);
         }
 
-        void deallocate(pointer p, size_type n)
-        {
-            Alloc::Deallocate(MemoryBlock{p, n * sizeof(T)});
-        }
+        void deallocate(pointer p, size_type n) { Alloc::Deallocate(MemoryBlock{p, n * sizeof(T)}); }
 
         template <class U, class... Args>
         void construct(U* p, Args&&... args)
         {
-            ::new((void*)p) U(std::forward<Args>(args)...);
+            ::new ((void*)p) U(std::forward<Args>(args)...);
         }
 
         template <class U>
@@ -515,12 +487,14 @@ namespace BeeEngine
     };
 
     template <typename T, MemoryAllocator U, MemoryAllocator V>
-    bool operator==(const StdAllocator<T, U>&, const StdAllocator<T, V>&) {
+    bool operator==(const StdAllocator<T, U>&, const StdAllocator<T, V>&)
+    {
         return std::is_same_v<U, V>;
     }
 
     template <typename T, MemoryAllocator U, MemoryAllocator V>
-    bool operator!=(const StdAllocator<T, U>& a, const StdAllocator<T, V>& b) {
+    bool operator!=(const StdAllocator<T, U>& a, const StdAllocator<T, V>& b)
+    {
         return !(a == b);
     }
-}
+} // namespace BeeEngine

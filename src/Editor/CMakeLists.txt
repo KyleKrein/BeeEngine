@@ -6,11 +6,13 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
         src/AssetScanner.h
         src/Panels/AssetPanel.cpp
         src/Panels/AssetPanel.h
-        src/Panels/ImGuiOutputConsole.cpp
-        src/Panels/ImGuiOutputConsole.h
         src/Panels/AssetEditPanel.cpp
         src/Panels/AssetEditPanel.h
-        src/ImGuiNativeDragAndDrop.h)
+        src/ImGuiNativeDragAndDrop.h
+        src/Panels/ImGuiUIEditor.h
+        src/Panels/ImGuiUIEditor.cpp
+        src/Panels/ProjectSettings.h
+        src/Panels/ProjectSettings.cpp)
 # files for native scripting: src/NativeScripting/ScriptParser.cpp src/NativeScripting/ScriptParser.h src/NativeScripting/ScriptScanner.cpp src/NativeScripting/ScriptScanner.h src/NativeScripting/CodeGenerators.cpp src/NativeScripting/CodeGenerators.h src/NativeScripting/GameBuilder.cpp src/NativeScripting/GameBuilder.h src/NativeScripting/StdioLogSystem.cpp
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 
@@ -34,3 +36,5 @@ configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSI
 configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.NativeBridge.runtimeconfig.json ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.runtimeconfig.json COPYONLY)
 configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.NativeBridge.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.dll COPYONLY)
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/Localization/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Localization)
+file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/Platforms/)
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/Platforms/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Platforms)

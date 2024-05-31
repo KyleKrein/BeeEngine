@@ -16,7 +16,7 @@ namespace BeeEngine
     void Entity::RemoveParent()
     {
         auto& hierarchy = GetComponent<HierarchyComponent>();
-        if(!hierarchy.Parent)
+        if (!hierarchy.Parent)
             return;
         GetComponent<TransformComponent>().SetTransform(Math::ToGlobalTransform(*this));
         auto& parentHierarchy = hierarchy.Parent.GetComponent<HierarchyComponent>();
@@ -30,19 +30,19 @@ namespace BeeEngine
         auto& hierarchy = where.GetComponent<HierarchyComponent>();
         for (auto child : hierarchy.Children)
         {
-            if(child == who)
+            if (child == who)
                 return child;
             auto r = IfEntityPresentInChildren(who, child);
-            if(r.has_value())
+            if (r.has_value())
                 return r;
         }
         return std::nullopt;
     }
-    void Entity::SetParent(Entity &parent)
+    void Entity::SetParent(Entity& parent)
     {
-        if(parent == *this)
+        if (parent == *this)
             return;
-        if(parent == Entity::Null)
+        if (parent == Entity::Null)
         {
             RemoveParent();
             return;
@@ -54,7 +54,7 @@ namespace BeeEngine
         BeeExpects((entt::entity)child != entt::null);
         auto& childHierarchy = child.GetComponent<HierarchyComponent>();
         auto isPresentedInChildren = IfEntityPresentInChildren(parent, child);
-        if(isPresentedInChildren.has_value())
+        if (isPresentedInChildren.has_value())
         {
             Entity prevParent = isPresentedInChildren.value();
             Entity currentParent = prevParent.GetComponent<HierarchyComponent>().Parent;
@@ -63,7 +63,7 @@ namespace BeeEngine
                 prevParent = currentParent;
                 currentParent = prevParent.GetComponent<HierarchyComponent>().Parent;
             }
-            if(childHierarchy.Parent)
+            if (childHierarchy.Parent)
             {
                 auto tempParent = childHierarchy.Parent;
                 prevParent.SetParentWithoutChecks(tempParent);
@@ -78,10 +78,11 @@ namespace BeeEngine
         parentHierarchy.Children.push_back(child);
         GetComponent<TransformComponent>().SetTransform(Math::ToLocalTransform(*this));
         BeeEnsures(childHierarchy.Parent == parent);
-        BeeEnsures(std::find(parentHierarchy.Children.begin(), parentHierarchy.Children.end(), child) != parentHierarchy.Children.end());
+        BeeEnsures(std::find(parentHierarchy.Children.begin(), parentHierarchy.Children.end(), child) !=
+                   parentHierarchy.Children.end());
     }
 
-    void Entity::SetParentWithoutChecks(Entity &parent)
+    void Entity::SetParentWithoutChecks(Entity& parent)
     {
         RemoveParent();
         auto& parentHierarchy = parent.GetComponent<HierarchyComponent>();
@@ -91,7 +92,7 @@ namespace BeeEngine
         parentHierarchy.Children.push_back(child);
     }
 
-    bool Entity::HasChild(Entity &child)
+    bool Entity::HasChild(Entity& child)
     {
         return IfEntityPresentInChildren(child, *this).has_value();
     }
@@ -101,7 +102,7 @@ namespace BeeEngine
         return GetComponent<HierarchyComponent>().Parent;
     }
 
-    const std::vector<Entity> &Entity::GetChildren()
+    const std::vector<Entity>& Entity::GetChildren()
     {
         return GetComponent<HierarchyComponent>().Children;
     }
@@ -110,4 +111,4 @@ namespace BeeEngine
     {
         return GetComponent<HierarchyComponent>().Parent != Entity::Null;
     }
-}
+} // namespace BeeEngine

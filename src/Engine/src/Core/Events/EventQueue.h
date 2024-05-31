@@ -1,9 +1,10 @@
 #pragma once
-#include "Core/TypeDefines.h"
 #include "Core/Events/Event.h"
+#include "Core/TypeDefines.h"
 #include "JobSystem/SpinLock.h"
 
-namespace BeeEngine{
+namespace BeeEngine
+{
     struct LayerStack;
 
     class EventQueue
@@ -12,6 +13,7 @@ namespace BeeEngine{
         explicit EventQueue(LayerStack& layerStack);
         void AddEvent(Scope<Event>&& event);
         void Dispatch();
+
     private:
         void ApplicationOnEvent(EventDispatcher& e);
 
@@ -20,4 +22,4 @@ namespace BeeEngine{
         LayerStack& m_LayerStack;
         Jobs::SpinLock m_Lock;
     };
-}
+} // namespace BeeEngine

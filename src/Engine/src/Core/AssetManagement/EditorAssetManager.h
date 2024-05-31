@@ -3,10 +3,14 @@
 //
 
 #pragma once
+#include "Core/AssetManagement/Asset.h"
+#include "Core/Coroutines/Generator.h"
 #include "IAssetManager.h"
+#include <unordered_map>
+#include <vector>
 namespace BeeEngine
 {
-    class EditorAssetManager final: public IAssetManager
+    class EditorAssetManager final : public IAssetManager
     {
     public:
         EditorAssetManager();
@@ -14,11 +18,13 @@ namespace BeeEngine
 
         Asset* GetAsset(AssetHandle handle) const final;
 
-        const AssetHandle*  GetAssetHandleByName(std::string_view name) const;
+        AssetMetadata& GetAssetMetadata(const AssetHandle& handle);
 
-        void LoadAsset(gsl::span<byte> data, AssetHandle handle, const std::string& name, AssetType type) final;
+        const AssetHandle* GetAssetHandleByName(const String& name) const;
 
-        void LoadAsset(const Path &path, AssetHandle handle) final;
+        void LoadAsset(gsl::span<byte> data, AssetHandle handle, const String& name, AssetType type) final;
+
+        void LoadAsset(const Path& path, AssetHandle handle) final;
 
         void UnloadAsset(AssetHandle handle) final;
 
@@ -30,9 +36,17 @@ namespace BeeEngine
 
         void RemoveAsset(AssetHandle handle);
 
+        std::span<const AssetHandle> GetAssetHandlesByType(AssetType type) const;
+
+        Generator<Asset&> GetAssetsOfType(AssetType type) const;
+        Generator<Asset&> IterateAssets() const;
+        Generator<std::pair<AssetHandle, const AssetMetadata*>> GetAssetsDataOfType(AssetType type) const;
+        Generator<std::pair<AssetHandle, const AssetMetadata*>> IterateAssetsData() const;
+
     private:
         mutable AssetMap m_AssetMap;
         AssetRegistry m_AssetRegistry;
-        std::map<std::string, AssetHandle> m_AssetNameMap;
+        std::map<String, AssetHandle> m_AssetNameMap;
+        std::unordered_map<AssetType, std::vector<AssetHandle>> m_TypeMap;
     };
-}
+} // namespace BeeEngine

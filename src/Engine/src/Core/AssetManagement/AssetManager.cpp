@@ -4,7 +4,6 @@
 
 #include "AssetManager.h"
 
-
 namespace BeeEngine
 {
     IAssetManager* AssetManager::s_AssetManager = nullptr;

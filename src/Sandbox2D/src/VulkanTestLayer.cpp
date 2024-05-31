@@ -4,12 +4,10 @@
 
 #include "VulkanTestLayer.h"
 
-#include "imgui.h"
 #include "Platform/Platform.h"
+#include "imgui.h"
 
-VulkanTestLayer::~VulkanTestLayer()
-{
-}
+VulkanTestLayer::~VulkanTestLayer() {}
 
 void VulkanTestLayer::OnAttach()
 {
@@ -21,9 +19,9 @@ void VulkanTestLayer::OnDetach()
     Layer::OnDetach();
 }
 
-void VulkanTestLayer::OnUpdate()
+void VulkanTestLayer::OnUpdate(BeeEngine::FrameData& data)
 {
-    Layer::OnUpdate();
+    Layer::OnUpdate(data);
 }
 
 void VulkanTestLayer::OnGUIRendering()

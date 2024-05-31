@@ -16,8 +16,10 @@ namespace BeeEngine
 {
     class IBindable
     {
-        public:
-        struct Dummy {};
+    public:
+        struct Dummy
+        {
+        };
         using BindGroupLayoutEntryType = std::variant<
 #if defined(BEE_COMPILE_WEBGPU)
             WGPUBindGroupLayoutEntry,
@@ -25,8 +27,7 @@ namespace BeeEngine
 #if defined(BEE_COMPILE_VULKAN)
             vk::DescriptorSetLayoutBinding,
 #endif
-            Dummy
-            >;
+            Dummy>;
         using BindGroupEntryType = std::variant<
 #if defined(BEE_COMPILE_WEBGPU)
             WGPUBindGroupEntry,
@@ -35,9 +36,9 @@ namespace BeeEngine
             vk::WriteDescriptorSet,
 #endif
             Dummy>;
-            virtual ~IBindable() = default;
-            virtual void Bind(uint32_t slot = 0) = 0;
-            virtual std::vector<BindGroupLayoutEntryType> GetBindGroupLayoutEntry() const = 0;
-            virtual std::vector<BindGroupEntryType> GetBindGroupEntry() const = 0;
+        virtual ~IBindable() = default;
+        virtual void Bind(uint32_t slot = 0) = 0;
+        virtual std::vector<BindGroupLayoutEntryType> GetBindGroupLayoutEntry() const = 0;
+        virtual std::vector<BindGroupEntryType> GetBindGroupEntry() const = 0;
     };
-}
+} // namespace BeeEngine

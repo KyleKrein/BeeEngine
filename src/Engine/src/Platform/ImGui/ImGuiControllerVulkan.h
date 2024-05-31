@@ -9,12 +9,12 @@
 #include <imgui.h>
 #include <vulkan/vulkan.hpp>
 
-
 namespace BeeEngine::Internal
 {
-    class ImGuiControllerVulkan: public ImGuiController
+    class ImGuiControllerVulkan : public ImGuiController
     {
         void* m_Window = nullptr;
+
     public:
         static std::function<void()> s_ShutdownFunction;
         void Initialize(uint16_t width, uint16_t height, uintptr_t windowHandle) override;
@@ -22,10 +22,11 @@ namespace BeeEngine::Internal
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
         void Render(CommandBuffer& commandBuffer) override;
         void Shutdown() override;
+
     private:
         void SetupFunctionsForBackend();
 
-        void(*m_NewFrameBackend)() = nullptr;
+        void (*m_NewFrameBackend)() = nullptr;
         VkDescriptorPool g_DescriptorPool = VK_NULL_HANDLE;
         static void check_vk_result(VkResult err)
         {
@@ -36,5 +37,5 @@ namespace BeeEngine::Internal
                 abort();
         }
     };
-}
+} // namespace BeeEngine::Internal
 #endif

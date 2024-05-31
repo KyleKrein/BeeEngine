@@ -16,4 +16,4 @@ namespace BeeEngine::Editor
     {
         return std::filesystem::current_path();
     }
-}
+} // namespace BeeEngine::Editor

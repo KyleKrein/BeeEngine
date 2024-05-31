@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 CPMAddPackage(
         NAME ImGui
         GITHUB_REPOSITORY ocornut/imgui
-        GIT_TAG c6aa051629753f0ef0d26bf775a8b6a92aa213b2
+        GIT_TAG 36ffdd69d304659388ad3d3be487a467de65eaf6
         DOWNLOAD_ONLY YES
 )
 set(ImGui_INCLUDE_DIR ${ImGui_SOURCE_DIR})

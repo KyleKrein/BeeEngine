@@ -8,15 +8,16 @@
 
 namespace BeeEngine::Internal
 {
-    class FpsCounter final: public IImGuiElement
+    class FpsCounter final : public IImGuiElement
     {
     public:
         void Update() override;
         void Render() override;
         void OnEvent(EventDispatcher& event) override;
+
     private:
         Time::secondsD m_LastTime = Time::TotalTime();
         float m_Fps = 0;
         float m_CurrentFps = 0;
     };
-}
+} // namespace BeeEngine::Internal

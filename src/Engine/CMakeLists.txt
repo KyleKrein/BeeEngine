@@ -67,6 +67,7 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/AssetManagement/PrefabImporter.cpp
         src/Core/AssetManagement/PrefabImporter.h
         src/Gui/ImGui/ImGuiExtension.h
+        src/Gui/ImGui/ImGuiExtension.cpp
         src/Core/Hash.cpp
         src/Core/Hash.h
         src/Serialization/ISerializer.h
@@ -139,9 +140,19 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Platform/Vulkan/VulkanComputePipeline.h
         src/Core/AssetManagement/MeshSourceImporter.cpp
         src/Core/AssetManagement/MeshSourceImporter.h
+        src/Core/AssetManagement/SceneImporter.h
+        src/Core/AssetManagement/SceneImporter.cpp
         src/Core/AssetManagement/MeshSource.cpp
         src/Core/AssetManagement/MeshSource.h
         src/Renderer/MaterialData.h
+        src/Core/GameConfig.h
+        src/Core/GameConfig.cpp
+        src/Gui/ImGui/ImGuiOutputConsole.cpp
+        src/Gui/ImGui/ImGuiOutputConsole.h
+        vendor/SIMDString/SIMDString.h
+        vendor/SIMDString/SIMDString.cpp
+        src/Gui/MessageBox.h
+        src/Gui/MessageBox.cpp
 )
 
 
@@ -177,7 +188,10 @@ elseif(APPLE)
             src/Platform/MacOS/FileDialogsMacOS.mm
             src/Platform/MacOS/MacOSDragDrop.h
             src/Platform/MacOS/MacOSDragDrop.mm
-            src/Platform/MacOS/MacOSThreads.cpp)
+            src/Platform/MacOS/MacOSThreads.cpp
+            src/Platform/MacOS/MacOSPlatform.cpp
+            src/Platform/MacOS/MacOSInternal.h
+            src/Platform/MacOS/MacOSInternal.mm)
     list(APPEND SOURCE_FILES ${MACOS_SOURCE_FILES})
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU OFF)
@@ -353,6 +367,15 @@ function(add_sdl_subdirectory)
 
     file(WRITE vendor/sdl/CMakeLists.txt "${MODIFIED_SDL_CMAKELISTS}")
 
+    if(NOT SDL3_PATCHED)
+    file(READ vendor/sdl/src/video/cocoa/SDL_cocoakeyboard.m SDL_cocoakeyboard)
+    string(REPLACE "![[data.fieldEdit superview] isEqual:parentView]"
+            "false"
+            MODIFIED_SDL_cocoakeyboard
+            "${SDL_cocoakeyboard}")
+    file(WRITE vendor/sdl/src/video/cocoa/SDL_cocoakeyboard.m "${MODIFIED_SDL_cocoakeyboard}") #This is a fix for crashes, that happen on MacOs when input text field is unfocused due to a double removal from superview
+    set(SDL3_PATCHED ON CACHE BOOL "SDL3 Patched" FORCE)
+    endif()
     add_subdirectory(vendor/sdl)
 
     file(READ vendor/sdl/CMakeLists.txt SDL_CMAKELISTS)
@@ -524,3 +547,5 @@ add_library(BeeEngine::WithScripting ALIAS BeeEngine)
 target_compile_definitions(BeeEngine PRIVATE BEE_ENABLE_SCRIPTING)
 
 target_compile_definitions(BeeEngine PUBLIC _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING) # for spdlog
+
+#clang_format(BeeEngine "${SOURCE_FILES}")

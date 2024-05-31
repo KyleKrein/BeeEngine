@@ -4,50 +4,32 @@
 
 #pragma once
 #if defined(BEE_COMPILE_WEBGPU)
+#include "Core/Coroutines/Task.h"
 #include "Renderer/GraphicsDevice.h"
+#include "WebGPUBufferPool.h"
+#include "WebGPUCommandBuffer.h"
 #include "WebGPUInstance.h"
 #include "WebGPUSwapchain.h"
-#include "WebGPUCommandBuffer.h"
 #include "gsl/gsl"
-#include "WebGPUBufferPool.h"
-#include "Core/Coroutines/Task.h"
 
 namespace BeeEngine::Internal
 {
-    class WebGPUGraphicsDevice: public GraphicsDevice
+    class WebGPUGraphicsDevice : public GraphicsDevice
     {
     public:
         WebGPUGraphicsDevice(WebGPUInstance& instance);
         ~WebGPUGraphicsDevice() override;
 
-        [[nodiscard]] WGPUAdapter GetAdapter() const
-        {
-            return m_Adapter;
-        }
+        [[nodiscard]] WGPUAdapter GetAdapter() const { return m_Adapter; }
 
-        [[nodiscard]] WGPUSurface GetSurface() const
-        {
-            return m_Surface;
-        }
+        [[nodiscard]] WGPUSurface GetSurface() const { return m_Surface; }
 
-        [[nodiscard]] WGPUDevice GetDevice() const
-        {
-            return m_Device;
-        }
+        [[nodiscard]] WGPUDevice GetDevice() const { return m_Device; }
 
-        static WebGPUGraphicsDevice& GetInstance()
-        {
-            return *s_Instance;
-        }
+        static WebGPUGraphicsDevice& GetInstance() { return *s_Instance; }
 
-        WebGPUSwapChain& GetSwapChain()
-        {
-            return *m_SwapChain;
-        }
-        WGPUQueue GetQueue() const
-        {
-            return m_Queue;
-        }
+        WebGPUSwapChain& GetSwapChain() { return *m_SwapChain; }
+        WGPUQueue GetQueue() const { return m_Queue; }
 
         WGPUBuffer CreateBuffer(WGPUBufferUsageFlags usage, uint32_t size);
         [[nodiscard("To avoid gpu memory leaks. Don't forget to call ReleaseBuffer()")]]
@@ -55,10 +37,7 @@ namespace BeeEngine::Internal
         {
             return m_BufferPool->RequestBuffer(size, usage);
         }
-        void ReleaseBuffer(const WebGPUBuffer& buffer)
-        {
-            m_BufferPool->ReleaseBuffer(buffer);
-        }
+        void ReleaseBuffer(const WebGPUBuffer& buffer) { m_BufferPool->ReleaseBuffer(buffer); }
         void CopyDataToBuffer(gsl::span<byte> data, WGPUBuffer buffer);
 
         void SubmitCommandBuffers(CommandBuffer* commandBuffers, uint32_t numberOfBuffers);
@@ -66,19 +45,10 @@ namespace BeeEngine::Internal
         CommandBuffer CreateCommandBuffer();
         void WindowResized(uint32_t width, uint32_t height) override;
 
-        void RequestSwapChainRebuild() override
-        {
-            m_SwapChainRequiresRebuild = true;
-        }
-        bool SwapChainRequiresRebuild() override
-        {
-            return m_SwapChainRequiresRebuild;
-        }
+        void RequestSwapChainRebuild() override { m_SwapChainRequiresRebuild = true; }
+        bool SwapChainRequiresRebuild() override { return m_SwapChainRequiresRebuild; }
 
-        void SetDefault(out<WGPULimits> limits) const noexcept
-        {
-            memset(&limits, 0, sizeof(WGPULimits));
-        }
+        void SetDefault(out<WGPULimits> limits) const noexcept { memset(&limits, 0, sizeof(WGPULimits)); }
         void SetDefault(out<WGPUBindGroupEntry> entry) const noexcept
         {
             entry.nextInChain = nullptr;
@@ -115,23 +85,17 @@ namespace BeeEngine::Internal
             wgpuTextureDestroy(texture);
             wgpuTextureRelease(texture);
         }
-        void DestroyTextureView(WGPUTextureView textureView)
-        {
-            wgpuTextureViewRelease(textureView);
-        }
+        void DestroyTextureView(WGPUTextureView textureView) { wgpuTextureViewRelease(textureView); }
 
-        const WGPUSupportedLimits& GetSupportedLimits() const noexcept
-        {
-            return m_SupportedLimits;
-        }
+        const WGPUSupportedLimits& GetSupportedLimits() const noexcept { return m_SupportedLimits; }
 
         Task<> WaitForQueueIdle();
 
     private:
         static WebGPUGraphicsDevice* s_Instance;
-        static WGPUAdapter RequestAdapter(WGPUInstance instance, WGPURequestAdapterOptions const * options);
+        static WGPUAdapter RequestAdapter(WGPUInstance instance, WGPURequestAdapterOptions const* options);
         WGPUSurface CreateSurface(WGPUInstance instance);
-        static WGPUDevice RequestDevice(WGPUAdapter adapter, WGPUDeviceDescriptor const * descriptor);
+        static WGPUDevice RequestDevice(WGPUAdapter adapter, WGPUDeviceDescriptor const* descriptor);
         WGPUQueue m_Queue;
         WGPUAdapter m_Adapter;
         WGPUSurface m_Surface;
@@ -144,5 +108,5 @@ namespace BeeEngine::Internal
 
         void LogAdapterInfo() const noexcept;
     };
-}
+} // namespace BeeEngine::Internal
 #endif
