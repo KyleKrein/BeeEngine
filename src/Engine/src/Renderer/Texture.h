@@ -3,15 +3,15 @@
 //
 
 #pragma once
-#include "Core/TypeDefines.h"
-#include "gsl/gsl"
-#include "IBindable.h"
 #include "BindingSet.h"
 #include "Core/AssetManagement/Asset.h"
+#include "Core/TypeDefines.h"
+#include "IBindable.h"
+#include "gsl/gsl"
 
 namespace BeeEngine
 {
-    class Texture: public IBindable, public Asset
+    class Texture : public IBindable, public Asset
     {
     public:
         virtual ~Texture() = default;
@@ -20,38 +20,29 @@ namespace BeeEngine
         [[nodiscard]] uint32_t GetHeight() const { return m_Height; }
         [[nodiscard]] uintptr_t GetRendererID() const { return m_RendererID; }
 
-        bool operator==(const Texture& other) const
-        {
-            return m_RendererID == other.m_RendererID;
-        }
-        bool operator!=(const Texture& other) const
-        {
-            return !(*this == other);
-        }
+        bool operator==(const Texture& other) const { return m_RendererID == other.m_RendererID; }
+        bool operator!=(const Texture& other) const { return !(*this == other); }
+
     protected:
         uintptr_t m_RendererID;
         uint32_t m_Width, m_Height;
     };
 
-    class Texture2D: public Texture
+    class Texture2D : public Texture
     {
     public:
         virtual ~Texture2D() = default;
 
         virtual void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels = 4) = 0;
 
-        [[nodiscard]] constexpr AssetType GetType() const final
-        {
-            return AssetType::Texture2D;
-        }
+        [[nodiscard]] constexpr AssetType GetType() const final { return AssetType::Texture2D; }
 
-        static Ref<Texture2D> Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels = 4);
+        static Ref<Texture2D>
+        Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels = 4);
 
-        BindingSet* GetBindingSet()
-        {
-            return m_BindingSet.get();
-        }
+        BindingSet* GetBindingSet() { return m_BindingSet.get(); }
+
     protected:
         Ref<BindingSet> m_BindingSet;
     };
-}
+} // namespace BeeEngine

@@ -4,10 +4,9 @@
 
 #include "UniformBuffer.h"
 
-#include "Renderer.h"
 #include "Platform/Vulkan/VulkanUniformBuffer.h"
 #include "Platform/WebGPU/WebGPUUniformBuffer.h"
-
+#include "Renderer.h"
 
 namespace BeeEngine
 {
@@ -28,4 +27,4 @@ namespace BeeEngine
         BeeCoreError("Unknown RendererAPI!");
         return nullptr;
     }
-}
+} // namespace BeeEngine

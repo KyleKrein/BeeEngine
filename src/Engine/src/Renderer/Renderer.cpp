@@ -3,15 +3,21 @@
 //
 
 #include "Renderer.h"
-#include "RenderingQueue.h"
 #include "Core/DeletionQueue.h"
+#include "RenderingQueue.h"
 
 namespace BeeEngine
 {
     RenderAPI Renderer::s_Api = RenderAPI::NotAvailable;
     Scope<RendererAPI> Renderer::s_RendererAPI = nullptr;
     Color4 Renderer::s_ClearColor = Color4::DarkGray;
-    RendererStatistics Renderer::s_Statistics {};
+    RendererStatistics Renderer::s_Statistics{};
+
+    void FrameData::CopyFrameBufferImageToSwapchain(FrameBuffer& framebuffer, uint32_t attachmentIndex)
+    {
+        BEE_PROFILE_FUNCTION();
+        Renderer::s_RendererAPI->CopyFrameBufferImageToSwapchain(framebuffer, attachmentIndex);
+    }
 
     void Renderer::EndFrame(FrameData& frameData)
     {
@@ -32,6 +38,6 @@ namespace BeeEngine
         BeeCoreInfo("Using {} Renderer API", ToString(api));
         s_RendererAPI = RendererAPI::Create();
         s_RendererAPI->Init();
-        //Internal::RenderingQueue::Initialize();
+        // Internal::RenderingQueue::Initialize();
     }
-}
+} // namespace BeeEngine

@@ -4,20 +4,22 @@
 #if defined(DESKTOP_PLATFORM) && defined(BEE_COMPILE_GLFW)
 #include "GlfwWindowHandler.h"
 #endif
-#include "WindowHandler.h"
-#include "SDLWindowHandler.h"
-#include "WinAPIWindowHandler.h"
 #include "Core/CodeSafety/Expects.h"
 #include "Debug/Instrumentor.h"
+#include "SDLWindowHandler.h"
+#include "WinAPIWindowHandler.h"
+#include "WindowHandler.h"
 using namespace BeeEngine::Internal;
 
-namespace BeeEngine{
+namespace BeeEngine
+{
     WindowHandler* WindowHandler::s_Instance = nullptr;
     WindowHandlerAPI WindowHandler::s_API = WindowHandlerAPI::SDL;
-    gsl::not_null<WindowHandler*> WindowHandler::Create(WindowHandlerAPI api, const ApplicationProperties& properties, EventQueue& eventQueue)
+    gsl::not_null<WindowHandler*>
+    WindowHandler::Create(WindowHandlerAPI api, const ApplicationProperties& properties, EventQueue& eventQueue)
     {
         BEE_PROFILE_FUNCTION();
-        BeeExpects(properties.WindowWidth > 0 && properties.WindowHeight > 0 && properties.Title != nullptr);
+        BeeExpects(properties.WindowWidth > 0 && properties.WindowHeight > 0 && !properties.Title.empty());
         s_API = api;
         switch (api)
         {
@@ -33,5 +35,4 @@ namespace BeeEngine{
                 BeeCoreFatalError("Invalid Window API");
         }
     }
-}
-
+} // namespace BeeEngine

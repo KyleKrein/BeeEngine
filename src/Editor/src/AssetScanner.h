@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Core/Path.h"
 #include <filesystem>
 #include <vector>
 
@@ -10,6 +11,7 @@ namespace BeeEngine::Editor
 {
     class AssetScanner
     {
-        static std::vector<std::filesystem::path> GetAllAssetFiles(const std::filesystem::path& workingDirectory);
+    public:
+        static std::vector<Path> GetAllAssetFiles(const Path& workingDirectory);
     };
-}
+} // namespace BeeEngine::Editor

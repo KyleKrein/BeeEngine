@@ -4,7 +4,6 @@
 
 #include "Camera.h"
 
-
 namespace BeeEngine
 {
 

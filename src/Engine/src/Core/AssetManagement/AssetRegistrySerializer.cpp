@@ -3,10 +3,10 @@
 //
 
 #include "AssetRegistrySerializer.h"
-#include <yaml-cpp/yaml.h>
-#include <fstream>
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
+#include "Serialization/YAMLHelper.h"
+#include <fstream>
 
 namespace BeeEngine
 {
@@ -24,14 +24,14 @@ namespace BeeEngine
                 return "AssetType::Prefab";
             case AssetType::Scene:
                 return "AssetType::Scene";
-            /*case AssetType::Shader:
-                return "AssetType::Shader";
-            case AssetType::Mesh:
-                return "AssetType::Mesh";
-            case AssetType::Material:
-                return "AssetType::Material";
-            case AssetType::Model:
-                return "AssetType::Model";*/
+                /*case AssetType::Shader:
+                    return "AssetType::Shader";
+                case AssetType::Mesh:
+                    return "AssetType::Mesh";
+                case AssetType::Material:
+                    return "AssetType::Material";
+                case AssetType::Model:
+                    return "AssetType::Model";*/
         }
         BeeCoreError("Unknown AssetType: {0}", ToString(type));
         return "AssetType::None";
@@ -61,10 +61,10 @@ namespace BeeEngine
         return AssetType::None;
     }
 
-    void AssetRegistrySerializer::Serialize(const Path &path)
+    void AssetRegistrySerializer::Serialize(const Path& path)
     {
         auto& registry = m_AssetManager->GetAssetRegistry();
-        if(!registry.contains(m_ProjectRegistryID))
+        if (!registry.contains(m_ProjectRegistryID))
             return;
         YAML::Emitter out;
         out << YAML::BeginMap;
@@ -72,49 +72,49 @@ namespace BeeEngine
         out << YAML::Key << "Assets";
         out << YAML::Value << YAML::BeginSeq;
         auto& registryMap = registry.at(m_ProjectRegistryID);
-        for(auto& [handle, metadata] : registryMap)
+        for (auto& [handle, metadata] : registryMap)
         {
             if (metadata.Location != AssetLocation::FileSystem)
             {
                 continue;
             }
             out << YAML::BeginMap;
-            out << YAML::Key << "Name" << YAML::Value << metadata.Name;
+            out << YAML::Key << "Name" << YAML::Value << metadata.Name.c_str();
             out << YAML::Key << "Type" << YAML::Value << AssetTypeToString(metadata.Type);
             out << YAML::Key << "Handle" << YAML::Value << handle;
             auto filepath = std::get<Path>(metadata.Data);
-            if(filepath.IsAbsolute())
+            if (filepath.IsAbsolute())
             {
                 filepath = filepath.GetRelativePath(m_ProjectPath);
             }
-            out << YAML::Key << "FilePath" << YAML::Value << filepath.AsUTF8();
+            out << YAML::Key << "FilePath" << YAML::Value << filepath.AsUTF8().c_str();
             out << YAML::EndMap;
         }
         out << YAML::EndSeq;
         out << YAML::EndMap;
 
-        File::WriteFile(path, out.c_str());
+        File::WriteFile(path, String{out.c_str()});
     }
 
-    void AssetRegistrySerializer::Deserialize(const Path &path)
+    void AssetRegistrySerializer::Deserialize(const Path& path)
     {
         std::ifstream ifs(path.ToStdPath());
         YAML::Node data = YAML::Load(ifs);
         ifs.close();
-        UUID registryID = data["Registry ID"].as<uint64_t>();
-        for(auto asset : data["Assets"])
+        UUID registryID = data["Registry ID"].as<UUID>();
+        for (auto asset : data["Assets"])
         {
-            Path filePath = asset["FilePath"].as<std::string>();
-            if(filePath.IsRelative())
+            Path filePath = String{asset["FilePath"].as<std::string>()};
+            if (filePath.IsRelative())
             {
                 filePath = m_ProjectPath / filePath;
             }
-            if(!File::Exists(filePath))
+            if (!File::Exists(filePath))
             {
                 BeeCoreError("Asset file {0} does not exist!", filePath.AsUTF8());
                 continue;
             }
-            m_AssetManager->LoadAsset(filePath, {registryID,asset["Handle"].as<uint64_t>()});
+            m_AssetManager->LoadAsset(filePath, {registryID, asset["Handle"].as<uint64_t>()});
         }
     }
-}
+} // namespace BeeEngine

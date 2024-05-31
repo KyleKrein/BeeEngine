@@ -1,7 +1,6 @@
 //
 // Created by Александр Лебедев on 13.08.2023.
 //
-#include <version>
 #include <functional>
 #include <future>
 #include <mutex>
@@ -9,17 +8,19 @@
 #include <thread>
 #include <utility>
 #include <vector>
+#include <version>
 #pragma once
 
-//Thread pool was originally taken from https://github.com/ZenSepiol/Dear-ImGui-App-Framework/tree/main
-//and modified to fit the needs of the engine
+// Thread pool was originally taken from https://github.com/ZenSepiol/Dear-ImGui-App-Framework/tree/main
+// and modified to fit the needs of the engine
 
 namespace BeeEngine
 {
     class ThreadPool
     {
     public:
-        ThreadPool(const size_t size) : m_BusyThreads(size), m_Threads(std::vector<std::thread>(size)), m_ShutdownRequested(false)
+        ThreadPool(const size_t size)
+            : m_BusyThreads(size), m_Threads(std::vector<std::thread>(size)), m_ShutdownRequested(false)
         {
             for (size_t i = 0; i < size; ++i)
             {
@@ -27,16 +28,13 @@ namespace BeeEngine
             }
         }
 
-        ~ThreadPool()
-        {
-            Shutdown();
-        }
+        ~ThreadPool() { Shutdown(); }
 
         ThreadPool(const ThreadPool&) = delete;
-        ThreadPool(ThreadPool&&)      = delete;
+        ThreadPool(ThreadPool&&) = delete;
 
         ThreadPool& operator=(const ThreadPool&) = delete;
-        ThreadPool& operator=(ThreadPool&&)      = delete;
+        ThreadPool& operator=(ThreadPool&&) = delete;
 
         // Waits until threads finish their current task and shutdowns the pool
         void Shutdown()
@@ -47,7 +45,7 @@ namespace BeeEngine
                 m_ConditionVariable.notify_all();
             }
 
-            for (auto & thread : m_Threads)
+            for (auto& thread : m_Threads)
             {
                 if (thread.joinable())
                 {
@@ -61,21 +59,21 @@ namespace BeeEngine
         {
 #if __cpp_lib_move_only_function
             std::packaged_task<decltype(f(args...))()> task(std::forward<F>(f), std::forward<Args>(args)...);
-        auto future       = task.get_future();
-        auto wrapperFunc = [task = std::move(task)]() mutable { std::move(task)(); };
-        {
-            std::lock_guard<std::mutex> lock(m_Mutex);
-            m_Queue.push(std::move(wrapperFunc));
-            // Wake up one thread if its waiting
-            m_ConditionVariable.notify_one();
-        }
+            auto future = task.get_future();
+            auto wrapperFunc = [task = std::move(task)]() mutable { std::move(task)(); };
+            {
+                std::lock_guard<std::mutex> lock(m_Mutex);
+                m_Queue.push(std::move(wrapperFunc));
+                // Wake up one thread if its waiting
+                m_ConditionVariable.notify_one();
+            }
 
-        // Return future from promise
-        return future;
+            // Return future from promise
+            return future;
 #else
 
             auto taskPtr = std::make_shared<std::packaged_task<decltype(f(args...))()>>(std::forward<F>(f),
-                    std::forward<Args>(args)...);
+                                                                                        std::forward<Args>(args)...);
 
             auto wrapperFunc = [taskPtr]() { (*taskPtr)(); };
             {
@@ -100,19 +98,20 @@ namespace BeeEngine
         class ThreadWorker
         {
         public:
-            ThreadWorker(ThreadPool* pool) : m_ThreadPool(pool)
-            {
-            }
+            ThreadWorker(ThreadPool* pool) : m_ThreadPool(pool) {}
 
             void operator()()
             {
                 std::unique_lock<std::mutex> lock(m_ThreadPool->m_Mutex);
-                while (!m_ThreadPool->m_ShutdownRequested || (m_ThreadPool->m_ShutdownRequested && !m_ThreadPool->m_Queue.empty()))
+                while (!m_ThreadPool->m_ShutdownRequested ||
+                       (m_ThreadPool->m_ShutdownRequested && !m_ThreadPool->m_Queue.empty()))
                 {
                     m_ThreadPool->m_BusyThreads--;
-                    m_ThreadPool->m_ConditionVariable.wait(lock, [this] {
-                        return this->m_ThreadPool->m_ShutdownRequested || !this->m_ThreadPool->m_Queue.empty();
-                    });
+                    m_ThreadPool->m_ConditionVariable.wait(lock,
+                                                           [this] {
+                                                               return this->m_ThreadPool->m_ShutdownRequested ||
+                                                                      !this->m_ThreadPool->m_Queue.empty();
+                                                           });
                     m_ThreadPool->m_BusyThreads++;
 
                     if (!this->m_ThreadPool->m_Queue.empty())
@@ -136,10 +135,8 @@ namespace BeeEngine
         };
 
     public:
-        size_t BusyThreads() const
-        {
-            return m_BusyThreads;
-        }
+        size_t BusyThreads() const { return m_BusyThreads; }
+
     private:
         size_t m_BusyThreads;
         mutable std::mutex m_Mutex;
@@ -154,4 +151,4 @@ namespace BeeEngine
         std::queue<std::function<void()>> m_Queue;
 #endif
     };
-}
+} // namespace BeeEngine

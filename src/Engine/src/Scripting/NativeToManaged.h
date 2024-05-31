@@ -4,6 +4,7 @@
 
 #pragma once
 #include "Core/Path.h"
+#include <optional>
 
 namespace BeeEngine
 {
@@ -33,36 +34,99 @@ namespace BeeEngine
     class NativeToManaged
     {
     public:
+        /**
+         * @brief This structure contains information about the current state of the garbage collector.
+         * IMPORTANT: This structure is used to pass data from the managed side to the native side.
+         * If this structure is changed, the corresponding structure on the managed side must be changed as well.
+         *
+         */
+        struct GCInfo
+        {
+            int32_t Generation0Count;
+            int32_t Generation1Count;
+            int32_t Generation2Count;
+            int64_t HeapSize;
+            int64_t PinnedObjects;
+            int64_t TotalAvailableMemory;
+        };
         struct NativeToManagedData;
         static void Init(const Path& pathToNativeBridgeDll);
         static ManagedAssemblyContextID CreateContext(const String& contextName, bool canBeUnloaded);
         static void UnloadContext(ManagedAssemblyContextID contextID);
         static void Shutdown();
-        static ManagedAssemblyID LoadAssemblyFromPath(ManagedAssemblyContextID contextID, const Path& path);
-        static std::vector<ManagedClassID> GetClassesFromAssembly(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyID);
-        static String GetClassName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID);
-        static String GetClassNamespace(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID);
-        static bool ClassIsValueType(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID);
-        static bool ClassIsEnum(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID);
-        static bool ClassIsDerivedFrom(ManagedAssemblyContextID contextIdDerived, ManagedAssemblyID assemblyIdDerived, ManagedClassID classIdDerived, ManagedAssemblyContextID contextIdBase, ManagedAssemblyID assemblyIdBase, ManagedClassID classIdBase);
-        static ManagedMethodID MethodGetByName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, const String& methodName, ManagedBindingFlags flags);
-        static std::vector<ManagedFieldID> ClassGetFields(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedBindingFlags flags);
-        static String FieldGetName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID);
-        static String FieldGetTypeName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID);
-        static MFieldFlags FieldGetFlags(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID);
-        static GCHandle ObjectNewGCHandle(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, GCHandleType type);
+        static ManagedAssemblyID LoadAssemblyFromPath(ManagedAssemblyContextID contextID,
+                                                      const Path& path,
+                                                      const std::optional<Path>& debugSymbolsPath);
+        static std::vector<ManagedClassID> GetClassesFromAssembly(ManagedAssemblyContextID contextID,
+                                                                  ManagedAssemblyID assemblyID);
+        static String
+        GetClassName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID);
+        static String
+        GetClassNamespace(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID);
+        static bool
+        ClassIsValueType(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID);
+        static bool
+        ClassIsEnum(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID);
+        static bool ClassIsDerivedFrom(ManagedAssemblyContextID contextIdDerived,
+                                       ManagedAssemblyID assemblyIdDerived,
+                                       ManagedClassID classIdDerived,
+                                       ManagedAssemblyContextID contextIdBase,
+                                       ManagedAssemblyID assemblyIdBase,
+                                       ManagedClassID classIdBase);
+        static ManagedMethodID MethodGetByName(ManagedAssemblyContextID contextID,
+                                               ManagedAssemblyID assemblyId,
+                                               ManagedClassID classID,
+                                               const String& methodName,
+                                               ManagedBindingFlags flags);
+        static std::vector<ManagedFieldID> ClassGetFields(ManagedAssemblyContextID contextID,
+                                                          ManagedAssemblyID assemblyId,
+                                                          ManagedClassID classID,
+                                                          ManagedBindingFlags flags);
+        static String FieldGetName(ManagedAssemblyContextID contextID,
+                                   ManagedAssemblyID assemblyId,
+                                   ManagedClassID classID,
+                                   ManagedFieldID fieldID);
+        static String FieldGetTypeName(ManagedAssemblyContextID contextID,
+                                       ManagedAssemblyID assemblyId,
+                                       ManagedClassID classID,
+                                       ManagedFieldID fieldID);
+        static MFieldFlags FieldGetFlags(ManagedAssemblyContextID contextID,
+                                         ManagedAssemblyID assemblyId,
+                                         ManagedClassID classID,
+                                         ManagedFieldID fieldID);
+        static GCHandle ObjectNewGCHandle(ManagedAssemblyContextID contextID,
+                                          ManagedAssemblyID assemblyId,
+                                          ManagedClassID classID,
+                                          GCHandleType type);
         static void ObjectFreeGCHandle(GCHandle handle);
-        static void* FieldGetData(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID, GCHandle objectHandle);
-        static void FieldSetData(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedFieldID fieldID, GCHandle objectHandle, void* data);
-        static void* MethodInvoke(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedMethodID methodID, GCHandle objectHandle, void** args);
+        static void* FieldGetData(ManagedAssemblyContextID contextID,
+                                  ManagedAssemblyID assemblyId,
+                                  ManagedClassID classID,
+                                  ManagedFieldID fieldID,
+                                  GCHandle objectHandle);
+        static void FieldSetData(ManagedAssemblyContextID contextID,
+                                 ManagedAssemblyID assemblyId,
+                                 ManagedClassID classID,
+                                 ManagedFieldID fieldID,
+                                 GCHandle objectHandle,
+                                 void* data);
+        static void* MethodInvoke(ManagedAssemblyContextID contextID,
+                                  ManagedAssemblyID assemblyId,
+                                  ManagedClassID classID,
+                                  ManagedMethodID methodID,
+                                  GCHandle objectHandle,
+                                  void** args);
         static String StringGetFromManagedString(void* managedString);
         static GCHandle StringCreateManaged(const String& string);
         static void FreeIntPtr(void* ptr);
         static void SetupLogger();
+
+        static GCInfo GetGCInfo();
+        static void GCCollect();
+
     private:
         static NativeToManagedData* s_Data;
 
         static bool init_hostfxr(const Path& assembly_path);
     };
-}
-
+} // namespace BeeEngine

@@ -4,7 +4,6 @@
 
 #include "RendererStatisticsGUI.h"
 
-
 namespace BeeEngine::Internal
 {
     static double ConvertFromBytesToMegabytes(const size_t& bytes)
@@ -26,4 +25,4 @@ namespace BeeEngine::Internal
         ImGui::Text("Allocated GPU buffers: %zu", stats.AllocatedGPUBuffers);
         ImGui::End();
     }
-}
+} // namespace BeeEngine::Internal

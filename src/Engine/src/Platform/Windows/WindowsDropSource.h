@@ -3,21 +3,21 @@
 //
 
 #pragma once
-#include <windows.h>
-#include <shobjidl.h>
+#include <oleidl.h> // for IDropSource, IDataObject
 #include <shlobj.h>
-#include <oleidl.h>     // for IDropSource, IDataObject
+#include <shobjidl.h>
+#include <windows.h>
 namespace BeeEngine::Internal
 {
-    class WindowsDropSource: public IDropSource
+    class WindowsDropSource : public IDropSource
     {
     public:
-        static IDropSource *CreateInstance();
+        static IDropSource* CreateInstance();
 
         WindowsDropSource();
 
     private:
-        virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject);
+        virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject);
         virtual ULONG STDMETHODCALLTYPE AddRef();
         virtual ULONG STDMETHODCALLTYPE Release();
 
@@ -30,26 +30,27 @@ namespace BeeEngine::Internal
         LONG m_nRefCount;
     };
 
-    class WindowsDropTarget: public IDropTarget
+    class WindowsDropTarget : public IDropTarget
     {
     public:
-        static IDropTarget *CreateInstance();
+        static IDropTarget* CreateInstance();
 
         WindowsDropTarget();
 
-        HRESULT DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
+        HRESULT DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
 
-        HRESULT DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
+        HRESULT DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
 
         HRESULT DragLeave(void) override;
 
-        HRESULT Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) override;
+        HRESULT Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override;
 
-        HRESULT QueryInterface(const IID &riid, void **ppvObject) override;
+        HRESULT QueryInterface(const IID& riid, void** ppvObject) override;
 
         ULONG AddRef(void) override;
 
         ULONG Release(void) override;
+
     private:
         void HandleStartDrag();
         ULONG m_nRefCount = 0;
@@ -58,5 +59,5 @@ namespace BeeEngine::Internal
         void FinishDragEvent();
     };
 
-    IDataObject *GetFileDataObject(const TCHAR *pszFile, REFIID riid);
-} // BeeEngine::Internal
+    IDataObject* GetFileDataObject(const TCHAR* pszFile, REFIID riid);
+} // namespace BeeEngine::Internal

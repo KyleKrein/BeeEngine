@@ -3,15 +3,14 @@
 //
 #if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUShaderModule.h"
+#include "Core/DeletionQueue.h"
 #include "WebGPUGraphicsDevice.h"
 #include "WebGPUInstancedBuffer.h"
-#include "Core/DeletionQueue.h"
-
 
 namespace BeeEngine::Internal
 {
     WebGPUShaderModule::WebGPUShaderModule(in<std::string> wgsl, ShaderType type, in<BufferLayout> layout)
-    : m_Type(type)
+        : m_Type(type)
     {
         InitResources(layout);
         WGPUShaderModuleWGSLDescriptor wgslDesc{};
@@ -33,14 +32,16 @@ namespace BeeEngine::Internal
     }
     WebGPUShaderModule::~WebGPUShaderModule()
     {
-        DeletionQueue::Frame().PushFunction([shaderModule = m_ShaderModule, layouts = m_BindGroupLayouts]()
-        {
-            for (auto[_, bindGroupLayout] : layouts)
+        DeletionQueue::Frame().PushFunction(
+            [shaderModule = m_ShaderModule, layouts = m_BindGroupLayouts]()
             {
-                wgpuBindGroupLayoutRelease(bindGroupLayout); //TODO: check why it fails if released in DeletionQueue::Main()
-            }
-            wgpuShaderModuleRelease(shaderModule);
-        });
+                for (auto [_, bindGroupLayout] : layouts)
+                {
+                    wgpuBindGroupLayoutRelease(
+                        bindGroupLayout); // TODO: check why it fails if released in DeletionQueue::Main()
+                }
+                wgpuShaderModuleRelease(shaderModule);
+            });
     }
     constexpr static WGPUVertexFormat ShaderDataTypeToWGPIU(ShaderDataType type)
     {
@@ -83,12 +84,12 @@ namespace BeeEngine::Internal
 
     void WebGPUShaderModule::InitResources(in<BufferLayout> layout)
     {
-        if(m_Type == ShaderType::Vertex)
+        if (m_Type == ShaderType::Vertex)
         {
             m_PointBufferLayout.arrayStride = layout.GetStride();
             m_PointBufferLayout.stepMode = WGPUVertexStepMode_Vertex;
             auto& inElements = layout.GetInputElements();
-            for (auto& element: inElements)
+            for (auto& element : inElements)
             {
                 WGPUVertexAttribute attribute{};
                 attribute.format = ShaderDataTypeToWGPIU(element.GetType());
@@ -99,17 +100,16 @@ namespace BeeEngine::Internal
             m_PointBufferLayout.attributeCount = m_PointAttributes.size();
             m_PointBufferLayout.attributes = m_PointAttributes.data();
 
-
-            //Instance buffer
+            // Instance buffer
             m_InstanceBufferLayout.arrayStride = layout.GetInstancedStride();
-            if(m_InstanceBufferLayout.arrayStride == 0)
+            if (m_InstanceBufferLayout.arrayStride == 0)
             {
                 memset(&m_InstanceBufferLayout, 0, sizeof(WGPUVertexBufferLayout));
                 return;
             }
             m_InstanceBufferLayout.stepMode = WGPUVertexStepMode_Instance;
             auto& instancedElements = layout.GetInstancedElements();
-            for (auto& element: instancedElements)
+            for (auto& element : instancedElements)
             {
                 WGPUVertexAttribute attribute{};
                 attribute.format = ShaderDataTypeToWGPIU(element.GetType());
@@ -122,14 +122,14 @@ namespace BeeEngine::Internal
         }
         auto& device = WebGPUGraphicsDevice::GetInstance();
         auto& uniformElements = layout.GetUniformElements();
-        if(uniformElements.empty())
+        if (uniformElements.empty())
             return;
         uint32_t index = uniformElements[0].GetBindingSet();
         uint32_t currentSet = 0;
         m_BindGroupLayouts.emplace_back();
-        for(auto& element: uniformElements)
+        for (auto& element : uniformElements)
         {
-            if(element.GetBindingSet() != index)
+            if (element.GetBindingSet() != index)
             {
                 m_BindGroupLayouts.emplace_back();
                 WGPUBindGroupLayoutDescriptor bindGroupLayoutDesc = {};
@@ -137,7 +137,8 @@ namespace BeeEngine::Internal
                 bindGroupLayoutDesc.label = "BindGroupLayout";
                 bindGroupLayoutDesc.entryCount = (uint32_t)m_BindGroupLayoutEntries.size();
                 bindGroupLayoutDesc.entries = m_BindGroupLayoutEntries.data();
-                m_BindGroupLayouts[currentSet] = std::make_pair( index,wgpuDeviceCreateBindGroupLayout(device.GetDevice(), &bindGroupLayoutDesc));
+                m_BindGroupLayouts[currentSet] =
+                    std::make_pair(index, wgpuDeviceCreateBindGroupLayout(device.GetDevice(), &bindGroupLayoutDesc));
                 m_BindGroupLayoutEntries.clear();
                 index = element.GetBindingSet();
                 currentSet++;
@@ -172,7 +173,8 @@ namespace BeeEngine::Internal
         bindGroupLayoutDesc.label = "BindGroupLayout";
         bindGroupLayoutDesc.entryCount = (uint32_t)m_BindGroupLayoutEntries.size();
         bindGroupLayoutDesc.entries = m_BindGroupLayoutEntries.data();
-        m_BindGroupLayouts[currentSet] = std::make_pair( index,wgpuDeviceCreateBindGroupLayout(device.GetDevice(), &bindGroupLayoutDesc));
+        m_BindGroupLayouts[currentSet] =
+            std::make_pair(index, wgpuDeviceCreateBindGroupLayout(device.GetDevice(), &bindGroupLayoutDesc));
     }
 
     Scope<InstancedBuffer> WebGPUShaderModule::CreateInstancedBuffer()
@@ -183,7 +185,7 @@ namespace BeeEngine::Internal
             BeeCoreError("Instanced buffer can be created only for vertex shader");
             return nullptr;
         }
-        if(m_InstanceBufferLayout.arrayStride == 0)
+        if (m_InstanceBufferLayout.arrayStride == 0)
         {
             BeeCoreTrace("Instanced buffer layout is empty");
             return nullptr;
@@ -191,5 +193,5 @@ namespace BeeEngine::Internal
         BeeCoreTrace("Creating instanced buffer");
         return CreateScope<WebGPUInstancedBuffer>(m_InstanceBufferLayout, MAX_INSTANCED_BUFFER_COUNT);
     }
-}
+} // namespace BeeEngine::Internal
 #endif

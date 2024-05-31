@@ -3,18 +3,18 @@
 //
 
 #pragma once
-#include "VulkanGraphicsDevice.h"
-#include "VulkanImage.h"
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/RenderingQueue.h"
+#include "VulkanGraphicsDevice.h"
+#include "VulkanImage.h"
 
 namespace BeeEngine::Internal
 {
 
-    class VulkanFrameBuffer final: public FrameBuffer
+    class VulkanFrameBuffer final : public FrameBuffer
     {
     public:
-        VulkanFrameBuffer(const FrameBufferPreferences &preferences);
+        VulkanFrameBuffer(const FrameBufferPreferences& preferences);
         ~VulkanFrameBuffer() override;
 
         CommandBuffer Bind() override;
@@ -30,21 +30,28 @@ namespace BeeEngine::Internal
         [[nodiscard]] uintptr_t GetDepthAttachmentRendererID() const override;
 
         [[nodiscard]] int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
+
+        VulkanImage GetColorAttachment(uint32_t index) const;
+
     private:
-        void CreateImageAndImageView(VulkanImage& image, vk::ImageView& view, FrameBufferTextureFormat format, FrameBufferTextureUsage usage);
+        void CreateImageAndImageView(VulkanImage& image,
+                                     vk::ImageView& view,
+                                     FrameBufferTextureFormat format,
+                                     FrameBufferTextureUsage usage);
+
     private:
         RenderingQueue m_RenderingQueue;
         std::vector<FrameBufferTextureSpecification> m_ColorAttachmentSpecification;
         FrameBufferTextureSpecification m_DepthAttachmentSpecification;
         FrameBufferPreferences m_Preferences;
-        bool m_Initiated {false};
+        bool m_Initiated{false};
 
         std::vector<VulkanImage> m_ColorAttachmentsTextures;
         std::vector<vk::ImageView> m_ColorAttachmentsTextureViews;
-        VulkanImage m_DepthAttachmentTexture {nullptr};
-        vk::ImageView m_DepthAttachmentTextureView {nullptr};
+        VulkanImage m_DepthAttachmentTexture{nullptr};
+        vk::ImageView m_DepthAttachmentTextureView{nullptr};
 
-        bool m_Invalid {true};
+        bool m_Invalid{true};
 
         VulkanGraphicsDevice& m_GraphicsDevice;
         vk::CommandBuffer m_CurrentCommandBuffer;
@@ -56,4 +63,4 @@ namespace BeeEngine::Internal
         vk::Sampler m_DepthSampler;
     };
 
-}
+} // namespace BeeEngine::Internal

@@ -7,11 +7,13 @@
 #include "VulkanInstancedBuffer.h"
 #include <map>
 
-
 namespace BeeEngine::Internal
 {
     VulkanShaderModule::VulkanShaderModule(std::vector<uint32_t>& spirv, ShaderType type, BufferLayout&& layout)
-        : m_Type(type), m_Layout(std::move(layout)), m_GraphicsDevice(VulkanGraphicsDevice::GetInstance()), m_OneInstanceSize(m_Layout.GetStride())
+        : m_Type(type),
+          m_Layout(std::move(layout)),
+          m_GraphicsDevice(VulkanGraphicsDevice::GetInstance()),
+          m_OneInstanceSize(m_Layout.GetStride())
     {
         vk::ShaderModuleCreateInfo createInfo{};
         createInfo.setCodeSize(spirv.size() * sizeof(uint32_t));
@@ -22,7 +24,7 @@ namespace BeeEngine::Internal
             m_ShaderModule = m_GraphicsDevice.GetDevice().createShaderModule(createInfo);
             BeeCoreTrace("Shader module of type {0} created", type);
         }
-        catch(const vk::SystemError& e)
+        catch (const vk::SystemError& e)
         {
             BeeCoreError("Failed to create shader module: {}", e.what());
         }
@@ -31,14 +33,18 @@ namespace BeeEngine::Internal
 
     VulkanShaderModule::~VulkanShaderModule()
     {
-        DeletionQueue::Frame().PushFunction([device = m_GraphicsDevice.GetDevice(), shaderModule = m_ShaderModule, descriptorSetLayouts = std::move(m_DescriptorSetLayouts)](){
-            if(shaderModule)
-                device.destroyShaderModule(shaderModule);
-            for(auto& layout : descriptorSetLayouts)
+        DeletionQueue::Frame().PushFunction(
+            [device = m_GraphicsDevice.GetDevice(),
+             shaderModule = m_ShaderModule,
+             descriptorSetLayouts = std::move(m_DescriptorSetLayouts)]()
             {
-                device.destroyDescriptorSetLayout(layout);
-            }
-        });
+                if (shaderModule)
+                    device.destroyShaderModule(shaderModule);
+                for (auto& layout : descriptorSetLayouts)
+                {
+                    device.destroyDescriptorSetLayout(layout);
+                }
+            });
     }
 
     ShaderType VulkanShaderModule::GetType() const
@@ -92,7 +98,7 @@ namespace BeeEngine::Internal
             case ShaderDataType::Mat4:
             case ShaderDataType::NoneData:
                 BeeCoreError("Unknown ShaderDataType");
-            break;
+                break;
         }
         return vk::Format::eUndefined;
     }
@@ -109,8 +115,8 @@ namespace BeeEngine::Internal
                 return vk::DescriptorType::eSampledImage;
             case ShaderUniformDataType::Unknown:
             default:
-            BeeCoreError("Unknown ShaderUniformDataType");
-            break;
+                BeeCoreError("Unknown ShaderUniformDataType");
+                break;
         }
         return vk::DescriptorType::eUniformBuffer;
     }
@@ -120,7 +126,7 @@ namespace BeeEngine::Internal
         switch (type)
         {
             case ShaderType::Vertex:
-                //return vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+                // return vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
             case ShaderType::Fragment:
                 return vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
             case ShaderType::Compute:
@@ -148,13 +154,13 @@ namespace BeeEngine::Internal
 
     void VulkanShaderModule::InitData()
     {
-        if(m_Type == ShaderType::Vertex)
+        if (m_Type == ShaderType::Vertex)
         {
             m_VertexBindingDescription.stride = m_Layout.GetStride();
             m_VertexBindingDescription.binding = 0;
             m_VertexBindingDescription.inputRate = vk::VertexInputRate::eVertex;
             auto& inElements = m_Layout.GetInputElements();
-            for (auto& element: inElements)
+            for (auto& element : inElements)
             {
                 vk::VertexInputAttributeDescription attribute{};
                 attribute.format = ShaderDataTypeToVulkan(element.GetType());
@@ -164,9 +170,9 @@ namespace BeeEngine::Internal
                 m_VertexAttributeDescriptions.push_back(attribute);
             }
 
-            //Instance buffer
+            // Instance buffer
             m_InstanceBindingDescription.stride = m_Layout.GetInstancedStride();
-            if(m_InstanceBindingDescription.stride == 0)
+            if (m_InstanceBindingDescription.stride == 0)
             {
                 m_VertexInputState = vk::PipelineVertexInputStateCreateInfo{};
                 m_VertexInputState.vertexBindingDescriptionCount = 1;
@@ -178,7 +184,7 @@ namespace BeeEngine::Internal
             m_InstanceBindingDescription.binding = 1;
             m_InstanceBindingDescription.inputRate = vk::VertexInputRate::eInstance;
             auto& instancedElements = m_Layout.GetInstancedElements();
-            for (auto& element: instancedElements)
+            for (auto& element : instancedElements)
             {
                 vk::VertexInputAttributeDescription attribute{};
                 attribute.format = ShaderDataTypeToVulkan(element.GetType());
@@ -193,21 +199,21 @@ namespace BeeEngine::Internal
             m_VertexInputState.vertexAttributeDescriptionCount = m_VertexAttributeDescriptions.size();
             m_VertexInputState.pVertexAttributeDescriptions = m_VertexAttributeDescriptions.data();
         }
-        else if(m_Type == ShaderType::Fragment)
+        else if (m_Type == ShaderType::Fragment)
         {
             auto& outputs = m_Layout.GetOutputElements();
             m_ColorAttachmentFormats.reserve(outputs.size());
             m_ColorBlendAttachments.reserve(outputs.size());
-            for(auto& element : outputs)
+            for (auto& element : outputs)
             {
                 m_ColorAttachmentFormats.push_back(ColorAttachmentFormatToVulkan(element.GetType()));
             }
-            for(auto format : m_ColorAttachmentFormats)
+            for (auto format : m_ColorAttachmentFormats)
             {
                 vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
                 colorBlendAttachment.blendEnable = vk::False;
                 colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                    vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+                                                      vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
                 /*switch (format)
                 {
                     case vk::Format::eR32Sfloat:
@@ -216,8 +222,8 @@ namespace BeeEngine::Internal
                     }break;
                     case vk::Format::eR8G8B8A8Unorm:
                     {
-                        colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                            vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+                        colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR |
+                vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
                     }break;
                     default:
                         BeeCoreError("Unknown color attachment format");
@@ -225,15 +231,15 @@ namespace BeeEngine::Internal
                 m_ColorBlendAttachments.push_back(colorBlendAttachment);
             }
         }
-        uniforms:
+    uniforms:
         auto& uniformElements = m_Layout.GetUniformElements();
-        if(uniformElements.empty())
+        if (uniformElements.empty())
             return;
 
         auto device = m_GraphicsDevice.GetDevice();
 
         std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> bindings;
-        for(auto& element : uniformElements)
+        for (auto& element : uniformElements)
         {
             vk::DescriptorSetLayoutBinding binding{};
             binding.binding = element.GetLocation();
@@ -243,7 +249,7 @@ namespace BeeEngine::Internal
             binding.pImmutableSamplers = nullptr;
             bindings[element.GetBindingSet()].push_back(binding);
         }
-        for(auto& [index, binding] : bindings)
+        for (auto& [index, binding] : bindings)
         {
             vk::DescriptorSetLayoutCreateInfo layoutInfo{};
             layoutInfo.bindingCount = static_cast<uint32_t>(binding.size());
@@ -251,4 +257,4 @@ namespace BeeEngine::Internal
             m_DescriptorSetLayouts.push_back(device.createDescriptorSetLayout(layoutInfo));
         }
     }
-}
+} // namespace BeeEngine::Internal

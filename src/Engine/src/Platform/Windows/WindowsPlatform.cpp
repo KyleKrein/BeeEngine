@@ -10,12 +10,13 @@ namespace BeeEngine
     {
         float64_t Frequency = GetFrequency();
         LARGE_INTEGER StartTime = GetStartTime();
+
     private:
         float64_t GetFrequency()
         {
             LARGE_INTEGER frequency;
             ::QueryPerformanceFrequency(&frequency);
-            return 1.0 / (float64_t) frequency.QuadPart;
+            return 1.0 / (float64_t)frequency.QuadPart;
         }
         LARGE_INTEGER GetStartTime()
         {
@@ -65,6 +66,6 @@ namespace BeeEngine
         static ClockData data;
         LARGE_INTEGER counter;
         ::QueryPerformanceCounter(&counter);
-        return (float64_t)(counter.QuadPart/* - data.StartTime.QuadPart*/) * data.Frequency;
+        return (float64_t)(counter.QuadPart /* - data.StartTime.QuadPart*/) * data.Frequency;
     }
-}
+} // namespace BeeEngine

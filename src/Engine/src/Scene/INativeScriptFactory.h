@@ -16,4 +16,4 @@ namespace BeeEngine
         virtual void Reload() = 0;
         virtual bool IsScriptRegistered(const std::string& name) = 0;
     };
-}
+} // namespace BeeEngine

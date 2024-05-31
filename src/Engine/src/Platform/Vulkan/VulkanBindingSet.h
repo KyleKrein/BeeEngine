@@ -11,17 +11,18 @@
 namespace BeeEngine::Internal
 {
 
-    class VulkanBindingSet final: public BindingSet
+    class VulkanBindingSet final : public BindingSet
     {
     public:
         VulkanBindingSet(std::initializer_list<BindingSetElement> elements);
         void Bind(CommandBuffer& cmd, uint32_t index, Pipeline& pipeline) const override;
 
         ~VulkanBindingSet() override;
+
     private:
         vk::DescriptorSet m_DescriptorSet;
         vk::DescriptorSetLayout m_DescriptorSetLayout;
         VulkanGraphicsDevice& m_GraphicsDevice;
     };
 
-}
+} // namespace BeeEngine::Internal

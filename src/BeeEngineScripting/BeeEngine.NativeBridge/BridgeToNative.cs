@@ -127,16 +127,21 @@ internal static class BridgeToNative
         s_Logger = new Logger(logInfo, logWarning, logTrace, logError);
     }
     [UnmanagedCallersOnly]
-    public static ulong LoadAssemblyFromPath(ulong contextId, IntPtr pathPtr)
+    public static ulong LoadAssemblyFromPath(ulong contextId, IntPtr pathPtr, IntPtr debugSymbolsPathPtr)
     {
         string? message = null;
         string? path = null;
+        string? debugSymbolsPath = null;
         if (pathPtr == 0)
         {
             message = "Path pointer is null";
             goto error;
         }
         path = Marshal.PtrToStringUTF8(pathPtr);
+        if(debugSymbolsPathPtr != 0)
+        {
+            debugSymbolsPath = Marshal.PtrToStringUTF8(debugSymbolsPathPtr);
+        }
         if (path == null)
         {
             message = "Unable to allocate memory for path string";
@@ -152,7 +157,18 @@ internal static class BridgeToNative
             ulong newId = GetNewId();
             using(var fs = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                var assembly = contextInfo.Context.LoadFromStream(fs);
+                Assembly assembly;
+                if(debugSymbolsPath is null)
+                {
+                    assembly = contextInfo.Context.LoadFromStream(fs);
+                }
+                else
+                {
+                    using(var fsDebug = new FileStream(debugSymbolsPath, FileMode.Open, FileAccess.Read))
+                    {
+                        assembly = contextInfo.Context.LoadFromStream(fs, fsDebug);
+                    }
+                }
                 contextInfo.AssemblyInfo.Add(newId, new(assembly, new()));
             }
             return newId;
@@ -988,5 +1004,39 @@ internal static class BridgeToNative
         string? str = Marshal.PtrToStringUTF8(strPtr);
         GCHandle handle = GCHandle.Alloc(str, GCHandleType.Pinned);
         return GCHandle.ToIntPtr(handle);
+    }
+
+    [UnmanagedCallersOnly]
+    public static void GCCollect()
+    {
+        GC.Collect();
+    }
+    /// <summary>
+    /// GCInfo is a struct that contains information about the current state of the garbage collector.
+    /// IMPORTANT: If this type is changed, the corresponding C++ type GCInfo in NativeToManaged.h must be changed as well
+    /// </summary>
+    public struct GCInfo
+    {
+        public int Generation0Count;
+        public int Generation1Count;
+        public int Generation2Count;
+        public long HeapSize;
+        public long PinnedObjects;
+        public long TotalAvailableMemory;
+    }
+
+    [UnmanagedCallersOnly]
+    public static GCInfo GetGCInfo()
+    {
+        var memoryInfo = GC.GetGCMemoryInfo();
+        return new GCInfo
+        {
+            Generation0Count = GC.CollectionCount(0),
+            Generation1Count = GC.CollectionCount(1),
+            Generation2Count = GC.CollectionCount(2),
+            HeapSize = memoryInfo.HeapSizeBytes,
+            PinnedObjects = memoryInfo.PinnedObjectsCount,
+            TotalAvailableMemory = memoryInfo.TotalAvailableMemoryBytes
+        };
     }
 }

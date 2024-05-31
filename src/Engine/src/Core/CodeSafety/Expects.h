@@ -7,26 +7,33 @@
 #include "version"
 
 #include "StackTrace.h"
+#include <exception>
 
-inline void BeeExpects(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
+[[noreturn]] inline void BeeExpects(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
 {
     BeeCoreError("Expected result {0} is incorrect\nStacktrace:\n{1}", expr, stackTrace);
     debug_break();
+    std::terminate();
 }
-inline void BeeEnsures(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
+[[noreturn]] inline void BeeEnsures(const char* expr, BeeEngine::StackTrace&& stackTrace = BeeEngine::StackTrace())
 {
     BeeCoreError("Expectations {0} failed\nStacktrace:\n{1}", expr, stackTrace);
     debug_break();
+    std::terminate();
 }
 
 #if defined(BEE_ENABLE_CHECKS)
 #define BEE_STRINGIFY(x) #x
-    #define BeeExpects(x) if(!(x)) [[unlikely]] BeeExpects(BEE_STRINGIFY(x))
-    #define BeeEnsures(x) if(!(x)) [[unlikely]] BeeEnsures(BEE_STRINGIFY(x))
-//#undef STRINGIFY
+#define BeeExpects(x)                                                                                                  \
+    if (!(x)) [[unlikely]]                                                                                             \
+    BeeExpects(BEE_STRINGIFY(x))
+#define BeeEnsures(x)                                                                                                  \
+    if (!(x)) [[unlikely]]                                                                                             \
+    BeeEnsures(BEE_STRINGIFY(x))
+// #undef STRINGIFY
 #else
-    #define BeeExpects(x)
-    #define BeeEnsures(x)
+#define BeeExpects(x)
+#define BeeEnsures(x)
 #endif
 #if 0
 constexpr inline void BeeExpects(bool x, std::string_view file, std::string_view line)

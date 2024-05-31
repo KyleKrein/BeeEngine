@@ -2,7 +2,9 @@
 // Created by Aleksandr on 18.03.2024.
 //
 #include "CommandBuffer.h"
+#include "FrameBuffer.h"
 #include "RenderingQueue.h"
+#include <Platform/Vulkan/VulkanGraphicsDevice.h>
 namespace BeeEngine
 {
     void CommandBuffer::BeginRecording()
@@ -10,23 +12,26 @@ namespace BeeEngine
         BeeExpects(IsValid());
     }
 
-    void CommandBuffer::DrawString(const String& text, Font& font, BindingSet& cameraBindingSet,
-        const glm::mat4& transform, const TextRenderingConfiguration& config)
+    void CommandBuffer::DrawString(const String& text,
+                                   Font& font,
+                                   BindingSet& cameraBindingSet,
+                                   const glm::mat4& transform,
+                                   const TextRenderingConfiguration& config)
     {
         BeeExpects(IsValid());
         m_RenderingQueue->SubmitText(text, font, cameraBindingSet, transform, config);
     }
 
-    void CommandBuffer::DrawRect(const glm::mat4& transform, const Color4& color, BindingSet& cameraBindingSet,
-        float lineWidth)
+    void CommandBuffer::DrawRect(const glm::mat4& transform,
+                                 const Color4& color,
+                                 BindingSet& cameraBindingSet,
+                                 float lineWidth)
     {
         BeeExpects(IsValid());
-        static constexpr std::array<glm::vec4, 4> QuadVertexPositions = {
-            glm::vec4(-0.5f, -0.5f, 0.0f, 1.0f),
-            glm::vec4(0.5f, -0.5f, 0.0f, 1.0f),
-            glm::vec4(0.5f, 0.5f, 0.0f, 1.0f),
-            glm::vec4(-0.5f, 0.5f, 0.0f, 1.0f)
-        };
+        static constexpr std::array<glm::vec4, 4> QuadVertexPositions = {glm::vec4(-0.5f, -0.5f, 0.0f, 1.0f),
+                                                                         glm::vec4(0.5f, -0.5f, 0.0f, 1.0f),
+                                                                         glm::vec4(0.5f, 0.5f, 0.0f, 1.0f),
+                                                                         glm::vec4(-0.5f, 0.5f, 0.0f, 1.0f)};
         glm::vec3 lineVertices[4];
         for (size_t i = 0; i < 4; i++)
             lineVertices[i] = transform * QuadVertexPositions[i];
@@ -36,15 +41,18 @@ namespace BeeEngine
         SubmitLine(lineVertices[3], lineVertices[0], cameraBindingSet, color, lineWidth);
     }
 
-    void CommandBuffer::SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets,
-        gsl::span<byte> instanceData)
+    void
+    CommandBuffer::SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, gsl::span<byte> instanceData)
     {
         BeeExpects(IsValid());
         m_RenderingQueue->SubmitInstance({&model, bindingSets}, instanceData);
     }
 
-    void CommandBuffer::SubmitLine(const glm::vec3& start, const glm::vec3& end, BindingSet& cameraBindingSet,
-        const Color4& color, float lineWidth)
+    void CommandBuffer::SubmitLine(const glm::vec3& start,
+                                   const glm::vec3& end,
+                                   BindingSet& cameraBindingSet,
+                                   const Color4& color,
+                                   float lineWidth)
     {
         BeeExpects(IsValid());
         m_RenderingQueue->SubmitLine(start, end, color, cameraBindingSet, lineWidth);
@@ -61,4 +69,4 @@ namespace BeeEngine
         BeeExpects(IsValid());
         m_RenderingQueue->FinishFrame(*this);
     }
-}
+} // namespace BeeEngine

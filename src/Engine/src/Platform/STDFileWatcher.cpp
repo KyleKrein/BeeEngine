@@ -3,15 +3,14 @@
 //
 
 #include "STDFileWatcher.h"
+#include "FileSystem/File.h"
 #include <chrono>
 #include <filesystem>
-#include "FileSystem/File.h"
-
 
 namespace BeeEngine::Internal
 {
 
-    void STDFileWatcherThread(STDFileWatcher &watcher)
+    void STDFileWatcherThread(STDFileWatcher& watcher)
     {
         struct FileInfo
         {
@@ -22,15 +21,15 @@ namespace BeeEngine::Internal
                 return LastWriteTime == other.LastWriteTime && FileSize == other.FileSize;
             }
         };
-        //USE FILE SIZE
-        // Time interval at which we check the base folder for changes
-        constexpr std::chrono::duration<int, std::milli> delay = std::chrono::milliseconds(500);// Why 500ms? Because it's a good compromise between responsiveness and performance
+        // USE FILE SIZE
+        //  Time interval at which we check the base folder for changes
+        constexpr std::chrono::duration<int, std::milli> delay = std::chrono::milliseconds(
+            500); // Why 500ms? Because it's a good compromise between responsiveness and performance
         std::unordered_map<Path, FileInfo> paths;
-        for(auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
+        for (auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
         {
             auto& path = file.path();
             paths[path] = {std::filesystem::last_write_time(file), std::filesystem::file_size(file)};
-
         }
         std::this_thread::sleep_for(delay);
         while (watcher.IsRunning())
@@ -41,9 +40,9 @@ namespace BeeEngine::Internal
             // Check if a file was deleted
             while (it != paths.end())
             {
-                if(!File::Exists(it->first))
+                if (!File::Exists(it->first))
                 {
-                    //watcher.m_Callback(it->first, FileWatcher::Event::Removed);
+                    // watcher.m_Callback(it->first, FileWatcher::Event::Removed);
                     removed[it->first] = it->second;
                     it = paths.erase(it);
                 }
@@ -52,33 +51,32 @@ namespace BeeEngine::Internal
                     ++it;
                 }
             }
-            for(auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
+            for (auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
             {
                 Path path = file.path();
                 auto currentLastWriteTime = std::filesystem::last_write_time(file);
                 auto currentFileSize = std::filesystem::file_size(file);
-                if(!paths.contains(path))
+                if (!paths.contains(path))
                 {
                     paths[path] = {currentLastWriteTime, currentFileSize};
-                    //watcher.m_Callback(path, FileWatcher::Event::Added);
+                    // watcher.m_Callback(path, FileWatcher::Event::Added);
                     added[path] = {currentLastWriteTime, currentFileSize};
                 }
-                else if(paths.at(path).LastWriteTime != currentLastWriteTime)
+                else if (paths.at(path).LastWriteTime != currentLastWriteTime)
                 {
-                    paths[path] =  {currentLastWriteTime, currentFileSize};
+                    paths[path] = {currentLastWriteTime, currentFileSize};
                     watcher.m_Callback(path, FileWatcher::Event::Modified);
                 }
             }
             std::vector<Path> renamed;
-            for(auto& [path, info] : removed)
+            for (auto& [path, info] : removed)
             {
                 static Path p;
                 bool wasRenamed = false;
-                for(auto& [addedPath, addedInfo] : added)
+                for (auto& [addedPath, addedInfo] : added)
                 {
-                    if(addedInfo == info &&
-                    addedPath.GetParent() == path.GetParent() &&
-                    addedPath.GetFileName() != path.GetFileName())
+                    if (addedInfo == info && addedPath.GetParent() == path.GetParent() &&
+                        addedPath.GetFileName() != path.GetFileName())
                     {
                         watcher.m_Callback(path, FileWatcher::Event::RenamedOldName);
                         watcher.m_Callback(addedPath, FileWatcher::Event::RenamedNewName);
@@ -87,15 +85,15 @@ namespace BeeEngine::Internal
                         break;
                     }
                 }
-                if(wasRenamed)
+                if (wasRenamed)
                 {
                     continue;
                 }
                 watcher.m_Callback(path, FileWatcher::Event::Removed);
             }
-            for(auto& [path, info] : added)
+            for (auto& [path, info] : added)
             {
-                if(std::find(renamed.begin(), renamed.end(), path) != renamed.end())
+                if (std::find(renamed.begin(), renamed.end(), path) != renamed.end())
                     continue;
                 watcher.m_Callback(path, FileWatcher::Event::Added);
             }
@@ -105,7 +103,7 @@ namespace BeeEngine::Internal
 
     void STDFileWatcher::Start()
     {
-        if(IsRunning())
+        if (IsRunning())
             return;
         m_Running.store(true);
 #if defined(__cpp_lib_jthread)
@@ -119,7 +117,7 @@ namespace BeeEngine::Internal
     {
         m_Running.store(false);
 #if !defined(__cpp_lib_jthread)
-        if(m_Thread && m_Thread->joinable())
+        if (m_Thread && m_Thread->joinable())
             m_Thread->join();
 #endif
         m_Thread = nullptr;
@@ -130,9 +128,8 @@ namespace BeeEngine::Internal
         return m_Running.load();
     }
 
-    STDFileWatcher::STDFileWatcher(const Path &path, const std::function<void(Path, Event)> &callback)
-    : m_Path(path.ToStdPath()), m_Callback(callback)
+    STDFileWatcher::STDFileWatcher(const Path& path, const std::function<void(Path, Event)>& callback)
+        : m_Path(path.ToStdPath()), m_Callback(callback)
     {
-
     }
-}
+} // namespace BeeEngine::Internal

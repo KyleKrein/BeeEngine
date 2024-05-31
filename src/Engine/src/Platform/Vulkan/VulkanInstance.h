@@ -5,31 +5,31 @@
 #pragma once
 
 #include "Renderer/Instance.h"
-#include "vulkan/vulkan.hpp"
 #include "Windowing/WindowHandler/WindowHandler.h"
+#include "vulkan/vulkan.hpp"
 
 namespace BeeEngine::Internal
 {
-    class VulkanInstance: public Instance
+    class VulkanInstance : public Instance
     {
     public:
         VulkanInstance(std::string_view windowTitle, WindowHandlerAPI windowApi);
         ~VulkanInstance() override;
 
-        [[nodiscard]]const vk::Instance &GetHandle() const { return m_Instance; }
+        [[nodiscard]] const vk::Instance& GetHandle() const { return m_Instance; }
 
     private:
-        vk::Instance m_Instance { nullptr };
-        vk::DebugUtilsMessengerEXT m_DebugMessenger { nullptr };
-        vk::DispatchLoaderDynamic m_DynamicLoader{ vk::DispatchLoaderDynamic(vkGetInstanceProcAddr)};
+        vk::Instance m_Instance{nullptr};
+        vk::DebugUtilsMessengerEXT m_DebugMessenger{nullptr};
+        vk::DispatchLoaderDynamic m_DynamicLoader{vk::DispatchLoaderDynamic(vkGetInstanceProcAddr)};
         WindowHandlerAPI m_WindowApi;
 
-        bool ExtensionsSupported(const std::vector<const char *>& extensions) const;
-        bool LayersSupported(const std::vector<const char *>& layers) const;
+        bool ExtensionsSupported(const std::vector<const char*>& extensions) const;
+        bool LayersSupported(const std::vector<const char*>& layers) const;
 
         void MakeDebugMessenger();
 
-        void ManageInstance(vk::ApplicationInfo &info);
+        void ManageInstance(vk::ApplicationInfo& info);
     };
-}
+} // namespace BeeEngine::Internal
 #endif

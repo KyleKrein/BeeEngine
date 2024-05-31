@@ -5,9 +5,9 @@
 #pragma once
 #include "VulkanImage.h"
 #if defined(BEE_COMPILE_VULKAN)
-#include "vulkan/vulkan.hpp"
 #include "Renderer/QueueFamilyIndices.h"
 #include "Renderer/SwapChain.h"
+#include "vulkan/vulkan.hpp"
 
 namespace BeeEngine::Internal
 {
@@ -18,21 +18,18 @@ namespace BeeEngine::Internal
         std::vector<vk::SurfaceFormatKHR> formats;
         std::vector<vk::PresentModeKHR> presentModes;
     };
-    class VulkanSwapChain: public SwapChain
+    class VulkanSwapChain : public SwapChain
     {
     public:
-        VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice, uint32_t width, uint32_t height, VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
+        VulkanSwapChain(VulkanGraphicsDevice& graphicsDevice,
+                        uint32_t width,
+                        uint32_t height,
+                        VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
         ~VulkanSwapChain() override;
 
-        vk::ImageView GetImageView(uint32_t index)
-        {
-            return m_SwapChainImageViews[index];
-        }
+        vk::ImageView GetImageView(uint32_t index) { return m_SwapChainImageViews[index]; }
 
-        vk::Image GetImage(uint32_t index)
-        {
-            return m_SwapChainImages[index];
-        }
+        vk::Image GetImage(uint32_t index) { return m_SwapChainImages[index]; }
 
         vk::ImageView GetDepthImageView(uint32_t index)
         {
@@ -41,33 +38,18 @@ namespace BeeEngine::Internal
         }
 
         VulkanSwapChain(const VulkanSwapChain& other) = delete;
-        VulkanSwapChain& operator=(const VulkanSwapChain& other ) = delete;
+        VulkanSwapChain& operator=(const VulkanSwapChain& other) = delete;
 
-        vk::SwapchainKHR& GetHandle()
-        {
-            return m_SwapChain;
-        }
-        vk::Format& GetFormat()
-        {
-            return m_SurfaceFormat.format;
-        }
-        vk::Extent2D& GetExtent()
-        {
-            return m_Extent;
-        }
-        vk::SurfaceFormatKHR& GetSurfaceFormat()
-        {
-            return m_SurfaceFormat;
-        }
-        vk::PresentModeKHR& GetPresentMode()
-        {
-            return m_PresentMode;
-        }
+        vk::SwapchainKHR& GetHandle() { return m_SwapChain; }
+        vk::Format& GetFormat() { return m_SurfaceFormat.format; }
+        vk::Extent2D& GetExtent() { return m_Extent; }
+        vk::SurfaceFormatKHR& GetSurfaceFormat() { return m_SurfaceFormat; }
+        vk::PresentModeKHR& GetPresentMode() { return m_PresentMode; }
         size_t ImageCount();
 
-        vk::Result AcquireNextImage(uint32_t *imageIndex);
-        vk::Result SubmitCommandBuffers(const vk::CommandBuffer *buffers, size_t count, uint32_t *imageIndex);
-        vk::Result PresentImage(const uint32_t *imageIndex);
+        vk::Result AcquireNextImage(uint32_t* imageIndex);
+        vk::Result SubmitCommandBuffers(const vk::CommandBuffer* buffers, size_t count, uint32_t* imageIndex);
+        vk::Result PresentImage(const uint32_t* imageIndex);
         bool ResizeInProgress();
 
     private:
@@ -76,7 +58,7 @@ namespace BeeEngine::Internal
         void ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& formats);
         void ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes);
 
-        void ChooseExtent(vk::SurfaceCapabilitiesKHR &capabilities);
+        void ChooseExtent(vk::SurfaceCapabilitiesKHR& capabilities);
 
         void CreateSwapChain();
         void CreateImageViews();
@@ -110,5 +92,5 @@ namespace BeeEngine::Internal
 
         vk::Format FindDepthFormat();
     };
-}
+} // namespace BeeEngine::Internal
 #endif

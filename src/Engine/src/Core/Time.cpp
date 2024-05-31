@@ -56,4 +56,4 @@ namespace BeeEngine
 #endif
         CalculateAverageDeltaTime();
     }
-}
+} // namespace BeeEngine

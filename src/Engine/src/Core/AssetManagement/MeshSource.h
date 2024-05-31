@@ -10,22 +10,17 @@
 
 namespace BeeEngine
 {
-    class MeshSource final: public Asset
+    class MeshSource final : public Asset
     {
     public:
         MeshSource(std::vector<Ref<Mesh>>&& meshes);
 
-        constexpr AssetType GetType() const override
-        {
-            return AssetType::MeshSource;
-        }
+        constexpr AssetType GetType() const override { return AssetType::MeshSource; }
 
-        [[nodiscard]] auto& GetModels()
-        {
-            return m_Models;
-        }
+        [[nodiscard]] auto& GetModels() { return m_Models; }
+
     private:
         std::vector<Ref<Mesh>> m_Meshes;
         std::vector<Model> m_Models;
     };
-}
+} // namespace BeeEngine

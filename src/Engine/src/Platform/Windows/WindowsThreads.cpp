@@ -1,8 +1,8 @@
 //
 // Created by alexl on 26.11.2023.
 //
-#include <thread>
 #include "Core/Numbers.h"
+#include <thread>
 #include <windows.h>
 namespace BeeEngine
 {
@@ -11,4 +11,4 @@ namespace BeeEngine
         DWORD_PTR mask = 1ull << core;
         SetThreadAffinityMask(thread.native_handle(), mask);
     }
-}
+} // namespace BeeEngine

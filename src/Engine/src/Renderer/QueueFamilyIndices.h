@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <optional>
 #include "Core/TypeDefines.h"
+#include <optional>
 
 namespace BeeEngine
 {
@@ -14,9 +14,6 @@ namespace BeeEngine
         std::optional<uint32_t> GraphicsFamily;
         std::optional<uint32_t> PresentFamily;
 
-        bool IsComplete() const
-        {
-            return GraphicsFamily.has_value() && PresentFamily.has_value();
-        }
+        bool IsComplete() const { return GraphicsFamily.has_value() && PresentFamily.has_value(); }
     };
-}
+} // namespace BeeEngine

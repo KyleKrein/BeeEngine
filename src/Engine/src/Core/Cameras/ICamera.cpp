@@ -4,7 +4,6 @@
 
 #include "ICamera.h"
 
-
 namespace BeeEngine
 {
 

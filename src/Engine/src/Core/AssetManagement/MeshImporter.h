@@ -14,4 +14,4 @@ namespace BeeEngine
     public:
         static Ref<Mesh> ImportMesh(AssetHandle handle, const AssetMetadata& metadata);
     };
-}
+} // namespace BeeEngine

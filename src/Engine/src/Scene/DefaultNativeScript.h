@@ -10,6 +10,5 @@ namespace BeeEngine
 {
     class DefaultScript : public ScriptableEntity
     {
-
     };
-}
+} // namespace BeeEngine

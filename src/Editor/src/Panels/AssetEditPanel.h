@@ -3,39 +3,32 @@
 //
 
 #pragma once
-#include "Locale/Locale.h"
+#include "Core/Application.h"
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetManager.h"
-#include "Core/Application.h"
+#include "Locale/Locale.h"
+#include <Core/AssetManagement/EditorAssetManager.h>
 
 namespace BeeEngine::Editor
 {
     class AssetEditPanel final
     {
     public:
-        AssetEditPanel(Locale::Domain& domain, const AssetHandle& handle);
+        AssetEditPanel(Locale::Domain& domain, const AssetHandle& handle, EditorAssetManager& assetManager);
 
         void Render();
         ~AssetEditPanel();
-        void ToggleOpened() noexcept
-        {
-            m_IsOpened = !m_IsOpened;
-        }
-        bool IsOpened() const noexcept
-        {
-            return m_IsOpened;
-        }
+        void ToggleOpened() noexcept { m_IsOpened = !m_IsOpened; }
+        bool IsOpened() const noexcept { return m_IsOpened; }
+
     private:
         AssetHandle m_Handle;
         Locale::Domain* m_Domain;
-        AssetType m_AssetType;
-        String m_AssetName;
-        bool m_NeedsToBeUnloaded = true;
+        EditorAssetManager& m_AssetManager;
         bool m_IsOpened = true;
 
         void RenderLocalizedAssetSettings();
-
         void HandleLocalizedAssetSave();
     };
 
-} // BeeEngine
+} // namespace BeeEngine::Editor

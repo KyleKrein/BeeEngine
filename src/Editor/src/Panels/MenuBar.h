@@ -10,20 +10,17 @@ namespace BeeEngine::Editor
 {
     struct MenuBarItem
     {
-        std::string Name;
+        String Name;
         std::function<void()> Action;
     };
     struct MenuBarElement
     {
-        std::string Name;
+        String Name;
         std::vector<MenuBarItem> Children;
 
-        void AddChild(const MenuBarItem& element)
-        {
-            Children.push_back(element);
-        }
+        void AddChild(const MenuBarItem& element) { Children.push_back(element); }
     };
-    class MenuBar: public BeeEngine::Internal::IImGuiElement
+    class MenuBar : public BeeEngine::Internal::IImGuiElement
     {
     public:
         MenuBar() = default;
@@ -34,7 +31,8 @@ namespace BeeEngine::Editor
         void OnEvent(EventDispatcher& event) override;
 
         void AddElement(const MenuBarElement& element);
+
     private:
         std::vector<MenuBarElement> m_Elements;
     };
-}
+} // namespace BeeEngine::Editor

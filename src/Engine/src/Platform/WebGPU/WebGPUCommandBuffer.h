@@ -8,14 +8,12 @@
 #include <webgpu/webgpu.h>
 namespace BeeEngine::Internal
 {
-    class WebGPUCommandBuffer: public CommandBuffer
+    class WebGPUCommandBuffer : public CommandBuffer
     {
     public:
-        explicit WebGPUCommandBuffer(WGPUCommandEncoder encoder)
-            : CommandBuffer(encoder)
-        {}
+        explicit WebGPUCommandBuffer(WGPUCommandEncoder encoder) : CommandBuffer(encoder) {}
         ~WebGPUCommandBuffer() override = default;
         [[nodiscard]] WGPUCommandEncoder GetHandle() const { return static_cast<WGPUCommandEncoder>(m_Handle); }
     };
-}
+} // namespace BeeEngine::Internal
 #endif

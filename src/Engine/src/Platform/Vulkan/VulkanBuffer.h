@@ -3,17 +3,17 @@
 //
 
 #pragma once
-#include "vulkan/vulkan.hpp"
 #include "vk_mem_alloc.h"
+#include "vulkan/vulkan.hpp"
 
 namespace BeeEngine::Internal
 {
     struct VulkanBuffer
     {
         vk::Buffer Buffer;
-        VmaAllocation Memory {VK_NULL_HANDLE};
+        VmaAllocation Memory{VK_NULL_HANDLE};
         VmaAllocationInfo Info;
-        //VulkanBuffer() = default;
+        // VulkanBuffer() = default;
 
         /*VulkanBuffer(VulkanBuffer&& other) noexcept
         {
@@ -44,4 +44,4 @@ namespace BeeEngine::Internal
             });
         }*/
     };
-}
+} // namespace BeeEngine::Internal

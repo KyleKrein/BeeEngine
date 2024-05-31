@@ -3,31 +3,32 @@
 //
 #if defined(BEE_COMPILE_WEBGPU)
 #include "WebGPUPipeline.h"
-#include "Renderer/Renderer.h"
-#include "WebGPUGraphicsDevice.h"
-#include "WebGPUBindingSet.h"
 #include "Core/DeletionQueue.h"
+#include "Renderer/Renderer.h"
+#include "WebGPUBindingSet.h"
+#include "WebGPUGraphicsDevice.h"
 
 namespace BeeEngine::Internal
 {
     WebGPUPipeline* WebGPUPipeline::s_CurrentPipeline = nullptr;
     WebGPUPipeline::WebGPUPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader)
-    : m_IsRender(true)
+        : m_IsRender(true)
     {
         m_ShaderModules[ShaderType::Vertex] = vertexShader;
         m_ShaderModules[ShaderType::Fragment] = fragmentShader;
 
         // Vertex fetch
-        WGPUVertexBufferLayout pointBufferLayout = ((WebGPUShaderModule *) vertexShader.get())->GetPointBufferLayout();
-        WGPUVertexBufferLayout instanceBufferLayout = ((WebGPUShaderModule *) vertexShader.get())->GetInstanceBufferLayout();
+        WGPUVertexBufferLayout pointBufferLayout = ((WebGPUShaderModule*)vertexShader.get())->GetPointBufferLayout();
+        WGPUVertexBufferLayout instanceBufferLayout =
+            ((WebGPUShaderModule*)vertexShader.get())->GetInstanceBufferLayout();
 
         WGPURenderPipelineDescriptor renderPipelineDescriptor = {};
         renderPipelineDescriptor.nextInChain = nullptr;
         renderPipelineDescriptor.label = "Render Pipeline";
-        //vertex
+        // vertex
         renderPipelineDescriptor.vertex.nextInChain = nullptr;
         std::array<WGPUVertexBufferLayout, 2> layouts = {pointBufferLayout, instanceBufferLayout};
-        if(instanceBufferLayout.arrayStride != 0)
+        if (instanceBufferLayout.arrayStride != 0)
         {
             renderPipelineDescriptor.vertex.bufferCount = layouts.size();
             renderPipelineDescriptor.vertex.buffers = layouts.data();
@@ -42,8 +43,8 @@ namespace BeeEngine::Internal
         renderPipelineDescriptor.vertex.constantCount = 0;
         renderPipelineDescriptor.vertex.constants = nullptr;
 
-        //Primitive pipeline state
-        // Each sequence of 3 vertices is considered as a triangle
+        // Primitive pipeline state
+        //  Each sequence of 3 vertices is considered as a triangle
         renderPipelineDescriptor.primitive.topology = WGPUPrimitiveTopology_TriangleList;
 
         // We'll see later how to specify the order in which vertices should be
@@ -58,13 +59,13 @@ namespace BeeEngine::Internal
         // But the face orientation does not matter much because we do not
         // cull (i.e. "hide") the faces pointing away from us (which is often
         // used for optimization).
-//#if defined(DEBUG)
-        renderPipelineDescriptor.primitive.cullMode = WGPUCullMode_None; //TODO: make configurable
-//#else
-        //renderPipelineDescriptor.primitive.cullMode = WGPUCullMode_Front;
-//#endif
+        // #if defined(DEBUG)
+        renderPipelineDescriptor.primitive.cullMode = WGPUCullMode_None; // TODO: make configurable
+        // #else
+        // renderPipelineDescriptor.primitive.cullMode = WGPUCullMode_Front;
+        // #endif
 
-        //fragment
+        // fragment
         WGPUFragmentState fragmentState{};
         fragmentState.nextInChain = nullptr;
         fragmentState.module = ((WebGPUShaderModule*)fragmentShader.get())->GetHandle();
@@ -74,7 +75,7 @@ namespace BeeEngine::Internal
 
         renderPipelineDescriptor.fragment = &fragmentState;
 
-        //depth stencil state
+        // depth stencil state
         WGPUDepthStencilState depthStencilState{};
         depthStencilState.nextInChain = nullptr;
         depthStencilState.format = WebGPUGraphicsDevice::GetInstance().GetSwapChain().GetDepthFormat();
@@ -96,7 +97,7 @@ namespace BeeEngine::Internal
 
         renderPipelineDescriptor.depthStencil = &depthStencilState;
 
-        //blending state
+        // blending state
         WGPUBlendState blendState{};
         blendState.color.srcFactor = WGPUBlendFactor_SrcAlpha;
         blendState.color.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha;
@@ -110,27 +111,27 @@ namespace BeeEngine::Internal
         colorTarget.blend = &blendState;
         colorTarget.writeMask = WGPUColorWriteMask_All; // We could write to only some of the color channels.
 
-       WGPUColorTargetState entityIDColorTarget{};
+        WGPUColorTargetState entityIDColorTarget{};
         entityIDColorTarget.format = WGPUTextureFormat_R32Float;
         entityIDColorTarget.blend = nullptr;
         entityIDColorTarget.writeMask = WGPUColorWriteMask::WGPUColorWriteMask_All;
 
-        std::vector<WGPUColorTargetState> colorTargets {colorTarget, entityIDColorTarget};
+        std::vector<WGPUColorTargetState> colorTargets{colorTarget, entityIDColorTarget};
 
         // We have only one target because our render pass has only one output color
         // attachment.
         fragmentState.targetCount = colorTargets.size();
         fragmentState.targets = colorTargets.data();
 
-        //multisample state
-        // Samples per pixel
+        // multisample state
+        //  Samples per pixel
         renderPipelineDescriptor.multisample.count = 1;
         // Default value for the mask, meaning "all bits on"
         renderPipelineDescriptor.multisample.mask = ~0u;
         // Default value as well (irrelevant for count = 1 anyways)
         renderPipelineDescriptor.multisample.alphaToCoverageEnabled = false;
 
-        //layout
+        // layout
         std::vector<WGPUBindGroupLayout> bindGroupLayouts;
         auto& tempLayouts = ((WebGPUShaderModule*)vertexShader.get())->GetBindGroupLayouts();
         for (auto& layout : tempLayouts)
@@ -149,11 +150,13 @@ namespace BeeEngine::Internal
         pipelineLayoutDescriptor.label = "Pipeline Layout";
         pipelineLayoutDescriptor.bindGroupLayoutCount = bindGroupLayouts.size();
         pipelineLayoutDescriptor.bindGroupLayouts = bindGroupLayouts.data();
-        m_PipelineLayout = wgpuDeviceCreatePipelineLayout(WebGPUGraphicsDevice::GetInstance().GetDevice(), &pipelineLayoutDescriptor);
+        m_PipelineLayout =
+            wgpuDeviceCreatePipelineLayout(WebGPUGraphicsDevice::GetInstance().GetDevice(), &pipelineLayoutDescriptor);
 
         renderPipelineDescriptor.layout = m_PipelineLayout;
 
-        m_Pipeline = wgpuDeviceCreateRenderPipeline(WebGPUGraphicsDevice::GetInstance().GetDevice(), &renderPipelineDescriptor);
+        m_Pipeline =
+            wgpuDeviceCreateRenderPipeline(WebGPUGraphicsDevice::GetInstance().GetDevice(), &renderPipelineDescriptor);
     }
 
     WebGPUPipeline::~WebGPUPipeline()
@@ -165,11 +168,10 @@ namespace BeeEngine::Internal
     void WebGPUPipeline::Bind(void* commandBuffer)
     {
         s_CurrentPipeline = this;
-        DeletionQueue::RendererFlush().PushFunction([]() {
-            s_CurrentPipeline = nullptr;
-        });
-        if(m_IsRender)
-            wgpuRenderPassEncoderSetPipeline((WGPURenderPassEncoder)(((RenderPass*)commandBuffer)->GetHandle()), m_Pipeline);
+        DeletionQueue::RendererFlush().PushFunction([]() { s_CurrentPipeline = nullptr; });
+        if (m_IsRender)
+            wgpuRenderPassEncoderSetPipeline((WGPURenderPassEncoder)(((RenderPass*)commandBuffer)->GetHandle()),
+                                             m_Pipeline);
     }
-}
+} // namespace BeeEngine::Internal
 #endif

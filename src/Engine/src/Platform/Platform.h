@@ -17,7 +17,7 @@ namespace BeeEngine
     void* PlatformMemoryCopy(void* dest, const void* src, size_t size);
     void* PlatformMemorySet(void* dest, int32_t value, size_t size);
 
-    //void PlatformConsolePrint(const char* message, Color4 foreground, Color4 background);
-    // Returns the absolute time in seconds
+    // void PlatformConsolePrint(const char* message, Color4 foreground, Color4 background);
+    //  Returns the absolute time in seconds
     float64_t PlatformGetAbsoluteTime();
-}
+} // namespace BeeEngine

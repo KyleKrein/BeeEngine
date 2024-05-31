@@ -3,8 +3,10 @@
 //
 
 #pragma once
-#include "MObject.h"
 #include "MMethod.h"
+#include "MObject.h"
+#include "MTypes.h"
+#include "MUtils.h"
 
 namespace BeeEngine
 {
@@ -12,37 +14,31 @@ namespace BeeEngine
     {
     public:
         constexpr static size_t MAX_FIELD_SIZE = 16;
-        GameScriptField(MField& field): m_Field(&field) {}
+        GameScriptField(MField& field) : m_Field(&field) {}
         MField& GetMField() { return *m_Field; }
 
-        template<class T>
+        template <class T>
         void SetData(const T& data)
         {
-            static_assert(sizeof (T)<= MAX_FIELD_SIZE, "Type is too large");
-            memcpy(m_Buffer, &data, sizeof (T));
+            static_assert(sizeof(T) <= MAX_FIELD_SIZE, "Type is too large");
+            memcpy(m_Buffer, &data, sizeof(T));
         }
-        template<>
+        template <>
         void SetData<MFieldValue>(const MFieldValue& data)
         {
             memcpy(m_Buffer, data.GetValuePtr(), MUtils::SizeOfMType(data.GetType()));
         }
 
-        void SetData(void* data)
-        {
-            memcpy(m_Buffer, data, MAX_FIELD_SIZE);
-        }
+        void SetData(void* data) { memcpy(m_Buffer, data, MAX_FIELD_SIZE); }
 
-        template<class T>
+        template <class T>
         [[nodiscard]] const T& GetData()
         {
             static_assert(sizeof(T) <= MAX_FIELD_SIZE, "Type is too large");
             return *(T*)m_Buffer;
         }
 
-        [[nodiscard]] void* GetData()
-        {
-            return m_Buffer;
-        }
+        [[nodiscard]] void* GetData() { return m_Buffer; }
 
     private:
         MField* m_Field;
@@ -51,7 +47,7 @@ namespace BeeEngine
     class GameScript
     {
     public:
-        //using OnFunction = void(*)();
+        // using OnFunction = void(*)();
 
         GameScript(MClass& mClass, class Entity entity, const String& locale);
         void InvokeOnCreate();
@@ -61,9 +57,10 @@ namespace BeeEngine
 
         ~GameScript()
         {
-            if(m_OnDestroy)
+            if (m_OnDestroy)
                 InvokeOnDestroy();
         }
+
     private:
         MObject m_Instance;
 
@@ -71,6 +68,6 @@ namespace BeeEngine
         MMethod* m_OnDestroy = nullptr;
         MMethod* m_OnUpdate = nullptr;
 
-        void CopyFieldsData(std::vector<GameScriptField> &aClass, const String& locale);
+        void CopyFieldsData(std::vector<GameScriptField>& aClass, const String& locale);
     };
-}
+} // namespace BeeEngine

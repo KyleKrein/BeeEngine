@@ -8,14 +8,14 @@
 
 namespace BeeEngine
 {
-    MeshSource::MeshSource(std::vector<Ref<Mesh>>&& meshes)
-    :m_Meshes(std::move(meshes))
+    MeshSource::MeshSource(std::vector<Ref<Mesh>>&& meshes) : m_Meshes(std::move(meshes))
     {
         m_Models.reserve(m_Meshes.size());
-        auto& meshDefaultMaterial = Application::GetInstance().GetAssetManager().GetMaterial("Renderer_DefaultMeshMaterial");
+        auto& meshDefaultMaterial =
+            Application::GetInstance().GetAssetManager().GetMaterial("Renderer_DefaultMeshMaterial");
         for (auto& mesh : m_Meshes)
         {
             m_Models.emplace_back(*mesh, meshDefaultMaterial);
         }
     }
-}
+} // namespace BeeEngine

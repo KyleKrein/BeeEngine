@@ -3,9 +3,9 @@
 //
 
 #pragma once
-#include "Core/TypeDefines.h"
 #include "Core/Color4.h"
 #include "Core/Coroutines/Task.h"
+#include "Core/TypeDefines.h"
 
 namespace BeeEngine
 {
@@ -17,15 +17,15 @@ namespace BeeEngine
     enum class FrameBufferTextureFormat
     {
         None = 0,
-        //color
+        // color
         RGBA8,
         RGBA16F,
         RedInteger,
 
-        //depth/stencil
+        // depth/stencil
         Depth24,
 
-        //defaults
+        // defaults
         Depth = Depth24
     };
     enum class FrameBufferTextureUsage
@@ -39,17 +39,15 @@ namespace BeeEngine
     {
         FrameBufferTextureSpecification() = default;
 
-        FrameBufferTextureSpecification(FrameBufferTextureFormat format)
-                : TextureFormat(format)
-        {}
-        //FrameBufferTextureSpecification(FrameBufferTextureFormat format, FrameBufferTextureUsage usage)
-        //        : TextureFormat(format), TextureUsage(usage)
+        FrameBufferTextureSpecification(FrameBufferTextureFormat format) : TextureFormat(format) {}
+        // FrameBufferTextureSpecification(FrameBufferTextureFormat format, FrameBufferTextureUsage usage)
+        //         : TextureFormat(format), TextureUsage(usage)
         //{}
 
         FrameBufferTextureFormat TextureFormat = FrameBufferTextureFormat::None;
         Color4 ClearColor = Color4::CornflowerBlue;
         float ClearDepth = 1.0f;
-        int32_t ClearRedInteger= -1;
+        int32_t ClearRedInteger = -1;
         FrameBufferTextureUsage TextureUsage = FrameBufferTextureUsage::GPUOnly;
     };
 
@@ -57,8 +55,9 @@ namespace BeeEngine
     {
         FrameBufferAttachmentSpecification() = default;
         FrameBufferAttachmentSpecification(std::initializer_list<FrameBufferTextureSpecification> attachments)
-                : Attachments(attachments)
-        {}
+            : Attachments(attachments)
+        {
+        }
 
         std::vector<FrameBufferTextureSpecification> Attachments;
     };
@@ -71,19 +70,18 @@ namespace BeeEngine
         bool SwapChainTarget = false;
         FrameBufferAttachmentSpecification Attachments;
 
-        FrameBufferPreferences()
-                : Width(1200), Height(720), Samples(1), SwapChainTarget(false)
-        {}
+        FrameBufferPreferences() : Width(1200), Height(720), Samples(1), SwapChainTarget(false) {}
         FrameBufferPreferences(uint32_t width, uint32_t height, uint32_t samples = 1, bool swapChainTarget = false)
-                : Width(width), Height(height), Samples(samples), SwapChainTarget(swapChainTarget)
-        {}
+            : Width(width), Height(height), Samples(samples), SwapChainTarget(swapChainTarget)
+        {
+        }
     };
     class FrameBuffer
     {
     public:
         FrameBuffer() = default;
         virtual ~FrameBuffer() = default;
-        [[nodiscard]]virtual CommandBuffer Bind() = 0;
+        [[nodiscard]] virtual CommandBuffer Bind() = 0;
         virtual void Unbind(CommandBuffer& commandBuffer) = 0;
         virtual void Resize(uint32_t width, uint32_t height) = 0;
         virtual void Invalidate() = 0;
@@ -96,4 +94,4 @@ namespace BeeEngine
     protected:
         bool IsDepthFormat(FrameBufferTextureFormat format) const;
     };
-}
+} // namespace BeeEngine

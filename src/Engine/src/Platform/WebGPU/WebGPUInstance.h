@@ -9,19 +9,16 @@
 
 namespace BeeEngine::Internal
 {
-    class WebGPUInstance: public Instance
+    class WebGPUInstance : public Instance
     {
     public:
         WebGPUInstance();
         ~WebGPUInstance() override;
 
-        [[nodiscard]] WGPUInstance GetHandle() const
-        {
-            return m_Instance;
-        }
+        [[nodiscard]] WGPUInstance GetHandle() const { return m_Instance; }
 
     private:
         WGPUInstance m_Instance;
     };
-}
+} // namespace BeeEngine::Internal
 #endif

@@ -4,48 +4,46 @@
 
 #pragma once
 
-#include "EntityID.h"
-#include "Scene.h"
 #include "Core/Logging/Log.h"
 #include "Core/UUID.h"
-//#include "Components.h"
+#include "EntityID.h"
+#include "Scene.h"
+// #include "Components.h"
 
 namespace BeeEngine
 {
     class Entity
     {
         friend class PrefabImporter;
+
     public:
         constexpr Entity() = default;
-        constexpr Entity(EntityID id, Scene* scene)
-            : m_ID(id), m_Scene(scene)
-        {}
+        constexpr Entity(EntityID id, Scene* scene) : m_ID(id), m_Scene(scene) {}
 
         UUID GetUUID();
 
-
-        template<typename T, typename... Args>
+        template <typename T, typename... Args>
         T& AddComponent(Args&&... args)
         {
             BeeCoreAssert(!HasComponent<T>(), "Entity already has component!");
             return m_Scene->m_Registry.emplace<T>(m_ID, std::forward<Args>(args)...);
         }
 
-        template<typename T>
+        template <typename T>
         T& GetComponent()
         {
             BeeCoreAssert(HasComponent<T>(), "Entity does not have component!");
             return m_Scene->m_Registry.get<T>(m_ID);
         }
 
-        template<typename T>
+        template <typename T>
         void RemoveComponent()
         {
             BeeCoreAssert(HasComponent<T>(), "Entity does not have component!");
             m_Scene->m_Registry.remove<T>(m_ID);
         }
 
-        template<typename T>
+        template <typename T>
         bool HasComponent()
         {
             return m_Scene->m_Registry.all_of<T>(m_ID);
@@ -81,17 +79,17 @@ namespace BeeEngine
             constexpr operator Entity() const { return Entity(ID, Scene); }
         };
 
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& serializer)
         {
-            serializer & GetUUID();
+            serializer& GetUUID();
         }
 
         constexpr static EntityInit const Null{};
 
     private:
-        EntityID m_ID {};
+        EntityID m_ID{};
         Scene* m_Scene = nullptr;
         void SetParentWithoutChecks(Entity& parent);
     };
-}
+} // namespace BeeEngine

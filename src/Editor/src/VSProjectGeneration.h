@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include <filesystem>
 #include "Core/Path.h"
+#include <filesystem>
 
 namespace BeeEngine
 {
@@ -12,7 +12,8 @@ namespace BeeEngine
     {
     public:
         static std::vector<Path> GetSourceFiles(const Path& path);
-        static void GenerateProject(const Path& path, const std::vector<Path>& sources, const std::string& projectName);
+        static void GenerateProject(const Path& path, const std::vector<Path>& sources, const String& projectName);
+
     private:
     };
-}
+} // namespace BeeEngine

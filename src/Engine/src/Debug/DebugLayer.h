@@ -11,18 +11,19 @@ namespace BeeEngine
 {
     namespace Debug
     {
-        class DebugLayer: public Layer
+        class DebugLayer : public Layer
         {
         public:
-            DebugLayer() {};
-            ~DebugLayer() override {};
+            DebugLayer(){};
+            ~DebugLayer() override{};
             void OnAttach() override;
             void OnDetach() override;
             void OnUpdate(FrameData& frameData) override;
             void OnGUIRendering() override;
             void OnEvent(EventDispatcher& e) override;
+
         private:
             Internal::RendererStatisticsGUI m_RendererStatisticsGUI;
         };
-    }
-}
+    } // namespace Debug
+} // namespace BeeEngine

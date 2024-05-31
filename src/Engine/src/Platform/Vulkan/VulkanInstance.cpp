@@ -1,7 +1,7 @@
 //
 // Created by alexl on 09.06.2023.
 //
-
+// clang-format off
 #if defined(BEE_COMPILE_VULKAN)
 #include "VulkanInstance.h"
 #include "Core/Logging/Log.h"
@@ -14,13 +14,12 @@
 #include <windows.h>
 #include <vulkan/vulkan_win32.h>
 #endif
-
+// clang-format on
 
 namespace BeeEngine::Internal
 {
 
-    VulkanInstance::VulkanInstance(std::string_view windowTitle, WindowHandlerAPI windowApi)
-    : m_WindowApi(windowApi)
+    VulkanInstance::VulkanInstance(std::string_view windowTitle, WindowHandlerAPI windowApi) : m_WindowApi(windowApi)
     {
         /*
          * An instance stores all per-application state info, it is a vulkan handle
@@ -30,8 +29,10 @@ namespace BeeEngine::Internal
         uint32_t version = 0;
         vkEnumerateInstanceVersion(&version);
         BeeCoreInfo("System supports Vulkan Variant {0}. Major: {1}, Minor {2}, Patch {3}",
-                    VK_API_VERSION_VARIANT(version), VK_API_VERSION_MAJOR(version),
-                    VK_API_VERSION_MINOR(version), VK_API_VERSION_PATCH(version));
+                    VK_API_VERSION_VARIANT(version),
+                    VK_API_VERSION_MAJOR(version),
+                    VK_API_VERSION_MINOR(version),
+                    VK_API_VERSION_PATCH(version));
 
         version &= ~(0xFFFU);
         version = VK_MAKE_API_VERSION(0, 1, 3, 0);
@@ -45,11 +46,7 @@ namespace BeeEngine::Internal
          *                                      uint32_t engineVersion_ = {},
          *                                      uint32_t apiVersion_ = {} ) VULKAN_HPP_NOEXCEPT
          */
-        vk::ApplicationInfo appInfo(windowTitle.data(),
-                                    1,
-                                    "BeeEngine",
-                                    1,
-                                    version);
+        vk::ApplicationInfo appInfo(windowTitle.data(), 1, "BeeEngine", 1, version);
         ManageInstance(appInfo);
         m_DynamicLoader = vk::DispatchLoaderDynamic(m_Instance, vkGetInstanceProcAddr);
 #if defined(DEBUG)
@@ -65,7 +62,7 @@ namespace BeeEngine::Internal
         m_Instance.destroy();
     }
 
-    bool VulkanInstance::ExtensionsSupported(const std::vector<const char *> &extensions) const
+    bool VulkanInstance::ExtensionsSupported(const std::vector<const char*>& extensions) const
     {
         std::vector<vk::ExtensionProperties> supportedExtensions = vk::enumerateInstanceExtensionProperties();
 
@@ -75,19 +72,19 @@ namespace BeeEngine::Internal
             BeeCoreTrace("\t{0}", extension.extensionName.data());
         }
 
-        for(const char* extension : extensions)
+        for (const char* extension : extensions)
         {
             bool found = false;
-            for(const vk::ExtensionProperties& supportedExtension : supportedExtensions)
+            for (const vk::ExtensionProperties& supportedExtension : supportedExtensions)
             {
-                if(strcmp(extension, supportedExtension.extensionName.data()) == 0)
+                if (strcmp(extension, supportedExtension.extensionName.data()) == 0)
                 {
                     found = true;
                     BeeCoreTrace("Extension {0} is supported", extension);
                     break;
                 }
             }
-            if(!found)
+            if (!found)
             {
                 BeeCoreError("Extension {0} is not supported", extension);
                 return false;
@@ -96,7 +93,7 @@ namespace BeeEngine::Internal
         return true;
     }
 
-    bool VulkanInstance::LayersSupported(const std::vector<const char *> &layers) const
+    bool VulkanInstance::LayersSupported(const std::vector<const char*>& layers) const
     {
         std::vector<vk::LayerProperties> supportedLayers = vk::enumerateInstanceLayerProperties();
         BeeCoreTrace("Supported Layers: ");
@@ -105,19 +102,19 @@ namespace BeeEngine::Internal
             BeeCoreTrace("\t{0}", layer.layerName.data());
         }
 
-        for(const char* layer: layers)
+        for (const char* layer : layers)
         {
             bool found = false;
-            for(const vk::LayerProperties& supportedLayer : supportedLayers)
+            for (const vk::LayerProperties& supportedLayer : supportedLayers)
             {
-                if(strcmp(layer, supportedLayer.layerName) == 0)
+                if (strcmp(layer, supportedLayer.layerName) == 0)
                 {
                     found = true;
                     BeeCoreTrace("Layer {0} is supported", layer);
                     break;
                 }
             }
-            if(!found)
+            if (!found)
             {
                 BeeCoreError("Layer {0} is not supported", layer);
                 return false;
@@ -132,7 +129,7 @@ namespace BeeEngine::Internal
                                                         void* pUserData)
     {
         String message = pCallbackData->pMessage;
-        if(message.starts_with("Validation Error"))
+        if (message.starts_with("Validation Error"))
             BeeCoreError("Validation Layer: {0}", message);
         else
             BeeCoreInfo("Validation Layer: {0}", message);
@@ -142,16 +139,17 @@ namespace BeeEngine::Internal
     void VulkanInstance::MakeDebugMessenger()
     {
         vk::DebugUtilsMessengerCreateInfoEXT createInfo = vk::DebugUtilsMessengerCreateInfoEXT(
-                vk::DebugUtilsMessengerCreateFlagsEXT(),
-                /*vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | */vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning,
-                vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
-                DebugCallback,
-                nullptr
-                );
+            vk::DebugUtilsMessengerCreateFlagsEXT(),
+            /*vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | */ vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo |
+                vk::DebugUtilsMessageSeverityFlagBitsEXT::eError | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning,
+            vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
+                vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
+            DebugCallback,
+            nullptr);
         m_DebugMessenger = m_Instance.createDebugUtilsMessengerEXT(createInfo, nullptr, m_DynamicLoader);
     }
 
-    void VulkanInstance::ManageInstance(vk::ApplicationInfo &appInfo)
+    void VulkanInstance::ManageInstance(vk::ApplicationInfo& appInfo)
     {
         std::vector<const char*> extensions;
         switch (m_WindowApi)
@@ -162,9 +160,10 @@ namespace BeeEngine::Internal
                 uint32_t extensionCount = 0;
                 SDL_Vulkan_GetInstanceExtensions(&extensionCount);
                 extensions.resize(extensionCount);
-                memcpy(extensions.data(), SDL_Vulkan_GetInstanceExtensions(nullptr), sizeof(const char*) * extensionCount);
+                memcpy(
+                    extensions.data(), SDL_Vulkan_GetInstanceExtensions(nullptr), sizeof(const char*) * extensionCount);
             }
-                break;
+            break;
 #endif
 #if defined(WINDOWS)
             case WindowHandlerAPI::WinAPI:
@@ -174,7 +173,7 @@ namespace BeeEngine::Internal
 #endif
         }
 
-        if(Application::GetOsPlatform() == OSPlatform::Mac)
+        if (Application::GetOsPlatform() == OSPlatform::Mac)
         {
             extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         }
@@ -191,7 +190,7 @@ namespace BeeEngine::Internal
         std::vector<const char*> layers;
 #if defined(BEE_VULKAN_ENABLE_VALIDATION_LAYERS)
         layers.push_back("VK_LAYER_KHRONOS_validation");
-        if(!LayersSupported(layers))
+        if (!LayersSupported(layers))
         {
             BeeCoreError("Required layers are not supported!");
             layers.clear();
@@ -200,7 +199,7 @@ namespace BeeEngine::Internal
 #if defined(IOS)
         layers.push_back("MoltenVK");
 #endif
-        if(!ExtensionsSupported(extensions))
+        if (!ExtensionsSupported(extensions))
         {
             BeeCoreError("Required extensions are not supported!");
             m_Instance = nullptr;
@@ -215,17 +214,14 @@ namespace BeeEngine::Internal
          *                                          uint32_t enabledLayerCount_ = {},
          *                                          const char* const* ppEnabledLayerNames_ = {},
          *                                          uint32_t enabledExtensionCount_ = {},
-         *                                          const char* const* ppEnabledExtensionNames_ = {} ) VULKAN_HPP_NOEXCEPT
+         *                                          const char* const* ppEnabledExtensionNames_ = {} )
+         * VULKAN_HPP_NOEXCEPT
          */
-        vk::InstanceCreateInfo createInfo(vk::InstanceCreateFlags()
-                , &appInfo,
-                                          layers.size(),
-                                          layers.data(),
-                                          extensions.size(),
-                                          extensions.data());
+        vk::InstanceCreateInfo createInfo(
+            vk::InstanceCreateFlags(), &appInfo, layers.size(), layers.data(), extensions.size(), extensions.data());
 
         createInfo.flags = vk::InstanceCreateFlags();
-        if(Application::GetOsPlatform() == OSPlatform::Mac)
+        if (Application::GetOsPlatform() == OSPlatform::Mac)
         {
             createInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
         }
@@ -244,5 +240,5 @@ namespace BeeEngine::Internal
             m_Instance = nullptr;
         }
     }
-}
+} // namespace BeeEngine::Internal
 #endif

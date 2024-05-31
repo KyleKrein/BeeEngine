@@ -3,14 +3,14 @@
 //
 
 #pragma once
+#include "Renderer/UniformBuffer.h"
 #include "VulkanBuffer.h"
 #include "VulkanGraphicsDevice.h"
-#include "Renderer/UniformBuffer.h"
 
 namespace BeeEngine::Internal
 {
 
-    class VulkanUniformBuffer final: public UniformBuffer
+    class VulkanUniformBuffer final : public UniformBuffer
     {
     public:
         VulkanUniformBuffer(size_t size);
@@ -23,6 +23,7 @@ namespace BeeEngine::Internal
         ~VulkanUniformBuffer() override;
 
         void SetData(void* data, size_t size) override;
+
     private:
         VulkanBuffer m_Buffer;
         size_t m_Size;
@@ -30,4 +31,4 @@ namespace BeeEngine::Internal
         vk::DescriptorBufferInfo m_DescriptorBufferInfo;
     };
 
-}
+} // namespace BeeEngine::Internal

@@ -4,7 +4,6 @@
 
 #include "SwapChain.h"
 
-
 namespace BeeEngine
 {
 

@@ -11,13 +11,24 @@ namespace BeeEngine
     class ConsoleOutput
     {
     public:
-        enum class Level{Error,Warning,Information,Trace};
-        enum class Input {Engine, App};
+        enum class Level
+        {
+            Error,
+            Warning,
+            Information,
+            Trace
+        };
+        enum class Input
+        {
+            Engine,
+            App
+        };
         static void Log(const String& message, Level level, Input input = Input::App);
         static void SetOutputProvider(IConsoleOutputProvider* provider);
+        static IConsoleOutputProvider* GetOutputProvider();
+
     private:
-        static void LogToNativeConsole(const String &message, ConsoleOutput::Level level
-                , ConsoleOutput::Input input);
+        static void LogToNativeConsole(const String& message, ConsoleOutput::Level level, ConsoleOutput::Input input);
         static IConsoleOutputProvider* s_OutputProvider;
     };
     class IConsoleOutputProvider
@@ -25,4 +36,4 @@ namespace BeeEngine
     public:
         virtual void AddMessage(const String& message, ConsoleOutput::Level level, ConsoleOutput::Input input) = 0;
     };
-}
+} // namespace BeeEngine

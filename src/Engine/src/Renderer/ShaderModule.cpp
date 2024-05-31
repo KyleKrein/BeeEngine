@@ -2,27 +2,27 @@
 // Created by Александр Лебедев on 01.07.2023.
 //
 #include "ShaderModule.h"
-#include "Utils/ShaderConverter.h"
-#include "FileSystem/File.h"
 #include "Core/ResourceManager.h"
-#include "Renderer.h"
+#include "FileSystem/File.h"
 #include "Platform/WebGPU/WebGPUShaderModule.h"
+#include "Renderer.h"
+#include "Utils/ShaderConverter.h"
 #include <filesystem>
 
 #include "Platform/Vulkan/VulkanShaderModule.h"
 
 namespace BeeEngine
 {
-    String ShaderModule::s_CachePath = "Cache/";
-    Ref<ShaderModule> BeeEngine::ShaderModule::Create(const String &path, ShaderType type, bool loadFromCache)
+    Path ShaderModule::s_CachePath = "Cache/";
+    Ref<ShaderModule> BeeEngine::ShaderModule::Create(const Path& path, ShaderType type, bool loadFromCache)
     {
-        if(!std::filesystem::directory_entry(s_CachePath).exists())
+        if (!std::filesystem::directory_entry(s_CachePath.ToStdPath()).exists())
         {
-            std::filesystem::create_directory(s_CachePath);
+            std::filesystem::create_directory(s_CachePath.ToStdPath());
         }
         BufferLayout layout;
 #if defined(BEE_COMPILE_WEBGPU)
-        if(Renderer::GetAPI() == WebGPU)
+        if (Renderer::GetAPI() == WebGPU)
         {
             std::string wgsl = LoadWGSL(path, type, loadFromCache, layout);
             return CreateRef<Internal::WebGPUShaderModule>(wgsl, type, layout);
@@ -44,7 +44,8 @@ namespace BeeEngine
         }
     }
 
-    std::vector<uint32_t> ShaderModule::CompileGLSLToSpirV(const String &path, ShaderType type, std::string& glsl, BufferLayoutBuilder& builder, out<BufferLayout> layout)
+    std::vector<uint32_t> ShaderModule::CompileGLSLToSpirV(
+        const Path& path, ShaderType type, String& glsl, BufferLayoutBuilder& builder, out<BufferLayout> layout)
     {
         std::vector<uint32_t> result;
         ShaderStage shaderType;
@@ -67,16 +68,18 @@ namespace BeeEngine
         layout = ShaderConverter::GenerateLayout(result, builder);
         BeeCoreTrace("Compiled shader to SPIRV");
         File::WriteBinaryFile(path, {(std::byte*)result.data(), result.size() * sizeof(uint32_t)});
-        //TODO: Cache layout
+        // TODO: Cache layout
         return result;
     }
 
-    std::vector<char> ShaderModule::ReadGLSLShader(const String &path)
+    std::vector<char> ShaderModule::ReadGLSLShader(const Path& path)
     {
-        std::ifstream file(path);
+        std::ifstream file(path.ToStdPath());
 
-        if (!file.is_open()) {
-            throw std::runtime_error("failed to open file: " + path);
+        if (!file.is_open())
+        {
+            String errorMsg = "failed to open file: " + path.AsUTF8();
+            throw std::runtime_error({errorMsg.begin(), errorMsg.end()});
         }
 
         size_t fileSize = File::Size(path);
@@ -89,17 +92,17 @@ namespace BeeEngine
         return buffer;
     }
 
-    std::vector<uint32_t> ShaderModule::LoadSpirVFromCache(const String &path)
+    std::vector<uint32_t> ShaderModule::LoadSpirVFromCache(const Path& path)
     {
         auto result = File::ReadBinaryFile(path);
-        gsl::span<uint32_t> span((uint32_t *)result.data(), result.size() / sizeof(uint32_t));
+        gsl::span<uint32_t> span((uint32_t*)result.data(), result.size() / sizeof(uint32_t));
         BeeCoreTrace("Loaded SPIRV from cache");
         return {span.begin(), span.end()};
     }
 
-    std::string ShaderModule::CompileSpirVToWGSL(in<std::vector<uint32_t>> spirvCode, in<std::string> newPath)
+    String ShaderModule::CompileSpirVToWGSL(in<std::vector<uint32_t>> spirvCode, in<Path> newPath)
     {
-        std::string wgsl;
+        String wgsl;
 #if defined(BEE_COMPILE_WEBGPU)
         bool result = ShaderConverter::SPVtoWGSL(spirvCode, wgsl);
         BeeEnsures(result);
@@ -107,32 +110,32 @@ namespace BeeEngine
 #endif
         return wgsl;
     }
-    std::string ShaderModule::LoadWGSLFromCache(const String& path)
+    String ShaderModule::LoadWGSLFromCache(const Path& path)
     {
-//#if defined(BEE_COMPILE_WEBGPU)
+        // #if defined(BEE_COMPILE_WEBGPU)
         auto wgsl = ReadGLSLShader(path);
         BeeCoreTrace("Loaded WGSL from cache");
-        return std::string(wgsl.data(), wgsl.size());
-//#endif
+        return String(wgsl.data(), wgsl.size());
+        // #endif
     }
 
-    std::string ShaderModule::LoadWGSL(const String& path, ShaderType type, bool loadFromCache, out<BufferLayout> layout)
+    String ShaderModule::LoadWGSL(const Path& path, ShaderType type, bool loadFromCache, out<BufferLayout> layout)
     {
-        auto name = ResourceManager::GetNameFromFilePath(path);
+        auto name = path.GetFileNameWithoutExtension().AsUTF8();
         auto newFilepath = s_CachePath + name + GetExtension(type);
-        if(path.ends_with(".vert") || path.ends_with(".frag") || path.ends_with(".comp"))
+        if (path.GetExtension() == (".vert") || path.GetExtension() == (".frag") || path.GetExtension() == (".comp"))
         {
-            if(loadFromCache)
+            if (loadFromCache)
             {
-                //if(File::Exists(newFilepath))
+                // if(File::Exists(newFilepath))
                 //{
-                    layout = LoadBufferLayoutFromCache(newFilepath + ".layout");
-                    return LoadWGSLFromCache(newFilepath + ".wgsl");
+                layout = LoadBufferLayoutFromCache(newFilepath + ".layout");
+                return LoadWGSLFromCache(newFilepath + ".wgsl");
                 //}
             }
             BufferLayoutBuilder builder;
             auto glsl = ReadGLSLShader(path);
-            auto glslString = std::string(glsl.data(), glsl.size());
+            auto glslString = String(glsl.data(), glsl.size());
             ShaderConverter::AnalyzeGLSL(type, builder, glslString);
             auto spirv = CompileGLSLToSpirV(newFilepath + ".spv", type, glslString, builder, layout);
             auto wgsl = CompileSpirVToWGSL(spirv, newFilepath + ".wgsl");
@@ -156,22 +159,26 @@ namespace BeeEngine
         else
         {
             BeeCoreError("Unknown shader type");
-            return std::string();
+            return String();
         }
     }
-    bool ShaderModule::LoadSpirV(const String& path, ShaderType type, bool loadFromCache, out<std::vector<uint32_t>> spirv, out<BufferLayout> layout)
+    bool ShaderModule::LoadSpirV(const Path& path,
+                                 ShaderType type,
+                                 bool loadFromCache,
+                                 out<std::vector<uint32_t>> spirv,
+                                 out<BufferLayout> layout)
     {
-        //auto name = ResourceManager::GetNameFromFilePath(path);
-        //auto newFilepath = s_CachePath + name + GetExtension(type) + ".spv";
-        if(path.ends_with(".vert") || path.ends_with(".frag") || path.ends_with(".comp"))
+        // auto name = ResourceManager::GetNameFromFilePath(path);
+        // auto newFilepath = s_CachePath + name + GetExtension(type) + ".spv";
+        if (path.GetExtension() == (".vert") || path.GetExtension() == (".frag") || path.GetExtension() == (".comp"))
         {
-            auto name = ResourceManager::GetNameFromFilePath(path);
+            auto name = path.GetFileNameWithoutExtension().AsUTF8();
             auto newFilepath = s_CachePath + name + GetExtension(type);
-            if(loadFromCache)
+            if (loadFromCache)
             {
                 spirv = LoadSpirVFromCache(newFilepath + ".spv");
                 layout = LoadBufferLayoutFromCache(newFilepath + ".layout");
-                if(!spirv.empty())
+                if (!spirv.empty())
                 {
                     return true;
                 }
@@ -179,7 +186,7 @@ namespace BeeEngine
             }
             BufferLayoutBuilder builder;
             auto glsl = ReadGLSLShader(path);
-            std::string glslString(glsl.data(), glsl.size());
+            String glslString(glsl.data(), glsl.size());
             ShaderConverter::AnalyzeGLSL(type, builder, glslString);
             spirv = CompileGLSLToSpirV(newFilepath, type, glslString, builder, layout);
         }
@@ -195,7 +202,7 @@ namespace BeeEngine
             BeeCoreError("Unknown shader type");
             return false;
         }
-        if(spirv.empty())
+        if (spirv.empty())
         {
             BeeCoreError("Unable to create shader module");
             return false;
@@ -203,8 +210,8 @@ namespace BeeEngine
         return true;
     }
 
-    BufferLayout ShaderModule::LoadBufferLayoutFromCache(const BeeEngine::String &path)
+    BufferLayout ShaderModule::LoadBufferLayoutFromCache(const Path& path)
     {
-        return BufferLayout(); //TODO: load layout
+        return BufferLayout(); // TODO: load layout
     }
-}
+} // namespace BeeEngine

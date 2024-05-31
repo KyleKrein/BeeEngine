@@ -47,6 +47,8 @@ namespace BeeEngine.Internal
         private static delegate* unmanaged<ulong, ComponentType, void*> s_Entity_GetComponent = null;
         private static delegate* unmanaged<ulong, ComponentType, int> s_Entity_HasComponent = null;
         private static delegate* unmanaged<ulong, ComponentType, void> s_Entity_RemoveComponent = null;
+        private static delegate* unmanaged<IntPtr> s_Scene_GetActive = null;
+        private static delegate* unmanaged<IntPtr, void> s_Scene_SetActive = null;
 
         enum ReflectionType : UInt32
         {
@@ -83,6 +85,7 @@ namespace BeeEngine.Internal
             Texture2D = 0x27,
             Font = 0x28,
             Prefab = 0x29,
+            Scene = 0x2a,
         }
         /// <summary>
         /// Struct for passing reflection type info to C++ side
@@ -268,6 +271,14 @@ namespace BeeEngine.Internal
             else if (functionName == "Entity_RemoveComponent")
             {
                 s_Entity_RemoveComponent = (delegate* unmanaged<ulong, ComponentType, void>)functionPtr;
+            }
+            else if (functionName == "Scene_GetActive")
+            {
+                s_Scene_GetActive = (delegate* unmanaged<IntPtr>)functionPtr;
+            }
+            else if (functionName == "Scene_SetActive")
+            {
+                s_Scene_SetActive = (delegate* unmanaged<IntPtr, void>)functionPtr;
             }
             else
                 throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
@@ -575,5 +586,16 @@ namespace BeeEngine.Internal
             gCHandle.Free();
             return resultString;
         }
+
+        internal unsafe static AssetHandle Scene_GetActive()
+        {
+            return *(AssetHandle*)s_Scene_GetActive();
+        }
+
+        internal static void Scene_SetActive(ref AssetHandle scene)
+        {
+            s_Scene_SetActive((nint)Unsafe.AsPointer(ref scene));
+        }
+
     }
 }

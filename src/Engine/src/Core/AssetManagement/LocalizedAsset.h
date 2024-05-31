@@ -4,17 +4,18 @@
 
 #pragma once
 #include "Asset.h"
-#include "Core/TypeDefines.h"
 #include "AssetMetadata.h"
-#include <unordered_map>
+#include "Core/TypeDefines.h"
 #include "Serialization/Serializable.h"
+#include <unordered_map>
 namespace BeeEngine
 {
 
-    class LocalizedAsset: public Asset
+    class LocalizedAsset : public Asset
     {
         friend class LocalizedAssetSerializer;
         using Locale = UTF8String;
+
     public:
         LocalizedAsset(std::initializer_list<std::pair<Locale, AssetHandle>> assets)
         {
@@ -23,28 +24,23 @@ namespace BeeEngine
                 m_Assets[asset.first] = asset.second;
             }
         }
-        LocalizedAsset(std::unordered_map<Locale, AssetHandle>&& assets)
-        : m_Assets(std::move(assets))
-        {}
-        [[nodiscard]] constexpr AssetType GetType() const override
-        {
-            return AssetType::Localized;
-        }
+        LocalizedAsset(std::unordered_map<Locale, AssetHandle>&& assets) : m_Assets(std::move(assets)) {}
+        [[nodiscard]] constexpr AssetType GetType() const override { return AssetType::Localized; }
         [[nodiscard]] Ref<Asset> GetAssetRef(const Locale& locale) const;
         [[nodiscard]] Asset& GetAsset(const Locale& locale) const;
 
-        template<typename Archive>
+        template <typename Archive>
         void Serialize(Archive& archive)
         {
-            //archive & Serialization::Key{"Name"} & Serialization::Value{Name};
-            //archive & Serialization::Key{};
+            // archive & Serialization::Key{"Name"} & Serialization::Value{Name};
+            // archive & Serialization::Key{};
         }
 
-        template<typename Archive>
+        template <typename Archive>
         void Deserialize(Archive& archive)
         {
-
         }
+
     private:
         std::unordered_map<Locale, AssetHandle> m_Assets;
         mutable Locale m_CurrentLocale;
@@ -63,4 +59,4 @@ namespace BeeEngine
         static String Serialize(const LocalizedAsset& asset);
         static Ref<LocalizedAsset> Deserialize(const String& data);
     };
-} // BeeEngine
+} // namespace BeeEngine

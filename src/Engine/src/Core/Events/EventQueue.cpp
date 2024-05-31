@@ -7,11 +7,7 @@
 #include "Core/Input.h"
 namespace BeeEngine
 {
-    EventQueue::EventQueue(LayerStack& layerStack)
-    :m_Events(), m_LayerStack(layerStack)
-    {
-
-    }
+    EventQueue::EventQueue(LayerStack& layerStack) : m_Events(), m_LayerStack(layerStack) {}
 
     void EventQueue::AddEvent(Scope<Event>&& event)
     {
@@ -32,14 +28,13 @@ namespace BeeEngine
             Input::OnEvent(event);
             m_LayerStack.OnEvent(dispatcher);
         }
-        //Event::ClearPool();
+        // Event::ClearPool();
         m_Events.clear();
     }
 
-    void EventQueue::ApplicationOnEvent(EventDispatcher &e)
+    void EventQueue::ApplicationOnEvent(EventDispatcher& e)
     {
         BEE_PROFILE_FUNCTION();
         Application::GetInstance().Dispatch(e);
     }
-}
-
+} // namespace BeeEngine

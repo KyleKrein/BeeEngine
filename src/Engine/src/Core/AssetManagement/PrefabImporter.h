@@ -16,4 +16,4 @@ namespace BeeEngine
         static Ref<Asset> ImportPrefab(AssetHandle handle, const AssetMetadata& metadata);
         static Ref<Asset> GeneratePrefab(Entity rootEntity, const Path& path, const AssetHandle& handle);
     };
-}
+} // namespace BeeEngine

@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include <cstddef>
 #include <atomic>
+#include <cstddef>
 #include <iostream>
 
 namespace BeeEngine::Internal
@@ -24,4 +24,4 @@ namespace BeeEngine::Internal
             return s_Statistics;
         }
     };
-}
+} // namespace BeeEngine::Internal

@@ -4,7 +4,6 @@
 
 #include "QueueFamilyIndices.h"
 
-
 namespace BeeEngine
 {
 

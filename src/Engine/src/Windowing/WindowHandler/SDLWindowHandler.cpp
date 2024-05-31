@@ -5,12 +5,12 @@
 #include "SDLWindowHandler.h"
 #if defined(BEE_COMPILE_SDL)
 #include "Core/Application.h"
-#include "Platform/Vulkan/VulkanInstance.h"
-#include "Platform/Vulkan/VulkanGraphicsDevice.h"
-#include "backends/imgui_impl_sdl3.h"
-#include "Platform/WebGPU/WebGPUInstance.h"
-#include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 #include "Hardware.h"
+#include "Platform/Vulkan/VulkanGraphicsDevice.h"
+#include "Platform/Vulkan/VulkanInstance.h"
+#include "Platform/WebGPU/WebGPUGraphicsDevice.h"
+#include "Platform/WebGPU/WebGPUInstance.h"
+#include "backends/imgui_impl_sdl3.h"
 
 #if defined(WINDOWS)
 #include "Platform/Windows/WindowsDropSource.h"
@@ -23,13 +23,13 @@
 namespace BeeEngine::Internal
 {
 
-    SDLWindowHandler::SDLWindowHandler(const ApplicationProperties &properties, EventQueue &eventQueue)
-    : WindowHandler(eventQueue), m_Finalizer()
+    SDLWindowHandler::SDLWindowHandler(const ApplicationProperties& properties, EventQueue& eventQueue)
+        : WindowHandler(eventQueue), m_Finalizer()
     {
         s_Instance = this;
         m_vsync = properties.Vsync;
         auto result = SDL_Init(SDL_INIT_VIDEO);
-        if(result != 0)
+        if (result != 0)
         {
             BeeCoreError("Failed to initialize SDL3! {}", SDL_GetError());
         }
@@ -42,16 +42,17 @@ namespace BeeEngine::Internal
                 windowFlags |= SDL_WINDOW_VULKAN;
                 break;
             case WebGPU:
-                if constexpr (Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
+                if constexpr (Application::GetOsPlatform() == OSPlatform::Mac ||
+                              Application::GetOsPlatform() == OSPlatform::iOS)
                 {
                     windowFlags |= SDL_WINDOW_METAL;
                 }
                 break;
             default:
-            BeeCoreFatalError("Invalid Renderer API chosen for SDL");
+                BeeCoreFatalError("Invalid Renderer API chosen for SDL");
         }
 
-        if(Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
+        if (Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
         {
             windowFlags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
         }
@@ -59,8 +60,9 @@ namespace BeeEngine::Internal
         m_Height = properties.WindowHeight;
         m_Title = properties.Title;
 
-        m_Window = SDL_CreateWindow(properties.Title, gsl::narrow_cast<int>(m_Width), gsl::narrow_cast<int>(m_Height), windowFlags);
-        if(m_Window == nullptr)
+        m_Window = SDL_CreateWindow(
+            properties.Title.c_str(), gsl::narrow_cast<int>(m_Width), gsl::narrow_cast<int>(m_Height), windowFlags);
+        if (m_Window == nullptr)
         {
             BeeCoreError("Failed to create SDL3 window! {}", SDL_GetError());
         }
@@ -96,11 +98,10 @@ namespace BeeEngine::Internal
     void SDLWindowHandler::InitializeVulkan()
     {
 #if defined(BEE_COMPILE_VULKAN)
-        m_Instance = CreateScope<VulkanInstance>(m_Title, WindowHandlerAPI::SDL);
+        m_Instance = CreateScope<VulkanInstance>(static_cast<std::string_view>(m_Title), WindowHandlerAPI::SDL);
         m_GraphicsDevice = CreateScope<VulkanGraphicsDevice>(*(VulkanInstance*)m_Instance.get());
 #endif
     }
-
 
     void SDLWindowHandler::InitializeWebGPU()
     {
@@ -118,7 +119,7 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::SetWidth(uint16_t width)
     {
-        if(width == m_Width)
+        if (width == m_Width)
             return;
         m_Width = width;
         SDL_SetWindowSize(m_Window, m_Width, m_Height);
@@ -126,7 +127,7 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::SetHeight(uint16_t height)
     {
-        if(height == m_Height)
+        if (height == m_Height)
             return;
         m_Height = height;
         SDL_SetWindowSize(m_Window, m_Width, m_Height);
@@ -134,7 +135,7 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::SetVSync(VSync mode)
     {
-        if(mode == m_vsync)
+        if (mode == m_vsync)
             return;
         m_vsync = mode;
         m_GraphicsDevice->RequestSwapChainRebuild();
@@ -145,10 +146,7 @@ namespace BeeEngine::Internal
         SDL_HideCursor();
     }
 
-    void SDLWindowHandler::DisableCursor()
-    {
-
-    }
+    void SDLWindowHandler::DisableCursor() {}
 
     void SDLWindowHandler::ShowCursor()
     {
@@ -199,12 +197,12 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_MOUSE_ENTER:
                 {
-                    //BeeCoreTrace("Mouse entered window");
+                    // BeeCoreTrace("Mouse entered window");
                     break;
                 }
                 case SDL_EVENT_WINDOW_MOUSE_LEAVE:
                 {
-                    //BeeCoreTrace("Mouse left window");
+                    // BeeCoreTrace("Mouse left window");
                     break;
                 }
                 case SDL_EVENT_WINDOW_FOCUS_GAINED:
@@ -248,7 +246,8 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_KEY_DOWN:
                 {
-                    auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.keysym.scancode), sdlEvent.key.repeat);
+                    auto event =
+                        CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.keysym.scancode), sdlEvent.key.repeat);
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
@@ -409,7 +408,7 @@ namespace BeeEngine::Internal
 
     bool SDLWindowHandler::IsRunning() const
     {
-        if(m_IsClosing) [[unlikely]]
+        if (m_IsClosing) [[unlikely]]
         {
             m_IsRunning = false;
             m_IsClosing = false;
@@ -425,9 +424,10 @@ namespace BeeEngine::Internal
         lastTime = currentTime;
         currentTime = SDL_GetPerformanceCounter();
         auto deltatime = ((double)(currentTime - lastTime)) / (double)SDL_GetPerformanceFrequency();
-        SetDeltaTime(Time::secondsD(deltatime), Time::secondsD(((double)currentTime)/(double)SDL_GetPerformanceFrequency()));
+        SetDeltaTime(Time::secondsD(deltatime),
+                     Time::secondsD(((double)currentTime) / (double)SDL_GetPerformanceFrequency()));
         return Time::secondsD(deltatime);
-        //UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetPerformanceCounter()));
+        // UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetPerformanceCounter()));
     }
 
     void SDLWindowHandler::Close()
@@ -1185,15 +1185,16 @@ namespace BeeEngine::Internal
             case SDL_NUM_SCANCODES:
                 return Key::Unknown;
                 break;
-                default:
-                    return Key::Unknown;
-                    break;
+            default:
+                return Key::Unknown;
+                break;
         }
     }
 
     MouseButton SDLWindowHandler::ConvertMouseButton(uint8_t button)
     {
-        switch (button) {
+        switch (button)
+        {
             case SDL_BUTTON_LEFT:
                 return MouseButton::Left;
             case SDL_BUTTON_MIDDLE:
@@ -1256,5 +1257,5 @@ namespace BeeEngine::Internal
         return state;
     }
 
-}
+} // namespace BeeEngine::Internal
 #endif

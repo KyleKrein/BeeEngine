@@ -1,12 +1,12 @@
 #include "ShaderConverter.h"
-#include "glslang/Public/ShaderLang.h"
 #include "Core/Logging/Log.h"
 #include "SPIRV/GlslangToSpv.h"
-//#include <spirv_cross/spirv_cross.hpp>
+#include "glslang/Public/ShaderLang.h"
+// #include <spirv_cross/spirv_cross.hpp>
 #if defined(BEE_COMPILE_WEBGPU)
 #include "src/tint/writer/wgsl/generator_impl.h"
 #else
-//#include <src/tint/lang/spirv/reader/ast_parser/parse.h>
+// #include <src/tint/lang/spirv/reader/ast_parser/parse.h>
 #endif
 #include "Renderer/ShaderTypes.h"
 #include <tint/tint.h>
@@ -26,13 +26,13 @@ namespace BeeEngine
             return new IncludeResult(headerName, result, code.size(), result);
         }
 
-        IncludeResult* includeLocal(const char*headerName, const char*includerName, size_t) override
+        IncludeResult* includeLocal(const char* headerName, const char* includerName, size_t) override
         {
             String code = File::ReadFile(std::filesystem::current_path() / "Shaders" / headerName);
             size_t length = strlen(code.c_str()) + 1;
             char* result = new char[length];
             strcpy(result, code.c_str());
-            return new IncludeResult(headerName, result, length-1, result);
+            return new IncludeResult(headerName, result, length - 1, result);
         }
 
         void releaseInclude(IncludeResult* result) override
@@ -47,10 +47,10 @@ namespace BeeEngine
     BeeEngine::ShaderUniformDataType GlslangToShaderUniformDataType(const glslang::TType& type)
     {
         auto basicType = type.getBasicType();
-        if(basicType == glslang::EbtSampler)
+        if (basicType == glslang::EbtSampler)
         {
             auto& sampler = type.getSampler();
-            if(sampler.isTexture())
+            if (sampler.isTexture())
             {
                 return BeeEngine::ShaderUniformDataType::SampledTexture;
             }
@@ -62,22 +62,26 @@ namespace BeeEngine
 
     void glslang_reflection(glslang::TIntermediate* intermediate, BeeEngine::BufferLayoutBuilder& layout)
     {
-        class RefrectionTraverser : public glslang::TIntermTraverser {
+        class RefrectionTraverser : public glslang::TIntermTraverser
+        {
         public:
-            RefrectionTraverser(BeeEngine::BufferLayoutBuilder& layout)
-                : layout(layout)
+            RefrectionTraverser(BeeEngine::BufferLayoutBuilder& layout) : layout(layout) {}
+            virtual void visitSymbol(glslang::TIntermSymbol* symbol) override
             {
-            }
-            virtual void visitSymbol(glslang::TIntermSymbol* symbol) override {
-                if (symbol->getQualifier().isUniformOrBuffer()) {
+                if (symbol->getQualifier().isUniformOrBuffer())
+                {
                     auto name = symbol->getName();
                     auto qualifier = symbol->getQualifier();
-                    if(qualifier.isUniform())
+                    if (qualifier.isUniform())
                     {
-                        layout.AddUniform(GlslangToShaderUniformDataType(symbol->getType()), qualifier.layoutSet, qualifier.layoutBinding, 0);
+                        layout.AddUniform(GlslangToShaderUniformDataType(symbol->getType()),
+                                          qualifier.layoutSet,
+                                          qualifier.layoutBinding,
+                                          0);
                     }
                 }
             }
+
         private:
             BufferLayoutBuilder& layout;
         };
@@ -88,13 +92,15 @@ namespace BeeEngine
         root->traverse(&traverser);
     }
 
-    bool ShaderConverter::GLSLtoSPV(const ShaderStage shader_type, const char *pshader,
-                                    std::vector<uint32_t> &spirv, BufferLayoutBuilder& layout)
+    bool ShaderConverter::GLSLtoSPV(const ShaderStage shader_type,
+                                    const char* pshader,
+                                    std::vector<uint32_t>& spirv,
+                                    BufferLayoutBuilder& layout)
     {
         EShLanguage stage = static_cast<EShLanguage>(shader_type);
         glslang::TShader shader(stage);
         glslang::TProgram program;
-        const char *shaderStrings[1];
+        const char* shaderStrings[1];
         TBuiltInResource Resources = {};
         InitResources(Resources);
 
@@ -106,7 +112,8 @@ namespace BeeEngine
         shader.setAutoMapBindings(true);
         shader.setAutoMapLocations(true);
         CustomIncluder includer;
-        if (!shader.parse(&Resources, 450, false, messages, includer)) {
+        if (!shader.parse(&Resources, 450, false, messages, includer))
+        {
             BeeCoreError(shader.getInfoLog());
             BeeCoreError(shader.getInfoDebugLog());
             return false; // something didn't work
@@ -117,7 +124,8 @@ namespace BeeEngine
         // Program-level processing...
         //
 
-        if (!program.link(messages)) {
+        if (!program.link(messages))
+        {
             BeeCoreError(shader.getInfoLog());
             BeeCoreError(shader.getInfoDebugLog());
             Finalize();
@@ -128,7 +136,7 @@ namespace BeeEngine
         return true;
     }
 
-    void ShaderConverter::InitResources(TBuiltInResource &Resources)
+    void ShaderConverter::InitResources(TBuiltInResource& Resources)
     {
         Resources.maxLights = 32;
         Resources.maxClipPlanes = 6;
@@ -243,12 +251,12 @@ namespace BeeEngine
         glslang::FinalizeProcess();
     }
 
-    bool ShaderConverter::SPVtoWGSL(const std::vector<uint32_t> &spirv, std::string &wgsl)
+    bool ShaderConverter::SPVtoWGSL(const std::vector<uint32_t>& spirv, String& wgsl)
     {
-        #if !defined(BEE_COMPILE_WEBGPU)
+#if !defined(BEE_COMPILE_WEBGPU)
         BeeCoreError("WGSL is only supported on WebGPU");
         return false;
-        #else
+#else
         try
         {
             auto program = tint::reader::spirv::Parse(spirv);
@@ -256,17 +264,18 @@ namespace BeeEngine
             generator.Generate();
             wgsl = generator.Result();
         }
-        catch (const std::exception &e)
+        catch (const std::exception& e)
         {
             BeeCoreError("Failed to convert SPIR-V to WGSL: {}", e.what());
             return false;
         }
         BeeCoreTrace("WGSL compiled successfully");
         return true;
-        #endif
+#endif
     }
 
-    static ShaderDataType GetShaderDataType(tint::inspector::ComponentType component, tint::inspector::CompositionType composition)
+    static ShaderDataType GetShaderDataType(tint::inspector::ComponentType component,
+                                            tint::inspector::CompositionType composition)
     {
         using namespace tint::inspector;
         switch (composition)
@@ -287,15 +296,15 @@ namespace BeeEngine
                 }
                 break;
             case CompositionType::kVec2:
-                if(component == ComponentType::kF32)
+                if (component == ComponentType::kF32)
                     return ShaderDataType::Float2;
                 break;
             case CompositionType::kVec3:
-                if(component == ComponentType::kF32)
+                if (component == ComponentType::kF32)
                     return ShaderDataType::Float3;
                 break;
             case CompositionType::kVec4:
-                if(component == ComponentType::kF32)
+                if (component == ComponentType::kF32)
                     return ShaderDataType::Float4;
                 break;
         }
@@ -346,38 +355,45 @@ namespace BeeEngine
         tint::inspector::Inspector inspector(shader);
 #endif
         auto entryPoints = inspector.GetEntryPoints();
-        for(auto& entryPoint : entryPoints)
+        for (auto& entryPoint : entryPoints)
         {
-            if(entryPoint.name != "main")//support for only main entry point
+            if (entryPoint.name != "main") // support for only main entry point
                 continue;
             auto& inputs = entryPoint.input_variables;
             builder.NumberOfInputs(inputs.size());
-            for(auto& input : inputs)
+            for (auto& input : inputs)
             {
 #if defined(BEE_COMPILE_WEBGPU)
-                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.location_attribute);
+                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),
+                                 input.name,
+                                 input.location_attribute);
 #else
-                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.attributes.location.value());
+                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),
+                                 String{input.name},
+                                 input.attributes.location.value());
 #endif
             }
             auto& outputs = entryPoint.output_variables;
             builder.NumberOfOutputs(outputs.size());
-            for(auto& output : outputs)
+            for (auto& output : outputs)
             {
-                builder.AddOutput(GetShaderDataType(output.component_type, output.composition_type),output.name, output.attributes.location.value());
+                builder.AddOutput(GetShaderDataType(output.component_type, output.composition_type),
+                                  String{output.name},
+                                  output.attributes.location.value());
             }
 
             const auto& resourceBindings = inspector.GetResourceBindings(entryPoint.name);
             BeeCoreTrace("Number of Resource Bindings: {}", resourceBindings.size());
-            if(inspector.has_error())
+            if (inspector.has_error())
             {
                 BeeCoreError("Inspector has error: {}", inspector.error());
             }
-            for (const auto& uniform:resourceBindings)
+            for (const auto& uniform : resourceBindings)
             {
-                builder.AddUniform(GetShaderUniformDataType(uniform.resource_type), uniform.bind_group, uniform.binding, uniform.size);
+                builder.AddUniform(
+                    GetShaderUniformDataType(uniform.resource_type), uniform.bind_group, uniform.binding, uniform.size);
             }
-            break; //support for only main entry point
+            break; // support for only main entry point
         }
         /*auto resourceBindings = inspector.GetResourceBindings("main");
         for (auto& resource : resourceBindings)
@@ -386,7 +402,7 @@ namespace BeeEngine
         }*/
         return builder.Build();
     }
-    BufferLayout ShaderConverter::GenerateLayout(in<std::string> wgsl, in<std::string> path, BufferLayoutBuilder& builder)
+    BufferLayout ShaderConverter::GenerateLayout(in<String> wgsl, in<std::string> path, BufferLayoutBuilder& builder)
     {
 #if defined(BEE_COMPILE_WEBGPU)
         BeeCoreTrace("Generating buffer layout for wgsl shader");
@@ -394,34 +410,41 @@ namespace BeeEngine
         auto shader = tint::reader::wgsl::Parse(&file);
         tint::inspector::Inspector inspector(&shader);
         auto entryPoints = inspector.GetEntryPoints();
-        for(auto& entryPoint : entryPoints)
+        for (auto& entryPoint : entryPoints)
         {
-            if(entryPoint.name != "main")//support for only main entry point
+            if (entryPoint.name != "main") // support for only main entry point
                 continue;
             auto& inputs = entryPoint.input_variables;
             builder.NumberOfInputs(inputs.size());
-            for(auto& input : inputs)
+            for (auto& input : inputs)
             {
-                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),input.name, input.location_attribute);
+                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),
+                                 input.name,
+                                 input.location_attribute);
             }
             const auto& uniforms = inspector.GetUniformBufferResourceBindings(entryPoint.name);
             BeeCoreTrace("Number of Uniforms: {}", uniforms.size());
-            if(inspector.has_error())
+            if (inspector.has_error())
             {
                 BeeCoreError("Inspector has error: {}", inspector.error());
             }
             const auto& resourceBindings = inspector.GetResourceBindings(entryPoint.name);
             BeeCoreTrace("Number of Resource Bindings: {}", resourceBindings.size());
-            if(inspector.has_error())
+            if (inspector.has_error())
             {
                 BeeCoreError("Inspector has error: {}", inspector.error());
             }
-            for (const auto& uniform:uniforms)
+            for (const auto& uniform : uniforms)
             {
-                BeeCoreTrace("Uniform: {}, {}, {}, {}, {}, {}", uniform.bind_group, uniform.binding, ToString(uniform.image_format),
-                             ToString(uniform.resource_type), uniform.size, uniform.size_no_padding);
+                BeeCoreTrace("Uniform: {}, {}, {}, {}, {}, {}",
+                             uniform.bind_group,
+                             uniform.binding,
+                             ToString(uniform.image_format),
+                             ToString(uniform.resource_type),
+                             uniform.size,
+                             uniform.size_no_padding);
             }
-            break; //support for only main entry point
+            break; // support for only main entry point
         }
         /*auto resourceBindings = inspector.GetResourceBindings("main");
         for (auto& resource : resourceBindings)
@@ -433,7 +456,7 @@ namespace BeeEngine
 #endif
         return builder.Build();
     }
-    int extractIntegerWords(const std::string& str)
+    int extractIntegerWords(const String& str)
     {
         std::stringstream ss;
 
@@ -443,8 +466,8 @@ namespace BeeEngine
         /* Running loop till the end of the stream */
         std::string temp;
         int found;
-        while (!ss.eof()) {
-
+        while (!ss.eof())
+        {
             /* extracting word by word from stream */
             ss >> temp;
 
@@ -458,33 +481,33 @@ namespace BeeEngine
         return -1;
     }
 
-    bool ShaderConverter::AnalyzeGLSL(const ShaderType &stage, out<BufferLayoutBuilder> layout, out<std::string> glsl)
+    bool ShaderConverter::AnalyzeGLSL(const ShaderType& stage, out<BufferLayoutBuilder> layout, out<String> glsl)
     {
         BeeCoreTrace("Analyzing GLSL shader");
         size_t pos = 0;
-        size_t endpos = glsl.size()-1;
+        size_t endpos = glsl.size() - 1;
         do
         {
             pos = glsl.find("instanced", pos + 1);
-            if(pos == std::string::npos)
+            if (pos == String::npos)
             {
                 break;
             }
             size_t location = glsl.find('=', pos);
-            if(location == std::string::npos)
+            if (location == String::npos)
             {
                 BeeCoreError("Failed to find '=' after 'instanced'");
                 return false;
             }
             size_t closeBracket = glsl.find(')', location);
-            if(closeBracket == std::string::npos)
+            if (closeBracket == String::npos)
             {
                 BeeCoreError("Failed to find ')' after '='");
                 return false;
             }
-            std::string locationStr = glsl.substr(location, closeBracket - location);
+            String locationStr = glsl.substr(location, closeBracket - location);
             int locationInt = extractIntegerWords(locationStr);
-            if(locationInt == -1)
+            if (locationInt == -1)
             {
                 BeeCoreError("Failed to extract integer from '{}'", locationStr);
                 return false;
@@ -494,10 +517,12 @@ namespace BeeEngine
         } while (pos != endpos);
 
         size_t index = 0;
-        while (true) {
+        while (true)
+        {
             /* Locate the substring to replace. */
             index = glsl.find("instanced", index);
-            if (index == std::string::npos) break;
+            if (index == String::npos)
+                break;
 
             /* Make the replacement. */
             glsl.replace(index, 9, "");
@@ -506,8 +531,7 @@ namespace BeeEngine
             index += 1;
         }
 
-
         BeeCoreTrace("GLSL analyzed successfully");
         return true;
     }
-}
+} // namespace BeeEngine

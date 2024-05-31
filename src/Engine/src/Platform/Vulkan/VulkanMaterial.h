@@ -9,25 +9,22 @@
 namespace BeeEngine::Internal
 {
 
-    class VulkanMaterial final: public Material
+    class VulkanMaterial final : public Material
     {
     public:
-        VulkanMaterial(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader, bool loadFromCache);
+        VulkanMaterial(const std::filesystem::path& vertexShader,
+                       const std::filesystem::path& fragmentShader,
+                       bool loadFromCache);
         ~VulkanMaterial() override;
 
         [[nodiscard]] InstancedBuffer& GetInstancedBuffer() const override;
-        void Bind(CommandBuffer& cmd) override
-        {
-            m_Pipeline->Bind(cmd);
-        }
+        void Bind(CommandBuffer& cmd) override { m_Pipeline->Bind(cmd); }
 
-        [[nodiscard]] Pipeline& GetPipeline() const
-        {
-            return *m_Pipeline;
-        }
+        [[nodiscard]] Pipeline& GetPipeline() const { return *m_Pipeline; }
+
     private:
         Ref<Pipeline> m_Pipeline;
         Ref<InstancedBuffer> m_InstancedBuffer;
     };
 
-}
+} // namespace BeeEngine::Internal

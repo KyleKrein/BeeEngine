@@ -15,8 +15,7 @@ namespace BeeEngine
         Surface(const Surface&) = delete;
         Surface& operator=(const Surface&) = delete;
 
-        //virtual void Submit() = 0;
-        //virtual void Present() = 0;
-
+        // virtual void Submit() = 0;
+        // virtual void Present() = 0;
     };
-}
+} // namespace BeeEngine

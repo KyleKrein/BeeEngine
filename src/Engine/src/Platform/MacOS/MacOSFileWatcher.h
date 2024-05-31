@@ -11,33 +11,29 @@
 
 namespace BeeEngine::Internal
 {
-    class MacOSFileWatcher: public FileWatcher
+    class MacOSFileWatcher : public FileWatcher
     {
         friend void MacOSFileWatcherThread(MacOSFileWatcher& watcher);
 
 #if defined(MACOS)
-        friend void FileSystemEventCallback(
-                ConstFSEventStreamRef streamRef,
-                void *clientCallBackInfo,
-                size_t numEvents,
-                void *eventPaths,
-                const FSEventStreamEventFlags eventFlags[],
-                const FSEventStreamEventId eventIds[]
-        );
+        friend void FileSystemEventCallback(ConstFSEventStreamRef streamRef,
+                                            void* clientCallBackInfo,
+                                            size_t numEvents,
+                                            void* eventPaths,
+                                            const FSEventStreamEventFlags eventFlags[],
+                                            const FSEventStreamEventId eventIds[]);
 #endif
     public:
-        MacOSFileWatcher(const Path& path, const std::function<void(Path, Event)> &callback);
+        MacOSFileWatcher(const Path& path, const std::function<void(Path, Event)>& callback);
         void Start() override;
         void Stop() override;
-        bool IsRunning() const override
-        {
-            return m_Running.load();
-        }
+        bool IsRunning() const override { return m_Running.load(); }
         ~MacOSFileWatcher() override
         {
-            if(MacOSFileWatcher::IsRunning())
+            if (MacOSFileWatcher::IsRunning())
                 MacOSFileWatcher::Stop();
         }
+
     private:
         std::atomic<bool> m_Running = false;
         const Path m_Path;
@@ -52,4 +48,4 @@ namespace BeeEngine::Internal
         CFRunLoopRef m_RunLoop = nullptr;
 #endif
     };
-}
+} // namespace BeeEngine::Internal

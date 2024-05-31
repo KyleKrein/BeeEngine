@@ -8,14 +8,14 @@
 
 namespace BeeEngine
 {
-    class UniformBuffer: public IBindable
+    class UniformBuffer : public IBindable
     {
     public:
         UniformBuffer() = default;
         ~UniformBuffer() override = default;
         UniformBuffer(const UniformBuffer& other) = delete;
-        UniformBuffer& operator=(const UniformBuffer& other ) = delete;
+        UniformBuffer& operator=(const UniformBuffer& other) = delete;
         static Ref<UniformBuffer> Create(size_t size);
         virtual void SetData(void* data, size_t size) = 0;
     };
-}
+} // namespace BeeEngine

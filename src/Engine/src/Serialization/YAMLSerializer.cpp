@@ -3,10 +3,9 @@
 //
 
 #include "YAMLSerializer.h"
-#include "yaml-cpp/yaml.h"
 #include "Core/String.h"
 #include "Core/ToString.h"
-
+#include "yaml-cpp/yaml.h"
 
 namespace BeeEngine::Serialization
 {
@@ -14,18 +13,14 @@ namespace BeeEngine::Serialization
     {
         YAML::Emitter Out;
     };
-    YAMLSerializer::YAMLSerializer()
-    : m_Data(new YAMLSerializerData())
-    {
-
-    }
+    YAMLSerializer::YAMLSerializer() : m_Data(new YAMLSerializerData()) {}
 
     YAMLSerializer::~YAMLSerializer()
     {
         delete m_Data;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, Marker marker)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, Marker marker)
     {
         switch (marker)
         {
@@ -45,91 +40,91 @@ namespace BeeEngine::Serialization
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, UTF8String &value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, UTF8String& value)
+    {
+        serializer.m_Data->Out << value.c_str();
+        return serializer;
+    }
+
+    YAMLSerializer& operator&(YAMLSerializer& serializer, int32_t value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, int32_t value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, uint32_t value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, uint32_t value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, int64_t value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, int64_t value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, uint64_t value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, uint64_t value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, float value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, float value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, double value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, double value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, bool value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, bool value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, char value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, char value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, const char* value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, const char *value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, char16_t value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, char16_t value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, char32_t value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, char32_t value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, char8_t value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, char8_t value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, int16_t value)
     {
         serializer.m_Data->Out << value;
         return serializer;
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, int16_t value)
-    {
-        serializer.m_Data->Out << value;
-        return serializer;
-    }
-
-    YAMLSerializer &operator&(YAMLSerializer & serializer, uint16_t value)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, uint16_t value)
     {
         serializer.m_Data->Out << value;
         return serializer;
@@ -153,12 +148,12 @@ namespace BeeEngine::Serialization
         return m_Data->Out.c_str();
     }
 
-    void YAMLSerializer::SerializeString(const String &string)
+    void YAMLSerializer::SerializeString(const String& string)
     {
-        m_Data->Out << string;
+        m_Data->Out << string.c_str();
     }
 
-    YAMLSerializer &operator&(YAMLSerializer & serializer, Serialization::Key key)
+    YAMLSerializer& operator&(YAMLSerializer& serializer, Serialization::Key key)
     {
         serializer.m_Data->Out << YAML::Key << key.String;
         return serializer;
@@ -168,4 +163,4 @@ namespace BeeEngine::Serialization
     {
         m_Data->Out << YAML::Value;
     }
-}
+} // namespace BeeEngine::Serialization
