@@ -162,7 +162,6 @@ namespace BeeEngine::Editor
                         String pathString = projectPath.AsUTF8();
                         auto name = projectPath.GetFileNameWithoutExtension().AsUTF8();
                         pathString = projectPath.RemoveFileName().AsUTF8();
-                        Jobs::Counter counter;
                         {
                             std::unique_lock lock(m_BigLock);
                             m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &m_EditorAssetManager);
@@ -172,14 +171,6 @@ namespace BeeEngine::Editor
                             m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
                             m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
-                            ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
-                            counter.Increment();
-                            Application::SubmitToMainThread(
-                                [this, &counter]()
-                                {
-                                    SetupGameLibrary();
-                                    counter.Decrement();
-                                });
 
                             if (File::Exists(m_ProjectFile->GetProjectAssetRegistryPath()))
                             {
@@ -211,31 +202,20 @@ namespace BeeEngine::Editor
                             m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(
                                 m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
                         }
-                        Jobs::WaitForJobsToComplete(counter);
                         auto sceneHandle = m_ProjectFile->GetLastUsedScene();
-                        if (sceneHandle != AssetHandle{0, 0})
-                        {
-                            Application::SubmitToMainThread(
-                                [this, sceneHandle]()
+                        Application::SubmitToMainThread(
+                            [this, sceneHandle]()
+                            {
+                                m_ProjectFile->ReloadAndRebuildGameLibrary();
+                                m_ProjectFile->IsAssemblyReloadPending(); // To disable automatic reloading on next
+                                                                          // frame. We are handling this now
+                                SetupGameLibrary();
+                                if (sceneHandle != AssetHandle{0, 0})
                                 {
-                                    m_ProjectFile->ReloadAndRebuildGameLibrary();
-                                    m_ProjectFile->IsAssemblyReloadPending(); // To disable automatic reloading on next
-                                                                              // frame. We are handling this now
-                                    ScriptingEngine::ReloadAssemblies();
                                     LoadScene(sceneHandle);
-                                });
-                        }
-                        else
-                        {
-                            Application::SubmitToMainThread(
-                                [this]()
-                                {
-                                    m_ProjectFile->ReloadAndRebuildGameLibrary();
-                                    m_ProjectFile->IsAssemblyReloadPending(); // To disable automatic reloading on next
-                                                                              // frame. We are handling this now
-                                    ScriptingEngine::ReloadAssemblies();
-                                });
-                        }
+                                }
+                                m_ProjectFile->StartFileWatchers();
+                            });
                     });
                 Jobs::Schedule(BeeMove(loadProjectJob));
             }
@@ -260,7 +240,6 @@ namespace BeeEngine::Editor
                             m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
                             m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
                             m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
-                            ResourceManager::ProjectName = m_ProjectFile->GetProjectName();
 
                             m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
                             m_InspectorPanel.SetProject(m_ProjectFile.get());
@@ -271,13 +250,14 @@ namespace BeeEngine::Editor
                                                                  { DeleteAsset(handle); });
                             m_ProjectFile->SetOnAssetRemovedCallback([this](const AssetHandle& handle)
                                                                      { DeleteAsset(handle); });
-                            SetupGameLibrary();
                             m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(
                                 m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
                             m_ProjectFile->ReloadAndRebuildGameLibrary();
                             m_ProjectFile->IsAssemblyReloadPending(); // To disable automatic reloading on next
                                                                       // frame. We are handling this now
-                            ScriptingEngine::ReloadAssemblies();
+                            SetupGameLibrary();
+
+                            m_ProjectFile->StartFileWatchers();
                         }
                     });
             }

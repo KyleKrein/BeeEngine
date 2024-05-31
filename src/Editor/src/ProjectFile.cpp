@@ -5,6 +5,7 @@
 #include "ProjectFile.h"
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
+#include "Core/CodeSafety/Expects.h"
 #include "Core/Logging/Log.h"
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
@@ -29,6 +30,7 @@ namespace BeeEngine::Editor
     {
         BeeCoreTrace("ProjectName: {0}", m_ProjectName);
         BeeCoreTrace("ProjectPath: {0}", m_ProjectPath.AsUTF8());
+        ResourceManager::ProjectName = GetProjectName();
         LoadLocalizationFiles();
         if (!File::Exists(m_ProjectPath / ".beeengine"))
         {
@@ -43,10 +45,6 @@ namespace BeeEngine::Editor
         }
         else
             m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build" / dotNetVersion;
-        if (File::Exists(m_AppAssemblyPath))
-            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath,
-                                                           [this](const Path& path, FileWatcher::Event event)
-                                                           { OnAppAssemblyFileSystemEvent(path, event); });
         m_AppAssemblyPath = m_AppAssemblyPath / "GameLibrary.dll";
         std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll",
                                    m_ProjectPath.ToStdPath() / ".beeengine" / "BeeEngine.Core.dll",
@@ -88,9 +86,6 @@ namespace BeeEngine::Editor
             File::CreateDirectory(m_ProjectPath / "Scenes");
 
             RegenerateSolution();
-            m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath,
-                                                     [this](const Path& path, FileWatcher::Event event)
-                                                     { OnAssetFileSystemEvent(path, event); });
             return;
         }
         else
@@ -125,8 +120,6 @@ namespace BeeEngine::Editor
                 SetLastUsedScene(data["LastUsedScene"].as<AssetHandle>());
             }
         }
-        m_AssetFileWatcher = FileWatcher::Create(
-            m_ProjectPath, [this](const Path& path, FileWatcher::Event event) { OnAssetFileSystemEvent(path, event); });
     }
 
     const Path& ProjectFile::GetProjectPath() const noexcept
@@ -147,6 +140,7 @@ namespace BeeEngine::Editor
                                 (m_ProjectPath / (newName + ".beeassetregistry")).ToStdPath());
         m_ProjectFilePath = m_ProjectPath / (newName + ".beeproj");
         m_ProjectAssetRegistryPath = m_ProjectPath / (newName + ".beeassetregistry");
+        ResourceManager::ProjectName = GetProjectName();
         Save();
     }
 
@@ -388,12 +382,6 @@ namespace BeeEngine::Editor
 
     void ProjectFile::Update() noexcept
     {
-        if (!m_AppAssemblyFileWatcher && File::Exists(m_AppAssemblyPath))
-        {
-            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath,
-                                                           [this](const Path& path, FileWatcher::Event event)
-                                                           { OnAppAssemblyFileSystemEvent(path, event); });
-        }
         if (m_MustReload)
         {
             m_MustReload = false;
@@ -584,7 +572,46 @@ namespace BeeEngine::Editor
     void ProjectFile::ReloadAndRebuildGameLibrary()
     {
         RegenerateSolution();
+        if (m_AppAssemblyFileWatcher)
+        {
+            m_AppAssemblyFileWatcher->Stop();
+        }
         RunCommand("dotnet build \"" + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln\" --configuration Debug");
+        if (m_AppAssemblyFileWatcher)
+        {
+            m_AppAssemblyFileWatcher->Start();
+        }
         m_AssemblyReloadPending = true;
+    }
+
+    void ProjectFile::StartFileWatchers()
+    {
+        if (!m_AppAssemblyFileWatcher)
+        {
+            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath,
+                                                           [this](const Path& path, FileWatcher::Event event)
+                                                           { OnAppAssemblyFileSystemEvent(path, event); });
+        }
+        else
+        {
+            m_AppAssemblyFileWatcher->Start();
+        }
+        if (!m_AssetFileWatcher)
+        {
+            m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath,
+                                                     [this](const Path& path, FileWatcher::Event event)
+                                                     { OnAssetFileSystemEvent(path, event); });
+        }
+        else
+        {
+            m_AssetFileWatcher->Start();
+        }
+    }
+
+    void ProjectFile::StopFileWatchers()
+    {
+        BeeExpects(m_AppAssemblyFileWatcher and m_AssetFileWatcher);
+        m_AppAssemblyFileWatcher->Stop();
+        m_AssetFileWatcher->Stop();
     }
 } // namespace BeeEngine::Editor

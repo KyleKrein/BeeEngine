@@ -40,6 +40,8 @@ namespace BeeEngine
 
         Generator<Asset&> GetAssetsOfType(AssetType type) const;
         Generator<Asset&> IterateAssets() const;
+        Generator<std::pair<AssetHandle, const AssetMetadata*>> GetAssetsDataOfType(AssetType type) const;
+        Generator<std::pair<AssetHandle, const AssetMetadata*>> IterateAssetsData() const;
 
     private:
         mutable AssetMap m_AssetMap;

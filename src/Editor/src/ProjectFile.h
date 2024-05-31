@@ -52,6 +52,9 @@ namespace BeeEngine::Editor
             return temp;
         }
 
+        void StartFileWatchers();
+        void StopFileWatchers();
+
         UUID GetAssetRegistryID() const noexcept { return m_AssetRegistryID; }
 
         void RenameProject(const String& newName) noexcept;

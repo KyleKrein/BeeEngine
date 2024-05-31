@@ -4,6 +4,8 @@
 
 #include "EditorAssetManager.h"
 #include "AssetImporter.h"
+#include "Core/AssetManagement/Asset.h"
+#include "Core/AssetManagement/AssetMetadata.h"
 #include "Core/ResourceManager.h"
 #include "EngineAssetRegistry.h"
 
@@ -165,6 +167,29 @@ namespace BeeEngine
             for (const auto& [assetID, metadata] : registryMap)
             {
                 co_yield *GetAsset({registryID, assetID});
+            }
+        }
+    }
+
+    Generator<std::pair<AssetHandle, const AssetMetadata*>>
+    EditorAssetManager::GetAssetsDataOfType(AssetType type) const
+    {
+        if (m_TypeMap.contains(type))
+        {
+            for (const auto& handle : m_TypeMap.at(type))
+            {
+                co_yield std::make_pair(handle, &m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID));
+            }
+        }
+    }
+
+    Generator<std::pair<AssetHandle, const AssetMetadata*>> EditorAssetManager::IterateAssetsData() const
+    {
+        for (const auto& [registryID, registryMap] : m_AssetRegistry)
+        {
+            for (const auto& [assetID, metadata] : registryMap)
+            {
+                co_yield std::make_pair(AssetHandle{registryID, assetID}, &metadata);
             }
         }
     }

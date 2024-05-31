@@ -5,12 +5,15 @@
 #pragma once
 
 #include "AssetEditPanel.h"
+#include "Core/AssetManagement/AssetManager.h"
+#include "Core/AssetManagement/AssetMetadata.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Core/Coroutines/Generator.h"
 #include "Core/String.h"
 #include "Locale/Locale.h"
 #include "ProjectFile.h"
 #include <string_view>
+#include <utility>
 
 namespace BeeEngine::Editor
 {
@@ -37,19 +40,19 @@ namespace BeeEngine::Editor
             {
                 return Name.empty() || ToLowercase(name).find(NameLower) != String::npos;
             }
-            Generator<Asset&> FilterAssets() const
+            Generator<std::pair<AssetHandle, const AssetMetadata*>> FilterAssets() const
             {
-                for (auto& asset : self.m_AssetManager->IterateAssets())
+                for (const auto& [handle, metadata] : self.m_AssetManager->IterateAssetsData())
                 {
-                    if (Type != AssetType::None && asset.GetType() != Type)
+                    if (Type != AssetType::None && metadata->Type != Type)
                     {
                         continue;
                     }
-                    if (!FilterByName(asset.Name))
+                    if (!FilterByName(std::string_view(metadata->Name)))
                     {
                         continue;
                     }
-                    co_yield asset;
+                    co_yield std::pair(handle, metadata);
                 }
             }
         } m_Filter{*this};

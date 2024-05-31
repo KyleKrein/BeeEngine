@@ -87,20 +87,21 @@ namespace BeeEngine::Editor
 
         ImGui::Columns(columnCount, "AssetPanelColumns", false);
 
-        for (auto& asset : m_Filter.FilterAssets())
+        for (const auto& [handle, metadataPtr] : m_Filter.FilterAssets())
         {
-            ImGui::PushID(asset.Name.data());
+            const auto& metadata = *metadataPtr;
+            ImGui::PushID(metadata.Name.data());
             Texture2D* icon = nullptr;
-            switch (asset.GetType())
+            switch (metadata.Type)
             {
                 case AssetType::Texture2D:
                 {
-                    icon = &static_cast<Texture2D&>(asset);
+                    icon = &static_cast<Texture2D&>(*m_AssetManager->GetAsset(handle));
                     break;
                 }
                 case AssetType::Font:
                 {
-                    icon = &static_cast<Font&>(asset).GetAtlasTexture();
+                    icon = &static_cast<Font&>(*m_AssetManager->GetAsset(handle)).GetAtlasTexture();
                     break;
                 }
                 default:
@@ -121,27 +122,27 @@ namespace BeeEngine::Editor
             ImGui::ImageButton(
                 (ImTextureID)icon->GetRendererID(), {thumbnailSize, thumbnailSize / aspectRatio}, {0, 1}, {1, 0});
 
-            if (asset.Handle.RegistryID == m_Project->GetAssetRegistryID())
+            if (handle.RegistryID == m_Project->GetAssetRegistryID())
             {
                 if (ImGui::BeginPopupContextItem("AssetPanelPopupMenu", ImGuiPopupFlags_MouseButtonRight))
                 {
                     if (ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.editAsset").c_str()))
                     {
-                        m_AssetEditPanel = CreateScope<AssetEditPanel>(*m_EditorDomain, asset.Handle, *m_AssetManager);
+                        m_AssetEditPanel = CreateScope<AssetEditPanel>(*m_EditorDomain, handle, *m_AssetManager);
                     }
                     if (ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.deleteAsset").c_str()))
                     {
-                        Application::SubmitToMainThread([this, handle = asset.Handle]() { m_OnAssetDeleted(handle); });
+                        Application::SubmitToMainThread([this, handle = handle]() { m_OnAssetDeleted(handle); });
                     }
                     ImGui::EndPopup();
                 }
             }
 
-            ImGui::StartDragAndDrop(GetDragAndDropTypeName(asset.GetType()), asset.Handle);
+            ImGui::StartDragAndDrop(GetDragAndDropTypeName(metadata.Type), handle);
 
             ImGui::PopStyleColor();
 
-            ImGui::TextWrapped(asset.Name.data());
+            ImGui::TextWrapped(metadata.Name.data());
 
             ImGui::NextColumn();
 
