@@ -334,9 +334,6 @@ namespace BeeEngine
     {
         static constexpr int32_t velocityIterations = 6;
         static constexpr int32_t positionIterations = 2; // TODO: expose to editor
-        m_2DPhysicsWorld->Step(
-            gsl::narrow_cast<float>(Time::secondsD(Time::DeltaTime()).count()), velocityIterations, positionIterations);
-
         auto view = m_Registry.view<RigidBody2DComponent>();
         for (auto e : view)
         {
@@ -356,6 +353,18 @@ namespace BeeEngine
                     CreateRuntimeBoxCollider2DFixture(transform, body, boxCollider);
                 }
             }
+            body->SetTransform({transform.Translation.x, transform.Translation.y}, transform.Rotation.z);
+        }
+
+        m_2DPhysicsWorld->Step(
+            gsl::narrow_cast<float>(Time::secondsD(Time::DeltaTime()).count()), velocityIterations, positionIterations);
+
+        for (auto e : view)
+        {
+            Entity entity{EntityID{e}, this};
+            auto& rigidBody = entity.GetComponent<RigidBody2DComponent>();
+            auto& transform = entity.GetComponent<TransformComponent>();
+            b2Body* body = (b2Body*)rigidBody.RuntimeBody;
             const auto& position = body->GetPosition();
             transform.Translation = {position.x, position.y, transform.Translation.z};
             transform.Rotation.z = body->GetAngle();
