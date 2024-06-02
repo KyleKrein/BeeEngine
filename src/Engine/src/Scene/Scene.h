@@ -11,6 +11,8 @@
 #include "Renderer/TopLevelAccelerationStructure.h"
 #include "Renderer/UniformBuffer.h"
 #include "entt/entt.hpp"
+#include <utility>
+#include <vector>
 
 class b2World;
 class b2Body;
@@ -26,6 +28,7 @@ namespace BeeEngine
     } // namespace Editor
     class Entity;
     class Prefab;
+    class SceneContactListener;
     class Scene : public Asset
     {
         friend class Entity;
@@ -85,23 +88,11 @@ namespace BeeEngine
 
         SceneRendererData& GetSceneRendererData() { return m_SceneRendererData; }
 
+        void OnCollisionStart(UUID entity1, UUID entity2);
+        void OnCollisionEnd(UUID entity1, UUID entity2);
+
     private:
-        entt::registry m_Registry;
-
-        bool m_IsRuntime = false;
-        // void ResetScene();
-        b2World* m_2DPhysicsWorld;
-
-        SceneRendererData m_SceneRendererData;
-
-        Ref<TopLevelAccelerationStructure> m_TLAS = TopLevelAccelerationStructure::Create();
-
         void UpdateScripts();
-
-        std::unordered_map<uint64_t, entt::entity> m_UUIDMap;
-
-        const std::vector<struct NativeScriptInfo>* m_NativeScripts = nullptr;
-
         void DestroyScripts();
 
         Entity CreateEntityWithUUID(struct UUID uuid, const String& name);
@@ -114,11 +105,30 @@ namespace BeeEngine
 
         Entity CopyEntity(Entity entity, Scene& targetScene, Entity parent, bool preserveUUID);
 
-        void* CreateRuntimeRigidBody2D(class RigidBody2DComponent& rigidBody,
+        void* CreateRuntimeRigidBody2D(UUID uuid,
+                                       class RigidBody2DComponent& rigidBody,
                                        const class TransformComponent& transform);
 
         void CreateRuntimeBoxCollider2DFixture(const class TransformComponent& transform,
                                                b2Body* body,
                                                class BoxCollider2DComponent& boxCollider) const;
+
+    private:
+        entt::registry m_Registry;
+
+        bool m_IsRuntime = false;
+        // void ResetScene();
+        b2World* m_2DPhysicsWorld;
+        SceneContactListener* m_ContactListener;
+
+        SceneRendererData m_SceneRendererData;
+
+        Ref<TopLevelAccelerationStructure> m_TLAS = TopLevelAccelerationStructure::Create();
+
+        std::unordered_map<uint64_t, entt::entity> m_UUIDMap;
+
+        const std::vector<struct NativeScriptInfo>* m_NativeScripts = nullptr;
+        std::vector<std::pair<UUID, UUID>> m_CollisionStarted;
+        std::vector<std::pair<UUID, UUID>> m_CollisionEnded;
     };
 } // namespace BeeEngine

@@ -1,4 +1,5 @@
-﻿using BeeEngine.Internal;
+﻿using BeeEngine.Events;
+using BeeEngine.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +48,40 @@ namespace BeeEngine
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 InternalCalls.Entity_SetName(ID, value);
+            }
+        }
+
+        private WeakEvent<Entity> m_OnCollisionStart = new WeakEvent<Entity>();
+
+        public WeakEvent<Entity> OnCollisionStart
+        {
+            get
+            {
+                ThrowIfDestroyed();
+                return m_OnCollisionStart;
+            }
+            set
+            {
+                ThrowIfDestroyed();
+                Log.AssertAndThrow(value != null, "OnCollisionStart can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnCollisionStart, value), "This must be the same event");
+            }
+        }
+
+        private WeakEvent<Entity> m_OnCollisionEnd = new WeakEvent<Entity>();
+
+        public WeakEvent<Entity> OnCollisionEnd
+        {
+            get
+            {
+                ThrowIfDestroyed();
+                return m_OnCollisionEnd;
+            }
+            set
+            {
+                ThrowIfDestroyed();
+                Log.AssertAndThrow(value != null, "OnCollisionEnd can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnCollisionEnd, value), "This must be the same event");
             }
         }
 

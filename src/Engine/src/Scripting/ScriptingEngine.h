@@ -76,6 +76,9 @@ namespace BeeEngine
 
         static void RequestSceneChange(AssetHandle sceneHandle);
 
+        static void OnCollisionStart(UUID entity1, UUID entity2);
+        static void OnCollisionEnd(UUID entity1, UUID entity2);
+
     private:
         static void InitDotNetHost();
         static class MAssembly& LoadAssembly(const Path& path, const Path& debugSymbolsPath);

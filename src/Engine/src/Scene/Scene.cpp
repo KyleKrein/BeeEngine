@@ -12,7 +12,9 @@
 #include "Prefab.h"
 #include "Renderer/Renderer.h"
 #include "Scripting/ScriptingEngine.h"
+#include "box2d/b2_world_callbacks.h"
 #include "gtc/type_ptr.hpp"
+#include <cstdint>
 #include <glm/glm.hpp>
 
 #include <box2d/b2_body.h>
@@ -132,6 +134,16 @@ namespace BeeEngine
     {
         UpdateScripts();
         Update2DPhysics();
+        for (const auto [entity1, entity2] : m_CollisionStarted)
+        {
+            ScriptingEngine::OnCollisionStart(entity1, entity2);
+        }
+        for (const auto [entity1, entity2] : m_CollisionEnded)
+        {
+            ScriptingEngine::OnCollisionEnd(entity1, entity2);
+        }
+        m_CollisionStarted.clear();
+        m_CollisionEnded.clear();
     }
 
     void Scene::StartRuntime()
@@ -205,17 +217,49 @@ namespace BeeEngine
         return {};
     }
 
+    class SceneContactListener : public b2ContactListener
+    {
+    public:
+        SceneContactListener(Scene& scene) : m_Scene(scene) {}
+        void BeginContact(b2Contact* contact) override
+        {
+            auto* fixtureA = contact->GetFixtureA();
+            auto* fixtureB = contact->GetFixtureB();
+            uintptr_t entityA = fixtureA->GetBody()->GetUserData().pointer;
+            uintptr_t entityB = fixtureB->GetBody()->GetUserData().pointer;
+            if (entityA && entityB)
+            {
+                m_Scene.OnCollisionStart((uint64_t)entityA, (uint64_t)entityB);
+            }
+        }
+        void EndContact(b2Contact* contact) override
+        {
+            auto* fixtureA = contact->GetFixtureA();
+            auto* fixtureB = contact->GetFixtureB();
+            uintptr_t entityA = fixtureA->GetBody()->GetUserData().pointer;
+            uintptr_t entityB = fixtureB->GetBody()->GetUserData().pointer;
+            if (entityA && entityB)
+            {
+                m_Scene.OnCollisionEnd((uint64_t)entityA, (uint64_t)entityB);
+            }
+        }
+
+    private:
+        Scene& m_Scene;
+    };
+
     void Scene::StartPhysicsWorld()
     {
         m_2DPhysicsWorld = new b2World({0.0f, -9.81f}); // TODO: make gravity configurable
-
+        m_ContactListener = new SceneContactListener(*this);
+        m_2DPhysicsWorld->SetContactListener(m_ContactListener);
         auto view = m_Registry.view<RigidBody2DComponent>();
         for (auto e : view)
         {
             Entity entity{EntityID{e}, this};
             auto& rigidBody = entity.GetComponent<RigidBody2DComponent>();
             auto& transform = entity.GetComponent<TransformComponent>();
-            b2Body* body = (b2Body*)CreateRuntimeRigidBody2D(rigidBody, transform);
+            b2Body* body = (b2Body*)CreateRuntimeRigidBody2D(entity.GetUUID(), rigidBody, transform);
 
             if (!entity.HasComponent<BoxCollider2DComponent>())
             {
@@ -263,12 +307,14 @@ namespace BeeEngine
         }
     }
 
-    void* Scene::CreateRuntimeRigidBody2D(RigidBody2DComponent& rigidBody, const TransformComponent& transform)
+    void*
+    Scene::CreateRuntimeRigidBody2D(UUID uuid, RigidBody2DComponent& rigidBody, const TransformComponent& transform)
     {
         b2BodyDef bodyDef;
         bodyDef.type = ConvertRigidBodyTypeToBox2D(rigidBody.Type);
         bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
         bodyDef.angle = transform.Rotation.z;
+        bodyDef.userData.pointer = (uintptr_t)uuid;
 
         b2Body* body = m_2DPhysicsWorld->CreateBody(&bodyDef);
         body->SetFixedRotation(rigidBody.FixedRotation);
@@ -280,6 +326,8 @@ namespace BeeEngine
     {
         delete m_2DPhysicsWorld;
         m_2DPhysicsWorld = nullptr;
+        delete m_ContactListener;
+        m_ContactListener = nullptr;
     }
 
     void Scene::Update2DPhysics()
@@ -298,7 +346,7 @@ namespace BeeEngine
             b2Body* body = (b2Body*)rigidBody.RuntimeBody;
             if (body == nullptr)
             {
-                body = (b2Body*)CreateRuntimeRigidBody2D(rigidBody, transform);
+                body = (b2Body*)CreateRuntimeRigidBody2D(entity.GetUUID(), rigidBody, transform);
             }
             if (entity.HasComponent<BoxCollider2DComponent>())
             {
@@ -467,5 +515,14 @@ namespace BeeEngine
             }
         }
         return Entity::Null;
+    }
+
+    void Scene::OnCollisionStart(UUID entity1, UUID entity2)
+    {
+        m_CollisionStarted.emplace_back(entity1, entity2);
+    }
+    void Scene::OnCollisionEnd(UUID entity1, UUID entity2)
+    {
+        m_CollisionEnded.emplace_back(entity1, entity2);
     }
 } // namespace BeeEngine

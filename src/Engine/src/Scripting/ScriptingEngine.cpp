@@ -20,6 +20,8 @@
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
 #include "ScriptGlue.h"
+#include "Scripting/MMethod.h"
+#include <cstdint>
 #include <filesystem>
 
 namespace BeeEngine
@@ -31,6 +33,9 @@ namespace BeeEngine
         REFLECT()
         MMethod* AddEntityScriptMethod = nullptr;
         MMethod* EntityWasRemovedMethod = nullptr;
+
+        MMethod* OnCollisionStartMethod = nullptr;
+        MMethod* OnCollisionEndMethod = nullptr;
 
         MMethod* EndSceneMethod = nullptr;
 
@@ -51,6 +56,8 @@ namespace BeeEngine
     REFLECT_STRUCT_BEGIN(ManagedHandles)
     REFLECT_STRUCT_MEMBER(AddEntityScriptMethod)
     REFLECT_STRUCT_MEMBER(EntityWasRemovedMethod)
+    REFLECT_STRUCT_MEMBER(OnCollisionStartMethod)
+    REFLECT_STRUCT_MEMBER(OnCollisionEndMethod)
     REFLECT_STRUCT_MEMBER(EndSceneMethod)
     REFLECT_STRUCT_MEMBER(EntityBaseClass)
     REFLECT_STRUCT_MEMBER(AssetHandleField)
@@ -278,6 +285,18 @@ namespace BeeEngine
             if (mClass->GetName() == "Scene")
             {
                 s_Data.Handles.SceneClass = mClass.get();
+                continue;
+            }
+            if (mClass->GetName() == "Physics2D")
+            {
+                s_Data.Handles.OnCollisionStartMethod =
+                    &mClass->GetMethod("OnCollisionStart",
+                                       ManagedBindingFlags(ManagedBindingFlags_Static | ManagedBindingFlags_Public |
+                                                           ManagedBindingFlags_NonPublic));
+                s_Data.Handles.OnCollisionEndMethod =
+                    &mClass->GetMethod("OnCollisionEnd",
+                                       ManagedBindingFlags(ManagedBindingFlags_Static | ManagedBindingFlags_Public |
+                                                           ManagedBindingFlags_NonPublic));
                 continue;
             }
             if (mClass->GetName() == "Time")
@@ -596,5 +615,20 @@ namespace BeeEngine
     void ScriptingEngine::RequestSceneChange(AssetHandle sceneHandle)
     {
         s_Data.OnSceneChangeCallback(sceneHandle);
+    }
+
+    void ScriptingEngine::OnCollisionStart(UUID entity1, UUID entity2)
+    {
+        uint64_t id1 = entity1;
+        uint64_t id2 = entity2;
+        void* params[] = {&id1, &id2};
+        s_Data.Handles.OnCollisionStartMethod->InvokeStatic(params);
+    }
+    void ScriptingEngine::OnCollisionEnd(UUID entity1, UUID entity2)
+    {
+        uint64_t id1 = entity1;
+        uint64_t id2 = entity2;
+        void* params[] = {&id1, &id2};
+        s_Data.Handles.OnCollisionEndMethod->InvokeStatic(params);
     }
 } // namespace BeeEngine
