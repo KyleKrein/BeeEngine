@@ -132,6 +132,8 @@ namespace BeeEngine::Editor
         if (mouseX >= 0 && mouseY >= 0 && gsl::narrow_cast<float>(mouseX) < viewportSize.x &&
             gsl::narrow_cast<float>(mouseY) < viewportSize.y)
         {
+            mouseX = gsl::narrow_cast<int>(mouseX * WindowHandler::GetInstance()->GetScaleFactor());
+            mouseY = gsl::narrow_cast<int>(mouseY * WindowHandler::GetInstance()->GetScaleFactor());
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
             int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
             pixelData--; // I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I
@@ -308,7 +310,8 @@ namespace BeeEngine::Editor
         }*/
         if (event->GetButton() == MouseButton::Left)
         {
-            if (!m_Scene->IsRuntime() && m_IsHovered && !ImGuizmo::IsOver() && !Input::KeyPressed(Key::LeftAlt))
+            if (!m_Scene->IsRuntime() && m_IsHovered && (!ImGuizmo::IsOver() || m_SelectedEntity == Entity::Null) &&
+                !Input::KeyPressed(Key::LeftAlt))
             {
                 m_SelectedEntity = m_HoveredEntity;
             }

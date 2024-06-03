@@ -76,6 +76,56 @@ namespace BeeEngine
         {
         }
     };
+    class DumpedImage final
+    {
+    public:
+        DumpedImage(void* data, uint32_t width, uint32_t height, uint32_t sizeOfPixel, FrameBufferTextureFormat format)
+            : m_Width(width), m_Height(height), m_SizeOfPixel(sizeOfPixel), m_Format(format)
+        {
+            m_Data = malloc(width * height * sizeOfPixel);
+            memcpy(m_Data, data, width * height * sizeOfPixel);
+        }
+        DumpedImage(const DumpedImage& other) = delete;
+        DumpedImage& operator=(const DumpedImage& other) = delete;
+        DumpedImage(DumpedImage&& other) noexcept
+        {
+            m_Data = other.m_Data;
+            m_Width = other.m_Width;
+            m_Height = other.m_Height;
+            m_SizeOfPixel = other.m_SizeOfPixel;
+            m_Format = other.m_Format;
+            other.m_Data = nullptr;
+        }
+        DumpedImage& operator=(DumpedImage&& other) noexcept
+        {
+            m_Data = other.m_Data;
+            m_Width = other.m_Width;
+            m_Height = other.m_Height;
+            m_SizeOfPixel = other.m_SizeOfPixel;
+            m_Format = other.m_Format;
+            other.m_Data = nullptr;
+            return *this;
+        }
+        ~DumpedImage()
+        {
+            if (m_Data)
+            {
+                free(m_Data);
+            }
+        }
+        [[nodiscard]] void* GetData() const { return m_Data; }
+        [[nodiscard]] uint32_t GetWidth() const { return m_Width; }
+        [[nodiscard]] uint32_t GetHeight() const { return m_Height; }
+        [[nodiscard]] uint32_t GetSizeOfPixel() const { return m_SizeOfPixel; }
+        [[nodiscard]] FrameBufferTextureFormat GetFormat() const { return m_Format; }
+
+    private:
+        void* m_Data = nullptr;
+        uint32_t m_Width;
+        uint32_t m_Height;
+        uint32_t m_SizeOfPixel;
+        FrameBufferTextureFormat m_Format;
+    };
     class FrameBuffer
     {
     public:
@@ -88,6 +138,7 @@ namespace BeeEngine
         [[nodiscard]] virtual uintptr_t GetColorAttachmentRendererID(uint32_t index) const = 0;
         [[nodiscard]] virtual uintptr_t GetDepthAttachmentRendererID() const = 0;
         [[nodiscard]] virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const = 0;
+        [[nodiscard]] virtual DumpedImage DumpAttachment(uint32_t attachmentIndex) const = 0;
         static Scope<FrameBuffer> Create(const FrameBufferPreferences& preferences);
         static Scope<FrameBuffer> Create(FrameBufferPreferences&& preferences);
 
