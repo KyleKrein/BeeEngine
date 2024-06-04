@@ -335,4 +335,18 @@ namespace BeeEngine
     private:
         const bool m_IsMinimized;
     };
+    struct WindowMaximizedEvent : public Event
+    {
+    public:
+        static consteval EventType GetStaticType() noexcept { return BeeEngine::EventType::WindowMaximized; }
+        WindowMaximizedEvent(bool isMaximized) : m_IsMaximized(isMaximized)
+        {
+            Category = EventCategory::App;
+            m_Type = EventType::WindowMaximized;
+        }
+        [[nodiscard]] bool IsMaximized() const { return m_IsMaximized; }
+
+    private:
+        const bool m_IsMaximized;
+    };
 } // namespace BeeEngine

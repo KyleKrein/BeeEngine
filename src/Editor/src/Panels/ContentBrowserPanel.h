@@ -4,6 +4,7 @@
 
 #pragma once
 #include "../ProjectFile.h"
+#include "ConfigFile.h"
 #include "Core/Path.h"
 #include "Renderer/Texture.h"
 #include "Scene/Scene.h"
@@ -13,7 +14,9 @@ namespace BeeEngine::Editor
     class ContentBrowserPanel
     {
     public:
-        ContentBrowserPanel(const Path& workingDirectory, Locale::Domain& editorDomain) noexcept;
+        ContentBrowserPanel(const Path& workingDirectory,
+                            Locale::Domain& editorDomain,
+                            const ConfigFile& config) noexcept;
         void SetContext(const Ref<Scene>& context) noexcept { m_Context = context; }
         void SetProject(ProjectFile* project) noexcept { m_Project = project; }
         void SetWorkingDirectory(const Path& path) noexcept
@@ -33,6 +36,7 @@ namespace BeeEngine::Editor
         void OnGUIRender() noexcept;
 
     private:
+        const ConfigFile& m_Config;
         Path m_WorkingDirectory;
         Path m_CurrentDirectory;
         Ref<Scene> m_Context;

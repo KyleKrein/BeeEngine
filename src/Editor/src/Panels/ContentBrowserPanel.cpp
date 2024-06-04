@@ -97,7 +97,7 @@ namespace BeeEngine::Editor
         }
 
         static float padding = 18.0f;
-        static float thumbnailSize = 64.0f;
+        float thumbnailSize = m_Config.ThumbnailSize;
         float cellSize = thumbnailSize + padding;
 
         float panelWidth = ImGui::GetContentRegionAvail().x;
@@ -392,8 +392,13 @@ namespace BeeEngine::Editor
             });
     }
 
-    ContentBrowserPanel::ContentBrowserPanel(const Path& workingDirectory, Locale::Domain& editorDomain) noexcept
-        : m_WorkingDirectory(workingDirectory), m_CurrentDirectory(workingDirectory), m_EditorDomain(&editorDomain)
+    ContentBrowserPanel::ContentBrowserPanel(const Path& workingDirectory,
+                                             Locale::Domain& editorDomain,
+                                             const ConfigFile& config) noexcept
+        : m_Config(config),
+          m_WorkingDirectory(workingDirectory),
+          m_CurrentDirectory(workingDirectory),
+          m_EditorDomain(&editorDomain)
     {
         m_DirectoryIcon =
             AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture, Locale::Localization::Default);

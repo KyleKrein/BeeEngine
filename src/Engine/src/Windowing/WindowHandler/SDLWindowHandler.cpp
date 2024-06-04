@@ -71,6 +71,11 @@ namespace BeeEngine::Internal
         m_WidthInPixels = widthInPixels;
         m_HeightInPixels = heightInPixels;
         m_ScaleFactor = (float32_t)m_WidthInPixels / (float32_t)m_Width;
+        SDL_SetWindowPosition(m_Window, properties.WindowXPosition, properties.WindowYPosition);
+        if (properties.IsMaximized)
+        {
+            SDL_MaximizeWindow(m_Window);
+        }
         int posX, posY;
         SDL_GetWindowPosition(m_Window, &posX, &posY);
         m_XPosition = posX;
@@ -188,11 +193,13 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_WINDOW_MAXIMIZED:
                 {
+                    m_Events.AddEvent(CreateScope<WindowMaximizedEvent>(true));
                     break;
                 }
                 case SDL_EVENT_WINDOW_RESTORED:
                 {
                     m_Events.AddEvent(CreateScope<WindowMinimizedEvent>(false));
+                    m_Events.AddEvent(CreateScope<WindowMaximizedEvent>(false));
                     break;
                 }
                 case SDL_EVENT_WINDOW_MOUSE_ENTER:

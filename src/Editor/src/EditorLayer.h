@@ -5,6 +5,7 @@
 #pragma once
 
 #include "BeeEngine.h"
+#include "ConfigFile.h"
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Core/Logging/ConsoleOutput.h"
@@ -34,6 +35,7 @@ namespace BeeEngine::Editor
     class EditorLayer : public Layer
     {
     public:
+        explicit EditorLayer(ConfigFile& config) noexcept : m_Config(config) {}
         ~EditorLayer() noexcept override = default;
 
         void OnAttach() noexcept override;
@@ -51,8 +53,9 @@ namespace BeeEngine::Editor
         EditorCamera m_EditorCamera = {};
         DockSpace m_DockSpace{};
         MenuBar m_MenuBar{};
-        AssetPanel m_AssetPanel{&m_EditorAssetManager, m_EditorLocaleDomain};
-        ContentBrowserPanel m_ContentBrowserPanel{std::filesystem::current_path(), m_EditorLocaleDomain};
+        ConfigFile& m_Config;
+        AssetPanel m_AssetPanel{&m_EditorAssetManager, m_EditorLocaleDomain, m_Config};
+        ContentBrowserPanel m_ContentBrowserPanel{std::filesystem::current_path(), m_EditorLocaleDomain, m_Config};
         SceneHierarchyPanel m_SceneHierarchyPanel{m_EditorLocaleDomain};
         ViewPort m_ViewPort{
             100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef(), Color4::White, m_EditorAssetManager};
@@ -76,6 +79,18 @@ namespace BeeEngine::Editor
         Ref<Texture2D> m_PlayButtonTexture = nullptr;
         Ref<Texture2D> m_StopButtonTexture = nullptr;
 
+        enum class SceneState
+        {
+            Edit = 0,
+            Play = 1,
+            Pause = 2,
+            Simulate = 3
+        };
+        SceneState m_SceneState = SceneState::Edit;
+        bool m_ShowBuildProjectPopup = false;
+        ImGuiUIEditor m_UIEditor{};
+        bool m_ShowEditorSettings = false;
+
         // std::vector<NativeScriptInfo> m_NativeScripts = {};
 
         void SetUpMenuBar();
@@ -87,15 +102,6 @@ namespace BeeEngine::Editor
         void LoadScene(const AssetHandle& handle);
 
         bool OnKeyPressed(KeyPressedEvent* e) noexcept;
-
-        enum class SceneState
-        {
-            Edit = 0,
-            Play = 1,
-            Pause = 2,
-            Simulate = 3
-        };
-        SceneState m_SceneState = SceneState::Edit;
 
         void OnScenePlay() noexcept;
         void OnScenePause() noexcept;
@@ -119,7 +125,7 @@ namespace BeeEngine::Editor
         void SetDefaultImGuiWindowLayoutIfNotPresent();
 
         void DrawBuildProjectPopup();
-        bool m_ShowBuildProjectPopup = false;
-        ImGuiUIEditor m_UIEditor{};
+
+        void SetImGuiFontSize(float size);
     };
 } // namespace BeeEngine::Editor

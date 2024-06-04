@@ -70,6 +70,7 @@ namespace BeeEngine
         InternalAssetManager& GetAssetManager() { return m_AssetManager; }
 
         bool IsFocused() { return m_IsFocused; }
+        bool IsMaximized() { return m_IsMaximized; }
 
     protected:
         virtual void Update(FrameData& frameData) {};
@@ -92,6 +93,12 @@ namespace BeeEngine
                     m_IsMinimized = event.IsMinimized();
                     return false;
                 });
+            dispatcher.Dispatch<WindowMaximizedEvent>(
+                [this](WindowMaximizedEvent& event) -> bool
+                {
+                    m_IsMaximized = event.IsMaximized();
+                    return false;
+                });
             dispatcher.Dispatch<WindowFocusedEvent>(
                 [this](auto& event)
                 {
@@ -111,8 +118,9 @@ namespace BeeEngine
         std::vector<std::function<void()>> m_MainThreadQueue;
         std::mutex m_MainThreadQueueMutex;
         static Application* s_Instance;
-        bool m_IsMinimized;
-        bool m_IsFocused;
+        bool m_IsMinimized = false;
+        bool m_IsMaximized = false;
+        bool m_IsFocused = true;
         Scope<WindowHandler> m_Window;
         LayerStack m_Layers;
         EventQueue m_EventQueue;

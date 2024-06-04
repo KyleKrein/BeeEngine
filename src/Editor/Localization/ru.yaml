@@ -1,53 +1,53 @@
+menubar.file.openScene: Открыть сцену
+inspector.textRenderer.foreground: Передний план
 buildProject.build.tooltip: Заполните все поля перед сборкой проекта
 transform.scale: Scale
 camera.projection.orthographic: Ортографическая
 inspector.circleRenderer.thickness: Толщина
-inspector.textRenderer.foreground: Передний план
-menubar.file.openScene: Открыть сцену
 text: Текст
-sceneHierarchyPanel.createCamera: Создать камеру
-camera.projection.perspective: Перспективная
 primary: "{gender, select, male{Главный} female{Главная} other{Главное}}"
-inspector.circleRenderer.fade: Дымка
+camera.projection.perspective: Перспективная
+sceneHierarchyPanel.createCamera: Создать камеру
 buildProject.defaultLocale: Локализация по умолчанию
-assetEditPanel.name: "Имя: {name}"
-menubar.file.saveSceneAs: Сохранить сцену как...
+inspector.circleRenderer.fade: Дымка
 sceneHierarchyPanel.toTopLevel: На верхний уровень
 menubar.build.reloadScripts: Перезагрузить скрипты
+assetEditPanel.name: "Имя: {name}"
+menubar.file.saveSceneAs: Сохранить сцену как...
 inspector.textRenderer: Текст
 texture: Текстура
-sceneHierarchyPanel.duplicateEntity: Дублировать
 sceneHierarchyPanel.createEmptyEntity: Создать сущность
 menubar.file.saveScene: Сохранить сцену
+sceneHierarchyPanel.duplicateEntity: Дублировать
+size: Размер
 sprite: Спрайт
 assetPanel.deleteAsset: Удалить
-size: Размер
 camera.nearClip: Near Clip
 camera.farClip: Far Clip
 camera.fov: FOV
 camera.projection: Проекция
+camera: Камера
 buildProject.startingScene: Начальная сцена
 inspector: Инспектор
-camera: Камера
 transform.rotation: Rotation
 createFolder: Создать папку
 transform: Transform
-camera.fixedAspectRatio: Фиксированное соотношение сторон
 menubar.file: Файл
+camera.fixedAspectRatio: Фиксированное соотношение сторон
 newProject: Создать проект
 menubar.view: Вид
 color: Цвет
-assetPanel.dropAssetsButton: Импортировать ассет
 inspector.circleRenderer: Круг
+assetPanel.dropAssetsButton: Импортировать ассет
 menubar.file.newScene: Новая сцена
-contentBrowserPanel.exportPrefab: Экспортировать префаб
 buildProject.defaultLocale.invalidError: Выбранная локализация по умолчанию не существует в текущем проекте
-menubar.view.outputConsole: Консоль вывода
+contentBrowserPanel.exportPrefab: Экспортировать префаб
 sprite.tilingFactor: Tiling Factor
+menubar.view.outputConsole: Консоль вывода
 createScene: Создать сцену
 assetPanel: Ресурсы игры
-buildProject.build: Собрать
 createScript: Создать скрипт
+buildProject.build: Собрать
 menubar.build: Сборка
 create: Создать
 menubar.view.localization: Локализация
@@ -56,8 +56,8 @@ name: Название
 transform.translation: Translation
 menubar.build.regenerateVSSolution: Пересоздать решение VS
 cancel: Отмена
-sceneHierarchyPanel: Сцена
 contentBrowserPanel: Файлы проекта
+sceneHierarchyPanel: Сцена
 sceneHierarchyPanel.deleteEntity: Удалить
 menubar.build.buildProject: Сборка проекта
 buildProject: Сборка проекта
@@ -84,3 +84,9 @@ saveScene.invalidPathError.body: Сохраняемый файл должен р
 settings: Параметры
 projectSelection: Проект
 loadProject: Открыть проект
+menubar.file.editorSettings: Настройки редактора
+editorSettings.language: Язык
+needsRestartingTooltip: Необходимо перезапустить приложение, чтобы это изменение было применено
+editorSettings.fontSize: Размер шрифта
+editorSettings.thumbnailSize: Размер миниатюр
+editorSettings: Настройки редактора
