@@ -5,10 +5,10 @@
 #include "WinAPIWindowHandler.h"
 
 #include "Platform/Platform.h"
-#include <winuser.h>
 
 #if defined(WINDOWS)
 #include "Core/Events/EventImplementations.h"
+#include <winuser.h>
 
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 #include "Platform/Vulkan/VulkanInstance.h"
