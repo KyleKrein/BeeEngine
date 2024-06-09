@@ -11,6 +11,7 @@
 #include "Renderer/TopLevelAccelerationStructure.h"
 #include "Renderer/UniformBuffer.h"
 #include "entt/entt.hpp"
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -29,7 +30,7 @@ namespace BeeEngine
     class Entity;
     class Prefab;
     class SceneContactListener;
-    class Scene : public Asset
+    class Scene : public Asset, public std::enable_shared_from_this<Scene>
     {
         friend class Entity;
         friend class BeeEngine::Editor::SceneHierarchyPanel;
@@ -68,6 +69,7 @@ namespace BeeEngine
         Entity CreateEntity(const String& name = "Entity");
         void DestroyEntity(Entity entity);
         Entity DuplicateEntity(Entity entity);
+        bool IsEntityValid(Entity entity);
 
         Entity InstantiatePrefab(Prefab& prefab, Entity parent);
 

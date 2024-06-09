@@ -67,7 +67,7 @@ namespace BeeEngine
             {
                 BeeCoreTrace("Instantiating Script: {0}", scriptComponent.Name);
                 scriptComponent.Instance = scriptComponent.InstantiateScript(scriptComponent.Name.c_str());
-                scriptComponent.Instance->m_Entity = Entity(EntityID{entity}, this);
+                scriptComponent.Instance->m_Entity = Entity(EntityID{entity}, weak_from_this());
                 scriptComponent.Instance->OnCreate();
             }
 
@@ -77,7 +77,7 @@ namespace BeeEngine
         auto view = m_Registry.view<ScriptComponent>();
         for (auto e : view)
         {
-            Entity entity{EntityID{e}, this};
+            Entity entity{EntityID{e}, weak_from_this()};
             auto& scriptComponent = entity.GetComponent<ScriptComponent>();
             if (scriptComponent.Class)
             {
@@ -86,7 +86,7 @@ namespace BeeEngine
         }
         for (auto e : view)
         {
-            Entity entity{EntityID{e}, this};
+            Entity entity{EntityID{e}, weak_from_this()};
             auto& scriptComponent = entity.GetComponent<ScriptComponent>();
             if (scriptComponent.Class)
             {
@@ -95,7 +95,7 @@ namespace BeeEngine
         }
         for (auto e : view)
         {
-            Entity entity{EntityID{e}, this};
+            Entity entity{EntityID{e}, weak_from_this()};
             auto& scriptComponent = entity.GetComponent<ScriptComponent>();
             if (scriptComponent.Class)
             {
@@ -187,7 +187,7 @@ namespace BeeEngine
 
     Entity Scene::CreateEntityWithUUID(UUID uuid, const String& name)
     {
-        Entity entity(EntityID{m_Registry.create()}, this);
+        Entity entity(EntityID{m_Registry.create()}, weak_from_this());
         entity.AddComponent<UUIDComponent>(uuid);
         entity.AddComponent<TransformComponent>();
         entity.AddComponent<HierarchyComponent>();
@@ -200,7 +200,7 @@ namespace BeeEngine
     Entity Scene::GetEntityByUUID(UUID uuid)
     {
         BeeExpects(m_UUIDMap.contains(uuid));
-        return {m_UUIDMap.at(uuid), this};
+        return {m_UUIDMap.at(uuid), weak_from_this()};
     }
 
     Entity Scene::GetEntityByName(std::string_view name)
@@ -211,7 +211,7 @@ namespace BeeEngine
             auto& tag = view.get<TagComponent>(entity);
             if (tag.Tag == name)
             {
-                return {EntityID{entity}, this};
+                return {EntityID{entity}, weak_from_this()};
             }
         }
         return {};
@@ -256,7 +256,7 @@ namespace BeeEngine
         auto view = m_Registry.view<RigidBody2DComponent>();
         for (auto e : view)
         {
-            Entity entity{EntityID{e}, this};
+            Entity entity{EntityID{e}, weak_from_this()};
             auto& rigidBody = entity.GetComponent<RigidBody2DComponent>();
             auto& transform = entity.GetComponent<TransformComponent>();
             b2Body* body = (b2Body*)CreateRuntimeRigidBody2D(entity.GetUUID(), rigidBody, transform);
@@ -337,7 +337,7 @@ namespace BeeEngine
         auto view = m_Registry.view<RigidBody2DComponent>();
         for (auto e : view)
         {
-            Entity entity{EntityID{e}, this};
+            Entity entity{EntityID{e}, weak_from_this()};
             auto& rigidBody = entity.GetComponent<RigidBody2DComponent>();
             auto& transform = entity.GetComponent<TransformComponent>();
             b2Body* body = (b2Body*)rigidBody.RuntimeBody;
@@ -361,7 +361,7 @@ namespace BeeEngine
 
         for (auto e : view)
         {
-            Entity entity{EntityID{e}, this};
+            Entity entity{EntityID{e}, weak_from_this()};
             auto& rigidBody = entity.GetComponent<RigidBody2DComponent>();
             auto& transform = entity.GetComponent<TransformComponent>();
             b2Body* body = (b2Body*)rigidBody.RuntimeBody;
@@ -425,7 +425,7 @@ namespace BeeEngine
             }
             UUID uuid = idView.get<UUIDComponent>(e).ID;
             const auto& name = srcRegistry.get<TagComponent>(e).Tag;
-            Entity entity = scene.CopyEntity({e, &scene}, *newScene, Entity::Null, true);
+            Entity entity = scene.CopyEntity({e, scene.weak_from_this()}, *newScene, Entity::Null, true);
         }
         return newScene;
     }
@@ -477,7 +477,7 @@ namespace BeeEngine
             auto& cameraComponent = view.get<CameraComponent>(entity);
             if (cameraComponent.Primary)
             {
-                return {EntityID{entity}, this};
+                return {EntityID{entity}, weak_from_this()};
             }
         }
         return Entity::Null;
@@ -520,7 +520,7 @@ namespace BeeEngine
                                            });
             if (it != view.end())
             {
-                return {EntityID{*it}, this};
+                return {EntityID{*it}, weak_from_this()};
             }
         }
         return Entity::Null;
@@ -533,5 +533,9 @@ namespace BeeEngine
     void Scene::OnCollisionEnd(UUID entity1, UUID entity2)
     {
         m_CollisionEnded.emplace_back(entity1, entity2);
+    }
+    bool Scene::IsEntityValid(Entity entity)
+    {
+        return !entity.m_Scene.expired() && entity.m_Scene.lock().get() == this && m_Registry.valid(entity.m_ID);
     }
 } // namespace BeeEngine

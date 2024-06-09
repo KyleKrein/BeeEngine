@@ -75,6 +75,7 @@ namespace BeeEngine::Editor
         Color4 m_ClearColor = Color4::CornflowerBlue;
         EditorAssetManager& m_AssetManager;
         Entity m_HoveredEntity = Entity::Null;
+        Entity m_LastHoveredRuntime = Entity::Null;
 
         Path m_WorkingDirectory;
 
@@ -95,5 +96,6 @@ namespace BeeEngine::Editor
         void HandleReadPixelTask();
 
         bool IsMouseInViewport();
+        Entity GetHoveredEntity();
     };
 } // namespace BeeEngine::Editor

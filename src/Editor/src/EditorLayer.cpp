@@ -87,6 +87,7 @@ namespace BeeEngine::Editor
             return;
         }
         m_ProjectFile->Update();
+        m_SceneHierarchyPanel.Update();
         m_EditorCamera.OnUpdate();
         ScriptingEngine::UpdateAllocatorStatistics();
         switch (m_SceneState)
@@ -143,8 +144,8 @@ namespace BeeEngine::Editor
         {
             m_MenuBar.Render();
             UIToolbar();
-            m_ViewPort.Render(m_EditorCamera);
             m_SceneHierarchyPanel.OnGUIRender();
+            m_ViewPort.Render(m_EditorCamera);
             m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
             m_ContentBrowserPanel.OnGUIRender();
             m_AssetPanel.Render();
@@ -359,6 +360,10 @@ namespace BeeEngine::Editor
         }
         if (m_SceneState == SceneState::Play)
         {
+            if (m_ViewPort.ShouldHandleEvents())
+            {
+                m_ViewPort.OnEvent(event);
+            }
             return;
         }
         if (m_ViewPort.ShouldHandleEvents())

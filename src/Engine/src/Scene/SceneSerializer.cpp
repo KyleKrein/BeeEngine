@@ -307,7 +307,7 @@ namespace BeeEngine
         m_Scene->m_Registry.each(
             [&](auto entityID)
             {
-                Entity entity = {EntityID{entityID}, m_Scene.get()};
+                Entity entity = {EntityID{entityID}, m_Scene};
                 if (!entity || entity.HasParent())
                     return;
                 SerializeEntity(out, entity);

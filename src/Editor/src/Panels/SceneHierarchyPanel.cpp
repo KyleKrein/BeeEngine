@@ -7,6 +7,7 @@
 #include "Core/Input.h"
 #include "Gui/ImGui/ImGuiExtension.h"
 #include "Scene/Components.h"
+#include "Scene/Entity.h"
 #include "Scene/Prefab.h"
 
 namespace BeeEngine::Editor
@@ -22,6 +23,14 @@ namespace BeeEngine::Editor
         m_Context = context;
     }
 
+    void SceneHierarchyPanel::Update()
+    {
+        if (m_SelectedEntity != Entity::Null && !m_SelectedEntity.IsValid())
+        {
+            ClearSelection();
+        }
+    }
+
     void SceneHierarchyPanel::OnGUIRender() noexcept
     {
         ImGui::Begin(m_EditorDomain->Translate("sceneHierarchyPanel").c_str());
@@ -33,7 +42,7 @@ namespace BeeEngine::Editor
             ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID",
                                                    [this](auto& e) mutable
                                                    {
-                                                       Entity droppedEntity = {e, m_Context.get()};
+                                                       Entity droppedEntity = {e, m_Context};
                                                        droppedEntity.RemoveParent();
                                                    });
             ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM",
@@ -49,7 +58,7 @@ namespace BeeEngine::Editor
             {
                 if (hierarchy.Parent == Entity::Null) // Только для "главных" сущностей
                 {
-                    DrawEntityNode({entityID, m_Context.get()});
+                    DrawEntityNode({entityID, m_Context});
                 }
             });
 
@@ -89,7 +98,7 @@ namespace BeeEngine::Editor
         ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID",
                                                [this, currentEntity = entity](auto& e) mutable
                                                {
-                                                   Entity droppedEntity = {e, m_Context.get()};
+                                                   Entity droppedEntity = {e, m_Context};
                                                    droppedEntity.SetParent(currentEntity);
                                                });
         ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_PREFAB_ITEM",

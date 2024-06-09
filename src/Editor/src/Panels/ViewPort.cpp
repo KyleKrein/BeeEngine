@@ -9,6 +9,7 @@
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Events/Event.h"
+#include "Core/Logging/Log.h"
 #include "Core/ResourceManager.h"
 #include "Debug/Instrumentor.h"
 #include "Gui/ImGui/ImGuiExtension.h"
@@ -16,7 +17,10 @@
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scene/SceneSerializer.h"
+#include "Scripting/ScriptingEngine.h"
+#include "Windowing/WindowHandler/WindowHandler.h"
 #include "gtc/type_ptr.hpp"
+#include "imgui.h"
 
 namespace BeeEngine::Editor
 {
@@ -51,7 +55,10 @@ namespace BeeEngine::Editor
     {
         if (!m_IsFocused && !m_IsHovered)
             return;
-
+        if (!m_Scene->IsRuntime() && m_LastHoveredRuntime)
+        {
+            m_LastHoveredRuntime = Entity::Null;
+        }
         if (event.GetCategory() & EventCategory::App)
         {
             return;
@@ -77,13 +84,18 @@ namespace BeeEngine::Editor
 
         m_MousePosition = {mx, my};
 
-        if (mouseX >= 0 && mouseY >= 0 && gsl::narrow_cast<float>(mouseX) < viewportSize.x &&
-            gsl::narrow_cast<float>(mouseY) < viewportSize.y)
+        if (IsMouseInViewport())
         {
+            int mouseX = gsl::narrow_cast<int>(mouseX * WindowHandler::GetInstance()->GetScaleFactor());
+            int mouseY = gsl::narrow_cast<int>(mouseY * WindowHandler::GetInstance()->GetScaleFactor());
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
         }
 
         m_Scene->UpdateRuntime();
+        if (m_SelectedEntity && !m_SelectedEntity.IsValid())
+        {
+            m_SelectedEntity = Entity::Null;
+        }
         SceneRenderer::RenderScene(*m_Scene, cmd, m_GameDomain->GetLocale());
 
         auto primaryCameraEntity = m_Scene->GetPrimaryCameraEntity();
@@ -99,6 +111,22 @@ namespace BeeEngine::Editor
                 SceneRenderer::RenderPhysicsColliders(*m_Scene, cmd, *m_CameraBindingSet);
         }
         m_FrameBuffer->Unbind(cmd);
+        if (IsMouseInViewport())
+        {
+            Entity hovered = GetHoveredEntity();
+            if (hovered != m_LastHoveredRuntime)
+            {
+                if (m_LastHoveredRuntime && m_LastHoveredRuntime.IsValid())
+                {
+                    ScriptingEngine::OnMouseLeave(m_LastHoveredRuntime.GetUUID());
+                }
+                m_LastHoveredRuntime = hovered;
+                if (m_LastHoveredRuntime)
+                {
+                    ScriptingEngine::OnMouseEnter(m_LastHoveredRuntime.GetUUID());
+                }
+            }
+        }
     }
     void ViewPort::UpdateEditor(EditorCamera& camera, bool renderPhysicsColliders) noexcept
     {
@@ -123,23 +151,14 @@ namespace BeeEngine::Editor
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
-        const glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+        m_MousePosition = {mx, my};
 
-        int mouseX = static_cast<int>(mx);
-        int mouseY = static_cast<int>(my);
-        m_MousePosition = {mouseX, mouseY};
-
-        if (mouseX >= 0 && mouseY >= 0 && gsl::narrow_cast<float>(mouseX) < viewportSize.x &&
-            gsl::narrow_cast<float>(mouseY) < viewportSize.y)
+        if (IsMouseInViewport())
         {
-            mouseX = gsl::narrow_cast<int>(mouseX * WindowHandler::GetInstance()->GetScaleFactor());
-            mouseY = gsl::narrow_cast<int>(mouseY * WindowHandler::GetInstance()->GetScaleFactor());
+            int mouseX = gsl::narrow_cast<int>(mx * WindowHandler::GetInstance()->GetScaleFactor());
+            int mouseY = gsl::narrow_cast<int>(my * WindowHandler::GetInstance()->GetScaleFactor());
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
-            int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
-            pixelData--; // I make it -1 because entt starts from 0 and clear value for red integer in webgpu is 0 and I
-                         // need to make invalid number -1 too, so in scene I make + 1
-            // BeeCoreTrace("Coords: {}, {}. Pixel data: {}", mouseX, mouseY, pixelData);
-            m_HoveredEntity = pixelData == -1 ? Entity::Null : Entity(EntityID{(entt::entity)pixelData}, m_Scene.get());
+            m_HoveredEntity = GetHoveredEntity();
         }
         m_FrameBuffer->Unbind(cmd);
     }
@@ -316,7 +335,32 @@ namespace BeeEngine::Editor
                 m_SelectedEntity = m_HoveredEntity;
             }
         }
+        if (m_Scene->IsRuntime())
+        {
+            if (IsMouseInViewport())
+            {
+                Entity clicked = GetHoveredEntity();
+                if (clicked)
+                {
+                    ScriptingEngine::OnMouseClick(clicked.GetUUID(), event->GetButton());
+                }
+            }
+        }
         return false;
+    }
+
+    Entity ViewPort::GetHoveredEntity()
+    {
+        int mouseX = gsl::narrow_cast<int>(m_MousePosition.x * WindowHandler::GetInstance()->GetScaleFactor());
+        int mouseY = gsl::narrow_cast<int>(m_MousePosition.y * WindowHandler::GetInstance()->GetScaleFactor());
+        int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
+        pixelData--; // I make it -1 because entt starts from 0 and clear value for red integer in webgpu is
+                     // 0 and I need to make invalid number -1 too, so in scene I make + 1
+        if (pixelData == -1)
+        {
+            return Entity::Null;
+        }
+        return {EntityID{(entt::entity)pixelData}, m_Scene};
     }
 
     void ViewPort::OpenScene(const Path& path)

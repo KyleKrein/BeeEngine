@@ -1,11 +1,13 @@
 Entities:
-  - Entity: 2485341485061375317
+  - Entity: 9189631042518872370
     TagComponent:
       Tag: Bee Prefab
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, -0, 0]
       Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.Bee
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
       Has Texture: true

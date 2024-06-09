@@ -9,6 +9,11 @@ using System.Threading.Tasks;
 
 namespace BeeEngine
 {
+    public struct MouseClickEventArgs
+    {
+        public Entity Entity;
+        public MouseButton MouseButton;
+    }
     /// <summary>
     /// Represents an entity in the scene.
     /// Each entity can have several components, associated with it.
@@ -82,6 +87,48 @@ namespace BeeEngine
                 ThrowIfDestroyed();
                 Log.AssertAndThrow(value != null, "OnCollisionEnd can't be null");
                 Log.AssertAndThrow(ReferenceEquals(m_OnCollisionEnd, value), "This must be the same event");
+            }
+        }
+
+        private static WeakEvent<MouseClickEventArgs> m_OnMouseClick = new WeakEvent<MouseClickEventArgs>();
+
+        public static WeakEvent<MouseClickEventArgs> OnMouseClick
+        {
+            get
+            {
+                return m_OnMouseClick;
+            }
+            set
+            {
+                Log.AssertAndThrow(value != null, "OnMouseClick can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnMouseClick, value), "This must be the same event");
+            }
+        }
+        private static WeakEvent<Entity> m_OnMouseEnter = new WeakEvent<Entity>();
+
+        public static WeakEvent<Entity> OnMouseEnter
+        {
+            get
+            {
+                return m_OnMouseEnter;
+            }
+            set
+            {
+                Log.AssertAndThrow(value != null, "OnMouseEnter can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnMouseEnter, value), "This must be the same event");
+            }
+        }
+        private static WeakEvent<Entity> m_OnMouseLeave = new WeakEvent<Entity>();
+        public static WeakEvent<Entity> OnMouseLeave
+        {
+            get
+            {
+                return m_OnMouseLeave;
+            }
+            set
+            {
+                Log.AssertAndThrow(value != null, "OnMouseLeave can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnMouseLeave, value), "This must be the same event");
             }
         }
 
@@ -231,7 +278,7 @@ namespace BeeEngine
             {
                 ThrowIfDestroyed();
                 ulong childID = 0;
-                while ((childID = InternalCalls.Entity_GetNextChild(ID, childID))!= 0)
+                while ((childID = InternalCalls.Entity_GetNextChild(ID, childID)) != 0)
                 {
                     ThrowIfDestroyed();
                     yield return LifeTimeManager.GetEntity(childID);

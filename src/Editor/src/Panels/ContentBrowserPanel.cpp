@@ -81,7 +81,7 @@ namespace BeeEngine::Editor
                 "ENTITY_ID",
                 [this](const auto& e)
                 {
-                    Entity droppedEntity = {e, m_Context.get()};
+                    Entity droppedEntity = {e, m_Context};
                     BeeExpects(droppedEntity);
                     PrefabImporter::GeneratePrefab(droppedEntity,
                                                    m_CurrentDirectory /

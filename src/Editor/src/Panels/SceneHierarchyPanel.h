@@ -18,6 +18,8 @@ namespace BeeEngine::Editor
 
         void SetContext(const Ref<Scene>& context);
 
+        void Update();
+
         void OnGUIRender() noexcept;
 
         void OnEvent(EventDispatcher& e) noexcept;
