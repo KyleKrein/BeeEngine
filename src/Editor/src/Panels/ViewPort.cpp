@@ -86,8 +86,8 @@ namespace BeeEngine::Editor
 
         if (IsMouseInViewport())
         {
-            int mouseX = gsl::narrow_cast<int>(mouseX * WindowHandler::GetInstance()->GetScaleFactor());
-            int mouseY = gsl::narrow_cast<int>(mouseY * WindowHandler::GetInstance()->GetScaleFactor());
+            mouseX = gsl::narrow_cast<int>(mouseX * WindowHandler::GetInstance()->GetScaleFactor());
+            mouseY = gsl::narrow_cast<int>(mouseY * WindowHandler::GetInstance()->GetScaleFactor());
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
         }
 
