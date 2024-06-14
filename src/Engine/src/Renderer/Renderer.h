@@ -6,7 +6,9 @@
 #include "CommandBuffer.h"
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Color4.h"
+#include "Core/Expected.h"
 #include "Core/Logging/Log.h"
+#include "Core/Time.h"
 #include "Debug/Instrumentor.h"
 #include "Font.h"
 #include "FrameBuffer.h"
@@ -14,7 +16,6 @@
 #include "RenderAPI.h"
 #include "RendererAPI.h"
 #include "RendererStatistics.h"
-#include "Windowing/WindowHandler/WindowHandler.h"
 
 namespace BeeEngine
 {
@@ -76,10 +77,15 @@ namespace BeeEngine
         //     s_RendererAPI->DrawInstanced(model, instanceBuffer, instanceCount);
         // }
 
-        static FrameData BeginFrame()
+        static Expected<FrameData, RendererAPI::Error> BeginFrame()
         {
             BEE_PROFILE_FUNCTION();
-            return {s_RendererAPI->BeginFrame(), s_Statistics};
+            auto result = s_RendererAPI->BeginFrame();
+            if (result.HasValue())
+            {
+                return FrameData{result.Value(), s_Statistics};
+            }
+            return Unexpected<RendererAPI::Error>{result.Error()};
         }
 
         static void EndFrame(FrameData& frameData);
@@ -96,6 +102,12 @@ namespace BeeEngine
             BEE_PROFILE_FUNCTION();
             BeeExpects(frameData.IsInProgress());
             s_RendererAPI->EndMainCommandBuffer(frameData.GetMainCommandBuffer());
+        }
+
+        static void RebuildSwapchain()
+        {
+            BEE_PROFILE_FUNCTION();
+            s_RendererAPI->RebuildSwapchain();
         }
 
         /*static void SubmitCommandBuffers(CommandBuffer* commandBuffers, uint32_t numberOfBuffers)

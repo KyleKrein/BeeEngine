@@ -2,6 +2,8 @@
 // Created by Aleksandr on 22.02.2024.
 //
 #pragma once
+#include "Core/Expected.h"
+#include "Renderer/CommandBuffer.h"
 #include "Renderer/RendererAPI.h"
 #include <vulkan/vulkan.hpp>
 
@@ -19,7 +21,7 @@ namespace BeeEngine::Internal
 
         void Init() override;
 
-        CommandBuffer BeginFrame() override;
+        Expected<CommandBuffer, RendererAPI::Error> BeginFrame() override;
 
         void EndFrame() override;
 
@@ -38,11 +40,11 @@ namespace BeeEngine::Internal
         void SubmitCommandBuffer(const CommandBuffer& commandBuffer) override;
 
         void CopyFrameBufferImageToSwapchain(FrameBuffer& framebuffer, uint32_t attachmentIndex) override;
+        void RebuildSwapchain() override;
 
     private:
         void CreateCommandBuffers();
         void FreeCommandBuffers();
-        void RecreateSwapChain();
 
     private:
         RenderingQueue m_RenderingQueue;

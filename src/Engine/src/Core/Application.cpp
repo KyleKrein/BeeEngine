@@ -8,7 +8,10 @@
 // #include "Platform/Vulkan/VulkanRendererAPI.h"
 #include "DeletionQueue.h"
 #include "JobSystem/JobScheduler.h"
+#include "Move.h"
+#include "Renderer/GraphicsDevice.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/RendererAPI.h"
 #include "Renderer/SceneRenderer.h"
 #include "Scene/Prefab.h"
 #include "Scripting/ScriptingEngine.h"
@@ -26,11 +29,17 @@ namespace BeeEngine
             m_Window->GetWidth(), m_Window->GetHeight(), m_Window->GetWidthInPixels(), m_Window->GetHeightInPixels()));
         std::condition_variable cv;
         std::mutex mutex;
+        GraphicsDevice& device = m_Window->GetGraphicsDevice();
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
             ExecuteMainThreadQueue();
             m_Window->ProcessEvents();
+            if (device.SwapChainRequiresRebuild())
+            {
+                Renderer::RebuildSwapchain();
+                continue;
+            }
             std::unique_lock lock(mutex);
             auto frameJob = Jobs::CreateJob<Jobs::Priority::Normal, 1024 * 1024>(
                 [this](std::condition_variable& cv)
@@ -39,7 +48,15 @@ namespace BeeEngine
                     auto deltaTime = m_Window->UpdateTime();
                     // if(!self.IsMinimized())
                     //{
-                    auto frameData = Renderer::BeginFrame();
+                    auto result = Renderer::BeginFrame();
+                    if (!result.HasValue())
+                    {
+                        auto error = BeeMove(result).Error();
+                        BeeCoreAssert(error == RendererAPI::Error::SwapchainOutdated, "Unhandled RenderedAPI error");
+                        cv.notify_one();
+                        return;
+                    }
+                    auto frameData = BeeMove(result).Value();
                     frameData.SetDeltaTime(deltaTime);
                     Renderer::StartMainCommandBuffer(frameData);
                     m_Layers.Update(frameData);

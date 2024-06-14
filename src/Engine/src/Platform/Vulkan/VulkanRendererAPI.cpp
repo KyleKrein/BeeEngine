@@ -5,8 +5,10 @@
 #include "VulkanRendererAPI.h"
 
 #include "Core/Application.h"
+#include "Core/Expected.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/RendererAPI.h"
 #include "Utils.h"
 #include "VulkanFrameBuffer.h"
 #include "VulkanMaterial.h"
@@ -28,20 +30,14 @@ namespace BeeEngine::Internal
         CreateCommandBuffers();
     }
 
-    CommandBuffer VulkanRendererAPI::BeginFrame()
+    Expected<CommandBuffer, RendererAPI::Error> VulkanRendererAPI::BeginFrame()
     {
-    BeginFrame:
-        if (m_GraphicsDevice->SwapChainRequiresRebuild())
-        {
-            BeeCoreTrace("Rebuilding swapchain");
-            RecreateSwapChain();
-        }
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
         auto result = swapchain.AcquireNextImage(&m_CurrentImageIndex);
         if (result == vk::Result::eErrorOutOfDateKHR)
         {
             m_GraphicsDevice->RequestSwapChainRebuild();
-            goto BeginFrame;
+            return Unexpected<RendererAPI::Error>{RendererAPI::Error::SwapchainOutdated};
         }
         else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
         {
@@ -261,7 +257,7 @@ namespace BeeEngine::Internal
         m_CommandBuffers.clear();
     }
 
-    void VulkanRendererAPI::RecreateSwapChain()
+    void VulkanRendererAPI::RebuildSwapchain()
     {
         uint32_t width = m_Window->GetWidthInPixels(), height = m_Window->GetHeightInPixels();
         m_GraphicsDevice->WindowResized(width, height);

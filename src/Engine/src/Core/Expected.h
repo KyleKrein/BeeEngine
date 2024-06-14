@@ -5,6 +5,7 @@
 #pragma once
 #include <string>
 #include <utility>
+#include <variant>
 #include <version>
 #ifdef __cpp_lib_source_location
 #include "source_location"
@@ -76,13 +77,13 @@ namespace BeeEngine
         bool HasValue() const { return m_HasValue; }
         operator bool() const { return m_HasValue; }
 
-        const T&& Value() const
+        T Value()
         {
             if (!m_HasValue)
                 throw std::get<E>(m_Data);
             return std::move(std::get<T>(m_Data));
         }
-        const E&& Error() const
+        E Error()
         {
             // if(m_HasValue) throw;
             return std::move(std::get<E>(m_Data));
