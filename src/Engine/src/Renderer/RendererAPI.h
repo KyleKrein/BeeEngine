@@ -6,6 +6,7 @@
 
 #include "CommandBuffer.h"
 #include "Core/Color4.h"
+#include "Core/Expected.h"
 #include "Core/TypeDefines.h"
 #include "Model.h"
 #include "RenderPass.h"
@@ -17,12 +18,18 @@ namespace BeeEngine
     class RendererAPI
     {
     public:
+        enum class Error
+        {
+            SwapchainOutdated
+        };
         virtual ~RendererAPI() = default;
 
         virtual void Init() = 0;
 
-        virtual CommandBuffer BeginFrame() = 0;
+        virtual Expected<CommandBuffer, Error> BeginFrame() = 0;
         virtual void EndFrame() = 0;
+
+        virtual void RebuildSwapchain() = 0;
 
         virtual void StartMainCommandBuffer(CommandBuffer& commandBuffer) = 0;
         virtual void EndMainCommandBuffer(CommandBuffer& commandBuffer) = 0;

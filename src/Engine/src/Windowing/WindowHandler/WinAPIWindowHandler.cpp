@@ -8,6 +8,7 @@
 
 #if defined(WINDOWS)
 #include "Core/Events/EventImplementations.h"
+#include <winuser.h>
 
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
 #include "Platform/Vulkan/VulkanInstance.h"
@@ -127,6 +128,11 @@ namespace BeeEngine::Internal
         // Show the window
         bool32_t shouldActivate = true; // If the window should not accept input, this should be false
         int32_t showWindowCommandFlags = shouldActivate ? SW_SHOW : SW_SHOWNOACTIVATE;
+        if (properties.IsMaximized)
+        {
+            showWindowCommandFlags = SW_SHOWMAXIMIZED;
+            m_Events.AddEvent(CreateScope<WindowMaximizedEvent>(true));
+        }
         // if initially minimized, use SW_MINIMIZE : SW_SHOWMINNOACTIVATE
         // if initially maximized, use SW_SHOWMAXIMIZED : SW_MAXIMIZE
 
@@ -592,6 +598,12 @@ namespace BeeEngine::Internal
                     case SC_RESTORE:
                     {
                         g_EventQueue->AddEvent(CreateScope<WindowMinimizedEvent>(false));
+                        g_EventQueue->AddEvent(CreateScope<WindowMaximizedEvent>(false));
+                    }
+                    break;
+                    case SC_MAXIMIZE:
+                    {
+                        g_EventQueue->AddEvent(CreateScope<WindowMaximizedEvent>(true));
                     }
                     break;
                     default:

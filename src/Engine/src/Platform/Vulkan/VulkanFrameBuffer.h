@@ -3,10 +3,12 @@
 //
 
 #pragma once
+#include "Platform/Vulkan/VulkanBuffer.h"
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/RenderingQueue.h"
 #include "VulkanGraphicsDevice.h"
 #include "VulkanImage.h"
+#include <vector>
 
 namespace BeeEngine::Internal
 {
@@ -33,6 +35,8 @@ namespace BeeEngine::Internal
 
         VulkanImage GetColorAttachment(uint32_t index) const;
 
+        [[nodiscard]] DumpedImage DumpAttachment(uint32_t attachmentIndex) const override;
+
     private:
         void CreateImageAndImageView(VulkanImage& image,
                                      vk::ImageView& view,
@@ -48,6 +52,20 @@ namespace BeeEngine::Internal
 
         std::vector<VulkanImage> m_ColorAttachmentsTextures;
         std::vector<vk::ImageView> m_ColorAttachmentsTextureViews;
+        struct AttachmentReadBuffer
+        {
+            VulkanBuffer Buffer;
+            bool IsUpdated{false};
+        };
+        mutable std::vector<AttachmentReadBuffer> m_ColorAttachmentsReadBuffers;
+        void ResetReadBuffers()
+        {
+            for (auto& buffer : m_ColorAttachmentsReadBuffers)
+            {
+                buffer.IsUpdated = false;
+            }
+        }
+        void CopyToBufferIfNotCopied(uint32_t index) const;
         VulkanImage m_DepthAttachmentTexture{nullptr};
         vk::ImageView m_DepthAttachmentTextureView{nullptr};
 

@@ -2,6 +2,7 @@
 // Created by alexl on 10.06.2023.
 //
 #include "Renderer/Renderer.h"
+#include "imgui.h"
 #if defined(BEE_COMPILE_VULKAN)
 #define VK_VERSION_
 #include "Platform/Vulkan/VulkanGraphicsDevice.h"
@@ -176,6 +177,7 @@ namespace BeeEngine::Internal
 #endif
                     break;
             }
+            ImGui::DestroyContext();
             vkDestroyDescriptorPool(device, pool, nullptr);
         };
     }

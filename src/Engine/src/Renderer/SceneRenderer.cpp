@@ -215,7 +215,7 @@ namespace BeeEngine
             auto spriteView = scene.m_Registry.view<SpriteRendererComponent>();
             for (auto entity : spriteView)
             {
-                Entity e = {entity, &scene};
+                Entity e = {entity, scene.weak_from_this()};
                 glm::mat4 transform = Math::ToGlobalTransform(e);
                 auto& spriteComponent = spriteView.get<SpriteRendererComponent>(entity);
                 SpriteInstanceBufferData data{
@@ -235,7 +235,7 @@ namespace BeeEngine
             std::vector<BindingSet*> circleBindingSets{sceneRendererData.CameraBindingSet.get()};
             for (auto entity : circleGroup)
             {
-                Entity e = {entity, &scene};
+                Entity e = {entity, scene.weak_from_this()};
                 auto& transformComponent = e.GetComponent<TransformComponent>();
                 glm::mat4 transform = Math::ToGlobalTransform(e);
                 auto& circleComponent = circleGroup.get<CircleRendererComponent>(entity);
@@ -257,7 +257,7 @@ namespace BeeEngine
                 auto& textComponent = textGroup.get<TextRendererComponent>(entity);
                 sceneTreeRenderer.AddText(textComponent.Text,
                                           &textComponent.Font(locale),
-                                          Math::ToGlobalTransform(Entity{entity, &scene}),
+                                          Math::ToGlobalTransform(Entity{entity, scene.weak_from_this()}),
                                           textComponent.Configuration,
                                           static_cast<int32_t>(entity) + 1);
             }
@@ -269,7 +269,7 @@ namespace BeeEngine
                 auto& meshComponent = meshGroup.get<MeshComponent>(entity);
                 if (!meshComponent.HasMeshes)
                     continue;
-                Entity e = {entity, &scene};
+                Entity e = {entity, scene.weak_from_this()};
                 glm::mat4 transform = Math::ToGlobalTransform(e);
 
                 struct MeshInstancedData
@@ -316,7 +316,7 @@ namespace BeeEngine
             if (camera.Primary)
             {
                 mainCamera = &camera.Camera;
-                cameraTransform = Math::ToGlobalTransform(Entity{entity, &scene});
+                cameraTransform = Math::ToGlobalTransform(Entity{entity, scene.weak_from_this()});
                 auto [translation, rotation, scale] = Math::DecomposeTransform(cameraTransform);
                 cameraPosition = translation;
                 break;
@@ -365,7 +365,7 @@ namespace BeeEngine
             {
                 auto bc2d = view.get<BoxCollider2DComponent>(entity);
                 auto [translation, rotation, scale] =
-                    Math::DecomposeTransform(Math::ToGlobalTransform(Entity{entity, &scene}));
+                    Math::DecomposeTransform(Math::ToGlobalTransform(Entity{entity, scene.weak_from_this()}));
                 if (bc2d.Type == BoxCollider2DComponent::ColliderType::Box)
                 {
                     translation = translation + glm::vec3(bc2d.Offset, 0.001f);

@@ -4,12 +4,37 @@
 
 #include "VulkanFrameBuffer.h"
 
+#include "Core/CodeSafety/Expects.h"
+#include "Core/Logging/Log.h"
+#include "Platform/Vulkan/VulkanBuffer.h"
 #include "Renderer/Renderer.h"
 #include "Utils.h"
 #include "backends/imgui_impl_vulkan.h"
+#include <cstdint>
+#include <mdspan>
+#include <vulkan/vulkan_enums.hpp>
 
 namespace BeeEngine::Internal
 {
+    static uint32_t GetSizeOfPixel(FrameBufferTextureFormat format)
+    {
+        switch (format)
+        {
+            case FrameBufferTextureFormat::RGBA8:
+                return 4;
+            case FrameBufferTextureFormat::RGBA16F:
+                return 8;
+            case FrameBufferTextureFormat::RedInteger:
+                return 4;
+            case FrameBufferTextureFormat::Depth24:
+                return 4;
+            case FrameBufferTextureFormat::None:
+            default:
+                break;
+        }
+        BeeCoreError("Unknown FrameBufferTextureFormat");
+        return 0;
+    }
     vk::Format ConvertToVulkanFormat(FrameBufferTextureFormat format)
     {
         switch (format)
@@ -48,10 +73,6 @@ namespace BeeEngine::Internal
                                     ? vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled
                                     : vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled |
                                           vk::ImageUsageFlagBits::eTransferSrc;
-        if (usage == FrameBufferTextureUsage::CPUAndGPU)
-        {
-            // imageCreateInfo.usage |= vk::ImageUsageFlagBits::eTransferSrc;
-        }
         imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
         imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 
@@ -65,12 +86,9 @@ namespace BeeEngine::Internal
         viewCreateInfo.subresourceRange.baseArrayLayer = 0;
         viewCreateInfo.subresourceRange.layerCount = 1;
 
-        vk::MemoryPropertyFlags memoryPropertyFlags = usage == FrameBufferTextureUsage::GPUOnly
-                                                          ? vk::MemoryPropertyFlagBits::eDeviceLocal
-                                                          : vk::MemoryPropertyFlagBits::eDeviceLocal;
+        vk::MemoryPropertyFlags memoryPropertyFlags = vk::MemoryPropertyFlagBits::eDeviceLocal;
 
-        VmaMemoryUsage memoryUsage =
-            usage == FrameBufferTextureUsage::GPUOnly ? VMA_MEMORY_USAGE_GPU_ONLY : VMA_MEMORY_USAGE_GPU_ONLY;
+        VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_GPU_ONLY;
         m_GraphicsDevice.CreateImageWithInfo(
             imageCreateInfo, viewCreateInfo, memoryPropertyFlags, memoryUsage, image, view);
     }
@@ -99,12 +117,15 @@ namespace BeeEngine::Internal
         BeeExpects(m_CurrentCommandBuffer == nullptr);
         BeeExpects(m_ColorAttachmentsTextures.size() == m_ColorAttachmentsTextureViews.size() &&
                    m_ColorAttachmentsTextures.size() == m_ColorDescriptorSets.size() &&
-                   m_ColorAttachmentsTextures.size() == m_ColorSamplers.size());
+                   m_ColorAttachmentsTextures.size() == m_ColorSamplers.size() &&
+                   m_ColorAttachmentsTextures.size() == m_ColorAttachmentsReadBuffers.size());
         DeletionQueue::Frame().PushFunction(
             [colorTextures = std::move(m_ColorAttachmentsTextures),
              colorViews = std::move(m_ColorAttachmentsTextureViews),
              colorSets = std::move(m_ColorDescriptorSets),
              colorSamplers = std::move(m_ColorSamplers),
+             colorReadBuffers = std::move(m_ColorAttachmentsReadBuffers),
+             colorSpecs = std::move(m_ColorAttachmentSpecification),
              depthTexture = m_DepthAttachmentTexture,
              depthView = m_DepthAttachmentTextureView,
              depthSampler = m_DepthSampler,
@@ -116,6 +137,10 @@ namespace BeeEngine::Internal
                     device.DestroyImageWithView(colorTextures[i], colorViews[i]);
                     device.GetDevice().destroySampler(colorSamplers[i]);
                     ImGui_ImplVulkan_RemoveTexture(colorSets[i]);
+                    if (colorSpecs[i].TextureUsage == FrameBufferTextureUsage::CPUAndGPU)
+                    {
+                        device.DestroyBuffer(colorReadBuffers[i].Buffer);
+                    }
                 }
                 if (depthTexture)
                 {
@@ -133,6 +158,7 @@ namespace BeeEngine::Internal
         {
             Invalidate();
         }
+        ResetReadBuffers();
         m_CurrentCommandBuffer = m_GraphicsDevice.BeginSingleTimeCommands();
 
         std::vector<vk::RenderingAttachmentInfo> colorAttachments{};
@@ -227,6 +253,10 @@ namespace BeeEngine::Internal
                 m_GraphicsDevice.DestroyImageWithView(m_ColorAttachmentsTextures[i], m_ColorAttachmentsTextureViews[i]);
                 ImGui_ImplVulkan_RemoveTexture(m_ColorDescriptorSets[i]);
                 m_GraphicsDevice.GetDevice().destroySampler(m_ColorSamplers[i]);
+                if (m_ColorAttachmentSpecification[i].TextureUsage == FrameBufferTextureUsage::CPUAndGPU)
+                {
+                    m_GraphicsDevice.DestroyBuffer(m_ColorAttachmentsReadBuffers[i].Buffer);
+                }
             }
             if (m_DepthAttachmentTexture)
             {
@@ -237,6 +267,7 @@ namespace BeeEngine::Internal
             }
             m_ColorAttachmentsTextures.clear();
             m_ColorAttachmentsTextureViews.clear();
+            m_ColorAttachmentsReadBuffers.clear();
             m_DepthAttachmentTexture = {};
             m_DepthAttachmentTextureView = nullptr;
 
@@ -248,6 +279,7 @@ namespace BeeEngine::Internal
         }
         m_ColorAttachmentsTextures.resize(m_ColorAttachmentSpecification.size());
         m_ColorAttachmentsTextureViews.resize(m_ColorAttachmentSpecification.size());
+        m_ColorAttachmentsReadBuffers.resize(m_ColorAttachmentSpecification.size());
         m_ColorDescriptorSets.resize(m_ColorAttachmentSpecification.size());
         m_ColorSamplers.resize(m_ColorAttachmentSpecification.size());
         for (size_t i = 0; i < m_ColorAttachmentSpecification.size(); ++i)
@@ -256,6 +288,14 @@ namespace BeeEngine::Internal
                                     m_ColorAttachmentsTextureViews[i],
                                     m_ColorAttachmentSpecification[i].TextureFormat,
                                     m_ColorAttachmentSpecification[i].TextureUsage);
+            if (m_ColorAttachmentSpecification[i].TextureUsage == FrameBufferTextureUsage::CPUAndGPU)
+            {
+                m_ColorAttachmentsReadBuffers[i].Buffer = m_GraphicsDevice.CreateBuffer(
+                    m_Preferences.Width * m_Preferences.Height *
+                        GetSizeOfPixel(m_ColorAttachmentSpecification[i].TextureFormat),
+                    vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eTransferSrc,
+                    VMA_MEMORY_USAGE_CPU_TO_GPU);
+            }
             m_GraphicsDevice.TransitionImageLayout(
                 m_ColorAttachmentsTextures[i].Image,
                 ConvertToVulkanFormat(m_ColorAttachmentSpecification[i].TextureFormat),
@@ -332,17 +372,68 @@ namespace BeeEngine::Internal
         BeeExpects(m_ColorAttachmentSpecification[attachmentIndex].TextureFormat ==
                    FrameBufferTextureFormat::RedInteger);
         BeeExpects(m_ColorAttachmentSpecification[attachmentIndex].TextureUsage == FrameBufferTextureUsage::CPUAndGPU);
-        return 0;
+        CopyToBufferIfNotCopied(attachmentIndex);
         void* data;
-        vmaMapMemory(GetVulkanAllocator(), m_ColorAttachmentsTextures[attachmentIndex].Memory, &data);
-        int pixel = ((float*)data)[y * m_Preferences.Width + x];
-        vmaUnmapMemory(GetVulkanAllocator(), m_ColorAttachmentsTextures[attachmentIndex].Memory);
-
+        vmaMapMemory(GetVulkanAllocator(), m_ColorAttachmentsReadBuffers[attachmentIndex].Buffer.Memory, &data);
+        float32_t pixelFloat = ((float32_t*)data)[y * m_Preferences.Width + x];
+        int pixel = (int)pixelFloat;
+        vmaUnmapMemory(GetVulkanAllocator(), m_ColorAttachmentsReadBuffers[attachmentIndex].Buffer.Memory);
         return pixel;
     }
     VulkanImage VulkanFrameBuffer::GetColorAttachment(uint32_t index) const
     {
         BeeExpects(index < m_ColorAttachmentsTextures.size());
         return m_ColorAttachmentsTextures[index];
+    }
+
+    DumpedImage VulkanFrameBuffer::DumpAttachment(uint32_t attachmentIndex) const
+    {
+        BeeExpects(attachmentIndex < m_ColorAttachmentsTextures.size());
+        BeeExpects(m_ColorAttachmentSpecification[attachmentIndex].TextureUsage == FrameBufferTextureUsage::CPUAndGPU);
+        CopyToBufferIfNotCopied(attachmentIndex);
+        void* data;
+        vmaMapMemory(GetVulkanAllocator(), m_ColorAttachmentsReadBuffers[attachmentIndex].Buffer.Memory, &data);
+        DumpedImage image(data,
+                          m_Preferences.Width,
+                          m_Preferences.Height,
+                          GetSizeOfPixel(m_ColorAttachmentSpecification[attachmentIndex].TextureFormat),
+                          m_ColorAttachmentSpecification[attachmentIndex].TextureFormat);
+        vmaUnmapMemory(GetVulkanAllocator(), m_ColorAttachmentsReadBuffers[attachmentIndex].Buffer.Memory);
+        return image;
+    }
+
+    void VulkanFrameBuffer::CopyToBufferIfNotCopied(uint32_t index) const
+    {
+        BeeExpects(!m_Invalid && "FrameBuffer is in invalid state.");
+        if (m_ColorAttachmentsReadBuffers[index].IsUpdated)
+        {
+            return;
+        }
+        m_ColorAttachmentsReadBuffers[index].IsUpdated = true;
+        auto cmd = m_GraphicsDevice.BeginSingleTimeCommands();
+        m_GraphicsDevice.TransitionImageLayout(
+            cmd,
+            m_ColorAttachmentsTextures[index].Image,
+            ConvertToVulkanFormat(m_ColorAttachmentSpecification[index].TextureFormat),
+            vk::ImageLayout::eShaderReadOnlyOptimal,
+            vk::ImageLayout::eTransferSrcOptimal);
+        vk::BufferImageCopy region{};
+        region.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent.width = m_Preferences.Width;
+        region.imageExtent.height = m_Preferences.Height;
+        region.imageExtent.depth = 1;
+        cmd.copyImageToBuffer(m_ColorAttachmentsTextures[index].Image,
+                              vk::ImageLayout::eTransferSrcOptimal,
+                              m_ColorAttachmentsReadBuffers[index].Buffer.Buffer,
+                              1,
+                              &region);
+        m_GraphicsDevice.TransitionImageLayout(
+            cmd,
+            m_ColorAttachmentsTextures[index].Image,
+            ConvertToVulkanFormat(m_ColorAttachmentSpecification[index].TextureFormat),
+            vk::ImageLayout::eTransferSrcOptimal,
+            vk::ImageLayout::eShaderReadOnlyOptimal);
+        m_GraphicsDevice.EndSingleTimeCommands(cmd);
     }
 } // namespace BeeEngine::Internal

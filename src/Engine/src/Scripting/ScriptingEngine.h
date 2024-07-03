@@ -8,6 +8,7 @@
 #include "Core/Time.h"
 #include "Core/TypeDefines.h"
 #include "Core/UUID.h"
+#include "KeyCodes.h"
 #include "Locale/Locale.h"
 #include "MTypes.h"
 #include "MUtils.h"
@@ -75,6 +76,13 @@ namespace BeeEngine
         static void UnloadAppContext();
 
         static void RequestSceneChange(AssetHandle sceneHandle);
+
+        static void OnCollisionStart(UUID entity1, UUID entity2);
+        static void OnCollisionEnd(UUID entity1, UUID entity2);
+
+        static void OnMouseClick(UUID entity, MouseButton button);
+        static void OnMouseEnter(UUID entity);
+        static void OnMouseLeave(UUID entity);
 
     private:
         static void InitDotNetHost();

@@ -49,11 +49,11 @@ namespace BeeEngine
         {
             Entity temp = rootEntity.GetParent();
             rootEntity.GetComponent<HierarchyComponent>().Parent = Entity::Null;
-            prefabEntity = rootEntity.m_Scene->CopyEntity(rootEntity, *tempScene, Entity::Null, false);
+            prefabEntity = rootEntity.m_Scene.lock()->CopyEntity(rootEntity, *tempScene, Entity::Null, false);
             rootEntity.GetComponent<HierarchyComponent>().Parent = temp;
         }
         else
-            prefabEntity = rootEntity.m_Scene->CopyEntity(rootEntity, *tempScene, Entity::Null, false);
+            prefabEntity = rootEntity.m_Scene.lock()->CopyEntity(rootEntity, *tempScene, Entity::Null, false);
         SceneSerializer serializer(tempScene);
         auto serialized = serializer.SerializeEntityToString(prefabEntity);
         File::WriteFile(path, serialized);

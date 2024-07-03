@@ -1,4 +1,5 @@
-﻿using BeeEngine.Internal;
+﻿using BeeEngine.Events;
+using BeeEngine.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,11 @@ using System.Threading.Tasks;
 
 namespace BeeEngine
 {
+    public struct MouseClickEventArgs
+    {
+        public Entity Entity;
+        public MouseButton MouseButton;
+    }
     /// <summary>
     /// Represents an entity in the scene.
     /// Each entity can have several components, associated with it.
@@ -47,6 +53,82 @@ namespace BeeEngine
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 InternalCalls.Entity_SetName(ID, value);
+            }
+        }
+
+        private WeakEvent<Entity> m_OnCollisionStart = new WeakEvent<Entity>();
+
+        public WeakEvent<Entity> OnCollisionStart
+        {
+            get
+            {
+                ThrowIfDestroyed();
+                return m_OnCollisionStart;
+            }
+            set
+            {
+                ThrowIfDestroyed();
+                Log.AssertAndThrow(value != null, "OnCollisionStart can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnCollisionStart, value), "This must be the same event");
+            }
+        }
+
+        private WeakEvent<Entity> m_OnCollisionEnd = new WeakEvent<Entity>();
+
+        public WeakEvent<Entity> OnCollisionEnd
+        {
+            get
+            {
+                ThrowIfDestroyed();
+                return m_OnCollisionEnd;
+            }
+            set
+            {
+                ThrowIfDestroyed();
+                Log.AssertAndThrow(value != null, "OnCollisionEnd can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnCollisionEnd, value), "This must be the same event");
+            }
+        }
+
+        private static WeakEvent<MouseClickEventArgs> m_OnMouseClick = new WeakEvent<MouseClickEventArgs>();
+
+        public static WeakEvent<MouseClickEventArgs> OnMouseClick
+        {
+            get
+            {
+                return m_OnMouseClick;
+            }
+            set
+            {
+                Log.AssertAndThrow(value != null, "OnMouseClick can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnMouseClick, value), "This must be the same event");
+            }
+        }
+        private static WeakEvent<Entity> m_OnMouseEnter = new WeakEvent<Entity>();
+
+        public static WeakEvent<Entity> OnMouseEnter
+        {
+            get
+            {
+                return m_OnMouseEnter;
+            }
+            set
+            {
+                Log.AssertAndThrow(value != null, "OnMouseEnter can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnMouseEnter, value), "This must be the same event");
+            }
+        }
+        private static WeakEvent<Entity> m_OnMouseLeave = new WeakEvent<Entity>();
+        public static WeakEvent<Entity> OnMouseLeave
+        {
+            get
+            {
+                return m_OnMouseLeave;
+            }
+            set
+            {
+                Log.AssertAndThrow(value != null, "OnMouseLeave can't be null");
+                Log.AssertAndThrow(ReferenceEquals(m_OnMouseLeave, value), "This must be the same event");
             }
         }
 
@@ -196,7 +278,7 @@ namespace BeeEngine
             {
                 ThrowIfDestroyed();
                 ulong childID = 0;
-                while ((childID = InternalCalls.Entity_GetNextChild(ID, childID))!= 0)
+                while ((childID = InternalCalls.Entity_GetNextChild(ID, childID)) != 0)
                 {
                     ThrowIfDestroyed();
                     yield return LifeTimeManager.GetEntity(childID);

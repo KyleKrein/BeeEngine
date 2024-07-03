@@ -5,7 +5,9 @@
 #include "../../../Assets/EmbeddedResources.h"
 #include "../../Core/Color4.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
+#include "backends/imgui_impl_vulkan.h"
 #include "imgui.h"
+#include <cstddef>
 
 namespace BeeEngine
 {
@@ -21,7 +23,7 @@ namespace BeeEngine
         style.WindowBorderSize = 0.0f;
         style.WindowMinSize = ImVec2(20.0f, 20.0f);
         style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
-        style.WindowMenuButtonPosition = ImGuiDir_None;
+        style.WindowMenuButtonPosition = ImGuiDir_Right;
         style.ChildRounding = 0.0f;
         style.ChildBorderSize = 1.0f;
         style.PopupRounding = 0.0f;
@@ -133,43 +135,7 @@ namespace BeeEngine
 
     void BeeEngine::ImGuiController::SetDefaultTheme(float fontSize)
     {
-        using namespace Internal;
-        ImGuiIO& io = ImGui::GetIO();
-        ImGuiStyle& style = ImGui::GetStyle();
-        auto OpenSansRegularFont = GetEmbeddedResource(EmbeddedResource::OpenSansRegular);
-        auto OpenSansBoldFont = GetEmbeddedResource(EmbeddedResource::OpenSansBold);
-
-        static const ImWchar icons_ranges[] = {// 0x20, 0xFFFF // full range
-                                               0x0020,
-                                               0x00FF, // Latin + Suplement
-                                               0x0100,
-                                               0x017F, // Latin Extended-A
-                                               0x0180,
-                                               0x024F, // Latin Extended-B
-                                               0x0400,
-                                               0x052F,
-                                               0x2DE0,
-                                               0x2DFF,
-                                               0xA640,
-                                               0xA69F,
-                                               0};
-
-        ImFontConfig config{};
-        // config.MergeMode = true;
-        auto scale = WindowHandler::GetInstance()->GetScaleFactor();
-        config.SizePixels = fontSize * scale;
-
-        io.Fonts->Clear();
-
-        io.FontDefault = io.Fonts->AddFontFromMemoryTTF(
-            (void*)OpenSansRegularFont.data(), OpenSansRegularFont.size_bytes(), fontSize, &config, icons_ranges);
-        io.Fonts->AddFontFromMemoryTTF(
-            (void*)OpenSansBoldFont.data(), OpenSansBoldFont.size_bytes(), fontSize, &config, icons_ranges);
-        // io.Fonts->GetGlyphRangesCyrillic();
-        // io.FontGlobalScale = 1.0f/scale; //TODO: uncomment this when dynamic font change is implemented
-
-        io.Fonts->Build();
-
+        CreateFontsWithSize(fontSize);
         SetupImGuiStyle();
     }
 
@@ -205,6 +171,45 @@ namespace BeeEngine
         colors[ImGuiCol_TitleBg] = {0.15f, 0.1505f, 0.151f, 1.0f};
         colors[ImGuiCol_TitleBgActive] = {0.15f, 0.1505f, 0.151f, 1.0f};
         colors[ImGuiCol_TitleBgCollapsed] = {0.95f, 0.1505f, 0.951f, 1.0f};
+    }
+
+    void ImGuiController::CreateFontsWithSize(float fontSize)
+    {
+        using namespace Internal;
+        auto& io = ImGui::GetIO();
+        auto scale = WindowHandler::GetInstance()->GetScaleFactor();
+        fontSize *= scale;
+        auto openSansRegularFont = GetEmbeddedResource(EmbeddedResource::OpenSansRegular);
+        auto openSansBoldFont = GetEmbeddedResource(EmbeddedResource::OpenSansBold);
+
+        static const ImWchar iconsRanges[] = {// 0x20, 0xFFFF // full range
+                                              0x0020,
+                                              0x00FF, // Latin + Suplement
+                                              0x0100,
+                                              0x017F, // Latin Extended-A
+                                              0x0180,
+                                              0x024F, // Latin Extended-B
+                                              0x0400,
+                                              0x052F,
+                                              0x2DE0,
+                                              0x2DFF,
+                                              0xA640,
+                                              0xA69F,
+                                              0};
+
+        ImFontConfig config{};
+        config.SizePixels = fontSize;
+        config.FontDataOwnedByAtlas = false;
+
+        io.Fonts->Clear();
+        io.FontDefault = io.Fonts->AddFontFromMemoryTTF(
+            (void*)openSansRegularFont.data(), openSansRegularFont.size_bytes(), fontSize, &config, iconsRanges);
+        io.Fonts->AddFontFromMemoryTTF(
+            (void*)openSansBoldFont.data(), openSansBoldFont.size_bytes(), fontSize, &config, iconsRanges);
+        // io.Fonts->GetGlyphRangesCyrillic();
+        // io.FontGlobalScale = 1.0f/scale; //TODO: uncomment this when dynamic font change is implemented
+
+        io.Fonts->Build();
     }
 
 } // namespace BeeEngine

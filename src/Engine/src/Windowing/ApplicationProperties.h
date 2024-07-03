@@ -23,6 +23,7 @@ namespace BeeEngine
         RenderAPI PreferredRenderAPI = GetPrefferedRenderAPI();
         int32_t WindowXPosition = 100; // Platform dependant. Does nothing in headless mode or on mobile
         int32_t WindowYPosition = 100; // Platform dependant. Does nothing in headless mode or on mobile
+        bool IsMaximized = false;      // Platform dependant. Does nothing in headless mode
         const StartMode Mode = StartMode::UI;
     };
 } // namespace BeeEngine

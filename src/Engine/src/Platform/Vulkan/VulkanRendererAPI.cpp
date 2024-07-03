@@ -5,11 +5,18 @@
 #include "VulkanRendererAPI.h"
 
 #include "Core/Application.h"
+#include "Core/Expected.h"
 #include "Renderer/CommandBuffer.h"
+#include "Renderer/FrameBuffer.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/RendererAPI.h"
 #include "Utils.h"
 #include "VulkanFrameBuffer.h"
 #include "VulkanMaterial.h"
+#include <chrono>
+#include <thread>
+#include <vulkan/vulkan_enums.hpp>
+#include <vulkan/vulkan_structs.hpp>
 
 namespace BeeEngine::Internal
 {
@@ -25,23 +32,32 @@ namespace BeeEngine::Internal
         m_GraphicsDevice = &VulkanGraphicsDevice::GetInstance();
         m_Window = WindowHandler::GetInstance();
         m_Device = m_GraphicsDevice->GetDevice();
+        Application::SubmitToMainThread(
+            [this]()
+            {
+                FrameBufferPreferences prefs;
+                prefs.Width = 1;
+                prefs.Height = 1;
+                prefs.Attachments = {{{FrameBufferTextureFormat::RGBA8}, {FrameBufferTextureFormat::Depth24}}};
+                m_MinimizationImage = FrameBuffer::Create(prefs);
+            });
         CreateCommandBuffers();
     }
 
-    CommandBuffer VulkanRendererAPI::BeginFrame()
+    Expected<CommandBuffer, RendererAPI::Error> VulkanRendererAPI::BeginFrame()
     {
-    BeginFrame:
-        if (m_GraphicsDevice->SwapChainRequiresRebuild())
-        {
-            BeeCoreTrace("Rebuilding swapchain");
-            RecreateSwapChain();
-        }
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
         auto result = swapchain.AcquireNextImage(&m_CurrentImageIndex);
         if (result == vk::Result::eErrorOutOfDateKHR)
         {
+            if (Application::GetInstance().IsMinimized())
+            {
+                BeeExpects(!m_MinimizedFrame);
+                m_MinimizedFrame = true;
+                return m_MinimizationImage->Bind();
+            }
             m_GraphicsDevice->RequestSwapChainRebuild();
-            goto BeginFrame;
+            return Unexpected<RendererAPI::Error>{RendererAPI::Error::SwapchainOutdated};
         }
         else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
         {
@@ -61,6 +77,10 @@ namespace BeeEngine::Internal
 
     void VulkanRendererAPI::StartMainCommandBuffer(CommandBuffer& commandBuffer)
     {
+        if (m_MinimizedFrame)
+        {
+            return;
+        }
         BeeExpects(commandBuffer == GetCurrentCommandBuffer());
 
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
@@ -114,6 +134,11 @@ namespace BeeEngine::Internal
 
     void VulkanRendererAPI::EndMainCommandBuffer(CommandBuffer& commandBuffer)
     {
+        if (m_MinimizedFrame)
+        {
+            m_MinimizationImage->Unbind(commandBuffer);
+            return;
+        }
         BeeExpects(commandBuffer == GetCurrentCommandBuffer());
         commandBuffer.EndRecording();
         auto cmd = commandBuffer.GetBufferHandleAs<vk::CommandBuffer>();
@@ -123,6 +148,16 @@ namespace BeeEngine::Internal
 
     void VulkanRendererAPI::EndFrame()
     {
+        if (m_MinimizedFrame)
+        {
+            m_MinimizedFrame = false;
+            // Not a good solution to imitate VSync
+            if (m_Window->GetVSync() == VSync::On)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(16));
+            }
+            return;
+        }
         auto cmd = GetCurrentCommandBuffer().GetBufferHandleAs<vk::CommandBuffer>();
         auto& swapchain = m_GraphicsDevice->GetSwapChain();
         m_GraphicsDevice->TransitionImageLayout(cmd,
@@ -261,7 +296,7 @@ namespace BeeEngine::Internal
         m_CommandBuffers.clear();
     }
 
-    void VulkanRendererAPI::RecreateSwapChain()
+    void VulkanRendererAPI::RebuildSwapchain()
     {
         uint32_t width = m_Window->GetWidthInPixels(), height = m_Window->GetHeightInPixels();
         m_GraphicsDevice->WindowResized(width, height);

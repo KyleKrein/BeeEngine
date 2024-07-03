@@ -13,29 +13,30 @@ namespace BeeEngine
         Mouse = 8,
         MouseKey = 16
     };
-    enum EventType
+    enum class EventType
     {
         WindowClose = 1,
         WindowResize = 2,
         WindowFocus = 3,
         WindowMoved = 4,
         WindowMinimized = 5,
-        AppTick = 6,
-        AppUpdate = 7,
-        AppRender = 8,
-        KeyPressed = 9,
-        KeyReleased = 10,
-        KeyTyped = 11,
-        MouseButtonPressed = 12,
-        MouseButtonReleased = 13,
-        MouseMoved = 14,
-        MouseScrolled = 15,
-        FileDrop = 16,
-        FileDrag = 17,
-        FileDragEnter = 18,
-        FileDragLeave = 19,
-        FileDragStart = 20,
-        FileDragEnd = 21,
+        WindowMaximized = 6,
+        AppTick = 7,
+        AppUpdate = 8,
+        AppRender = 9,
+        KeyPressed = 10,
+        KeyReleased = 11,
+        KeyTyped = 12,
+        MouseButtonPressed = 13,
+        MouseButtonReleased = 14,
+        MouseMoved = 15,
+        MouseScrolled = 16,
+        FileDrop = 17,
+        FileDrag = 18,
+        FileDragEnter = 19,
+        FileDragLeave = 20,
+        FileDragStart = 21,
+        FileDragEnd = 22,
     };
     class Event
     {

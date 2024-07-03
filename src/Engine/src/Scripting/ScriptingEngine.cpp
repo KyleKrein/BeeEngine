@@ -10,6 +10,7 @@
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
 #include "GameScript.h"
+#include "KeyCodes.h"
 #include "MAssembly.h"
 #include "MClass.h"
 #include "MField.h"
@@ -20,6 +21,8 @@
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
 #include "ScriptGlue.h"
+#include "Scripting/MMethod.h"
+#include <cstdint>
 #include <filesystem>
 
 namespace BeeEngine
@@ -31,6 +34,12 @@ namespace BeeEngine
         REFLECT()
         MMethod* AddEntityScriptMethod = nullptr;
         MMethod* EntityWasRemovedMethod = nullptr;
+
+        MMethod* OnCollisionStartMethod = nullptr;
+        MMethod* OnCollisionEndMethod = nullptr;
+        MMethod* OnMouseClickMethod = nullptr;
+        MMethod* OnMouseEnterMethod = nullptr;
+        MMethod* OnMouseLeaveMethod = nullptr;
 
         MMethod* EndSceneMethod = nullptr;
 
@@ -51,6 +60,11 @@ namespace BeeEngine
     REFLECT_STRUCT_BEGIN(ManagedHandles)
     REFLECT_STRUCT_MEMBER(AddEntityScriptMethod)
     REFLECT_STRUCT_MEMBER(EntityWasRemovedMethod)
+    REFLECT_STRUCT_MEMBER(OnCollisionStartMethod)
+    REFLECT_STRUCT_MEMBER(OnCollisionEndMethod)
+    REFLECT_STRUCT_MEMBER(OnMouseClickMethod)
+    REFLECT_STRUCT_MEMBER(OnMouseEnterMethod)
+    REFLECT_STRUCT_MEMBER(OnMouseLeaveMethod)
     REFLECT_STRUCT_MEMBER(EndSceneMethod)
     REFLECT_STRUCT_MEMBER(EntityBaseClass)
     REFLECT_STRUCT_MEMBER(AssetHandleField)
@@ -278,6 +292,30 @@ namespace BeeEngine
             if (mClass->GetName() == "Scene")
             {
                 s_Data.Handles.SceneClass = mClass.get();
+                continue;
+            }
+            if (mClass->GetName() == "Physics2D")
+            {
+                s_Data.Handles.OnCollisionStartMethod =
+                    &mClass->GetMethod("OnCollisionStart",
+                                       ManagedBindingFlags(ManagedBindingFlags_Static | ManagedBindingFlags_Public |
+                                                           ManagedBindingFlags_NonPublic));
+                s_Data.Handles.OnCollisionEndMethod =
+                    &mClass->GetMethod("OnCollisionEnd",
+                                       ManagedBindingFlags(ManagedBindingFlags_Static | ManagedBindingFlags_Public |
+                                                           ManagedBindingFlags_NonPublic));
+                s_Data.Handles.OnMouseClickMethod =
+                    &mClass->GetMethod("OnMouseClick",
+                                       ManagedBindingFlags(ManagedBindingFlags_Static | ManagedBindingFlags_Public |
+                                                           ManagedBindingFlags_NonPublic));
+                s_Data.Handles.OnMouseEnterMethod =
+                    &mClass->GetMethod("OnMouseEnter",
+                                       ManagedBindingFlags(ManagedBindingFlags_Static | ManagedBindingFlags_Public |
+                                                           ManagedBindingFlags_NonPublic));
+                s_Data.Handles.OnMouseLeaveMethod =
+                    &mClass->GetMethod("OnMouseLeave",
+                                       ManagedBindingFlags(ManagedBindingFlags_Static | ManagedBindingFlags_Public |
+                                                           ManagedBindingFlags_NonPublic));
                 continue;
             }
             if (mClass->GetName() == "Time")
@@ -596,5 +634,45 @@ namespace BeeEngine
     void ScriptingEngine::RequestSceneChange(AssetHandle sceneHandle)
     {
         s_Data.OnSceneChangeCallback(sceneHandle);
+    }
+
+    void ScriptingEngine::OnCollisionStart(UUID entity1, UUID entity2)
+    {
+        uint64_t id1 = entity1;
+        uint64_t id2 = entity2;
+        void* params[] = {&id1, &id2};
+        s_Data.Handles.OnCollisionStartMethod->InvokeStatic(params);
+    }
+    void ScriptingEngine::OnCollisionEnd(UUID entity1, UUID entity2)
+    {
+        uint64_t id1 = entity1;
+        uint64_t id2 = entity2;
+        void* params[] = {&id1, &id2};
+        s_Data.Handles.OnCollisionEndMethod->InvokeStatic(params);
+    }
+
+    void ScriptingEngine::OnMouseClick(UUID entity, MouseButton button)
+    {
+        Entity camera = s_Data.CurrentScene->GetPrimaryCameraEntity();
+        uint64_t id1 = camera.GetUUID();
+        uint64_t id2 = entity;
+        void* params[] = {&id1, &id2, &button};
+        s_Data.Handles.OnMouseClickMethod->InvokeStatic(params);
+    }
+    void ScriptingEngine::OnMouseEnter(UUID entity)
+    {
+        Entity camera = s_Data.CurrentScene->GetPrimaryCameraEntity();
+        uint64_t id1 = camera.GetUUID();
+        uint64_t id2 = entity;
+        void* params[] = {&id1, &id2};
+        s_Data.Handles.OnMouseEnterMethod->InvokeStatic(params);
+    }
+    void ScriptingEngine::OnMouseLeave(UUID entity)
+    {
+        Entity camera = s_Data.CurrentScene->GetPrimaryCameraEntity();
+        uint64_t id1 = camera.GetUUID();
+        uint64_t id2 = entity;
+        void* params[] = {&id1, &id2};
+        s_Data.Handles.OnMouseLeaveMethod->InvokeStatic(params);
     }
 } // namespace BeeEngine

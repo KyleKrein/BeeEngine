@@ -966,8 +966,15 @@ namespace BeeEngine::Internal
 
     void VulkanGraphicsDevice::WindowResized(uint32_t width, uint32_t height)
     {
+        m_Device.waitIdle();
         auto oldSwapChain = m_SwapChain->GetHandle();
         CreateSwapChainSupportDetails();
+        if (m_SwapChainSupportDetails.capabilities.currentExtent.width == 0 ||
+            m_SwapChainSupportDetails.capabilities.currentExtent.height == 0)
+        {
+            m_SwapChainRebuildRequested = false;
+            return;
+        }
         m_SwapChain = CreateScope<VulkanSwapChain>(*this, width, height, oldSwapChain);
         m_SwapChainRebuildRequested = false;
         BeeEnsures(m_SwapChain->GetHandle() != VK_NULL_HANDLE);

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "AssetEditPanel.h"
+#include "ConfigFile.h"
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/AssetManagement/AssetMetadata.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
@@ -20,7 +21,7 @@ namespace BeeEngine::Editor
     class AssetPanel
     {
     public:
-        AssetPanel(EditorAssetManager* assetManager, Locale::Domain& domain);
+        AssetPanel(EditorAssetManager* assetManager, Locale::Domain& domain, const ConfigFile& config);
         void SetProject(ProjectFile* project);
 
         void SetAssetDeletedCallback(const std::function<void(AssetHandle)>& callback) { m_OnAssetDeleted = callback; }
@@ -57,6 +58,7 @@ namespace BeeEngine::Editor
             }
         } m_Filter{*this};
         friend Filter;
+        const ConfigFile& m_Config;
         Scope<AssetEditPanel> m_AssetEditPanel;
         EditorAssetManager* m_AssetManager;
         Locale::Domain* m_EditorDomain;

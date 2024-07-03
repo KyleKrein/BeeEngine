@@ -3,6 +3,7 @@
 //
 
 #include "Input.h"
+#include "Core/Events/Event.h"
 #include "Core/Events/EventImplementations.h"
 
 namespace BeeEngine
@@ -158,37 +159,37 @@ namespace BeeEngine
     {
         switch (event->GetType())
         {
-            case BeeEngine::KeyPressed:
+            case BeeEngine::EventType::KeyPressed:
             {
                 Key key = ((KeyPressedEvent*)event)->GetKey();
                 s_Keys[key] = true;
                 break;
             }
-            case BeeEngine::KeyReleased:
+            case BeeEngine::EventType::KeyReleased:
             {
                 Key key = ((KeyReleasedEvent*)event)->GetKey();
                 s_Keys[key] = false;
                 break;
             }
-            case BeeEngine::MouseButtonPressed:
+            case BeeEngine::EventType::MouseButtonPressed:
             {
                 MouseButton button = ((MouseButtonPressedEvent*)event)->GetButton();
                 s_MouseButtons[button] = true;
                 break;
             }
-            case BeeEngine::MouseButtonReleased:
+            case BeeEngine::EventType::MouseButtonReleased:
             {
                 MouseButton button = ((MouseButtonReleasedEvent*)event)->GetButton();
                 s_MouseButtons[button] = false;
                 break;
             }
-            case BeeEngine::MouseMoved:
+            case BeeEngine::EventType::MouseMoved:
             {
                 s_MouseX = ((MouseMovedEvent*)event)->GetX();
                 s_MouseY = ((MouseMovedEvent*)event)->GetY();
                 break;
             }
-            case BeeEngine::MouseScrolled:
+            case BeeEngine::EventType::MouseScrolled:
             {
                 s_MouseWheelX = ((MouseScrolledEvent*)event)->GetXOffset();
                 s_MouseWheelY = ((MouseScrolledEvent*)event)->GetYOffset();

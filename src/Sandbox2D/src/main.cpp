@@ -1,30 +1,21 @@
-//#include "TestLayer.h"
-#include "JobSystem/JobScheduler.h"
-#include "Windowing/ApplicationProperties.h"
+// #include "TestLayer.h"
 #include "Core/Application.h"
 #include "Core/EntryPoint.h"
 #include "Gui/ImGui/ImGuiExtension.h"
-//#include "BeeEngine.h"
+#include "JobSystem/JobScheduler.h"
+#include "Renderer/Renderer.h"
+#include "Windowing/ApplicationProperties.h"
+// #include "BeeEngine.h"
 #include "VulkanTestLayer.h"
 using namespace BeeEngine;
-class Game: public BeeEngine::Application
+class Game : public BeeEngine::Application
 {
 public:
-    Game(const ApplicationProperties& properties)
-    : Application(properties)
-    {
-        PushLayer(CreateRef<VulkanTestLayer>());
-    }
+    Game(const ApplicationProperties& properties) : Application(properties) { PushLayer(CreateRef<VulkanTestLayer>()); }
 
-    void Update() override
-    {
+    void Update(FrameData& data) override { Update(data); }
 
-    }
-
-    virtual ~Game() override
-    {
-
-    }
+    virtual ~Game() override {}
 };
 
 gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication(const BeeEngine::ApplicationArgs& args)

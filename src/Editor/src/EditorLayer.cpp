@@ -9,13 +9,17 @@
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
 #include "Core/AssetManagement/EngineAssetRegistry.h"
+#include "Core/Events/EventImplementations.h"
+#include "Core/Logging/Log.h"
 #include "Core/ResourceManager.h"
 #include "Debug/Instrumentor.h"
 #include "FileSystem/File.h"
 #include "Gui/ImGui/ImGuiExtension.h"
 #include "Gui/MessageBox.h"
 #include "JobSystem/JobScheduler.h"
+#include "Locale/Locale.h"
 #include "Locale/LocalizationGenerator.h"
+#include "Platform/ImGui/ImGuiController.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scripting/MAssembly.h"
@@ -24,6 +28,9 @@
 #include "Scripting/ScriptGlue.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Utils/FileDialogs.h"
+#if defined(BEE_COMPILE_VULKAN)
+#include "backends/imgui_impl_vulkan.h"
+#endif
 #include "imgui.h"
 #include <../../Engine/Assets/EmbeddedResources.h>
 #include <Core/Move.h>
@@ -31,10 +38,19 @@
 
 namespace BeeEngine::Editor
 {
-
+    Locale::Localization GetSupportedLocale(const Locale::Localization& loadedLocale)
+    {
+        if (loadedLocale.GetLanguageString() == "en" || loadedLocale.GetLanguageString() == "ru")
+        {
+            return loadedLocale;
+        }
+        return Locale::Localization::Default;
+    }
     void EditorLayer::OnAttach() noexcept
     {
-        m_EditorLocaleDomain.SetLocale(Locale::GetSystemLocale());
+        SetImGuiFontSize(m_Config.FontSize);
+        auto locale = GetSupportedLocale(m_Config.Locale);
+        m_EditorLocaleDomain.SetLocale(locale);
         auto localizationFilesPaths =
             Locale::LocalizationGenerator::GetLocalizationFiles(std::filesystem::current_path() / "Localization");
         Locale::LocalizationGenerator::ProcessLocalizationFiles(m_EditorLocaleDomain, localizationFilesPaths);
@@ -71,6 +87,7 @@ namespace BeeEngine::Editor
             return;
         }
         m_ProjectFile->Update();
+        m_SceneHierarchyPanel.Update();
         m_EditorCamera.OnUpdate();
         ScriptingEngine::UpdateAllocatorStatistics();
         switch (m_SceneState)
@@ -127,8 +144,8 @@ namespace BeeEngine::Editor
         {
             m_MenuBar.Render();
             UIToolbar();
-            m_ViewPort.Render(m_EditorCamera);
             m_SceneHierarchyPanel.OnGUIRender();
+            m_ViewPort.Render(m_EditorCamera);
             m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
             m_ContentBrowserPanel.OnGUIRender();
             m_AssetPanel.Render();
@@ -261,10 +278,78 @@ namespace BeeEngine::Editor
                         }
                     });
             }
+            ImGui::PushID("editorSettingsButton");
+            if (ImGui::Button(m_EditorLocaleDomain.Translate("editorSettings").c_str()))
+            {
+                m_ShowEditorSettings = !m_ShowEditorSettings;
+            }
+            ImGui::PopID();
             ImGui::End();
         }
         m_UIEditor.Render();
+        if (m_ShowEditorSettings)
+        {
+            ImGui::Begin(m_EditorLocaleDomain.Translate("editorSettings").c_str(), &m_ShowEditorSettings);
+
+            ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("editorSettings.language").c_str());
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::BeginCombo("##EditorLanguage", m_Config.Locale.GetLanguageString().c_str()))
+            {
+                if (ImGui::BeginTooltip())
+                {
+                    ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("needsRestartingTooltip").c_str());
+                    ImGui::EndTooltip();
+                }
+                for (const auto& locale : m_EditorLocaleDomain.GetLocales())
+                {
+                    if (ImGui::Selectable(locale.c_str()))
+                    {
+                        m_Config.Locale = Locale::Localization{locale};
+                    }
+                    if (m_Config.Locale.GetLanguageString() == locale)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / 2);
+            ImGui::TextWrapped(m_EditorLocaleDomain.Translate("editorSettings.fontSize").c_str());
+            // ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::SliderFloat(
+                    "##fontSizeFloat", &m_Config.FontSize, 12, 100, "%.3f", ImGuiSliderFlags_AlwaysClamp))
+            {
+                SetImGuiFontSize(m_Config.FontSize);
+            }
+            ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("editorSettings.thumbnailSize").c_str());
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SliderFloat(
+                "##thumbnailSize", &m_Config.ThumbnailSize, 32, 256, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+            ImGui::End();
+        }
         m_DockSpace.End();
+    }
+
+    void EditorLayer::SetImGuiFontSize(float size)
+    {
+        Application::SubmitToMainThread(
+            [size]()
+            {
+                ImGuiController::CreateFontsWithSize(size);
+#if defined(BEE_COMPILE_VULKAN)
+                if (Renderer::GetAPI() == RenderAPI::Vulkan)
+                {
+                    ImGui_ImplVulkan_DestroyFontsTexture();
+                    ImGui_ImplVulkan_CreateFontsTexture();
+                }
+#endif
+                BeeCoreTrace("Font size set to {}", size);
+            });
     }
 
     void EditorLayer::OnEvent(EventDispatcher& event) noexcept
@@ -275,6 +360,10 @@ namespace BeeEngine::Editor
         }
         if (m_SceneState == SceneState::Play)
         {
+            if (m_ViewPort.ShouldHandleEvents())
+            {
+                m_ViewPort.OnEvent(event);
+            }
             return;
         }
         if (m_ViewPort.ShouldHandleEvents())
@@ -286,6 +375,16 @@ namespace BeeEngine::Editor
         m_DragAndDrop.OnEvent(event);
 
         event.Dispatch<KeyPressedEvent>([this](KeyPressedEvent& event) -> bool { return OnKeyPressed(&event); });
+        event.Dispatch<WindowResizeEvent>(
+            [this](WindowResizeEvent& event) -> bool
+            {
+                if (!Application::GetInstance().IsMaximized())
+                {
+                    m_Config.Width = event.GetWidthInPoints();
+                    m_Config.Height = event.GetHeightInPoints();
+                }
+                return false;
+            });
     }
 
     void EditorLayer::SetUpMenuBar()
@@ -310,6 +409,8 @@ namespace BeeEngine::Editor
                            }});
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.saveScene"), [this]() { SaveScene(); }});
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.saveSceneAs"), [this]() { SaveSceneAs(); }});
+        fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.editorSettings"),
+                           [this]() { m_ShowEditorSettings = !m_ShowEditorSettings; }});
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.exit"),
                            []() { BeeEngine::Application::GetInstance().Close(); }});
         m_MenuBar.AddElement(fileMenu);
@@ -762,7 +863,12 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
         auto iniPath = std::filesystem::current_path() / "imgui.ini";
         if (std::filesystem::exists(iniPath))
         {
-            return;
+            // Check if current locale is correct
+            auto content = File::ReadFile(iniPath);
+            if (content.contains(m_EditorLocaleDomain.Translate("sceneHierarchyPanel")))
+            {
+                return;
+            }
         }
         File::WriteFile(iniPath, GenerateImGuiINIFile());
         BeeCoreTrace("Setting default Editor layout");

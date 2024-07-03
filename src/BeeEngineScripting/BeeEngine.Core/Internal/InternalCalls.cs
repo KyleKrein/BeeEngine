@@ -393,7 +393,10 @@ namespace BeeEngine.Internal
 
         internal static string Entity_GetName(ulong id)
         {
-            return Marshal.PtrToStringUTF8(s_Entity_GetName(id));
+            GCHandle handle = GCHandle.FromIntPtr(s_Entity_GetName(id));
+            string name = (string)handle.Target;
+            handle.Free();
+            return name;
         }
 
         internal static void Entity_SetName(ulong id, string name)

@@ -17,5 +17,6 @@ namespace BeeEngine
         void SetDarkThemeColors();
 
         static void SetDefaultTheme(float fontSize = 18.0f);
+        static void CreateFontsWithSize(float fontSize);
     };
 } // namespace BeeEngine

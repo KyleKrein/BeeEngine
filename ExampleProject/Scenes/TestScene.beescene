@@ -13,18 +13,18 @@ Entities:
         - Name: FourthScene
           Type: Scene
           Data: [3753192931707503016, 7586138150448856676]
-        - Name: FirstScene
+        - Name: ThirdScene
           Type: Scene
-          Data: [3753192931707503016, 14163096334939169538]
+          Data: [3753192931707503016, 4396845291111867722]
         - Name: SecondScene
           Type: Scene
           Data: [3753192931707503016, 13448237300006342104]
         - Name: FifthScene
           Type: Scene
           Data: [3753192931707503016, 13295074674533560124]
-        - Name: ThirdScene
+        - Name: FirstScene
           Type: Scene
-          Data: [3753192931707503016, 4396845291111867722]
+          Data: [3753192931707503016, 14163096334939169538]
     HierarchyComponent:
       []
   - Entity: 1822372434052717332
@@ -52,7 +52,7 @@ Entities:
       Tag: Right
     TransformComponent:
       Translation: [4.27064419, 1.86965156, -9.53673862e-07]
-      Rotation: [0, -0, 0.012217246]
+      Rotation: [0, -0, 0.0122172423]
       Scale: [1.30000114, 1.30000114, 0.999999225]
     ScriptComponent:
       FullName: Example.RandomColor
@@ -67,8 +67,8 @@ Entities:
     TagComponent:
       Tag: Left
     TransformComponent:
-      Translation: [-2.66171217, 1.800933, 0]
-      Rotation: [0, -0, 0.012217246]
+      Translation: [-2.66171265, 1.80093288, 0]
+      Rotation: [0, -0, 0.0122172423]
       Scale: [1.30000114, 1.30000114, 0.999999225]
     ScriptComponent:
       FullName: Example.Helper
@@ -114,7 +114,7 @@ Entities:
         OrthographicSize: 10
         OrthographicNearClip: -1
         OrthographicFarClip: 1
-        AspectRatio: 1.87762237
+        AspectRatio: 1.66449511
       Primary: true
       FixedAspectRatio: false
     ScriptComponent:
@@ -135,12 +135,12 @@ Entities:
     ScriptComponent:
       FullName: Example.SetScore
       Fields:
-        - Name: Score
-          Type: int
-          Data: 0
         - Name: Offset
           Type: Vector3
           Data: [-4, 2, 0]
+        - Name: Score
+          Type: int
+          Data: 0
     TextRendererComponent:
       Text: "Score: 0"
       Font: [0, 328465234592345234]
@@ -173,6 +173,8 @@ Entities:
       Translation: [-6.01117039, -0.0301062465, 0]
       Rotation: [0, -0, 0]
       Scale: [2, 2, 1]
+    ScriptComponent:
+      FullName: Example.Bee
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
       Has Texture: true

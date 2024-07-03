@@ -20,8 +20,8 @@
 namespace BeeEngine::Editor
 {
 
-    AssetPanel::AssetPanel(EditorAssetManager* assetManager, Locale::Domain& domain)
-        : m_AssetManager(assetManager), m_EditorDomain(&domain)
+    AssetPanel::AssetPanel(EditorAssetManager* assetManager, Locale::Domain& domain, const ConfigFile& config)
+        : m_AssetManager(assetManager), m_EditorDomain(&domain), m_Config(config)
     {
     }
 
@@ -77,7 +77,7 @@ namespace BeeEngine::Editor
         auto& registry = m_AssetManager->GetAssetRegistry();
 
         static float padding = 16.0f;
-        static float thumbnailSize = 64.0f;
+        float thumbnailSize = m_Config.ThumbnailSize;
         float cellSize = thumbnailSize + padding;
 
         float panelWidth = ImGui::GetContentRegionAvail().x;
