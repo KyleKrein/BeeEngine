@@ -2,6 +2,7 @@
 #include "Core/Events/EventImplementations.h"
 #include "DebugLayer.h"
 #include <Renderer/SceneRenderer.h>
+#include <cstdint>
 
 namespace BeeEngine::Runtime
 {
@@ -60,7 +61,8 @@ namespace BeeEngine::Runtime
         e.Dispatch<WindowResizeEvent>(
             [this](WindowResizeEvent& e)
             {
-                m_FrameBuffer->Resize(e.GetWidthInPixels(), e.GetHeightInPixels());
+                m_FrameBuffer->Resize(std::max(e.GetWidthInPixels(), (uint16_t)1),
+                                      std::max(e.GetHeightInPixels(), (uint16_t)1));
                 m_ActiveScene->OnViewPortResize(e.GetWidthInPoints(), e.GetHeightInPoints());
                 m_ViewportSize = {e.GetWidthInPoints(), e.GetHeightInPoints()};
                 return false;

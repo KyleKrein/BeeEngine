@@ -52,6 +52,8 @@ namespace BeeEngine::Internal
         uint32_t m_CurrentImageIndex = 0;
         VulkanGraphicsDevice* m_GraphicsDevice;
         vk::Device m_Device;
+        Ref<FrameBuffer> m_MinimizationImage;
+        bool m_MinimizedFrame = false;
         WindowHandler* m_Window;
     };
 } // namespace BeeEngine::Internal
