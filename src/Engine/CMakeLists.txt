@@ -420,6 +420,7 @@ CPMAddPackage(
 find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)
 find_package(Boost REQUIRED COMPONENTS context)
 find_package(unofficial-nethost CONFIG REQUIRED)
+find_package(OpenAL CONFIG REQUIRED)
 
 if(BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
@@ -478,6 +479,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC Boost::context
         PRIVATE fastgltf
         PRIVATE unofficial::nethost::nethost
+        PRIVATE OpenAL::OpenAL
         )
 
 target_compile_definitions(BeeEngine

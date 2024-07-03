@@ -1,8 +1,8 @@
 {
-  "dependencies":
-  [
+  "dependencies": [
     "icu",
     "boost-context",
-    "nethost"
+    "nethost",
+    "openal-soft"
   ]
 }
