@@ -8,12 +8,15 @@
 #include "KeyCodes.h"
 #include "Scene/Components.h"
 #include "vec3.hpp"
+#include <cstdint>
 
 namespace BeeEngine
 {
     class ScriptGlue
     {
     public:
+        static void Init();
+        static void Shutdown();
         static void Register();
         /**
          * @brief Component type enum to be sent to and from C# side
@@ -31,6 +34,21 @@ namespace BeeEngine
             BoxCollider2D = 0x03,
             Rigidbody2D = 0x04,
             CircleRenderer = 0x05,
+        };
+        /**
+         * @brief Model type enum to be sent to and from C# side
+         *
+         * IMPORTANT: If you change this enum, you must also change
+         * the corresponding enum in InternalCalls.cs and
+         * add the corresponding case in the switch statement in
+         * ScriptGlue.cpp
+         */
+        enum class ModelType : uint32_t
+        {
+            Rectangle,
+            Circle,
+            Text,
+            Line
         };
 
     private:
@@ -85,5 +103,13 @@ namespace BeeEngine
         static void* Locale_TranslateDynamic(void* key, ArrayInfo args);
         static void* Scene_GetActive();
         static void Scene_SetActive(void* scene);
+        static void
+        Renderer_SubmitInstance(CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data);
+
+        static Texture2D* GetTextureForModelType(ModelType modelType, AssetHandle* handle);
+
+    private:
+        struct ScriptGlueInternalState;
+        static inline ScriptGlueInternalState* s_Data = nullptr;
     };
 } // namespace BeeEngine

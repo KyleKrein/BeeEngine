@@ -110,6 +110,7 @@ namespace BeeEngine
     void ScriptingEngine::Init(std::function<void(AssetHandle)> onSceneChangeCallback)
     {
         // InitMono();
+        ScriptGlue::Init();
         s_Data.OnSceneChangeCallback = BeeMove(onSceneChangeCallback);
         InitDotNetHost();
     }
@@ -124,7 +125,7 @@ namespace BeeEngine
         s_Data.Handles = {};
         // s_Data.AddEntityScriptMethod = nullptr;
         // s_Data.EntityWasRemovedMethod = nullptr;
-
+        ScriptGlue::Shutdown();
         MonoShutdown();
     }
 

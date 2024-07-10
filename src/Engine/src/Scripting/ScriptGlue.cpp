@@ -5,16 +5,26 @@
 #include "ScriptGlue.h"
 #include "Core/Application.h"
 #include "Core/AssetManagement/Asset.h"
+#include "Core/AssetManagement/AssetManager.h"
 #include "Core/Input.h"
 #include "Core/Logging/GameLogger.h"
+#include "Core/Logging/Log.h"
+#include "Core/Numbers.h"
 #include "MAssembly.h"
 #include "NativeToManaged.h"
+#include "Renderer/BindingSet.h"
+#include "Renderer/CommandBuffer.h"
+#include "Renderer/RenderingQueue.h"
+#include "Renderer/Texture.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scene/Prefab.h"
 #include "Scene/Scene.h"
 #include "Scripting/ScriptingEngine.h"
 #include "ScriptingEngine.h"
+#include <exception>
+#include <unordered_map>
+#include <vector>
 
 #define BEE_NATIVE_FUNCTION(name) ScriptingEngine::RegisterNativeFunction(#name, (void*)&name)
 
@@ -132,6 +142,8 @@ namespace BeeEngine
 
             BEE_NATIVE_FUNCTION(Scene_GetActive);
             BEE_NATIVE_FUNCTION(Scene_SetActive);
+
+            BEE_NATIVE_FUNCTION(Renderer_SubmitInstance);
         }
     }
     void ScriptGlue::Log_Warn(void* message)
@@ -524,5 +536,66 @@ namespace BeeEngine
     {
         AssetHandle handle = *static_cast<AssetHandle*>(scene);
         Application::SubmitToMainThread([handle]() { ScriptingEngine::RequestSceneChange(handle); });
+    }
+
+    struct ScriptGlue::ScriptGlueInternalState
+    {
+        std::unordered_map<ScriptGlue::ModelType, Model*> Models;
+        Texture2D* BlankTexture = nullptr;
+    };
+
+    Texture2D* ScriptGlue::GetTextureForModelType(ScriptGlue::ModelType modelType, AssetHandle* handle)
+    {
+        switch (modelType)
+        {
+            case ScriptGlue::ModelType::Rectangle:
+            {
+                Texture2D* result = s_Data->BlankTexture;
+                if (handle != nullptr && *handle != AssetHandle{0, 0})
+                {
+                    result = &AssetManager::GetAsset<Texture2D>(*handle, ScriptingEngine::GetScriptingLocale());
+                }
+                return result;
+            }
+            case ModelType::Line:
+                [[fallthrough]];
+            case ScriptGlue::ModelType::Circle:
+            {
+                return s_Data->BlankTexture;
+            }
+            case ScriptGlue::ModelType::Text:
+            {
+                return &AssetManager::GetAsset<Font>(*handle, ScriptingEngine::GetScriptingLocale()).GetAtlasTexture();
+            }
+        }
+        BeeCoreAssert(false, "Unknown model type: {}", modelType);
+        std::terminate();
+    }
+
+    void
+    ScriptGlue::Renderer_SubmitInstance(CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data)
+    {
+        Model& model = *s_Data->Models[modelType];
+        Texture2D* texture = GetTextureForModelType(modelType, handle);
+        std::vector<BindingSet*> bindingSets = {
+            ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet.get(),
+            texture->GetBindingSet()};
+        cmd.SubmitInstance(model, bindingSets, {(byte*)data.data, data.size});
+    }
+
+    void ScriptGlue::Init()
+    {
+        auto& assetManager = Application::GetInstance().GetAssetManager();
+        s_Data = new ScriptGlueInternalState{
+            .Models = {{ModelType::Rectangle, &assetManager.GetModel("Renderer2D_Rectangle")},
+                       {ModelType::Circle, &assetManager.GetModel("Renderer2D_Circle")},
+                       {ModelType::Text, &assetManager.GetModel("Renderer_Font")},
+                       {ModelType::Line, &assetManager.GetModel("Renderer_Line")}},
+            .BlankTexture = &assetManager.GetTexture("Blank")};
+    }
+
+    void ScriptGlue::Shutdown()
+    {
+        delete s_Data;
     }
 } // namespace BeeEngine

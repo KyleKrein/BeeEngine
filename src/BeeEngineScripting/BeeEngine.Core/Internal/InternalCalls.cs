@@ -49,6 +49,7 @@ namespace BeeEngine.Internal
         private static delegate* unmanaged<ulong, ComponentType, void> s_Entity_RemoveComponent = null;
         private static delegate* unmanaged<IntPtr> s_Scene_GetActive = null;
         private static delegate* unmanaged<IntPtr, void> s_Scene_SetActive = null;
+        private static delegate* unmanaged<Graphics, uint, IntPtr, ArrayInfo, void> s_Renderer_SubmitInstance = null;
 
         enum ReflectionType : UInt32
         {
@@ -116,6 +117,21 @@ namespace BeeEngine.Internal
         {
             public IntPtr Ptr;
             public ulong Length;
+        }
+
+        /// <summary>
+        /// Enum for model type info for rendering to C++ side
+        /// 
+        /// IMPORTANT: If this type is changed, the corresponding C++ type in
+        /// ScriptGlue.h MUST be changed as well
+        ///
+        /// </summary>
+        internal enum ModelType : uint
+        {
+            Rectangle,
+            Circle,
+            Text,
+            Line
         }
         /// <summary>
         /// Assigns the function pointer to the corresponding function
@@ -280,6 +296,10 @@ namespace BeeEngine.Internal
             {
                 s_Scene_SetActive = (delegate* unmanaged<IntPtr, void>)functionPtr;
             }
+            else if (functionName == "Renderer_SubmitInstance")
+            {
+                s_Renderer_SubmitInstance = (delegate* unmanaged<Graphics, uint, IntPtr, ArrayInfo, void>)functionPtr;
+            }
             else
                 throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
             Debug.WriteLine($"Native function {functionName} registered");
@@ -310,7 +330,7 @@ namespace BeeEngine.Internal
         /// ScriptGlue.h and the corresponding switch case in ScriptGlue.cpp
         /// MUST be changed as well
         /// </summary>
-        enum ComponentType: UInt32
+        enum ComponentType : UInt32
         {
             Transform = 0x00,
             SpriteRenderer = 0x01,
@@ -502,13 +522,13 @@ namespace BeeEngine.Internal
         {
             Log.AssertAndThrow(args.Length <= MaxReflectionTypeInfos, "Too many arguments for dynamic translation");
             IntPtr keyPtr = Marshal.StringToHGlobalUni(key);
-            ArrayInfo arrayInfo = new ArrayInfo{ Ptr = s_ReflectionTypeInfosHandle.AddrOfPinnedObject(), Length = (ulong)args.Length };
+            ArrayInfo arrayInfo = new ArrayInfo { Ptr = s_ReflectionTypeInfosHandle.AddrOfPinnedObject(), Length = (ulong)args.Length };
             IntPtr resultPtr = IntPtr.Zero;
-            lock(s_ReflectionTypeInfosLock)
+            lock (s_ReflectionTypeInfosLock)
             {
                 for (int i = 0; i < args.Length; i++)
                 {
-                    ReflectionTypeInfo info = new ReflectionTypeInfo{Type = ReflectionType.None, Ptr = IntPtr.Zero};
+                    ReflectionTypeInfo info = new ReflectionTypeInfo { Type = ReflectionType.None, Ptr = IntPtr.Zero };
                     if (args[i] == null)
                     {
                         info.Type = ReflectionType.None;
@@ -600,5 +620,9 @@ namespace BeeEngine.Internal
             s_Scene_SetActive((nint)Unsafe.AsPointer(ref scene));
         }
 
+        internal static void Renderer_SubmitInstance(Graphics graphics, ModelType modelType, ref AssetHandle handle, void* data, ulong size)
+        {
+            s_Renderer_SubmitInstance(graphics, (uint)modelType, (IntPtr)Unsafe.AsPointer(ref handle), new ArrayInfo { Ptr = (IntPtr)data, Length = size });
+        }
     }
 }
