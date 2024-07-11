@@ -1,4 +1,5 @@
 ﻿using BeeEngine.Math;
+using BeeEngine.Renderer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -50,6 +51,7 @@ namespace BeeEngine.Internal
         private static delegate* unmanaged<IntPtr> s_Scene_GetActive = null;
         private static delegate* unmanaged<IntPtr, void> s_Scene_SetActive = null;
         private static delegate* unmanaged<Graphics, uint, IntPtr, ArrayInfo, void> s_Renderer_SubmitInstance = null;
+        private static delegate* unmanaged<Graphics, IntPtr, IntPtr, IntPtr, void> s_Renderer_SubmitText = null;
 
         enum ReflectionType : UInt32
         {
@@ -299,6 +301,10 @@ namespace BeeEngine.Internal
             else if (functionName == "Renderer_SubmitInstance")
             {
                 s_Renderer_SubmitInstance = (delegate* unmanaged<Graphics, uint, IntPtr, ArrayInfo, void>)functionPtr;
+            }
+            else if (functionName == "Renderer_SubmitText")
+            {
+                s_Renderer_SubmitText = (delegate* unmanaged<Graphics, IntPtr, IntPtr, IntPtr, void>)functionPtr;
             }
             else
                 throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
@@ -623,6 +629,10 @@ namespace BeeEngine.Internal
         internal static void Renderer_SubmitInstance(Graphics graphics, ModelType modelType, ref AssetHandle handle, void* data, ulong size)
         {
             s_Renderer_SubmitInstance(graphics, (uint)modelType, (IntPtr)Unsafe.AsPointer(ref handle), new ArrayInfo { Ptr = (IntPtr)data, Length = size });
+        }
+        internal static void Renderer_SubmitText(Graphics graphics, ref AssetHandle handle, ref Matrix4 transform, ref TextConfig config)
+        {
+            s_Renderer_SubmitText(graphics, (IntPtr)Unsafe.AsPointer(ref handle), (IntPtr)Unsafe.AsPointer(ref transform), (IntPtr)Unsafe.AsPointer(ref config));
         }
     }
 }

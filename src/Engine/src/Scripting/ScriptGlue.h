@@ -105,6 +105,11 @@ namespace BeeEngine
         static void Scene_SetActive(void* scene);
         static void
         Renderer_SubmitInstance(CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data);
+        static void Renderer_SubmitText(CommandBuffer cmd,
+                                        AssetHandle* handle,
+                                        void* textPtr,
+                                        glm::mat4* transform,
+                                        TextRenderingConfiguration* config);
 
         static Texture2D* GetTextureForModelType(ModelType modelType, AssetHandle* handle);
 

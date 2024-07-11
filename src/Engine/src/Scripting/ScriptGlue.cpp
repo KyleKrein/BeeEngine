@@ -144,6 +144,7 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(Scene_SetActive);
 
             BEE_NATIVE_FUNCTION(Renderer_SubmitInstance);
+            BEE_NATIVE_FUNCTION(Renderer_SubmitText);
         }
     }
     void ScriptGlue::Log_Warn(void* message)
@@ -581,6 +582,19 @@ namespace BeeEngine
             ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet.get(),
             texture->GetBindingSet()};
         cmd.SubmitInstance(model, bindingSets, {(byte*)data.data, data.size});
+    }
+
+    void ScriptGlue::Renderer_SubmitText(
+        CommandBuffer cmd, AssetHandle* handle, void* textPtr, glm::mat4* transform, TextRenderingConfiguration* config)
+    {
+        String text = NativeToManaged::StringGetFromManagedString(textPtr);
+        Model& model = *s_Data->Models[ModelType::Text];
+        Font& font = AssetManager::GetAsset<Font>(*handle, ScriptingEngine::GetScriptingLocale());
+        cmd.DrawString(text,
+                       font,
+                       *ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet,
+                       *transform,
+                       *config);
     }
 
     void ScriptGlue::Init()
