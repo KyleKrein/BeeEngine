@@ -1,5 +1,20 @@
 Scene: Untitled
 Entities:
+  - Entity: 9283933447621010588
+    TagComponent:
+      Tag: Renderer
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.RenderScript
+      Fields:
+        - Name: Image
+          Type: Texture2D
+          Data: [3753192931707503016, 2492935997162504003]
+    HierarchyComponent:
+      []
   - Entity: 1635267982073534492
     TagComponent:
       Tag: Scene Changer
@@ -13,18 +28,18 @@ Entities:
         - Name: FourthScene
           Type: Scene
           Data: [3753192931707503016, 7586138150448856676]
-        - Name: ThirdScene
+        - Name: FirstScene
           Type: Scene
-          Data: [3753192931707503016, 4396845291111867722]
+          Data: [3753192931707503016, 14163096334939169538]
         - Name: SecondScene
           Type: Scene
           Data: [3753192931707503016, 13448237300006342104]
         - Name: FifthScene
           Type: Scene
           Data: [3753192931707503016, 13295074674533560124]
-        - Name: FirstScene
+        - Name: ThirdScene
           Type: Scene
-          Data: [3753192931707503016, 14163096334939169538]
+          Data: [3753192931707503016, 4396845291111867722]
     HierarchyComponent:
       []
   - Entity: 1822372434052717332
@@ -51,9 +66,9 @@ Entities:
     TagComponent:
       Tag: Right
     TransformComponent:
-      Translation: [4.27064419, 1.86965156, -9.53673862e-07]
-      Rotation: [0, -0, 0.0122172423]
-      Scale: [1.30000114, 1.30000114, 0.999999225]
+      Translation: [4.28976154, 1.87742841, -9.53673805e-07]
+      Rotation: [0, -0, 0.0122172404]
+      Scale: [1.30000114, 1.30000114, 0.999999166]
     ScriptComponent:
       FullName: Example.RandomColor
     SpriteRendererComponent:
@@ -67,9 +82,9 @@ Entities:
     TagComponent:
       Tag: Left
     TransformComponent:
-      Translation: [-2.66171265, 1.80093288, 0]
-      Rotation: [0, -0, 0.0122172423]
-      Scale: [1.30000114, 1.30000114, 0.999999225]
+      Translation: [-2.64259624, 1.80870962, 0]
+      Rotation: [0, -0, 0.0122172404]
+      Scale: [1.30000114, 1.30000114, 0.999999166]
     ScriptComponent:
       FullName: Example.Helper
     CircleRendererComponent:
@@ -114,7 +129,7 @@ Entities:
         OrthographicSize: 10
         OrthographicNearClip: -1
         OrthographicFarClip: 1
-        AspectRatio: 1.66449511
+        AspectRatio: 1.7784946
       Primary: true
       FixedAspectRatio: false
     ScriptComponent:
@@ -135,12 +150,12 @@ Entities:
     ScriptComponent:
       FullName: Example.SetScore
       Fields:
-        - Name: Offset
-          Type: Vector3
-          Data: [-4, 2, 0]
         - Name: Score
           Type: int
           Data: 0
+        - Name: Offset
+          Type: Vector3
+          Data: [-4, 2, 0]
     TextRendererComponent:
       Text: "Score: 0"
       Font: [0, 328465234592345234]

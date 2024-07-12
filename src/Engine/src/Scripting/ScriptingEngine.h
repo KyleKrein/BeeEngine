@@ -12,6 +12,7 @@
 #include "Locale/Locale.h"
 #include "MTypes.h"
 #include "MUtils.h"
+#include "Renderer/CommandBuffer.h"
 #include <functional>
 #include <glm/glm.hpp>
 
@@ -51,6 +52,7 @@ namespace BeeEngine
 
         static void OnEntityDestroyed(UUID uuid);
         static void OnEntityUpdate(Entity entity);
+        static void OnEntityRender(Entity entity, CommandBuffer& cmd);
         static class MObject* GetEntityScriptInstance(Entity entity);
 
         static void UpdateAllocatorStatistics();

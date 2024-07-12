@@ -10,6 +10,7 @@
 #include "Renderer.h"
 #include "RenderingQueue.h"
 #include "Scene/Components.h"
+#include "Scripting/ScriptingEngine.h"
 #include "UniformBuffer.h"
 #include "gtc/type_ptr.hpp"
 #include <cmath>
@@ -150,21 +151,6 @@ namespace BeeEngine
     Model* SceneRenderer::s_RectModel = nullptr;
     Model* SceneRenderer::s_CircleModel = nullptr;
     Texture2D* SceneRenderer::s_BlankTexture = nullptr;
-    struct SpriteInstanceBufferData
-    {
-        glm::mat4 Model{1.0f};
-        BeeEngine::Color4 Color{BeeEngine::Color4::White};
-        float TilingFactor = 1.0f;
-        int32_t EntityID = -1;
-    };
-    struct CircleInstanceBufferData
-    {
-        glm::mat4 Model{1.0f};
-        BeeEngine::Color4 Color{BeeEngine::Color4::White};
-        float Thickness = 1.0f;
-        float Fade = 0.005f;
-        int32_t EntityID = -1;
-    };
     bool IsSphereInFrustum(const Math::Cameras::Sphere& sphere, const Math::Cameras::Frustum& frustum)
     {
         Math::Cameras::Plane planes[6] = {frustum.NearFace,
@@ -285,6 +271,17 @@ namespace BeeEngine
                 {
                     sceneTreeRenderer.AddEntity(
                         transform, false, model, bindingSets, {(byte*)&meshInstancedData, sizeof(MeshInstancedData)});
+                }
+            }
+
+            auto scriptGroup = scene.m_Registry.view<ScriptComponent>();
+            for (auto entity : scriptGroup)
+            {
+                auto& scriptComponent = scriptGroup.get<ScriptComponent>(entity);
+                Entity e = {entity, scene.weak_from_this()};
+                if (scriptComponent.Class)
+                {
+                    ScriptingEngine::OnEntityRender(e, commandBuffer);
                 }
             }
         }

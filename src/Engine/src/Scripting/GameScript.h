@@ -7,6 +7,8 @@
 #include "MObject.h"
 #include "MTypes.h"
 #include "MUtils.h"
+#include "Renderer/CommandBuffer.h"
+#include "Scripting/MMethod.h"
 
 namespace BeeEngine
 {
@@ -53,6 +55,7 @@ namespace BeeEngine
         void InvokeOnCreate();
         void InvokeOnDestroy();
         void InvokeOnUpdate();
+        void InvokeOnRender(CommandBuffer& cmd);
         MObject& GetMObject() { return m_Instance; }
 
         ~GameScript()
@@ -67,6 +70,7 @@ namespace BeeEngine
         MMethod* m_OnCreate = nullptr;
         MMethod* m_OnDestroy = nullptr;
         MMethod* m_OnUpdate = nullptr;
+        MMethod* m_OnRender = nullptr;
 
         void CopyFieldsData(std::vector<GameScriptField>& aClass, const String& locale);
     };
