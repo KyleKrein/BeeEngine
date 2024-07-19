@@ -14,16 +14,11 @@ namespace BeeEngine::Editor
     class ContentBrowserPanel
     {
     public:
-        ContentBrowserPanel(const Path& workingDirectory,
+        ContentBrowserPanel(Property<Scope<ProjectFile>>& project,
+                            const Path& workingDirectory,
                             Locale::Domain& editorDomain,
                             const ConfigFile& config) noexcept;
         void SetContext(const Ref<Scene>& context) noexcept { m_Context = context; }
-        void SetProject(ProjectFile* project) noexcept { m_Project = project; }
-        void SetWorkingDirectory(const Path& path) noexcept
-        {
-            m_WorkingDirectory = path;
-            m_CurrentDirectory = path;
-        }
         [[nodiscard]] Path GetWorkingDirectory() const noexcept { return m_WorkingDirectory; }
 
         bool NeedsToRegenerateSolution() noexcept
@@ -40,7 +35,7 @@ namespace BeeEngine::Editor
         Path m_WorkingDirectory;
         Path m_CurrentDirectory;
         Ref<Scene> m_Context;
-        ProjectFile* m_Project = nullptr;
+        const ProjectFile* m_Project = nullptr;
         Locale::Domain* m_EditorDomain = nullptr;
 
         Ref<Texture2D> m_DirectoryIcon;

@@ -6,10 +6,12 @@
 
 #include "AssetEditPanel.h"
 #include "ConfigFile.h"
+#include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/AssetManagement/AssetMetadata.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Core/Coroutines/Generator.h"
+#include "Core/Property.h"
 #include "Core/String.h"
 #include "Locale/Locale.h"
 #include "ProjectFile.h"
@@ -21,10 +23,12 @@ namespace BeeEngine::Editor
     class AssetPanel
     {
     public:
-        AssetPanel(EditorAssetManager* assetManager, Locale::Domain& domain, const ConfigFile& config);
-        void SetProject(ProjectFile* project);
+        AssetPanel(Property<Scope<ProjectFile>>& project,
+                   EditorAssetManager* assetManager,
+                   Locale::Domain& domain,
+                   const ConfigFile& config);
 
-        void SetAssetDeletedCallback(const std::function<void(AssetHandle)>& callback) { m_OnAssetDeleted = callback; }
+        Signal<AssetHandle> onAssetRemoved;
 
         void Render();
 
@@ -62,7 +66,6 @@ namespace BeeEngine::Editor
         Scope<AssetEditPanel> m_AssetEditPanel;
         EditorAssetManager* m_AssetManager;
         Locale::Domain* m_EditorDomain;
-        ProjectFile* m_Project;
-        std::function<void(AssetHandle)> m_OnAssetDeleted;
+        const ProjectFile* m_Project;
     };
 } // namespace BeeEngine::Editor

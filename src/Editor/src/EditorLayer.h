@@ -29,6 +29,7 @@
 #include "Scene/NativeScriptFactory.h"
 #include "Scene/SceneSerializer.h"
 #include "Utils/DynamicLibrary.h"
+#include "kdbindings/property.h"
 
 namespace BeeEngine::Editor
 {
@@ -37,6 +38,7 @@ namespace BeeEngine::Editor
     public:
         explicit EditorLayer(ConfigFile& config) noexcept : m_Config(config) {}
         ~EditorLayer() noexcept override = default;
+        Property<Scope<ProjectFile>> Project{nullptr};
 
         void OnAttach() noexcept override;
         void OnDetach() noexcept override;
@@ -54,14 +56,14 @@ namespace BeeEngine::Editor
         DockSpace m_DockSpace{};
         MenuBar m_MenuBar{};
         ConfigFile& m_Config;
-        AssetPanel m_AssetPanel{&m_EditorAssetManager, m_EditorLocaleDomain, m_Config};
-        ContentBrowserPanel m_ContentBrowserPanel{std::filesystem::current_path(), m_EditorLocaleDomain, m_Config};
+        AssetPanel m_AssetPanel{Project, &m_EditorAssetManager, m_EditorLocaleDomain, m_Config};
+        ContentBrowserPanel m_ContentBrowserPanel{
+            Project, std::filesystem::current_path(), m_EditorLocaleDomain, m_Config};
         SceneHierarchyPanel m_SceneHierarchyPanel{m_EditorLocaleDomain};
         ViewPort m_ViewPort{
-            100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef(), Color4::White, m_EditorAssetManager};
+            Project, 100, 100, m_SceneHierarchyPanel.GetSelectedEntityRef(), Color4::White, m_EditorAssetManager};
         BeeEngine::Internal::FpsCounter m_FpsCounter{};
-        InspectorPanel m_InspectorPanel{&m_EditorAssetManager, m_EditorLocaleDomain};
-        Scope<ProjectFile> m_ProjectFile = nullptr;
+        InspectorPanel m_InspectorPanel{Project, &m_EditorAssetManager, m_EditorLocaleDomain};
         Scope<Locale::ImGuiLocalizationPanel> m_LocalizationPanel = nullptr;
         Scope<ProjectSettings> m_ProjectSettings = nullptr;
 
@@ -109,8 +111,6 @@ namespace BeeEngine::Editor
         void OnSceneSimulate() noexcept;
 
         void ReloadAssembly();
-
-        void SetScene(const Ref<Scene>& sharedPtr);
 
         void SaveSceneAs();
 

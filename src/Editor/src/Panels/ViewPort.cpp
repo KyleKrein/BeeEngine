@@ -25,7 +25,8 @@
 namespace BeeEngine::Editor
 {
 
-    ViewPort::ViewPort(uint32_t width,
+    ViewPort::ViewPort(Property<Scope<ProjectFile>>& project,
+                       uint32_t width,
                        uint32_t height,
                        Entity& selectedEntity,
                        const Color4& clearColor,
@@ -35,11 +36,17 @@ namespace BeeEngine::Editor
           m_FrameBuffer(nullptr),
           m_IsFocused(false),
           m_IsHovered(false),
-          m_Scene(std::move(CreateRef<Scene>())),
+          CurrentScene(std::move(CreateRef<Scene>())),
           m_SelectedEntity(selectedEntity),
           m_ClearColor(clearColor),
           m_AssetManager(assetManager)
     {
+        project.valueChanged().connect(
+            [this](const auto& newProject)
+            {
+                m_WorkingDirectory = newProject->FolderPath.get();
+                m_GameDomain = &newProject->GetProjectLocaleDomain();
+            });
         FrameBufferPreferences preferences;
         preferences.Width = m_Width * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Height = m_Height * WindowHandler::GetInstance()->GetScaleFactor();
@@ -55,7 +62,7 @@ namespace BeeEngine::Editor
     {
         if (!m_IsFocused && !m_IsHovered)
             return;
-        if (!m_Scene->IsRuntime() && m_LastHoveredRuntime)
+        if (!CurrentScene()->IsRuntime() && m_LastHoveredRuntime)
         {
             m_LastHoveredRuntime = Entity::Null;
         }
@@ -91,14 +98,14 @@ namespace BeeEngine::Editor
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
         }
 
-        m_Scene->UpdateRuntime();
+        CurrentScene()->UpdateRuntime();
         if (m_SelectedEntity && !m_SelectedEntity.IsValid())
         {
             m_SelectedEntity = Entity::Null;
         }
-        SceneRenderer::RenderScene(*m_Scene, cmd, m_GameDomain->GetLocale());
+        SceneRenderer::RenderScene(*CurrentScene(), cmd, m_GameDomain->GetLocale());
 
-        auto primaryCameraEntity = m_Scene->GetPrimaryCameraEntity();
+        auto primaryCameraEntity = CurrentScene()->GetPrimaryCameraEntity();
         if (primaryCameraEntity)
         {
             auto& cameraComponent = primaryCameraEntity.GetComponent<CameraComponent>();
@@ -108,7 +115,7 @@ namespace BeeEngine::Editor
             m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjection)), sizeof(glm::mat4));
             RenderSelectedEntityOutline(cmd);
             if (renderPhysicsColliders)
-                SceneRenderer::RenderPhysicsColliders(*m_Scene, cmd, *m_CameraBindingSet);
+                SceneRenderer::RenderPhysicsColliders(*CurrentScene(), cmd, *m_CameraBindingSet);
         }
         m_FrameBuffer->Unbind(cmd);
         if (IsMouseInViewport())
@@ -136,7 +143,7 @@ namespace BeeEngine::Editor
                                        sizeof(glm::mat4));
         if (m_SelectedEntity && m_SelectedEntity.HasComponent<CameraComponent>())
             RenderCameraFrustum(cmd);
-        SceneRenderer::RenderScene(*m_Scene,
+        SceneRenderer::RenderScene(*CurrentScene(),
                                    cmd,
                                    m_GameDomain->GetLocale(),
                                    camera,
@@ -147,7 +154,7 @@ namespace BeeEngine::Editor
                                    camera.GetRightDirection());
         RenderSelectedEntityOutline(cmd);
         if (renderPhysicsColliders)
-            SceneRenderer::RenderPhysicsColliders(*m_Scene, cmd, *m_CameraBindingSet);
+            SceneRenderer::RenderPhysicsColliders(*CurrentScene(), cmd, *m_CameraBindingSet);
         auto [mx, my] = ImGui::GetMousePos();
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
@@ -171,9 +178,9 @@ namespace BeeEngine::Editor
 
         const glm::mat4* cameraProjection = nullptr;
         glm::mat4 cameraView;
-        if (m_Scene->IsRuntime())
+        if (CurrentScene()->IsRuntime())
         {
-            Entity mainCamera = m_Scene->GetPrimaryCameraEntity();
+            Entity mainCamera = CurrentScene()->GetPrimaryCameraEntity();
             if (!mainCamera)
                 return;
             auto& cameraComponent = mainCamera.GetComponent<CameraComponent>();
@@ -242,7 +249,7 @@ namespace BeeEngine::Editor
             m_Height = gsl::narrow_cast<uint32_t>(size.y);
             m_FrameBuffer->Resize(m_Width * WindowHandler::GetInstance()->GetScaleFactor(),
                                   m_Height * WindowHandler::GetInstance()->GetScaleFactor());
-            m_Scene->OnViewPortResize(m_Width, m_Height);
+            CurrentScene()->OnViewPortResize(m_Width, m_Height);
             camera.SetViewportSize(m_Width, m_Height);
             ScriptingEngine::SetViewportSize(m_Width, m_Height);
         }
@@ -329,13 +336,13 @@ namespace BeeEngine::Editor
         }*/
         if (event->GetButton() == MouseButton::Left)
         {
-            if (!m_Scene->IsRuntime() && m_IsHovered && (!ImGuizmo::IsOver() || m_SelectedEntity == Entity::Null) &&
-                !Input::KeyPressed(Key::LeftAlt))
+            if (!CurrentScene()->IsRuntime() && m_IsHovered &&
+                (!ImGuizmo::IsOver() || m_SelectedEntity == Entity::Null) && !Input::KeyPressed(Key::LeftAlt))
             {
                 m_SelectedEntity = m_HoveredEntity;
             }
         }
-        if (m_Scene->IsRuntime())
+        if (CurrentScene()->IsRuntime())
         {
             if (IsMouseInViewport())
             {
@@ -360,7 +367,7 @@ namespace BeeEngine::Editor
         {
             return Entity::Null;
         }
-        return {EntityID{(entt::entity)pixelData}, m_Scene};
+        return {EntityID{(entt::entity)pixelData}, CurrentScene()};
     }
 
     void ViewPort::OpenScene(const Path& path)

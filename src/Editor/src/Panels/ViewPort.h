@@ -9,8 +9,11 @@
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Gui/ImGui/IImGuiElement.h"
 #include "Locale/Locale.h"
+#include "ProjectFile.h"
 #include "Scene/Entity.h"
+#include "Scene/Scene.h"
 #include "Scene/SceneCamera.h"
+#include "kdbindings/property.h"
 #include <ImGuizmo.h>
 
 namespace BeeEngine::Editor
@@ -25,28 +28,21 @@ namespace BeeEngine::Editor
     class ViewPort final
     {
     public:
-        ViewPort(uint32_t width,
+        ViewPort(Property<Scope<ProjectFile>>& project,
+                 uint32_t width,
                  uint32_t height,
                  Entity& selectedEntity,
                  const Color4& clearColor,
                  EditorAssetManager& assetManager) noexcept;
+        Property<Ref<Scene>> CurrentScene;
         void OnEvent(EventDispatcher& event) noexcept;
         void UpdateRuntime(bool renderPhysicsColliders) noexcept;
         void UpdateEditor(EditorCamera& camera, bool renderPhysicsColliders) noexcept;
         void Render(EditorCamera& camera) noexcept;
-        Ref<Scene>& GetScene() noexcept { return m_Scene; }
-        void SetScene(const Ref<Scene>& scene) noexcept
-        {
-            m_Scene.reset();
-            m_Scene = scene;
-        }
-        void SetDomain(const Locale::Domain* domain) noexcept { m_GameDomain = domain; }
         bool ShouldHandleEvents() const noexcept { return m_IsFocused && m_IsHovered; }
 
         [[nodiscard]] uint32_t GetHeight() const { return m_Height; }
         [[nodiscard]] uint32_t GetWidth() const { return m_Width; }
-
-        void SetWorkingDirectory(const Path& path) noexcept { m_WorkingDirectory = path; }
 
         bool IsNewSceneLoaded() const noexcept
         {
@@ -64,7 +60,6 @@ namespace BeeEngine::Editor
         Scope<FrameBuffer> m_FrameBuffer;
         bool m_IsFocused;
         bool m_IsHovered;
-        Ref<Scene> m_Scene;
         Entity& m_SelectedEntity;
         const Locale::Domain* m_GameDomain = nullptr;
         GuizmoOperation m_GuizmoOperation = GuizmoOperation::Translate;

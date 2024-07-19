@@ -3,7 +3,7 @@
 //
 #include "ContentBrowserPanel.h"
 #include "BeeEngine.h"
-#include "Core/AssetManagement//PrefabImporter.h"
+#include "Core/AssetManagement/PrefabImporter.h"
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
 #include "Gui/ImGui/ImGuiExtension.h"
@@ -392,7 +392,8 @@ namespace BeeEngine::Editor
             });
     }
 
-    ContentBrowserPanel::ContentBrowserPanel(const Path& workingDirectory,
+    ContentBrowserPanel::ContentBrowserPanel(Property<Scope<ProjectFile>>& project,
+                                             const Path& workingDirectory,
                                              Locale::Domain& editorDomain,
                                              const ConfigFile& config) noexcept
         : m_Config(config),
@@ -400,6 +401,13 @@ namespace BeeEngine::Editor
           m_CurrentDirectory(workingDirectory),
           m_EditorDomain(&editorDomain)
     {
+        project.valueChanged().connect(
+            [this](const auto& newProject)
+            {
+                m_Project = newProject.get();
+                m_WorkingDirectory = newProject->FolderPath.get();
+                m_CurrentDirectory = m_WorkingDirectory;
+            });
         m_DirectoryIcon =
             AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture, Locale::Localization::Default);
         m_FileIcon =
