@@ -110,6 +110,12 @@ namespace BeeEngine::Editor
         void OnSceneStop() noexcept;
         void OnSceneSimulate() noexcept;
 
+        void RenderChooseProjectScreen();
+
+        void RenderEditor();
+
+        void RenderEditorSettings(bool& show);
+
         void ReloadAssembly();
 
         void SaveSceneAs();
