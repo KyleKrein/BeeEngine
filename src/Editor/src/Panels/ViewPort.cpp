@@ -112,7 +112,7 @@ namespace BeeEngine::Editor
             auto& camera = cameraComponent.Camera;
             auto viewMatrix = glm::inverse(Math::ToGlobalTransform(primaryCameraEntity));
             auto viewProjection = camera.GetProjectionMatrix() * viewMatrix;
-            m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjection)), sizeof(glm::mat4));
+            m_CameraUniformBuffer->SetData((glm::value_ptr(viewProjection)), sizeof(glm::mat4));
             RenderSelectedEntityOutline(cmd);
             if (renderPhysicsColliders)
                 SceneRenderer::RenderPhysicsColliders(*CurrentScene(), cmd, *m_CameraBindingSet);
@@ -139,8 +139,8 @@ namespace BeeEngine::Editor
     {
         BEE_PROFILE_FUNCTION();
         auto cmd = m_FrameBuffer->Bind();
-        m_CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(camera.GetViewProjection())),
-                                       sizeof(glm::mat4));
+        auto viewProjection = camera.GetViewProjection();
+        m_CameraUniformBuffer->SetData(glm::value_ptr(viewProjection), sizeof(glm::mat4));
         if (m_SelectedEntity && m_SelectedEntity.HasComponent<CameraComponent>())
             RenderCameraFrustum(cmd);
         SceneRenderer::RenderScene(*CurrentScene(),

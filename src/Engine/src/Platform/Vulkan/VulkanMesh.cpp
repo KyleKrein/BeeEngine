@@ -78,12 +78,10 @@ namespace BeeEngine::Internal
 
     void VulkanMesh::CreateVertexBuffer(const std::vector<Vertex>& vertices)
     {
-        CreateVertexBuffer(const_cast<void*>(static_cast<const void*>(vertices.data())),
-                           vertices.size() * sizeof(Vertex),
-                           vertices.size());
+        CreateVertexBuffer(vertices.data(), vertices.size() * sizeof(Vertex), vertices.size());
     }
 
-    void VulkanMesh::CreateVertexBuffer(void* verticesData, size_t size, size_t vertexCount)
+    void VulkanMesh::CreateVertexBuffer(const void* verticesData, size_t size, size_t vertexCount)
     {
         vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst |
                                      vk::BufferUsageFlagBits::eShaderDeviceAddress;
@@ -105,7 +103,7 @@ namespace BeeEngine::Internal
     void VulkanMesh::CreateIndexBuffer(const std::vector<uint32_t>& indices)
     {
         auto size = indices.size() * sizeof(uint32_t);
-        auto indicesData = const_cast<void*>(static_cast<const void*>(indices.data()));
+        auto* indicesData = indices.data();
 
         vk::BufferUsageFlags usage = vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst |
                                      vk::BufferUsageFlagBits::eShaderDeviceAddress;
