@@ -71,7 +71,7 @@ namespace BeeEngine::Editor
         void Update() noexcept;
 
         const Locale::Domain& GetProjectLocaleDomain() const noexcept { return m_ProjectLocaleDomain; }
-
+        Locale::Domain& GetProjectLocaleDomain() noexcept { return m_ProjectLocaleDomain; }
         void ReloadAndRebuildGameLibrary();
 
         const String& GetStartingSceneName() const

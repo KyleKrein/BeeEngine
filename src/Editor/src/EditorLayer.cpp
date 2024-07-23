@@ -192,8 +192,8 @@ namespace BeeEngine::Editor
                 }
                 m_AssetPanel.onAssetRemoved.connect([this](const AssetHandle& handle) { DeleteAsset(handle); });
                 Project()->onAssetRemoved.connect([this](const AssetHandle& handle) { DeleteAsset(handle); });
-                m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(
-                    const_cast<Locale::Domain&>(Project()->GetProjectLocaleDomain()), Project()->FolderPath());
+                m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(Project()->GetProjectLocaleDomain(),
+                                                                                  Project()->FolderPath());
             }
             auto sceneHandle = Project()->GetLastUsedScene();
             Application::SubmitToMainThread(
@@ -476,7 +476,7 @@ namespace BeeEngine::Editor
         debugSymbolsPath.ReplaceExtension(".pdb");
         ScriptingEngine::LoadGameAssembly(Project()->GameAssemblyPath(), debugSymbolsPath);
         ScriptGlue::Register();
-        ScriptingEngine::SetLocaleDomain(const_cast<Locale::Domain&>(Project()->GetProjectLocaleDomain()));
+        ScriptingEngine::SetLocaleDomain(Project()->GetProjectLocaleDomain());
         // auto& gameAssembly =
         // ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() /
         // ".beeengine" / "GameLibrary.dll");
