@@ -24,7 +24,7 @@ namespace BeeEngine::Internal
                                             const FSEventStreamEventId eventIds[]);
 #endif
     public:
-        MacOSFileWatcher(const Path& path, const std::function<void(Path, Event)>& callback);
+        MacOSFileWatcher(const Path& path);
         void Start() override;
         void Stop() override;
         bool IsRunning() const override { return m_Running.load(); }
@@ -37,7 +37,7 @@ namespace BeeEngine::Internal
     private:
         std::atomic<bool> m_Running = false;
         const Path m_Path;
-        const std::function<void(Path, Event)> m_Callback;
+        Path m_OldNamePath;
 #if defined(__cpp_lib_jthread)
         Scope<std::jthread> m_Thread = nullptr;
 #else

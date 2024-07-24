@@ -22,7 +22,7 @@ namespace BeeEngine::Internal
 
         ~VulkanUniformBuffer() override;
 
-        void SetData(void* data, size_t size) override;
+        void SetData(const void* data, size_t size) override;
 
     private:
         VulkanBuffer m_Buffer;

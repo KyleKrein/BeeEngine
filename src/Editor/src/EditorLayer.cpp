@@ -12,6 +12,7 @@
 #include "Core/Events/EventImplementations.h"
 #include "Core/Logging/Log.h"
 #include "Core/ResourceManager.h"
+#include "Core/TypeDefines.h"
 #include "Debug/Instrumentor.h"
 #include "FileSystem/File.h"
 #include "Gui/ImGui/ImGuiExtension.h"
@@ -22,6 +23,7 @@
 #include "Platform/ImGui/ImGuiController.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
+#include "Scene/Scene.h"
 #include "Scripting/MAssembly.h"
 #include "Scripting/MClass.h"
 #include "Scripting/NativeToManaged.h"
@@ -64,15 +66,25 @@ namespace BeeEngine::Editor
             AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::StopButtonTexture, Locale::Localization::Default);
 
         m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1f, 1000.0f);
-        m_SceneHierarchyPanel.SetContext(m_ViewPort.GetScene());
-        m_ContentBrowserPanel.SetContext(m_ViewPort.GetScene());
-        m_InspectorPanel.SetContext(m_ViewPort.GetScene());
-        m_ActiveScene = m_ViewPort.GetScene();
+        m_SceneHierarchyPanel.SetContext(m_ViewPort.CurrentScene());
+        m_ContentBrowserPanel.SetContext(m_ViewPort.CurrentScene());
+        m_InspectorPanel.SetContext(m_ViewPort.CurrentScene());
+        m_ActiveScene = m_ViewPort.CurrentScene();
+        m_ViewPort.CurrentScene.valueChanged().connect(
+            [this](const Ref<Scene>& newScene)
+            {
+                m_SceneHierarchyPanel.ClearSelection();
+                m_ActiveScene = newScene;
+                m_SceneHierarchyPanel.SetContext(newScene);
+                m_ContentBrowserPanel.SetContext(newScene);
+                m_InspectorPanel.SetContext(newScene);
+                m_ActiveScene->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
+            });
     }
 
     void EditorLayer::OnDetach() noexcept
     {
-        if (m_ProjectFile)
+        if (Project())
         {
             ScriptingEngine::Shutdown();
         }
@@ -82,11 +94,11 @@ namespace BeeEngine::Editor
     {
         BEE_PROFILE_FUNCTION();
         std::unique_lock lock(m_BigLock);
-        if (m_ProjectFile == nullptr)
+        if (Project() == nullptr)
         {
             return;
         }
-        m_ProjectFile->Update();
+        Project()->Update();
         m_SceneHierarchyPanel.Update();
         m_EditorCamera.OnUpdate();
         ScriptingEngine::UpdateAllocatorStatistics();
@@ -96,9 +108,9 @@ namespace BeeEngine::Editor
             {
                 if (m_ContentBrowserPanel.NeedsToRegenerateSolution())
                 {
-                    m_ProjectFile->RegenerateSolution();
+                    Project()->RegenerateSolution();
                 }
-                if (m_ProjectFile->IsAssemblyReloadPending())
+                if (Project()->IsAssemblyReloadPending())
                 {
                     ReloadAssembly();
                 }
@@ -136,202 +148,177 @@ namespace BeeEngine::Editor
         m_FpsCounter.Update();
     }
 
+    void EditorLayer::RenderChooseProjectScreen()
+    {
+        enum class ProjAction
+        {
+            Load,
+            Create
+        };
+        auto loadProject = [this](ProjAction action)
+        {
+            auto projectPath = action == ProjAction::Load ? FileDialogs::OpenFile({"BeeEngine Project", "*.beeproj"})
+                                                          : FileDialogs::OpenFolder();
+            if (projectPath.IsEmpty())
+            {
+                return;
+            }
+            auto name = projectPath.GetFileNameWithoutExtension().AsUTF8();
+            if (action == ProjAction::Load)
+            {
+                projectPath = projectPath.RemoveFileName().AsUTF8();
+            }
+            {
+                std::unique_lock lock(m_BigLock);
+                Project.set(CreateScope<ProjectFile>(projectPath, name, &m_EditorAssetManager));
+                m_ProjectSettings =
+                    CreateScope<ProjectSettings>(*Project(), m_EditorLocaleDomain, m_EditorAssetManager);
+
+                if (action == ProjAction::Load && File::Exists(Project()->AssetRegistryPath()))
+                {
+                    AssetRegistrySerializer assetRegistrySerializer(
+                        &m_EditorAssetManager, Project()->FolderPath(), Project()->GetAssetRegistryID());
+                    assetRegistrySerializer.Deserialize(Project()->AssetRegistryPath());
+                    std::vector<Path> assetPaths = AssetScanner::GetAllAssetFiles(Project()->FolderPath());
+                    for (auto& path : assetPaths)
+                    {
+                        auto name = path.GetFileNameWithoutExtension().AsUTF8();
+                        const auto* handlePtr = m_EditorAssetManager.GetAssetHandleByName(name);
+                        if (!handlePtr)
+                        {
+                            m_EditorAssetManager.LoadAsset(path, {Project.get()->GetAssetRegistryID()});
+                        }
+                    }
+                }
+                m_AssetPanel.onAssetRemoved.connect([this](const AssetHandle& handle) { DeleteAsset(handle); });
+                Project()->onAssetRemoved.connect([this](const AssetHandle& handle) { DeleteAsset(handle); });
+                m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(Project()->GetProjectLocaleDomain(),
+                                                                                  Project()->FolderPath());
+            }
+            auto sceneHandle = Project()->GetLastUsedScene();
+            Application::SubmitToMainThread(
+                [this, sceneHandle]()
+                {
+                    Project()->ReloadAndRebuildGameLibrary();
+                    Project()->IsAssemblyReloadPending(); // To disable automatic reloading on next
+                                                          // frame. We are handling this now
+                    SetupGameLibrary();
+                    if (sceneHandle != AssetHandle{0, 0})
+                    {
+                        LoadScene(sceneHandle);
+                    }
+                    Project()->StartFileWatchers();
+                });
+        };
+        ImGui::Begin(m_EditorLocaleDomain.Translate("projectSelection").c_str());
+
+        if (ImGui::Button(m_EditorLocaleDomain.Translate("loadProject").c_str()))
+        {
+            auto loadProjectJob =
+                Jobs::CreateJob([this, loadProject = BeeMove(loadProject)]() { loadProject(ProjAction::Load); });
+            Jobs::Schedule(BeeMove(loadProjectJob));
+        }
+        if (ImGui::Button(m_EditorLocaleDomain.Translate("newProject").c_str()))
+        {
+            auto newProjectJob =
+                Jobs::CreateJob([this, loadProject = BeeMove(loadProject)]() { loadProject(ProjAction::Create); });
+            Jobs::Schedule(BeeMove(newProjectJob));
+        }
+        ImGui::PushID("editorSettingsButton");
+        if (ImGui::Button(m_EditorLocaleDomain.Translate("editorSettings").c_str()))
+        {
+            m_ShowEditorSettings = !m_ShowEditorSettings;
+        }
+        ImGui::PopID();
+        ImGui::End();
+    }
+
+    void EditorLayer::RenderEditor()
+    {
+        m_MenuBar.Render();
+        UIToolbar();
+        m_SceneHierarchyPanel.OnGUIRender();
+        m_ViewPort.Render(m_EditorCamera);
+        m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
+        m_ContentBrowserPanel.OnGUIRender();
+        m_AssetPanel.Render();
+        m_FpsCounter.Render();
+        m_Console.RenderGUI();
+        m_LocalizationPanel->Render();
+        m_DragAndDrop.ImGuiRender();
+        m_ProjectSettings->Render();
+        DrawBuildProjectPopup();
+        ImGui::Begin(m_EditorLocaleDomain.Translate("settings").c_str());
+        ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
+        if (ImGui::Button("GC Collect"))
+        {
+            NativeToManaged::GCCollect();
+        }
+        ImGui::End();
+    }
+
+    void EditorLayer::RenderEditorSettings(bool& show)
+    {
+        if (!show)
+        {
+            return;
+        }
+        ImGui::Begin(m_EditorLocaleDomain.Translate("editorSettings").c_str(), &show);
+
+        ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("editorSettings.language").c_str());
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        if (ImGui::BeginCombo("##EditorLanguage", m_Config.Locale.GetLanguageString().c_str()))
+        {
+            if (ImGui::BeginTooltip())
+            {
+                ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("needsRestartingTooltip").c_str());
+                ImGui::EndTooltip();
+            }
+            for (const auto& locale : m_EditorLocaleDomain.GetLocales())
+            {
+                if (ImGui::Selectable(locale.c_str()))
+                {
+                    m_Config.Locale = Locale::Localization{locale};
+                }
+                if (m_Config.Locale.GetLanguageString() == locale)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / 2);
+        ImGui::TextWrapped(m_EditorLocaleDomain.Translate("editorSettings.fontSize").c_str());
+        // ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        if (ImGui::SliderFloat("##fontSizeFloat", &m_Config.FontSize, 12, 100, "%.3f", ImGuiSliderFlags_AlwaysClamp))
+        {
+            SetImGuiFontSize(m_Config.FontSize);
+        }
+        ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("editorSettings.thumbnailSize").c_str());
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::SliderFloat("##thumbnailSize", &m_Config.ThumbnailSize, 32, 256, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+        ImGui::End();
+    }
+
     void EditorLayer::OnGUIRendering() noexcept
     {
         std::unique_lock lock(m_BigLock);
         m_DockSpace.Start();
-        if (m_ProjectFile)
+        if (Project())
         {
-            m_MenuBar.Render();
-            UIToolbar();
-            m_SceneHierarchyPanel.OnGUIRender();
-            m_ViewPort.Render(m_EditorCamera);
-            m_InspectorPanel.OnGUIRender(m_SceneHierarchyPanel.GetSelectedEntity());
-            m_ContentBrowserPanel.OnGUIRender();
-            m_AssetPanel.Render();
-            m_FpsCounter.Render();
-            m_Console.RenderGUI();
-            m_LocalizationPanel->Render();
-            m_DragAndDrop.ImGuiRender();
-            m_ProjectSettings->Render();
-            DrawBuildProjectPopup();
-            ImGui::Begin(m_EditorLocaleDomain.Translate("settings").c_str());
-            ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
-            if (ImGui::Button("GC Collect"))
-            {
-                NativeToManaged::GCCollect();
-            }
-            ImGui::End();
+            RenderEditor();
         }
         else
         {
-            ImGui::Begin(m_EditorLocaleDomain.Translate("projectSelection").c_str());
-            if (ImGui::Button(m_EditorLocaleDomain.Translate("loadProject").c_str()))
-            {
-                auto loadProjectJob = Jobs::CreateJob(
-                    [this]()
-                    {
-                        auto projectPath = FileDialogs::OpenFile({"BeeEngine Project", "*.beeproj"});
-                        if (projectPath.IsEmpty())
-                        {
-                            return;
-                        }
-                        String pathString = projectPath.AsUTF8();
-                        auto name = projectPath.GetFileNameWithoutExtension().AsUTF8();
-                        pathString = projectPath.RemoveFileName().AsUTF8();
-                        {
-                            std::unique_lock lock(m_BigLock);
-                            m_ProjectFile = CreateScope<ProjectFile>(pathString, name, &m_EditorAssetManager);
-                            m_ProjectSettings = CreateScope<ProjectSettings>(
-                                *m_ProjectFile, m_EditorLocaleDomain, m_EditorAssetManager);
-                            m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
-                            m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
-                            m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
-                            m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
-
-                            if (File::Exists(m_ProjectFile->GetProjectAssetRegistryPath()))
-                            {
-                                AssetRegistrySerializer assetRegistrySerializer(&m_EditorAssetManager,
-                                                                                m_ProjectFile->GetProjectPath(),
-                                                                                m_ProjectFile->GetAssetRegistryID());
-                                assetRegistrySerializer.Deserialize(m_ProjectFile->GetProjectAssetRegistryPath());
-                                std::vector<Path> assetPaths =
-                                    AssetScanner::GetAllAssetFiles(m_ProjectFile->GetProjectPath());
-                                for (auto& path : assetPaths)
-                                {
-                                    auto name = path.GetFileNameWithoutExtension().AsUTF8();
-                                    const auto* handlePtr = m_EditorAssetManager.GetAssetHandleByName(name);
-                                    if (!handlePtr)
-                                    {
-                                        m_EditorAssetManager.LoadAsset(path, {m_ProjectFile->GetAssetRegistryID()});
-                                    }
-                                }
-                            }
-
-                            m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
-                            m_InspectorPanel.SetProject(m_ProjectFile.get());
-                            m_AssetPanel.SetProject(m_ProjectFile.get());
-                            m_ContentBrowserPanel.SetProject(m_ProjectFile.get());
-                            m_AssetPanel.SetAssetDeletedCallback([this](const AssetHandle& handle)
-                                                                 { DeleteAsset(handle); });
-                            m_ProjectFile->SetOnAssetRemovedCallback([this](const AssetHandle& handle)
-                                                                     { DeleteAsset(handle); });
-                            m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(
-                                m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
-                        }
-                        auto sceneHandle = m_ProjectFile->GetLastUsedScene();
-                        Application::SubmitToMainThread(
-                            [this, sceneHandle]()
-                            {
-                                m_ProjectFile->ReloadAndRebuildGameLibrary();
-                                m_ProjectFile->IsAssemblyReloadPending(); // To disable automatic reloading on next
-                                                                          // frame. We are handling this now
-                                SetupGameLibrary();
-                                if (sceneHandle != AssetHandle{0, 0})
-                                {
-                                    LoadScene(sceneHandle);
-                                }
-                                m_ProjectFile->StartFileWatchers();
-                            });
-                    });
-                Jobs::Schedule(BeeMove(loadProjectJob));
-            }
-            if (ImGui::Button(m_EditorLocaleDomain.Translate("newProject").c_str()))
-            {
-                Application::SubmitToMainThread(
-                    [this]()
-                    {
-                        auto projectPath = FileDialogs::OpenFolder(
-                            /*{"BeeEngine Project", "*.beeproj"}*/);
-                        if (projectPath.IsEmpty())
-                        {
-                            return;
-                        }
-                        auto name = projectPath.GetFileName().AsUTF8();
-                        {
-                            std::unique_lock lock(m_BigLock);
-                            m_ProjectFile = CreateScope<ProjectFile>(projectPath, name, &m_EditorAssetManager);
-                            m_ProjectSettings = CreateScope<ProjectSettings>(
-                                *m_ProjectFile, m_EditorLocaleDomain, m_EditorAssetManager);
-                            m_ContentBrowserPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
-                            m_ViewPort.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
-                            m_ViewPort.SetDomain(&m_ProjectFile->GetProjectLocaleDomain());
-                            m_InspectorPanel.SetWorkingDirectory(m_ProjectFile->GetProjectPath());
-
-                            m_InspectorPanel.SetProjectAssetRegistryID(m_ProjectFile->GetAssetRegistryID());
-                            m_InspectorPanel.SetProject(m_ProjectFile.get());
-                            m_ContentBrowserPanel.SetProject(m_ProjectFile.get());
-
-                            m_AssetPanel.SetProject(m_ProjectFile.get());
-                            m_AssetPanel.SetAssetDeletedCallback([this](const AssetHandle& handle)
-                                                                 { DeleteAsset(handle); });
-                            m_ProjectFile->SetOnAssetRemovedCallback([this](const AssetHandle& handle)
-                                                                     { DeleteAsset(handle); });
-                            m_LocalizationPanel = CreateScope<Locale::ImGuiLocalizationPanel>(
-                                m_ProjectFile->GetProjectLocaleDomain(), m_ProjectFile->GetProjectPath());
-                            m_ProjectFile->ReloadAndRebuildGameLibrary();
-                            m_ProjectFile->IsAssemblyReloadPending(); // To disable automatic reloading on next
-                                                                      // frame. We are handling this now
-                            SetupGameLibrary();
-
-                            m_ProjectFile->StartFileWatchers();
-                        }
-                    });
-            }
-            ImGui::PushID("editorSettingsButton");
-            if (ImGui::Button(m_EditorLocaleDomain.Translate("editorSettings").c_str()))
-            {
-                m_ShowEditorSettings = !m_ShowEditorSettings;
-            }
-            ImGui::PopID();
-            ImGui::End();
+            RenderChooseProjectScreen();
         }
         m_UIEditor.Render();
-        if (m_ShowEditorSettings)
-        {
-            ImGui::Begin(m_EditorLocaleDomain.Translate("editorSettings").c_str(), &m_ShowEditorSettings);
-
-            ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("editorSettings.language").c_str());
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::BeginCombo("##EditorLanguage", m_Config.Locale.GetLanguageString().c_str()))
-            {
-                if (ImGui::BeginTooltip())
-                {
-                    ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("needsRestartingTooltip").c_str());
-                    ImGui::EndTooltip();
-                }
-                for (const auto& locale : m_EditorLocaleDomain.GetLocales())
-                {
-                    if (ImGui::Selectable(locale.c_str()))
-                    {
-                        m_Config.Locale = Locale::Localization{locale};
-                    }
-                    if (m_Config.Locale.GetLanguageString() == locale)
-                    {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / 2);
-            ImGui::TextWrapped(m_EditorLocaleDomain.Translate("editorSettings.fontSize").c_str());
-            // ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::SliderFloat(
-                    "##fontSizeFloat", &m_Config.FontSize, 12, 100, "%.3f", ImGuiSliderFlags_AlwaysClamp))
-            {
-                SetImGuiFontSize(m_Config.FontSize);
-            }
-            ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("editorSettings.thumbnailSize").c_str());
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::SliderFloat(
-                "##thumbnailSize", &m_Config.ThumbnailSize, 32, 256, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-
-            ImGui::End();
-        }
+        RenderEditorSettings(m_ShowEditorSettings);
         m_DockSpace.End();
     }
 
@@ -354,7 +341,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::OnEvent(EventDispatcher& event) noexcept
     {
-        if (m_ProjectFile == nullptr)
+        if (Project() == nullptr)
         {
             return;
         }
@@ -404,8 +391,7 @@ namespace BeeEngine::Editor
                            {
                                m_SceneHierarchyPanel.ClearSelection();
                                SaveScene();
-                               m_ActiveScene = CreateRef<Scene>();
-                               SetScene(m_ActiveScene);
+                               m_ViewPort.CurrentScene = CreateRef<Scene>();
                            }});
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.saveScene"), [this]() { SaveScene(); }});
         fileMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.file.saveSceneAs"), [this]() { SaveSceneAs(); }});
@@ -419,12 +405,12 @@ namespace BeeEngine::Editor
         buildMenu.AddChild({m_EditorLocaleDomain.Translate("menubar.build.regenerateVSSolution"),
                             [this]()
                             {
-                                if (!m_ProjectFile)
+                                if (!Project())
                                 {
                                     BeeCoreError("No project loaded");
                                     return;
                                 }
-                                m_ProjectFile->RegenerateSolution();
+                                Project()->RegenerateSolution();
                             }});
         buildMenu.AddChild(
             {m_EditorLocaleDomain.Translate("menubar.build.reloadScripts"), [this]() { ReloadAssembly(); }});
@@ -432,7 +418,7 @@ namespace BeeEngine::Editor
                             [this]()
                             {
                                 auto reloadJob =
-                                    Jobs::CreateJob([this]() { m_ProjectFile->ReloadAndRebuildGameLibrary(); });
+                                    Jobs::CreateJob([this]() { Project.get()->ReloadAndRebuildGameLibrary(); });
                                 Jobs::Schedule(BeeMove(reloadJob));
                             }});
         m_MenuBar.AddElement(buildMenu);
@@ -447,7 +433,7 @@ namespace BeeEngine::Editor
 
     void EditorLayer::ReloadAssembly()
     {
-        const Path tempPath = m_ProjectFile->GetProjectPath() / ".beeengine" / "temp.beescene";
+        const Path tempPath = Project()->FolderPath() / ".beeengine" / "temp.beescene";
         SceneSerializer serializer(m_ActiveScene);
         serializer.Serialize(tempPath);
         m_SceneHierarchyPanel.ClearSelection();
@@ -486,11 +472,11 @@ namespace BeeEngine::Editor
                 m_ActiveScene->StartRuntime();
             });
         ScriptingEngine::LoadCoreAssembly("libs/BeeEngine.Core.dll");
-        Path debugSymbolsPath = m_ProjectFile->GetAssemblyPath();
+        Path debugSymbolsPath = Project()->GameAssemblyPath();
         debugSymbolsPath.ReplaceExtension(".pdb");
-        ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetAssemblyPath(), debugSymbolsPath);
+        ScriptingEngine::LoadGameAssembly(Project()->GameAssemblyPath(), debugSymbolsPath);
         ScriptGlue::Register();
-        ScriptingEngine::SetLocaleDomain(m_ProjectFile->GetProjectLocaleDomain());
+        ScriptingEngine::SetLocaleDomain(Project()->GetProjectLocaleDomain());
         // auto& gameAssembly =
         // ScriptingEngine::LoadGameAssembly(m_ProjectFile->GetProjectPath() /
         // ".beeengine" / "GameLibrary.dll");
@@ -584,29 +570,15 @@ namespace BeeEngine::Editor
     void EditorLayer::OnSceneStop() noexcept
     {
         m_ActiveScene->StopRuntime();
-        m_ActiveScene = m_EditorScene;
-        SetScene(m_ActiveScene);
-        m_ActiveScene->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
+        m_ViewPort.CurrentScene = m_EditorScene;
     }
 
     void EditorLayer::OnSceneSimulate() noexcept {}
 
     void EditorLayer::LoadScene(const AssetHandle& handle)
     {
-        m_SceneHierarchyPanel.ClearSelection();
-        m_ActiveScene = Scene::Copy(AssetManager::GetAsset<Scene>(handle));
-        SetScene(m_ActiveScene);
-        m_ActiveScene->OnViewPortResize(m_ViewPort.GetWidth(), m_ViewPort.GetHeight());
-        m_ProjectFile->SetLastUsedScene(handle);
-    }
-
-    void EditorLayer::SetScene(const Ref<Scene>& sharedPtr)
-    {
-        m_SceneHierarchyPanel.ClearSelection();
-        m_ViewPort.SetScene(sharedPtr);
-        m_SceneHierarchyPanel.SetContext(sharedPtr);
-        m_ContentBrowserPanel.SetContext(sharedPtr);
-        m_InspectorPanel.SetContext(sharedPtr);
+        m_ViewPort.CurrentScene = Scene::Copy(AssetManager::GetAsset<Scene>(handle));
+        Project.get()->SetLastUsedScene(handle);
     }
 
     void EditorLayer::SaveSceneAs()
@@ -627,7 +599,7 @@ namespace BeeEngine::Editor
                                    potentialSubPath.begin(), potentialSubPath.end(), base.begin(), base.end()) ==
                                potentialSubPath.begin();
                     };
-                    if (!isSubPath(m_ProjectFile->GetProjectPath().AsUTF8(), filepath.AsUTF8()))
+                    if (!isSubPath(Project()->FolderPath().AsUTF8(), filepath.AsUTF8()))
                     {
                         ShowMessageBox(m_EditorLocaleDomain.Translate("saveScene.invalidPathError.title"),
                                        m_EditorLocaleDomain.Translate("saveScene.invalidPathError.body"),
@@ -660,12 +632,12 @@ namespace BeeEngine::Editor
                     scene->Handle = newSceneHandle;
                     auto& metadata = m_EditorAssetManager.GetAssetMetadata(newSceneHandle);
                     scene->Name = std::string_view(metadata.Name);
-                    m_ProjectFile->SetLastUsedScene(newSceneHandle);
-                    if (m_ProjectFile->GetStartingSceneName() == "Not available")
+                    Project()->SetLastUsedScene(newSceneHandle);
+                    if (Project()->GetStartingSceneName() == "Not available")
                     {
-                        m_ProjectFile->SetStartingScene(newSceneHandle);
+                        Project()->SetStartingScene(newSceneHandle);
                     }
-                    m_ProjectFile->Save();
+                    Project()->Save();
             });
         Jobs::Schedule(BeeMove(job));
     }
@@ -706,8 +678,8 @@ namespace BeeEngine::Editor
     void EditorLayer::SaveAssetRegistry()
     {
         AssetRegistrySerializer serializer(
-            &m_EditorAssetManager, m_ProjectFile->GetProjectPath(), m_ProjectFile->GetAssetRegistryID());
-        serializer.Serialize(m_ProjectFile->GetProjectAssetRegistryPath());
+            &m_EditorAssetManager, Project()->FolderPath(), Project()->GetAssetRegistryID());
+        serializer.Serialize(Project()->AssetRegistryPath());
     }
 
     void EditorLayer::DeleteAsset(const AssetHandle& handle)
@@ -899,16 +871,16 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
         // Choose a default locale from the project locale domain
         ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("buildProject.defaultLocale").c_str());
         ImGui::SameLine();
-        if (ImGui::BeginCombo("##defaultLocale", m_ProjectFile->GetDefaultLocale().GetLanguageString().c_str()))
+        if (ImGui::BeginCombo("##defaultLocale", Project()->DefaultLocale().GetLanguageString().c_str()))
         {
             if (ImGui::BeginTooltip())
             {
                 ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("buildProject.defaultLocale.tooltip").c_str());
                 ImGui::EndTooltip();
             }
-            for (const auto& locale : m_ProjectFile->GetProjectLocaleDomain().GetLocales())
+            for (const auto& locale : Project()->GetProjectLocaleDomain().GetLocales())
             {
-                bool isSelected = m_ProjectFile->GetDefaultLocale().GetLanguageString() == locale;
+                bool isSelected = Project()->DefaultLocale().GetLanguageString() == locale;
                 if (ImGui::Selectable(locale.c_str(), isSelected))
                 {
                     options.DefaultLocale = locale;
@@ -920,9 +892,9 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
             }
             ImGui::EndCombo();
         }
-        ImGui::TextUnformatted((m_EditorLocaleDomain.Translate("buildProject.startingScene") + ": " +
-                                m_ProjectFile->GetStartingSceneName())
-                                   .c_str());
+        ImGui::TextUnformatted(
+            (m_EditorLocaleDomain.Translate("buildProject.startingScene") + ": " + Project()->GetStartingSceneName())
+                .c_str());
 
         ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("buildProject.outputPath").c_str());
         ImGui::SameLine();
@@ -961,7 +933,7 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
             {
                 customError += '\n' + m_EditorLocaleDomain.Translate("buildProject.outputPath.invalidError");
             }
-            for (const auto& locale : m_ProjectFile->GetProjectLocaleDomain().GetLocales())
+            for (const auto& locale : Project()->GetProjectLocaleDomain().GetLocales())
             {
                 if (locale == options.DefaultLocale.GetLanguageString())
                 {
@@ -976,9 +948,9 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
             bool isEverythingFilled = !isOutputPathEmpty && isOutputPathValid && isDefaultLocaleValid;
             return isEverythingFilled;
         };
-        if (options.DefaultLocale != m_ProjectFile->GetDefaultLocale())
+        if (options.DefaultLocale != Project()->DefaultLocale())
         {
-            options.DefaultLocale = m_ProjectFile->GetDefaultLocale();
+            options.DefaultLocale = Project()->DefaultLocale();
         }
         bool disabled = !areAllFieldsFilled();
         if (disabled)
@@ -987,7 +959,7 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
         }
         if (ImGui::Button(m_EditorLocaleDomain.Translate("buildProject.build").c_str()))
         {
-            m_ProjectFile->BuildProject(options);
+            Project()->BuildProject(options);
             ImGui::CloseCurrentPopup();
             m_ShowBuildProjectPopup = false;
         }

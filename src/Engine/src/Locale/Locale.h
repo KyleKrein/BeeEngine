@@ -178,9 +178,9 @@ namespace BeeEngine::Locale
          *
          * @return A generator that yields constant references to the available locales.
          */
-        Generator<const String&> GetLocales()
+        Generator<const String&> GetLocales() const
         {
-            for (auto& [locale, _] : m_Languages)
+            for (const auto& [locale, _] : m_Languages)
             {
                 co_yield locale;
             }

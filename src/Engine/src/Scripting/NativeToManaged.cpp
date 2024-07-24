@@ -35,8 +35,8 @@ namespace BeeEngine
         uint64_t Length;
     };
     using SetupLoggerFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* info, void* warn, void* trace, void* error);
-    using CreateAssemblyContextFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(void* name, int32_t canBeUnloaded);
-    using LoadAssemblyFromPathFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, void* path, void* debugSymbolsPath);
+    using CreateAssemblyContextFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(const char* name, int32_t canBeUnloaded);
+    using LoadAssemblyFromPathFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, const char* path, const char* debugSymbolsPath);
     using GetClassesFromAssemblyFunction = ArrayInfo(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId);
     using FreeIntPtrFunction = void(CORECLR_DELEGATE_CALLTYPE *)(void* ptr);
     using GetClassNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
@@ -44,7 +44,7 @@ namespace BeeEngine
     using ClassIsValueTypeFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
     using ClassIsEnumFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId);
     using ClassIsDerivedFromFunction = int32_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextIdDerived, uint64_t assemblyIdDerived, uint64_t classIdDerived, uint64_t contextIdBase, uint64_t assemblyIdBase, uint64_t classIdBase);
-    using MethodGetByNameFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, void* name, int32_t bindingFlags);
+    using MethodGetByNameFunction = uint64_t(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, const char* name, int32_t bindingFlags);
     using ClassGetFieldsFunction = ArrayInfo(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, int32_t bindingFlags);
     using FieldGetNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId);
     using FieldGetTypeNameFunction = void*(CORECLR_DELEGATE_CALLTYPE *)(uint64_t contextId, uint64_t assemblyId, uint64_t classId, uint64_t fieldId);
@@ -241,7 +241,7 @@ namespace BeeEngine
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
     {
-        return s_Data->CreateAssemblyContext(const_cast<char*>(contextName.c_str()), canBeUnloaded?1:0);
+        return s_Data->CreateAssemblyContext(contextName.c_str(), canBeUnloaded?1:0);
     }
 
     void NativeToManaged::UnloadContext(ManagedAssemblyContextID contextID)
@@ -256,7 +256,7 @@ namespace BeeEngine
 
     ManagedAssemblyID NativeToManaged::LoadAssemblyFromPath(ManagedAssemblyContextID contextID, const Path& path, const std::optional<Path>& debugSymbolsPath)
     {
-        return s_Data->LoadAssemblyFromPath(contextID, const_cast<char*>(path.AsCString()), debugSymbolsPath.has_value() ? const_cast<char*>(debugSymbolsPath->AsCString()) : nullptr);
+        return s_Data->LoadAssemblyFromPath(contextID, path.AsCString(), debugSymbolsPath.has_value() ? debugSymbolsPath->AsCString() : nullptr);
     }
 
     std::vector<ManagedClassID> NativeToManaged::GetClassesFromAssembly(ManagedAssemblyContextID contextID,
@@ -314,7 +314,7 @@ namespace BeeEngine
     ManagedMethodID NativeToManaged::MethodGetByName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, const String& methodName, ManagedBindingFlags flags)
     {
-        return s_Data->MethodGetByName(contextID, assemblyId, classID, const_cast<char*>(methodName.c_str()), std::to_underlying(flags));
+        return s_Data->MethodGetByName(contextID, assemblyId, classID, methodName.c_str(), std::to_underlying(flags));
     }
 
     std::vector<ManagedFieldID> NativeToManaged::ClassGetFields(ManagedAssemblyContextID contextID,

@@ -3,7 +3,7 @@
 //
 #include "ContentBrowserPanel.h"
 #include "BeeEngine.h"
-#include "Core/AssetManagement//PrefabImporter.h"
+#include "Core/AssetManagement/PrefabImporter.h"
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
 #include "Gui/ImGui/ImGuiExtension.h"
@@ -347,11 +347,12 @@ namespace BeeEngine::Editor
                     filePath = m_WorkingDirectory / filePath;
                 }
                 std::error_code error;
-                if (std::filesystem::copy_file(filePath.ToStdPath(),
-                                               (path / filePath.GetFileName()).ToStdPath(),
-                                               std::filesystem::copy_options::recursive |
-                                                   std::filesystem::copy_options::overwrite_existing,
-                                               error))
+                std::filesystem::copy(filePath.ToStdPath(),
+                                      (path / filePath.GetFileName()).ToStdPath(),
+                                      std::filesystem::copy_options::recursive |
+                                          std::filesystem::copy_options::overwrite_existing,
+                                      error);
+                if (!error)
                 {
                     std::filesystem::remove_all(filePath.ToStdPath());
                     if (filePath.GetExtension() == ".cs")
@@ -392,7 +393,8 @@ namespace BeeEngine::Editor
             });
     }
 
-    ContentBrowserPanel::ContentBrowserPanel(const Path& workingDirectory,
+    ContentBrowserPanel::ContentBrowserPanel(Property<Scope<ProjectFile>>& project,
+                                             const Path& workingDirectory,
                                              Locale::Domain& editorDomain,
                                              const ConfigFile& config) noexcept
         : m_Config(config),
@@ -400,6 +402,13 @@ namespace BeeEngine::Editor
           m_CurrentDirectory(workingDirectory),
           m_EditorDomain(&editorDomain)
     {
+        project.valueChanged().connect(
+            [this](const auto& newProject)
+            {
+                m_Project = newProject.get();
+                m_WorkingDirectory = newProject->FolderPath.get();
+                m_CurrentDirectory = m_WorkingDirectory;
+            });
         m_DirectoryIcon =
             AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::DirectoryTexture, Locale::Localization::Default);
         m_FileIcon =
