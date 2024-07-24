@@ -182,8 +182,7 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         auto& locale = localization.GetLanguageString();
         auto& sceneRendererData = scene.GetSceneRendererData();
-        sceneRendererData.CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)),
-                                                       sizeof(glm::mat4));
+        sceneRendererData.CameraUniformBuffer->SetData(glm::value_ptr(viewProjectionMatrix), sizeof(glm::mat4));
 
         Scene::GPUSceneData sceneData{};
         sceneData.viewproj = viewProjectionMatrix;
@@ -349,7 +348,7 @@ namespace BeeEngine
     {
         Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
         Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
-        cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
+        cameraUniformBuffer->SetData(glm::value_ptr(viewProjectionMatrix), sizeof(glm::mat4));
         RenderPhysicsColliders(scene, commandBuffer, *cameraBindingSet);
     }
 

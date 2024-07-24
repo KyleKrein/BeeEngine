@@ -153,6 +153,7 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         vendor/SIMDString/SIMDString.cpp
         src/Gui/MessageBox.h
         src/Gui/MessageBox.cpp
+        src/Core/Property.h
 )
 
 
@@ -411,6 +412,7 @@ add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
+add_subdirectory(vendor/KDBindings)
 CPMAddPackage(
         NAME fastgltf
         GITHUB_REPOSITORY spnda/fastgltf
@@ -478,6 +480,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC Boost::context
         PRIVATE fastgltf
         PRIVATE unofficial::nethost::nethost
+        PUBLIC KDAB::KDBindings
         )
 
 target_compile_definitions(BeeEngine

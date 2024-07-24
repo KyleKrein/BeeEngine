@@ -34,3 +34,6 @@
 [submodule "src/Engine/vendor/vcpkg"]
 	path = src/Engine/vendor/vcpkg
 	url = https://github.com/Microsoft/vcpkg.git
+[submodule "src/Engine/vendor/KDBindings"]
+	path = src/Engine/vendor/KDBindings
+	url = https://github.com/KDAB/KDBindings.git

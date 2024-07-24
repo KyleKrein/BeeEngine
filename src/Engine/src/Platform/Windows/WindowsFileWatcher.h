@@ -13,7 +13,7 @@ namespace BeeEngine::Internal
         friend void WindowsFileWatcherThread(WindowsFileWatcher& watcher);
 
     public:
-        WindowsFileWatcher(const Path& path, const std::function<void(Path, Event)>& callback);
+        WindowsFileWatcher(const Path& path);
         void Start() override;
         void Stop() override;
         bool IsRunning() const override { return m_Running.load(); }
@@ -26,8 +26,9 @@ namespace BeeEngine::Internal
     private:
         std::atomic<bool> m_Running = false;
         const std::wstring m_Path;
-        const std::function<void(Path, Event)> m_Callback;
+        Path m_OldNamePath;
 #if defined(WINDOWS)
+        friend void ProcessDirectoryChanges(WindowsFileWatcher& self, wchar_t* filename, unsigned char* Buffer);
         Scope<std::jthread> m_Thread = nullptr;
 #endif
     };

@@ -13,25 +13,29 @@ namespace BeeEngine::Editor
     class InspectorPanel
     {
     public:
-        InspectorPanel(EditorAssetManager* assetManager, Locale::Domain& editorDomain)
+        InspectorPanel(Property<Scope<ProjectFile>>& project,
+                       EditorAssetManager* assetManager,
+                       Locale::Domain& editorDomain)
             : m_AssetManager(assetManager), m_EditorDomain(&editorDomain)
         {
+            project.valueChanged().connect(
+                [this](const auto& newProject)
+                {
+                    m_Project = newProject.get();
+                    m_ProjectAssetRegistryID = newProject->GetAssetRegistryID();
+                    m_WorkingDirectory = newProject->FolderPath.get();
+                });
         }
         explicit InspectorPanel(const Ref<Scene>& context, EditorAssetManager* assetManager);
 
-        void SetProject(ProjectFile* project) { m_Project = project; }
-
         void SetContext(const Ref<Scene>& context);
-        void SetProjectAssetRegistryID(UUID id) { m_ProjectAssetRegistryID = id; }
 
         void OnGUIRender(Entity selectedEntity) noexcept;
-
-        void SetWorkingDirectory(const Path& path) noexcept { m_WorkingDirectory = path; }
 
     private:
         UUID m_ProjectAssetRegistryID;
         Ref<Scene> m_Context;
-        ProjectFile* m_Project = nullptr;
+        const ProjectFile* m_Project = nullptr;
         EditorAssetManager* m_AssetManager = nullptr;
 
         Path m_WorkingDirectory;

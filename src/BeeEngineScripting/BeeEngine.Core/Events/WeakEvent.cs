@@ -8,12 +8,11 @@ namespace BeeEngine.Events
     {
         private event EventHandler<TEventArgs> _eventKeeper;
         private readonly HashSet<OwnWeakReference<TEventArgs>> _activeListenersOfThisType = new HashSet<OwnWeakReference<TEventArgs>>();
-        public string EventID { get; }= Guid.NewGuid().ToString();
         private readonly object locker = new object();
 
         public bool HasDuplicates(object listener)
         {
-            lock(locker)
+            lock (locker)
             {
                 return _activeListenersOfThisType.Any(k => k.holder == listener);
             }
@@ -21,7 +20,7 @@ namespace BeeEngine.Events
 
         internal void AddToEvent(object listener, EventHandler<TEventArgs> action)
         {
-            lock(locker)
+            lock (locker)
             {
                 var newAction = new OwnWeakReference<TEventArgs>(listener, action);
                 _activeListenersOfThisType.Add(newAction);
@@ -65,7 +64,7 @@ namespace BeeEngine.Events
 
         internal void RemoveFromEvent(object listener)
         {
-            lock(locker)
+            lock (locker)
             {
                 var currentEvent = _activeListenersOfThisType.FirstOrDefault(k => k.holder.Target == listener);
                 if (currentEvent.holder != null)
@@ -78,7 +77,7 @@ namespace BeeEngine.Events
 
         public void Invoke(object/*?*/ sender, TEventArgs eventArgs)
         {
-            lock(locker)
+            lock (locker)
             {
                 if (_activeListenersOfThisType.Any(k => k.IsDead()))
                 {
@@ -96,7 +95,7 @@ namespace BeeEngine.Events
 
         internal string DebugInfo()
         {
-            lock(locker)
+            lock (locker)
             {
                 string info = string.Empty;
                 info += _activeListenersOfThisType.Count + " Count \n";
