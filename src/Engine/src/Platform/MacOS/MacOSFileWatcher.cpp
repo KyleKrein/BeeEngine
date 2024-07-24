@@ -3,6 +3,7 @@
 //
 
 #include "MacOSFileWatcher.h"
+#include "Core/Move.h"
 
 namespace BeeEngine::Internal
 {
@@ -21,19 +22,34 @@ namespace BeeEngine::Internal
             Path path = paths[i];
             MacOSFileWatcher* watcher = (MacOSFileWatcher*)clientCallBackInfo;
             if (eventFlags[i] & kFSEventStreamEventFlagItemCreated)
-                watcher->m_Callback(path, FileWatcher::Event::Added);
+            {
+                watcher->onAnyEvent.emit(path, FileWatcher::Event::Added);
+                watcher->onFileAdded.emit(path);
+            }
             else if (eventFlags[i] & kFSEventStreamEventFlagItemRemoved)
-                watcher->m_Callback(path, FileWatcher::Event::Removed);
+            {
+                watcher->onAnyEvent.emit(path, FileWatcher::Event::Removed);
+                watcher->onFileRemoved.emit(path);
+            }
             else if (eventFlags[i] & kFSEventStreamEventFlagItemRenamed)
             {
                 if (oldRenamed)
-                    watcher->m_Callback(path, FileWatcher::Event::RenamedOldName);
+                {
+                    watcher->onAnyEvent.emit(path, FileWatcher::Event::RenamedOldName);
+                    watcher->m_OldNamePath = BeeMove(path);
+                }
                 else
-                    watcher->m_Callback(path, FileWatcher::Event::RenamedNewName);
+                {
+                    watcher->onAnyEvent.emit(path, FileWatcher::Event::RenamedNewName);
+                    watcher->onFileRenamed.emit(watcher->m_OldNamePath, path);
+                }
                 oldRenamed = !oldRenamed;
             }
             else if (eventFlags[i] & kFSEventStreamEventFlagItemModified)
-                watcher->m_Callback(path, FileWatcher::Event::Modified);
+            {
+                watcher->onAnyEvent.emit(path, FileWatcher::Event::Modified);
+                watcher->onFileModified.emit(path);
+            }
         }
     }
 #endif
@@ -60,10 +76,7 @@ namespace BeeEngine::Internal
 #endif
     }
 
-    MacOSFileWatcher::MacOSFileWatcher(const Path& path, const std::function<void(Path, Event)>& callback)
-        : m_Path(path), m_Callback(callback)
-    {
-    }
+    MacOSFileWatcher::MacOSFileWatcher(const Path& path) : m_Path(path) {}
 
     void MacOSFileWatcher::Start()
     {

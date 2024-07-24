@@ -347,11 +347,12 @@ namespace BeeEngine::Editor
                     filePath = m_WorkingDirectory / filePath;
                 }
                 std::error_code error;
-                if (std::filesystem::copy_file(filePath.ToStdPath(),
-                                               (path / filePath.GetFileName()).ToStdPath(),
-                                               std::filesystem::copy_options::recursive |
-                                                   std::filesystem::copy_options::overwrite_existing,
-                                               error))
+                std::filesystem::copy(filePath.ToStdPath(),
+                                      (path / filePath.GetFileName()).ToStdPath(),
+                                      std::filesystem::copy_options::recursive |
+                                          std::filesystem::copy_options::overwrite_existing,
+                                      error);
+                if (!error)
                 {
                     std::filesystem::remove_all(filePath.ToStdPath());
                     if (filePath.GetExtension() == ".cs")

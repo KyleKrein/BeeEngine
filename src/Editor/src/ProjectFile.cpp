@@ -499,10 +499,13 @@ namespace BeeEngine::Editor
                     break;
                 case FileWatcher::Event::Removed:
                     Application::SubmitToMainThread(
-                        [this, handle]()
+                        [this, handle, path = BeeMove(p)]()
                         {
-                            if (!m_AssetManager->IsAssetHandleValid(handle))
+                            if (!m_AssetManager->IsAssetHandleValid(handle) ||
+                                (std::get<Path>(m_AssetManager->GetAssetMetadata(handle).Data)) != path)
+                            {
                                 return;
+                            }
                             onAssetRemoved.emit(handle);
                         });
                     break;
@@ -575,9 +578,9 @@ namespace BeeEngine::Editor
     {
         if (!m_AppAssemblyFileWatcher)
         {
-            m_AppAssemblyFileWatcher = FileWatcher::Create(GameAssemblyPath.get(),
-                                                           [this](const Path& path, FileWatcher::Event event)
-                                                           { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyFileWatcher = FileWatcher::Create(GameAssemblyPath.get());
+            m_AppAssemblyFileWatcher->onAnyEvent.connect([this](const Path& path, FileWatcher::Event event)
+                                                         { OnAppAssemblyFileSystemEvent(path, event); });
         }
         else
         {
@@ -585,9 +588,9 @@ namespace BeeEngine::Editor
         }
         if (!m_AssetFileWatcher)
         {
-            m_AssetFileWatcher = FileWatcher::Create(FolderPath.get(),
-                                                     [this](const Path& path, FileWatcher::Event event)
-                                                     { OnAssetFileSystemEvent(path, event); });
+            m_AssetFileWatcher = FileWatcher::Create(FolderPath.get());
+            m_AssetFileWatcher->onAnyEvent.connect([this](const Path& path, FileWatcher::Event event)
+                                                   { OnAssetFileSystemEvent(path, event); });
         }
         else
         {
