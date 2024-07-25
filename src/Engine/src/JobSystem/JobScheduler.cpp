@@ -8,8 +8,13 @@
 
 #include <boost/context/preallocated.hpp>
 #include <boost/context/protected_fixedsize_stack.hpp>
+#include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <type_traits>
+#include <utility>
+#include <variant>
 #undef GetJob
 #include <mutex>
 #include <queue>
@@ -161,14 +166,14 @@ namespace BeeEngine
     }
 
     Internal::JobScheduler::WaitingContext::WaitingContext(BeeEngine::Ref<BeeEngine::Internal::Fiber>&& fiber,
-                                                           Jobs::Counter* counter)
-        : fiber(BeeMove(fiber)), counter(counter)
+                                                           Jobs::ConditionType cond)
+        : fiber(BeeMove(fiber)), condition(BeeMove(cond))
     {
     }
 
     Internal::JobScheduler::WaitingContext::WaitingContext(const BeeEngine::Ref<BeeEngine::Internal::Fiber>& fiber,
-                                                           BeeEngine::Jobs::Counter* counter)
-        : fiber(fiber), counter(counter)
+                                                           Jobs::ConditionType cond)
+        : fiber(fiber), condition(BeeMove(cond))
     {
     }
 
@@ -206,7 +211,37 @@ namespace BeeEngine
             {
                 for (auto it = m_WaitingJobs.begin(); it != m_WaitingJobs.end(); ++it)
                 {
-                    if (auto& f = *it; !f.counter || f.counter->IsZero())
+                    auto& f = *it;
+                    bool takeThis = std::visit(
+                        [](auto&& arg) -> bool
+                        {
+                            using T = std::remove_cvref_t<decltype(arg)>;
+                            if constexpr (std::is_same_v<Jobs::Counter*, T>)
+                            {
+                                if (!arg || arg->IsZero())
+                                {
+                                    return true;
+                                }
+                            }
+                            else if constexpr (std::is_same_v<std::chrono::high_resolution_clock::time_point, T>)
+                            {
+                                auto now = std::chrono::high_resolution_clock::now();
+                                if (now >= arg)
+                                {
+                                    return true;
+                                }
+                            }
+                            else
+                            {
+                                BeeEnsures(false);
+                                std::unreachable();
+                            }
+
+                            return false;
+                        },
+                        f.condition);
+
+                    if (takeThis)
                     {
                         fiber = std::move(f.fiber);
                         it = m_WaitingJobs.erase(it);
@@ -269,6 +304,20 @@ namespace BeeEngine
         }
         return reinterpret_cast<uintptr_t>(Internal::Job::s_Instance->GetCurrentFiber()->GetStackBottom()) -
                reinterpret_cast<uintptr_t>(&test) - static_cast<uintptr_t>(1);
+    }
+    void Jobs::this_job::SleepFor(Time::millisecondsD time)
+    {
+        using std::chrono::high_resolution_clock;
+        using std::chrono::time_point_cast;
+        BeeExpects(IsInJob());
+        auto ptr = Internal::Job::s_Instance->GetCurrentFiber();
+        auto& context = ptr->GetContext();
+        {
+            std::unique_lock lock(Internal::Job::s_Instance->m_WaitingJobsMutex);
+            Internal::Job::s_Instance->m_WaitingJobs.emplace_back(
+                std::move(ptr), time_point_cast<high_resolution_clock::duration>(high_resolution_clock::now() + time));
+        }
+        context = std::move(context.resume());
     }
 
 } // namespace BeeEngine

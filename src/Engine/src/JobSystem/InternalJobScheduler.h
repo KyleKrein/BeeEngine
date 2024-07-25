@@ -3,9 +3,12 @@
 //
 
 #pragma once
+#include <chrono>
 #include <cstddef>
 #include <mutex>
 #include <queue>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "Core/TypeDefines.h"
@@ -54,12 +57,13 @@ namespace BeeEngine
             friend bool BeeEngine::Jobs::this_job::IsInJob();
             friend size_t BeeEngine::Jobs::this_job::TotalStackSize();
             friend size_t BeeEngine::Jobs::this_job::AvailableStackSize();
+            friend void Jobs::this_job::SleepFor(Time::millisecondsD time);
             struct WaitingContext
             {
                 Ref<::BeeEngine::Internal::Fiber> fiber;
-                ::BeeEngine::Jobs::Counter* counter;
-                WaitingContext(::BeeEngine::Ref<::BeeEngine::Internal::Fiber>&& fiber, Jobs::Counter* counter);
-                WaitingContext(const Ref<::BeeEngine::Internal::Fiber>& fiber, ::BeeEngine::Jobs::Counter* counter);
+                std::variant<::BeeEngine::Jobs::Counter*, std::chrono::high_resolution_clock::time_point> condition;
+                WaitingContext(::BeeEngine::Ref<::BeeEngine::Internal::Fiber>&& fiber, Jobs::ConditionType condition);
+                WaitingContext(const Ref<::BeeEngine::Internal::Fiber>& fiber, Jobs::ConditionType condition);
             };
 
         public:

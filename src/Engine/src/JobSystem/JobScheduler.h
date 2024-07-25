@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Core/Time.h"
 #include "Hardware.h"
 #include <atomic>
 #include <boost/context/continuation.hpp>
@@ -10,6 +11,7 @@
 #include <memory>
 #include <span>
 #include <thread>
+#include <variant>
 
 namespace BeeEngine
 {
@@ -33,6 +35,14 @@ namespace BeeEngine
              * @return size_t
              */
             size_t AvailableStackSize();
+            /**
+             * @brief Suspends this job for at least
+             * amount of time, that was specified.
+             * It is recommended to use std::chrono::literals
+             * to pass a time parameter
+             * @param time
+             */
+            void SleepFor(Time::millisecondsD time);
             // inline Jobs::ID GetID();
             bool IsInJob();
         }; // namespace this_job
@@ -49,6 +59,7 @@ namespace BeeEngine
         private:
             std::atomic<uint32_t> m_Counter = 0;
         };
+        using ConditionType = std::variant<::BeeEngine::Jobs::Counter*, std::chrono::high_resolution_clock::time_point>;
         enum class Priority
         {
             Low,
