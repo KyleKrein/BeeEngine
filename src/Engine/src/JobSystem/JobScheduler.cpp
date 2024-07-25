@@ -3,8 +3,14 @@
 //
 
 #include "JobScheduler.h"
+#include "Core/CodeSafety/Expects.h"
 #include "InternalJobScheduler.h"
 
+#include <boost/context/preallocated.hpp>
+#include <boost/context/protected_fixedsize_stack.hpp>
+#include <cstdint>
+#include <optional>
+#undef GetJob
 #include <mutex>
 #include <queue>
 
@@ -18,21 +24,42 @@ namespace BeeEngine
     {
         if (!m_Continuation)
         {
-            // Первый запуск
+// Первый запуск
+#if !defined(DEBUG)
+            boost::context::protected_fixedsize_stack stack_alloc(m_Job.StackSize);
+#else
             boost::context::fixedsize_stack stack_alloc(m_Job.StackSize);
-            m_Continuation = boost::context::callcc(std::allocator_arg,
-                                                    stack_alloc,
-                                                    [this](boost::context::continuation&& c)
-                                                    {
-                                                        m_Continuation = std::move(c);
-                                                        m_IsCompleted = true;
-                                                        m_Job();
-                                                        if (m_Job.Counter && m_IsCompleted)
-                                                        {
-                                                            m_Job.Counter->Decrement();
-                                                        }
-                                                        return std::move(m_Continuation);
-                                                    });
+#endif
+            auto stackContext = stack_alloc.allocate();
+            auto func = [this](boost::context::continuation&& c)
+            {
+                m_Continuation = std::move(c);
+                m_IsCompleted = true;
+                m_Job();
+                if (m_Job.Counter && m_IsCompleted)
+                {
+                    m_Job.Counter->Decrement();
+                }
+                return std::move(m_Continuation);
+            };
+            boost::context::preallocated prealloc{stackContext.sp, stackContext.size, stackContext};
+
+            using Record =
+                boost::context::detail::record<boost::context::continuation, decltype(stack_alloc), decltype(func)>;
+            // reserve space for control structure
+            m_StackPointer = stackContext.sp;
+            void* storage = reinterpret_cast<void*>(
+                (reinterpret_cast<uintptr_t>(m_StackPointer) - static_cast<uintptr_t>(sizeof(Record))) &
+                ~static_cast<uintptr_t>(0xff));
+            // 64byte gab between control structure and stack top
+            m_StackTop = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(storage) - static_cast<uintptr_t>(64));
+            m_StackBottom = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(m_StackPointer) -
+                                                    static_cast<uintptr_t>(stackContext.size));
+            // create fast-context
+            const std::size_t size =
+                reinterpret_cast<uintptr_t>(m_StackTop) - reinterpret_cast<uintptr_t>(m_StackBottom);
+            m_StackSize = size;
+            m_Continuation = boost::context::callcc(std::allocator_arg, prealloc, stack_alloc, func);
         }
         else
         {
@@ -223,6 +250,25 @@ namespace BeeEngine
     bool Jobs::this_job::IsInJob()
     {
         return Internal::Job::s_Instance->GetCurrentFiber() != nullptr;
+    }
+    size_t Jobs::this_job::TotalStackSize()
+    {
+        BeeExpects(IsInJob());
+        return Internal::Job::s_Instance->GetCurrentFiber()->GetStackSize();
+    }
+    size_t Jobs::this_job::AvailableStackSize()
+    {
+        BeeExpects(IsInJob());
+        char test;
+        static const bool growthDown = Internal::Job::s_Instance->GetCurrentFiber()->GetStackBottom() < &test;
+        if (growthDown) [[likely]]
+        {
+            return reinterpret_cast<uintptr_t>(&test) -
+                   reinterpret_cast<uintptr_t>(Internal::Job::s_Instance->GetCurrentFiber()->GetStackBottom()) -
+                   static_cast<uintptr_t>(1);
+        }
+        return reinterpret_cast<uintptr_t>(Internal::Job::s_Instance->GetCurrentFiber()->GetStackBottom()) -
+               reinterpret_cast<uintptr_t>(&test) - static_cast<uintptr_t>(1);
     }
 
 } // namespace BeeEngine

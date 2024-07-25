@@ -19,6 +19,20 @@ namespace BeeEngine
         namespace this_job
         {
             void yield();
+            /**
+             * @brief Returns total size of the
+             * current stack in bytes. Must be called
+             * only in a job
+             * @return size_t
+             */
+            size_t TotalStackSize();
+            /**
+             * @brief Returns approximate size of the
+             * left space on the current stack in bytes.
+             * Must be called only in a job
+             * @return size_t
+             */
+            size_t AvailableStackSize();
             // inline Jobs::ID GetID();
             bool IsInJob();
         }; // namespace this_job

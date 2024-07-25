@@ -3,11 +3,13 @@
 //
 
 #pragma once
+#include <cstddef>
 #include <mutex>
 #include <queue>
 #include <vector>
 
 #include "Core/TypeDefines.h"
+#include "JobScheduler.h"
 #include "JobSystem/JobScheduler.h"
 
 namespace BeeEngine
@@ -33,8 +35,16 @@ namespace BeeEngine
 
             boost::context::continuation& GetContext() { return m_Continuation; }
 
+            size_t GetStackSize() const { return m_StackSize; }
+            void* GetStackTop() const { return m_StackTop; }
+            void* GetStackBottom() const { return m_StackBottom; }
+
         private:
             JobWrapper m_Job;
+            void* m_StackPointer = nullptr;
+            void* m_StackTop = nullptr;
+            void* m_StackBottom = nullptr;
+            size_t m_StackSize = 0;
             boost::context::continuation m_Continuation;
             std::atomic<bool> m_IsCompleted = false;
         };
@@ -42,6 +52,8 @@ namespace BeeEngine
         {
             friend void BeeEngine::Jobs::this_job::yield();
             friend bool BeeEngine::Jobs::this_job::IsInJob();
+            friend size_t BeeEngine::Jobs::this_job::TotalStackSize();
+            friend size_t BeeEngine::Jobs::this_job::AvailableStackSize();
             struct WaitingContext
             {
                 Ref<::BeeEngine::Internal::Fiber> fiber;
