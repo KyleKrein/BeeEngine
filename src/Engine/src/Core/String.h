@@ -17,6 +17,13 @@ namespace BeeEngine
     using UTF8String = String;
     using UTF16String = std::u16string;
 
+    namespace StringLiterals
+    {
+        constexpr UTF8String operator""_u8(const char* arg)
+        {
+            return {arg};
+        }
+    } // namespace StringLiterals
     bool IsValidString(const UTF8String& string);
     UTF16String ConvertUTF8ToUTF16(const UTF8String& string);
     UTF8String ConvertUTF16ToUTF8(const UTF16String& string);
@@ -136,3 +143,4 @@ namespace BeeEngine
     UTF8String ToUppercase(std::string_view string);
     UTF8String ToLowercase(std::string_view string);
 } // namespace BeeEngine
+using namespace BeeEngine::StringLiterals; // May be removed in future
