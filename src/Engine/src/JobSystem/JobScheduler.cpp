@@ -192,6 +192,15 @@ namespace BeeEngine
         {
             return;
         }
+        if (!Jobs::this_job::IsInJob())
+        {
+            using namespace std::chrono_literals;
+            while (!counter.IsZero())
+            {
+                std::this_thread::sleep_for(10ms);
+            }
+            return;
+        }
         auto currentFiber = GetCurrentFiber();
         currentFiber->MarkIncomplete();
         {
