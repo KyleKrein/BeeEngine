@@ -282,6 +282,7 @@ namespace BeeEngine
 
     void Jobs::this_job::yield()
     {
+        BeeExpects(IsInJob());
         auto ptr = Internal::Job::s_Instance->GetCurrentFiber();
         auto& context = ptr->GetContext();
         {

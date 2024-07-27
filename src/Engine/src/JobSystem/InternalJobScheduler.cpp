@@ -1,3 +1,17 @@
+/**
+ * @file InternalJobScheduler.cpp
+ * @author Aleksandr Lebedev
+ * @brief This file contains definitions of thread_local static fields
+ * and functions to get values from those fields. They are separated
+ * from all other files to avoid certain compiler optimizations,
+ * that assume that all thread_local fields always have the same
+ * memory address, which may not be the case, because this JobSystem
+ * can move Jobs between threads.
+ * @date 2024-07-27
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 //
 // Created by Aleksandr on 11.03.2024.
 //
