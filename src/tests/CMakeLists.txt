@@ -10,7 +10,8 @@ add_executable(BeeEngine_Tests tests_main.cpp GeneralPurposeAllocatorTest.cpp St
         FormatStringTest.cpp
         TransformTests.cpp
         HashTests.cpp
-        LocaleTests.cpp)
+        LocaleTests.cpp
+        JobTests.cpp)
 
 set_property(TARGET BeeEngine_Tests PROPERTY CXX_STANDARD 23)
 

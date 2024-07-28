@@ -2,6 +2,8 @@
 // Created by alexl on 09.06.2023.
 //
 #include "Utils.h"
+#include <array>
+#include <vulkan/vulkan_handles.hpp>
 #if defined(BEE_COMPILE_VULKAN)
 #include "Core/Logging/Log.h"
 #include "VulkanGraphicsDevice.h"
@@ -138,7 +140,11 @@ namespace BeeEngine::Internal
                                        m_ImageAvailableSemaphores[m_CurrentFrame], // must be a not signaled semaphore
                                        nullptr,
                                        imageIndex);
-
+        if (m_ImagesInFlight[*imageIndex] != VK_NULL_HANDLE)
+        {
+            CheckVkResult(device.waitForFences(
+                1, &m_ImagesInFlight[*imageIndex], vk::True, std::numeric_limits<uint64_t>::max()));
+        }
         return result;
     }
 

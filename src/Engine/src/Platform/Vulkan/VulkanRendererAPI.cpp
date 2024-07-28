@@ -6,6 +6,7 @@
 
 #include "Core/Application.h"
 #include "Core/Expected.h"
+#include "Core/Logging/Log.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/Renderer.h"
@@ -15,6 +16,7 @@
 #include "VulkanMaterial.h"
 #include <chrono>
 #include <thread>
+#include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_enums.hpp>
 #include <vulkan/vulkan_structs.hpp>
 
@@ -71,7 +73,7 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to begin recording command buffer");
         }
-        CommandBuffer commandBuffer{m_CommandBuffers[m_CurrentImageIndex], &m_RenderingQueue};
+        CommandBuffer commandBuffer{cmd, &m_RenderingQueue};
         return commandBuffer;
     }
 

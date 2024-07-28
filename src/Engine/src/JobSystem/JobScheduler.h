@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "Core/Time.h"
 #include "Hardware.h"
 #include <atomic>
 #include <boost/context/continuation.hpp>
@@ -10,6 +11,7 @@
 #include <memory>
 #include <span>
 #include <thread>
+#include <variant>
 
 namespace BeeEngine
 {
@@ -18,8 +20,47 @@ namespace BeeEngine
         using ID = uint32_t;
         namespace this_job
         {
+            /**
+             * @brief Yields the current job, allowing other jobs to run.
+             * This function is useful when a job needs to give up control temporarily,
+             * allowing other jobs to execute. It is a non-blocking operation.
+             *
+             * @return void
+             *
+             * @note This function should be called only within a job.
+             *       Calling it outside of a job may lead to unexpected behavior.
+             */
             void yield();
+            /**
+             * @brief Returns total size of the
+             * current stack in bytes. Must be called
+             * only in a job
+             * @return size_t
+             */
+            size_t TotalStackSize();
+            /**
+             * @brief Returns approximate size of the
+             * left space on the current stack in bytes.
+             * Must be called only in a job
+             * @return size_t
+             */
+            size_t AvailableStackSize();
+            /**
+             * @brief Suspends this job for at least
+             * amount of time, that was specified.
+             * It is recommended to use std::chrono::literals
+             * to pass a time parameter
+             * @param time
+             */
+            void SleepFor(Time::millisecondsD time);
             // inline Jobs::ID GetID();
+            /**
+             * @brief Checks if the current code is executing within a job.
+             *
+             * @return bool
+             * @retval true  The current code is executing within a job.
+             * @retval false The current code is not executing within a job.
+             */
             bool IsInJob();
         }; // namespace this_job
 
@@ -35,6 +76,7 @@ namespace BeeEngine
         private:
             std::atomic<uint32_t> m_Counter = 0;
         };
+        using ConditionType = std::variant<::BeeEngine::Jobs::Counter*, std::chrono::high_resolution_clock::time_point>;
         enum class Priority
         {
             Low,
@@ -180,6 +222,21 @@ namespace BeeEngine
             }
             Internal::ScheduleAll(jobWrappers);
         }
+        /**
+         * @brief Waits for all jobs associated with the given counter to complete.
+         * If in a job, yields the current job, allowing other jobs to run.
+         * If not in a job, blocks the current thread until all jobs associated with the given counter have finished
+         * executing.
+         *
+         * @param counter A valid reference to the Jobs::Counter object associated with the jobs to wait for.
+         *
+         * @return void
+         *
+         * @note This function is thread-safe and can be called from multiple threads simultaneously.
+         *
+         * @note If a job associated with the given counter calls WaitForJobsToComplete on the same counter,
+         *       a deadlock may occur. It is recommended to avoid such circular dependencies.
+         */
         void WaitForJobsToComplete(Jobs::Counter& counter);
         constexpr size_t DefaultStackSize = 1024 * 64; // in bytes
 
