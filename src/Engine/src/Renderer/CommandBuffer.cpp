@@ -16,10 +16,11 @@ namespace BeeEngine
                                    Font& font,
                                    BindingSet& cameraBindingSet,
                                    const glm::mat4& transform,
-                                   const TextRenderingConfiguration& config)
+                                   const TextRenderingConfiguration& config,
+                                   int32_t entityId)
     {
         BeeExpects(IsValid());
-        m_RenderingQueue->SubmitText(text, font, cameraBindingSet, transform, config);
+        m_RenderingQueue->SubmitText(text, font, cameraBindingSet, transform, config, entityId);
     }
 
     void CommandBuffer::DrawRect(const glm::mat4& transform,

@@ -51,7 +51,8 @@ namespace BeeEngine.Internal
         private static delegate* unmanaged<IntPtr> s_Scene_GetActive = null;
         private static delegate* unmanaged<IntPtr, void> s_Scene_SetActive = null;
         private static delegate* unmanaged<Graphics, uint, IntPtr, ArrayInfo, void> s_Renderer_SubmitInstance = null;
-        private static delegate* unmanaged<Graphics, IntPtr, IntPtr, IntPtr, void> s_Renderer_SubmitText = null;
+        private static delegate* unmanaged<Graphics, IntPtr, IntPtr, IntPtr, IntPtr, int, void> s_Renderer_SubmitText = null;
+        private static delegate* unmanaged<ulong, ulong> s_Entity_GetEnttID = null;
 
         enum ReflectionType : UInt32
         {
@@ -304,7 +305,11 @@ namespace BeeEngine.Internal
             }
             else if (functionName == "Renderer_SubmitText")
             {
-                s_Renderer_SubmitText = (delegate* unmanaged<Graphics, IntPtr, IntPtr, IntPtr, void>)functionPtr;
+                s_Renderer_SubmitText = (delegate* unmanaged<Graphics, IntPtr, IntPtr, IntPtr, IntPtr, int, void>)functionPtr;
+            }
+            else if (functionName == "Entity_GetEnttID")
+            {
+                s_Entity_GetEnttID = (delegate* unmanaged<ulong, ulong>)functionPtr;
             }
             else
                 throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
@@ -428,6 +433,11 @@ namespace BeeEngine.Internal
         internal static void Entity_SetName(ulong id, string name)
         {
             s_Entity_SetName(id, Marshal.StringToHGlobalUni(name));
+        }
+
+        internal static ulong Entity_GetEnttID(ulong uuid)
+        {
+            return s_Entity_GetEnttID(uuid);
         }
 
         internal static string TextRendererComponent_GetText(ulong id)
@@ -630,9 +640,9 @@ namespace BeeEngine.Internal
         {
             s_Renderer_SubmitInstance(graphics, (uint)modelType, (IntPtr)Unsafe.AsPointer(ref handle), new ArrayInfo { Ptr = (IntPtr)data, Length = size });
         }
-        internal static void Renderer_SubmitText(Graphics graphics, ref AssetHandle handle, ref Matrix4 transform, ref TextConfig config)
+        internal static void Renderer_SubmitText(Graphics graphics, ref AssetHandle handle, string text, ref Matrix4 transform, ref TextConfig config, int entityId)
         {
-            s_Renderer_SubmitText(graphics, (IntPtr)Unsafe.AsPointer(ref handle), (IntPtr)Unsafe.AsPointer(ref transform), (IntPtr)Unsafe.AsPointer(ref config));
+            s_Renderer_SubmitText(graphics, (IntPtr)Unsafe.AsPointer(ref handle), Marshal.StringToHGlobalUni(text), (IntPtr)Unsafe.AsPointer(ref transform), (IntPtr)Unsafe.AsPointer(ref config), entityId);
         }
     }
 }

@@ -12,6 +12,7 @@
 #include "MSDFData.h"
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 #include "Renderer.h"
+#include "SceneRenderer.h"
 #include "ext/matrix_transform.hpp"
 #include "gtx/quaternion.hpp"
 
@@ -134,24 +135,12 @@ namespace BeeEngine::Internal
         s_Statistics.VertexCount = 0;
         s_Statistics.IndexCount = 0;
     }
-    struct TextInstancedData
-    {
-        glm::vec2 TexCoord0;
-        glm::vec2 TexCoord1;
-        glm::vec2 TexCoord2;
-        glm::vec2 TexCoord3;
-        glm::vec3 PositionOffset0;
-        glm::vec3 PositionOffset1;
-        glm::vec3 PositionOffset2;
-        glm::vec3 PositionOffset3;
-        Color4 ForegroundColor;
-        Color4 BackgroundColor;
-    };
     void RenderingQueue::SubmitText(const String& text,
                                     Font& font,
                                     BindingSet& cameraBindingSet,
                                     const glm::mat4& transform,
-                                    const TextRenderingConfiguration& config)
+                                    const TextRenderingConfiguration& config,
+                                    int32_t entityId)
     {
         BeeExpects(IsValidString(text));
         auto& textModel = Application::GetInstance().GetAssetManager().GetModel("Renderer_Font");
@@ -244,18 +233,17 @@ namespace BeeEngine::Internal
             texCoordMin *= glm::vec2(texelWidth, texelHeight);
             texCoordMax *= glm::vec2(texelWidth, texelHeight);
 
-            TextInstancedData data{
-                .TexCoord0 = texCoordMin,
-                .TexCoord1 = {texCoordMin.x, texCoordMax.y},
-                .TexCoord2 = texCoordMax,
-                .TexCoord3 = {texCoordMax.x, texCoordMin.y},
-                .PositionOffset0 = transform * glm::vec4(quadMin, 0.0f, 1.0f),
-                .PositionOffset1 = transform * glm::vec4{quadMin.x, quadMax.y, 0.0f, 1.0f},
-                .PositionOffset2 = transform * glm::vec4(quadMax, 0.0f, 1.0f),
-                .PositionOffset3 = transform * glm::vec4{quadMax.x, quadMin.y, 0.0f, 1.0f},
-                .ForegroundColor = config.ForegroundColor,
-                .BackgroundColor = config.BackgroundColor,
-            };
+            TextInstancedData data{.TexCoord0 = texCoordMin,
+                                   .TexCoord1 = {texCoordMin.x, texCoordMax.y},
+                                   .TexCoord2 = texCoordMax,
+                                   .TexCoord3 = {texCoordMax.x, texCoordMin.y},
+                                   .PositionOffset0 = transform * glm::vec4(quadMin, 0.0f, 1.0f),
+                                   .PositionOffset1 = transform * glm::vec4{quadMin.x, quadMax.y, 0.0f, 1.0f},
+                                   .PositionOffset2 = transform * glm::vec4(quadMax, 0.0f, 1.0f),
+                                   .PositionOffset3 = transform * glm::vec4{quadMax.x, quadMin.y, 0.0f, 1.0f},
+                                   .ForegroundColor = config.ForegroundColor,
+                                   .BackgroundColor = config.BackgroundColor,
+                                   .EntityID = entityId + 1};
             SubmitInstance({.Model = &textModel, .BindingSets = {&cameraBindingSet, atlasTexture.GetBindingSet()}},
                            {(byte*)&data, sizeof(TextInstancedData)});
 

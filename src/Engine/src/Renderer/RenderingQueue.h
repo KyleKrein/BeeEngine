@@ -81,7 +81,8 @@ namespace BeeEngine::Internal
                         Font& font,
                         BindingSet& cameraBindingSet,
                         const glm::mat4& transform,
-                        const TextRenderingConfiguration& config);
+                        const TextRenderingConfiguration& config,
+                        int32_t entityId = -1);
         void Flush(CommandBuffer& commandBuffer);
         void FinishFrame(CommandBuffer& commandBuffer);
 

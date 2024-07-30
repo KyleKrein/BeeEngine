@@ -32,6 +32,20 @@ namespace BeeEngine
         float Fade = 0.005f;
         int32_t EntityID = -1;
     };
+    struct TextInstancedData
+    {
+        glm::vec2 TexCoord0;
+        glm::vec2 TexCoord1;
+        glm::vec2 TexCoord2;
+        glm::vec2 TexCoord3;
+        glm::vec3 PositionOffset0;
+        glm::vec3 PositionOffset1;
+        glm::vec3 PositionOffset2;
+        glm::vec3 PositionOffset3;
+        Color4 ForegroundColor;
+        Color4 BackgroundColor;
+        int32_t EntityID;
+    };
     class SceneRenderer
     {
     private:

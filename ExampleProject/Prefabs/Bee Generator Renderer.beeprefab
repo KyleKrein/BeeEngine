@@ -1,0 +1,22 @@
+Entities:
+  - Entity: 11979321831752977972
+    TagComponent:
+      Tag: Bee Generator Renderer
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.BeeGeneratorRenderer
+      Fields:
+        - Name: BeeTexture
+          Type: Texture2D
+          Data: [3753192931707503016, 2492935997162504003]
+        - Name: BeesX
+          Type: int
+          Data: 100
+        - Name: BeesY
+          Type: int
+          Data: 100
+    HierarchyComponent:
+      []

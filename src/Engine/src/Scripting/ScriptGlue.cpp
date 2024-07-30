@@ -22,6 +22,7 @@
 #include "Scene/Scene.h"
 #include "Scripting/ScriptingEngine.h"
 #include "ScriptingEngine.h"
+#include <cstdint>
 #include <exception>
 #include <unordered_map>
 #include <vector>
@@ -119,6 +120,7 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(Entity_Destroy);
             BEE_NATIVE_FUNCTION(Entity_Duplicate);
             BEE_NATIVE_FUNCTION(Entity_InstantiatePrefab);
+            BEE_NATIVE_FUNCTION(Entity_GetEnttID);
 
             BEE_NATIVE_FUNCTION(TextRendererComponent_GetText);
             BEE_NATIVE_FUNCTION(TextRendererComponent_SetText);
@@ -584,8 +586,12 @@ namespace BeeEngine
         cmd.SubmitInstance(model, bindingSets, {(byte*)data.data, data.size});
     }
 
-    void ScriptGlue::Renderer_SubmitText(
-        CommandBuffer cmd, AssetHandle* handle, void* textPtr, glm::mat4* transform, TextRenderingConfiguration* config)
+    void ScriptGlue::Renderer_SubmitText(CommandBuffer cmd,
+                                         AssetHandle* handle,
+                                         void* textPtr,
+                                         glm::mat4* transform,
+                                         TextRenderingConfiguration* config,
+                                         int32_t entityId)
     {
         String text = NativeToManaged::StringGetFromManagedString(textPtr);
         Model& model = *s_Data->Models[ModelType::Text];
@@ -594,7 +600,15 @@ namespace BeeEngine
                        font,
                        *ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet,
                        *transform,
-                       *config);
+                       *config,
+                       entityId);
+    }
+
+    uint64_t ScriptGlue::Entity_GetEnttID(uint64_t uuid)
+    {
+        Entity entity = GetEntity(uuid);
+        BeeCoreTrace("Entity_GetEnttID");
+        return static_cast<uint64_t>(static_cast<uint32_t>(entity));
     }
 
     void ScriptGlue::Init()

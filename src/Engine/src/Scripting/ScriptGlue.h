@@ -85,6 +85,7 @@ namespace BeeEngine
         static void Entity_Destroy(uint64_t id);
         static uint64_t Entity_Duplicate(uint64_t id);
         static uint64_t Entity_InstantiatePrefab(AssetHandle* handle, uint64_t parentId);
+        static uint64_t Entity_GetEnttID(uint64_t uuid);
         static void* TextRendererComponent_GetText(uint64_t id);
         static void TextRendererComponent_SetText(uint64_t id, void* text);
         static uint64_t Entity_FindEntityByName(void* name);
@@ -109,7 +110,8 @@ namespace BeeEngine
                                         AssetHandle* handle,
                                         void* textPtr,
                                         glm::mat4* transform,
-                                        TextRenderingConfiguration* config);
+                                        TextRenderingConfiguration* config,
+                                        int32_t entityId);
 
         static Texture2D* GetTextureForModelType(ModelType modelType, AssetHandle* handle);
 

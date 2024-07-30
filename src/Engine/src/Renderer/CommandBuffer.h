@@ -35,7 +35,8 @@ namespace BeeEngine
                         Font& font,
                         BindingSet& cameraBindingSet,
                         const glm::mat4& transform,
-                        const TextRenderingConfiguration& config);
+                        const TextRenderingConfiguration& config,
+                        int32_t entityId = -1);
         void DrawRect(const glm::mat4& transform, const Color4& color, BindingSet& cameraBindingSet, float lineWidth);
         void SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, gsl::span<byte> instanceData);
         void SubmitLine(const glm::vec3& start,
