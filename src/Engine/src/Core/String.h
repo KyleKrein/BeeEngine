@@ -47,10 +47,24 @@ namespace BeeEngine
     UTF16String ConvertUTF8ToUTF16(const UTF8String& string);
     UTF8String ConvertUTF16ToUTF8(const UTF16String& string);
 
+    /**
+     * @brief a string_view like class
+     * that allows to iterate on unicode
+     * characters (read only)
+     */
     class UTF8StringView
     {
     public:
+        /**
+         * @brief Construct a new UTF8StringView object
+         *
+         * @param string must be a string with lifetime, that
+         * exceeds lifetime of UTF8StringView object.
+         * String literals and temporary values are not allowed
+         */
         UTF8StringView(const UTF8String& string);
+        UTF8StringView(UTF8String&&) = delete;
+        UTF8StringView(const char*) = delete;
         class iterator
         {
         public:

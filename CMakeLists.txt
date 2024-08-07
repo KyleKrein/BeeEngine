@@ -20,7 +20,17 @@ include(src/Engine/vendor/vcpkg/scripts/buildsystems/vcpkg.cmake)
 project(
         BeeEngine_CPP
         DESCRIPTION "BeeEngine"
+        LANGUAGES CXX C
 )
+include(CheckIPOSupported)
+# Optional IPO. Do not use IPO if it's not supported by compiler.
+check_ipo_supported(RESULT result OUTPUT output LANGUAGES CXX C)
+if(result)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+  message("Using IPO")
+else()
+        message(WARNING "IPO is not supported: ${output}")
+endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
