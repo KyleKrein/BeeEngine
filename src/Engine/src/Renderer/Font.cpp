@@ -17,10 +17,147 @@
 #include <msdf-atlas-gen/GlyphGeometry.h>
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <mutex>
+#include <unordered_map>
 #include <vector>
 
 namespace BeeEngine
 {
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    class JobsImmediateAtlasGenerator
+    {
+    public:
+        JobsImmediateAtlasGenerator();
+        JobsImmediateAtlasGenerator(int width, int height);
+        template <typename... ARGS>
+        JobsImmediateAtlasGenerator(int width, int height, ARGS... storageArgs);
+        void generate(std::span<const msdf_atlas::GlyphGeometry> glyphs);
+        void rearrange(int width, int height, const msdf_atlas::Remap* remapping, int count);
+        void resize(int width, int height);
+        /// Sets attributes for the generator function
+        void setAttributes(const msdf_atlas::GeneratorAttributes& attributes);
+        /// Allows access to the underlying AtlasStorage
+        const AtlasStorage& atlasStorage() const;
+        /// Returns the layout of the contained glyphs as a list of GlyphBoxes
+        const std::vector<msdf_atlas::GlyphBox>& getLayout() const;
+
+    private:
+        AtlasStorage storage;
+        std::vector<msdf_atlas::GlyphBox> layout;
+        std::vector<T> glyphBuffer;
+        std::vector<byte> errorCorrectionBuffer;
+        msdf_atlas::GeneratorAttributes attributes;
+    };
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    JobsImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::JobsImmediateAtlasGenerator()
+    {
+    }
+
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    JobsImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::JobsImmediateAtlasGenerator(int width, int height)
+        : storage(width, height)
+    {
+    }
+
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    template <typename... ARGS>
+    JobsImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::JobsImmediateAtlasGenerator(int width,
+                                                                                         int height,
+                                                                                         ARGS... storageArgs)
+        : storage(width, height, storageArgs...)
+    {
+    }
+
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    void
+    JobsImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::generate(std::span<const msdf_atlas::GlyphGeometry> glyphs)
+    {
+        int maxBoxArea = 0;
+        for (size_t i = 0; i < glyphs.size(); ++i)
+        {
+            msdf_atlas::GlyphBox box = glyphs[i];
+            maxBoxArea = std::max(maxBoxArea, box.rect.w * box.rect.h);
+            layout.push_back((msdf_atlas::GlyphBox&&)box);
+        }
+        size_t threadCount = Hardware::GetNumberOfCores();
+        int threadBufferSize = N * maxBoxArea;
+        if (threadCount * threadBufferSize > glyphBuffer.size())
+        {
+            glyphBuffer.resize(threadCount * threadBufferSize);
+        }
+        if (threadCount * maxBoxArea > errorCorrectionBuffer.size())
+        {
+            errorCorrectionBuffer.resize(threadCount * maxBoxArea);
+        }
+        std::unordered_map<std::thread::id, msdf_atlas::GeneratorAttributes> threadAttributes;
+        Jobs::Counter counter;
+        size_t threadNo = 0;
+        Jobs::SpinLock lock;
+        auto jobFunc =
+            [this, &threadAttributes, threadBufferSize, &lock, &threadNo, maxBoxArea](const auto& glyph, size_t index)
+        {
+            if (glyph.isWhitespace())
+            {
+                return;
+            }
+            int l, b, w, h;
+            glyph.getBoxRect(l, b, w, h);
+            msdfgen::BitmapRef<T, N> glyphBitmap(glyphBuffer.data() + threadNo * threadBufferSize, w, h);
+            auto id = std::this_thread::get_id();
+            if (!threadAttributes.contains(id))
+            {
+                std::unique_lock ulock(lock);
+                threadAttributes[id] = attributes;
+                threadAttributes[id].config.errorCorrection.buffer =
+                    reinterpret_cast<msdfgen::byte*>(errorCorrectionBuffer.data() + threadNo++ * maxBoxArea);
+            }
+            GEN_FN(glyphBitmap, glyph, threadAttributes.at(id));
+            storage.put(l, b, msdfgen::BitmapConstRef<T, N>(glyphBitmap));
+        };
+        Jobs::ForEach(glyphs, counter, jobFunc);
+        Jobs::WaitForJobsToComplete(counter);
+    }
+
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    void JobsImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::rearrange(int width,
+                                                                            int height,
+                                                                            const msdf_atlas::Remap* remapping,
+                                                                            int count)
+    {
+        for (int i = 0; i < count; ++i)
+        {
+            layout[remapping[i].index].rect.x = remapping[i].target.x;
+            layout[remapping[i].index].rect.y = remapping[i].target.y;
+        }
+        AtlasStorage newStorage((AtlasStorage&&)storage, width, height, remapping, count);
+        storage = (AtlasStorage&&)newStorage;
+    }
+
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    void JobsImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::resize(int width, int height)
+    {
+        AtlasStorage newStorage((AtlasStorage&&)storage, width, height);
+        storage = (AtlasStorage&&)newStorage;
+    }
+
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    void JobsImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::setAttributes(
+        const msdf_atlas::GeneratorAttributes& attributes)
+    {
+        this->attributes = attributes;
+    }
+
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    const AtlasStorage& JobsImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::atlasStorage() const
+    {
+        return storage;
+    }
+
+    template <typename T, int N, msdf_atlas::GeneratorFunction<T, N> GEN_FN, class AtlasStorage>
+    const std::vector<msdf_atlas::GlyphBox>& JobsImmediateAtlasGenerator<T, N, GEN_FN, AtlasStorage>::getLayout() const
+    {
+        return layout;
+    }
+
     struct Configuration
     {
         int Width, Height;
@@ -36,11 +173,10 @@ namespace BeeEngine
         attributes.config.overlapSupport = true;
         attributes.scanlinePass = true;
 
-        msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(
-            config.Width, config.Height);
+        JobsImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(config.Width,
+                                                                                                   config.Height);
         generator.setAttributes(attributes);
-        generator.setThreadCount(Hardware::GetNumberOfCores());
-        generator.generate(glyphs.data(), glyphs.size());
+        generator.generate(std::span{glyphs.data(), glyphs.size()});
         msdfgen::BitmapConstRef<T, N> bitmap = generator.atlasStorage();
 
         // unsigned char* pixels = new unsigned char[bitmap.width * bitmap.height * N];
@@ -172,11 +308,13 @@ namespace BeeEngine
 #endif
 
         msdf_atlas::TightAtlasPacker atlasPacker;
-        // atlasPacker.setDimensionsConstraint();
-        atlasPacker.setPixelRange(2.0f);
-        atlasPacker.setMiterLimit(1.0f);
-        atlasPacker.setPadding(0.0f);
-        atlasPacker.setScale(emSize);
+        atlasPacker.setDimensionsConstraint(msdf_atlas::DimensionsConstraint::SQUARE);
+        atlasPacker.setMinimumScale(24.0);
+        // setPixelRange or setUnitRange
+        atlasPacker.setUnitRange(2.0);
+        atlasPacker.setMiterLimit(1.0);
+        // atlasPacker.setPadding(0.0f);
+        // atlasPacker.setScale(emSize);
         int remaining = atlasPacker.pack(m_Data->Glyphs.data(), m_Data->Glyphs.size());
         BeeCoreTrace("Packed {}/{} glyphs", m_Data->Glyphs.size() - remaining, m_Data->Glyphs.size());
         BeeEnsures(remaining == 0);

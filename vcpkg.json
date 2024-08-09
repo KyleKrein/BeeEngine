@@ -1,8 +1,10 @@
 {
-  "dependencies":
-  [
+  "dependencies": [
     "icu",
     "boost-context",
-    "nethost"
+    "nethost",
+    "freetype",
+    "libpng",
+    "skia"
   ]
 }
