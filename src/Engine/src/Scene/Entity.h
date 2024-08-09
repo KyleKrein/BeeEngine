@@ -59,10 +59,8 @@ namespace BeeEngine
         void Destroy()
         {
             BeeExpects(IsValid());
-            BeeCoreAssert(*this != Entity::Null, "Entity is null!");
             m_Scene.lock()->DestroyEntity(*this);
-            m_ID = Null.ID;
-            m_Scene = Null.Scene;
+            *this = Entity::Null;
         }
         [[nodiscard]] bool IsValid() const { return !m_Scene.expired() && m_Scene.lock()->IsEntityValid(*this); }
 

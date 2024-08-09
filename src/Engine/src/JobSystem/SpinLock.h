@@ -24,7 +24,7 @@ namespace BeeEngine::Jobs
          * Spins until the lock is acquired by setting the atomic flag.
          * This function will block the calling thread until the lock is available.
          */
-        void lock()
+        constexpr void lock()
         {
             while (flag.test_and_set(std::memory_order_acquire))
             {
@@ -37,7 +37,7 @@ namespace BeeEngine::Jobs
          *
          * Clears the atomic flag, allowing other threads to acquire the lock.
          */
-        void unlock() { flag.clear(std::memory_order_release); }
+        constexpr void unlock() { flag.clear(std::memory_order_release); }
 
         /**
          * @brief Attempts to acquire the spinlock without spinning.
@@ -47,7 +47,7 @@ namespace BeeEngine::Jobs
          *
          * @return true if the lock was acquired, false otherwise.
          */
-        [[nodiscard]] bool try_lock() { return !flag.test_and_set(std::memory_order_acquire); }
+        [[nodiscard]] constexpr bool try_lock() { return !flag.test_and_set(std::memory_order_acquire); }
 
         /**
          * @brief Checks if the spinlock is currently held.
@@ -56,7 +56,7 @@ namespace BeeEngine::Jobs
          *
          * @return true if the lock is held, false otherwise.
          */
-        [[nodiscard]] bool is_locked() const { return flag.test(std::memory_order_acquire); }
+        [[nodiscard]] constexpr bool is_locked() const { return flag.test(std::memory_order_acquire); }
 
     private:
         std::atomic_flag flag = {};

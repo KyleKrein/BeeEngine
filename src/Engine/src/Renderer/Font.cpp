@@ -6,11 +6,18 @@
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Logging/Log.h"
 #include "FileSystem/File.h"
+#include "Hardware.h"
+#include "JobSystem/JobScheduler.h"
 #include "MSDFData.h"
 #include "Texture.h"
+#include "ext/import-font.h"
+#include <chrono>
+#include <cstddef>
 #include <glm.hpp>
 #include <msdf-atlas-gen/GlyphGeometry.h>
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
+#include <mutex>
+#include <vector>
 
 namespace BeeEngine
 {
@@ -32,7 +39,7 @@ namespace BeeEngine
         msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(
             config.Width, config.Height);
         generator.setAttributes(attributes);
-        generator.setThreadCount(8);
+        generator.setThreadCount(Hardware::GetNumberOfCores());
         generator.generate(glyphs.data(), glyphs.size());
         msdfgen::BitmapConstRef<T, N> bitmap = generator.atlasStorage();
 
@@ -56,47 +63,80 @@ namespace BeeEngine
             bitmap.width, bitmap.height, {(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
     }
 
+    void Font::Init()
+    {
+        BeeExpects(s_Handle == nullptr);
+        BeeCoreTrace("Initializing Freetype");
+        s_Handle = msdfgen::initializeFreetype();
+        BeeEnsures(s_Handle);
+    }
+    void Font::Shutdown()
+    {
+        BeeExpects(s_Handle == nullptr);
+        BeeCoreTrace("Freetype Shutdown");
+        msdfgen::deinitializeFreetype(static_cast<msdfgen::FreetypeHandle*>(s_Handle));
+        s_Handle = nullptr;
+    }
     Font::Font(const Path& path) : m_Data(new Internal::MSDFData())
     {
         String pathStr = path;
-        msdfgen::FreetypeHandle* ft = msdfgen::initializeFreetype();
-        if (!ft)
-            return;
+        {
+            std::unique_lock lock(s_Lock);
+            if (s_Counter == 0)
+            {
+                Init();
+            }
+            s_Counter++;
+        }
         auto data = File::ReadBinaryFile(path);
-        msdfgen::FontHandle* font = msdfgen::loadFontData(ft, (const msdfgen::byte*)data.data(), data.size());
+        msdfgen::FontHandle* font = msdfgen::loadFontData(static_cast<msdfgen::FreetypeHandle*>(s_Handle),
+                                                          reinterpret_cast<msdfgen::byte*>(data.data()),
+                                                          data.size());
         if (!font)
         {
             BeeCoreError("Failed to load font: {}", pathStr);
         }
         LoadFont(font, pathStr);
         msdfgen::destroyFont(font);
-        msdfgen::deinitializeFreetype(ft);
     }
 
     Font::~Font()
     {
         delete m_Data;
+        {
+            std::unique_lock lock(s_Lock);
+            s_Counter--;
+            if (s_Counter == 0)
+            {
+                Shutdown();
+            }
+        }
     }
 
     Font::Font(const String& name, gsl::span<byte> data) : m_Data(new Internal::MSDFData())
     {
-        msdfgen::FreetypeHandle* ft = msdfgen::initializeFreetype();
-        if (!ft)
-            return;
-        msdfgen::FontHandle* font =
-            msdfgen::loadFontData(ft, reinterpret_cast<const msdfgen::byte*>(data.data()), data.size());
+        {
+            std::unique_lock lock(s_Lock);
+            if (s_Counter == 0)
+            {
+                Init();
+            }
+            s_Counter++;
+        }
+        msdfgen::FontHandle* font = msdfgen::loadFontData(static_cast<msdfgen::FreetypeHandle*>(s_Handle),
+                                                          reinterpret_cast<msdfgen::byte*>(data.data()),
+                                                          data.size());
         if (!font)
         {
             BeeCoreError("Failed to load font: {}", name);
         }
         LoadFont(font, name);
         msdfgen::destroyFont(font);
-        msdfgen::deinitializeFreetype(ft);
     }
 
     void Font::LoadFont(void* handle, const String& name)
     {
-        msdfgen::FontHandle* font = (msdfgen::FontHandle*)handle;
+        msdfgen::FontHandle* font = static_cast<msdfgen::FontHandle*>(handle);
         m_Data->FontGeometry = msdf_atlas::FontGeometry(&m_Data->Glyphs);
         constexpr static float fontScale = 1.0f;
 
@@ -124,8 +164,12 @@ namespace BeeEngine
         }
         int glyphsLoaded = m_Data->FontGeometry.loadCharset(font, fontScale, charset);
         BeeCoreTrace("Loaded {}/{} glyphs", glyphsLoaded, charset.size());
-
+#if defined(DEBUG)
         double emSize = 40.0;
+#else
+        // TODO: Read documentation and check, whether this is the best solution to improve look of the text
+        double emSize = 400.0;
+#endif
 
         msdf_atlas::TightAtlasPacker atlasPacker;
         // atlasPacker.setDimensionsConstraint();
@@ -148,20 +192,19 @@ namespace BeeEngine
         // if MSDF or MTSDF
 
         const uint64_t seed = 0;
-        constexpr static uint64_t threadCount = 8;
-        const bool expensiveColoring = false;
+        constexpr bool expensiveColoring = true;
         constexpr static double defaultAngleThreshold = 3.0;
-        if (expensiveColoring)
+
+        if constexpr (expensiveColoring)
         {
-            msdf_atlas::Workload(
-                [&glyphs = m_Data->Glyphs, seed](int i, int threadNo) -> bool
-                {
-                    uint64_t glyphSeed = (LCG_MULTIPLIER * (seed ^ i) + LCG_INCREMENT) * !!seed;
-                    glyphs[i].edgeColoring(msdfgen::edgeColoringInkTrap, defaultAngleThreshold, glyphSeed);
-                    return true;
-                },
-                m_Data->Glyphs.size())
-                .finish(threadCount);
+            auto jobFunc = [seed](auto& glyph, size_t index)
+            {
+                uint64_t glyphSeed = (LCG_MULTIPLIER * (seed ^ index) + LCG_INCREMENT) * !!seed;
+                glyph.edgeColoring(msdfgen::edgeColoringInkTrap, defaultAngleThreshold, glyphSeed);
+            };
+            Jobs::Counter counter;
+            Jobs::ForEach(m_Data->Glyphs, counter, jobFunc);
+            Jobs::WaitForJobsToComplete(counter);
         }
         else
         {

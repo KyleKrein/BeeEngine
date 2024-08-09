@@ -4,7 +4,9 @@
 
 #pragma once
 #include "Core/Path.h"
+#include "JobSystem/SpinLock.h"
 #include "Texture.h"
+#include <cstddef>
 
 namespace BeeEngine
 {
@@ -31,6 +33,13 @@ namespace BeeEngine
     private:
         Internal::MSDFData* m_Data = nullptr;
         Ref<Texture2D> m_AtlasTexture;
+
+        static inline size_t s_Counter{0};
+        static inline Jobs::SpinLock s_Lock;
+        static inline void* s_Handle = nullptr;
+
+        static void Init();
+        static void Shutdown();
 
         void LoadFont(void* handle, const String& name);
     };

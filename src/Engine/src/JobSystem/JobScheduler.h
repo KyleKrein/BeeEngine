@@ -5,13 +5,21 @@
 #pragma once
 #include "Core/Time.h"
 #include "Hardware.h"
+#include <Core/Move.h>
+#include <array>
 #include <atomic>
 #include <boost/context/continuation.hpp>
 #include <concepts>
+#include <cstddef>
+#include <functional>
 #include <memory>
+#include <ranges>
 #include <span>
 #include <thread>
+#include <utility>
 #include <variant>
+#include <vector>
+
 
 namespace BeeEngine
 {
@@ -274,6 +282,44 @@ namespace BeeEngine
         {
             return Job<F, Args...>(
                 &counter, Priority::Normal, DefaultStackSize, std::forward<F>(func), std::forward<Args>(args)...);
+        }
+        template <typename Func, typename... Args>
+        constexpr auto ForEach(std::ranges::range auto&& container, Jobs::Counter& counter, Func&& func, Args&&... args)
+        {
+            size_t maxNumber = container.size();
+            if (maxNumber == 0)
+            {
+                return;
+            }
+            const size_t cores = Hardware::GetNumberOfCores();
+            const size_t remainder = maxNumber % cores;
+            const size_t jobsPerThread = maxNumber / cores;
+            size_t start = 0;
+            for (size_t core = 0; core < cores; ++core)
+            {
+                size_t end = start + jobsPerThread + (core < remainder ? 1 : 0);
+                auto job = CreateJob(
+                    counter,
+                    [start, end, &container](Func&& func, Args&&... args) mutable
+                    {
+                        for (size_t i = start; i < end; ++i)
+                        {
+                            func(container[i], std::move(i), std::forward<Args>(args)...);
+                        }
+                    },
+                    func,
+                    args...);
+                Schedule(BeeMove(job));
+                start = end;
+            }
+        }
+        template <typename Func, typename... Args>
+        constexpr auto ForEach(std::ranges::range auto&& container, Func&& func, Args&&... args)
+        {
+            return ForEach(container,
+                           *static_cast<Jobs::Counter*>(nullptr),
+                           std::forward<Func>(func),
+                           std::forward<Args>(args)...);
         }
     } // namespace Jobs
 

@@ -22,14 +22,16 @@ project(
         DESCRIPTION "BeeEngine"
         LANGUAGES CXX C
 )
-include(CheckIPOSupported)
-# Optional IPO. Do not use IPO if it's not supported by compiler.
-check_ipo_supported(RESULT result OUTPUT output LANGUAGES CXX C)
-if(result)
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-  message("Using IPO")
-else()
-        message(WARNING "IPO is not supported: ${output}")
+if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+        include(CheckIPOSupported)
+        # Optional IPO. Do not use IPO if it's not supported by compiler.
+        check_ipo_supported(RESULT result OUTPUT output LANGUAGES CXX C)
+        if(result)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        message("Using Link time optimizations")
+        else()
+                message(WARNING "Link time optimizations are not supported: ${output}")
+        endif()
 endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
