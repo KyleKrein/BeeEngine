@@ -17,7 +17,7 @@ if(WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
         add_link_options(/LTCG:STATUS)
 endif()
 set(VCPKG_ROOT "src/Engine/vendor/vcpkg")
-set(CMAKE_TOOLCHAIN_FILE ${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 include(${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 project(
         BeeEngine_CPP

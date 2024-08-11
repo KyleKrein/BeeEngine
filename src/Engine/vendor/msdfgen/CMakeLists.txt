@@ -91,6 +91,11 @@ target_link_libraries(msdfgen-full INTERFACE msdfgen::msdfgen-core msdfgen::msdf
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER meta)
 ]]
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+        set(MSDF_ATLAS_DYNAMIC_RUNTIME TRUE)
+else()
+        set(MSDF_ATLAS_DYNAMIC_RUNTIME FALSE)
+endif()
 CPMAddPackage(
         NAME msdfatlasgen
         GITHUB_REPOSITORY Chlumsky/msdf-atlas-gen

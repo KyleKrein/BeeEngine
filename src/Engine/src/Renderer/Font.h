@@ -34,9 +34,10 @@ namespace BeeEngine
         Internal::MSDFData* m_Data = nullptr;
         Ref<Texture2D> m_AtlasTexture;
 
+        struct StaticData;
         static inline size_t s_Counter{0};
         static inline Jobs::SpinLock s_Lock;
-        static inline void* s_Handle = nullptr;
+        static inline StaticData* s_Handle = nullptr;
 
         static void Init();
         static void Shutdown();

@@ -20,7 +20,6 @@
 #include <variant>
 #include <vector>
 
-
 namespace BeeEngine
 {
     namespace Jobs
@@ -283,6 +282,11 @@ namespace BeeEngine
             return Job<F, Args...>(
                 &counter, Priority::Normal, DefaultStackSize, std::forward<F>(func), std::forward<Args>(args)...);
         }
+        struct Indices
+        {
+            std::size_t ElementIndex;
+            std::size_t PackIndex;
+        };
         template <typename Func, typename... Args>
         constexpr auto ForEach(std::ranges::range auto&& container, Jobs::Counter& counter, Func&& func, Args&&... args)
         {
@@ -300,11 +304,26 @@ namespace BeeEngine
                 size_t end = start + jobsPerThread + (core < remainder ? 1 : 0);
                 auto job = CreateJob(
                     counter,
-                    [start, end, &container](Func&& func, Args&&... args) mutable
+                    [start, end, core, &container](Func&& func, Args&&... args) mutable
                     {
                         for (size_t i = start; i < end; ++i)
                         {
-                            func(container[i], std::move(i), std::forward<Args>(args)...);
+                            if constexpr (requires {
+                                              func(container[i], std::declval<Indices>(), std::forward<Args>(args)...);
+                                          })
+                            {
+                                func(container[i],
+                                     Indices{.ElementIndex = i, .PackIndex = core},
+                                     std::forward<Args>(args)...);
+                            }
+                            else if constexpr (requires { func(container[i], std::forward<Args>(args)...); })
+                            {
+                                func(container[i], std::forward<Args>(args)...);
+                            }
+                            else
+                            {
+                                func(container[i], std::move(i), std::forward<Args>(args)...);
+                            }
                         }
                     },
                     func,

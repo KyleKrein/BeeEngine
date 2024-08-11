@@ -9,6 +9,8 @@
 #include "Hardware.h"
 #include "JobSystem/JobScheduler.h"
 #include "MSDFData.h"
+#include "Renderer/Pipeline.h"
+#include "Renderer/ShaderModule.h"
 #include "Texture.h"
 #include "ext/import-font.h"
 #include <chrono>
@@ -19,6 +21,8 @@
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+
+#define JOBS_MODE 0
 
 namespace BeeEngine
 {
@@ -88,12 +92,15 @@ namespace BeeEngine
         {
             errorCorrectionBuffer.resize(threadCount * maxBoxArea);
         }
-        std::unordered_map<std::thread::id, msdf_atlas::GeneratorAttributes> threadAttributes;
+        std::vector<msdf_atlas::GeneratorAttributes> threadAttributes(threadCount);
+        for (size_t i = 0; i < threadCount; ++i)
+        {
+            threadAttributes[i] = attributes;
+            threadAttributes[i].config.errorCorrection.buffer =
+                reinterpret_cast<msdfgen::byte*>(errorCorrectionBuffer.data() + i * maxBoxArea);
+        }
         Jobs::Counter counter;
-        size_t threadNo = 0;
-        Jobs::SpinLock lock;
-        auto jobFunc =
-            [this, &threadAttributes, threadBufferSize, &lock, &threadNo, maxBoxArea](const auto& glyph, size_t index)
+        auto jobFunc = [this, &threadAttributes, threadBufferSize, maxBoxArea](const auto& glyph, Jobs::Indices indices)
         {
             if (glyph.isWhitespace())
             {
@@ -101,16 +108,8 @@ namespace BeeEngine
             }
             int l, b, w, h;
             glyph.getBoxRect(l, b, w, h);
-            msdfgen::BitmapRef<T, N> glyphBitmap(glyphBuffer.data() + threadNo * threadBufferSize, w, h);
-            auto id = std::this_thread::get_id();
-            if (!threadAttributes.contains(id))
-            {
-                std::unique_lock ulock(lock);
-                threadAttributes[id] = attributes;
-                threadAttributes[id].config.errorCorrection.buffer =
-                    reinterpret_cast<msdfgen::byte*>(errorCorrectionBuffer.data() + threadNo++ * maxBoxArea);
-            }
-            GEN_FN(glyphBitmap, glyph, threadAttributes.at(id));
+            msdfgen::BitmapRef<T, N> glyphBitmap(glyphBuffer.data() + indices.PackIndex * threadBufferSize, w, h);
+            GEN_FN(glyphBitmap, glyph, threadAttributes.at(indices.PackIndex));
             storage.put(l, b, msdfgen::BitmapConstRef<T, N>(glyphBitmap));
         };
         Jobs::ForEach(glyphs, counter, jobFunc);
@@ -172,11 +171,18 @@ namespace BeeEngine
         msdf_atlas::GeneratorAttributes attributes;
         attributes.config.overlapSupport = true;
         attributes.scanlinePass = true;
-
+#if JOBS_MODE
         JobsImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(config.Width,
                                                                                                    config.Height);
         generator.setAttributes(attributes);
         generator.generate(std::span{glyphs.data(), glyphs.size()});
+#else
+        msdf_atlas::ImmediateAtlasGenerator<S, N, GenFunc, msdf_atlas::BitmapAtlasStorage<T, N>> generator(
+            config.Width, config.Height);
+        generator.setThreadCount(Hardware::GetNumberOfCores());
+        generator.setAttributes(attributes);
+        generator.generate(glyphs.data(), glyphs.size());
+#endif
         msdfgen::BitmapConstRef<T, N> bitmap = generator.atlasStorage();
 
         // unsigned char* pixels = new unsigned char[bitmap.width * bitmap.height * N];
@@ -198,19 +204,29 @@ namespace BeeEngine
         return Texture2D::Create(
             bitmap.width, bitmap.height, {(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
     }
+    struct Font::StaticData
+    {
+        msdfgen::FreetypeHandle* FreeType = msdfgen::initializeFreetype();
+        Ref<Pipeline> AtlasPipeline =
+            Pipeline::Create(ShaderModule::Create("Shaders/MSDFGenerator.comp", ShaderType::Compute));
+        ~StaticData()
+        {
+            BeeCoreTrace("Freetype Shutdown");
+            msdfgen::deinitializeFreetype(FreeType);
+        }
+    };
 
     void Font::Init()
     {
         BeeExpects(s_Handle == nullptr);
         BeeCoreTrace("Initializing Freetype");
-        s_Handle = msdfgen::initializeFreetype();
+        s_Handle = new StaticData{};
         BeeEnsures(s_Handle);
     }
     void Font::Shutdown()
     {
-        BeeExpects(s_Handle == nullptr);
-        BeeCoreTrace("Freetype Shutdown");
-        msdfgen::deinitializeFreetype(static_cast<msdfgen::FreetypeHandle*>(s_Handle));
+        BeeExpects(s_Handle != nullptr);
+        delete s_Handle;
         s_Handle = nullptr;
     }
     Font::Font(const Path& path) : m_Data(new Internal::MSDFData())
@@ -224,6 +240,7 @@ namespace BeeEngine
             }
             s_Counter++;
         }
+        auto start = std::chrono::high_resolution_clock::now();
         auto data = File::ReadBinaryFile(path);
         msdfgen::FontHandle* font = msdfgen::loadFontData(static_cast<msdfgen::FreetypeHandle*>(s_Handle),
                                                           reinterpret_cast<msdfgen::byte*>(data.data()),
@@ -234,6 +251,10 @@ namespace BeeEngine
         }
         LoadFont(font, pathStr);
         msdfgen::destroyFont(font);
+        BeeCoreInfo(
+            "{} Font loading took: {} ms",
+            pathStr,
+            std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - start).count());
     }
 
     Font::~Font()
@@ -259,6 +280,7 @@ namespace BeeEngine
             }
             s_Counter++;
         }
+        auto start = std::chrono::high_resolution_clock::now();
         msdfgen::FontHandle* font = msdfgen::loadFontData(static_cast<msdfgen::FreetypeHandle*>(s_Handle),
                                                           reinterpret_cast<msdfgen::byte*>(data.data()),
                                                           data.size());
@@ -268,6 +290,10 @@ namespace BeeEngine
         }
         LoadFont(font, name);
         msdfgen::destroyFont(font);
+        BeeCoreInfo(
+            "{} Font loading took: {} ms",
+            name,
+            std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - start).count());
     }
 
     void Font::LoadFont(void* handle, const String& name)
@@ -335,6 +361,7 @@ namespace BeeEngine
 
         if constexpr (expensiveColoring)
         {
+#if JOBS_MODE
             auto jobFunc = [seed](auto& glyph, size_t index)
             {
                 uint64_t glyphSeed = (LCG_MULTIPLIER * (seed ^ index) + LCG_INCREMENT) * !!seed;
@@ -343,6 +370,17 @@ namespace BeeEngine
             Jobs::Counter counter;
             Jobs::ForEach(m_Data->Glyphs, counter, jobFunc);
             Jobs::WaitForJobsToComplete(counter);
+#else
+            msdf_atlas::Workload(
+                [&glyphs = m_Data->Glyphs, seed](int i, int threadNo) -> bool
+                {
+                    uint64_t glyphSeed = (LCG_MULTIPLIER * (seed ^ i) + LCG_INCREMENT) * !!seed;
+                    glyphs[i].edgeColoring(msdfgen::edgeColoringInkTrap, defaultAngleThreshold, glyphSeed);
+                    return true;
+                },
+                m_Data->Glyphs.size())
+                .finish(Hardware::GetNumberOfCores());
+#endif
         }
         else
         {
