@@ -174,7 +174,7 @@ namespace BeeEngine
         {
             auto name = path.GetFileNameWithoutExtension().AsUTF8();
             auto newFilepath = s_CachePath + name + GetExtension(type);
-            if (loadFromCache)
+            if (loadFromCache && File::Exists(newFilepath + ".spv"))
             {
                 spirv = LoadSpirVFromCache(newFilepath + ".spv");
                 layout = LoadBufferLayoutFromCache(newFilepath + ".layout");

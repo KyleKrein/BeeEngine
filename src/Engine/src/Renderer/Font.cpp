@@ -207,8 +207,8 @@ namespace BeeEngine
     struct Font::StaticData
     {
         msdfgen::FreetypeHandle* FreeType = msdfgen::initializeFreetype();
-        Ref<Pipeline> AtlasPipeline =
-            Pipeline::Create(ShaderModule::Create("Shaders/MSDFGenerator.comp", ShaderType::Compute));
+        // Ref<Pipeline> AtlasPipeline =
+        //     Pipeline::Create(ShaderModule::Create("Shaders/MSDFGenerator.comp", ShaderType::Compute));
         ~StaticData()
         {
             BeeCoreTrace("Freetype Shutdown");
@@ -242,9 +242,8 @@ namespace BeeEngine
         }
         auto start = std::chrono::high_resolution_clock::now();
         auto data = File::ReadBinaryFile(path);
-        msdfgen::FontHandle* font = msdfgen::loadFontData(static_cast<msdfgen::FreetypeHandle*>(s_Handle),
-                                                          reinterpret_cast<msdfgen::byte*>(data.data()),
-                                                          data.size());
+        msdfgen::FontHandle* font =
+            msdfgen::loadFontData(s_Handle->FreeType, reinterpret_cast<msdfgen::byte*>(data.data()), data.size());
         if (!font)
         {
             BeeCoreError("Failed to load font: {}", pathStr);
@@ -281,9 +280,8 @@ namespace BeeEngine
             s_Counter++;
         }
         auto start = std::chrono::high_resolution_clock::now();
-        msdfgen::FontHandle* font = msdfgen::loadFontData(static_cast<msdfgen::FreetypeHandle*>(s_Handle),
-                                                          reinterpret_cast<msdfgen::byte*>(data.data()),
-                                                          data.size());
+        msdfgen::FontHandle* font =
+            msdfgen::loadFontData(s_Handle->FreeType, reinterpret_cast<msdfgen::byte*>(data.data()), data.size());
         if (!font)
         {
             BeeCoreError("Failed to load font: {}", name);
@@ -318,12 +316,18 @@ namespace BeeEngine
             {0xA640, 0xA69F}, // Cyrillic Extended-B
         };
 
-        msdf_atlas::Charset charset;
-        for (CharsetRange range : charsetRanges)
+        static const msdf_atlas::Charset charset = []()
         {
-            for (uint32_t i = range.First; i <= range.Last; ++i)
-                charset.add(i);
-        }
+            msdf_atlas::Charset charset;
+            for (CharsetRange range : charsetRanges)
+            {
+                for (uint32_t i = range.First; i <= range.Last; ++i)
+                {
+                    charset.add(i);
+                }
+            }
+            return charset;
+        }();
         int glyphsLoaded = m_Data->FontGeometry.loadCharset(font, fontScale, charset);
         BeeCoreTrace("Loaded {}/{} glyphs", glyphsLoaded, charset.size());
 #if defined(DEBUG)
