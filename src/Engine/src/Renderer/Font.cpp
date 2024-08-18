@@ -172,7 +172,6 @@ namespace BeeEngine
     static const Path g_CacheFolder = "Cache";
     bool IsCacheValid(const Path& cachedPath)
     {
-        return false;
         return File::Exists(cachedPath);
     }
     template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
@@ -182,7 +181,7 @@ namespace BeeEngine
                                               const msdf_atlas::FontGeometry& fontGeometry,
                                               const Configuration& config)
     {
-        auto cachedPath = g_CacheFolder / (fontName + ".png");
+        auto cachedPath = g_CacheFolder / (Path(fontName).GetFileName().AsUTF8() + ".png");
         if (IsCacheValid(cachedPath))
         {
             auto result = TextureImporter::LoadTextureFromFile(cachedPath);
@@ -230,6 +229,7 @@ namespace BeeEngine
 #else
         const String& p = cachedPath;
 #endif
+        stbi_flip_vertically_on_write(true);
         stbi_write_png(p.c_str(), bitmap.width, bitmap.height, N, bitmap.pixels, bitmap.width * N);
         return Texture2D::Create(
             bitmap.width, bitmap.height, {(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
@@ -360,21 +360,18 @@ namespace BeeEngine
         }();
         int glyphsLoaded = m_Data->FontGeometry.loadCharset(font, fontScale, charset);
         BeeCoreTrace("Loaded {}/{} glyphs", glyphsLoaded, charset.size());
-#if defined(DEBUG)
-        double emSize = 40.0;
-#else
+
         // TODO: Read documentation and check, whether this is the best solution to improve look of the text
-        double emSize = 400.0;
-#endif
+        double emSize = 100.0;
 
         msdf_atlas::TightAtlasPacker atlasPacker;
-        atlasPacker.setDimensionsConstraint(msdf_atlas::DimensionsConstraint::SQUARE);
-        atlasPacker.setMinimumScale(24.0);
+        // atlasPacker.setDimensionsConstraint(msdf_atlas::DimensionsConstraint::SQUARE);
+        atlasPacker.setMinimumScale(emSize);
         // setPixelRange or setUnitRange
-        atlasPacker.setUnitRange(2.0);
+        atlasPacker.setPixelRange(2.0);
         atlasPacker.setMiterLimit(1.0);
-        // atlasPacker.setPadding(0.0f);
-        // atlasPacker.setScale(emSize);
+        //  atlasPacker.setPadding(0.0f);
+        //  atlasPacker.setScale(emSize);
         int remaining = atlasPacker.pack(m_Data->Glyphs.data(), m_Data->Glyphs.size());
         BeeCoreTrace("Packed {}/{} glyphs", m_Data->Glyphs.size() - remaining, m_Data->Glyphs.size());
         BeeEnsures(remaining == 0);
@@ -390,7 +387,7 @@ namespace BeeEngine
         // if MSDF or MTSDF
 
         const uint64_t seed = 0;
-        constexpr bool expensiveColoring = false;
+        constexpr bool expensiveColoring = true;
         constexpr static double defaultAngleThreshold = 3.0;
 
         if constexpr (expensiveColoring)
