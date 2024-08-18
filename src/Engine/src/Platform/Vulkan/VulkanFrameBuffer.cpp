@@ -176,6 +176,12 @@ namespace BeeEngine::Internal
             colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
             colorAttachment.clearValue = m_ColorAttachmentSpecification[i].ClearColor;
             colorAttachments.push_back(colorAttachment);
+            m_GraphicsDevice.TransitionImageLayout(
+                m_CurrentCommandBuffer,
+                m_ColorAttachmentsTextures[i].Image,
+                ConvertToVulkanFormat(m_ColorAttachmentSpecification[i].TextureFormat),
+                vk::ImageLayout::eShaderReadOnlyOptimal,
+                vk::ImageLayout::eColorAttachmentOptimal);
         }
 
         vk::RenderingAttachmentInfo depthStencilAttachment{};
@@ -193,6 +199,11 @@ namespace BeeEngine::Internal
         renderInfo.renderArea = vk::Rect2D{{0, 0}, {m_Preferences.Width, m_Preferences.Height}};
         if (m_DepthAttachmentTexture)
         {
+            m_GraphicsDevice.TransitionImageLayout(m_CurrentCommandBuffer,
+                                                   m_DepthAttachmentTexture.Image,
+                                                   ConvertToVulkanFormat(m_DepthAttachmentSpecification.TextureFormat),
+                                                   vk::ImageLayout::eUndefined,
+                                                   vk::ImageLayout::eDepthStencilAttachmentOptimal);
             renderInfo.pDepthAttachment = &depthStencilAttachment;
         }
         else
@@ -222,6 +233,15 @@ namespace BeeEngine::Internal
         BEE_PROFILE_FUNCTION();
         commandBuffer.EndRecording(); // Flush();
         m_CurrentCommandBuffer.endRendering(g_vkDynamicLoader);
+        for (size_t i = 0; i < m_ColorAttachmentsTextures.size(); i++)
+        {
+            m_GraphicsDevice.TransitionImageLayout(
+                m_CurrentCommandBuffer,
+                m_ColorAttachmentsTextures[i].Image,
+                ConvertToVulkanFormat(m_ColorAttachmentSpecification[i].TextureFormat),
+                vk::ImageLayout::eColorAttachmentOptimal,
+                vk::ImageLayout::eShaderReadOnlyOptimal);
+        }
         m_GraphicsDevice.EndSingleTimeCommands(m_CurrentCommandBuffer);
         // Renderer::SubmitCommandBuffer({m_CurrentCommandBuffer});
         commandBuffer.Invalidate();
