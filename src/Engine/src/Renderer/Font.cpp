@@ -3,24 +3,32 @@
 //
 
 #include "Font.h"
+#include "Core/AssetManagement/TextureImporter.h"
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Logging/Log.h"
 #include "FileSystem/File.h"
 #include "Hardware.h"
 #include "JobSystem/JobScheduler.h"
 #include "MSDFData.h"
+#include "Platform/Windows/WindowsString.h"
 #include "Renderer/Pipeline.h"
 #include "Renderer/ShaderModule.h"
 #include "Texture.h"
 #include "ext/import-font.h"
+#include "ext/save-png.h"
 #include <chrono>
 #include <cstddef>
 #include <glm.hpp>
 #include <msdf-atlas-gen/GlyphGeometry.h>
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <mutex>
+#include <stb_image_write.h>
 #include <unordered_map>
 #include <vector>
+
+#if defined(WINDOWS)
+int stbi_write_png(const wchar_t* filename, int x, int y, int comp, const void* data, int stride_bytes);
+#endif
 
 #define JOBS_MODE 0
 
@@ -161,6 +169,12 @@ namespace BeeEngine
     {
         int Width, Height;
     };
+    static const Path g_CacheFolder = "Cache";
+    bool IsCacheValid(const Path& cachedPath)
+    {
+        return false;
+        return File::Exists(cachedPath);
+    }
     template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
     static Ref<Texture2D> CreateAndCacheAtlas(const String& fontName,
                                               float fontSize,
@@ -168,6 +182,16 @@ namespace BeeEngine
                                               const msdf_atlas::FontGeometry& fontGeometry,
                                               const Configuration& config)
     {
+        auto cachedPath = g_CacheFolder / (fontName + ".png");
+        if (IsCacheValid(cachedPath))
+        {
+            auto result = TextureImporter::LoadTextureFromFile(cachedPath);
+            if (result)
+            {
+                return result;
+            }
+            BeeCoreError("Unable to load cached atlas texture from {}", cachedPath);
+        }
         msdf_atlas::GeneratorAttributes attributes;
         attributes.config.overlapSupport = true;
         attributes.scanlinePass = true;
@@ -200,7 +224,13 @@ namespace BeeEngine
         }
         free(row);
 #endif
-        // delete[] pixels;
+// delete[] pixels;
+#if defined(WINDOWS)
+        std::wstring p = Internal::WStringFromUTF8(cachedPath);
+#else
+        const String& p = cachedPath;
+#endif
+        stbi_write_png(p.c_str(), bitmap.width, bitmap.height, N, bitmap.pixels, bitmap.width * N);
         return Texture2D::Create(
             bitmap.width, bitmap.height, {(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
     }
@@ -360,12 +390,12 @@ namespace BeeEngine
         // if MSDF or MTSDF
 
         const uint64_t seed = 0;
-        constexpr bool expensiveColoring = true;
+        constexpr bool expensiveColoring = false;
         constexpr static double defaultAngleThreshold = 3.0;
 
         if constexpr (expensiveColoring)
         {
-#if JOBS_MODE
+#if JOBS_MODE || 1
             auto jobFunc = [seed](auto& glyph, size_t index)
             {
                 uint64_t glyphSeed = (LCG_MULTIPLIER * (seed ^ index) + LCG_INCREMENT) * !!seed;
