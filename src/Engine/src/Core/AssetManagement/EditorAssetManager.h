@@ -20,7 +20,10 @@ namespace BeeEngine
 
         AssetMetadata& GetAssetMetadata(const AssetHandle& handle);
 
-        const AssetHandle* GetAssetHandleByName(const String& name) const;
+        [[deprecated("If two assets have the same name, this method returns only the last loaded. This behavior is "
+                     "incorrect, therefore this method must be replaced")]] const AssetHandle*
+        GetAssetHandleByName(
+            const String& name) const; // TODO write the replacement, that works on path, not on the name
 
         void LoadAsset(gsl::span<byte> data, AssetHandle handle, const String& name, AssetType type) final;
 

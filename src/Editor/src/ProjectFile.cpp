@@ -6,6 +6,7 @@
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
 #include "Core/CodeSafety/Expects.h"
+#include "Core/Format.h"
 #include "Core/Logging/Log.h"
 #include "Core/ResourceManager.h"
 #include "Core/ScopeGuard.h"
@@ -257,7 +258,7 @@ namespace BeeEngine::Editor
                     gameFilesPath = BuildMacOSGame(gameLibraryPath, platformOutputPath);
                     break;
                 default:
-                    BeeCoreWarn("Cannot build for platform {0}", platform);
+                    BeeCoreWarn("[BUILDING] Cannot build for platform {0}", platform);
                     continue;
             }
             const Path gameConfigPath = gameFilesPath / "Game.cfg";
@@ -304,11 +305,33 @@ namespace BeeEngine::Editor
                             case AssetType::Font:
                                 return fontPath;
                             default:
-                                BeeCoreWarn("Unsupported asset type in project build{0}", meta.Type);
+                                BeeCoreWarn(
+                                    "[BUILDING][{0}] Unsupported asset type in project build {1}", platform, meta.Type);
                                 return assetPath;
                         }
                     };
-                    const Path assetOutputPath = choosePath() / std::get<Path>(meta.Data).GetFileName();
+                    Path assetOutputPath = choosePath() / std::get<Path>(meta.Data).GetFileName();
+                    if (File::Exists(
+                            assetOutputPath)) // there's already an asset with the same name and type in project
+                    {
+                        const auto originalName = std::get<Path>(meta.Data).GetFileNameWithoutExtension().AsUTF8();
+                        const auto extension = std::get<Path>(meta.Data).GetExtension().AsUTF8();
+                        Path newPath;
+                        String newName;
+                        size_t index = 1;
+                        do
+                        {
+                            newName = FormatString("{0}_{1}{2}", originalName, index++, extension);
+                            newPath = choosePath() / newName;
+                        } while (File::Exists(newPath));
+                        BeeCoreWarn("[BUILDING][{0}] Name collision detected. Renamed '{1}' to '{2}'",
+                                    platform,
+                                    originalName + extension,
+                                    newName);
+                        meta.Name = newName;
+                        assetOutputPath = newPath;
+                    }
+
                     File::CopyFile(std::get<Path>(meta.Data), assetOutputPath);
                     meta.Data = assetOutputPath;
                     assetRegistry[registryUuid].emplace(uuid, std::move(meta));
@@ -336,7 +359,7 @@ namespace BeeEngine::Editor
             config.Serialize(gameConfigPath);
         }
         std::filesystem::remove_all(libraryOutputPath.ToStdPath());
-        BeeCoreInfo("Project {0} built successfully in {1} mode!", Name.get(), options.BuildType);
+        BeeCoreInfo("[BUILDING] Project {0} built successfully in {1} mode!", Name.get(), options.BuildType);
     }
 
     Path ProjectFile::BuildWindowsGame(const Path& gameLibraryPath, const Path& outputDirectory)

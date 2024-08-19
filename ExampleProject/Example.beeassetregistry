@@ -32,10 +32,6 @@ Assets:
     Type: AssetType::Prefab
     Handle: 8978671574241113924
     FilePath: Prefabs/Bee Generator.beeprefab
-  - Name: Bee Generator
-    Type: AssetType::Prefab
-    Handle: 9207183314698693651
-    FilePath: Prefabs/Bee Generator.beeprefab
   - Name: Scene Changer
     Type: AssetType::Prefab
     Handle: 10162596410429172432
@@ -72,7 +68,3 @@ Assets:
     Type: AssetType::Prefab
     Handle: 16877448585992915076
     FilePath: Prefabs/Bee Prefab.beeprefab
-  - Name: Bee Generator Renderer
-    Type: AssetType::Prefab
-    Handle: 18264209897753119151
-    FilePath: Prefabs/Bee Generator Renderer.beeprefab
