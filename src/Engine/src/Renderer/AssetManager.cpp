@@ -15,13 +15,7 @@ BeeEngine::Material& BeeEngine::InternalAssetManager::LoadMaterial(const String&
     if (HasMaterial(name))
         return GetMaterial(name);
     else
-        return *m_Materials
-                    .emplace(name,
-                             Material::Create(vertexShader,
-                                              fragmentShader,
-                                              false // change to true when cache will be implemented
-                                              ))
-                    .first->second;
+        return *m_Materials.emplace(name, Material::Create(vertexShader, fragmentShader)).first->second;
 }
 
 BeeEngine::Mesh& BeeEngine::InternalAssetManager::LoadMesh(const String& name, const std::filesystem::path& path)

@@ -28,7 +28,6 @@ namespace BeeEngine
         virtual void Bind(CommandBuffer& cmd) = 0;
 
         static Ref<Material> Create(const std::filesystem::path& vertexShader,
-                                    const std::filesystem::path& fragmentShader,
-                                    bool loadFromCache = true);
+                                    const std::filesystem::path& fragmentShader);
     };
 } // namespace BeeEngine

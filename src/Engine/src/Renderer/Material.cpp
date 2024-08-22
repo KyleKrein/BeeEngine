@@ -14,16 +14,15 @@
 namespace BeeEngine
 {
     Ref<Material> Material::Create(const std::filesystem::path& vertexShader,
-                                   const std::filesystem::path& fragmentShader,
-                                   bool loadFromCache)
+                                   const std::filesystem::path& fragmentShader)
     {
         switch (Renderer::GetAPI())
         {
             case WebGPU:
-                return CreateRef<Internal::WebGPUMaterial>(vertexShader, fragmentShader, loadFromCache);
+                return CreateRef<Internal::WebGPUMaterial>(vertexShader, fragmentShader);
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
-                return CreateRef<Internal::VulkanMaterial>(vertexShader, fragmentShader, loadFromCache);
+                return CreateRef<Internal::VulkanMaterial>(vertexShader, fragmentShader);
 #endif
             default:
                 BeeCoreError("Unknown RendererAPI");

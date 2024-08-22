@@ -154,6 +154,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Gui/MessageBox.h
         src/Gui/MessageBox.cpp
         src/Core/Property.h
+        src/Renderer/BufferLayoutSerializer.cpp
+        src/Renderer/BufferLayoutSerializer.hpp
 )
 
 
