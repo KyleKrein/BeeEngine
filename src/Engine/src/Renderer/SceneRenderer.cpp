@@ -292,7 +292,12 @@ namespace BeeEngine
         // tlas.UpdateInstances(std::move(sceneTreeRenderer.GetAllEntities()));
 
         // TODO: this is temporary
-        for (auto& entity : sceneTreeRenderer.m_AllEntities)
+        for (auto& entity : sceneTreeRenderer.m_Opaque)
+        {
+            commandBuffer.SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
+        }
+        commandBuffer.Flush();
+        for (auto& entity : sceneTreeRenderer.m_Transparent)
         {
             commandBuffer.SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
         }

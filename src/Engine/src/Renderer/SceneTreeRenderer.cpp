@@ -23,9 +23,10 @@ namespace BeeEngine
                                       const std::vector<BindingSet*>& bindingSets,
                                       gsl::span<byte> instancedData)
     {
+        auto& vec = isTransparent ? m_Transparent : m_Opaque;
         std::vector<byte> instancedDataVector(instancedData.size());
         memcpy(instancedDataVector.data(), instancedData.data(), instancedData.size());
-        m_AllEntities.emplace_back(Entity{transform, &model, bindingSets, std::move(instancedDataVector)});
+        vec.emplace_back(Entity{transform, &model, bindingSets, std::move(instancedDataVector)});
     }
     struct TextInstancedData
     {
@@ -151,7 +152,7 @@ namespace BeeEngine
                                    .EntityID = entityID};
             std::vector<byte> instancedData(sizeof(TextInstancedData));
             memcpy(instancedData.data(), &data, sizeof(TextInstancedData));
-            m_AllEntities.emplace_back(Entity{transform,
+            m_Transparent.emplace_back(Entity{transform,
                                               &textModel,
                                               std::vector<BindingSet*>{m_TextBindingSet, atlasTexture.GetBindingSet()},
                                               std::move(instancedData)});

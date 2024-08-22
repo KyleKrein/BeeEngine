@@ -6,6 +6,7 @@
 
 #include "VulkanInstancedBuffer.h"
 #include <map>
+#include <vulkan/vulkan_enums.hpp>
 
 namespace BeeEngine::Internal
 {
@@ -211,23 +212,32 @@ namespace BeeEngine::Internal
             for (auto format : m_ColorAttachmentFormats)
             {
                 vk::PipelineColorBlendAttachmentState colorBlendAttachment{};
-                colorBlendAttachment.blendEnable = vk::False;
                 colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
                                                       vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-                /*switch (format)
+
+                switch (format)
                 {
                     case vk::Format::eR32Sfloat:
                     {
-                        colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR;
-                    }break;
+                        colorBlendAttachment.blendEnable = vk::False;
+                    }
+                    break;
                     case vk::Format::eR8G8B8A8Unorm:
                     {
-                        colorBlendAttachment.colorWriteMask = vk::ColorComponentFlagBits::eR |
-                vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-                    }break;
+                        colorBlendAttachment.blendEnable = vk::True;
+                        colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+                        colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+                        colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
+                        // In tutorial it's eOne and eZero for alpha blend factor, but in webgpu tutorial it's
+                        // eZero and eOne. And the second method works
+                        colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eZero;
+                        colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eOne;
+                        colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
+                    }
+                    break;
                     default:
                         BeeCoreError("Unknown color attachment format");
-                }*/
+                }
                 m_ColorBlendAttachments.push_back(colorBlendAttachment);
             }
         }

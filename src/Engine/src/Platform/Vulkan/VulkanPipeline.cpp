@@ -86,7 +86,7 @@ namespace BeeEngine::Internal
         vk::PipelineColorBlendStateCreateInfo colorBlending{};
         colorBlending.logicOpEnable = vk::False;
         colorBlending.logicOp = vk::LogicOp::eCopy;
-        colorBlending.attachmentCount = colorAttachmentFormats.size();
+        colorBlending.attachmentCount = colorBlendAttachments.size();
         colorBlending.pAttachments = colorBlendAttachments.data();
         colorBlending.setBlendConstants({0.0f, 0.0f, 0.0f, 0.0f});
 
