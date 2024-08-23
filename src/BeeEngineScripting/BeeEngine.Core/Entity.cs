@@ -1,5 +1,6 @@
 ﻿using BeeEngine.Events;
 using BeeEngine.Internal;
+using BeeEngine.Renderer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,6 +41,11 @@ namespace BeeEngine
             ID = id;
         }
 
+        /// <summary>
+        /// Gets or sets the name of the entity.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the value is null.</exception>
         public string Name
         {
             get
@@ -53,6 +59,21 @@ namespace BeeEngine
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 InternalCalls.Entity_SetName(ID, value);
+            }
+        }
+
+        /// <summary>
+        /// Gets a reference to the transform component of the entity.
+        /// The transform component represents the position, rotation, and scale of the entity in the 3D space.
+        /// </summary>
+        /// <returns>A reference to the transform component of the entity.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
+        public ref Transform Transform
+        {
+            get
+            {
+                ThrowIfDestroyed();
+                return ref GetComponent<TransformComponent>()!.Transform;
             }
         }
 
@@ -132,6 +153,11 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Attaches a behavior to the entity.
+        /// </summary>
+        /// <param name="behaviour">The behavior to attach.</param>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
         internal void SetBehaviour(Behaviour behaviour)
         {
             ThrowIfDestroyed();
@@ -141,6 +167,13 @@ namespace BeeEngine
                 m_Behaviour.ThisEntity = this;
             }
         }
+
+        /// <summary>
+        /// Gets the attached behavior of the specified type, if any.
+        /// </summary>
+        /// <typeparam name="T">The type of behavior to get.</typeparam>
+        /// <returns>The attached behavior of the specified type, or <c>null</c> if none is attached.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T? GetBehaviour<T>() where T : Behaviour
         {
@@ -149,12 +182,25 @@ namespace BeeEngine
                 return (T?)m_Behaviour;
             return null;
         }
+
+        /// <summary>
+        /// Checks if the entity has a behavior attached.
+        /// </summary>
+        /// <returns><c>true</c> if a behavior is attached; otherwise, <c>false</c>.</returns>
+        /// /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasBehaviour()
         {
             ThrowIfDestroyed();
             return m_Behaviour != null;
         }
+
+        /// <summary>
+        /// Checks if the entity has a behavior of the specified type attached.
+        /// </summary>
+        /// <typeparam name="T">The type of behavior to check.</typeparam>
+        /// <returns><c>true</c> if a behavior of the specified type is attached; otherwise, <c>false</c>.</returns>
+        /// /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasBehaviour<T>() where T : Behaviour
         {
@@ -162,6 +208,12 @@ namespace BeeEngine
             return HasBehaviour() && m_Behaviour is T;
         }
 
+        /// <summary>
+        /// Creates and attaches a new component of the specified type to the entity.
+        /// </summary>
+        /// <typeparam name="T">The type of component to create.</typeparam>
+        /// <returns>The created component.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
         public unsafe T CreateComponent<T>() where T : Component, new()
         {
             ThrowIfDestroyed();

@@ -79,6 +79,19 @@ namespace BeeEngine.Math
         public static readonly Matrix4 Zero = new Matrix4(Vector4.Zero, Vector4.Zero, Vector4.Zero, Vector4.Zero);
 
         /// <summary>
+        /// Creates a transformation matrix from the given translation, rotation, and scale.
+        /// </summary>
+        /// <param name="translation">The translation vector.</param>
+        /// <param name="rotation">The rotation vector in radians.</param>
+        /// <param name="scale">The scale vector.</param>
+        /// <returns>A transformation matrix combining translation, rotation, and scale.</returns>
+        public static Matrix4 CreateTransform(Vector3 translation, Vector3 rotation, Vector3 scale)
+        {
+            var rotationMatrix = Matrix4.CreateFromQuaternion(new Quaternion(rotation));
+            return Matrix4.CreateTranslation(translation) * rotationMatrix * Matrix4.CreateScale(scale);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Matrix4"/> struct.
         /// </summary>
         /// <param name="row0">Top row of the matrix.</param>
@@ -1625,7 +1638,7 @@ namespace BeeEngine.Math
 
             // __m128 X_ = _mm_sub_ps(
             var X_ = Sse.Subtract(
-                              // _mm_mul_ps(detD, A),
+                // _mm_mul_ps(detD, A),
                 Sse.Multiply(detD, A),
                 // Mat2Mul(B, D_C));
                 // _mm_add_ps(

@@ -1,5 +1,6 @@
 ﻿using BeeEngine.Internal;
 using BeeEngine.Math;
+using BeeEngine.Renderer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,15 @@ namespace BeeEngine
         private unsafe Vector3* m_Translation;
         private unsafe Vector3* m_Rotation;
         private unsafe Vector3* m_Scale;
+
+        public unsafe ref Transform Transform
+        {
+            get
+            {
+                CheckIfDestroyed();
+                return ref Unsafe.AsRef<Transform>((Transform*)m_Translation);
+            }
+        }
 
         public unsafe ref Vector3 Translation
         {
