@@ -153,14 +153,6 @@ namespace BeeEngine::Locale
     { // Отображение текущих ключей и их локализаций
         ImGui::BeginChild("##Lower", {-1, ImGui::GetContentRegionAvail().y - 60}, false);
         {
-            ImGui::TextUnformatted("Search: ");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::InputText("##Search", &searchField, ImGuiInputTextFlags_AutoSelectAll))
-            {
-                searchFieldLowerCase = ToLowercase(std::string_view(searchField));
-            }
-
             auto& locale = m_SelectedLocale.GetLanguageString();
             auto& keys = m_LocaleKeys[locale];
             size_t i = 0;
@@ -390,6 +382,15 @@ namespace BeeEngine::Locale
                               "друг/Моя подруга {name}}}\"");
             ImGui::EndPopup();
         }
+
+        ImGui::TextUnformatted("Search: ");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        if (ImGui::InputText("##Search", &searchField, ImGuiInputTextFlags_AutoSelectAll))
+        {
+            searchFieldLowerCase = ToLowercase(std::string_view(searchField));
+        }
+
         ImGui::EndChild();
     }
 
