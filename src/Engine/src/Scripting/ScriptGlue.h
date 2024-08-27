@@ -6,6 +6,8 @@
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/UUID.h"
 #include "KeyCodes.h"
+#include "Renderer/CommandBuffer.h"
+#include "Renderer/FrameBuffer.h"
 #include "Scene/Components.h"
 #include "vec3.hpp"
 #include <cstdint>
@@ -113,7 +115,13 @@ namespace BeeEngine
                                         TextRenderingConfiguration* config,
                                         int32_t entityId);
 
-        static Texture2D* GetTextureForModelType(ModelType modelType, AssetHandle* handle);
+        static BindingSet* GetBindingSetForModelType(ModelType modelType, AssetHandle* handle);
+
+        static FrameBuffer* Framebuffer_CreateDefault(uint32_t width, uint32_t height);
+        static void Framebuffer_Resize(FrameBuffer* framebuffer, uint32_t width, uint32_t height);
+        static void Framebuffer_Destroy(FrameBuffer* framebuffer);
+        static void Framebuffer_Bind(FrameBuffer* framebuffer, CommandBuffer* cmd);
+        static void Framebuffer_Unbind(FrameBuffer* framebuffer, CommandBuffer* cmd);
 
     private:
         struct ScriptGlueInternalState;

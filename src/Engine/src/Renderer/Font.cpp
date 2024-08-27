@@ -11,6 +11,7 @@
 #include "JobSystem/JobScheduler.h"
 #include "MSDFData.h"
 #include "Platform/Windows/WindowsString.h"
+#include "Renderer/BindingSet.h"
 #include "Renderer/Pipeline.h"
 #include "Renderer/ShaderModule.h"
 #include "Texture.h"
@@ -175,16 +176,16 @@ namespace BeeEngine
         return File::Exists(cachedPath);
     }
     template <typename T, typename S, int N, msdf_atlas::GeneratorFunction<S, N> GenFunc>
-    static Ref<Texture2D> CreateAndCacheAtlas(const String& fontName,
-                                              float fontSize,
-                                              const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
-                                              const msdf_atlas::FontGeometry& fontGeometry,
-                                              const Configuration& config)
+    static Scope<GPUTextureResource> CreateAndCacheAtlas(const String& fontName,
+                                                         float fontSize,
+                                                         const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
+                                                         const msdf_atlas::FontGeometry& fontGeometry,
+                                                         const Configuration& config)
     {
         auto cachedPath = g_CacheFolder / (Path(fontName).GetFileName().AsUTF8() + ".png");
         if (IsCacheValid(cachedPath))
         {
-            auto result = TextureImporter::LoadTextureFromFile(cachedPath);
+            auto result = GPUTextureResource::Create(cachedPath);
             if (result)
             {
                 return result;
@@ -231,7 +232,7 @@ namespace BeeEngine
 #endif
         stbi_flip_vertically_on_write(true);
         stbi_write_png(p.c_str(), bitmap.width, bitmap.height, N, bitmap.pixels, bitmap.width * N);
-        return Texture2D::Create(
+        return GPUTextureResource::Create(
             bitmap.width, bitmap.height, {(byte*)bitmap.pixels, (size_t)(bitmap.width * bitmap.height * N)}, N);
     }
     struct Font::StaticData
@@ -427,6 +428,7 @@ namespace BeeEngine
 
         m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 4, msdf_atlas::mtsdfGenerator>(
             name, emSize, m_Data->Glyphs, m_Data->FontGeometry, {width, height});
+        m_BindingSet = BindingSet::Create({{0, *m_AtlasTexture}});
 #if 0
         msdfgen::Shape shape;
         if(msdfgen::loadGlyph(shape, font, 'A'))

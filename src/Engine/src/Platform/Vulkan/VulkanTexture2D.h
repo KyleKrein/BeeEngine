@@ -8,19 +8,17 @@
 
 namespace BeeEngine::Internal
 {
-    class VulkanTexture2D : public Texture2D
+    class VulkanGPUTextureResource : public BeeEngine::GPUTextureResource
     {
     public:
-        void Bind(uint32_t slot = 0) override {}
-
         std::vector<IBindable::BindGroupLayoutEntryType> GetBindGroupLayoutEntry() const override;
 
         std::vector<IBindable::BindGroupEntryType> GetBindGroupEntry() const override;
 
         void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels) override;
 
-        VulkanTexture2D(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels);
-        ~VulkanTexture2D() override;
+        VulkanGPUTextureResource(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels);
+        ~VulkanGPUTextureResource() override;
 
     private:
         void FreeResources();

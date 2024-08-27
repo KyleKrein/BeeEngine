@@ -201,7 +201,7 @@ namespace BeeEngine::Editor
                 {
                     auto* texture = sprite.Texture(m_Project->GetProjectLocaleDomain().GetLocale());
                     float aspectRatio = (float)texture->GetWidth() / (float)texture->GetHeight();
-                    if (ImGui::ImageButton((void*)texture->GetRendererID(),
+                    if (ImGui::ImageButton((void*)texture->GetGPUResource().GetRendererID(),
                                            ImVec2(ImGui::GetContentRegionAvail().x * 0.95f,
                                                   ImGui::GetContentRegionAvail().x * 0.95f / aspectRatio),
                                            {0, 1},

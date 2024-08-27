@@ -54,6 +54,13 @@ namespace BeeEngine.Internal
         private static delegate* unmanaged<Graphics, IntPtr, IntPtr, IntPtr, IntPtr, int, void> s_Renderer_SubmitText = null;
         private static delegate* unmanaged<ulong, ulong> s_Entity_GetEnttID = null;
 
+        private static delegate* unmanaged<uint, uint, IntPtr> s_Framebuffer_CreateDefault = null;
+        private static delegate* unmanaged<IntPtr, void> s_Framebuffer_Destroy = null;
+        private static delegate* unmanaged<IntPtr, Graphics*, void> s_Framebuffer_Bind = null;
+        private static delegate* unmanaged<IntPtr, Graphics*, void> s_Framebuffer_Unbind = null;
+
+        private static delegate* unmanaged<IntPtr, uint, uint, void> s_Framebuffer_Resize = null;
+
         enum ReflectionType : UInt32
         {
             None = 0x00,
@@ -310,6 +317,22 @@ namespace BeeEngine.Internal
             else if (functionName == "Entity_GetEnttID")
             {
                 s_Entity_GetEnttID = (delegate* unmanaged<ulong, ulong>)functionPtr;
+            }
+            else if (functionName == "Framebuffer_CreateDefault")
+            {
+                s_Framebuffer_CreateDefault = (delegate* unmanaged<uint, uint, IntPtr>)functionPtr;
+            }
+            else if (functionName == "Framebuffer_Resize")
+            {
+                s_Framebuffer_Resize = (delegate* unmanaged<IntPtr, uint, uint, void>)functionPtr;
+            }
+            else if (functionName == "Framebuffer_Bind")
+            {
+                s_Framebuffer_Bind = (delegate* unmanaged<IntPtr, Graphics*, void>)functionPtr;
+            }
+            else if (functionName == "Framebuffer_Unbind")
+            {
+                s_Framebuffer_Unbind = (delegate* unmanaged<IntPtr, Graphics*, void>)functionPtr;
             }
             else
                 throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
@@ -643,6 +666,28 @@ namespace BeeEngine.Internal
         internal static void Renderer_SubmitText(Graphics graphics, ref AssetHandle handle, string text, ref Matrix4 transform, ref TextConfig config, int entityId)
         {
             s_Renderer_SubmitText(graphics, (IntPtr)Unsafe.AsPointer(ref handle), Marshal.StringToHGlobalUni(text), (IntPtr)Unsafe.AsPointer(ref transform), (IntPtr)Unsafe.AsPointer(ref config), entityId);
+        }
+        internal static IntPtr Framebuffer_CreateDefault(uint width, uint height)
+        {
+            return s_Framebuffer_CreateDefault(width, height);
+        }
+        internal static void Framebuffer_Resize(IntPtr framebuffer, uint width, uint height)
+        {
+            s_Framebuffer_Resize(framebuffer, width, height);
+        }
+        internal static void Framebuffer_Destroy(IntPtr framebuffer)
+        {
+            s_Framebuffer_Destroy(framebuffer);
+        }
+        internal static Graphics Framebuffer_Bind(IntPtr framebuffer)
+        {
+            Graphics graphics;
+            s_Framebuffer_Bind(framebuffer, &graphics);
+            return graphics;
+        }
+        internal static void Framebuffer_Unbind(IntPtr framebuffer, Graphics graphics)
+        {
+            s_Framebuffer_Unbind(framebuffer, &graphics);
         }
     }
 }

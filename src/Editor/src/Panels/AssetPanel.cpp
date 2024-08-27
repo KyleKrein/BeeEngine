@@ -91,12 +91,12 @@ namespace BeeEngine::Editor
         {
             const auto& metadata = *metadataPtr;
             ImGui::PushID(metadata.Name.data());
-            Texture2D* icon = nullptr;
+            GPUTextureResource* icon = nullptr;
             switch (metadata.Type)
             {
                 case AssetType::Texture2D:
                 {
-                    icon = &static_cast<Texture2D&>(*m_AssetManager->GetAsset(handle));
+                    icon = &static_cast<Texture2D&>(*m_AssetManager->GetAsset(handle)).GetGPUResource();
                     break;
                 }
                 case AssetType::Font:
@@ -107,7 +107,8 @@ namespace BeeEngine::Editor
                 default:
                 {
                     icon = &AssetManager::GetAsset<Texture2D>(EngineAssetRegistry::FileTexture,
-                                                              Locale::Localization::Default);
+                                                              Locale::Localization::Default)
+                                .GetGPUResource();
                     break;
                 }
             }

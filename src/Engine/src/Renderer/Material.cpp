@@ -30,17 +30,17 @@ namespace BeeEngine
         }
     }
     static String defaultLocale = "en_En";
-    Texture2D* MaterialInstance::GetColorTexture() const
+    GPUTextureResource* MaterialInstance::GetColorTexture() const
     {
         if (!AssetManager::IsAssetHandleValid(colorTexture))
-            return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
-        return &AssetManager::GetAsset<Texture2D>(colorTexture, defaultLocale);
+            return &Application::GetInstance().GetAssetManager().GetTexture("Blank").GetGPUResource();
+        return &AssetManager::GetAsset<Texture2D>(colorTexture, defaultLocale).GetGPUResource();
     }
-    Texture2D* MaterialInstance::GetMetalRoughTexture() const
+    GPUTextureResource* MaterialInstance::GetMetalRoughTexture() const
     {
         if (!AssetManager::IsAssetHandleValid(metalRoughTexture))
-            return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
-        return &AssetManager::GetAsset<Texture2D>(metalRoughTexture, defaultLocale);
+            return &Application::GetInstance().GetAssetManager().GetTexture("Blank").GetGPUResource();
+        return &AssetManager::GetAsset<Texture2D>(metalRoughTexture, defaultLocale).GetGPUResource();
     }
 
 } // namespace BeeEngine

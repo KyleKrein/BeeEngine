@@ -14,6 +14,7 @@
 #include "NativeToManaged.h"
 #include "Renderer/BindingSet.h"
 #include "Renderer/CommandBuffer.h"
+#include "Renderer/FrameBuffer.h"
 #include "Renderer/RenderingQueue.h"
 #include "Renderer/Texture.h"
 #include "Scene/Components.h"
@@ -25,6 +26,7 @@
 #include <cstdint>
 #include <exception>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #define BEE_NATIVE_FUNCTION(name) ScriptingEngine::RegisterNativeFunction(#name, (void*)&name)
@@ -147,6 +149,12 @@ namespace BeeEngine
 
             BEE_NATIVE_FUNCTION(Renderer_SubmitInstance);
             BEE_NATIVE_FUNCTION(Renderer_SubmitText);
+
+            BEE_NATIVE_FUNCTION(Framebuffer_CreateDefault);
+            BEE_NATIVE_FUNCTION(Framebuffer_Resize);
+            BEE_NATIVE_FUNCTION(Framebuffer_Bind);
+            BEE_NATIVE_FUNCTION(Framebuffer_Unbind);
+            BEE_NATIVE_FUNCTION(Framebuffer_Destroy);
         }
     }
     void ScriptGlue::Log_Warn(void* message)
@@ -544,45 +552,49 @@ namespace BeeEngine
     struct ScriptGlue::ScriptGlueInternalState
     {
         std::unordered_map<ScriptGlue::ModelType, Model*> Models;
-        Texture2D* BlankTexture = nullptr;
+        BindingSet* BlankTextureSet = nullptr;
     };
 
-    Texture2D* ScriptGlue::GetTextureForModelType(ScriptGlue::ModelType modelType, AssetHandle* handle)
+    BindingSet* ScriptGlue::GetBindingSetForModelType(ScriptGlue::ModelType modelType, AssetHandle* handle)
     {
+        BindingSet* bindingSet = s_Data->BlankTextureSet;
         switch (modelType)
         {
             case ScriptGlue::ModelType::Rectangle:
             {
-                Texture2D* result = s_Data->BlankTexture;
                 if (handle != nullptr && *handle != AssetHandle{0, 0})
                 {
-                    result = &AssetManager::GetAsset<Texture2D>(*handle, ScriptingEngine::GetScriptingLocale());
+                    bindingSet = &AssetManager::GetAsset<Texture2D>(*handle, ScriptingEngine::GetScriptingLocale())
+                                      .GetBindingSet();
                 }
-                return result;
+                break;
             }
             case ModelType::Line:
-                [[fallthrough]];
+                break;
             case ScriptGlue::ModelType::Circle:
             {
-                return s_Data->BlankTexture;
+                break;
             }
             case ScriptGlue::ModelType::Text:
             {
-                return &AssetManager::GetAsset<Font>(*handle, ScriptingEngine::GetScriptingLocale()).GetAtlasTexture();
+                bindingSet =
+                    &AssetManager::GetAsset<Font>(*handle, ScriptingEngine::GetScriptingLocale()).GetAtlasBindingSet();
+                break;
             }
+            default:
+                BeeCoreAssert(false, "Unknown model type: {}", modelType);
+                std::terminate();
         }
-        BeeCoreAssert(false, "Unknown model type: {}", modelType);
-        std::terminate();
+        return bindingSet;
     }
 
     void
     ScriptGlue::Renderer_SubmitInstance(CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data)
     {
         Model& model = *s_Data->Models[modelType];
-        Texture2D* texture = GetTextureForModelType(modelType, handle);
+        auto* bindingSet = GetBindingSetForModelType(modelType, handle);
         std::vector<BindingSet*> bindingSets = {
-            ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet.get(),
-            texture->GetBindingSet()};
+            ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet.get(), bindingSet};
         cmd.SubmitInstance(model, bindingSets, {(byte*)data.data, data.size});
     }
 
@@ -611,6 +623,36 @@ namespace BeeEngine
         return static_cast<uint64_t>(static_cast<uint32_t>(entity));
     }
 
+    FrameBuffer* ScriptGlue::Framebuffer_CreateDefault(uint32_t width, uint32_t height)
+    {
+        FrameBufferPreferences preferences;
+        preferences.Width = width * WindowHandler::GetInstance()->GetScaleFactor();
+        preferences.Height = height * WindowHandler::GetInstance()->GetScaleFactor();
+        preferences.Attachments = {
+            FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
+
+        preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; // RedInteger
+
+        auto framebuffer = FrameBuffer::Create(preferences);
+        return framebuffer.release();
+    }
+    void ScriptGlue::Framebuffer_Resize(FrameBuffer* framebuffer, uint32_t width, uint32_t height)
+    {
+        framebuffer->Resize(width, height);
+    }
+    void ScriptGlue::Framebuffer_Destroy(FrameBuffer* framebuffer)
+    {
+        delete framebuffer;
+    }
+    void ScriptGlue::Framebuffer_Bind(FrameBuffer* framebuffer, CommandBuffer* cmd)
+    {
+        *cmd = framebuffer->Bind();
+    }
+    void ScriptGlue::Framebuffer_Unbind(FrameBuffer* framebuffer, CommandBuffer* cmd)
+    {
+        framebuffer->Unbind(*cmd);
+    }
+
     void ScriptGlue::Init()
     {
         auto& assetManager = Application::GetInstance().GetAssetManager();
@@ -619,7 +661,7 @@ namespace BeeEngine
                        {ModelType::Circle, &assetManager.GetModel("Renderer2D_Circle")},
                        {ModelType::Text, &assetManager.GetModel("Renderer_Font")},
                        {ModelType::Line, &assetManager.GetModel("Renderer_Line")}},
-            .BlankTexture = &assetManager.GetTexture("Blank")};
+            .BlankTextureSet = &assetManager.GetTexture("Blank").GetBindingSet()};
     }
 
     void ScriptGlue::Shutdown()

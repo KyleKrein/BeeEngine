@@ -148,12 +148,13 @@ namespace BeeEngine::Internal
         auto& fontGeometry = font.GetMSDFData().FontGeometry;
         auto& metrics = fontGeometry.getMetrics();
         auto& atlasTexture = font.GetAtlasTexture();
+        auto& atlasBindingSet = font.GetAtlasBindingSet();
 
         double x = 0.0;
         double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
         double y = 0.0; //-fsScale * metrics.ascenderY;
 
-        const auto spaceGlyph = fontGeometry.getGlyph(' ');
+        const auto* const spaceGlyph = fontGeometry.getGlyph(' ');
 
         UTF8StringView textView(text);
         auto it = textView.begin();
@@ -244,7 +245,7 @@ namespace BeeEngine::Internal
                                    .ForegroundColor = config.ForegroundColor,
                                    .BackgroundColor = config.BackgroundColor,
                                    .EntityID = entityId + 1};
-            SubmitInstance({.Model = &textModel, .BindingSets = {&cameraBindingSet, atlasTexture.GetBindingSet()}},
+            SubmitInstance({.Model = &textModel, .BindingSets = {&cameraBindingSet, &atlasBindingSet}},
                            {(byte*)&data, sizeof(TextInstancedData)});
 
             if (it != end)

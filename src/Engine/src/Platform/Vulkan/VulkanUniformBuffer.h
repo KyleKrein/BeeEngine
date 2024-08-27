@@ -14,7 +14,6 @@ namespace BeeEngine::Internal
     {
     public:
         VulkanUniformBuffer(size_t size);
-        void Bind(uint32_t slot) override;
 
         std::vector<IBindable::BindGroupLayoutEntryType> GetBindGroupLayoutEntry() const override;
 

@@ -5,6 +5,7 @@
 #pragma once
 #include "Core/Path.h"
 #include "JobSystem/SpinLock.h"
+#include "Renderer/BindingSet.h"
 #include "Texture.h"
 #include <cstddef>
 
@@ -27,12 +28,15 @@ namespace BeeEngine
 
         [[nodiscard]] constexpr AssetType GetType() const override { return AssetType::Font; }
 
-        Texture2D& GetAtlasTexture() const { return *m_AtlasTexture; }
+        GPUTextureResource& GetAtlasTexture() const { return *m_AtlasTexture; }
         const Internal::MSDFData& GetMSDFData() const { return *m_Data; }
+
+        [[nodiscard]] BindingSet& GetAtlasBindingSet() { return *m_BindingSet; }
 
     private:
         Internal::MSDFData* m_Data = nullptr;
-        Ref<Texture2D> m_AtlasTexture;
+        Scope<GPUTextureResource> m_AtlasTexture;
+        Ref<BindingSet> m_BindingSet;
 
         struct StaticData;
         static inline size_t s_Counter{0};

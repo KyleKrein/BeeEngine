@@ -261,14 +261,7 @@ list(APPEND SOURCE_FILES ${SCRIPTING_SOURCE_FILES})
 
 add_library(BeeEngine ${SOURCE_FILES})
 
-#add_custom_target(BuildBeeEngineScriptingLibs
-#    COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE}
-#    WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting"
-#    COMMENT "Building C# libraries for scripting support"
-#)
-
-#add_dependencies(BeeEngine BuildBeeEngineScriptingLibs)
-# Запускаем dotnet build во время конфигурации
+message(STATUS "Building C# libraries for scripting support")
 execute_process(
     COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE}
     WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting"
