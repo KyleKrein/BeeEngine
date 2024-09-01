@@ -6,6 +6,7 @@
 #include "Core/Color4.h"
 #include "Core/Coroutines/Task.h"
 #include "Core/TypeDefines.h"
+#include "Texture.h"
 
 namespace BeeEngine
 {
@@ -135,8 +136,10 @@ namespace BeeEngine
         virtual void Unbind(CommandBuffer& commandBuffer) = 0;
         virtual void Resize(uint32_t width, uint32_t height) = 0;
         virtual void Invalidate() = 0;
-        [[nodiscard]] virtual uintptr_t GetColorAttachmentRendererID(uint32_t index) const = 0;
-        [[nodiscard]] virtual uintptr_t GetDepthAttachmentRendererID() const = 0;
+        [[nodiscard]] virtual uintptr_t GetColorAttachmentImGuiRendererID(uint32_t index) const = 0;
+        [[nodiscard]] virtual uintptr_t GetDepthAttachmentImGuiRendererID() const = 0;
+        [[nodiscard]] virtual GPUTextureResource& GetColorAttachmentResource(size_t index) = 0;
+        [[nodiscard]] virtual BindingSet& GetColorBindingSet() = 0;
         [[nodiscard]] virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const = 0;
         [[nodiscard]] virtual DumpedImage DumpAttachment(uint32_t attachmentIndex) const = 0;
         static Scope<FrameBuffer> Create(const FrameBufferPreferences& preferences);

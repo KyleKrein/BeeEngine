@@ -15,6 +15,7 @@
 #include "Renderer/BindingSet.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/FrameBuffer.h"
+#include "Renderer/IBindable.h"
 #include "Renderer/RenderingQueue.h"
 #include "Renderer/Texture.h"
 #include "Scene/Components.h"
@@ -155,6 +156,11 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(Framebuffer_Bind);
             BEE_NATIVE_FUNCTION(Framebuffer_Unbind);
             BEE_NATIVE_FUNCTION(Framebuffer_Destroy);
+            BEE_NATIVE_FUNCTION(UniformBuffer_CreateDefault);
+            BEE_NATIVE_FUNCTION(UniformBuffer_SetData);
+            BEE_NATIVE_FUNCTION(UniformBuffer_Destroy);
+            BEE_NATIVE_FUNCTION(BindingSet_Create);
+            BEE_NATIVE_FUNCTION(BindingSet_Destroy);
         }
     }
     void ScriptGlue::Log_Warn(void* message)
@@ -588,17 +594,34 @@ namespace BeeEngine
         return bindingSet;
     }
 
-    void
-    ScriptGlue::Renderer_SubmitInstance(CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data)
+    void ScriptGlue::Renderer_SubmitInstance(
+        BindingSet* cameraBindingSet, CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data)
     {
         Model& model = *s_Data->Models[modelType];
-        auto* bindingSet = GetBindingSetForModelType(modelType, handle);
+        BindingSet* bindingSet;
+        if (modelType == ModelType::Framebuffer)
+        {
+            struct FramebufferData
+            {
+                glm::mat4 Model;
+                FrameBuffer* Framebuffer;
+            };
+            FrameBuffer* framebuffer = static_cast<FramebufferData*>(data.data)->Framebuffer;
+            bindingSet = &framebuffer->GetColorBindingSet();
+        }
+        else
+        {
+            bindingSet = GetBindingSetForModelType(modelType, handle);
+        }
         std::vector<BindingSet*> bindingSets = {
-            ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet.get(), bindingSet};
+            cameraBindingSet ? cameraBindingSet
+                             : ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet.get(),
+            bindingSet};
         cmd.SubmitInstance(model, bindingSets, {(byte*)data.data, data.size});
     }
 
-    void ScriptGlue::Renderer_SubmitText(CommandBuffer cmd,
+    void ScriptGlue::Renderer_SubmitText(BindingSet* cameraBindingSet,
+                                         CommandBuffer cmd,
                                          AssetHandle* handle,
                                          void* textPtr,
                                          glm::mat4* transform,
@@ -610,7 +633,8 @@ namespace BeeEngine
         Font& font = AssetManager::GetAsset<Font>(*handle, ScriptingEngine::GetScriptingLocale());
         cmd.DrawString(text,
                        font,
-                       *ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet,
+                       cameraBindingSet ? *cameraBindingSet
+                                        : *ScriptingEngine::GetSceneContext()->GetSceneRendererData().CameraBindingSet,
                        *transform,
                        *config,
                        entityId);
@@ -623,21 +647,23 @@ namespace BeeEngine
         return static_cast<uint64_t>(static_cast<uint32_t>(entity));
     }
 
-    FrameBuffer* ScriptGlue::Framebuffer_CreateDefault(uint32_t width, uint32_t height)
+    FrameBuffer* ScriptGlue::Framebuffer_CreateDefault(uint32_t width, uint32_t height, Color4 clearColor)
     {
         FrameBufferPreferences preferences;
-        preferences.Width = width * WindowHandler::GetInstance()->GetScaleFactor();
-        preferences.Height = height * WindowHandler::GetInstance()->GetScaleFactor();
+        preferences.Width = width;   // * WindowHandler::GetInstance()->GetScaleFactor();
+        preferences.Height = height; // * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Attachments = {
             FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 
-        preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; // RedInteger
-
+        // preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; // RedInteger
+        preferences.Attachments.Attachments[0].ClearColor = clearColor;
         auto framebuffer = FrameBuffer::Create(preferences);
         return framebuffer.release();
     }
     void ScriptGlue::Framebuffer_Resize(FrameBuffer* framebuffer, uint32_t width, uint32_t height)
     {
+        // width = width * WindowHandler::GetInstance()->GetScaleFactor();
+        // height = height * WindowHandler::GetInstance()->GetScaleFactor();
         framebuffer->Resize(width, height);
     }
     void ScriptGlue::Framebuffer_Destroy(FrameBuffer* framebuffer)
@@ -653,6 +679,36 @@ namespace BeeEngine
         framebuffer->Unbind(*cmd);
     }
 
+    UniformBuffer* ScriptGlue::UniformBuffer_CreateDefault(uint32_t sizeBytes)
+    {
+        auto result = UniformBuffer::Create(sizeBytes);
+        return result.release();
+    }
+    void ScriptGlue::UniformBuffer_Destroy(UniformBuffer* buffer)
+    {
+        delete buffer;
+    }
+    void ScriptGlue::UniformBuffer_SetData(UniformBuffer* buffer, void* data, uint32_t sizeBytes)
+    {
+        buffer->SetData(data, sizeBytes);
+    }
+    BindingSet* ScriptGlue::BindingSet_Create(ArrayInfo elements)
+    {
+        std::vector<BindingSetElement> bindingSetElements;
+        bindingSetElements.reserve(elements.size);
+        IBindable** bindables = static_cast<IBindable**>(elements.data);
+        for (size_t i = 0; i < elements.size; i++)
+        {
+            bindingSetElements.emplace_back(i, *bindables[i]);
+        }
+        auto result = BindingSet::Create(BeeMove(bindingSetElements));
+        return result.release();
+    }
+    void ScriptGlue::BindingSet_Destroy(BindingSet* bindingSet)
+    {
+        delete bindingSet;
+    }
+
     void ScriptGlue::Init()
     {
         auto& assetManager = Application::GetInstance().GetAssetManager();
@@ -660,7 +716,8 @@ namespace BeeEngine
             .Models = {{ModelType::Rectangle, &assetManager.GetModel("Renderer2D_Rectangle")},
                        {ModelType::Circle, &assetManager.GetModel("Renderer2D_Circle")},
                        {ModelType::Text, &assetManager.GetModel("Renderer_Font")},
-                       {ModelType::Line, &assetManager.GetModel("Renderer_Line")}},
+                       {ModelType::Line, &assetManager.GetModel("Renderer_Line")},
+                       {ModelType::Framebuffer, &assetManager.GetModel("Renderer_Framebuffer")}},
             .BlankTextureSet = &assetManager.GetTexture("Blank").GetBindingSet()};
     }
 

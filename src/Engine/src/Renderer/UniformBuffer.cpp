@@ -10,7 +10,7 @@
 
 namespace BeeEngine
 {
-    Ref<UniformBuffer> UniformBuffer::Create(size_t size)
+    Scope<UniformBuffer> UniformBuffer::Create(size_t size)
     {
         switch (Renderer::GetAPI())
         {
@@ -21,7 +21,7 @@ namespace BeeEngine
 
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
-                return CreateRef<Internal::VulkanUniformBuffer>(size);
+                return CreateScope<Internal::VulkanUniformBuffer>(size);
 #endif
         }
         BeeCoreError("Unknown RendererAPI!");

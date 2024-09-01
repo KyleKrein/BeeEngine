@@ -189,4 +189,17 @@ namespace BeeEngine::Internal
     {
         return m_Sampler || m_ImageView || m_Image.Image || m_Image.Memory;
     }
+
+    VulkanGPUTextureResource::VulkanGPUTextureResource(
+        uint32_t width, uint32_t height, VulkanImage image, vk::ImageView view, vk::Sampler sampler)
+        : m_Device(VulkanGraphicsDevice::GetInstance()), m_Image(image), m_ImageView(view), m_Sampler(sampler)
+    {
+        m_Height = height;
+        m_Width = width;
+        m_ImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        m_ImageInfo.imageView = m_ImageView;
+        m_ImageInfo.sampler = m_Sampler;
+        m_RendererID =
+            (uintptr_t)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    }
 } // namespace BeeEngine::Internal

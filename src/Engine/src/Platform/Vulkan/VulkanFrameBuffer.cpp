@@ -6,9 +6,13 @@
 
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Logging/Log.h"
+#include "Core/TypeDefines.h"
 #include "Platform/Vulkan/VulkanBuffer.h"
+#include "Platform/Vulkan/VulkanImage.h"
+#include "Renderer/BindingSet.h"
 #include "Renderer/Renderer.h"
 #include "Utils.h"
+#include "VulkanTexture2D.h"
 #include "backends/imgui_impl_vulkan.h"
 #include <cstdint>
 #include <mdspan>
@@ -115,38 +119,19 @@ namespace BeeEngine::Internal
     VulkanFrameBuffer::~VulkanFrameBuffer()
     {
         BeeExpects(m_CurrentCommandBuffer == nullptr);
-        BeeExpects(m_ColorAttachmentsTextures.size() == m_ColorAttachmentsTextureViews.size() &&
-                   m_ColorAttachmentsTextures.size() == m_ColorDescriptorSets.size() &&
-                   m_ColorAttachmentsTextures.size() == m_ColorSamplers.size() &&
-                   m_ColorAttachmentsTextures.size() == m_ColorAttachmentsReadBuffers.size());
+        BeeExpects(m_ColorAttachmentsTextures.size() == m_ColorAttachmentsReadBuffers.size());
         DeletionQueue::Frame().PushFunction(
             [colorTextures = std::move(m_ColorAttachmentsTextures),
-             colorViews = std::move(m_ColorAttachmentsTextureViews),
-             colorSets = std::move(m_ColorDescriptorSets),
-             colorSamplers = std::move(m_ColorSamplers),
              colorReadBuffers = std::move(m_ColorAttachmentsReadBuffers),
-             colorSpecs = std::move(m_ColorAttachmentSpecification),
-             depthTexture = m_DepthAttachmentTexture,
-             depthView = m_DepthAttachmentTextureView,
-             depthSampler = m_DepthSampler,
-             depthSet = m_DepthDescriptorSet]() mutable
+             colorSpecs = std::move(m_ColorAttachmentSpecification)]() mutable
             {
                 auto& device = VulkanGraphicsDevice::GetInstance();
                 for (size_t i = 0; i < colorTextures.size(); ++i)
                 {
-                    device.DestroyImageWithView(colorTextures[i], colorViews[i]);
-                    device.GetDevice().destroySampler(colorSamplers[i]);
-                    ImGui_ImplVulkan_RemoveTexture(colorSets[i]);
                     if (colorSpecs[i].TextureUsage == FrameBufferTextureUsage::CPUAndGPU)
                     {
                         device.DestroyBuffer(colorReadBuffers[i].Buffer);
                     }
-                }
-                if (depthTexture)
-                {
-                    device.DestroyImageWithView(depthTexture, depthView);
-                    device.GetDevice().destroySampler(depthSampler);
-                    ImGui_ImplVulkan_RemoveTexture(depthSet);
                 }
             });
     }
@@ -169,7 +154,7 @@ namespace BeeEngine::Internal
         for (size_t i = 0; i < size; ++i)
         {
             vk::RenderingAttachmentInfo colorAttachment{};
-            colorAttachment.imageView = m_ColorAttachmentsTextureViews[i];
+            colorAttachment.imageView = m_ColorAttachmentsTextures[i].GetVulkanImageView();
             colorAttachment.resolveMode = vk::ResolveModeFlagBits::eNone;
             colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
             colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
@@ -178,14 +163,14 @@ namespace BeeEngine::Internal
             colorAttachments.push_back(colorAttachment);
             m_GraphicsDevice.TransitionImageLayout(
                 m_CurrentCommandBuffer,
-                m_ColorAttachmentsTextures[i].Image,
+                m_ColorAttachmentsTextures[i].GetVulkanImage().Image,
                 ConvertToVulkanFormat(m_ColorAttachmentSpecification[i].TextureFormat),
                 vk::ImageLayout::eShaderReadOnlyOptimal,
                 vk::ImageLayout::eColorAttachmentOptimal);
         }
 
         vk::RenderingAttachmentInfo depthStencilAttachment{};
-        depthStencilAttachment.imageView = m_DepthAttachmentTextureView;
+        depthStencilAttachment.imageView = m_DepthAttachmentTexture->GetVulkanImageView();
         depthStencilAttachment.clearValue.depthStencil =
             vk::ClearDepthStencilValue{m_DepthAttachmentSpecification.ClearDepth, 0};
         depthStencilAttachment.loadOp = vk::AttachmentLoadOp::eClear;
@@ -200,7 +185,7 @@ namespace BeeEngine::Internal
         if (m_DepthAttachmentTexture)
         {
             m_GraphicsDevice.TransitionImageLayout(m_CurrentCommandBuffer,
-                                                   m_DepthAttachmentTexture.Image,
+                                                   m_DepthAttachmentTexture->GetVulkanImage().Image,
                                                    ConvertToVulkanFormat(m_DepthAttachmentSpecification.TextureFormat),
                                                    vk::ImageLayout::eUndefined,
                                                    vk::ImageLayout::eDepthStencilAttachmentOptimal);
@@ -237,7 +222,7 @@ namespace BeeEngine::Internal
         {
             m_GraphicsDevice.TransitionImageLayout(
                 m_CurrentCommandBuffer,
-                m_ColorAttachmentsTextures[i].Image,
+                m_ColorAttachmentsTextures[i].GetVulkanImage().Image,
                 ConvertToVulkanFormat(m_ColorAttachmentSpecification[i].TextureFormat),
                 vk::ImageLayout::eColorAttachmentOptimal,
                 vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -270,42 +255,23 @@ namespace BeeEngine::Internal
                                                      // in use. And I have no idea, how to overcome this.
             for (size_t i = 0; i < m_ColorAttachmentsTextures.size(); ++i)
             {
-                m_GraphicsDevice.DestroyImageWithView(m_ColorAttachmentsTextures[i], m_ColorAttachmentsTextureViews[i]);
-                ImGui_ImplVulkan_RemoveTexture(m_ColorDescriptorSets[i]);
-                m_GraphicsDevice.GetDevice().destroySampler(m_ColorSamplers[i]);
                 if (m_ColorAttachmentSpecification[i].TextureUsage == FrameBufferTextureUsage::CPUAndGPU)
                 {
                     m_GraphicsDevice.DestroyBuffer(m_ColorAttachmentsReadBuffers[i].Buffer);
                 }
             }
-            if (m_DepthAttachmentTexture)
-            {
-                m_GraphicsDevice.DestroyImageWithView(m_DepthAttachmentTexture, m_DepthAttachmentTextureView);
-                // m_GraphicsDevice.DestroyDescriptorSet(m_DepthDescriptorSet);
-                m_GraphicsDevice.GetDevice().destroySampler(m_DepthSampler);
-                ImGui_ImplVulkan_RemoveTexture(m_DepthDescriptorSet);
-            }
             m_ColorAttachmentsTextures.clear();
-            m_ColorAttachmentsTextureViews.clear();
             m_ColorAttachmentsReadBuffers.clear();
-            m_DepthAttachmentTexture = {};
-            m_DepthAttachmentTextureView = nullptr;
-
-            m_ColorDescriptorSets.clear();
-            m_DepthDescriptorSet = nullptr;
-
-            m_ColorSamplers.clear();
-            m_DepthSampler = nullptr;
+            m_DepthAttachmentTexture = nullptr;
         }
-        m_ColorAttachmentsTextures.resize(m_ColorAttachmentSpecification.size());
-        m_ColorAttachmentsTextureViews.resize(m_ColorAttachmentSpecification.size());
+        m_ColorAttachmentsTextures.reserve(m_ColorAttachmentSpecification.size());
         m_ColorAttachmentsReadBuffers.resize(m_ColorAttachmentSpecification.size());
-        m_ColorDescriptorSets.resize(m_ColorAttachmentSpecification.size());
-        m_ColorSamplers.resize(m_ColorAttachmentSpecification.size());
         for (size_t i = 0; i < m_ColorAttachmentSpecification.size(); ++i)
         {
-            CreateImageAndImageView(m_ColorAttachmentsTextures[i],
-                                    m_ColorAttachmentsTextureViews[i],
+            VulkanImage image;
+            vk::ImageView view;
+            CreateImageAndImageView(image,
+                                    view,
                                     m_ColorAttachmentSpecification[i].TextureFormat,
                                     m_ColorAttachmentSpecification[i].TextureUsage);
             if (m_ColorAttachmentSpecification[i].TextureUsage == FrameBufferTextureUsage::CPUAndGPU)
@@ -317,7 +283,7 @@ namespace BeeEngine::Internal
                     VMA_MEMORY_USAGE_CPU_TO_GPU);
             }
             m_GraphicsDevice.TransitionImageLayout(
-                m_ColorAttachmentsTextures[i].Image,
+                image.Image,
                 ConvertToVulkanFormat(m_ColorAttachmentSpecification[i].TextureFormat),
                 vk::ImageLayout::eUndefined,
                 vk::ImageLayout::eShaderReadOnlyOptimal);
@@ -338,16 +304,22 @@ namespace BeeEngine::Internal
             samplerCreateInfo.minLod = 0.0f;
             samplerCreateInfo.maxLod = 0.0f;
 
-            m_ColorSamplers[i] = m_GraphicsDevice.GetDevice().createSampler(samplerCreateInfo);
-            m_ColorDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(
-                m_ColorSamplers[i], m_ColorAttachmentsTextureViews[i], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            vk::Sampler sampler = m_GraphicsDevice.GetDevice().createSampler(samplerCreateInfo);
+            m_ColorAttachmentsTextures.emplace_back(m_Preferences.Width, m_Preferences.Height, image, view, sampler);
         }
+        std::vector<BindingSetElement> elements;
+        elements.reserve(m_ColorAttachmentsTextures.size());
+        for (size_t i = 0; i < m_ColorAttachmentsTextures.size(); ++i)
+        {
+            elements.emplace_back(i, m_ColorAttachmentsTextures[i]);
+        }
+        m_ColorBindingSet = BindingSet::Create(BeeMove(elements));
         if (m_DepthAttachmentSpecification.TextureFormat != FrameBufferTextureFormat::None)
         {
-            CreateImageAndImageView(m_DepthAttachmentTexture,
-                                    m_DepthAttachmentTextureView,
-                                    m_DepthAttachmentSpecification.TextureFormat,
-                                    m_DepthAttachmentSpecification.TextureUsage);
+            VulkanImage image;
+            vk::ImageView view;
+            CreateImageAndImageView(
+                image, view, m_DepthAttachmentSpecification.TextureFormat, m_DepthAttachmentSpecification.TextureUsage);
             // m_GraphicsDevice.TransitionImageLayout(m_DepthAttachmentTexture.Image,
             // ConvertToVulkanFormat(m_DepthAttachmentSpecification.TextureFormat),
             //     vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthAttachmentOptimal);
@@ -367,22 +339,23 @@ namespace BeeEngine::Internal
             samplerCreateInfo.mipLodBias = 0.0f;
             samplerCreateInfo.minLod = 0.0f;
             samplerCreateInfo.maxLod = 0.0f;
-            m_DepthSampler = m_GraphicsDevice.GetDevice().createSampler(samplerCreateInfo);
-            m_DepthDescriptorSet = ImGui_ImplVulkan_AddTexture(
-                m_DepthSampler, m_DepthAttachmentTextureView, VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL);
+            vk::Sampler sampler = m_GraphicsDevice.GetDevice().createSampler(samplerCreateInfo);
+            m_DepthAttachmentTexture =
+                CreateScope<VulkanGPUTextureResource>(m_Preferences.Width, m_Preferences.Height, image, view, sampler);
         }
         m_Invalid = false;
     }
 
-    uintptr_t VulkanFrameBuffer::GetColorAttachmentRendererID(uint32_t index) const
+    uintptr_t VulkanFrameBuffer::GetColorAttachmentImGuiRendererID(uint32_t index) const
     {
-        BeeExpects(index < m_ColorDescriptorSets.size());
-        return (uintptr_t)(VkDescriptorSet)m_ColorDescriptorSets[index];
+        BeeExpects(index < m_ColorAttachmentsTextures.size());
+        return m_ColorAttachmentsTextures[index].GetRendererID();
     }
 
-    uintptr_t VulkanFrameBuffer::GetDepthAttachmentRendererID() const
+    uintptr_t VulkanFrameBuffer::GetDepthAttachmentImGuiRendererID() const
     {
-        return (uintptr_t)(VkDescriptorSet)m_DepthDescriptorSet;
+        BeeExpects(m_DepthAttachmentTexture);
+        return m_DepthAttachmentTexture->GetRendererID();
     }
 
     int VulkanFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) const
@@ -403,7 +376,7 @@ namespace BeeEngine::Internal
     VulkanImage VulkanFrameBuffer::GetColorAttachment(uint32_t index) const
     {
         BeeExpects(index < m_ColorAttachmentsTextures.size());
-        return m_ColorAttachmentsTextures[index];
+        return m_ColorAttachmentsTextures[index].GetVulkanImage();
     }
 
     DumpedImage VulkanFrameBuffer::DumpAttachment(uint32_t attachmentIndex) const
@@ -433,7 +406,7 @@ namespace BeeEngine::Internal
         auto cmd = m_GraphicsDevice.BeginSingleTimeCommands();
         m_GraphicsDevice.TransitionImageLayout(
             cmd,
-            m_ColorAttachmentsTextures[index].Image,
+            m_ColorAttachmentsTextures[index].GetVulkanImage().Image,
             ConvertToVulkanFormat(m_ColorAttachmentSpecification[index].TextureFormat),
             vk::ImageLayout::eShaderReadOnlyOptimal,
             vk::ImageLayout::eTransferSrcOptimal);
@@ -443,14 +416,14 @@ namespace BeeEngine::Internal
         region.imageExtent.width = m_Preferences.Width;
         region.imageExtent.height = m_Preferences.Height;
         region.imageExtent.depth = 1;
-        cmd.copyImageToBuffer(m_ColorAttachmentsTextures[index].Image,
+        cmd.copyImageToBuffer(m_ColorAttachmentsTextures[index].GetVulkanImage().Image,
                               vk::ImageLayout::eTransferSrcOptimal,
                               m_ColorAttachmentsReadBuffers[index].Buffer.Buffer,
                               1,
                               &region);
         m_GraphicsDevice.TransitionImageLayout(
             cmd,
-            m_ColorAttachmentsTextures[index].Image,
+            m_ColorAttachmentsTextures[index].GetVulkanImage().Image,
             ConvertToVulkanFormat(m_ColorAttachmentSpecification[index].TextureFormat),
             vk::ImageLayout::eTransferSrcOptimal,
             vk::ImageLayout::eShaderReadOnlyOptimal);

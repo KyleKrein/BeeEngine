@@ -3,7 +3,9 @@
 //
 
 #pragma once
+#include "Core/CodeSafety/Expects.h"
 #include "Platform/Vulkan/VulkanBuffer.h"
+#include "Platform/Vulkan/VulkanTexture2D.h"
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/RenderingQueue.h"
 #include "VulkanGraphicsDevice.h"
@@ -27,9 +29,17 @@ namespace BeeEngine::Internal
 
         void Invalidate() override;
 
-        [[nodiscard]] uintptr_t GetColorAttachmentRendererID(uint32_t index) const override;
+        [[nodiscard]] uintptr_t GetColorAttachmentImGuiRendererID(uint32_t index) const override;
 
-        [[nodiscard]] uintptr_t GetDepthAttachmentRendererID() const override;
+        [[nodiscard]] uintptr_t GetDepthAttachmentImGuiRendererID() const override;
+
+        [[nodiscard]] GPUTextureResource& GetColorAttachmentResource(size_t index) override
+        {
+            BeeExpects(index < m_ColorAttachmentsTextures.size());
+            return m_ColorAttachmentsTextures[index];
+        }
+
+        [[nodiscard]] BindingSet& GetColorBindingSet() override { return *m_ColorBindingSet; }
 
         [[nodiscard]] int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
 
@@ -50,8 +60,7 @@ namespace BeeEngine::Internal
         FrameBufferPreferences m_Preferences;
         bool m_Initiated{false};
 
-        std::vector<VulkanImage> m_ColorAttachmentsTextures;
-        std::vector<vk::ImageView> m_ColorAttachmentsTextureViews;
+        std::vector<VulkanGPUTextureResource> m_ColorAttachmentsTextures;
         struct AttachmentReadBuffer
         {
             VulkanBuffer Buffer;
@@ -66,19 +75,13 @@ namespace BeeEngine::Internal
             }
         }
         void CopyToBufferIfNotCopied(uint32_t index) const;
-        VulkanImage m_DepthAttachmentTexture{nullptr};
-        vk::ImageView m_DepthAttachmentTextureView{nullptr};
+        Scope<VulkanGPUTextureResource> m_DepthAttachmentTexture{nullptr};
+        Ref<BindingSet> m_ColorBindingSet{nullptr};
 
         bool m_Invalid{true};
 
         VulkanGraphicsDevice& m_GraphicsDevice;
         vk::CommandBuffer m_CurrentCommandBuffer;
-
-        std::vector<vk::DescriptorSet> m_ColorDescriptorSets;
-        vk::DescriptorSet m_DepthDescriptorSet;
-
-        std::vector<vk::Sampler> m_ColorSamplers;
-        vk::Sampler m_DepthSampler;
     };
 
 } // namespace BeeEngine::Internal

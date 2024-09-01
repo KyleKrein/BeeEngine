@@ -10,6 +10,11 @@ namespace BeeEngine.Renderer
     /// </summary>
     public struct Graphics
     {
+        /*public enum Transparency
+        {
+            Transparent,
+            Opaque
+        }*/
         /// <summary>
         /// Draws a sprite using a transformation, color, optional texture, tiling factor, and an optional associated entity.
         /// </summary>
@@ -24,6 +29,17 @@ namespace BeeEngine.Renderer
             DrawSprite(ref matrix, color, texture, tilingFactor, entity);
         }
 
+        public void DrawSprite(ref Matrix4 transform, Framebuffer framebuffer/*, Transparency transparency = Transparency.Transparent*/)
+        {
+            DrawSprite(null, ref transform, framebuffer/*, transparency*/);
+        }
+
+        public unsafe void DrawSprite(SceneCameraBuffer? camera, ref Matrix4 transform, Framebuffer framebuffer/*, Transparency transparency = Transparency.Transparent*/)
+        {
+            var data = new FramebufferInstanceData { Model = transform, FramebufferHandle = framebuffer.Handle };
+            InternalCalls.Renderer_SubmitInstance(camera, this, InternalCalls.ModelType.Framebuffer, ref Unsafe.NullRef<AssetHandle>(), &data, (ulong)sizeof(Matrix4));
+        }
+
         /// <summary>
         /// Draws a sprite using a transformation matrix, color, optional texture, tiling factor, and an optional associated entity.
         /// </summary>
@@ -32,15 +48,19 @@ namespace BeeEngine.Renderer
         /// <param name="texture">The optional texture to apply to the sprite.</param>
         /// <param name="tilingFactor">The tiling factor for the texture. Default is 1.0f.</param>
         /// <param name="entity">The optional entity associated with the sprite for identification.</param>
-        public unsafe void DrawSprite(ref Matrix4 transform, Color color, Texture2D? texture = null, float tilingFactor = 1.0f, Entity? entity = null)
+        public void DrawSprite(ref Matrix4 transform, Color color, Texture2D? texture = null, float tilingFactor = 1.0f, Entity? entity = null)
+        {
+            DrawSprite(null, ref transform, color, texture, tilingFactor, entity);
+        }
+        public unsafe void DrawSprite(SceneCameraBuffer? camera, ref Matrix4 transform, Color color, Texture2D? texture = null, float tilingFactor = 1.0f, Entity? entity = null)
         {
             SpriteInstanceBufferData data = new SpriteInstanceBufferData { Model = transform, Color = color, TilingFactor = tilingFactor, EntityID = entity is null ? 0 : (int)LifeTimeManager.GetEntityEnttID(entity) + 1 };
             if (texture is null)
             {
-                InternalCalls.Renderer_SubmitInstance(this, InternalCalls.ModelType.Rectangle, ref Unsafe.NullRef<AssetHandle>(), &data, (ulong)sizeof(SpriteInstanceBufferData));
+                InternalCalls.Renderer_SubmitInstance(camera, this, InternalCalls.ModelType.Rectangle, ref Unsafe.NullRef<AssetHandle>(), &data, (ulong)sizeof(SpriteInstanceBufferData));
                 return;
             }
-            InternalCalls.Renderer_SubmitInstance(this, InternalCalls.ModelType.Rectangle, ref texture.m_Handle, &data, (ulong)sizeof(SpriteInstanceBufferData));
+            InternalCalls.Renderer_SubmitInstance(camera, this, InternalCalls.ModelType.Rectangle, ref texture.m_Handle, &data, (ulong)sizeof(SpriteInstanceBufferData));
         }
 
         /// <summary>
@@ -122,10 +142,15 @@ namespace BeeEngine.Renderer
         /// <param name="thickness">The thickness of the circle's outline. Default is 1.0f.</param>
         /// <param name="fade">The amount of fade to apply to the circle's edges. Default is 0.005f.</param>
         /// <param name="entity">The optional entity associated with the circle for identification.</param>
-        public unsafe void DrawCircle(ref Matrix4 transform, Color color, float thickness = 1.0f, float fade = 0.005f, Entity? entity = null)
+        public void DrawCircle(ref Matrix4 transform, Color color, float thickness = 1.0f, float fade = 0.005f, Entity? entity = null)
+        {
+            DrawCircle(null, ref transform, color, thickness, fade, entity);
+        }
+
+        public unsafe void DrawCircle(SceneCameraBuffer? camera, ref Matrix4 transform, Color color, float thickness = 1.0f, float fade = 0.005f, Entity? entity = null)
         {
             CircleInstanceBufferData data = new CircleInstanceBufferData { Model = transform, Color = color, Thickness = thickness, Fade = fade, EntityID = entity is null ? 0 : (int)LifeTimeManager.GetEntityEnttID(entity) + 1 };
-            InternalCalls.Renderer_SubmitInstance(this, InternalCalls.ModelType.Circle, ref Unsafe.NullRef<AssetHandle>(), &data, (ulong)sizeof(CircleInstanceBufferData));
+            InternalCalls.Renderer_SubmitInstance(camera, this, InternalCalls.ModelType.Circle, ref Unsafe.NullRef<AssetHandle>(), &data, (ulong)sizeof(CircleInstanceBufferData));
         }
 
         /// <summary>
@@ -170,9 +195,13 @@ namespace BeeEngine.Renderer
         /// <param name="entity">The optional entity associated with the text for identification.</param>
         public void DrawText(string text, ref Matrix4 transform, Font font, Color color, float kerningOffset = 0.0f, float spacing = 0.0f, Entity? entity = null)
         {
+            DrawText(text, null, ref transform, font, color, kerningOffset, spacing, entity);
+        }
+        public void DrawText(string text, SceneCameraBuffer? camera, ref Matrix4 transform, Font font, Color color, float kerningOffset = 0.0f, float spacing = 0.0f, Entity? entity = null)
+        {
             Log.AssertAndThrow(font is not null, "Font cannot be null");
             TextConfig config = new TextConfig { ForegroundColor = color, KerningOffset = kerningOffset, LineSpacing = spacing };
-            InternalCalls.Renderer_SubmitText(this, ref font.m_Handle, text, ref transform, ref config, entity is null ? -1 : (int)LifeTimeManager.GetEntityEnttID(entity));
+            InternalCalls.Renderer_SubmitText(camera, this, ref font.m_Handle, text, ref transform, ref config, entity is null ? -1 : (int)LifeTimeManager.GetEntityEnttID(entity));
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -190,6 +219,12 @@ namespace BeeEngine.Renderer
                 TilingFactor = 1.0f;
                 EntityID = -1;
             }
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct FramebufferInstanceData
+        {
+            public Matrix4 Model;
+            public IntPtr FramebufferHandle;
         }
 
         [StructLayout(LayoutKind.Sequential)]

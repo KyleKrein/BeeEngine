@@ -253,7 +253,7 @@ namespace BeeEngine::Editor
             camera.SetViewportSize(m_Width, m_Height);
             ScriptingEngine::SetViewportSize(m_Width, m_Height);
         }
-        auto textureID = m_FrameBuffer->GetColorAttachmentRendererID(0);
+        auto textureID = m_FrameBuffer->GetColorAttachmentImGuiRendererID(0);
         BeeExpects(textureID != 0);
         ImGui::Image((ImTextureID)textureID,
                      {static_cast<float>(m_Width), static_cast<float>(m_Height)} /*, ImVec2{0, 1}, ImVec2{1, 0}*/);
