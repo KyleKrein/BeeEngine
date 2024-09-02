@@ -29,11 +29,45 @@ namespace BeeEngine.Renderer
             DrawSprite(ref matrix, color, texture, tilingFactor, entity);
         }
 
+        /// <summary>
+        /// Draws a framebuffer using a transformation matrix, and an optional scene camera buffer.
+        /// </summary>
+        /// <param name="transform">The transformation matrix for positioning, scaling, and rotating the framebuffer.</param>
+        /// <param name="framebuffer">The framebuffer to draw.</param>
+        /// <param name="transparency">The transparency of the framebuffer, either transparent or opaque. Default is opaque.</param>
         public void DrawSprite(ref Matrix4 transform, Framebuffer framebuffer/*, Transparency transparency = Transparency.Transparent*/)
         {
             DrawSprite(null, ref transform, framebuffer/*, transparency*/);
         }
 
+        /// <summary>
+        /// Draws a framebuffer using a transformation, and an optional scene camera buffer.
+        /// </summary>
+        /// <param name="transform">The transformation for positioning, scaling, and rotating the framebuffer.</param>
+        /// <param name="framebuffer">The framebuffer to draw.</param>
+        public void DrawSprite(ref Transform transform, Framebuffer framebuffer)
+        {
+            var matrix = transform.Matrix;
+            DrawSprite(ref matrix, framebuffer);
+        }
+        /// <summary>
+        /// Draws a framebuffer using a transformation matrix, and an optional scene camera buffer.
+        /// </summary>
+        /// <param name="camera">The optional scene camera buffer. If null, uses the primary scene camera.</param>
+        /// <param name="transform">The transformation matrix for positioning, scaling, and rotating the framebuffer.</param>
+        /// <param name="framebuffer">The framebuffer to draw.</param>
+        public void DrawSprite(SceneCameraBuffer? camera, ref Transform transform, Framebuffer framebuffer)
+        {
+            var matrix = transform.Matrix;
+            DrawSprite(camera, ref matrix, framebuffer);
+        }
+
+        /// <summary>
+        /// Draws a framebuffer using a transformation matrix and an optional scene camera buffer.
+        /// </summary>
+        /// <param name="camera">The optional scene camera buffer. If null, uses the primary scene camera.</param>
+        /// <param name="transform">The transformation matrix for positioning, scaling, and rotating the framebuffer.</param>
+        /// <param name="framebuffer">The framebuffer to draw.</param>
         public unsafe void DrawSprite(SceneCameraBuffer? camera, ref Matrix4 transform, Framebuffer framebuffer/*, Transparency transparency = Transparency.Transparent*/)
         {
             var data = new FramebufferInstanceData { Model = transform, FramebufferHandle = framebuffer.Handle };
@@ -52,6 +86,16 @@ namespace BeeEngine.Renderer
         {
             DrawSprite(null, ref transform, color, texture, tilingFactor, entity);
         }
+
+        /// <summary>
+        /// Draws a sprite using a transformation matrix, color, optional texture, tiling factor, and an optional associated entity.
+        /// </summary>
+        /// <param name="camera">The optional scene camera buffer. If null, uses the primary scene camera.</param>
+        /// <param name="transform">The transformation matrix for positioning, scaling, and rotating the sprite.</param>
+        /// <param name="color">The color to apply to the sprite.</param>
+        /// <param name="texture">The optional texture to apply to the sprite.</param>
+        /// <param name="tilingFactor">The tiling factor for the texture. Default is 1.0f.</param>
+        /// <param name="entity">The optional entity associated with the sprite for identification.</param>
         public unsafe void DrawSprite(SceneCameraBuffer? camera, ref Matrix4 transform, Color color, Texture2D? texture = null, float tilingFactor = 1.0f, Entity? entity = null)
         {
             SpriteInstanceBufferData data = new SpriteInstanceBufferData { Model = transform, Color = color, TilingFactor = tilingFactor, EntityID = entity is null ? 0 : (int)LifeTimeManager.GetEntityEnttID(entity) + 1 };
@@ -147,6 +191,15 @@ namespace BeeEngine.Renderer
             DrawCircle(null, ref transform, color, thickness, fade, entity);
         }
 
+        /// <summary>
+        /// Draws a circle using a transformation matrix, color, thickness, fade, and an optional associated entity.
+        /// </summary>
+        /// <param name="camera">The optional scene camera buffer. If null, uses the default camera.</param>
+        /// <param name="transform">The transformation matrix for positioning, scaling, and rotating the circle.</param>
+        /// <param name="color">The color to apply to the circle.</param>
+        /// <param name="thickness">The thickness of the circle's outline. Default is 1.0f.</param>
+        /// <param name="fade">The amount of fade to apply to the circle's edges. Default is 0.005f.</param>
+        /// <param name="entity">The optional entity associated with the circle for identification. Default is null.</param>
         public unsafe void DrawCircle(SceneCameraBuffer? camera, ref Matrix4 transform, Color color, float thickness = 1.0f, float fade = 0.005f, Entity? entity = null)
         {
             CircleInstanceBufferData data = new CircleInstanceBufferData { Model = transform, Color = color, Thickness = thickness, Fade = fade, EntityID = entity is null ? 0 : (int)LifeTimeManager.GetEntityEnttID(entity) + 1 };
@@ -197,6 +250,17 @@ namespace BeeEngine.Renderer
         {
             DrawText(text, null, ref transform, font, color, kerningOffset, spacing, entity);
         }
+        /// <summary>
+        /// Draws text with specified text content, transformation matrix, font, color, kerning offset, line spacing, and optional entity.
+        /// </summary>
+        /// <param name="text">The text content to render.</param>
+        /// <param name="camera">The optional scene camera buffer. If null, uses the primary scene camera.</param>
+        /// <param name="transform">The transformation matrix for positioning and scaling the text.</param>
+        /// <param name="font">The font to use for rendering the text.</param>
+        /// <param name="color">The color to apply to the text.</param>
+        /// <param name="kerningOffset">The kerning offset to adjust spacing between characters. Default is 0.0f.</param>
+        /// <param name="spacing">The line spacing to adjust spacing between lines of text. Default is 0.0f.</param>
+        /// <param name="entity">The optional entity associated with the text for identification. Default is null.</param>
         public void DrawText(string text, SceneCameraBuffer? camera, ref Matrix4 transform, Font font, Color color, float kerningOffset = 0.0f, float spacing = 0.0f, Entity? entity = null)
         {
             Log.AssertAndThrow(font is not null, "Font cannot be null");

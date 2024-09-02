@@ -1,7 +1,10 @@
 using BeeEngine.Internal;
 
 namespace BeeEngine.Renderer;
-
+/// <summary>
+/// The BindingSet struct is used to bind uniform buffers and textures
+/// to shader programs.
+/// </summary>
 public sealed class BindingSet : IDisposable
 {
     internal IntPtr m_Handle;

@@ -26,32 +26,52 @@ public sealed class Framebuffer : IDisposable
 
     internal IntPtr Handle => m_Handle;
 
+
     /// <summary>
     /// Creates a new Framebuffer with the specified width and height in points.
     /// </summary>
-    /// <param name="width">The width of the Framebuffer in points.</param>
-    /// <param name="height">The height of the Framebuffer in points.</param>
+    /// <param name="width">The width of the framebuffer in points.</param>
+    /// <param name="height">The height of the framebuffer in points.</param>
+    /// <remarks>
+    /// Uses the <see cref="Color.Transparent"/> background color.
+    /// </remarks>
     /// <returns>A new instance of <see cref="Framebuffer"/>.</returns>
     public static Framebuffer Create(uint width, uint height)
     {
         return new Framebuffer(width, height, Color.Transparent);
     }
+
     /// <summary>
     /// Creates a new Framebuffer with the specified width and height in pixels.
-    /// Prefer using <see cref="Create(uint, uint)"/>, unless you really know
-    /// that you need set size in pixels.
     /// </summary>
-    /// <param name="width">The width of the Framebuffer in pixels.</param>
-    /// <param name="height">The height of the Framebuffer in pixels.</param>
+    /// <param name="width">The width of the framebuffer in pixels.</param>
+    /// <param name="height">The height of the framebuffer in pixels.</param>
+    /// <remarks>
+    /// Uses the <see cref="Color.Transparent"/> background color.
+    /// </remarks>
     /// <returns>A new instance of <see cref="Framebuffer"/>.</returns>
     public static Framebuffer CreatePixels(uint width, uint height)
     {
         return new Framebuffer(width, height, width, height, Color.Transparent);
     }
+    /// <summary>
+    /// Creates a new Framebuffer with the specified width and height in points.
+    /// </summary>
+    /// <param name="width">The width of the framebuffer in points.</param>
+    /// <param name="height">The height of the framebuffer in points.</param>
+    /// <param name="backgroundColor">The background color of the framebuffer.</param>
+    /// <returns>A new instance of <see cref="Framebuffer"/>.</returns>
     public static Framebuffer Create(uint width, uint height, Color backgroundColor)
     {
         return new Framebuffer(width, height, backgroundColor);
     }
+    /// <summary>
+    /// Creates a new Framebuffer with the specified width and height in pixels.
+    /// </summary>
+    /// <param name="width">The width of the framebuffer in pixels.</param>
+    /// <param name="height">The height of the framebuffer in pixels.</param>
+    /// <param name="backgroundColor">The background color of the framebuffer.</param>
+    /// <returns>A new instance of <see cref="Framebuffer"/>.</returns>
     public static Framebuffer CreatePixels(uint width, uint height, Color backgroundColor)
     {
         return new Framebuffer(width, height, width, height, backgroundColor);
@@ -176,7 +196,7 @@ public sealed class Framebuffer : IDisposable
         Dispose(disposing: false);
     }
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         Dispose(disposing: true);
         GC.SuppressFinalize(this);

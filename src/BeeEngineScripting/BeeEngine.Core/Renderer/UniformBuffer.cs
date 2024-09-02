@@ -1,13 +1,16 @@
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using BeeEngine.Internal;
 
 namespace BeeEngine.Renderer;
 
+/// <summary>
+/// The UniformBuffer struct represents a uniform buffer
+/// on the GPU.
+/// </summary>
 public sealed class UniformBuffer : IDisposable
 {
-    public uint Size => m_SizeInBytes;
-    public Type StoredType => m_Type;
+    public uint Size => m_SizeInBytes; // Size in bytes
+    public Type StoredType => m_Type; // The type stored in the uniform buffer
     internal IntPtr m_Handle;
     private uint m_SizeInBytes;
     private Type m_Type;
@@ -20,10 +23,26 @@ public sealed class UniformBuffer : IDisposable
     {
         return new UniformBuffer((uint)Unsafe.SizeOf<T>(), typeof(T));
     }
+    /// <summary>
+    /// Sets the data of the uniform buffer.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to set. It must be
+    /// the same type as the one used to create a UniformBuffer.</typeparam>
+    /// <param name="data">The data to set.</param>
+    /// <remarks>
+    /// This method is a convenience wrapper around <see cref="SetData{T}(ref T)"/>.
+    /// It creates a temporary variable and calls the other overload.
+    /// </remarks>
     public void SetData<T>(T data) where T : unmanaged
     {
         SetData(ref data);
     }
+    /// <summary>
+    /// Sets the data of the uniform buffer.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to set. It must be
+    /// the same type as the one used to create a UniformBuffer.</typeparam>
+    /// <param name="data">The data to set.</param>
     public void SetData<T>(ref T data) where T : unmanaged
     {
         Log.AssertAndThrow(!disposedValue, "Trying to access a disposed uniform buffer");
