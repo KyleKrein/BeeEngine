@@ -47,7 +47,10 @@ public sealed class SceneCameraBuffer : IDisposable
     /// <returns>A new camera buffer.</returns>
     public static SceneCameraBuffer CreateOrthographic(uint width, uint height)
     {
-        return new SceneCameraBuffer(Matrix4.CreateOrthographic(width, height, -1.0f, 1000.0f));
+        // Inverted y axis
+        const float near = 1000f;
+        const float far = -1.0f;
+        return new SceneCameraBuffer(Matrix4.CreateOrthographic(width, height, near, far));
     }
     private SceneCameraBuffer(Matrix4 matrix)
     {

@@ -86,6 +86,11 @@ namespace BeeEngine::Editor
     {
         if (Project())
         {
+            if (m_SceneState == SceneState::Play)
+            {
+                m_SceneState = SceneState::Edit;
+                OnSceneStop();
+            }
             ScriptingEngine::Shutdown();
         }
         ConsoleOutput::SetOutputProvider(nullptr);

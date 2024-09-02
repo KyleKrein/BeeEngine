@@ -10,6 +10,7 @@
 #include "Platform/Vulkan/VulkanBuffer.h"
 #include "Platform/Vulkan/VulkanImage.h"
 #include "Renderer/BindingSet.h"
+#include "Renderer/FrameBuffer.h"
 #include "Renderer/Renderer.h"
 #include "Utils.h"
 #include "VulkanTexture2D.h"
@@ -288,8 +289,14 @@ namespace BeeEngine::Internal
                 vk::ImageLayout::eUndefined,
                 vk::ImageLayout::eShaderReadOnlyOptimal);
             vk::SamplerCreateInfo samplerCreateInfo{};
-            samplerCreateInfo.magFilter = vk::Filter::eLinear;
-            samplerCreateInfo.minFilter = vk::Filter::eLinear;
+            samplerCreateInfo.magFilter =
+                m_ColorAttachmentSpecification[i].TextureFormat == FrameBufferTextureFormat::RedInteger
+                    ? vk::Filter::eNearest
+                    : vk::Filter::eLinear;
+            samplerCreateInfo.minFilter =
+                m_ColorAttachmentSpecification[i].TextureFormat == FrameBufferTextureFormat::RedInteger
+                    ? vk::Filter::eNearest
+                    : vk::Filter::eLinear;
             samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
             samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
             samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
@@ -299,7 +306,10 @@ namespace BeeEngine::Internal
             samplerCreateInfo.unnormalizedCoordinates = vk::False;
             samplerCreateInfo.compareEnable = vk::False;
             samplerCreateInfo.compareOp = vk::CompareOp::eAlways;
-            samplerCreateInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+            samplerCreateInfo.mipmapMode =
+                m_ColorAttachmentSpecification[i].TextureFormat == FrameBufferTextureFormat::RedInteger
+                    ? vk::SamplerMipmapMode::eNearest
+                    : vk::SamplerMipmapMode::eLinear;
             samplerCreateInfo.mipLodBias = 0.0f;
             samplerCreateInfo.minLod = 0.0f;
             samplerCreateInfo.maxLod = 0.0f;

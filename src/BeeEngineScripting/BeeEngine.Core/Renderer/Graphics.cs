@@ -88,6 +88,21 @@ namespace BeeEngine.Renderer
         }
 
         /// <summary>
+        /// Draws a sprite using a transformation, color, optional texture, tiling factor, and an optional associated entity.
+        /// </summary>
+        /// <param name="camera">The optional scene camera buffer. If null, uses the primary scene camera.</param>
+        /// <param name="transform">The transformation for positioning, scaling, and rotating the sprite.</param>
+        /// <param name="color">The color to apply to the sprite.</param>
+        /// <param name="texture">The optional texture to apply to the sprite. Default is null.</param>
+        /// <param name="tilingFactor">The tiling factor for the texture. Default is 1.0f.</param>
+        /// <param name="entity">The optional entity associated with the sprite for identification. Default is null.</param>
+        public void DrawSprite(SceneCameraBuffer? camera, ref Transform transform, Color color, Texture2D? texture = null, float tilingFactor = 1.0f, Entity? entity = null)
+        {
+            var matrix = transform.Matrix;
+            DrawSprite(camera, ref matrix, color, texture, tilingFactor, entity);
+        }
+
+        /// <summary>
         /// Draws a sprite using a transformation matrix, color, optional texture, tiling factor, and an optional associated entity.
         /// </summary>
         /// <param name="camera">The optional scene camera buffer. If null, uses the primary scene camera.</param>
@@ -176,6 +191,20 @@ namespace BeeEngine.Renderer
         {
             Matrix4 matrix = transform.Matrix;
             DrawCircle(ref matrix, color, thickness, fade, entity);
+        }
+        /// <summary>
+        /// Draws a circle using a transformation, color, thickness, fade, and an optional associated entity.
+        /// </summary>
+        /// <param name="camera">The optional scene camera buffer. If null, uses the primary scene camera.</param>
+        /// <param name="transform">The transformation for positioning, scaling, and rotating the circle.</param>
+        /// <param name="color">The color to apply to the circle.</param>
+        /// <param name="thickness">The thickness of the circle's outline. Default is 1.0f.</param>
+        /// <param name="fade">The amount of fade to apply to the circle's edges. Default is 0.005f.</param>
+        /// <param name="entity">The optional entity associated with the circle for identification. Default is null.</param>
+        public void DrawCircle(SceneCameraBuffer? camera, ref Transform transform, Color color, float thickness = 1.0f, float fade = 0.005f, Entity? entity = null)
+        {
+            Matrix4 matrix = transform.Matrix;
+            DrawCircle(camera, ref matrix, color, thickness, fade, entity);
         }
 
         /// <summary>

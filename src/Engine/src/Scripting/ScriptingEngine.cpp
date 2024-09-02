@@ -125,6 +125,7 @@ namespace BeeEngine
         s_Data.Handles = {};
         // s_Data.AddEntityScriptMethod = nullptr;
         // s_Data.EntityWasRemovedMethod = nullptr;
+        NativeToManaged::GCCollect();
         ScriptGlue::Shutdown();
         MonoShutdown();
     }
