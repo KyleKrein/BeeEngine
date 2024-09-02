@@ -235,9 +235,26 @@ void BeeEngine::InternalAssetManager::LoadStandardAssets()
     auto& openSansRegularFont =
         LoadFont("OpenSansRegular", Internal::GetEmbeddedResource(EmbeddedResource::OpenSansRegular));
 
+    std::vector<BeeEngine::Vertex> framebufferVertexBuffer = {{
+                                                                  {-0.5f, -0.5f, 0.0f},
+                                                                  {1.0f, 1.0f, 1.0f},
+                                                                  {0.0f, 1.0f},
+                                                              },
+                                                              {
+                                                                  {0.5f, -0.5f, 0.0f},
+                                                                  {1.0f, 1.0f, 1.0f},
+                                                                  {1.0f, 1.0f},
+                                                              },
+                                                              {
+                                                                  {0.5f, 0.5f, 0.0f},
+                                                                  {1.0f, 1.0f, 1.0f},
+                                                                  {1.0f, 0.0f},
+                                                              },
+                                                              {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}};
     auto& framebufferMaterial = LoadMaterial(
         "Renderer_FramebufferMaterial", "Shaders/Renderer_Framebuffer.vert", "Shaders/Renderer_Framebuffer.frag");
-    auto& framebufferModel = LoadModel("Renderer_Framebuffer", framebufferMaterial, mesh);
+    auto& framebufferMesh = LoadMesh("Renderer_FramebufferMesh", framebufferVertexBuffer, indexBuffer);
+    auto& framebufferModel = LoadModel("Renderer_Framebuffer", framebufferMaterial, framebufferMesh);
     auto& defaultMeshMaterial = LoadMaterial("Renderer_DefaultMeshMaterial",
                                              "Shaders/Renderer_MeshDefaultShader.vert",
                                              "Shaders/Renderer_MeshDefaultShader.frag");

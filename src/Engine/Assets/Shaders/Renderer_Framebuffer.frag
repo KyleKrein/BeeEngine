@@ -16,8 +16,7 @@ layout(set = 1, binding = 3) uniform sampler u_idSampler;
 void main()
 {
     outEntityID = texture(sampler2D(u_idTexture, u_idSampler), fragTexCoord).r;
-    vec4 texColor = texture(sampler2D(u_texture, u_sampler), fragTexCoord);
-    outColor = texColor;
+    outColor = texture(sampler2D(u_texture, u_sampler), fragTexCoord);
     if(outColor.a == 0.0f)
         discard;
 }
