@@ -207,8 +207,8 @@ namespace BeeEngine
                     transform, spriteComponent.Color, spriteComponent.TilingFactor, static_cast<int32_t>(entity) + 1};
                 std::vector<BindingSet*> bindingSets{sceneRendererData.CameraBindingSet.get(),
                                                      (spriteComponent.HasTexture
-                                                          ? spriteComponent.Texture(locale)->GetBindingSet()
-                                                          : s_BlankTexture->GetBindingSet())};
+                                                          ? &spriteComponent.Texture(locale)->GetBindingSet()
+                                                          : &s_BlankTexture->GetBindingSet())};
                 sceneTreeRenderer.AddEntity(data.Model,
                                             data.Color.A() < 0.95f || spriteComponent.HasTexture,
                                             *s_RectModel,

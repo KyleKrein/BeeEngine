@@ -86,6 +86,11 @@ namespace BeeEngine::Editor
     {
         if (Project())
         {
+            if (m_SceneState == SceneState::Play)
+            {
+                m_SceneState = SceneState::Edit;
+                OnSceneStop();
+            }
             ScriptingEngine::Shutdown();
         }
         ConsoleOutput::SetOutputProvider(nullptr);
@@ -516,8 +521,9 @@ namespace BeeEngine::Editor
                      nullptr,
                      ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse |
                          ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
-        ImTextureID textureID = (ImTextureID)(m_SceneState == SceneState::Edit ? m_PlayButtonTexture->GetRendererID()
-                                                                               : m_StopButtonTexture->GetRendererID());
+        ImTextureID textureID =
+            (ImTextureID)(m_SceneState == SceneState::Edit ? m_PlayButtonTexture->GetGPUResource().GetRendererID()
+                                                           : m_StopButtonTexture->GetGPUResource().GetRendererID());
         float size = ImGui::GetWindowHeight() - 4;
         ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
         if (ImGui::ImageButton(textureID, ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0))

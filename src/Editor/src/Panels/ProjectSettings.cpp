@@ -94,9 +94,10 @@ namespace BeeEngine::Editor
         }
         else
         {
-            ImGui::ImageButton(
-                (ImTextureID)AssetManager::GetAsset<Texture2D>(m_IconHandle, m_Domain.GetLocale()).GetRendererID(),
-                ImVec2(32, 32));
+            ImGui::ImageButton((ImTextureID)AssetManager::GetAsset<Texture2D>(m_IconHandle, m_Domain.GetLocale())
+                                   .GetGPUResource()
+                                   .GetRendererID(),
+                               ImVec2(32, 32));
         }
         ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_TEXTURE2D_ITEM",
                                               [this](const AssetHandle& handle)

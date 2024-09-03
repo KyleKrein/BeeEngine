@@ -16,8 +16,6 @@ namespace BeeEngine::Internal
         m_DescriptorBufferInfo.range = size;
     }
 
-    void VulkanUniformBuffer::Bind(uint32_t slot) {}
-
     std::vector<IBindable::BindGroupLayoutEntryType> VulkanUniformBuffer::GetBindGroupLayoutEntry() const
     {
         vk::DescriptorSetLayoutBinding layoutBinding(0,

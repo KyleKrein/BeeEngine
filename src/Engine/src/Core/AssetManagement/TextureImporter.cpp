@@ -18,7 +18,7 @@ STBIDEF stbi_uc* stbi_load(const wchar_t* filename, int* x, int* y, int* comp, i
 
 namespace BeeEngine
 {
-    Ref<Texture2D> TextureImporter::LoadTextureFromFile(const Path& filepath)
+    Scope<GPUTextureResource> TextureImporter::LoadTextureFromFile(const Path& filepath)
     {
         int width, height, channels;
         stbi_set_flip_vertically_on_load(true);
@@ -39,9 +39,9 @@ namespace BeeEngine
         {
             return nullptr;
         }
-        return Texture2D::Create(width, height, {(byte*)data, size_t(width * height * channels)}, channels);
+        return GPUTextureResource::Create(width, height, {(byte*)data, size_t(width * height * channels)}, channels);
     }
-    Ref<Texture2D> TextureImporter::LoadTextureFromMemory(gsl::span<byte> textureData)
+    Scope<GPUTextureResource> TextureImporter::LoadTextureFromMemory(gsl::span<byte> textureData)
     {
         BeeExpects(!textureData.empty());
         int width, height, channels;
@@ -63,7 +63,7 @@ namespace BeeEngine
         {
             return nullptr;
         }
-        return Texture2D::Create(width, height, {(byte*)data, size_t(width * height * channels)}, channels);
+        return GPUTextureResource::Create(width, height, {(byte*)data, size_t(width * height * channels)}, channels);
     }
 
     Ref<Texture2D> TextureImporter::ImportTexture2D(AssetHandle handle, const AssetMetadata& metadata)
@@ -73,9 +73,9 @@ namespace BeeEngine
             switch (metadata.Location)
             {
                 case AssetLocation::FileSystem:
-                    return LoadTextureFromFile(std::get<Path>(metadata.Data));
+                    return CreateRef<Texture2D>(LoadTextureFromFile(std::get<Path>(metadata.Data)));
                 case AssetLocation::Embedded:
-                    return LoadTextureFromMemory(std::get<gsl::span<byte>>(metadata.Data));
+                    return CreateRef<Texture2D>(LoadTextureFromMemory(std::get<gsl::span<byte>>(metadata.Data)));
             }
             BeeEnsures(false && "Unknown location of asset");
         }();

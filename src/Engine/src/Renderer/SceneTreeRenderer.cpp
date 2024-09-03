@@ -54,6 +54,7 @@ namespace BeeEngine
         auto& fontGeometry = font->GetMSDFData().FontGeometry;
         auto& metrics = fontGeometry.getMetrics();
         auto& atlasTexture = font->GetAtlasTexture();
+        auto& atlasBindingSet = font->GetAtlasBindingSet();
 
         double x = 0.0;
         double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
@@ -154,7 +155,7 @@ namespace BeeEngine
             memcpy(instancedData.data(), &data, sizeof(TextInstancedData));
             m_Transparent.emplace_back(Entity{transform,
                                               &textModel,
-                                              std::vector<BindingSet*>{m_TextBindingSet, atlasTexture.GetBindingSet()},
+                                              std::vector<BindingSet*>{m_TextBindingSet, &atlasBindingSet},
                                               std::move(instancedData)});
 
             if (it != end)

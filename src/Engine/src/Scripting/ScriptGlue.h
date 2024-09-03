@@ -6,6 +6,9 @@
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/UUID.h"
 #include "KeyCodes.h"
+#include "Renderer/CommandBuffer.h"
+#include "Renderer/FrameBuffer.h"
+#include "Renderer/UniformBuffer.h"
 #include "Scene/Components.h"
 #include "vec3.hpp"
 #include <cstdint>
@@ -48,7 +51,8 @@ namespace BeeEngine
             Rectangle,
             Circle,
             Text,
-            Line
+            Line,
+            Framebuffer
         };
 
     private:
@@ -104,16 +108,28 @@ namespace BeeEngine
         static void* Locale_TranslateDynamic(void* key, ArrayInfo args);
         static void* Scene_GetActive();
         static void Scene_SetActive(void* scene);
-        static void
-        Renderer_SubmitInstance(CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data);
-        static void Renderer_SubmitText(CommandBuffer cmd,
+        static void Renderer_SubmitInstance(
+            BindingSet* cameraBindingSet, CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data);
+        static void Renderer_SubmitText(BindingSet* cameraBindingSet,
+                                        CommandBuffer cmd,
                                         AssetHandle* handle,
                                         void* textPtr,
                                         glm::mat4* transform,
                                         TextRenderingConfiguration* config,
                                         int32_t entityId);
 
-        static Texture2D* GetTextureForModelType(ModelType modelType, AssetHandle* handle);
+        static BindingSet* GetBindingSetForModelType(ModelType modelType, AssetHandle* handle);
+
+        static FrameBuffer* Framebuffer_CreateDefault(uint32_t width, uint32_t height, Color4 clearColor);
+        static void Framebuffer_Resize(FrameBuffer* framebuffer, uint32_t width, uint32_t height);
+        static void Framebuffer_Destroy(FrameBuffer* framebuffer);
+        static void Framebuffer_Bind(FrameBuffer* framebuffer, CommandBuffer* cmd);
+        static void Framebuffer_Unbind(FrameBuffer* framebuffer, CommandBuffer* cmd);
+        static UniformBuffer* UniformBuffer_CreateDefault(uint32_t sizeBytes);
+        static void UniformBuffer_Destroy(UniformBuffer* buffer);
+        static void UniformBuffer_SetData(UniformBuffer* buffer, void* data, uint32_t sizeBytes);
+        static BindingSet* BindingSet_Create(ArrayInfo elements);
+        static void BindingSet_Destroy(BindingSet* bindingSet);
 
     private:
         struct ScriptGlueInternalState;

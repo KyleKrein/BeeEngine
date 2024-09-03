@@ -8,7 +8,7 @@
 
 namespace BeeEngine::Internal
 {
-    void VulkanTexture2D::CopyBufferToImageWithTransition(VulkanBuffer& buffer)
+    void VulkanGPUTextureResource::CopyBufferToImageWithTransition(VulkanBuffer& buffer)
     {
         m_Device.TransitionImageLayout(m_Image.Image,
                                        vk::Format::eR8G8B8A8Unorm,
@@ -21,7 +21,7 @@ namespace BeeEngine::Internal
                                        vk::ImageLayout::eShaderReadOnlyOptimal);
     }
 
-    std::vector<IBindable::BindGroupLayoutEntryType> VulkanTexture2D::GetBindGroupLayoutEntry() const
+    std::vector<IBindable::BindGroupLayoutEntryType> VulkanGPUTextureResource::GetBindGroupLayoutEntry() const
     {
         vk::DescriptorSetLayoutBinding uboLayoutBinding;
         uboLayoutBinding.binding = 0;
@@ -40,7 +40,7 @@ namespace BeeEngine::Internal
         return {uboLayoutBinding, samplerLayoutBinding};
     }
 
-    std::vector<IBindable::BindGroupEntryType> VulkanTexture2D::GetBindGroupEntry() const
+    std::vector<IBindable::BindGroupEntryType> VulkanGPUTextureResource::GetBindGroupEntry() const
     {
         vk::WriteDescriptorSet imageWrite;
         imageWrite.dstBinding = 0;
@@ -59,7 +59,7 @@ namespace BeeEngine::Internal
         return {imageWrite, samplerWrite};
     }
 
-    void VulkanTexture2D::SetData(gsl::span<std::byte> data, uint32_t numberOfChannels)
+    void VulkanGPUTextureResource::SetData(gsl::span<std::byte> data, uint32_t numberOfChannels)
     {
         std::vector<std::byte> dataWithAlpha;
         if (numberOfChannels == 3)
@@ -154,28 +154,27 @@ namespace BeeEngine::Internal
         m_ImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         m_ImageInfo.imageView = m_ImageView;
         m_ImageInfo.sampler = m_Sampler;
-        m_BindingSet = BindingSet::Create({{0, *this}});
     }
 
-    VulkanTexture2D::VulkanTexture2D(uint32_t width,
-                                     uint32_t height,
-                                     gsl::span<std::byte> data,
-                                     uint32_t numberOfChannels)
+    VulkanGPUTextureResource::VulkanGPUTextureResource(uint32_t width,
+                                                       uint32_t height,
+                                                       gsl::span<std::byte> data,
+                                                       uint32_t numberOfChannels)
         : m_Device(VulkanGraphicsDevice::GetInstance())
     {
         m_Height = height;
         m_Width = width;
 
-        VulkanTexture2D::SetData(data, numberOfChannels);
+        VulkanGPUTextureResource::SetData(data, numberOfChannels);
     }
 
-    VulkanTexture2D::~VulkanTexture2D()
+    VulkanGPUTextureResource::~VulkanGPUTextureResource()
     {
         if (ShouldFreeResources())
             FreeResources();
     }
 
-    void VulkanTexture2D::FreeResources()
+    void VulkanGPUTextureResource::FreeResources()
     {
         auto device = m_Device.GetDevice();
         DeletionQueue::Frame().PushFunction([device, sampler = m_Sampler]() { device.destroySampler(sampler); });
@@ -186,8 +185,21 @@ namespace BeeEngine::Internal
         m_Image = {};
     }
 
-    bool VulkanTexture2D::ShouldFreeResources()
+    bool VulkanGPUTextureResource::ShouldFreeResources()
     {
         return m_Sampler || m_ImageView || m_Image.Image || m_Image.Memory;
+    }
+
+    VulkanGPUTextureResource::VulkanGPUTextureResource(
+        uint32_t width, uint32_t height, VulkanImage image, vk::ImageView view, vk::Sampler sampler)
+        : m_Device(VulkanGraphicsDevice::GetInstance()), m_Image(image), m_ImageView(view), m_Sampler(sampler)
+    {
+        m_Height = height;
+        m_Width = width;
+        m_ImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        m_ImageInfo.imageView = m_ImageView;
+        m_ImageInfo.sampler = m_Sampler;
+        m_RendererID =
+            (uintptr_t)ImGui_ImplVulkan_AddTexture(m_Sampler, m_ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     }
 } // namespace BeeEngine::Internal
