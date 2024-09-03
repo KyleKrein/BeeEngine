@@ -21,11 +21,15 @@ namespace BeeEngine
      */
     enum class FrameBufferTextureFormat
     {
-        None = 0,       ///< No format specified.
-        RGBA8,          ///< 8-bit RGBA color format.
-        RGBA16F,        ///< 16-bit floating point RGBA color format.
-        RedInteger,     ///< Single-channel integer format.
-        Depth24,        ///< 24-bit depth format.
+        None = 0, ///< No format specified.
+        // Colors
+        RGBA8,      ///< 8-bit RGBA color format.
+        RGBA16F,    ///< 16-bit floating point RGBA color format.
+        RedInteger, ///< Single-channel integer format.
+
+        // Depth Stencil
+        Depth24, ///< 24-bit depth format.
+
         Depth = Depth24 ///< Default depth format.
     };
 
@@ -47,7 +51,7 @@ namespace BeeEngine
     struct FrameBufferTextureSpecification
     {
         FrameBufferTextureSpecification() = default;
-        explicit FrameBufferTextureSpecification(FrameBufferTextureFormat format) : TextureFormat(format) {}
+        FrameBufferTextureSpecification(FrameBufferTextureFormat format) : TextureFormat(format) {}
 
         FrameBufferTextureFormat TextureFormat = FrameBufferTextureFormat::None; ///< Format of the texture.
         Color4 ClearColor = Color4::CornflowerBlue;                              ///< Clear color used for this texture.
@@ -105,18 +109,42 @@ namespace BeeEngine
          * @param sizeOfPixel Size of each pixel in bytes.
          * @param format Format of the image.
          */
-        DumpedImage(void* data, uint32_t width, uint32_t height, uint32_t sizeOfPixel, FrameBufferTextureFormat format);
+        DumpedImage(void* data, uint32_t width, uint32_t height, uint32_t sizeOfPixel, FrameBufferTextureFormat format)
+        {
+            m_Data = malloc(width * height * sizeOfPixel);
+            memcpy(m_Data, data, width * height * sizeOfPixel);
+        }
 
         // Deleted copy constructor and assignment operator
         DumpedImage(const DumpedImage& other) = delete;
         DumpedImage& operator=(const DumpedImage& other) = delete;
 
-        // Move constructor and assignment operator
-        DumpedImage(DumpedImage&& other) noexcept;
-        DumpedImage& operator=(DumpedImage&& other) noexcept;
-
-        /// Destructor to free the image data.
-        ~DumpedImage();
+        DumpedImage(DumpedImage&& other) noexcept
+        {
+            m_Data = other.m_Data;
+            m_Width = other.m_Width;
+            m_Height = other.m_Height;
+            m_SizeOfPixel = other.m_SizeOfPixel;
+            m_Format = other.m_Format;
+            other.m_Data = nullptr;
+        }
+        DumpedImage& operator=(DumpedImage&& other) noexcept
+        {
+            m_Data = other.m_Data;
+            m_Width = other.m_Width;
+            m_Height = other.m_Height;
+            m_SizeOfPixel = other.m_SizeOfPixel;
+            m_Format = other.m_Format;
+            other.m_Data = nullptr;
+            return *this;
+        }
+        ~DumpedImage()
+        {
+            if (m_Data)
+            {
+                free(m_Data);
+            }
+        }
 
         /**
          * @brief Gets the raw image data.
