@@ -10,6 +10,7 @@
 #include "Core/Logging/GameLogger.h"
 #include "Core/Logging/Log.h"
 #include "Core/Numbers.h"
+#include "JobSystem/SpinLock.h"
 #include "MAssembly.h"
 #include "NativeToManaged.h"
 #include "Renderer/BindingSet.h"
@@ -18,6 +19,7 @@
 #include "Renderer/IBindable.h"
 #include "Renderer/RenderingQueue.h"
 #include "Renderer/Texture.h"
+#include "Renderer/UniformBuffer.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scene/Prefab.h"
@@ -26,6 +28,7 @@
 #include "ScriptingEngine.h"
 #include <cstdint>
 #include <exception>
+#include <mutex>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -559,6 +562,12 @@ namespace BeeEngine
     {
         std::unordered_map<ScriptGlue::ModelType, Model*> Models;
         BindingSet* BlankTextureSet = nullptr;
+        std::unordered_map<FrameBuffer*, Scope<FrameBuffer>> AllocatedFramebuffers;
+        Jobs::SpinLock AllocatedFramebuffersLock;
+        std::unordered_map<UniformBuffer*, Scope<UniformBuffer>> AllocatedUniformBuffers;
+        Jobs::SpinLock AllocatedUniformBuffersLock;
+        std::unordered_map<BindingSet*, Scope<BindingSet>> AllocatedBindingSets;
+        Jobs::SpinLock AllocatedBindingSetsLock;
     };
 
     BindingSet* ScriptGlue::GetBindingSetForModelType(ScriptGlue::ModelType modelType, AssetHandle* handle)
@@ -658,7 +667,10 @@ namespace BeeEngine
         // preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; // RedInteger
         preferences.Attachments.Attachments[0].ClearColor = clearColor;
         auto framebuffer = FrameBuffer::Create(preferences);
-        return framebuffer.release();
+        FrameBuffer* result = framebuffer.get();
+        std::unique_lock lock(s_Data->AllocatedFramebuffersLock);
+        s_Data->AllocatedFramebuffers[result] = std::move(framebuffer);
+        return result;
     }
     void ScriptGlue::Framebuffer_Resize(FrameBuffer* framebuffer, uint32_t width, uint32_t height)
     {
@@ -668,7 +680,8 @@ namespace BeeEngine
     }
     void ScriptGlue::Framebuffer_Destroy(FrameBuffer* framebuffer)
     {
-        delete framebuffer;
+        std::unique_lock lock(s_Data->AllocatedFramebuffersLock);
+        s_Data->AllocatedFramebuffers.erase(framebuffer);
     }
     void ScriptGlue::Framebuffer_Bind(FrameBuffer* framebuffer, CommandBuffer* cmd)
     {
@@ -681,12 +694,16 @@ namespace BeeEngine
 
     UniformBuffer* ScriptGlue::UniformBuffer_CreateDefault(uint32_t sizeBytes)
     {
-        auto result = UniformBuffer::Create(sizeBytes);
-        return result.release();
+        auto uniformBuffer = UniformBuffer::Create(sizeBytes);
+        UniformBuffer* result = uniformBuffer.get();
+        std::unique_lock lock(s_Data->AllocatedUniformBuffersLock);
+        s_Data->AllocatedUniformBuffers[result] = std::move(uniformBuffer);
+        return result;
     }
     void ScriptGlue::UniformBuffer_Destroy(UniformBuffer* buffer)
     {
-        delete buffer;
+        std::unique_lock lock(s_Data->AllocatedUniformBuffersLock);
+        s_Data->AllocatedUniformBuffers.erase(buffer);
     }
     void ScriptGlue::UniformBuffer_SetData(UniformBuffer* buffer, void* data, uint32_t sizeBytes)
     {
@@ -701,12 +718,16 @@ namespace BeeEngine
         {
             bindingSetElements.emplace_back(i, *bindables[i]);
         }
-        auto result = BindingSet::Create(BeeMove(bindingSetElements));
-        return result.release();
+        auto bindingSet = BindingSet::Create(BeeMove(bindingSetElements));
+        BindingSet* result = bindingSet.get();
+        std::unique_lock lock(s_Data->AllocatedBindingSetsLock);
+        s_Data->AllocatedBindingSets[result] = std::move(bindingSet);
+        return result;
     }
     void ScriptGlue::BindingSet_Destroy(BindingSet* bindingSet)
     {
-        delete bindingSet;
+        std::unique_lock lock(s_Data->AllocatedBindingSetsLock);
+        s_Data->AllocatedBindingSets.erase(bindingSet);
     }
 
     void ScriptGlue::Init()

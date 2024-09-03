@@ -219,27 +219,6 @@ Entities:
         - Name: Texture1
           Type: Texture2D
           Data: [3753192931707503016, 13987028760561915515]
-        - Name: X
-          Type: float
-          Data: 0
-        - Name: near
-          Type: float
-          Data: -10000
-        - Name: width
-          Type: float
-          Data: 1
-        - Name: height
-          Type: float
-          Data: 1
-        - Name: far
-          Type: float
-          Data: 100000
-        - Name: Y
-          Type: float
-          Data: 0
-        - Name: Z
-          Type: float
-          Data: 0
         - Name: Texture2
           Type: Texture2D
           Data: [3753192931707503016, 7772243033513047726]
