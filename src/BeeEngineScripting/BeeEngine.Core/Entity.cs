@@ -1,19 +1,17 @@
 ﻿using BeeEngine.Events;
 using BeeEngine.Internal;
 using BeeEngine.Renderer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BeeEngine
 {
+    /// <summary>
+    /// A struct that contains information about a mouse click event.
+    /// </summary>
     public struct MouseClickEventArgs
     {
-        public Entity Entity;
-        public MouseButton MouseButton;
+        public Entity Entity; // The entity that was clicked
+        public MouseButton MouseButton; // The mouse button that was clicked
     }
     /// <summary>
     /// Represents an entity in the scene.
@@ -226,6 +224,12 @@ namespace BeeEngine
             return component;
         }
 
+        /// <summary>
+        /// Retrieves the component of type <typeparamref name="T"/> attached to the entity.
+        /// </summary>
+        /// <typeparam name="T">The type of component to retrieve.</typeparam>
+        /// <returns>The component of the specified type, or <c>null</c> if none is attached.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
         public unsafe T? GetComponent<T>() where T : Component, new()
         {
             ThrowIfDestroyed();
@@ -250,12 +254,24 @@ namespace BeeEngine
             m_ComponentCache.Add(componentType, cmp);
             return cmp;
         }
+        /// <summary>
+        /// Checks if the entity has a component of type <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of component to check.</typeparam>
+        /// <returns><c>true</c> if the entity has the component; otherwise, <c>false</c>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>()
         {
             ThrowIfDestroyed();
             return InternalCalls.Entity_HasComponent(ID, typeof(T));
         }
+        /// <summary>
+        /// Checks if the entity has a component of the specified type.
+        /// </summary>
+        /// <param name="type">The type of the component to check.</param>
+        /// <returns><c>true</c> if the entity has the component; otherwise, <c>false</c>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(Type type)
         {
@@ -263,6 +279,12 @@ namespace BeeEngine
             return InternalCalls.Entity_HasComponent(ID, type);
         }
 
+        /// <summary>
+        /// Removes the component of type <typeparamref name="T"/> from the entity,
+        /// if it exists.
+        /// </summary>
+        /// <typeparam name="T">The type of component to remove.</typeparam>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
         public void RemoveComponent<T>()
         {
             ThrowIfDestroyed();
@@ -272,12 +294,21 @@ namespace BeeEngine
             InternalCalls.Entity_RemoveComponent(ID, type);
             m_ComponentCache.Remove(type);
         }
+        /// <summary>
+        /// Destroys the entity. After the entity is destroyed,
+        /// it cannot be used anymore.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is already destroyed.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Destroy()
         {
             ThrowIfDestroyed();
             InternalCalls.Entity_Destroy(ID);
         }
+        /// <summary>
+        /// Checks if the entity is alive.
+        /// </summary>
+        /// <returns><c>true</c> if the entity is alive; otherwise, <c>false</c>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsAlive()
         {
@@ -303,7 +334,11 @@ namespace BeeEngine
             m_ComponentCache.Clear();
         }
 
-        public Entity Parent
+        /// <summary>
+        /// Returns the parent of the entity. If the entity has no parent, it returns null.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the entity is destroyed.</exception>
+        public Entity? Parent
         {
             get
             {
@@ -324,6 +359,9 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns the children of the entity.
+        /// </summary>
         public IEnumerable<Entity> Children
         {
             get
@@ -337,7 +375,11 @@ namespace BeeEngine
                 }
             }
         }
-
+        /// <summary>
+        /// Adds a child to the entity.
+        /// </summary>
+        /// <param name="child"></param>
+        /// <exception cref="ArgumentException"></exception>
         public void AddChild(Entity child)
         {
             ThrowIfDestroyed();
@@ -345,20 +387,30 @@ namespace BeeEngine
                 throw new ArgumentException("Child can't be null");
             InternalCalls.Entity_AddChild(ID, child.ID);
         }
-
+        /// <summary>
+        /// Removes a child from the entity.
+        /// </summary>
+        /// <param name="child"></param>
+        /// <exception cref="ArgumentNullException"></exception>
         public void RemoveChild(Entity child)
         {
             ThrowIfDestroyed();
             if (child is null)
-                throw new ArgumentException("Child can't be null");
+                throw new ArgumentNullException(nameof(child));
             InternalCalls.Entity_RemoveChild(ID, child.ID);
         }
 
+        /// <summary>
+        /// Checks if a child is a child of this entity.
+        /// </summary>
+        /// <param name="child">The child to check.</param>
+        /// <returns><c>true</c> if the child is a child of the entity; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="child"/> is <c>null</c>.</exception>
         public bool HasChild(Entity child)
         {
             ThrowIfDestroyed();
             if (child is null)
-                throw new ArgumentException("Child can't be null");
+                throw new ArgumentNullException(nameof(child));
             return InternalCalls.Entity_HasChild(ID, child.ID);
         }
 

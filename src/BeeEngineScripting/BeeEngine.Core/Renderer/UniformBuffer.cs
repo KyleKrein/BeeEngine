@@ -73,16 +73,13 @@ public sealed class UniformBuffer : IDisposable
         }
     }
 
-    // // TODO: переопределить метод завершения, только если "Dispose(bool disposing)" содержит код для освобождения неуправляемых ресурсов
     ~UniformBuffer()
     {
-        // Не изменяйте этот код. Разместите код очистки в методе "Dispose(bool disposing)".
         Dispose(disposing: false);
     }
 
     public void Dispose()
     {
-        // Не изменяйте этот код. Разместите код очистки в методе "Dispose(bool disposing)".
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

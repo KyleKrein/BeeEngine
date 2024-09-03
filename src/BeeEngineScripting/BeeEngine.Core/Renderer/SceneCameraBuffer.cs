@@ -19,10 +19,12 @@ public sealed class SceneCameraBuffer : IDisposable
     {
         get
         {
+            ThrowIfDisposed();
             return m_ViewProjection;
         }
         set
         {
+            ThrowIfDisposed();
             m_ViewProjection = value;
             m_UniformBuffer.SetData(ref m_ViewProjection);
         }
@@ -62,6 +64,11 @@ public sealed class SceneCameraBuffer : IDisposable
         m_BindingSet = bindingSetBuilder.Build();
     }
 
+    void ThrowIfDisposed()
+    {
+        Log.AssertAndThrow(!disposedValue, "Trying to access a disposed scene camera buffer.");
+    }
+
     private void Dispose(bool disposing)
     {
         if (!disposedValue)
@@ -71,23 +78,12 @@ public sealed class SceneCameraBuffer : IDisposable
                 m_UniformBuffer.Dispose();
                 m_BindingSet.Dispose();
             }
-
-            // TODO: освободить неуправляемые ресурсы (неуправляемые объекты) и переопределить метод завершения
-            // TODO: установить значение NULL для больших полей
             disposedValue = true;
         }
     }
 
-    // // TODO: переопределить метод завершения, только если "Dispose(bool disposing)" содержит код для освобождения неуправляемых ресурсов
-    // ~SceneCameraBuffer()
-    // {
-    //     // Не изменяйте этот код. Разместите код очистки в методе "Dispose(bool disposing)".
-    //     Dispose(disposing: false);
-    // }
-
     public void Dispose()
     {
-        // Не изменяйте этот код. Разместите код очистки в методе "Dispose(bool disposing)".
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

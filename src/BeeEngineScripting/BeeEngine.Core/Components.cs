@@ -1,15 +1,16 @@
 ﻿using BeeEngine.Internal;
 using BeeEngine.Math;
 using BeeEngine.Renderer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BeeEngine
 {
+    /// <summary>
+    /// Abstract class for all components. Only for internal use,
+    /// it doesn't meant to be used by Game Developers, because 
+    /// each component class must have its twin class on the C++
+    /// side of the engine.
+    /// </summary>
     public abstract class Component
     {
         internal unsafe void* ComponentHandle;
@@ -25,12 +26,20 @@ namespace BeeEngine
         }
     }
 
+    /// <summary>
+    /// The TransformComponent class represents a Position, Rotation, and Scale
+    /// of an Entity. Each Entity has its own TransformComponent by default.
+    /// </summary>
     public sealed class TransformComponent : Component
     {
         private unsafe Vector3* m_Translation;
         private unsafe Vector3* m_Rotation;
         private unsafe Vector3* m_Scale;
 
+        /// <summary>
+        /// Returns a reference to the Transform object,
+        /// which contains the Position, Rotation, and Scale of the Entity.
+        /// </summary>
         public unsafe ref Transform Transform
         {
             get
@@ -40,6 +49,9 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the Position/Translation of the Entity.
+        /// </summary>
         public unsafe ref Vector3 Translation
         {
             get
@@ -48,7 +60,9 @@ namespace BeeEngine
                 return ref Unsafe.AsRef<Vector3>(m_Translation);
             }
         }
-
+        /// <summary>
+        /// Returns a reference to the Rotation of the Entity.
+        /// </summary>
         public unsafe ref Vector3 Rotation
         {
             get
@@ -57,7 +71,9 @@ namespace BeeEngine
                 return ref Unsafe.AsRef<Vector3>(m_Rotation);
             }
         }
-
+        /// <summary>
+        /// Returns a reference to the Scale of the Entity.
+        /// </summary>
         public unsafe ref Vector3 Scale
         {
             get
@@ -75,6 +91,10 @@ namespace BeeEngine
         }
     }
 
+    /// <summary>
+    /// The SpriteRendererComponent class allows to render 2D sprites at
+    /// the position of an Entity.
+    /// </summary>
     public sealed class SpriteRendererComponent : Component
     {
         private unsafe Color* m_Color;
@@ -84,6 +104,11 @@ namespace BeeEngine
 
         private Texture2D m_Texture2D = new Texture2D();
 
+        /// <summary>
+        /// Returns a reference to the current Color, that is
+        /// used to tint the sprite. Color.White
+        /// does not tint the sprite.
+        /// </summary>
         public unsafe ref Color Color
         {
             get
@@ -93,6 +118,10 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a Texture2D of the sprite, if any.
+        /// Otherwise, returns null.
+        /// </summary>
         public unsafe Texture2D? Texture
         {
             get
@@ -121,7 +150,12 @@ namespace BeeEngine
                 DebugLog.Assert(m_Texture2D.IsValid(), "Invalid asset handle");
             }
         }
-
+        /// <summary>
+        /// Returns a reference to the tiling factor of the sprite.
+        /// TilingFactor allows to expand or shrink the sprite.
+        /// If the sprite is extended, it will be repeated.
+        /// Default value is 1.
+        /// </summary>
         public unsafe ref float TilingFactor
         {
             get
@@ -142,12 +176,20 @@ namespace BeeEngine
         }
     }
 
+    /// <summary>
+    /// The CircleRendererComponent class allows to render circles at
+    /// the position of an Entity.
+    /// </summary>
     public sealed class CircleRendererComponent : Component
     {
         private unsafe Color* m_Color;
         private unsafe float* m_Thickness;
         private unsafe float* m_Fade;
 
+        /// <summary>
+        /// Returns a reference to the current Color, that is
+        /// used to tint the circle.
+        /// </summary>
         public unsafe ref Color Color
         {
             get
@@ -157,6 +199,9 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns the thickness of the circle.
+        /// </summary>
         public unsafe ref float Thickness
         {
             get
@@ -166,6 +211,10 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns the fade of the circle.
+        /// The fade is the amount of fade to apply to the circle's edges.
+        /// </summary>
         public unsafe ref float Fade
         {
             get
@@ -183,13 +232,21 @@ namespace BeeEngine
         }
     }
 
+    /// <summary>
+    /// The RigidBodyType enum defines the type of the RigidBody
+    /// of an Entity.
+    /// </summary>
     public enum RigidBodyType
     {
-        Static = 0,
-        Dynamic = 1,
-        Kinematic = 2,
+        Static = 0, // Body is not affected by forces
+        Dynamic = 1, // Body is affected by forces
+        Kinematic = 2, // Body is affected by forces, but can not move. Not in use
     }
 
+    /// <summary>
+    /// The RigidBody2DComponent class allows to add a RigidBody to an Entity.
+    /// RigidBodies are affected by forces and can move.
+    /// </summary>
     public sealed class RigidBody2DComponent : Component
     {
         private unsafe RigidBodyType* m_BodyType;
@@ -226,6 +283,9 @@ namespace BeeEngine
         Circle = 1
     }
 
+    /// <summary>
+    /// The BoxCollider2DComponent class represents a 2D box or circle collider
+    /// </summary>
     public sealed class BoxCollider2DComponent : Component
     {
         private unsafe BoxCollider2DType* m_Type;
@@ -237,6 +297,9 @@ namespace BeeEngine
         private unsafe float* m_Restitution;
         private unsafe float* m_RestitutionThreshold;
 
+        /// <summary>
+        /// Returns a reference to the type of the 2D collider (Box or Circle).
+        /// </summary>
         public unsafe ref BoxCollider2DType Type
         {
             get
@@ -246,6 +309,9 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the offset of the collider relative to the entity's center.
+        /// </summary>
         public unsafe ref Vector2 Offset
         {
             get
@@ -255,6 +321,9 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the size of the 2D collider.
+        /// </summary>
         public unsafe ref Vector2 Size
         {
             get
@@ -264,6 +333,10 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the density of the collider. 
+        /// Density affects the mass of the entity in physics calculations.
+        /// </summary>
         public unsafe ref float Density
         {
             get
@@ -273,6 +346,10 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the friction of the collider. 
+        /// Friction affects how much the entity resists sliding.
+        /// </summary>
         public unsafe ref float Friction
         {
             get
@@ -282,6 +359,10 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the restitution of the collider.
+        /// Restitution determines the bounciness of the entity.
+        /// </summary>
         public unsafe ref float Restitution
         {
             get
@@ -291,6 +372,11 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the restitution threshold of the collider.
+        /// The restitution threshold determines the minimum velocity 
+        /// needed for the entity to bounce.
+        /// </summary>
         public unsafe ref float RestitutionThreshold
         {
             get
@@ -312,6 +398,9 @@ namespace BeeEngine
         }
     }
 
+    /// <summary>
+    /// This class allows to render text using the Transform of an Entity.
+    /// </summary>
     public sealed class TextRendererComponent : Component
     {
         private unsafe Color* m_ForegroundColor;
@@ -322,6 +411,9 @@ namespace BeeEngine
 
         private Font m_Font = new Font();
 
+        /// <summary>
+        /// Gets or sets the text associated with this TextRendererComponent.
+        /// </summary>
         public string Text
         {
             get
@@ -332,10 +424,15 @@ namespace BeeEngine
             set
             {
                 CheckIfDestroyed();
+                Log.AssertAndThrow(value is not null, "Text in TextRendererComponent can't be null");
                 InternalCalls.TextRendererComponent_SetText(EntityID, value);
             }
         }
 
+        /// <summary>
+        /// Gets or sets the font used by the TextRendererComponent.
+        /// The font cannot be null, and must be a valid asset.
+        /// </summary>
         public unsafe Font Font
         {
             get
@@ -353,6 +450,9 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the foreground color used for rendering the text.
+        /// </summary>
         public unsafe ref Color Foreground
         {
             get
@@ -362,6 +462,9 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the background color used for rendering the text.
+        /// </summary>
         public unsafe ref Color Background
         {
             get
@@ -371,6 +474,10 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the kerning value of the text.
+        /// Kerning adjusts the spacing between characters.
+        /// </summary>
         public unsafe ref float Kerning
         {
             get
@@ -380,6 +487,10 @@ namespace BeeEngine
             }
         }
 
+        /// <summary>
+        /// Returns a reference to the line spacing value of the text.
+        /// Line spacing adjusts the space between lines of text.
+        /// </summary>
         public unsafe ref float LineSpacing
         {
             get

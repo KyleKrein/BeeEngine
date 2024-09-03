@@ -37,9 +37,13 @@ public sealed class BindingSet : IDisposable
         Dispose(disposing: false);
     }
 
+    private void ThrowIfDisposed()
+    {
+        Log.AssertAndThrow(!disposedValue, "Trying to access a disposed binding set.");
+    }
+
     public void Dispose()
     {
-        // Не изменяйте этот код. Разместите код очистки в методе "Dispose(bool disposing)".
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

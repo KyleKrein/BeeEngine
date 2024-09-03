@@ -16,5 +16,4 @@ void main()
 {
     outTexCoord = vTexCoord;
     gl_Position = camera.projView * vModel * vec4(vPosition, 1.0);
-    //gl_Position = vModel * vec4(vPosition, 1.0);
 }

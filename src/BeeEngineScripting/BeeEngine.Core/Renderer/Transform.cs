@@ -36,6 +36,9 @@ public struct Transform
         Rotation = Vector3.Zero;
         Scale = Vector3.One;
     }
+    public static Matrix4 operator *(Matrix4 lhs, Transform rhs) => lhs * rhs.Matrix;
+    public static Transform operator *(Transform lhs, Matrix4 rhs) => new Transform(lhs.Matrix * rhs);
+    public static Transform operator *(Transform lhs, Transform rhs) => new Transform(lhs.Matrix * rhs.Matrix);
     /// <summary>
     /// Initializes a new instance of the <see cref="Transform"/> struct from a given transformation matrix.
     /// </summary>
