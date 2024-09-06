@@ -17,6 +17,35 @@ namespace BeeEngine
         { a.GetNearClip() } -> std::convertible_to<float>;
         { a.GetFarClip() } -> std::convertible_to<float>;
     };
+    struct SpriteInstanceBufferData
+    {
+        glm::mat4 Model{1.0f};
+        BeeEngine::Color4 Color{BeeEngine::Color4::White};
+        float TilingFactor = 1.0f;
+        int32_t EntityID = -1;
+    };
+    struct CircleInstanceBufferData
+    {
+        glm::mat4 Model{1.0f};
+        BeeEngine::Color4 Color{BeeEngine::Color4::White};
+        float Thickness = 1.0f;
+        float Fade = 0.005f;
+        int32_t EntityID = -1;
+    };
+    struct TextInstancedData
+    {
+        glm::vec2 TexCoord0;
+        glm::vec2 TexCoord1;
+        glm::vec2 TexCoord2;
+        glm::vec2 TexCoord3;
+        glm::vec3 PositionOffset0;
+        glm::vec3 PositionOffset1;
+        glm::vec3 PositionOffset2;
+        glm::vec3 PositionOffset3;
+        Color4 ForegroundColor;
+        Color4 BackgroundColor;
+        int32_t EntityID;
+    };
     class SceneRenderer
     {
     private:

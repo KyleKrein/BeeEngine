@@ -6,8 +6,10 @@
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetRegistrySerializer.h"
 #include "Core/CodeSafety/Expects.h"
+#include "Core/Format.h"
 #include "Core/Logging/Log.h"
 #include "Core/ResourceManager.h"
+#include "Core/ScopeGuard.h"
 #include "FileSystem/File.h"
 #include "Locale/LocalizationGenerator.h"
 #include "Utils/Commands.h"
@@ -23,33 +25,51 @@ namespace BeeEngine::Editor
     ProjectFile::ProjectFile(const Path& projectPath,
                              const String& projectName,
                              EditorAssetManager* assetManager) noexcept
-        : m_ProjectName(projectName),
-          m_ProjectPath(projectPath),
+        : Name(projectName),
+          FolderPath(projectPath),
+          FilePath(makeBoundProperty(FolderPath / (Name + ".beeproj"))),
+          AssetRegistryPath(makeBoundProperty(FolderPath / (Name + ".beeassetregistry"))),
           m_AssetManager(assetManager),
           m_ProjectLocaleDomain(projectName)
     {
-        BeeCoreTrace("ProjectName: {0}", m_ProjectName);
-        BeeCoreTrace("ProjectPath: {0}", m_ProjectPath.AsUTF8());
-        ResourceManager::ProjectName = GetProjectName();
+        Name.valueAboutToChange().connect(
+            [this](const String& oldName, const String& newName)
+            {
+                std::filesystem::remove(FilePath.get().ToStdPath());
+                std::filesystem::rename(AssetRegistryPath.get().ToStdPath(),
+                                        (FolderPath.get() / (newName + ".beeassetregistry")).ToStdPath());
+            });
+        Name.valueChanged().connect(
+            [this](const String& newName)
+            {
+                ResourceManager::ProjectName = newName;
+                Save();
+            });
+        auto localeHandle = DefaultLocale.valueChanged().connect([this](const auto& newLocale) { Save(); });
+        localeHandle.block(true);
+        ScopeGuard defer([localeHandle]() mutable { localeHandle.block(false); });
+        BeeCoreTrace("ProjectName: {0}", Name.get());
+        BeeCoreTrace("ProjectPath: {0}", FolderPath.get().AsUTF8());
+        ResourceManager::ProjectName = Name.get();
         LoadLocalizationFiles();
-        if (!File::Exists(m_ProjectPath / ".beeengine"))
+        if (!File::Exists(FolderPath.get() / ".beeengine"))
         {
-            File::CreateDirectory(m_ProjectPath / ".beeengine");
+            File::CreateDirectory(FolderPath.get() / ".beeengine");
         }
-        if (!File::Exists(m_ProjectPath / ".beeengine" / "build"))
+        if (!File::Exists(FolderPath.get() / ".beeengine" / "build"))
         {
-            m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build";
-            File::CreateDirectory(m_AppAssemblyPath);
-            m_AppAssemblyPath = m_AppAssemblyPath / dotNetVersion;
-            File::CreateDirectory(m_AppAssemblyPath);
+            GameAssemblyPath = FolderPath.get() / ".beeengine" / "build";
+            File::CreateDirectory(GameAssemblyPath.get());
+            GameAssemblyPath = GameAssemblyPath.get() / dotNetVersion;
+            File::CreateDirectory(GameAssemblyPath.get());
         }
         else
-            m_AppAssemblyPath = m_ProjectPath / ".beeengine" / "build" / dotNetVersion;
-        m_AppAssemblyPath = m_AppAssemblyPath / "GameLibrary.dll";
+            GameAssemblyPath = FolderPath.get() / ".beeengine" / "build" / dotNetVersion;
+        GameAssemblyPath = GameAssemblyPath.get() / "GameLibrary.dll";
         std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll",
-                                   m_ProjectPath.ToStdPath() / ".beeengine" / "BeeEngine.Core.dll",
+                                   FolderPath.get().ToStdPath() / ".beeengine" / "BeeEngine.Core.dll",
                                    std::filesystem::copy_options::overwrite_existing);
-        if (!File::Exists(m_ProjectFilePath))
+        if (!File::Exists(FilePath.get()))
         {
         init:
             Save();
@@ -82,8 +102,8 @@ namespace BeeEngine::Editor
                 std::ofstream fout(currentConfigFile);
                 fout << data;*/
             }
-            File::CreateDirectory(m_ProjectPath / "Assets");
-            File::CreateDirectory(m_ProjectPath / "Scenes");
+            File::CreateDirectory(FolderPath.get() / "Assets");
+            File::CreateDirectory(FolderPath.get() / "Scenes");
 
             RegenerateSolution();
             return;
@@ -93,7 +113,7 @@ namespace BeeEngine::Editor
             RegenerateSolution();
         }
         {
-            std::ifstream ifs(m_ProjectFilePath.ToStdPath());
+            std::ifstream ifs(FilePath.get().ToStdPath());
             YAML::Node data = YAML::Load(ifs);
             ifs.close();
             if (!data["ProjectName"])
@@ -103,7 +123,7 @@ namespace BeeEngine::Editor
             m_AssetRegistryID = data["Asset Registry ID"].as<uint64_t>();
             if (data["DefaultLocale"])
             {
-                m_DefaultLocale = Locale::Localization(String{data["DefaultLocale"].as<std::string>()});
+                DefaultLocale = Locale::Localization(String{data["DefaultLocale"].as<std::string>()});
             }
             if (data["StartingScene"])
             {
@@ -111,7 +131,7 @@ namespace BeeEngine::Editor
             }
         }
         {
-            Path userConfigPath = m_ProjectPath / ".beeengine" / "usersettings.cfg";
+            Path userConfigPath = FolderPath.get() / ".beeengine" / "usersettings.cfg";
             if (File::Exists(userConfigPath))
             {
                 std::ifstream ifs(userConfigPath.ToStdPath());
@@ -122,41 +142,19 @@ namespace BeeEngine::Editor
         }
     }
 
-    const Path& ProjectFile::GetProjectPath() const noexcept
-    {
-        return m_ProjectPath;
-    }
-
-    const String& ProjectFile::GetProjectName() const noexcept
-    {
-        return m_ProjectName;
-    }
-
-    void ProjectFile::RenameProject(const String& newName) noexcept
-    {
-        m_ProjectName = newName;
-        std::filesystem::remove(m_ProjectFilePath.ToStdPath());
-        std::filesystem::rename(m_ProjectAssetRegistryPath.ToStdPath(),
-                                (m_ProjectPath / (newName + ".beeassetregistry")).ToStdPath());
-        m_ProjectFilePath = m_ProjectPath / (newName + ".beeproj");
-        m_ProjectAssetRegistryPath = m_ProjectPath / (newName + ".beeassetregistry");
-        ResourceManager::ProjectName = GetProjectName();
-        Save();
-    }
-
     void ProjectFile::Save()
     {
         {
             YAML::Emitter out;
             out << YAML::BeginMap;
 
-            out << YAML::Key << "ProjectName" << YAML::Value << m_ProjectName.c_str();
+            out << YAML::Key << "ProjectName" << YAML::Value << Name.get().c_str();
             out << YAML::Key << "Asset Registry ID" << YAML::Value << (uint64_t)m_AssetRegistryID;
-            out << YAML::Key << "DefaultLocale" << YAML::Value << m_DefaultLocale.GetLanguageString().c_str();
+            out << YAML::Key << "DefaultLocale" << YAML::Value << DefaultLocale.get().GetLanguageString().c_str();
             out << YAML::Key << "StartingScene" << YAML::Value << m_StartingScene;
             out << YAML::EndMap;
 
-            File::WriteFile(m_ProjectFilePath, String{out.c_str()});
+            File::WriteFile(FilePath.get(), String{out.c_str()});
         }
 
         {
@@ -164,7 +162,7 @@ namespace BeeEngine::Editor
             out << YAML::BeginMap;
             out << YAML::Key << "LastUsedScene" << YAML::Value << m_LastUsedScene;
             out << YAML::EndMap;
-            File::WriteFile(m_ProjectPath / ".beeengine" / "usersettings.cfg", String{out.c_str()});
+            File::WriteFile(FolderPath.get() / ".beeengine" / "usersettings.cfg", String{out.c_str()});
         }
     }
 
@@ -188,8 +186,8 @@ namespace BeeEngine::Editor
 
     void ProjectFile::RegenerateSolution()
     {
-        auto sources = VSProjectGeneration::GetSourceFiles(m_ProjectPath);
-        VSProjectGeneration::GenerateProject(m_ProjectPath, sources, m_ProjectName);
+        auto sources = VSProjectGeneration::GetSourceFiles(FolderPath.get());
+        VSProjectGeneration::GenerateProject(FolderPath.get(), sources, Name.get());
     }
 
     std::vector<std::pair<OSPlatform, Path>> ProjectFile::CheckForAvailablePlatforms()
@@ -233,8 +231,8 @@ namespace BeeEngine::Editor
 
     void ProjectFile::BuildProject(const BuildProjectOptions& options)
     {
-        const Path libraryOutputPath = m_ProjectPath.AsUTF8() + "/.beeengine/build/" + ToString(options.BuildType);
-        RunCommand("dotnet build " + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln --configuration " +
+        const Path libraryOutputPath = FolderPath.get().AsUTF8() + "/.beeengine/build/" + ToString(options.BuildType);
+        RunCommand("dotnet build " + FolderPath.get().AsUTF8() + "/" + Name.get() + ".sln --configuration " +
                    ToString(options.BuildType) + " --output " + libraryOutputPath.AsUTF8());
         const Path gameLibraryPath = libraryOutputPath / "GameLibrary.dll";
         const auto outputPath = options.OutputPath.ToStdPath();
@@ -260,11 +258,11 @@ namespace BeeEngine::Editor
                     gameFilesPath = BuildMacOSGame(gameLibraryPath, platformOutputPath);
                     break;
                 default:
-                    BeeCoreWarn("Cannot build for platform {0}", platform);
+                    BeeCoreWarn("[BUILDING] Cannot build for platform {0}", platform);
                     continue;
             }
             const Path gameConfigPath = gameFilesPath / "Game.cfg";
-            const Path assetRegistryPath = gameFilesPath / (GetProjectName() + ".beeassetregistry");
+            const Path assetRegistryPath = gameFilesPath / (Name.get() + ".beeassetregistry");
 
             const Path assetPath = gameFilesPath / "Assets";
             const Path scenePath = assetPath / "Scenes";
@@ -307,11 +305,33 @@ namespace BeeEngine::Editor
                             case AssetType::Font:
                                 return fontPath;
                             default:
-                                BeeCoreWarn("Unsupported asset type in project build{0}", meta.Type);
+                                BeeCoreWarn(
+                                    "[BUILDING][{0}] Unsupported asset type in project build {1}", platform, meta.Type);
                                 return assetPath;
                         }
                     };
-                    const Path assetOutputPath = choosePath() / std::get<Path>(meta.Data).GetFileName();
+                    Path assetOutputPath = choosePath() / std::get<Path>(meta.Data).GetFileName();
+                    if (File::Exists(
+                            assetOutputPath)) // there's already an asset with the same name and type in project
+                    {
+                        const auto originalName = std::get<Path>(meta.Data).GetFileNameWithoutExtension().AsUTF8();
+                        const auto extension = std::get<Path>(meta.Data).GetExtension().AsUTF8();
+                        Path newPath;
+                        String newName;
+                        size_t index = 1;
+                        do
+                        {
+                            newName = FormatString("{0}_{1}{2}", originalName, index++, extension);
+                            newPath = choosePath() / newName;
+                        } while (File::Exists(newPath));
+                        BeeCoreWarn("[BUILDING][{0}] Name collision detected. Renamed '{1}' to '{2}'",
+                                    platform,
+                                    originalName + extension,
+                                    newName);
+                        meta.Name = newName;
+                        assetOutputPath = newPath;
+                    }
+
                     File::CopyFile(std::get<Path>(meta.Data), assetOutputPath);
                     meta.Data = assetOutputPath;
                     assetRegistry[registryUuid].emplace(uuid, std::move(meta));
@@ -322,7 +342,7 @@ namespace BeeEngine::Editor
             AssetRegistrySerializer serializer(&assetManager, gameFilesPath, m_AssetRegistryID);
             serializer.Serialize(assetRegistryPath);
 
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(GetProjectPath().ToStdPath()))
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(FolderPath.get().ToStdPath()))
             {
                 auto extension = entry.path().extension();
                 if (extension == ".yaml")
@@ -333,13 +353,13 @@ namespace BeeEngine::Editor
             }
 
             GameConfig config;
-            config.Name = GetProjectName();
+            config.Name = Name.get();
             config.DefaultLocale = options.DefaultLocale;
             config.StartingScene = m_StartingScene;
             config.Serialize(gameConfigPath);
         }
         std::filesystem::remove_all(libraryOutputPath.ToStdPath());
-        BeeCoreInfo("Project {0} built successfully in {1} mode!", GetProjectName(), options.BuildType);
+        BeeCoreInfo("[BUILDING] Project {0} built successfully in {1} mode!", Name.get(), options.BuildType);
     }
 
     Path ProjectFile::BuildWindowsGame(const Path& gameLibraryPath, const Path& outputDirectory)
@@ -350,12 +370,12 @@ namespace BeeEngine::Editor
         }
         File::CopyFile(gameLibraryPath, outputDirectory / "libs" / "GameLibrary.dll");
         std::filesystem::rename((outputDirectory / "GameRuntime.exe").ToStdPath(),
-                                (outputDirectory / (GetProjectName() + ".exe")).ToStdPath());
+                                (outputDirectory / (Name.get() + ".exe")).ToStdPath());
         return outputDirectory;
     }
     Path ProjectFile::BuildMacOSGame(const Path& gameLibraryPath, const Path& outputDirectory)
     {
-        const Path runtimePath = outputDirectory / (GetProjectName() + ".app");
+        const Path runtimePath = outputDirectory / (Name.get() + ".app");
         std::filesystem::rename((outputDirectory / "GameRuntime.app").ToStdPath(), runtimePath.ToStdPath());
         const Path contentsPath = runtimePath / "Contents";
         // std::filesystem::rename((contentsPath / "MacOS" / "GameRuntime").ToStdPath(), (contentsPath / "MacOS" /
@@ -389,16 +409,6 @@ namespace BeeEngine::Editor
         }
     }
 
-    const Path& ProjectFile::GetProjectFilePath() const noexcept
-    {
-        return m_ProjectFilePath;
-    }
-
-    const Path& ProjectFile::GetProjectAssetRegistryPath() const noexcept
-    {
-        return m_ProjectAssetRegistryPath;
-    }
-
     Generator<const AssetMetadata&> ProjectFile::GetAssetsForDirectory(const Path& directory)
     {
         auto& assets = m_AssetManager->GetAssetRegistry().at(m_AssetRegistryID);
@@ -419,7 +429,7 @@ namespace BeeEngine::Editor
     {
         Path p = path;
         if (p.IsRelative())
-            p = m_ProjectPath / p;
+            p = FolderPath.get() / p;
         if (p.AsUTF8().contains(".git") || p.AsUTF8().contains(".beeengine"))
         {
             return;
@@ -491,8 +501,8 @@ namespace BeeEngine::Editor
                         AssetHandle handle = *handlePtr;
                         m_AssetManager->RemoveAsset(handle);
                         m_AssetManager->LoadAsset(newPath, handle);
-                        AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
-                        serializer.Serialize(m_ProjectAssetRegistryPath);
+                        AssetRegistrySerializer serializer(m_AssetManager, FolderPath.get(), m_AssetRegistryID);
+                        serializer.Serialize(AssetRegistryPath.get());
                     });
                 return;
             }
@@ -505,18 +515,21 @@ namespace BeeEngine::Editor
                         [this, p, handle]()
                         {
                             m_AssetManager->LoadAsset(p, handle);
-                            AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
-                            serializer.Serialize(m_ProjectAssetRegistryPath);
+                            AssetRegistrySerializer serializer(m_AssetManager, FolderPath.get(), m_AssetRegistryID);
+                            serializer.Serialize(AssetRegistryPath.get());
                         });
                     changed = true;
                     break;
                 case FileWatcher::Event::Removed:
                     Application::SubmitToMainThread(
-                        [this, handle]()
+                        [this, handle, path = BeeMove(p)]()
                         {
-                            if (!m_AssetManager->IsAssetHandleValid(handle))
+                            if (!m_AssetManager->IsAssetHandleValid(handle) ||
+                                (std::get<Path>(m_AssetManager->GetAssetMetadata(handle).Data)) != path)
+                            {
                                 return;
-                            m_OnAssetRemoved(handle);
+                            }
+                            onAssetRemoved.emit(handle);
                         });
                     break;
                 case FileWatcher::Event::Modified:
@@ -541,15 +554,15 @@ namespace BeeEngine::Editor
             Application::SubmitToMainThread(
                 [this]()
                 {
-                    AssetRegistrySerializer serializer(m_AssetManager, m_ProjectPath, m_AssetRegistryID);
-                    serializer.Serialize(m_ProjectAssetRegistryPath);
+                    AssetRegistrySerializer serializer(m_AssetManager, FolderPath.get(), m_AssetRegistryID);
+                    serializer.Serialize(AssetRegistryPath.get());
                 });
         }
     }
 
     void ProjectFile::LoadLocalizationFiles()
     {
-        auto paths = Locale::LocalizationGenerator::GetLocalizationFiles(m_ProjectPath);
+        auto paths = Locale::LocalizationGenerator::GetLocalizationFiles(FolderPath.get());
         Locale::LocalizationGenerator::ProcessLocalizationFiles(m_ProjectLocaleDomain, paths);
         m_ProjectLocaleDomain.Build();
     }
@@ -576,7 +589,7 @@ namespace BeeEngine::Editor
         {
             m_AppAssemblyFileWatcher->Stop();
         }
-        RunCommand("dotnet build \"" + m_ProjectPath.AsUTF8() + "/" + m_ProjectName + ".sln\" --configuration Debug");
+        RunCommand("dotnet build \"" + FolderPath.get().AsUTF8() + "/" + Name.get() + ".sln\" --configuration Debug");
         if (m_AppAssemblyFileWatcher)
         {
             m_AppAssemblyFileWatcher->Start();
@@ -588,9 +601,9 @@ namespace BeeEngine::Editor
     {
         if (!m_AppAssemblyFileWatcher)
         {
-            m_AppAssemblyFileWatcher = FileWatcher::Create(m_AppAssemblyPath,
-                                                           [this](const Path& path, FileWatcher::Event event)
-                                                           { OnAppAssemblyFileSystemEvent(path, event); });
+            m_AppAssemblyFileWatcher = FileWatcher::Create(GameAssemblyPath.get());
+            m_AppAssemblyFileWatcher->onAnyEvent.connect([this](const Path& path, FileWatcher::Event event)
+                                                         { OnAppAssemblyFileSystemEvent(path, event); });
         }
         else
         {
@@ -598,9 +611,9 @@ namespace BeeEngine::Editor
         }
         if (!m_AssetFileWatcher)
         {
-            m_AssetFileWatcher = FileWatcher::Create(m_ProjectPath,
-                                                     [this](const Path& path, FileWatcher::Event event)
-                                                     { OnAssetFileSystemEvent(path, event); });
+            m_AssetFileWatcher = FileWatcher::Create(FolderPath.get());
+            m_AssetFileWatcher->onAnyEvent.connect([this](const Path& path, FileWatcher::Event event)
+                                                   { OnAssetFileSystemEvent(path, event); });
         }
         else
         {

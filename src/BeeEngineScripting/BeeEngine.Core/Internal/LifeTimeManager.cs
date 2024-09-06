@@ -9,12 +9,25 @@ namespace BeeEngine.Internal
 {
     internal static class LifeTimeManager
     {
-        private static Dictionary<ulong, Entity> s_Entities = new Dictionary<ulong, Entity>();
+        private static Dictionary<ulong, Entity> s_Entities = new();
+        private static Dictionary<ulong, ulong> s_EnttIdsCache = new();
+
 
         internal static Entity GetEntity(ulong entityId)
         {
             CreateEntityIfNotExists(entityId);
             return s_Entities[entityId];
+        }
+
+        internal static ulong GetEntityEnttID(Entity entity)
+        {
+            if (s_EnttIdsCache.ContainsKey(entity.ID))
+            {
+                return s_EnttIdsCache[entity.ID];
+            }
+            ulong enttID = InternalCalls.Entity_GetEnttID(entity.ID);
+            s_EnttIdsCache[entity.ID] = enttID;
+            return enttID;
         }
 
         //For calling from C++
@@ -52,6 +65,7 @@ namespace BeeEngine.Internal
         {
             Log.Info("Finishing Scene");
             s_Entities.Clear();
+            s_EnttIdsCache.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

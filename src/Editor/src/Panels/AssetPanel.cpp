@@ -11,6 +11,7 @@
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
 #include "Gui/ImGui/ImGuiExtension.h"
+#include "ProjectFile.h"
 #include "Renderer/Font.h"
 #include "Renderer/Texture.h"
 #include "imgui.h"
@@ -20,14 +21,13 @@
 namespace BeeEngine::Editor
 {
 
-    AssetPanel::AssetPanel(EditorAssetManager* assetManager, Locale::Domain& domain, const ConfigFile& config)
+    AssetPanel::AssetPanel(Property<Scope<ProjectFile>>& project,
+                           EditorAssetManager* assetManager,
+                           Locale::Domain& domain,
+                           const ConfigFile& config)
         : m_AssetManager(assetManager), m_EditorDomain(&domain), m_Config(config)
     {
-    }
-
-    void AssetPanel::SetProject(ProjectFile* project)
-    {
-        m_Project = project;
+        project.valueChanged().connect([this](const auto& newProject) { m_Project = newProject.get(); });
     }
 
     void AssetPanel::Render()
@@ -91,12 +91,12 @@ namespace BeeEngine::Editor
         {
             const auto& metadata = *metadataPtr;
             ImGui::PushID(metadata.Name.data());
-            Texture2D* icon = nullptr;
+            GPUTextureResource* icon = nullptr;
             switch (metadata.Type)
             {
                 case AssetType::Texture2D:
                 {
-                    icon = &static_cast<Texture2D&>(*m_AssetManager->GetAsset(handle));
+                    icon = &static_cast<Texture2D&>(*m_AssetManager->GetAsset(handle)).GetGPUResource();
                     break;
                 }
                 case AssetType::Font:
@@ -107,7 +107,8 @@ namespace BeeEngine::Editor
                 default:
                 {
                     icon = &AssetManager::GetAsset<Texture2D>(EngineAssetRegistry::FileTexture,
-                                                              Locale::Localization::Default);
+                                                              Locale::Localization::Default)
+                                .GetGPUResource();
                     break;
                 }
             }
@@ -132,7 +133,7 @@ namespace BeeEngine::Editor
                     }
                     if (ImGui::MenuItem(m_EditorDomain->Translate("assetPanel.deleteAsset").c_str()))
                     {
-                        Application::SubmitToMainThread([this, handle = handle]() { m_OnAssetDeleted(handle); });
+                        Application::SubmitToMainThread([this, handle = handle]() { onAssetRemoved.emit(handle); });
                     }
                     ImGui::EndPopup();
                 }
@@ -174,7 +175,7 @@ namespace BeeEngine::Editor
                 }
                 LocalizedAsset localizedAsset{std::move(handles)};
                 String serialized = LocalizedAssetSerializer::Serialize(localizedAsset);
-                Path assetPath = m_Project->GetProjectPath() / (assetName + ".beelocalizedasset");
+                Path assetPath = m_Project->FolderPath.get() / (assetName + ".beelocalizedasset");
                 File::WriteFile(assetPath, serialized);
                 m_AssetEditPanel = CreateScope<AssetEditPanel>(*m_EditorDomain, handle, *m_AssetManager);
                 ImGui::CloseCurrentPopup();

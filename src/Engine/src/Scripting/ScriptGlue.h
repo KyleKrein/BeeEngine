@@ -6,14 +6,20 @@
 #include "Core/AssetManagement/AssetManager.h"
 #include "Core/UUID.h"
 #include "KeyCodes.h"
+#include "Renderer/CommandBuffer.h"
+#include "Renderer/FrameBuffer.h"
+#include "Renderer/UniformBuffer.h"
 #include "Scene/Components.h"
 #include "vec3.hpp"
+#include <cstdint>
 
 namespace BeeEngine
 {
     class ScriptGlue
     {
     public:
+        static void Init();
+        static void Shutdown();
         static void Register();
         /**
          * @brief Component type enum to be sent to and from C# side
@@ -31,6 +37,22 @@ namespace BeeEngine
             BoxCollider2D = 0x03,
             Rigidbody2D = 0x04,
             CircleRenderer = 0x05,
+        };
+        /**
+         * @brief Model type enum to be sent to and from C# side
+         *
+         * IMPORTANT: If you change this enum, you must also change
+         * the corresponding enum in InternalCalls.cs and
+         * add the corresponding case in the switch statement in
+         * ScriptGlue.cpp
+         */
+        enum class ModelType : uint32_t
+        {
+            Rectangle,
+            Circle,
+            Text,
+            Line,
+            Framebuffer
         };
 
     private:
@@ -67,6 +89,7 @@ namespace BeeEngine
         static void Entity_Destroy(uint64_t id);
         static uint64_t Entity_Duplicate(uint64_t id);
         static uint64_t Entity_InstantiatePrefab(AssetHandle* handle, uint64_t parentId);
+        static uint64_t Entity_GetEnttID(uint64_t uuid);
         static void* TextRendererComponent_GetText(uint64_t id);
         static void TextRendererComponent_SetText(uint64_t id, void* text);
         static uint64_t Entity_FindEntityByName(void* name);
@@ -85,5 +108,31 @@ namespace BeeEngine
         static void* Locale_TranslateDynamic(void* key, ArrayInfo args);
         static void* Scene_GetActive();
         static void Scene_SetActive(void* scene);
+        static void Renderer_SubmitInstance(
+            BindingSet* cameraBindingSet, CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data);
+        static void Renderer_SubmitText(BindingSet* cameraBindingSet,
+                                        CommandBuffer cmd,
+                                        AssetHandle* handle,
+                                        void* textPtr,
+                                        glm::mat4* transform,
+                                        TextRenderingConfiguration* config,
+                                        int32_t entityId);
+
+        static BindingSet* GetBindingSetForModelType(ModelType modelType, AssetHandle* handle);
+
+        static FrameBuffer* Framebuffer_CreateDefault(uint32_t width, uint32_t height, Color4 clearColor);
+        static void Framebuffer_Resize(FrameBuffer* framebuffer, uint32_t width, uint32_t height);
+        static void Framebuffer_Destroy(FrameBuffer* framebuffer);
+        static void Framebuffer_Bind(FrameBuffer* framebuffer, CommandBuffer* cmd);
+        static void Framebuffer_Unbind(FrameBuffer* framebuffer, CommandBuffer* cmd);
+        static UniformBuffer* UniformBuffer_CreateDefault(uint32_t sizeBytes);
+        static void UniformBuffer_Destroy(UniformBuffer* buffer);
+        static void UniformBuffer_SetData(UniformBuffer* buffer, void* data, uint32_t sizeBytes);
+        static BindingSet* BindingSet_Create(ArrayInfo elements);
+        static void BindingSet_Destroy(BindingSet* bindingSet);
+
+    private:
+        struct ScriptGlueInternalState;
+        static inline ScriptGlueInternalState* s_Data = nullptr;
     };
 } // namespace BeeEngine

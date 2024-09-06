@@ -1,6 +1,12 @@
 # BeeEngine
 This is a General Purpose 2D (and in the future 3D also) cross-platform game engine, that is in early stages of development.
 
+# UI Screenshots
+**BeeEngine Editor: Flappy Bird example**
+![BeeEngine Editor UI Game Example](screenshots/MainUI.jpg)
+**BeeEngine Editor: Example Project**
+![BeeEngine Editor Example Project](screenshots/MainUI2.jpg)
+
 ## Features
 
 - Cross-platform

@@ -12,7 +12,7 @@
 namespace BeeEngine
 {
 
-    Scope<FileWatcher> FileWatcher::Create(const Path& path, const std::function<void(Path, Event)>& callback)
+    Scope<FileWatcher> FileWatcher::Create(const Path& path)
     {
         BeeExpects(!path.IsEmpty());
         BeeExpects(path.IsAbsolute());
@@ -21,10 +21,10 @@ namespace BeeEngine
         switch (Application::GetOsPlatform())
         {
             case OSPlatform::Windows:
-                result = CreateScope<Internal::WindowsFileWatcher>(path, callback);
+                result = CreateScope<Internal::WindowsFileWatcher>(path);
                 break;
             case OSPlatform::Mac:
-                result = CreateScope<Internal::MacOSFileWatcher>(path, callback);
+                result = CreateScope<Internal::MacOSFileWatcher>(path);
                 break;
             case OSPlatform::Android:
             case OSPlatform::Linux:
@@ -32,7 +32,7 @@ namespace BeeEngine
             default:
             {
                 BeeCoreWarn("FileWatcher is not implemented for this platform. Using STDFileWatcher instead.");
-                result = CreateScope<Internal::STDFileWatcher>(path, callback);
+                result = CreateScope<Internal::STDFileWatcher>(path);
                 break;
             }
         }

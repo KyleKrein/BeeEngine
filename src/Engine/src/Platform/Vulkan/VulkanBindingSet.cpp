@@ -24,15 +24,22 @@ namespace BeeEngine::Internal
                 return vk::PipelineBindPoint::eGraphics;
         }
     }
-
     VulkanBindingSet::VulkanBindingSet(std::initializer_list<BindingSetElement> elements)
-        : BindingSet(elements), m_GraphicsDevice(VulkanGraphicsDevice::GetInstance())
+        : VulkanBindingSet(std::vector(elements))
+    {
+    }
+    VulkanBindingSet::VulkanBindingSet(std::vector<BindingSetElement> elements)
+        : BindingSet(BeeMove(elements)), m_GraphicsDevice(VulkanGraphicsDevice::GetInstance())
     {
         std::vector<vk::DescriptorSetLayoutBinding> bindings;
+        size_t bindingIndex = 0;
+        if (!m_Elements.empty() && m_Elements[0].Binding != 0)
+        {
+            bindingIndex = m_Elements[0].Binding;
+        }
         for (const auto& element : m_Elements)
         {
             auto binding = element.Data.GetBindGroupLayoutEntry();
-            size_t bindingIndex = element.Binding;
             for (auto& entry : binding)
             {
                 auto& vkEntry = std::get<vk::DescriptorSetLayoutBinding>(entry);
@@ -47,12 +54,19 @@ namespace BeeEngine::Internal
         allocInfo.pSetLayouts = &m_DescriptorSetLayout;
         m_GraphicsDevice.CreateDescriptorSet(allocInfo, &m_DescriptorSet);
         // update
+        if (!m_Elements.empty() && m_Elements[0].Binding != 0)
+        {
+            bindingIndex = m_Elements[0].Binding;
+        }
+        else
+        {
+            bindingIndex = 0;
+        }
 
         std::vector<vk::WriteDescriptorSet> descriptorWrites;
         for (const auto& element : m_Elements)
         {
             auto binding = element.Data.GetBindGroupEntry();
-            size_t bindingIndex = element.Binding;
             for (auto& entry : binding)
             {
                 auto& writeDescriptorSet = std::get<vk::WriteDescriptorSet>(entry);

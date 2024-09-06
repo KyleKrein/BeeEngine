@@ -25,8 +25,8 @@ namespace BeeEngine
         Ref<BindingSet> bindingSet =
             BindingSet::Create({{0, *dataBuffer}, {1, *GetColorTexture()}, {3, *GetMetalRoughTexture()}});
 
-        [[nodiscard]] Texture2D* GetColorTexture() const;
-        [[nodiscard]] Texture2D* GetMetalRoughTexture() const;
+        [[nodiscard]] GPUTextureResource* GetColorTexture() const;
+        [[nodiscard]] GPUTextureResource* GetMetalRoughTexture() const;
         void RebuildBindingSet()
         {
             bindingSet = BindingSet::Create({{0, *dataBuffer}, {1, *GetColorTexture()}, {3, *GetMetalRoughTexture()}});

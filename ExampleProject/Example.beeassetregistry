@@ -16,6 +16,10 @@ Assets:
     Type: AssetType::Scene
     Handle: 4396845291111867722
     FilePath: Scenes/TestScene.beescene
+  - Name: Bee Generator Renderer
+    Type: AssetType::Prefab
+    Handle: 4826114485800703668
+    FilePath: Prefabs/Bee Generator Renderer.beeprefab
   - Name: PhysicsTest
     Type: AssetType::Scene
     Handle: 7586138150448856676
@@ -24,6 +28,10 @@ Assets:
     Type: AssetType::Texture2D
     Handle: 7772243033513047726
     FilePath: Assets/pc.png
+  - Name: Bee Generator
+    Type: AssetType::Prefab
+    Handle: 8978671574241113924
+    FilePath: Prefabs/Bee Generator.beeprefab
   - Name: Scene Changer
     Type: AssetType::Prefab
     Handle: 10162596410429172432

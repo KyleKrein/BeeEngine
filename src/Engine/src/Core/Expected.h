@@ -64,30 +64,31 @@ namespace BeeEngine
     class Expected
     {
     public:
-        Expected(const T& value) : m_Data({value}), m_HasValue(true) {}
-        Expected(T&& value) : m_Data({std::move(value)}), m_HasValue(true) {}
-        Expected(const Unexpected<E>& error) : m_Data({error.Error}), m_HasValue(false) {}
-        Expected(Unexpected<E>&& error) : m_Data({std::move(error.Error)}), m_HasValue(false) {}
+        constexpr Expected(const T& value) : m_Data({value}), m_HasValue(true) {}
+        constexpr Expected(T&& value) : m_Data({std::move(value)}), m_HasValue(true) {}
+        constexpr Expected(const Unexpected<E>& error) : m_Data({error.Error}), m_HasValue(false) {}
+        constexpr Expected(Unexpected<E>&& error) : m_Data({std::move(error.Error)}), m_HasValue(false) {}
 
-        Expected(const Expected& other) = default;
-        Expected(Expected&& other) noexcept = default;
-        Expected& operator=(const Expected& other) = default;
-        Expected& operator=(Expected&& other) noexcept = default;
+        constexpr Expected(const Expected& other) = default;
+        constexpr Expected(Expected&& other) noexcept = default;
+        constexpr Expected& operator=(const Expected& other) = default;
+        constexpr Expected& operator=(Expected&& other) noexcept = default;
 
-        bool HasValue() const { return m_HasValue; }
-        operator bool() const { return m_HasValue; }
+        constexpr bool HasValue() const { return m_HasValue; }
+        constexpr operator bool() const { return m_HasValue; }
 
-        T Value()
+        constexpr T Value()
         {
             if (!m_HasValue)
                 throw std::get<E>(m_Data);
             return std::move(std::get<T>(m_Data));
         }
-        E Error()
+        constexpr E Error()
         {
             // if(m_HasValue) throw;
             return std::move(std::get<E>(m_Data));
         }
+        constexpr ~Expected() = default;
 
     private:
         std::variant<T, E> m_Data;
@@ -97,22 +98,23 @@ namespace BeeEngine
     class Expected<void, E>
     {
     public:
-        Expected() : m_HasValue(true) {}
-        Expected(const Unexpected<E>& error) : m_Data({error.Error}), m_HasValue(false) {}
-        Expected(Unexpected<E>&& error) : m_Data({std::move(error.Error)}), m_HasValue(false) {}
+        constexpr Expected() : m_HasValue(true) {}
+        constexpr Expected(const Unexpected<E>& error) : m_Data({error.Error}), m_HasValue(false) {}
+        constexpr Expected(Unexpected<E>&& error) : m_Data({std::move(error.Error)}), m_HasValue(false) {}
 
-        Expected(const Expected& other) = default;
-        Expected(Expected&& other) noexcept = default;
-        Expected& operator=(const Expected& other) = default;
-        Expected& operator=(Expected&& other) noexcept = default;
+        constexpr Expected(const Expected& other) = default;
+        constexpr Expected(Expected&& other) noexcept = default;
+        constexpr Expected& operator=(const Expected& other) = default;
+        constexpr Expected& operator=(Expected&& other) noexcept = default;
 
-        bool HasValue() const { return m_HasValue; }
-        operator bool() const { return m_HasValue; }
-        const E&& Error() const
+        constexpr bool HasValue() const { return m_HasValue; }
+        constexpr operator bool() const { return m_HasValue; }
+        constexpr E Error() const
         {
             // if(m_HasValue) throw;
             return std::move(m_Data);
         }
+        constexpr ~Expected() = default;
 
     private:
         E m_Data;

@@ -23,9 +23,10 @@ namespace BeeEngine
                                       const std::vector<BindingSet*>& bindingSets,
                                       gsl::span<byte> instancedData)
     {
+        auto& vec = isTransparent ? m_Transparent : m_Opaque;
         std::vector<byte> instancedDataVector(instancedData.size());
         memcpy(instancedDataVector.data(), instancedData.data(), instancedData.size());
-        m_AllEntities.emplace_back(Entity{transform, &model, bindingSets, std::move(instancedDataVector)});
+        vec.emplace_back(Entity{transform, &model, bindingSets, std::move(instancedDataVector)});
     }
     struct TextInstancedData
     {
@@ -53,6 +54,7 @@ namespace BeeEngine
         auto& fontGeometry = font->GetMSDFData().FontGeometry;
         auto& metrics = fontGeometry.getMetrics();
         auto& atlasTexture = font->GetAtlasTexture();
+        auto& atlasBindingSet = font->GetAtlasBindingSet();
 
         double x = 0.0;
         double fsScale = 1.0 / (metrics.ascenderY - metrics.descenderY);
@@ -151,9 +153,9 @@ namespace BeeEngine
                                    .EntityID = entityID};
             std::vector<byte> instancedData(sizeof(TextInstancedData));
             memcpy(instancedData.data(), &data, sizeof(TextInstancedData));
-            m_AllEntities.emplace_back(Entity{transform,
+            m_Transparent.emplace_back(Entity{transform,
                                               &textModel,
-                                              std::vector<BindingSet*>{m_TextBindingSet, atlasTexture.GetBindingSet()},
+                                              std::vector<BindingSet*>{m_TextBindingSet, &atlasBindingSet},
                                               std::move(instancedData)});
 
             if (it != end)

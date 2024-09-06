@@ -12,9 +12,7 @@ namespace BeeEngine::Internal
     class VulkanMaterial final : public Material
     {
     public:
-        VulkanMaterial(const std::filesystem::path& vertexShader,
-                       const std::filesystem::path& fragmentShader,
-                       bool loadFromCache);
+        VulkanMaterial(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader);
         ~VulkanMaterial() override;
 
         [[nodiscard]] InstancedBuffer& GetInstancedBuffer() const override;

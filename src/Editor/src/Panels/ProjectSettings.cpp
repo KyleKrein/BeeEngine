@@ -11,7 +11,7 @@ namespace BeeEngine::Editor
         : m_CurrentProject(currentProject),
           m_Domain(domain),
           m_AssetManager(assetManager),
-          m_ProjectName(m_CurrentProject.GetProjectName())
+          m_ProjectName(m_CurrentProject.Name())
     {
     }
 
@@ -25,14 +25,12 @@ namespace BeeEngine::Editor
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         if (ImGui::InputText("##Project Name", &m_ProjectName, ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            m_CurrentProject.RenameProject(m_ProjectName);
-            m_CurrentProject.Save();
+            m_CurrentProject.Name = m_ProjectName;
         }
         ImGui::TextUnformatted(m_Domain.Translate("buildProject.defaultLocale").c_str());
         ImGui::SameLine();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        if (ImGui::BeginCombo("##Default Localization",
-                              m_CurrentProject.GetDefaultLocale().GetLanguageString().c_str()))
+        if (ImGui::BeginCombo("##Default Localization", m_CurrentProject.DefaultLocale().GetLanguageString().c_str()))
         {
             if (ImGui::BeginTooltip())
             {
@@ -41,11 +39,10 @@ namespace BeeEngine::Editor
             }
             for (const auto& locale : m_CurrentProject.GetProjectLocaleDomain().GetLocales())
             {
-                bool isSelected = locale == m_CurrentProject.GetDefaultLocale();
+                bool isSelected = locale == m_CurrentProject.DefaultLocale();
                 if (ImGui::Selectable(locale.c_str(), isSelected))
                 {
-                    m_CurrentProject.SetDefaultLocale(locale);
-                    m_CurrentProject.Save();
+                    m_CurrentProject.DefaultLocale = locale;
                 }
                 if (isSelected)
                 {
@@ -97,9 +94,10 @@ namespace BeeEngine::Editor
         }
         else
         {
-            ImGui::ImageButton(
-                (ImTextureID)AssetManager::GetAsset<Texture2D>(m_IconHandle, m_Domain.GetLocale()).GetRendererID(),
-                ImVec2(32, 32));
+            ImGui::ImageButton((ImTextureID)AssetManager::GetAsset<Texture2D>(m_IconHandle, m_Domain.GetLocale())
+                                   .GetGPUResource()
+                                   .GetRendererID(),
+                               ImVec2(32, 32));
         }
         ImGui::AcceptDragAndDrop<AssetHandle>("ASSET_BROWSER_TEXTURE2D_ITEM",
                                               [this](const AssetHandle& handle)

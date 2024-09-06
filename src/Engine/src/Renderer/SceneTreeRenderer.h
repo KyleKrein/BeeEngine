@@ -32,7 +32,8 @@ namespace BeeEngine
                      const glm::mat4& transform,
                      const TextRenderingConfiguration& configuration,
                      int32_t entityID);
-        auto&& GetAllEntities() { return std::move(m_AllEntities); }
+        auto&& GetTransparent() { return std::move(m_Transparent); }
+        auto&& GetOpaque() { return std::move(m_Opaque); }
 
         struct Entity
         {
@@ -43,7 +44,8 @@ namespace BeeEngine
         };
 
     private:
-        std::vector<Entity> m_AllEntities;
+        std::vector<Entity> m_Transparent;
+        std::vector<Entity> m_Opaque;
         BindingSet* m_TextBindingSet;
         glm::mat4 m_CameraTransform;
     };

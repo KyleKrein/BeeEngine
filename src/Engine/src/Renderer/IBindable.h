@@ -37,7 +37,7 @@ namespace BeeEngine
 #endif
             Dummy>;
         virtual ~IBindable() = default;
-        virtual void Bind(uint32_t slot = 0) = 0;
+        // virtual void Bind(uint32_t slot = 0) = 0;
         virtual std::vector<BindGroupLayoutEntryType> GetBindGroupLayoutEntry() const = 0;
         virtual std::vector<BindGroupEntryType> GetBindGroupEntry() const = 0;
     };

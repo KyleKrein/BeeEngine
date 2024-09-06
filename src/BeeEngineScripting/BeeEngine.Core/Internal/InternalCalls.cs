@@ -1,4 +1,5 @@
 ﻿using BeeEngine.Math;
+using BeeEngine.Renderer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -49,7 +50,22 @@ namespace BeeEngine.Internal
         private static delegate* unmanaged<ulong, ComponentType, void> s_Entity_RemoveComponent = null;
         private static delegate* unmanaged<IntPtr> s_Scene_GetActive = null;
         private static delegate* unmanaged<IntPtr, void> s_Scene_SetActive = null;
+        private static delegate* unmanaged<IntPtr, Graphics, uint, IntPtr, ArrayInfo, void> s_Renderer_SubmitInstance = null;
+        private static delegate* unmanaged<IntPtr, Graphics, IntPtr, IntPtr, IntPtr, IntPtr, int, void> s_Renderer_SubmitText = null;
+        private static delegate* unmanaged<ulong, ulong> s_Entity_GetEnttID = null;
 
+        private static delegate* unmanaged<uint, uint, Color, IntPtr> s_Framebuffer_CreateDefault = null;
+        private static delegate* unmanaged<IntPtr, void> s_Framebuffer_Destroy = null;
+        private static delegate* unmanaged<IntPtr, Graphics*, void> s_Framebuffer_Bind = null;
+        private static delegate* unmanaged<IntPtr, Graphics*, void> s_Framebuffer_Unbind = null;
+
+        private static delegate* unmanaged<IntPtr, uint, uint, void> s_Framebuffer_Resize = null;
+
+        private static delegate* unmanaged<uint, IntPtr> s_UniformBuffer_CreateDefault = null;
+        private static delegate* unmanaged<IntPtr, void> s_UniformBuffer_Destroy = null;
+        private static delegate* unmanaged<IntPtr, IntPtr, uint, void> s_UniformBuffer_SetData = null;
+        private static delegate* unmanaged<ArrayInfo, IntPtr> s_BindingSet_Create = null;
+        private static delegate* unmanaged<IntPtr, void> s_BindingSet_Destroy = null;
         enum ReflectionType : UInt32
         {
             None = 0x00,
@@ -116,6 +132,22 @@ namespace BeeEngine.Internal
         {
             public IntPtr Ptr;
             public ulong Length;
+        }
+
+        /// <summary>
+        /// Enum for model type info for rendering to C++ side
+        /// 
+        /// IMPORTANT: If this type is changed, the corresponding C++ type in
+        /// ScriptGlue.h MUST be changed as well
+        ///
+        /// </summary>
+        internal enum ModelType : uint
+        {
+            Rectangle,
+            Circle,
+            Text,
+            Line,
+            Framebuffer,
         }
         /// <summary>
         /// Assigns the function pointer to the corresponding function
@@ -280,6 +312,58 @@ namespace BeeEngine.Internal
             {
                 s_Scene_SetActive = (delegate* unmanaged<IntPtr, void>)functionPtr;
             }
+            else if (functionName == "Renderer_SubmitInstance")
+            {
+                s_Renderer_SubmitInstance = (delegate* unmanaged<IntPtr, Graphics, uint, IntPtr, ArrayInfo, void>)functionPtr;
+            }
+            else if (functionName == "Renderer_SubmitText")
+            {
+                s_Renderer_SubmitText = (delegate* unmanaged<IntPtr, Graphics, IntPtr, IntPtr, IntPtr, IntPtr, int, void>)functionPtr;
+            }
+            else if (functionName == "Entity_GetEnttID")
+            {
+                s_Entity_GetEnttID = (delegate* unmanaged<ulong, ulong>)functionPtr;
+            }
+            else if (functionName == "Framebuffer_CreateDefault")
+            {
+                s_Framebuffer_CreateDefault = (delegate* unmanaged<uint, uint, Color, IntPtr>)functionPtr;
+            }
+            else if (functionName == "Framebuffer_Resize")
+            {
+                s_Framebuffer_Resize = (delegate* unmanaged<IntPtr, uint, uint, void>)functionPtr;
+            }
+            else if (functionName == "Framebuffer_Bind")
+            {
+                s_Framebuffer_Bind = (delegate* unmanaged<IntPtr, Graphics*, void>)functionPtr;
+            }
+            else if (functionName == "Framebuffer_Unbind")
+            {
+                s_Framebuffer_Unbind = (delegate* unmanaged<IntPtr, Graphics*, void>)functionPtr;
+            }
+            else if (functionName == "Framebuffer_Destroy")
+            {
+                s_Framebuffer_Destroy = (delegate* unmanaged<IntPtr, void>)functionPtr;
+            }
+            else if (functionName == "UniformBuffer_CreateDefault")
+            {
+                s_UniformBuffer_CreateDefault = (delegate* unmanaged<uint, IntPtr>)functionPtr;
+            }
+            else if (functionName == "UniformBuffer_Destroy")
+            {
+                s_UniformBuffer_Destroy = (delegate* unmanaged<IntPtr, void>)functionPtr;
+            }
+            else if (functionName == "UniformBuffer_SetData")
+            {
+                s_UniformBuffer_SetData = (delegate* unmanaged<IntPtr, IntPtr, uint, void>)functionPtr;
+            }
+            else if (functionName == "BindingSet_Create")
+            {
+                s_BindingSet_Create = (delegate* unmanaged<ArrayInfo, IntPtr>)functionPtr;
+            }
+            else if (functionName == "BindingSet_Destroy")
+            {
+                s_BindingSet_Destroy = (delegate* unmanaged<IntPtr, void>)functionPtr;
+            }
             else
                 throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
             Debug.WriteLine($"Native function {functionName} registered");
@@ -310,7 +394,7 @@ namespace BeeEngine.Internal
         /// ScriptGlue.h and the corresponding switch case in ScriptGlue.cpp
         /// MUST be changed as well
         /// </summary>
-        enum ComponentType: UInt32
+        enum ComponentType : UInt32
         {
             Transform = 0x00,
             SpriteRenderer = 0x01,
@@ -402,6 +486,11 @@ namespace BeeEngine.Internal
         internal static void Entity_SetName(ulong id, string name)
         {
             s_Entity_SetName(id, Marshal.StringToHGlobalUni(name));
+        }
+
+        internal static ulong Entity_GetEnttID(ulong uuid)
+        {
+            return s_Entity_GetEnttID(uuid);
         }
 
         internal static string TextRendererComponent_GetText(ulong id)
@@ -502,13 +591,13 @@ namespace BeeEngine.Internal
         {
             Log.AssertAndThrow(args.Length <= MaxReflectionTypeInfos, "Too many arguments for dynamic translation");
             IntPtr keyPtr = Marshal.StringToHGlobalUni(key);
-            ArrayInfo arrayInfo = new ArrayInfo{ Ptr = s_ReflectionTypeInfosHandle.AddrOfPinnedObject(), Length = (ulong)args.Length };
+            ArrayInfo arrayInfo = new ArrayInfo { Ptr = s_ReflectionTypeInfosHandle.AddrOfPinnedObject(), Length = (ulong)args.Length };
             IntPtr resultPtr = IntPtr.Zero;
-            lock(s_ReflectionTypeInfosLock)
+            lock (s_ReflectionTypeInfosLock)
             {
                 for (int i = 0; i < args.Length; i++)
                 {
-                    ReflectionTypeInfo info = new ReflectionTypeInfo{Type = ReflectionType.None, Ptr = IntPtr.Zero};
+                    ReflectionTypeInfo info = new ReflectionTypeInfo { Type = ReflectionType.None, Ptr = IntPtr.Zero };
                     if (args[i] == null)
                     {
                         info.Type = ReflectionType.None;
@@ -600,5 +689,59 @@ namespace BeeEngine.Internal
             s_Scene_SetActive((nint)Unsafe.AsPointer(ref scene));
         }
 
+        internal static void Renderer_SubmitInstance(SceneCameraBuffer? camera, Graphics graphics, ModelType modelType, ref AssetHandle handle, void* data, ulong size)
+        {
+            s_Renderer_SubmitInstance(camera?.m_BindingSet.m_Handle ?? IntPtr.Zero, graphics, (uint)modelType, (IntPtr)Unsafe.AsPointer(ref handle), new ArrayInfo { Ptr = (IntPtr)data, Length = size });
+        }
+        internal static void Renderer_SubmitText(SceneCameraBuffer? camera, Graphics graphics, ref AssetHandle handle, string text, ref Matrix4 transform, ref TextConfig config, int entityId)
+        {
+            s_Renderer_SubmitText(camera?.m_BindingSet.m_Handle ?? IntPtr.Zero, graphics, (IntPtr)Unsafe.AsPointer(ref handle), Marshal.StringToHGlobalUni(text), (IntPtr)Unsafe.AsPointer(ref transform), (IntPtr)Unsafe.AsPointer(ref config), entityId);
+        }
+        internal static IntPtr Framebuffer_CreateDefault(uint width, uint height, Color color)
+        {
+            return s_Framebuffer_CreateDefault(width, height, color);
+        }
+        internal static void Framebuffer_Resize(IntPtr framebuffer, uint width, uint height)
+        {
+            s_Framebuffer_Resize(framebuffer, width, height);
+        }
+        internal static void Framebuffer_Destroy(IntPtr framebuffer)
+        {
+            s_Framebuffer_Destroy(framebuffer);
+        }
+        internal static Graphics Framebuffer_Bind(IntPtr framebuffer)
+        {
+            Graphics graphics;
+            s_Framebuffer_Bind(framebuffer, &graphics);
+            return graphics;
+        }
+        internal static void Framebuffer_Unbind(IntPtr framebuffer, Graphics graphics)
+        {
+            s_Framebuffer_Unbind(framebuffer, &graphics);
+        }
+        internal static IntPtr UniformBuffer_CreateDefault(uint sizeBytes)
+        {
+            return s_UniformBuffer_CreateDefault(sizeBytes);
+        }
+        internal static void UniformBuffer_SetData(IntPtr uniformBuffer, ref byte data, uint sizeBytes)
+        {
+            s_UniformBuffer_SetData(uniformBuffer, (IntPtr)Unsafe.AsPointer(ref data), sizeBytes);
+        }
+        internal static void UniformBuffer_Destroy(IntPtr uniformBuffer)
+        {
+            s_UniformBuffer_Destroy(uniformBuffer);
+        }
+        internal static IntPtr BindingSet_Create(IntPtr[] handles)
+        {
+            fixed (IntPtr* handlesPtr = handles)
+            {
+                return s_BindingSet_Create(new ArrayInfo { Ptr = (IntPtr)(handlesPtr), Length = (ulong)handles.Length });
+            }
+        }
+
+        internal static void BindingSet_Destroy(IntPtr bindingSet)
+        {
+            s_BindingSet_Destroy(bindingSet);
+        }
     }
 }

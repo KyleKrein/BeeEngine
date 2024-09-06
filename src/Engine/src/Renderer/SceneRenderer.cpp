@@ -10,6 +10,7 @@
 #include "Renderer.h"
 #include "RenderingQueue.h"
 #include "Scene/Components.h"
+#include "Scripting/ScriptingEngine.h"
 #include "UniformBuffer.h"
 #include "gtc/type_ptr.hpp"
 #include <cmath>
@@ -150,21 +151,6 @@ namespace BeeEngine
     Model* SceneRenderer::s_RectModel = nullptr;
     Model* SceneRenderer::s_CircleModel = nullptr;
     Texture2D* SceneRenderer::s_BlankTexture = nullptr;
-    struct SpriteInstanceBufferData
-    {
-        glm::mat4 Model{1.0f};
-        BeeEngine::Color4 Color{BeeEngine::Color4::White};
-        float TilingFactor = 1.0f;
-        int32_t EntityID = -1;
-    };
-    struct CircleInstanceBufferData
-    {
-        glm::mat4 Model{1.0f};
-        BeeEngine::Color4 Color{BeeEngine::Color4::White};
-        float Thickness = 1.0f;
-        float Fade = 0.005f;
-        int32_t EntityID = -1;
-    };
     bool IsSphereInFrustum(const Math::Cameras::Sphere& sphere, const Math::Cameras::Frustum& frustum)
     {
         Math::Cameras::Plane planes[6] = {frustum.NearFace,
@@ -196,8 +182,7 @@ namespace BeeEngine
         BEE_PROFILE_FUNCTION();
         auto& locale = localization.GetLanguageString();
         auto& sceneRendererData = scene.GetSceneRendererData();
-        sceneRendererData.CameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)),
-                                                       sizeof(glm::mat4));
+        sceneRendererData.CameraUniformBuffer->SetData(glm::value_ptr(viewProjectionMatrix), sizeof(glm::mat4));
 
         Scene::GPUSceneData sceneData{};
         sceneData.viewproj = viewProjectionMatrix;
@@ -222,8 +207,8 @@ namespace BeeEngine
                     transform, spriteComponent.Color, spriteComponent.TilingFactor, static_cast<int32_t>(entity) + 1};
                 std::vector<BindingSet*> bindingSets{sceneRendererData.CameraBindingSet.get(),
                                                      (spriteComponent.HasTexture
-                                                          ? spriteComponent.Texture(locale)->GetBindingSet()
-                                                          : s_BlankTexture->GetBindingSet())};
+                                                          ? &spriteComponent.Texture(locale)->GetBindingSet()
+                                                          : &s_BlankTexture->GetBindingSet())};
                 sceneTreeRenderer.AddEntity(data.Model,
                                             data.Color.A() < 0.95f || spriteComponent.HasTexture,
                                             *s_RectModel,
@@ -287,6 +272,17 @@ namespace BeeEngine
                         transform, false, model, bindingSets, {(byte*)&meshInstancedData, sizeof(MeshInstancedData)});
                 }
             }
+
+            auto scriptGroup = scene.m_Registry.view<ScriptComponent>();
+            for (auto entity : scriptGroup)
+            {
+                auto& scriptComponent = scriptGroup.get<ScriptComponent>(entity);
+                Entity e = {entity, scene.weak_from_this()};
+                if (scriptComponent.Class)
+                {
+                    ScriptingEngine::OnEntityRender(e, commandBuffer);
+                }
+            }
         }
 
         // auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
@@ -296,7 +292,12 @@ namespace BeeEngine
         // tlas.UpdateInstances(std::move(sceneTreeRenderer.GetAllEntities()));
 
         // TODO: this is temporary
-        for (auto& entity : sceneTreeRenderer.m_AllEntities)
+        for (auto& entity : sceneTreeRenderer.m_Opaque)
+        {
+            commandBuffer.SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
+        }
+        commandBuffer.Flush();
+        for (auto& entity : sceneTreeRenderer.m_Transparent)
         {
             commandBuffer.SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
         }
@@ -352,7 +353,7 @@ namespace BeeEngine
     {
         Ref<UniformBuffer> cameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
         Ref<BindingSet> cameraBindingSet = BindingSet::Create({{0, *cameraUniformBuffer}});
-        cameraUniformBuffer->SetData(const_cast<float*>(glm::value_ptr(viewProjectionMatrix)), sizeof(glm::mat4));
+        cameraUniformBuffer->SetData(glm::value_ptr(viewProjectionMatrix), sizeof(glm::mat4));
         RenderPhysicsColliders(scene, commandBuffer, *cameraBindingSet);
     }
 

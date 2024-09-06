@@ -1,0 +1,22 @@
+Entities:
+  - Entity: 10079727215807708293
+    TagComponent:
+      Tag: Bee Generator
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, -0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      FullName: Example.BeeGenerator
+      Fields:
+        - Name: BeePrefab
+          Type: Prefab
+          Data: [3753192931707503016, 16877448585992915076]
+        - Name: BeesX
+          Type: int
+          Data: 100
+        - Name: BeesY
+          Type: int
+          Data: 100
+    HierarchyComponent:
+      []

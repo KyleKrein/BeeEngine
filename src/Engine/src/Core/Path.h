@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Move.h"
 #include "String.h"
 #include <version>
 
@@ -17,15 +18,6 @@ namespace BeeEngine
         Path(const std::filesystem::path& path);
         Path(const UTF16String& path);
         Path(const char* path);
-        Path(std::string_view path)
-        {
-            if (path.data() == nullptr)
-                return;
-            if (path.empty())
-            {
-                return;
-            }
-        }
         Path(UTF8String&& path) noexcept;
         Path(std::filesystem::path&& path) noexcept;
         Path(UTF16String&& path) noexcept;
@@ -49,16 +41,18 @@ namespace BeeEngine
             return std::forward<Self>(self).m_Path;
         }
 #else
-        const UTF8String& AsUTF8() const noexcept { return m_Path; }
+        const UTF8String& AsUTF8() const& noexcept { return m_Path; }
+        UTF8String&& AsUTF8() && noexcept { return BeeMove(m_Path); }
 #endif
         const char* AsCString() const noexcept { return m_Path.c_str(); }
+        // const char* AsCString() const&& noexcept = delete;
         UTF16String ToUTF16() const { return ConvertUTF8ToUTF16(m_Path); }
 
         String ToString() const { return m_Path; }
 
         std::filesystem::path ToStdPath() const;
 
-        operator UTF8String&() { return m_Path; }
+        // operator UTF8String&() { return m_Path; }
         operator const UTF8String&() const { return m_Path; }
 
         void Clear() noexcept { m_Path.clear(); }

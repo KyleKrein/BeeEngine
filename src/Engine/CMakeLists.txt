@@ -153,6 +153,9 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         vendor/SIMDString/SIMDString.cpp
         src/Gui/MessageBox.h
         src/Gui/MessageBox.cpp
+        src/Core/Property.h
+        src/Renderer/BufferLayoutSerializer.cpp
+        src/Renderer/BufferLayoutSerializer.hpp
 )
 
 
@@ -258,14 +261,7 @@ list(APPEND SOURCE_FILES ${SCRIPTING_SOURCE_FILES})
 
 add_library(BeeEngine ${SOURCE_FILES})
 
-#add_custom_target(BuildBeeEngineScriptingLibs
-#    COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE}
-#    WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting"
-#    COMMENT "Building C# libraries for scripting support"
-#)
-
-#add_dependencies(BeeEngine BuildBeeEngineScriptingLibs)
-# Запускаем dotnet build во время конфигурации
+message(STATUS "Building C# libraries for scripting support")
 execute_process(
     COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE}
     WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting"
@@ -411,6 +407,7 @@ add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
+add_subdirectory(vendor/KDBindings)
 CPMAddPackage(
         NAME fastgltf
         GITHUB_REPOSITORY spnda/fastgltf
@@ -478,6 +475,7 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC Boost::context
         PRIVATE fastgltf
         PRIVATE unofficial::nethost::nethost
+        PUBLIC KDAB::KDBindings
         )
 
 target_compile_definitions(BeeEngine

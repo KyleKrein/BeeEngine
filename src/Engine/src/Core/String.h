@@ -10,6 +10,12 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
+#include <version>
+#if __cpp_constexpr >= 202207L
+#define CONSTEXPR constexpr
+#else
+#define CONSTEXPR inline
+#endif
 
 namespace BeeEngine
 {
@@ -17,14 +23,48 @@ namespace BeeEngine
     using UTF8String = String;
     using UTF16String = std::u16string;
 
+    namespace StringLiterals
+    {
+        /**
+         * @brief Operator, that converts any
+         * C-string into UTF8String
+         * @param arg C-String
+         * @return UTF8String
+         */
+        CONSTEXPR UTF8String operator""_u8(const char* arg)
+        {
+            return {arg};
+        }
+    } // namespace StringLiterals
+    /**
+     * @brief Checks if argument
+     * is a valid UTF8 string
+     * @param string
+     * @return true if string is valid
+     * @return false if string is invalid
+     */
     bool IsValidString(const UTF8String& string);
     UTF16String ConvertUTF8ToUTF16(const UTF8String& string);
     UTF8String ConvertUTF16ToUTF8(const UTF16String& string);
 
+    /**
+     * @brief a string_view like class
+     * that allows to iterate on unicode
+     * characters (read only)
+     */
     class UTF8StringView
     {
     public:
+        /**
+         * @brief Construct a new UTF8StringView object
+         *
+         * @param string must be a string with lifetime, that
+         * exceeds lifetime of UTF8StringView object.
+         * String literals and temporary values are not allowed
+         */
         UTF8StringView(const UTF8String& string);
+        UTF8StringView(UTF8String&&) = delete;
+        UTF8StringView(const char*) = delete;
         class iterator
         {
         public:
@@ -136,3 +176,5 @@ namespace BeeEngine
     UTF8String ToUppercase(std::string_view string);
     UTF8String ToLowercase(std::string_view string);
 } // namespace BeeEngine
+using namespace BeeEngine::StringLiterals; // May be removed in future
+#undef CONSTEXPR

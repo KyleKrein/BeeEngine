@@ -387,6 +387,7 @@ namespace BeeEngine::Internal
         deviceFeatures2.pNext = &deviceVulkan11Features;
 
         deviceFeatures2.features.samplerAnisotropy = vk::True;
+        deviceFeatures2.features.independentBlend = vk::True;
 
         deviceVulkan12Features.bufferDeviceAddress = vk::True;
         deviceVulkan12Features.descriptorIndexing = vk::True;
@@ -403,6 +404,10 @@ namespace BeeEngine::Internal
         accelerationStructureFeatures.accelerationStructure = HasRayTracingSupport() ? vk::True : vk::False;
 
         rayTracingFeatures.pNext = &accelerationStructureFeatures;
+        if (!HasRayTracingSupport())
+        {
+            deviceVulkan13Features.pNext = nullptr;
+        }
 
         std::vector<const char*> enabledLayers;
 

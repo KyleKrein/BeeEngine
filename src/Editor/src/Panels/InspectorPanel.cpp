@@ -201,7 +201,7 @@ namespace BeeEngine::Editor
                 {
                     auto* texture = sprite.Texture(m_Project->GetProjectLocaleDomain().GetLocale());
                     float aspectRatio = (float)texture->GetWidth() / (float)texture->GetHeight();
-                    if (ImGui::ImageButton((void*)texture->GetRendererID(),
+                    if (ImGui::ImageButton((void*)texture->GetGPUResource().GetRendererID(),
                                            ImVec2(ImGui::GetContentRegionAvail().x * 0.95f,
                                                   ImGui::GetContentRegionAvail().x * 0.95f / aspectRatio),
                                            {0, 1},
@@ -506,7 +506,7 @@ namespace BeeEngine::Editor
                         {
                             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                             {
-                                Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
+                                Path assetPath = m_Project->FolderPath.get() / (const char*)payload->Data;
                                 if (checkExtensionFunc(assetPath.GetExtension()))
                                 {
                                     auto name = assetPath.GetFileNameWithoutExtension().AsUTF8();
@@ -642,7 +642,7 @@ namespace BeeEngine::Editor
                             {
                                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                                 {
-                                    Path assetPath = m_Project->GetProjectPath() / (const char*)payload->Data;
+                                    Path assetPath = m_Project->FolderPath.get() / (const char*)payload->Data;
 
                                     if (ResourceManager::IsAssetExtension(assetPath.GetExtension()))
                                     {

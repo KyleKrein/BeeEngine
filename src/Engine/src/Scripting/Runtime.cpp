@@ -79,6 +79,9 @@ namespace BeeEngine
         auto& onUpdate = mClass.GetMethod("OnUpdate", flags);
         if (onUpdate.IsValid())
             m_OnUpdate = &onUpdate;
+        auto& onRender = mClass.GetMethod("OnRender", flags);
+        if (onRender.IsValid())
+            m_OnRender = &onRender;
 
         if (entity.HasComponent<ScriptComponent>())
         {
@@ -105,6 +108,15 @@ namespace BeeEngine
     {
         if (m_OnUpdate)
             m_Instance.Invoke(*m_OnUpdate, nullptr);
+    }
+    void GameScript::InvokeOnRender(CommandBuffer& cmd)
+    {
+        if (!m_OnRender)
+        {
+            return;
+        }
+        void* params[] = {&cmd};
+        m_Instance.Invoke(*m_OnRender, params);
     }
 
     static MType AssetTypeToMType(AssetType type)

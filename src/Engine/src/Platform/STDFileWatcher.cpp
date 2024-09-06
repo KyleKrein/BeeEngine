@@ -65,7 +65,8 @@ namespace BeeEngine::Internal
                 else if (paths.at(path).LastWriteTime != currentLastWriteTime)
                 {
                     paths[path] = {currentLastWriteTime, currentFileSize};
-                    watcher.m_Callback(path, FileWatcher::Event::Modified);
+                    watcher.onAnyEvent.emit(path, FileWatcher::Event::Modified);
+                    watcher.onFileModified.emit(path);
                 }
             }
             std::vector<Path> renamed;
@@ -78,8 +79,9 @@ namespace BeeEngine::Internal
                     if (addedInfo == info && addedPath.GetParent() == path.GetParent() &&
                         addedPath.GetFileName() != path.GetFileName())
                     {
-                        watcher.m_Callback(path, FileWatcher::Event::RenamedOldName);
-                        watcher.m_Callback(addedPath, FileWatcher::Event::RenamedNewName);
+                        watcher.onAnyEvent.emit(path, FileWatcher::Event::RenamedOldName);
+                        watcher.onAnyEvent.emit(addedPath, FileWatcher::Event::RenamedNewName);
+                        watcher.onFileRenamed.emit(path, addedPath);
                         wasRenamed = true;
                         renamed.push_back(addedPath);
                         break;
@@ -89,13 +91,15 @@ namespace BeeEngine::Internal
                 {
                     continue;
                 }
-                watcher.m_Callback(path, FileWatcher::Event::Removed);
+                watcher.onAnyEvent.emit(path, FileWatcher::Event::Removed);
+                watcher.onFileRemoved.emit(path);
             }
             for (auto& [path, info] : added)
             {
                 if (std::find(renamed.begin(), renamed.end(), path) != renamed.end())
                     continue;
-                watcher.m_Callback(path, FileWatcher::Event::Added);
+                watcher.onAnyEvent.emit(path, FileWatcher::Event::Added);
+                watcher.onFileAdded.emit(path);
             }
             std::this_thread::sleep_for(delay);
         }
@@ -128,8 +132,5 @@ namespace BeeEngine::Internal
         return m_Running.load();
     }
 
-    STDFileWatcher::STDFileWatcher(const Path& path, const std::function<void(Path, Event)>& callback)
-        : m_Path(path.ToStdPath()), m_Callback(callback)
-    {
-    }
+    STDFileWatcher::STDFileWatcher(const Path& path) : m_Path(path.ToStdPath()) {}
 } // namespace BeeEngine::Internal

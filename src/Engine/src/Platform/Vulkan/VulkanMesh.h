@@ -33,7 +33,7 @@ namespace BeeEngine::Internal
 
     private:
         void CreateVertexBuffer(const std::vector<Vertex>& vertices);
-        void CreateVertexBuffer(void* verticesData, size_t size, size_t vertexCount);
+        void CreateVertexBuffer(const void* verticesData, size_t size, size_t vertexCount);
         void CreateIndexBuffer(const std::vector<uint32_t>& indices);
         void CreateAccelerationStructure(size_t vertexStride);
 

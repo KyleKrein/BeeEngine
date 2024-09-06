@@ -110,6 +110,7 @@ namespace BeeEngine
     void ScriptingEngine::Init(std::function<void(AssetHandle)> onSceneChangeCallback)
     {
         // InitMono();
+        ScriptGlue::Init();
         s_Data.OnSceneChangeCallback = BeeMove(onSceneChangeCallback);
         InitDotNetHost();
     }
@@ -124,7 +125,8 @@ namespace BeeEngine
         s_Data.Handles = {};
         // s_Data.AddEntityScriptMethod = nullptr;
         // s_Data.EntityWasRemovedMethod = nullptr;
-
+        NativeToManaged::GCCollect();
+        ScriptGlue::Shutdown();
         MonoShutdown();
     }
 
@@ -405,6 +407,16 @@ namespace BeeEngine
         // BeeCoreAssert(s_Data.EntityObjects.contains(uuid), "Entity does not have a script attached!");
         auto& script = s_Data.EntityObjects.at(uuid);
         script->InvokeOnUpdate();
+    }
+    void ScriptingEngine::OnEntityRender(Entity entity, CommandBuffer& cmd)
+    {
+        UUID uuid = entity.GetUUID();
+        if (!s_Data.EntityObjects.contains(uuid))
+        {
+            return;
+        }
+        auto& script = s_Data.EntityObjects.at(uuid);
+        script->InvokeOnRender(cmd);
     }
 
     Scene* ScriptingEngine::GetSceneContext()

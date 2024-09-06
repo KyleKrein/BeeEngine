@@ -16,8 +16,6 @@ namespace BeeEngine::Internal
         m_DescriptorBufferInfo.range = size;
     }
 
-    void VulkanUniformBuffer::Bind(uint32_t slot) {}
-
     std::vector<IBindable::BindGroupLayoutEntryType> VulkanUniformBuffer::GetBindGroupLayoutEntry() const
     {
         vk::DescriptorSetLayoutBinding layoutBinding(0,
@@ -45,7 +43,7 @@ namespace BeeEngine::Internal
         m_GraphicsDevice.DestroyBuffer(m_Buffer);
     }
 
-    void VulkanUniformBuffer::SetData(void* data, size_t size)
+    void VulkanUniformBuffer::SetData(const void* data, size_t size)
     {
         BeeExpects(size == m_Size && data != nullptr);
         m_GraphicsDevice.CopyToBuffer({(byte*)data, size}, m_Buffer);

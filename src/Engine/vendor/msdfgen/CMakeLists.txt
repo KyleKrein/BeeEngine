@@ -1,3 +1,4 @@
+#[[
 CPMAddPackage(
         NAME freetype
         GITHUB_REPOSITORY freetype/freetype
@@ -8,8 +9,7 @@ CPMAddPackage(
 CPMAddPackage(
         NAME msdfgen
         GITHUB_REPOSITORY Chlumsky/msdfgen
-        GIT_TAG 052f5fffd78066fbd276504cfc099cca006274b5
-        DOWNLOAD_ONLY YES
+        GIT_TAG 755c45b4445baa12bfead90fa7d4d2259f2a14c4
 )
 
 get_property(MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -90,14 +90,18 @@ target_link_libraries(msdfgen-full INTERFACE msdfgen::msdfgen-core msdfgen::msdf
 # Hide ZERO_CHECK and ALL_BUILD targets
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER meta)
-
+]]
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+        set(MSDF_ATLAS_DYNAMIC_RUNTIME TRUE)
+else()
+        set(MSDF_ATLAS_DYNAMIC_RUNTIME FALSE)
+endif()
 CPMAddPackage(
         NAME msdfatlasgen
         GITHUB_REPOSITORY Chlumsky/msdf-atlas-gen
-        GIT_TAG ae40bf4a3a0fd4a31ba278bacd1413a1da4d73cf
-        DOWNLOAD_ONLY YES
+        GIT_TAG c27de5988d7ecfbc9936ee5f936429e2dbc077b9
 )
-
+#[[
 project(msdf-atlas-gen VERSION 1.2 LANGUAGES CXX)
 
 find_package(Threads REQUIRED)
@@ -124,6 +128,6 @@ if (MSVC)
 endif()
 target_compile_features(msdf-atlas-gen PUBLIC cxx_std_11)
 target_link_libraries(msdf-atlas-gen PUBLIC Threads::Threads msdfgen::msdfgen msdfgen-ext)
-
+]]
 add_library(MSDFGEN INTERFACE)
 target_link_libraries(MSDFGEN INTERFACE msdf-atlas-gen::msdf-atlas-gen)

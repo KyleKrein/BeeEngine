@@ -7,11 +7,10 @@
 namespace BeeEngine::Internal
 {
     VulkanMaterial::VulkanMaterial(const std::filesystem::path& vertexShader,
-                                   const std::filesystem::path& fragmentShader,
-                                   bool loadFromCache)
+                                   const std::filesystem::path& fragmentShader)
     {
-        auto vertexShaderModule = ShaderModule::Create(vertexShader, ShaderType::Vertex, loadFromCache);
-        auto fragmentShaderModule = ShaderModule::Create(fragmentShader, ShaderType::Fragment, loadFromCache);
+        auto vertexShaderModule = ShaderModule::Create(vertexShader, ShaderType::Vertex);
+        auto fragmentShaderModule = ShaderModule::Create(fragmentShader, ShaderType::Fragment);
         m_InstancedBuffer = vertexShaderModule->CreateInstancedBuffer();
         m_Pipeline = Pipeline::Create(vertexShaderModule, fragmentShaderModule);
     }

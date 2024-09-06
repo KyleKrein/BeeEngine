@@ -14,16 +14,15 @@
 namespace BeeEngine
 {
     Ref<Material> Material::Create(const std::filesystem::path& vertexShader,
-                                   const std::filesystem::path& fragmentShader,
-                                   bool loadFromCache)
+                                   const std::filesystem::path& fragmentShader)
     {
         switch (Renderer::GetAPI())
         {
             case WebGPU:
-                return CreateRef<Internal::WebGPUMaterial>(vertexShader, fragmentShader, loadFromCache);
+                return CreateRef<Internal::WebGPUMaterial>(vertexShader, fragmentShader);
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
-                return CreateRef<Internal::VulkanMaterial>(vertexShader, fragmentShader, loadFromCache);
+                return CreateRef<Internal::VulkanMaterial>(vertexShader, fragmentShader);
 #endif
             default:
                 BeeCoreError("Unknown RendererAPI");
@@ -31,17 +30,17 @@ namespace BeeEngine
         }
     }
     static String defaultLocale = "en_En";
-    Texture2D* MaterialInstance::GetColorTexture() const
+    GPUTextureResource* MaterialInstance::GetColorTexture() const
     {
         if (!AssetManager::IsAssetHandleValid(colorTexture))
-            return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
-        return &AssetManager::GetAsset<Texture2D>(colorTexture, defaultLocale);
+            return &Application::GetInstance().GetAssetManager().GetTexture("Blank").GetGPUResource();
+        return &AssetManager::GetAsset<Texture2D>(colorTexture, defaultLocale).GetGPUResource();
     }
-    Texture2D* MaterialInstance::GetMetalRoughTexture() const
+    GPUTextureResource* MaterialInstance::GetMetalRoughTexture() const
     {
         if (!AssetManager::IsAssetHandleValid(metalRoughTexture))
-            return &Application::GetInstance().GetAssetManager().GetTexture("Blank");
-        return &AssetManager::GetAsset<Texture2D>(metalRoughTexture, defaultLocale);
+            return &Application::GetInstance().GetAssetManager().GetTexture("Blank").GetGPUResource();
+        return &AssetManager::GetAsset<Texture2D>(metalRoughTexture, defaultLocale).GetGPUResource();
     }
 
 } // namespace BeeEngine

@@ -4,10 +4,12 @@
 
 #include "WindowsFileWatcher.h"
 
+#include "Core/Move.h"
 #include <atomic>
 #include <future>
 #include <thread>
 #include <utility>
+
 #if defined(WINDOWS)
 #include "WindowsString.h"
 #include <windows.h>
@@ -16,9 +18,7 @@
 namespace BeeEngine::Internal
 {
 #if defined(WINDOWS)
-    void ProcessDirectoryChanges(const std::function<void(const Path&, FileWatcher::Event)>& callback,
-                                 wchar_t* filename,
-                                 BYTE* Buffer);
+    void ProcessDirectoryChanges(WindowsFileWatcher& self, wchar_t* filename, BYTE* Buffer);
 
     void ReadDirectoryChangesCustom(
         HANDLE hDir, BYTE* Buffer, size_t BufferSize, DWORD& BytesReturned, OVERLAPPED& Overlapped);
@@ -56,7 +56,7 @@ namespace BeeEngine::Internal
                     break;
                 case WAIT_OBJECT_0:
                     GetOverlappedResult(hDir, &Overlapped, &BytesReturned, FALSE);
-                    ProcessDirectoryChanges(watcher.m_Callback, filename, Buffer.data());
+                    ProcessDirectoryChanges(watcher, filename, Buffer.data());
                     ResetEvent(Overlapped.hEvent);
                     ReadDirectoryChangesCustom(hDir, Buffer.data(), Buffer.size(), BytesReturned, Overlapped);
                     break;
@@ -86,9 +86,7 @@ namespace BeeEngine::Internal
         );
     }
 
-    void ProcessDirectoryChanges(const std::function<void(const Path&, FileWatcher::Event)>& callback,
-                                 wchar_t* filename,
-                                 BYTE* Buffer)
+    void ProcessDirectoryChanges(WindowsFileWatcher& self, wchar_t* filename, BYTE* Buffer)
     {
         BYTE* p = Buffer;
         while (true)
@@ -103,19 +101,24 @@ namespace BeeEngine::Internal
             switch (pNotify->Action)
             {
                 case FILE_ACTION_MODIFIED:
-                    callback(path, FileWatcher::Event::Modified);
+                    self.onAnyEvent.emit(path, FileWatcher::Event::Modified);
+                    self.onFileModified.emit(path);
                     break;
                 case FILE_ACTION_ADDED:
-                    callback(path, FileWatcher::Event::Added);
+                    self.onAnyEvent.emit(path, FileWatcher::Event::Added);
+                    self.onFileAdded.emit(path);
                     break;
                 case FILE_ACTION_REMOVED:
-                    callback(path, FileWatcher::Event::Removed);
+                    self.onAnyEvent.emit(path, FileWatcher::Event::Removed);
+                    self.onFileRemoved.emit(path);
                     break;
                 case FILE_ACTION_RENAMED_OLD_NAME:
-                    callback(path, FileWatcher::Event::RenamedOldName);
+                    self.onAnyEvent.emit(path, FileWatcher::Event::RenamedOldName);
+                    self.m_OldNamePath = BeeMove(path);
                     break;
                 case FILE_ACTION_RENAMED_NEW_NAME:
-                    callback(path, FileWatcher::Event::RenamedNewName);
+                    self.onAnyEvent.emit(path, FileWatcher::Event::RenamedNewName);
+                    self.onFileRenamed.emit(self.m_OldNamePath, path);
                     break;
             }
             if (!pNotify->NextEntryOffset)
@@ -124,10 +127,7 @@ namespace BeeEngine::Internal
         }
     }
 #endif
-    WindowsFileWatcher::WindowsFileWatcher(const Path& path, const std::function<void(Path, Event)>& callback)
-        : m_Path(std::move(path.ToStdPath().wstring())), m_Callback(callback)
-    {
-    }
+    WindowsFileWatcher::WindowsFileWatcher(const Path& path) : m_Path(std::move(path.ToStdPath().wstring())) {}
 
     void WindowsFileWatcher::Start()
     {

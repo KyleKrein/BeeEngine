@@ -7,6 +7,7 @@
 #include "Core/AssetManagement/EditorAssetManager.h"
 #include "Core/Coroutines/Generator.h"
 #include "Core/OsPlatform.h"
+#include "Core/Property.h"
 #include "Core/TypeDefines.h"
 #include "Core/UUID.h"
 #include "FileSystem/FileWatcher.h"
@@ -31,10 +32,14 @@ namespace BeeEngine::Editor
     public:
         ProjectFile(const Path& projectPath, const String& projectName, EditorAssetManager* assetManager) noexcept;
 
-        [[nodiscard]] const Path& GetProjectPath() const noexcept;
-        [[nodiscard]] const String& GetProjectName() const noexcept;
-        [[nodiscard]] const Path& GetProjectFilePath() const noexcept;
-        [[nodiscard]] const Path& GetProjectAssetRegistryPath() const noexcept;
+        Property<String> Name;
+        Property<Path> FolderPath;
+        Property<Path> FilePath;
+        Property<Path> AssetRegistryPath;
+        Property<Path> GameAssemblyPath;
+        Property<Locale::Localization> DefaultLocale{Locale::Localization::Default};
+
+        Signal<AssetHandle> onAssetRemoved;
 
         AssetHandle GetLastUsedScene() const noexcept { return m_LastUsedScene; }
         void SetLastUsedScene(const AssetHandle& handle);
@@ -57,8 +62,6 @@ namespace BeeEngine::Editor
 
         UUID GetAssetRegistryID() const noexcept { return m_AssetRegistryID; }
 
-        void RenameProject(const String& newName) noexcept;
-
         void RegenerateSolution();
 
         void BuildProject(const BuildProjectOptions& options);
@@ -67,22 +70,9 @@ namespace BeeEngine::Editor
 
         void Update() noexcept;
 
+        const Locale::Domain& GetProjectLocaleDomain() const noexcept { return m_ProjectLocaleDomain; }
         Locale::Domain& GetProjectLocaleDomain() noexcept { return m_ProjectLocaleDomain; }
-
-        const Path& GetAssemblyPath() const { return m_AppAssemblyPath; }
-
         void ReloadAndRebuildGameLibrary();
-
-        void SetOnAssetRemovedCallback(std::function<void(AssetHandle)> callback) noexcept
-        {
-            m_OnAssetRemoved = std::move(callback);
-        }
-        const Locale::Localization& GetDefaultLocale() const noexcept { return m_DefaultLocale; }
-        void SetDefaultLocale(const Locale::Localization& locale)
-        {
-            m_DefaultLocale = locale;
-            Save();
-        }
 
         const String& GetStartingSceneName() const
         {
@@ -103,23 +93,15 @@ namespace BeeEngine::Editor
         void OnAssetFileSystemEvent(const Path& path, FileWatcher::Event changeType);
 
         void LoadLocalizationFiles();
-
-        Path m_ProjectPath;
-        String m_ProjectName;
-        Path m_ProjectFilePath = m_ProjectPath / (m_ProjectName + ".beeproj");
-        Path m_ProjectAssetRegistryPath = m_ProjectPath / (m_ProjectName + ".beeassetregistry");
         AssetHandle m_LastUsedScene{0, 0};
         AssetHandle m_StartingScene{0, 0};
         Scope<FileWatcher> m_AppAssemblyFileWatcher = nullptr;
         mutable bool m_AssemblyReloadPending = false;
-        Path m_AppAssemblyPath;
         BeeEngine::UUID m_AssetRegistryID;
         Locale::Domain m_ProjectLocaleDomain;
-        Locale::Localization m_DefaultLocale = Locale::Localization::Default;
 
         Scope<FileWatcher> m_AssetFileWatcher = nullptr;
         EditorAssetManager* m_AssetManager;
-        std::function<void(AssetHandle)> m_OnAssetRemoved;
 
         void HandleChangedScriptFile(const Path& path, FileWatcher::Event event);
 
