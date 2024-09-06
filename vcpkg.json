@@ -1,6 +1,11 @@
 {
   "dependencies": [
-    "icu",
+    {
+      "name": "icu",
+      "features": [
+        "tools"
+      ]
+    },
     "boost-context",
     "nethost",
     "freetype",

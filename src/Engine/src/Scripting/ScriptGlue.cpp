@@ -6,6 +6,7 @@
 #include "Core/Application.h"
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/AssetManager.h"
+#include "Core/Casts.h"
 #include "Core/Input.h"
 #include "Core/Logging/GameLogger.h"
 #include "Core/Logging/Log.h"
@@ -714,9 +715,9 @@ namespace BeeEngine
         std::vector<BindingSetElement> bindingSetElements;
         bindingSetElements.reserve(elements.size);
         IBindable** bindables = static_cast<IBindable**>(elements.data);
-        for (size_t i = 0; i < elements.size; i++)
+        for (uint32_t i = 0; i < narrow_cast<uint32_t>(elements.size); i++)
         {
-            bindingSetElements.emplace_back(i, *bindables[i]);
+            bindingSetElements.push_back({i, *bindables[i]});
         }
         auto bindingSet = BindingSet::Create(BeeMove(bindingSetElements));
         BindingSet* result = bindingSet.get();

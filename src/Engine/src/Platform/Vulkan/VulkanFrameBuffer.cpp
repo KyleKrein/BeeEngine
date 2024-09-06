@@ -4,6 +4,7 @@
 
 #include "VulkanFrameBuffer.h"
 
+#include "Core/Casts.h"
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Logging/Log.h"
 #include "Core/TypeDefines.h"
@@ -319,9 +320,9 @@ namespace BeeEngine::Internal
         }
         std::vector<BindingSetElement> elements;
         elements.reserve(m_ColorAttachmentsTextures.size());
-        for (size_t i = 0; i < m_ColorAttachmentsTextures.size(); ++i)
+        for (uint32_t i = 0; i < narrow_cast<uint32_t>(m_ColorAttachmentsTextures.size()); ++i)
         {
-            elements.emplace_back(i, m_ColorAttachmentsTextures[i]);
+            elements.push_back({i, m_ColorAttachmentsTextures[i]});
         }
         m_ColorBindingSet = BindingSet::Create(BeeMove(elements));
         if (m_DepthAttachmentSpecification.TextureFormat != FrameBufferTextureFormat::None)

@@ -114,6 +114,15 @@ def install_dependencies():
         if not check_version_installed('dotnet'):
             logging.info("Installing .NET SDK...")
             subprocess.run(["brew", "install", "dotnet"], check=True)
+        if not check_version_installed('autoconf'):
+            logging.info("Installing autoconf...")
+            subprocess.run(['brew', 'install', 'autoconf'])
+        if not check_version_installed('automake'):
+            logging.info("Installing automake...")
+            subprocess.run(['brew', 'install', 'automake'])
+        if not check_version_installed('autoconf-archive'):
+            logging.info("Installing autoconf-archive...")
+            subprocess.run(['brew', 'install', 'autoconf-archive'])
 
     elif os_name == 'Linux':
         if not check_version_installed('git'):
