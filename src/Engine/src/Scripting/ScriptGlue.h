@@ -96,6 +96,7 @@ namespace BeeEngine
         static int32_t Input_IsKeyDown(Key key);
         static int32_t Input_IsMouseButtonDown(MouseButton button);
         static void Input_GetMousePosition(glm::vec2* outPosition);
+        static void Input_GetMouseWheelDelta(glm::vec2* outWheelDelta);
         static void Input_GetMousePositionInWorldSpace(uint64_t id, glm::vec2* outPosition);
         static void Asset_Load(AssetHandle* handle);
         static void Asset_Unload(AssetHandle* handle);

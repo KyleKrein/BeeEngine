@@ -135,6 +135,7 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(Input_IsKeyDown);
             BEE_NATIVE_FUNCTION(Input_IsMouseButtonDown);
             BEE_NATIVE_FUNCTION(Input_GetMousePosition);
+            BEE_NATIVE_FUNCTION(Input_GetMouseWheelDelta);
             BEE_NATIVE_FUNCTION(Input_GetMousePositionInWorldSpace);
 
             BEE_NATIVE_FUNCTION(Asset_Load);
@@ -208,6 +209,10 @@ namespace BeeEngine
     int32_t ScriptGlue::Input_IsKeyDown(Key key)
     {
         return Input::KeyPressed(key);
+    }
+    void ScriptGlue::Input_GetMouseWheelDelta(glm::vec2* outWheelDelta)
+    {
+        *outWheelDelta = {Input::GetMouseWheelX(), Input::GetMouseWheelY()};
     }
 
     int32_t ScriptGlue::Input_IsMouseButtonDown(MouseButton button)

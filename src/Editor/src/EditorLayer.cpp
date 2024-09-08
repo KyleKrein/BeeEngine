@@ -20,6 +20,7 @@
 #include "JobSystem/JobScheduler.h"
 #include "Locale/Locale.h"
 #include "Locale/LocalizationGenerator.h"
+#include "Panels/ProjectSettings.h"
 #include "Platform/ImGui/ImGuiController.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
@@ -875,29 +876,7 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
                            static_cast<int>(BuildProjectOptions::BuildType::Release));
 
         // Choose a default locale from the project locale domain
-        ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("buildProject.defaultLocale").c_str());
-        ImGui::SameLine();
-        if (ImGui::BeginCombo("##defaultLocale", Project()->DefaultLocale().GetLanguageString().c_str()))
-        {
-            if (ImGui::BeginTooltip())
-            {
-                ImGui::TextUnformatted(m_EditorLocaleDomain.Translate("buildProject.defaultLocale.tooltip").c_str());
-                ImGui::EndTooltip();
-            }
-            for (const auto& locale : Project()->GetProjectLocaleDomain().GetLocales())
-            {
-                bool isSelected = Project()->DefaultLocale().GetLanguageString() == locale;
-                if (ImGui::Selectable(locale.c_str(), isSelected))
-                {
-                    options.DefaultLocale = locale;
-                }
-                if (isSelected)
-                {
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
-        }
+        ProjectSettings::DropMenuChooseDefaultLocale(*Project(), m_EditorLocaleDomain);
         ImGui::TextUnformatted(
             (m_EditorLocaleDomain.Translate("buildProject.startingScene") + ": " + Project()->GetStartingSceneName())
                 .c_str());

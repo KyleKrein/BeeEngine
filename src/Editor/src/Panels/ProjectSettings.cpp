@@ -2,6 +2,8 @@
 #include "Core/AssetManagement/AssetManager.h"
 #include "Gui/ImGui/ImGuiExtension.h"
 #include "Renderer/Texture.h"
+#include <algorithm>
+#include <ranges>
 
 namespace BeeEngine::Editor
 {
@@ -13,6 +15,48 @@ namespace BeeEngine::Editor
           m_AssetManager(assetManager),
           m_ProjectName(m_CurrentProject.Name())
     {
+    }
+    void ProjectSettings::DropMenuChooseDefaultLocale(ProjectFile& project, Locale::Domain& editorDomain)
+    {
+        ImGui::TextUnformatted(editorDomain.Translate("buildProject.defaultLocale").c_str());
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        auto locales = project.GetProjectLocaleDomain().GetLocales();
+        bool defaultLocaleSelected = false;
+        for (const auto& locale : locales)
+        {
+            if (locale == project.DefaultLocale())
+            {
+                defaultLocaleSelected = true;
+                break;
+            }
+        }
+        locales = project.GetProjectLocaleDomain().GetLocales();
+        String selected = locales.begin() != locales.end()
+                              ? defaultLocaleSelected ? project.DefaultLocale().GetLanguageString() : *locales.begin()
+                              : "Not selected";
+        if (ImGui::BeginCombo("##Default Localization", selected.c_str()))
+        {
+            if (ImGui::BeginTooltip())
+            {
+                ImGui::TextUnformatted(editorDomain.Translate("buildProject.defaultLocale.tooltip").c_str());
+                ImGui::EndTooltip();
+            }
+            for (const auto& locale : project.GetProjectLocaleDomain().GetLocales())
+            {
+                bool isSelected = locale == selected;
+                if (ImGui::Selectable(locale.c_str(), isSelected))
+                {
+                    project.DefaultLocale = locale;
+                    selected = locale;
+                }
+                if (isSelected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
     }
 
     void ProjectSettings::Render()
@@ -27,30 +71,7 @@ namespace BeeEngine::Editor
         {
             m_CurrentProject.Name = m_ProjectName;
         }
-        ImGui::TextUnformatted(m_Domain.Translate("buildProject.defaultLocale").c_str());
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        if (ImGui::BeginCombo("##Default Localization", m_CurrentProject.DefaultLocale().GetLanguageString().c_str()))
-        {
-            if (ImGui::BeginTooltip())
-            {
-                ImGui::TextUnformatted(m_Domain.Translate("buildProject.defaultLocale.tooltip").c_str());
-                ImGui::EndTooltip();
-            }
-            for (const auto& locale : m_CurrentProject.GetProjectLocaleDomain().GetLocales())
-            {
-                bool isSelected = locale == m_CurrentProject.DefaultLocale();
-                if (ImGui::Selectable(locale.c_str(), isSelected))
-                {
-                    m_CurrentProject.DefaultLocale = locale;
-                }
-                if (isSelected)
-                {
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
-        }
+        DropMenuChooseDefaultLocale(m_CurrentProject, m_Domain);
         ImGui::TextUnformatted(m_Domain.Translate("buildProject.startingScene").c_str());
         ImGui::SameLine();
         if (ImGui::BeginCombo("##StartingScene", m_CurrentProject.GetStartingSceneName().c_str()))

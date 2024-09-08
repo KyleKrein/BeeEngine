@@ -20,9 +20,11 @@ namespace BeeEngine
             }
         }
 
+        public static Vector2 MouseWheelDelta => InternalCalls.Input_GetMouseWheelDelta();
+
         public static Vector2 GetMouseCoordsInWorldSpace(Entity camera)
         {
-            if(camera == null)
+            if (camera == null)
                 throw new ArgumentNullException(nameof(camera));
             if (!camera.IsAlive())
                 throw new ArgumentException("Entity was already destroyed");

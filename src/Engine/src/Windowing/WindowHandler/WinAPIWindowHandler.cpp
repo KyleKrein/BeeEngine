@@ -20,6 +20,7 @@
 #include <windowsx.h>
 // Forward declare message handler from imgui_impl_win32.cpp
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static glm::vec2 g_MouseWheelDelta = {0.0f, 0.0f};
 namespace BeeEngine::Internal
 {
     void GetMonitorRealResolution(HMONITOR monitor, int* pixelsWidth, int* pixelsHeight)
@@ -203,11 +204,18 @@ namespace BeeEngine::Internal
 
     void WinAPIWindowHandler::ProcessEvents()
     {
+        auto lastWheelDelta = g_MouseWheelDelta;
+        g_MouseWheelDelta = {0.0f, 0.0f};
         MSG message;
         while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&message);
             DispatchMessageW(&message);
+        }
+        if (lastWheelDelta != g_MouseWheelDelta)
+        {
+            auto event = CreateScope<MouseScrolledEvent>(g_MouseWheelDelta.x, g_MouseWheelDelta.y);
+            m_Events.AddEvent(std::move(event));
         }
     }
 
@@ -669,11 +677,38 @@ namespace BeeEngine::Internal
                 g_EventQueue->AddEvent(CreateScope<MouseMovedEvent>(x, y));
             }
             break;
+            case WM_MOUSEHWHEEL:
+            {
+                int32_t delta = GET_WHEEL_DELTA_WPARAM(w_param);
+                if (delta > 0)
+                {
+                    g_MouseWheelDelta.x = 1;
+                }
+                else if (delta < 0)
+                {
+                    g_MouseWheelDelta.x = -1;
+                }
+                else
+                {
+                    g_MouseWheelDelta.x = 0;
+                }
+            }
+            break;
             case WM_MOUSEWHEEL:
             {
                 int32_t delta = GET_WHEEL_DELTA_WPARAM(w_param);
-                if (delta != 0)
-                    g_EventQueue->AddEvent(CreateScope<MouseScrolledEvent>(0, delta > 0 ? 1 : -1));
+                if (delta > 0)
+                {
+                    g_MouseWheelDelta.y = 1;
+                }
+                else if (delta < 0)
+                {
+                    g_MouseWheelDelta.y = -1;
+                }
+                else
+                {
+                    g_MouseWheelDelta.y = 0;
+                }
             }
             break;
             case WM_LBUTTONDOWN:

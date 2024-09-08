@@ -111,6 +111,7 @@ namespace BeeEngine::Locale
             for (auto& [locale, keys] : m_LocaleKeys)
             {
                 Localization loc = {locale};
+                m_Domain->AddLocale(loc);
                 for (auto& [key, value] : keys)
                 {
                     m_Domain->AddLocaleKey(loc, key, value);

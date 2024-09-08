@@ -187,10 +187,17 @@ namespace BeeEngine::Locale
         }
         /**
          * Adds a new locale to the collection.
+         * Does nothing if a locale already exists.
          *
          * @param locale The locale to be added.
          */
-        void AddLocale(const Locale& locale) { m_Languages[locale.GetLanguageString()] = KeyMap(); }
+        void AddLocale(const Locale& locale)
+        {
+            if (!m_Languages.contains(locale.GetLanguageString()))
+            {
+                m_Languages[locale.GetLanguageString()] = KeyMap();
+            }
+        }
         /**
          * @brief Adds a localization source to the engine.
          *
