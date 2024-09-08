@@ -66,6 +66,7 @@ namespace BeeEngine.Internal
             Log.Info("Finishing Scene");
             s_Entities.Clear();
             s_EnttIdsCache.Clear();
+            Localization.ClearCache();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

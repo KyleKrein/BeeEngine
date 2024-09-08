@@ -35,7 +35,7 @@ namespace BeeEngine::Editor
         Path m_WorkingDirectory;
         Path m_CurrentDirectory;
         Ref<Scene> m_Context;
-        const ProjectFile* m_Project = nullptr;
+        ProjectFile* m_Project = nullptr;
         Locale::Domain* m_EditorDomain = nullptr;
 
         Ref<Texture2D> m_DirectoryIcon;

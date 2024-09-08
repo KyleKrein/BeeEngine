@@ -3,6 +3,7 @@
 //
 
 #include "File.h"
+#include "Core/Logging/Log.h"
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -75,6 +76,7 @@ namespace BeeEngine
         if (!ofs)
         {
             UTF8String pathStr = path.AsUTF8() + ": " + std::strerror(errno);
+            BeeCoreError("Failed to write file: {}", pathStr);
             throw std::runtime_error({pathStr.begin(), pathStr.end()});
         }
         ofs << content;
@@ -87,6 +89,7 @@ namespace BeeEngine
         if (!ofs)
         {
             UTF8String pathStr = path.AsUTF8() + ": " + std::strerror(errno);
+            BeeCoreError("Failed to write file: {}", pathStr);
             throw std::runtime_error({pathStr.begin(), pathStr.end()});
         }
         ofs << content;

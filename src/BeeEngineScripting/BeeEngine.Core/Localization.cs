@@ -29,14 +29,20 @@ namespace BeeEngine
                     return;
                 }
 
-                if(!ValidateLocale(value))
+                if (!ValidateLocale(value))
                     throw new ArgumentException("Invalid locale format. Locale must be in the format 'language_COUNTRY' or 'language' and must consist of 2 characters for language and 2 characters for country. Example: 'en_US' or 'en'");
 
+                ClearCache();
                 s_CachedLocale = value;
                 InternalCalls.Locale_SetLocale(value);
-                s_CachedStaticKeys.Clear();
-                s_CachedDynamicKeys.Clear();
             }
+        }
+
+        internal static void ClearCache()
+        {
+            s_CachedLocale = null;
+            s_CachedStaticKeys.Clear();
+            s_CachedDynamicKeys.Clear();
         }
 
         private static bool ValidateLocale(string value)
@@ -93,11 +99,11 @@ namespace BeeEngine
 
             for (int i = 0; i < args.Length; i++)
             {
-                if(args[i] is null)
+                if (args[i] is null)
                     throw new ArgumentNullException($"Argument {i} is null");
-                if(i % 2 != 0)
+                if (i % 2 != 0)
                 {
-                    if(args[i] is string or int or float or double or bool or byte or sbyte or short or ushort or uint or long or ulong)
+                    if (args[i] is string or int or float or double or bool or byte or sbyte or short or ushort or uint or long or ulong)
                         continue;
                     throw new ArgumentException(
                         $"Each value argument in key-value pair must be a string or int or float or double or bool or byte or sbyte or short or ushort or uint or long or ulong. Argument {i} is not one of these types");

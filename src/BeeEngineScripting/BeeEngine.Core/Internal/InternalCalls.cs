@@ -34,6 +34,7 @@ namespace BeeEngine.Internal
         private static delegate* unmanaged<int, int> s_Input_IsKeyDown = null;
         private static delegate* unmanaged<int, int> s_Input_IsMouseButtonDown = null;
         private static delegate* unmanaged<void*, void> s_Input_GetMousePosition = null;
+        private static delegate* unmanaged<Vector2*, void> s_Input_GetMouseWheelDelta = null;
         private static delegate* unmanaged<ulong, void*, void> s_Input_GetMousePositionInWorldSpace = null;
         private static delegate* unmanaged<void*, void> s_Asset_Load = null;
         private static delegate* unmanaged<void*, void> s_Asset_Unload = null;
@@ -247,6 +248,10 @@ namespace BeeEngine.Internal
             else if (functionName == "Input_GetMousePosition")
             {
                 s_Input_GetMousePosition = (delegate* unmanaged<void*, void>)functionPtr;
+            }
+            else if (functionName == "Input_GetMouseWheelDelta")
+            {
+                s_Input_GetMouseWheelDelta = (delegate* unmanaged<Vector2*, void>)functionPtr;
             }
             else if (functionName == "Input_GetMousePositionInWorldSpace")
             {
@@ -534,6 +539,12 @@ namespace BeeEngine.Internal
         internal static void Input_GetMousePosition(ref Vector2 mouseCoords)
         {
             s_Input_GetMousePosition(Unsafe.AsPointer(ref mouseCoords));
+        }
+        internal unsafe static Vector2 Input_GetMouseWheelDelta()
+        {
+            Vector2 mouseDelta;
+            s_Input_GetMouseWheelDelta(&mouseDelta);
+            return mouseDelta;
         }
 
         internal static void Input_GetMousePositionInWorldSpace(ulong id, ref Vector2 mouseCoords)

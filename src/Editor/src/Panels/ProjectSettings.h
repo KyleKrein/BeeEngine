@@ -6,6 +6,8 @@ namespace BeeEngine::Editor
     class ProjectSettings
     {
     public:
+        static void DropMenuChooseDefaultLocale(ProjectFile& project, Locale::Domain& editorDomain);
+
         ProjectSettings(ProjectFile& currentProject, Locale::Domain& domain, EditorAssetManager& assetManager);
         void Toggle() { m_IsOpened = !m_IsOpened; }
         void Render();

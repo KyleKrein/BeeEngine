@@ -83,10 +83,12 @@ namespace BeeEngine::Editor
                 {
                     Entity droppedEntity = {e, m_Context};
                     BeeExpects(droppedEntity);
+                    m_Project->StopFileWatchers();
                     PrefabImporter::GeneratePrefab(droppedEntity,
                                                    m_CurrentDirectory /
                                                        (droppedEntity.GetComponent<TagComponent>().Tag + ".beeprefab"),
                                                    {m_Project->GetAssetRegistryID()});
+                    m_Project->StartFileWatchers();
                 });
         }
         if (ImGui::IsDragAndDropPayloadInProcess("EXTERN_DRAG_AND_DROP"))
