@@ -11,6 +11,10 @@
 #include "memory.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
+#include <iterator>
+#include <memory>
+#include <spdlog/sinks/daily_file_sink.h>
+#include <vector>
 #include <version>
 
 #if defined(__cpp_lib_source_location)
@@ -27,12 +31,19 @@ namespace BeeEngine
     public:
         static void Init()
         {
-            spdlog::set_pattern("%^[%T] %n: %v%$");
-            s_CoreLogger = spdlog::stdout_color_mt("BeeEngine");
-            s_CoreLogger->set_level(spdlog::level::trace);
+            std::string pattern = "%^[%T] [%l] %n: %v%$";
+            spdlog::set_pattern(pattern);
+            std::vector<spdlog::sink_ptr> sinks{
+                std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
+                std::make_shared<spdlog::sinks::daily_file_format_sink_mt>("logfile.txt", 23, 59)};
 
-            s_ClientLogger = spdlog::stdout_color_mt("App");
+            s_CoreLogger = std::make_shared<spdlog::logger>("BeeEngine", std::begin(sinks), std::end(sinks));
+            s_CoreLogger->set_level(spdlog::level::trace);
+            s_CoreLogger->set_pattern(pattern);
+
+            s_ClientLogger = std::make_shared<spdlog::logger>("App", std::begin(sinks), std::end(sinks));
             s_ClientLogger->set_level(spdlog::level::trace);
+            s_ClientLogger->set_pattern(pattern);
 
             s_IsInit = true;
         }
@@ -84,11 +95,11 @@ namespace BeeEngine
         debug_break();                                                                                                 \
     }                                                                                                                  \
 /*#define BeeCoreFatalError(...)  ::BeeEngine::Log::GetCoreLogger()->critical(::BeeEngine::FormatString(__VA_ARGS__)); \
-throw std::runtime_error(__VA_ARGS__) #define BeeCoreError(...)                                                                                             \
-::BeeEngine::Log::GetCoreLogger()->error(::BeeEngine::FormatString(__VA_ARGS__)) #define BeeCoreWarn(...)                                                                                              \
-::BeeEngine::Log::GetCoreLogger()->warn(::BeeEngine::FormatString(__VA_ARGS__)) #define BeeCoreInfo(...)                                                                                              \
-::BeeEngine::Log::GetCoreLogger()->info(::BeeEngine::FormatString(__VA_ARGS__)) #define BeeCoreTrace(...)                                                                                             \
-::BeeEngine::Log::GetCoreLogger()->trace(::BeeEngine::FormatString(__VA_ARGS__)) #define BeeCoreAssert(x, ...)                                                                                         \
+throw std::runtime_error(__VA_ARGS__) #define BeeCoreError(...)                                                        \
+::BeeEngine::Log::GetCoreLogger()->error(::BeeEngine::FormatString(__VA_ARGS__)) #define BeeCoreWarn(...)              \
+::BeeEngine::Log::GetCoreLogger()->warn(::BeeEngine::FormatString(__VA_ARGS__)) #define BeeCoreInfo(...)               \
+::BeeEngine::Log::GetCoreLogger()->info(::BeeEngine::FormatString(__VA_ARGS__)) #define BeeCoreTrace(...)              \
+::BeeEngine::Log::GetCoreLogger()->trace(::BeeEngine::FormatString(__VA_ARGS__)) #define BeeCoreAssert(x, ...)         \
 if(!(x)) {::BeeEngine::Log::GetCoreLogger()->error(::BeeEngine::FormatString(__VA_ARGS__)); debug_break();}*/
 
 // Client log

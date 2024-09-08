@@ -132,9 +132,16 @@ namespace BeeEngine
             BeeCoreError("get_hostfxr_path failed: {0}", rc);
             return false;
         }
+        auto hostfxr_path = std::filesystem::path{buffer};
+        auto version = Path{hostfxr_path.parent_path().filename()}.AsUTF8()[0] - '0';
+        if (version < 8) // dotnet 8.0
+        {
+            BeeCoreError("HostFxr version {0} is not supported", version);
+            return false;
+        }
 
         // Load hostfxr and get desired exports
-        s_Data = new NativeToManagedData(std::filesystem::path{buffer});
+        s_Data = new NativeToManagedData(hostfxr_path);
         auto& lib = s_Data->HostFxrLibrary;
         s_Data->init_for_cmd_line_fptr = (hostfxr_initialize_for_dotnet_command_line_fn)lib.GetFunction("hostfxr_initialize_for_dotnet_command_line");
         s_Data->init_for_config_fptr = (hostfxr_initialize_for_runtime_config_fn)lib.GetFunction("hostfxr_initialize_for_runtime_config");
@@ -196,7 +203,7 @@ namespace BeeEngine
         if(!init_hostfxr(nullptr))
         {
             BeeCoreError("Unable to initialize .NET Host!");
-            ShowMessageBox("Unable to initialize .NET Host!", "This program is unable to find .Net Runtime on your device. Please download and install it from dotnet.microsoft.com", MessageBoxType::Error);
+            ShowMessageBox("Unable to initialize .NET Host!", "This program is unable to find .Net of at least version 8 on your device. Please download and install it from dotnet.microsoft.com", MessageBoxType::Error);
             throw std::runtime_error("Unable to initialize .NET Host!");
         }
         //
@@ -207,7 +214,7 @@ namespace BeeEngine
         if(!load_assembly_and_get_function_pointer)
         {
             BeeCoreError("Unable to load .NET Core runtime!");
-            ShowMessageBox("Unable to load .NET Core runtime!", "This program is unable to find .Net Runtime on your device. Please download and install it from dotnet.microsoft.com", MessageBoxType::Error);
+            ShowMessageBox("Unable to load .NET Core runtime!", "This program is unable to find .Net of at least version 8 on your device. Please download and install it from dotnet.microsoft.com", MessageBoxType::Error);
             throw std::runtime_error("Unable to initialize .NET Host!");
         }
         //Obtain function pointers
