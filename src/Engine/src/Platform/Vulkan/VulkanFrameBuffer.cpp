@@ -30,8 +30,10 @@ namespace BeeEngine::Internal
                 return 4;
             case FrameBufferTextureFormat::RGBA16F:
                 return 8;
-            case FrameBufferTextureFormat::RedInteger:
+            case FrameBufferTextureFormat::INT32:
                 return 4;
+            case FrameBufferTextureFormat::UINT64:
+                return 8;
             case FrameBufferTextureFormat::Depth24:
                 return 4;
             case FrameBufferTextureFormat::None:
@@ -41,6 +43,44 @@ namespace BeeEngine::Internal
         BeeCoreError("Unknown FrameBufferTextureFormat");
         return 0;
     }
+
+    static vk::Filter GetSamplerFilter(FrameBufferTextureFormat format)
+    {
+        switch (format)
+        {
+            case FrameBufferTextureFormat::RGBA8:
+            case FrameBufferTextureFormat::RGBA16F:
+                return vk::Filter::eLinear;
+            case FrameBufferTextureFormat::Depth24:
+            case FrameBufferTextureFormat::INT32:
+            case FrameBufferTextureFormat::UINT64:
+                return vk::Filter::eNearest;
+            case FrameBufferTextureFormat::None:
+            default:
+                break;
+        }
+        BeeCoreError("Unknown FrameBufferTextureFormat");
+        return vk::Filter::eNearest;
+    }
+
+    static vk::SamplerMipmapMode GetSamplerMipmapMode(FrameBufferTextureFormat format)
+    {
+        switch (format)
+        {
+            case FrameBufferTextureFormat::RGBA8:
+            case FrameBufferTextureFormat::RGBA16F:
+                return vk::SamplerMipmapMode::eLinear;
+            case FrameBufferTextureFormat::Depth24:
+            case FrameBufferTextureFormat::INT32:
+            case FrameBufferTextureFormat::UINT64:
+                return vk::SamplerMipmapMode::eNearest;
+            case FrameBufferTextureFormat::None:
+            default:
+                break;
+        }
+        BeeCoreError("Unknown FrameBufferTextureFormat");
+        return vk::SamplerMipmapMode::eNearest;
+    }
     vk::Format ConvertToVulkanFormat(FrameBufferTextureFormat format)
     {
         switch (format)
@@ -49,8 +89,10 @@ namespace BeeEngine::Internal
                 return vk::Format::eR8G8B8A8Unorm;
             case FrameBufferTextureFormat::RGBA16F:
                 return vk::Format::eR16G16B16A16Sfloat;
-            case FrameBufferTextureFormat::RedInteger:
-                return vk::Format::eR32Sfloat;
+            case FrameBufferTextureFormat::UINT64:
+                return vk::Format::eR64Uint;
+            case FrameBufferTextureFormat::INT32:
+                return vk::Format::eR32Sint;
             case FrameBufferTextureFormat::Depth24:
                 return vk::Format::eD32Sfloat;
             case FrameBufferTextureFormat::None:
@@ -290,14 +332,8 @@ namespace BeeEngine::Internal
                 vk::ImageLayout::eUndefined,
                 vk::ImageLayout::eShaderReadOnlyOptimal);
             vk::SamplerCreateInfo samplerCreateInfo{};
-            samplerCreateInfo.magFilter =
-                m_ColorAttachmentSpecification[i].TextureFormat == FrameBufferTextureFormat::RedInteger
-                    ? vk::Filter::eNearest
-                    : vk::Filter::eLinear;
-            samplerCreateInfo.minFilter =
-                m_ColorAttachmentSpecification[i].TextureFormat == FrameBufferTextureFormat::RedInteger
-                    ? vk::Filter::eNearest
-                    : vk::Filter::eLinear;
+            samplerCreateInfo.magFilter = GetSamplerFilter(m_ColorAttachmentSpecification[i].TextureFormat);
+            samplerCreateInfo.minFilter = GetSamplerFilter(m_ColorAttachmentSpecification[i].TextureFormat);
             samplerCreateInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
             samplerCreateInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
             samplerCreateInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
@@ -307,10 +343,7 @@ namespace BeeEngine::Internal
             samplerCreateInfo.unnormalizedCoordinates = vk::False;
             samplerCreateInfo.compareEnable = vk::False;
             samplerCreateInfo.compareOp = vk::CompareOp::eAlways;
-            samplerCreateInfo.mipmapMode =
-                m_ColorAttachmentSpecification[i].TextureFormat == FrameBufferTextureFormat::RedInteger
-                    ? vk::SamplerMipmapMode::eNearest
-                    : vk::SamplerMipmapMode::eLinear;
+            samplerCreateInfo.mipmapMode = GetSamplerMipmapMode(m_ColorAttachmentSpecification[i].TextureFormat);
             samplerCreateInfo.mipLodBias = 0.0f;
             samplerCreateInfo.minLod = 0.0f;
             samplerCreateInfo.maxLod = 0.0f;
@@ -369,18 +402,16 @@ namespace BeeEngine::Internal
         return m_DepthAttachmentTexture->GetRendererID();
     }
 
-    int VulkanFrameBuffer::ReadPixel(uint32_t attachmentIndex, int x, int y) const
+    uint64_t VulkanFrameBuffer::ReadPixelUINT64(uint32_t attachmentIndex, int x, int y) const
     {
         BeeExpects(attachmentIndex < m_ColorAttachmentsTextures.size());
         BeeExpects(x >= 0 && x < m_Preferences.Width && y >= 0 && y < m_Preferences.Height);
-        BeeExpects(m_ColorAttachmentSpecification[attachmentIndex].TextureFormat ==
-                   FrameBufferTextureFormat::RedInteger);
+        BeeExpects(m_ColorAttachmentSpecification[attachmentIndex].TextureFormat == FrameBufferTextureFormat::UINT64);
         BeeExpects(m_ColorAttachmentSpecification[attachmentIndex].TextureUsage == FrameBufferTextureUsage::CPUAndGPU);
         CopyToBufferIfNotCopied(attachmentIndex);
         void* data;
         vmaMapMemory(GetVulkanAllocator(), m_ColorAttachmentsReadBuffers[attachmentIndex].Buffer.Memory, &data);
-        float32_t pixelFloat = ((float32_t*)data)[y * m_Preferences.Width + x];
-        int pixel = (int)pixelFloat;
+        uint64_t pixel = ((uint64_t*)data)[y * m_Preferences.Width + x];
         vmaUnmapMemory(GetVulkanAllocator(), m_ColorAttachmentsReadBuffers[attachmentIndex].Buffer.Memory);
         return pixel;
     }

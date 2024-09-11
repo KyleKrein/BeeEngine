@@ -20,7 +20,6 @@ namespace BeeEngine
     class ResourceManager
     {
     public:
-        static String ProjectName;
         inline static String ProcessFilePath(std::string_view filepath)
         {
             BEE_PROFILE_FUNCTION();
@@ -110,20 +109,18 @@ namespace BeeEngine
             return fullName;
         }
 
-        static String GetScriptTemplate(const String& scriptName)
+        static String GetScriptTemplate(const String& scriptName, const String& projectName)
         {
             std::ostringstream script;
             script << "using BeeEngine;\n";
-            script << "using System;\n";
+            script << "using BeeEngine.Math;\n";
             script << "\n";
-            script << "namespace " << ProjectName << "\n";
+            script << "namespace " << projectName << ";\n";
+            script << "public class " << scriptName << ": Behaviour\n";
             script << "{\n";
-            script << "\tpublic class " << scriptName << ": Behaviour\n";
+            script << "\tvoid OnUpdate()\n";
             script << "\t{\n";
-            script << "\t\tvoid OnUpdate()\n";
-            script << "\t\t{\n";
-            script << "\t\t\t// TODO: Add your code here\n";
-            script << "\t\t}\n";
+            script << "\t\t// TODO: Add your code here\n";
             script << "\t}\n";
             script << "}\n";
             return String{script.str()};

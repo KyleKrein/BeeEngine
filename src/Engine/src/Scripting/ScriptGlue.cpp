@@ -668,7 +668,7 @@ namespace BeeEngine
         preferences.Width = width;   // * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Height = height; // * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Attachments = {
-            FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
+            FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::UINT64, FrameBufferTextureFormat::Depth24};
 
         // preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; // RedInteger
         preferences.Attachments.Attachments[0].ClearColor = clearColor;

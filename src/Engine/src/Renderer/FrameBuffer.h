@@ -23,9 +23,10 @@ namespace BeeEngine
     {
         None = 0, ///< No format specified.
         // Colors
-        RGBA8,      ///< 8-bit RGBA color format.
-        RGBA16F,    ///< 16-bit floating point RGBA color format.
-        RedInteger, ///< Single-channel integer format.
+        RGBA8,   ///< 8-bit RGBA color format.
+        RGBA16F, ///< 16-bit floating point RGBA color format.
+        INT32,   ///< Single-channel integer format.
+        UINT64,  ///< Single-channel unsigned integer format.
 
         // Depth Stencil
         Depth24, ///< 24-bit depth format.
@@ -252,7 +253,7 @@ namespace BeeEngine
          * @param y Y-coordinate of the pixel.
          * @return The value of the pixel.
          */
-        [[nodiscard]] virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) const = 0;
+        [[nodiscard]] virtual uint64_t ReadPixelUINT64(uint32_t attachmentIndex, int x, int y) const = 0;
 
         /**
          * @brief Dumps an image from a color attachment.

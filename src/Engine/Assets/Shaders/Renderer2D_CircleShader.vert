@@ -1,4 +1,6 @@
-#version 450 core
+#version 460
+
+#extension GL_ARB_gpu_shader_int64 : require
 
 layout (location = 0) in vec3 vPosition;
 layout (location = 1) in vec3 vNormal;
@@ -7,13 +9,13 @@ layout (instanced location = 4) in mat4 vModel;
 layout (instanced location = 8) in vec4 vColor;
 layout (instanced location = 9) in float vThickness;
 layout (instanced location = 10) in float vFade;
-layout (instanced location = 11) in int vEntityID;
+layout (instanced location = 11) in uint64_t vEntityID;
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec2 outTexCoord;
 layout(location = 2) out float outThickness;
 layout(location = 3) out float outFade;
-layout(location = 4) out int outEntityID;
+layout(location = 4) out uint64_t outEntityID;
 
 layout(set = 0, binding = 0) uniform UniformBufferCamera
 {

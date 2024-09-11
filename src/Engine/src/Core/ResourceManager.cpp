@@ -7,5 +7,5 @@
 
 namespace BeeEngine
 {
-    String ResourceManager::ProjectName;
+
 }

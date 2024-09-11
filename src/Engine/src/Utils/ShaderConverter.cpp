@@ -112,7 +112,7 @@ namespace BeeEngine
         shader.setAutoMapBindings(true);
         shader.setAutoMapLocations(true);
         CustomIncluder includer;
-        if (!shader.parse(&Resources, 450, false, messages, includer))
+        if (!shader.parse(&Resources, 460, false, messages, includer))
         {
             BeeCoreError(shader.getInfoLog());
             BeeCoreError(shader.getInfoDebugLog());

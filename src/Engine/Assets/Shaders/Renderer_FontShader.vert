@@ -1,4 +1,5 @@
-#version 450 core
+#version 460
+
 layout (location = 0) in vec2 vPosition;
 
 layout (instanced location = 1) in vec2 vTexCoord0;
@@ -11,12 +12,12 @@ layout (instanced location = 7) in vec3 vPositionOffset2;
 layout (instanced location = 8) in vec3 vPositionOffset3;
 layout (instanced location = 9) in vec4 vForegroundColor;
 layout (instanced location = 10) in vec4 vBackgroundColor;
-layout (instanced location = 11) in int vEntityID;
+layout (instanced location = 11) in uvec2 vEntityID;
 
 layout(location = 0) out vec4 outForegroundColor;
 layout(location = 1) out vec4 outBackgroundColor;
 layout(location = 2) out vec2 outTexCoord;
-layout(location = 3) out int outEntityID;
+layout(location = 3) out uvec2 outEntityID;
 
 layout(set = 0, binding = 0) uniform UniformBufferCamera
 {

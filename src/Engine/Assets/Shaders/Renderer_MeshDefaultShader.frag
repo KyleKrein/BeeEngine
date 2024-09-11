@@ -1,16 +1,17 @@
 #version 460
 
 #extension GL_GOOGLE_include_directive : require
+#extension GL_ARB_gpu_shader_int64 : require
 
 #include "InputStructures.glsl"
 
 layout(location = 0) in vec3 inNormal;
 layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec2 inUV;
-layout(location = 3) in flat int inEntityID;
+layout(location = 3) in flat uint64_t inEntityID;
 
 layout(location = 0) out vec4 outColor;
-layout(location = 1) out float outEntityID;
+layout(location = 1) out uint64_t outEntityID;
 
 void main()
 {

@@ -21,6 +21,7 @@
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "gtc/type_ptr.hpp"
 #include "imgui.h"
+#include <cstdint>
 
 namespace BeeEngine::Editor
 {
@@ -51,7 +52,7 @@ namespace BeeEngine::Editor
         preferences.Width = m_Width * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Height = m_Height * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Attachments = {
-            FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
+            FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::UINT64, FrameBufferTextureFormat::Depth24};
 
         preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; // RedInteger
 
@@ -360,14 +361,14 @@ namespace BeeEngine::Editor
     {
         int mouseX = gsl::narrow_cast<int>(m_MousePosition.x * WindowHandler::GetInstance()->GetScaleFactor());
         int mouseY = gsl::narrow_cast<int>(m_MousePosition.y * WindowHandler::GetInstance()->GetScaleFactor());
-        int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
-        pixelData--; // I make it -1 because entt starts from 0 and clear value for red integer in webgpu is
-                     // 0 and I need to make invalid number -1 too, so in scene I make + 1
-        if (pixelData == -1)
+        uint64_t pixelData = m_FrameBuffer->ReadPixelUINT64(1, mouseX, mouseY);
+        // pixelData--; // I make it -1 because entt starts from 0 and clear value for red integer in webgpu is
+        //  0 and I need to make invalid number -1 too, so in scene I make + 1
+        if (pixelData == 0)
         {
             return Entity::Null;
         }
-        return {EntityID{(entt::entity)pixelData}, CurrentScene()};
+        return CurrentScene()->GetEntityByUUID(pixelData); //{EntityID{(entt::entity)pixelData}, CurrentScene()};
     }
 
     void ViewPort::OpenScene(const Path& path)

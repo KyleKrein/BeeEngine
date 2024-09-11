@@ -306,7 +306,7 @@ namespace BeeEngine::Editor
                                 scriptName = "NewScript";
                             }
                             Path scriptPath = m_CurrentDirectory / (scriptName + ".cs");
-                            auto templ = ResourceManager::GetScriptTemplate(scriptName);
+                            auto templ = ResourceManager::GetScriptTemplate(scriptName, m_Project->Name());
                             File::WriteFile(scriptPath, templ);
                             m_NeedToRegenerateSolution = true;
                         });

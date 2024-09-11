@@ -39,18 +39,12 @@ namespace BeeEngine::Editor
                 std::filesystem::rename(AssetRegistryPath.get().ToStdPath(),
                                         (FolderPath.get() / (newName + ".beeassetregistry")).ToStdPath());
             });
-        Name.valueChanged().connect(
-            [this](const String& newName)
-            {
-                ResourceManager::ProjectName = newName;
-                Save();
-            });
+        Name.valueChanged().connect([this](const String& newName) { Save(); });
         auto localeHandle = DefaultLocale.valueChanged().connect([this](const auto& newLocale) { Save(); });
         localeHandle.block(true);
         ScopeGuard defer([localeHandle]() mutable { localeHandle.block(false); });
         BeeCoreTrace("ProjectName: {0}", Name.get());
         BeeCoreTrace("ProjectPath: {0}", FolderPath.get().AsUTF8());
-        ResourceManager::ProjectName = Name.get();
         LoadLocalizationFiles();
         if (!File::Exists(FolderPath.get() / ".beeengine"))
         {

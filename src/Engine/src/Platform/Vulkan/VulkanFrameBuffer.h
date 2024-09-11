@@ -41,7 +41,7 @@ namespace BeeEngine::Internal
 
         [[nodiscard]] BindingSet& GetColorBindingSet() override { return *m_ColorBindingSet; }
 
-        [[nodiscard]] int ReadPixel(uint32_t attachmentIndex, int x, int y) const override;
+        [[nodiscard]] uint64_t ReadPixelUINT64(uint32_t attachmentIndex, int x, int y) const override;
 
         VulkanImage GetColorAttachment(uint32_t index) const;
 

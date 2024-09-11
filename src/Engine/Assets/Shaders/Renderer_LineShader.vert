@@ -1,4 +1,4 @@
-#version 450 core
+#version 460
 
 layout (location = 0) in vec3 vPosition;
 layout (instanced location = 1) in vec4 vColor;

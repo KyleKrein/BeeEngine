@@ -1,9 +1,9 @@
-#version 450 core
+#version 460
 
 layout(location = 0) in vec2 fragTexCoord;
 
 layout(location = 0) out vec4 outColor;
-layout(location = 1) out float outEntityID;
+layout(location = 1) out uvec2 outEntityID;
 
 /*TODO: convert strings like layout(set = 1, binding = 0) uniform sampler2D u_sampler
 to lines down below automatically. also need to replace all usings of sampler2D with
@@ -15,7 +15,7 @@ layout(set = 1, binding = 3) uniform sampler u_idSampler;
 
 void main()
 {
-    outEntityID = texture(sampler2D(u_idTexture, u_idSampler), fragTexCoord).r;
+    outEntityID = texture(sampler2D(u_idTexture, u_idSampler), fragTexCoord).rg;
     outColor = texture(sampler2D(u_texture, u_sampler), fragTexCoord);
     if(outColor.a == 0.0f)
         discard;

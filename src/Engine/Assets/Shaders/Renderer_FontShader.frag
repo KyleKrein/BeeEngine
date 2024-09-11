@@ -1,12 +1,12 @@
-#version 450 core
+#version 460
 
 layout(location = 0) in vec4 fForegroundColor;
 layout(location = 1) in vec4 fBackgroundColor;
 layout(location = 2) in vec2 fTexCoord;
-layout(location = 3) in flat int fEntityID;
+layout(location = 3) in flat uvec2 fEntityID;
 
 layout(location = 0) out vec4 outColor;
-layout(location = 1) out float outEntityID;
+layout(location = 1) out uvec2 outEntityID;
 
 
 layout(set = 1, binding = 0) uniform texture2D u_texture;
@@ -33,7 +33,7 @@ void main()
     float opacity = clamp(screenPxDistance + 0.5f, 0.0f, 1.0f);
 
     outColor = mix(fBackgroundColor, fForegroundColor, opacity);
-    outEntityID = float(fEntityID);
+    outEntityID = fEntityID;
     if(outColor.a == 0.0f)
         discard;
 }

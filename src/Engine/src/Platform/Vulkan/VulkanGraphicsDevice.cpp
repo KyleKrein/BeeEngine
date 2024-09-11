@@ -155,6 +155,7 @@ namespace BeeEngine::Internal
 
         if (deviceFeatures2.features.samplerAnisotropy == vk::True &&
             deviceVulkan12Features.bufferDeviceAddress == vk::True &&
+            deviceFeatures2.features.shaderInt64 == vk::True &&
 #if !defined(MACOS) && !defined(IOS)
             deviceVulkan13Features.dynamicRendering == vk::True &&
             deviceVulkan13Features.synchronization2 == vk::True &&
@@ -388,6 +389,7 @@ namespace BeeEngine::Internal
 
         deviceFeatures2.features.samplerAnisotropy = vk::True;
         deviceFeatures2.features.independentBlend = vk::True;
+        deviceFeatures2.features.shaderInt64 = vk::True;
 
         deviceVulkan12Features.bufferDeviceAddress = vk::True;
         deviceVulkan12Features.descriptorIndexing = vk::True;
