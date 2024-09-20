@@ -10,12 +10,6 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
-#include <version>
-#if __cpp_constexpr >= 202207L
-#define CONSTEXPR constexpr
-#else
-#define CONSTEXPR inline
-#endif
 
 namespace BeeEngine
 {
@@ -31,7 +25,7 @@ namespace BeeEngine
          * @param arg C-String
          * @return UTF8String
          */
-        CONSTEXPR UTF8String operator""_u8(const char* arg)
+        inline UTF8String operator""_u8(const char* arg)
         {
             return {arg};
         }

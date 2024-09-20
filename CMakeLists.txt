@@ -1,10 +1,27 @@
 cmake_minimum_required(VERSION 3.25)
 include(cmake/UniversalAppleBuild.cmake)
+project(
+        BeeEngine_CPP
+        DESCRIPTION "BeeEngine"
+        LANGUAGES CXX C
+)
+
+if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+        set(BEE_ARCH "x64")
+else()
+        set(BEE_ARCH ${CMAKE_HOST_SYSTEM_PROCESSOR})
+endif()
+
+if(UNIX AND NOT APPLE)
+        set(VCPKG_TARGET_TRIPLET ${BEE_ARCH}-linux)
+        add_compile_options(-march=native)
+endif()
+
 set(VCPKG_LIBRARY_LINKAGE static CACHE STRING "Linkage of vcpkg libraries" FORCE)
 set(VCPKG_CRT_LINKAGE static CACHE STRING "Linkage of vcpkg libraries" FORCE)
 #TODO: make this only for distribution builds, when dist builds are implemented
 if(WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
-        set(VCPKG_TARGET_TRIPLET x64-windows-static)
+        set(VCPKG_TARGET_TRIPLET ${BEE_ARCH}-windows-static)
         if(POLICY CMP0091)
                 cmake_policy(SET CMP0091 NEW) 
         endif()
@@ -19,11 +36,7 @@ endif()
 set(VCPKG_ROOT "src/Engine/vendor/vcpkg")
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 include(${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
-project(
-        BeeEngine_CPP
-        DESCRIPTION "BeeEngine"
-        LANGUAGES CXX C
-)
+
 if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
         include(CheckIPOSupported)
         # Optional IPO. Do not use IPO if it's not supported by compiler.
