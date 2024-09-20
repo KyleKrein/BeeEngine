@@ -3,7 +3,7 @@
 //
 #pragma once
 #include <version>
-#if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L
+#if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L && !defined(LINUX)
 #include <stacktrace>
 #endif
 #include "Core/String.h"
@@ -29,7 +29,7 @@ namespace BeeEngine
             {
             }
         };
-#if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L
+#if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L && !defined(LINUX)
         StackTrace(const std::stacktrace& stacktrace = std::stacktrace::current());
 #elif defined(MACOS)
         StackTrace();

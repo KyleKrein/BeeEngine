@@ -30,6 +30,7 @@ namespace BeeEngine
         std::condition_variable cv;
         std::mutex mutex;
         GraphicsDevice& device = m_Window->GetGraphicsDevice();
+        device.RequestSwapChainRebuild();
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
@@ -38,7 +39,6 @@ namespace BeeEngine
             if (device.SwapChainRequiresRebuild())
             {
                 Renderer::RebuildSwapchain();
-                continue;
             }
             std::unique_lock lock(mutex);
             auto frameJob = Jobs::CreateJob<Jobs::Priority::Normal, 1024 * 1024>(

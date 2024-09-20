@@ -17,7 +17,6 @@
 #include "VulkanTexture2D.h"
 #include "backends/imgui_impl_vulkan.h"
 #include <cstdint>
-#include <mdspan>
 #include <vulkan/vulkan_enums.hpp>
 
 namespace BeeEngine::Internal

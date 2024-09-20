@@ -3,6 +3,7 @@
 //
 
 #include "SDLWindowHandler.h"
+#include "Core/OsPlatform.h"
 #if defined(BEE_COMPILE_SDL)
 #include "Core/Application.h"
 #include "Hardware.h"
@@ -28,6 +29,10 @@ namespace BeeEngine::Internal
     {
         s_Instance = this;
         m_vsync = properties.Vsync;
+        if (Application::GetOsPlatform() == OSPlatform::Linux)
+        {
+            SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "wayland");
+        }
         auto result = SDL_Init(SDL_INIT_VIDEO);
         if (result != 0)
         {
@@ -52,7 +57,8 @@ namespace BeeEngine::Internal
                 BeeCoreFatalError("Invalid Renderer API chosen for SDL");
         }
 
-        if (Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS)
+        if (Application::GetOsPlatform() == OSPlatform::Mac || Application::GetOsPlatform() == OSPlatform::iOS ||
+            Application::GetOsPlatform() == OSPlatform::Linux)
         {
             windowFlags |= SDL_WINDOW_HIGH_PIXEL_DENSITY;
         }

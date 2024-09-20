@@ -1,7 +1,7 @@
 CPMAddPackage(
         NAME tint
         GIT_REPOSITORY https://dawn.googlesource.com/tint
-        GIT_TAG 45b139212530ea743cd08a2906953df026f3eedf
+        GIT_TAG 3cb3f4a22006b39e08dfda6b1dc4d01fafb2f7a5
         DOWNLOAD_ONLY YES
 )
 #check if fetch_dawn_dependencies.py exists
