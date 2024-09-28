@@ -3,7 +3,9 @@
 //
 
 #include "STDFileWatcher.h"
+#include "Core/Application.h"
 #include "FileSystem/File.h"
+#include "JobSystem/JobScheduler.h"
 #include <chrono>
 #include <filesystem>
 
@@ -26,12 +28,22 @@ namespace BeeEngine::Internal
         constexpr std::chrono::duration<int, std::milli> delay = std::chrono::milliseconds(
             500); // Why 500ms? Because it's a good compromise between responsiveness and performance
         std::unordered_map<Path, FileInfo> paths;
-        for (auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
+        bool mainIsDirectory = std::filesystem::is_directory(watcher.m_Path);
+        if (mainIsDirectory)
         {
-            auto& path = file.path();
-            paths[path] = {std::filesystem::last_write_time(file), std::filesystem::file_size(file)};
+            for (auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
+            {
+                auto& path = file.path();
+                paths[path] = {std::filesystem::last_write_time(file),
+                               std::filesystem::is_directory(file) ? 0 : std::filesystem::file_size(file)};
+            }
         }
-        std::this_thread::sleep_for(delay);
+        else
+        {
+            paths[watcher.m_Path] = {std::filesystem::last_write_time(watcher.m_Path),
+                                     std::filesystem::file_size(watcher.m_Path)};
+        }
+        Jobs::this_job::SleepFor(delay);
         while (watcher.IsRunning())
         {
             std::unordered_map<Path, FileInfo> removed;
@@ -51,22 +63,36 @@ namespace BeeEngine::Internal
                     ++it;
                 }
             }
-            for (auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
+            if (!paths.empty() && !mainIsDirectory)
             {
-                Path path = file.path();
-                auto currentLastWriteTime = std::filesystem::last_write_time(file);
-                auto currentFileSize = std::filesystem::file_size(file);
-                if (!paths.contains(path))
+                auto currentLastWriteTime = std::filesystem::last_write_time(watcher.m_Path);
+                auto currentFileSize = std::filesystem::file_size(watcher.m_Path);
+                if (paths.at(watcher.m_Path).LastWriteTime != currentLastWriteTime)
                 {
-                    paths[path] = {currentLastWriteTime, currentFileSize};
-                    // watcher.m_Callback(path, FileWatcher::Event::Added);
-                    added[path] = {currentLastWriteTime, currentFileSize};
+                    paths[watcher.m_Path] = {currentLastWriteTime, currentFileSize};
+                    watcher.onAnyEvent.emit(watcher.m_Path, FileWatcher::Event::Modified);
+                    watcher.onFileModified.emit(watcher.m_Path);
                 }
-                else if (paths.at(path).LastWriteTime != currentLastWriteTime)
+            }
+            else
+            {
+                for (auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
                 {
-                    paths[path] = {currentLastWriteTime, currentFileSize};
-                    watcher.onAnyEvent.emit(path, FileWatcher::Event::Modified);
-                    watcher.onFileModified.emit(path);
+                    Path path = file.path();
+                    auto currentLastWriteTime = std::filesystem::last_write_time(file);
+                    auto currentFileSize = std::filesystem::is_directory(file) ? 0 : std::filesystem::file_size(file);
+                    if (!paths.contains(path))
+                    {
+                        paths[path] = {currentLastWriteTime, currentFileSize};
+                        // watcher.m_Callback(path, FileWatcher::Event::Added);
+                        added[path] = {currentLastWriteTime, currentFileSize};
+                    }
+                    else if (paths.at(path).LastWriteTime != currentLastWriteTime)
+                    {
+                        paths[path] = {currentLastWriteTime, currentFileSize};
+                        watcher.onAnyEvent.emit(path, FileWatcher::Event::Modified);
+                        watcher.onFileModified.emit(path);
+                    }
                 }
             }
             std::vector<Path> renamed;
@@ -101,30 +127,36 @@ namespace BeeEngine::Internal
                 watcher.onAnyEvent.emit(path, FileWatcher::Event::Added);
                 watcher.onFileAdded.emit(path);
             }
-            std::this_thread::sleep_for(delay);
+            if (!mainIsDirectory && paths.empty())
+            {
+                Application::SubmitToMainThread(
+                    [&watcher, p = watcher.m_Path]()
+                    {
+                        BeeCoreTrace("File watcher {0} stopped because file was deleted", p);
+                        watcher.Stop();
+                    });
+                break;
+            }
+
+            Jobs::this_job::SleepFor(delay);
         }
     }
 
     void STDFileWatcher::Start()
     {
         if (IsRunning())
+        {
             return;
+        }
         m_Running.store(true);
-#if defined(__cpp_lib_jthread)
-        m_Thread = CreateScope<std::jthread>(STDFileWatcherThread, std::ref(*this));
-#else
-        m_Thread = CreateScope<std::thread>(STDFileWatcherThread, std::ref(*this));
-#endif
+        Jobs::Schedule(
+            Jobs::CreateJob<Jobs::Priority::Low, Jobs::DefaultStackSize>(m_JobCounter, STDFileWatcherThread, *this));
     }
 
     void STDFileWatcher::Stop()
     {
         m_Running.store(false);
-#if !defined(__cpp_lib_jthread)
-        if (m_Thread && m_Thread->joinable())
-            m_Thread->join();
-#endif
-        m_Thread = nullptr;
+        Jobs::WaitForJobsToComplete(m_JobCounter);
     }
 
     bool STDFileWatcher::IsRunning() const
