@@ -46,8 +46,6 @@ namespace BeeEngine
                 {
                     m_EventQueue.Dispatch();
                     auto deltaTime = m_Window->UpdateTime();
-                    // if(!self.IsMinimized())
-                    //{
                     auto result = Renderer::BeginFrame();
                     if (!result.HasValue())
                     {
@@ -63,12 +61,6 @@ namespace BeeEngine
                     Update(frameData);
                     Renderer::EndMainCommandBuffer(frameData);
                     Renderer::EndFrame(frameData);
-                    //}
-                    // else
-                    //{
-                    //    self.m_Layers.Update();
-                    //    self.Update();
-                    //}
 
                     DeletionQueue::Frame().Flush();
 

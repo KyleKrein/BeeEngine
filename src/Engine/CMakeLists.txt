@@ -227,7 +227,8 @@ elseif (UNIX AND NOT APPLE)
     # Covers Linux implementation
     set(LINUX_SOURCE_FILES
             src/Platform/Linux/FileDialogsLinux.cpp
-            src/Platform/Linux/LinuxThreads.cpp)
+            src/Platform/Linux/LinuxThreads.cpp
+            src/Platform/Linux/LinuxPlatform.cpp)
     list(APPEND SOURCE_FILES ${LINUX_SOURCE_FILES})
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU OFF)

@@ -42,6 +42,7 @@ namespace BeeEngine
         }
 #else
         const UTF8String& AsUTF8() const& noexcept { return m_Path; }
+        UTF8String& AsUTF8() & noexcept { return m_Path; }
         UTF8String&& AsUTF8() && noexcept { return BeeMove(m_Path); }
 #endif
         const char* AsCString() const noexcept { return m_Path.c_str(); }
