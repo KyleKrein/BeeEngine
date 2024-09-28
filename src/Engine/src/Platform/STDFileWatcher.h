@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "JobSystem/JobScheduler.h"
 #include <FileSystem/FileWatcher.h>
 #include <chrono>
 #include <filesystem>
@@ -27,17 +28,14 @@ namespace BeeEngine::Internal
         ~STDFileWatcher() override
         {
             if (STDFileWatcher::IsRunning())
+            {
                 STDFileWatcher::Stop();
+            }
         }
 
-    public:
     private:
         std::atomic<bool> m_Running = false;
         const std::filesystem::path m_Path;
-#if defined(__cpp_lib_jthread)
-        Scope<std::jthread> m_Thread = nullptr;
-#else
-        Scope<std::thread> m_Thread = nullptr;
-#endif
+        Jobs::Counter m_JobCounter;
     };
 } // namespace BeeEngine::Internal
