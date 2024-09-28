@@ -169,6 +169,14 @@ namespace BeeEngine
 
     UTF8String ToUppercase(std::string_view string);
     UTF8String ToLowercase(std::string_view string);
+    inline UTF8String ToUppercase(const String& string)
+    {
+        return ToUppercase(std::string_view{string.begin(), string.end()});
+    }
+    inline UTF8String ToLowercase(const String& string)
+    {
+        return ToLowercase(std::string_view{string.begin(), string.end()});
+    }
 } // namespace BeeEngine
 using namespace BeeEngine::StringLiterals; // May be removed in future
 #undef CONSTEXPR

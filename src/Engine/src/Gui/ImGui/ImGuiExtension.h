@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Core/Logging/Log.h"
+#include "Core/Path.h"
 #include "Core/String.h"
 #include "imgui.h"
 #include <functional>
@@ -78,4 +79,39 @@ namespace ImGui
                                      ImGuiInputTextFlags flags = 0,
                                      ImGuiInputTextCallback callback = nullptr,
                                      void* user_data = nullptr);
+
+    void SetDefaultFileIcon(ImTextureID icon, float width, float height);
+    void SetDefaultFolderIcon(ImTextureID icon, float width, float height);
+    void SetFileDialogThumbnailSize(float size);
+    struct FileDialogTranslations
+    {
+        BeeEngine::String Rename = "Rename";
+        BeeEngine::String Delete = "Delete";
+        BeeEngine::String Cancel = "Cancel";
+        BeeEngine::String Confirm = "Confirm";
+        BeeEngine::String OpenFolder = "Open folder";
+        BeeEngine::String CreateFolder = "Create folder";
+        BeeEngine::String OpenFile = "Open file";
+        BeeEngine::String Name = "Name";
+        BeeEngine::String Create = "Create";
+
+        BeeEngine::String RenamePopupTitle = "Choose a new name.";
+        BeeEngine::String DeletePopupTitle = "Are you sure that you want to delete";
+    };
+    void SetFileDialogTranslations(FileDialogTranslations translations);
+
+    void OpenFileDialog(const char* key,
+                        const char* filter,
+                        bool multipleFiles = false,
+                        const BeeEngine::Path& currentFolder = std::filesystem::current_path());
+    void OpenFileSaveDialog(const char* key,
+                            const char* filter,
+                            const BeeEngine::Path& currentFolder = std::filesystem::current_path());
+    void OpenFolderFileDialog(const char* key, const BeeEngine::Path& currentFolder = std::filesystem::current_path());
+    bool BeginFileDialog(const char* key);
+    bool IsFileDialogReady();
+    std::optional<BeeEngine::Path> GetResultFileDialog();
+    void EndFileDialog();
+    void CloseFileDialog();
+
 } // namespace ImGui
