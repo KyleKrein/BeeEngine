@@ -30,6 +30,7 @@
 #include "Scene/SceneSerializer.h"
 #include "Utils/DynamicLibrary.h"
 #include "kdbindings/property.h"
+#include <functional>
 
 namespace BeeEngine::Editor
 {
@@ -92,6 +93,8 @@ namespace BeeEngine::Editor
         bool m_ShowBuildProjectPopup = false;
         ImGuiUIEditor m_UIEditor{};
         bool m_ShowEditorSettings = false;
+
+        std::function<void()> m_SaveSceneAsFunc;
 
         // std::vector<NativeScriptInfo> m_NativeScripts = {};
 

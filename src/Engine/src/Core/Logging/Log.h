@@ -11,9 +11,11 @@
 #include "memory.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
+#include <filesystem>
 #include <iterator>
 #include <memory>
 #include <spdlog/sinks/daily_file_sink.h>
+#include <system_error>
 #include <vector>
 #include <version>
 
@@ -31,6 +33,8 @@ namespace BeeEngine
     public:
         static void Init()
         {
+            std::error_code err;
+            std::filesystem::remove_all("logfile.txt", err);
             std::string pattern = "%^[%T] [%l] %n: %v%$";
             spdlog::set_pattern(pattern);
             std::vector<spdlog::sink_ptr> sinks{

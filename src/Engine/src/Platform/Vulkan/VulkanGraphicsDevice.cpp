@@ -4,6 +4,7 @@
 // clang-format off
 
 #include "Gui/MessageBox.h"
+#include <thread>
 #if defined(BEE_COMPILE_VULKAN)
 #include "Platform/ImGui/ImGuiControllerVulkan.h"
 #if defined(WINDOWS)
@@ -317,19 +318,26 @@ namespace BeeEngine::Internal
         {
             vk::PhysicalDevice device;
             uint64_t vram = 0;
+            vk::PhysicalDeviceType type = vk::PhysicalDeviceType::eOther;
         };
         DeviceScore bestDevice = {nullptr, 0};
         for (auto& device : physicalDevices)
         {
-#if defined(DEBUG)
+            // #if defined(DEBUG)
             LogDeviceProperties(device);
-#endif
+            // #endif
             if (IsSuitableDevice(device))
             {
+                auto type = device.getProperties().deviceType;
                 auto vram = device.getMemoryProperties().memoryHeaps[0].size;
-                if (bestDevice.device == nullptr || vram > bestDevice.vram)
+                if (bestDevice.device == nullptr /*|| vram > bestDevice.vram*/)
                 {
-                    bestDevice = {device, vram};
+                    bestDevice = {device, vram, type};
+                }
+                else if (bestDevice.type != vk::PhysicalDeviceType::eDiscreteGpu &&
+                         type == vk::PhysicalDeviceType::eDiscreteGpu)
+                {
+                    bestDevice = {device, vram, type};
                 }
             }
         }
@@ -339,7 +347,10 @@ namespace BeeEngine::Internal
 
         if (!m_PhysicalDevice)
         {
-            BeeCoreError("No suitable physical device found");
+            using namespace std::chrono_literals;
+            BeeCoreError("No suitable physical device found. It's likely that your graphics driver is outdated. Please "
+                         "update it and try again");
+            std::this_thread::sleep_for(2s);
             ShowMessageBox("Unable to choose GPU",
                            "It's likely that your graphics driver is outdated. Please update it and try again",
                            MessageBoxType::Error);

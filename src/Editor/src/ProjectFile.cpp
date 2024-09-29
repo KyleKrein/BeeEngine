@@ -8,6 +8,7 @@
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Format.h"
 #include "Core/Logging/Log.h"
+#include "Core/OsPlatform.h"
 #include "Core/ResourceManager.h"
 #include "Core/ScopeGuard.h"
 #include "FileSystem/File.h"
@@ -257,6 +258,9 @@ namespace BeeEngine::Editor
                 case OSPlatform::Mac:
                     gameFilesPath = BuildMacOSGame(gameLibraryPath, platformOutputPath);
                     break;
+                case OSPlatform::Linux:
+                    gameFilesPath = BuildLinuxGame(gameLibraryPath, platformOutputPath);
+                    break;
                 default:
                     BeeCoreWarn("[BUILDING] Cannot build for platform {0}", platform);
                     continue;
@@ -371,6 +375,17 @@ namespace BeeEngine::Editor
         File::CopyFile(gameLibraryPath, outputDirectory / "libs" / "GameLibrary.dll");
         std::filesystem::rename((outputDirectory / "GameRuntime.exe").ToStdPath(),
                                 (outputDirectory / (Name.get() + ".exe")).ToStdPath());
+        return outputDirectory;
+    }
+    Path ProjectFile::BuildLinuxGame(const Path& gameLibraryPath, const Path& outputDirectory)
+    {
+        if (!File::Exists(outputDirectory / "libs"))
+        {
+            File::CreateDirectory(outputDirectory / "libs");
+        }
+        File::CopyFile(gameLibraryPath, outputDirectory / "libs" / "GameLibrary.dll");
+        std::filesystem::rename((outputDirectory / "GameRuntime").ToStdPath(),
+                                (outputDirectory / (Name.get())).ToStdPath());
         return outputDirectory;
     }
     Path ProjectFile::BuildMacOSGame(const Path& gameLibraryPath, const Path& outputDirectory)
