@@ -348,11 +348,7 @@ if(BEE_COMPILE_WEBGPU)
     message("Compiling WebGPU")
     enable_webgpu(BeeEngine)
     target_compile_definitions(BeeEngine PUBLIC BEE_COMPILE_WEBGPU)
-else ()
-    #adding tint to the project
-    add_subdirectory(vendor/tint)
 endif ()
-target_link_libraries( ${PROJECT_NAME} PRIVATE libtint)
 
 function(add_sdl_subdirectory)
     file(READ vendor/sdl/CMakeLists.txt SDL_CMAKELISTS)

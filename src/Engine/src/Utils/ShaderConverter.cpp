@@ -1,7 +1,10 @@
 #include "ShaderConverter.h"
 #include "Core/Logging/Log.h"
+#include "Core/Numbers.h"
 #include "SPIRV/GlslangToSpv.h"
+#include "glslang/Include/BaseTypes.h"
 #include "glslang/Public/ShaderLang.h"
+#include <cstdint>
 // #include <spirv_cross/spirv_cross.hpp>
 #if defined(BEE_COMPILE_WEBGPU)
 #include "src/tint/writer/wgsl/generator_impl.h"
@@ -9,7 +12,9 @@
 // #include <src/tint/lang/spirv/reader/ast_parser/parse.h>
 #endif
 #include "Renderer/ShaderTypes.h"
+#if defined(BEE_TINT)
 #include <tint/tint.h>
+#endif
 
 #include "FileSystem/File.h"
 
@@ -59,25 +64,189 @@ namespace BeeEngine
 
         return ShaderUniformDataType::Data;
     }
+    size_t GetUniformSize(const glslang::TType& type)
+    {
+        if (type.getBasicType() == glslang::EbtBlock)
+        {
+            size_t totalSize = 0;
+            for (const auto& member : *type.getStruct())
+            {
+                totalSize += GetUniformSize(*member.type);
+            }
+            return totalSize;
+        }
+        // Размеры для базовых типов
+        size_t baseSize = 0;
+        switch (type.getBasicType())
+        {
+            case glslang::EbtFloat:
+                baseSize = sizeof(float32_t);
+                break;
+            case glslang::EbtInt:
+                baseSize = sizeof(int32_t);
+                break;
+            case glslang::EbtUint:
+                baseSize = sizeof(uint32_t);
+                break;
+            case glslang::EbtBool:
+                baseSize = sizeof(bool);
+                break;
+            case glslang::EbtFloat16:
+                baseSize = sizeof(float32_t) / 2; // Для half (если поддерживается)
+            default:
+                return 0; // Неизвестный тип
+        }
+
+        // Обработка векторных типов
+        if (type.isVector())
+        {
+            return baseSize * type.getVectorSize(); // Вектор
+        }
+
+        // Обработка матриц
+        if (type.isMatrix())
+        {
+            return baseSize * type.getMatrixCols() * type.getMatrixRows(); // Матрица
+        }
+
+        // Обработка структур
+        if (type.isStruct())
+        {
+            size_t totalSize = 0;
+            for (const auto& member : *type.getStruct())
+            {
+                totalSize += GetUniformSize(*member.type);
+            }
+            return totalSize; // Возвращаем общий размер структуры
+        }
+
+        return baseSize; // Для скалярных типов
+    }
+    ShaderDataType GlslangToShaderDataType(const glslang::TType& type)
+    {
+        // Проверка базового типа
+        switch (type.getBasicType())
+        {
+            case glslang::EbtFloat:
+                switch (type.getVectorSize())
+                {
+                    case 1:
+                        return ShaderDataType::Float; // float
+                    case 2:
+                        return ShaderDataType::Float2; // vec2
+                    case 3:
+                        return ShaderDataType::Float3; // vec3
+                    case 4:
+                        return ShaderDataType::Float4; // vec4
+                    default:
+                        // return ShaderDataType::NoneData; // Неверный размер
+                }
+                if (type.getMatrixCols() == 4 && type.getMatrixRows() == 4)
+                {
+                    return ShaderDataType::Mat4;
+                }
+                if (type.getMatrixCols() == 3 && type.getMatrixRows() == 3)
+                {
+                    return ShaderDataType::Mat3;
+                }
+                break;
+            case glslang::EbtInt:
+                switch (type.getVectorSize())
+                {
+                    case 1:
+                        return ShaderDataType::Int; // int
+                    case 2:
+                        return ShaderDataType::Int2; // ivec2
+                    case 3:
+                        return ShaderDataType::Int3; // ivec3
+                    case 4:
+                        return ShaderDataType::Int4; // ivec4
+                    default:
+                        // return ShaderDataType::NoneData; // Неверный размер
+                }
+                break;
+            case glslang::EbtUint:
+                switch (type.getVectorSize())
+                {
+                    case 1:
+                        return ShaderDataType::UInt; // uint
+                    case 2:
+                        return ShaderDataType::UInt2; // uvec2
+                    case 3:
+                        return ShaderDataType::UInt3; // uvec3
+                    case 4:
+                        return ShaderDataType::UInt4; // uvec4
+                    default:
+                        // return ShaderDataType::NoneData; // Неверный размер
+                }
+                break;
+            case glslang::EbtBool:
+                return ShaderDataType::Bool; // bool
+
+            case glslang::EbtFloat16:
+                return ShaderDataType::Half; // half (если поддерживается)
+
+            case glslang::EbtStruct:
+                // Для структур можно добавить дополнительные проверки
+                // в зависимости от их использования
+                // return ShaderDataType::NoneData; // Для простоты
+
+                // Если нужно обрабатывать матрицы
+                // case glslang::Ebt:
+                // return ShaderDataType::Mat3; // mat3
+                // case glslang::EbtMat4:
+                // return ShaderDataType::Mat4; // mat4
+
+            default:
+                break; // return ShaderDataType::NoneData; // Неверный тип
+        }
+        BeeCoreTrace("Unknown type: {0}", type.getBasicType());
+        return ShaderDataType::NoneData;
+    }
 
     void glslang_reflection(glslang::TIntermediate* intermediate, BeeEngine::BufferLayoutBuilder& layout)
     {
-        class RefrectionTraverser : public glslang::TIntermTraverser
+        class ReflectionTraverser : public glslang::TIntermTraverser
         {
         public:
-            RefrectionTraverser(BeeEngine::BufferLayoutBuilder& layout) : layout(layout) {}
-            virtual void visitSymbol(glslang::TIntermSymbol* symbol) override
+            ReflectionTraverser(BeeEngine::BufferLayoutBuilder& layout) : layout(layout) {}
+
+            void visitSymbol(glslang::TIntermSymbol* symbol) override
             {
-                if (symbol->getQualifier().isUniformOrBuffer())
+                auto qualifier = symbol->getQualifier();
+                auto name = String{symbol->getName().c_str()};
+                if (name.starts_with("gl_"))
                 {
-                    auto name = symbol->getName();
-                    auto qualifier = symbol->getQualifier();
+                    return;
+                }
+
+                // Входные переменные
+                if (qualifier.isPipeInput())
+                {
+                    auto type = GlslangToShaderDataType(symbol->getType());
+                    if (type != ShaderDataType::NoneData)
+                    {
+                        layout.AddInput(type, name, qualifier.layoutLocation);
+                    }
+                }
+                // Выходные переменные
+                else if (qualifier.isPipeOutput())
+                {
+                    auto type = GlslangToShaderDataType(symbol->getType());
+                    if (type != ShaderDataType::NoneData)
+                    {
+                        layout.AddOutput(type, name, qualifier.layoutLocation);
+                    }
+                }
+                // Униформы
+                else if (qualifier.isUniformOrBuffer())
+                {
                     if (qualifier.isUniform())
                     {
                         layout.AddUniform(GlslangToShaderUniformDataType(symbol->getType()),
                                           qualifier.layoutSet,
                                           qualifier.layoutBinding,
-                                          0);
+                                          GetUniformSize(symbol->getType()));
                     }
                 }
             }
@@ -86,7 +255,7 @@ namespace BeeEngine
             BufferLayoutBuilder& layout;
         };
 
-        RefrectionTraverser traverser{layout};
+        ReflectionTraverser traverser{layout};
 
         auto root = intermediate->getTreeRoot();
         root->traverse(&traverser);
@@ -273,7 +442,7 @@ namespace BeeEngine
         return true;
 #endif
     }
-
+#if defined(BEE_TINT)
     static ShaderDataType GetShaderDataType(tint::inspector::ComponentType component,
                                             tint::inspector::CompositionType composition)
     {
@@ -341,7 +510,8 @@ namespace BeeEngine
         }
         return ShaderUniformDataType::Unknown;
     }
-
+#endif
+#if defined(BEE_TINT) or defined(BEE_COMPILE_WEBGPU)
     BufferLayout ShaderConverter::GenerateLayout(in<std::vector<uint32_t>> spirv, BufferLayoutBuilder& builder)
     {
         BeeCoreTrace("Generating buffer layout for spirv shader");
@@ -401,6 +571,59 @@ namespace BeeEngine
 
         }*/
         return builder.Build();
+    }
+#endif
+    BufferLayout ShaderConverter::GenerateLayout(in<std::vector<uint32_t>> spirv, BufferLayoutBuilder& builder)
+    {
+        BeeCoreTrace("Generating buffer layout for spirv shader");
+        return builder.Build();
+#if 0
+        tint::spirv::reader::Options options;
+        options.allowed_features = tint::wgsl::AllowedFeatures::Everything();
+        auto shader = tint::spirv::reader::Read(spirv, options);
+        tint::inspector::Inspector inspector(shader);
+        auto entryPoints = inspector.GetEntryPoints();
+        for (auto& entryPoint : entryPoints)
+        {
+            if (entryPoint.name != "main") // support for only main entry point
+                continue;
+            auto& inputs = entryPoint.input_variables;
+            builder.NumberOfInputs(inputs.size());
+            for (auto& input : inputs)
+            {
+                builder.AddInput(GetShaderDataType(input.component_type, input.composition_type),
+                                 String{input.name},
+                                 input.attributes.location.value());
+            }
+            auto& outputs = entryPoint.output_variables;
+            builder.NumberOfOutputs(outputs.size());
+            for (auto& output : outputs)
+            {
+                builder.AddOutput(GetShaderDataType(output.component_type, output.composition_type),
+                                  String{output.name},
+                                  output.attributes.location.value());
+            }
+
+            const auto& resourceBindings = inspector.GetResourceBindings(entryPoint.name);
+            BeeCoreTrace("Number of Resource Bindings: {}", resourceBindings.size());
+            if (inspector.has_error())
+            {
+                BeeCoreError("Inspector has error: {}", inspector.error());
+            }
+            for (const auto& uniform : resourceBindings)
+            {
+                builder.AddUniform(
+                    GetShaderUniformDataType(uniform.resource_type), uniform.bind_group, uniform.binding, uniform.size);
+            }
+            break; // support for only main entry point
+        }
+        /*auto resourceBindings = inspector.GetResourceBindings("main");
+        for (auto& resource : resourceBindings)
+        {
+
+        }*/
+        return builder.Build();
+#endif
     }
     BufferLayout ShaderConverter::GenerateLayout(in<String> wgsl, in<std::string> path, BufferLayoutBuilder& builder)
     {
