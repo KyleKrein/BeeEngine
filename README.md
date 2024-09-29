@@ -23,9 +23,9 @@ This is a General Purpose 2D (and in the future 3D also) cross-platform game eng
 ## Platforms and Building
 
 ### Supported Platforms
-Windows and MacOS are main platforms for now. Linux hasn't been tested, therefore it might not build or run. Mobile platforms are in development.
+Windows, Linux and MacOS are main platforms for now. Mobile platforms are in development.
 
-Tested on AppleClang 15 compiler on MacOS and MSVC compiler on Windows.
+Tested on AppleClang 15 compiler on MacOS, on MSVC compiler on Windows and on Clang compiler on Linux.
 
 ### Building
 To build BeeEngine you need to:

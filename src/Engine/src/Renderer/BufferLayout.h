@@ -62,6 +62,13 @@ namespace BeeEngine
         static uint32_t GetSizeOfType(ShaderDataType type);
         [[nodiscard]] uint32_t GetComponentCount() const;
 
+        bool operator==(const BufferElement& other) const
+        {
+            return m_Type == other.m_Type && m_Name == other.m_Name && m_Location == other.m_Location;
+        }
+
+        bool operator!=(const BufferElement& other) const { return !(*this == other); }
+
     private:
         String m_Name;
         ShaderDataType m_Type;
@@ -156,18 +163,29 @@ namespace BeeEngine
             m_Temp.emplace_back(type, name, normalized);
             return;
 #endif
+            auto element = BufferElement(type, name, location, normalized);
             if (IsInstanced(location))
             {
+                if (std::find(m_InstancedElements.begin(), m_InstancedElements.end(), element) !=
+                    m_InstancedElements.end())
+                {
+                    return;
+                }
                 BeeCoreTrace("Registered in instanced element of type {0} with name {1} in location {2}",
                              ToString(type),
                              name,
                              location);
-                m_InstancedElements.emplace_back(type, name, location, normalized);
+                m_InstancedElements.emplace_back(BeeMove(element));
+                return;
+            }
+
+            if (std::find(m_InElements.begin(), m_InElements.end(), element) != m_InElements.end())
+            {
                 return;
             }
             BeeCoreTrace(
                 "Registered in element of type {0} with name {1} in location {2}", ToString(type), name, location);
-            m_InElements.emplace_back(type, name, location, normalized);
+            m_InElements.emplace_back(BeeMove(element));
         }
         void AddUniform(ShaderUniformDataType type, uint32_t bindingSet, uint32_t location, uint32_t size)
         {
@@ -193,9 +211,14 @@ namespace BeeEngine
 
         void AddOutput(ShaderDataType type, const String& name, uint32_t location, bool normalized = false)
         {
+            auto element = BufferElement(type, name, location, normalized);
+            if (std::find(m_OutElements.begin(), m_OutElements.end(), element) != m_OutElements.end())
+            {
+                return;
+            }
             BeeCoreTrace(
                 "Registered out element of type {0} with name {1} in location {2}", ToString(type), name, location);
-            m_OutElements.emplace_back(type, name, location, normalized);
+            m_OutElements.emplace_back(BeeMove(element));
         }
 
         [[nodiscard]]

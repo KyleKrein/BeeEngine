@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "SDL_events.h"
 #include "WindowHandler.h"
 #if defined(BEE_COMPILE_SDL)
 #include "KeyCodes.h"
@@ -43,6 +44,7 @@ namespace BeeEngine::Internal
         static MouseButton ConvertMouseButton(uint8_t button);
         void InitializeVulkan();
         void InitializeWebGPU();
+        void HandleDragDropLinux(const SDL_Event& event);
 
         struct sdlFinalizer
         {

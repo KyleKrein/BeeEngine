@@ -4,7 +4,9 @@
 
 #include "VulkanShaderModule.h"
 
+#include "Renderer/BufferLayout.h"
 #include "VulkanInstancedBuffer.h"
+#include <cstdint>
 #include <map>
 #include <vulkan/vulkan_enums.hpp>
 
@@ -163,6 +165,22 @@ namespace BeeEngine::Internal
             auto& inElements = m_Layout.GetInputElements();
             for (auto& element : inElements)
             {
+                if (element.GetType() == ShaderDataType::Mat4 || element.GetType() == ShaderDataType::Mat3)
+                {
+                    const uint32_t matSize = element.GetType() == ShaderDataType::Mat4 ? 4 : 3;
+                    ShaderDataType type =
+                        element.GetType() == ShaderDataType::Mat4 ? ShaderDataType::Float4 : ShaderDataType::Float3;
+                    for (uint32_t i = 0; i < matSize; ++i)
+                    {
+                        vk::VertexInputAttributeDescription attribute{};
+                        attribute.format = ShaderDataTypeToVulkan(type);
+                        attribute.offset = element.GetOffset() + sizeof(float) * matSize * i;
+                        attribute.location = element.GetLocation() + i;
+                        attribute.binding = 0;
+                        m_VertexAttributeDescriptions.push_back(attribute);
+                    }
+                    continue;
+                }
                 vk::VertexInputAttributeDescription attribute{};
                 attribute.format = ShaderDataTypeToVulkan(element.GetType());
                 attribute.offset = element.GetOffset();
@@ -187,6 +205,22 @@ namespace BeeEngine::Internal
             auto& instancedElements = m_Layout.GetInstancedElements();
             for (auto& element : instancedElements)
             {
+                if (element.GetType() == ShaderDataType::Mat4 || element.GetType() == ShaderDataType::Mat3)
+                {
+                    const uint32_t matSize = element.GetType() == ShaderDataType::Mat4 ? 4 : 3;
+                    ShaderDataType type =
+                        element.GetType() == ShaderDataType::Mat4 ? ShaderDataType::Float4 : ShaderDataType::Float3;
+                    for (uint32_t i = 0; i < matSize; ++i)
+                    {
+                        vk::VertexInputAttributeDescription attribute{};
+                        attribute.format = ShaderDataTypeToVulkan(type);
+                        attribute.offset = element.GetOffset() + sizeof(float) * matSize * i;
+                        attribute.location = element.GetLocation() + i;
+                        attribute.binding = 1;
+                        m_VertexAttributeDescriptions.push_back(attribute);
+                    }
+                    continue;
+                }
                 vk::VertexInputAttributeDescription attribute{};
                 attribute.format = ShaderDataTypeToVulkan(element.GetType());
                 attribute.offset = element.GetOffset();
