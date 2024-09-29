@@ -31,7 +31,6 @@
 #include "Scripting/NativeToManaged.h"
 #include "Scripting/ScriptGlue.h"
 #include "Scripting/ScriptingEngine.h"
-#include "Utils/FileDialogs.h"
 #include <optional>
 #if defined(BEE_COMPILE_VULKAN)
 #include "backends/imgui_impl_vulkan.h"
@@ -277,6 +276,11 @@ namespace BeeEngine::Editor
         m_LocalizationPanel->Render();
         m_DragAndDrop.ImGuiRender();
         m_ProjectSettings->Render();
+        if (ImGui::BeginFileDialog("##Save scene as"))
+        {
+            m_SaveSceneAsFunc();
+            ImGui::EndFileDialog();
+        }
         DrawBuildProjectPopup();
         ImGui::Begin(m_EditorLocaleDomain.Translate("settings").c_str());
         ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
@@ -618,63 +622,71 @@ namespace BeeEngine::Editor
 
     void EditorLayer::SaveSceneAs()
     {
-        auto job = Jobs::CreateJob(
-            [this, scene = m_ActiveScene]() mutable
-            {
-                TryToGetFile:
-                    auto filepath = BeeEngine::FileDialogs::SaveFile({"BeeEngine Scene", "*.beescene"});
-                    if (filepath.IsEmpty())
+        m_SaveSceneAsFunc = [this, scene = m_ActiveScene]() mutable
+        {
+            TryToGetFile:
+                if (!ImGui::IsFileDialogReady())
+                {
+                    return;
+                }
+                auto filepathResult = ImGui::GetResultFileDialog();
+                if (!filepathResult.has_value())
+                {
+                    ImGui::CloseFileDialog();
+                    return;
+                }
+                auto filepath = BeeMove(filepathResult).value();
+                constexpr static auto isSubPath = [](const String& base, const String& potentialSubPath)
+                {
+                    // Проверяем, является ли путь potentialSubPath частью base
+                    return std::search(potentialSubPath.begin(), potentialSubPath.end(), base.begin(), base.end()) ==
+                           potentialSubPath.begin();
+                };
+                if (!isSubPath(Project()->FolderPath().AsUTF8(), filepath.AsUTF8()))
+                {
+                    ShowMessageBox(m_EditorLocaleDomain.Translate("saveScene.invalidPathError.title"),
+                                   m_EditorLocaleDomain.Translate("saveScene.invalidPathError.body"),
+                                   MessageBoxType::Error);
+                    goto TryToGetFile;
+                }
+                Jobs::Schedule(Jobs::CreateJob(
+                    [this, scene = BeeMove(scene), filepath = BeeMove(filepath)]() mutable
                     {
-                        return;
-                    }
-                    constexpr static auto isSubPath = [](const String& base, const String& potentialSubPath)
-                    {
-                        // Проверяем, является ли путь potentialSubPath частью base
-                        return std::search(
-                                   potentialSubPath.begin(), potentialSubPath.end(), base.begin(), base.end()) ==
-                               potentialSubPath.begin();
-                    };
-                    if (!isSubPath(Project()->FolderPath().AsUTF8(), filepath.AsUTF8()))
-                    {
-                        ShowMessageBox(m_EditorLocaleDomain.Translate("saveScene.invalidPathError.title"),
-                                       m_EditorLocaleDomain.Translate("saveScene.invalidPathError.body"),
-                                       MessageBoxType::Error);
-                        goto TryToGetFile;
-                    }
-                    if (filepath.GetExtension() != ".beescene")
-                    {
-                        filepath.ReplaceExtension(".beescene");
-                    }
-                    SceneSerializer serializer(scene);
-                    serializer.Serialize(filepath);
-                    Jobs::Counter counter;
-                    auto waitForTheAssetToBeAdded =
-                        Jobs::CreateJob(counter,
-                                        [this, name = filepath.GetFileNameWithoutExtension().AsUTF8()]()
-                                        {
-                                            const AssetHandle* handlePtr =
-                                                m_EditorAssetManager.GetAssetHandleByName(name);
-                                            while (!handlePtr)
+                        if (filepath.GetExtension() != ".beescene")
+                        {
+                            filepath.ReplaceExtension(".beescene");
+                        }
+                        SceneSerializer serializer(scene);
+                        serializer.Serialize(filepath);
+                        Jobs::Counter counter;
+                        auto waitForTheAssetToBeAdded =
+                            Jobs::CreateJob(counter,
+                                            [this, name = filepath.GetFileNameWithoutExtension().AsUTF8()]()
                                             {
-                                                Jobs::this_job::yield();
-                                                handlePtr = m_EditorAssetManager.GetAssetHandleByName(name);
-                                            }
-                                        });
-                    Jobs::Schedule(BeeMove(waitForTheAssetToBeAdded));
-                    Jobs::WaitForJobsToComplete(counter);
-                    AssetHandle newSceneHandle =
-                        *m_EditorAssetManager.GetAssetHandleByName(filepath.GetFileNameWithoutExtension().AsUTF8());
-                    scene->Handle = newSceneHandle;
-                    auto& metadata = m_EditorAssetManager.GetAssetMetadata(newSceneHandle);
-                    scene->Name = std::string_view(metadata.Name);
-                    Project()->SetLastUsedScene(newSceneHandle);
-                    if (Project()->GetStartingSceneName() == "Not available")
-                    {
-                        Project()->SetStartingScene(newSceneHandle);
-                    }
-                    Project()->Save();
-            });
-        Jobs::Schedule(BeeMove(job));
+                                                const AssetHandle* handlePtr =
+                                                    m_EditorAssetManager.GetAssetHandleByName(name);
+                                                while (!handlePtr)
+                                                {
+                                                    Jobs::this_job::yield();
+                                                    handlePtr = m_EditorAssetManager.GetAssetHandleByName(name);
+                                                }
+                                            });
+                        Jobs::Schedule(BeeMove(waitForTheAssetToBeAdded));
+                        Jobs::WaitForJobsToComplete(counter);
+                        AssetHandle newSceneHandle =
+                            *m_EditorAssetManager.GetAssetHandleByName(filepath.GetFileNameWithoutExtension().AsUTF8());
+                        scene->Handle = newSceneHandle;
+                        auto& metadata = m_EditorAssetManager.GetAssetMetadata(newSceneHandle);
+                        scene->Name = std::string_view(metadata.Name);
+                        Project()->SetLastUsedScene(newSceneHandle);
+                        if (Project()->GetStartingSceneName() == "Not available")
+                        {
+                            Project()->SetStartingScene(newSceneHandle);
+                        }
+                        Project()->Save();
+                    }));
+        };
+        ImGui::OpenFileSaveDialog("##Save scene as", ".beescene", Project()->FolderPath());
     }
 
     void EditorLayer::SaveScene()
@@ -916,20 +928,24 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
             options.OutputPath = outputPath;
         }
         ImGui::SameLine();
+        constexpr static auto* chooseFolderForBuild = "##ChooseFolderForBuild";
         if (ImGui::Button("..."))
         {
-            auto getOutputPathJob = Jobs::CreateJob(
-                []()
+            ImGui::OpenFolderFileDialog(chooseFolderForBuild);
+        }
+        if (ImGui::BeginFileDialog(chooseFolderForBuild))
+        {
+            if (ImGui::IsFileDialogReady())
+            {
+                auto chosenPath = ImGui::GetResultFileDialog();
+                if (chosenPath.has_value())
                 {
-                    Path chosenPath = FileDialogs::OpenFolder();
-                    if (chosenPath.IsEmpty())
-                    {
-                        return;
-                    }
-                    outputPath = chosenPath.AsUTF8();
-                    options.OutputPath = std::move(chosenPath);
-                });
-            Jobs::Schedule(BeeMove(getOutputPathJob));
+                    outputPath = chosenPath.value().AsUTF8();
+                    options.OutputPath = BeeMove(chosenPath).value();
+                }
+                ImGui::CloseFileDialog();
+            }
+            ImGui::EndFileDialog();
         }
         static String customError;
         auto areAllFieldsFilled = [this]() -> bool

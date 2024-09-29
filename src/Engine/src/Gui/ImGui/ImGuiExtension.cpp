@@ -8,8 +8,10 @@
 #include "Core/String.h"
 #include "FileSystem/File.h"
 #include "imgui.h"
+#include <algorithm>
 #include <cstddef>
 #include <optional>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -128,6 +130,8 @@ namespace ImGui
         std::optional<BeeEngine::Path> Result;
         bool Ready = false;
         BeeEngine::String InputFieldCurrentFolder;
+        BeeEngine::String NewFileName;
+        size_t SelectedFilter = 0;
     };
 
     std::unordered_map<BeeEngine::String, FileDialogData> g_FileDialogs;
@@ -218,11 +222,11 @@ namespace ImGui
         if (result)
         {
             g_CurrentFileDialogKey = key;
-            // ImGui::OpenPopup(key);
-            // result = ImGui::BeginPopup(key);
-            // if (result)
+            ImGui::OpenPopup(key);
+            result = ImGui::BeginPopupModal(key, nullptr, ImGuiWindowFlags_NoDocking);
+            if (result)
             {
-                ImGui::Begin(key, nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_Modal);
+                // ImGui::Begin(key, nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_Modal);
                 DrawFileDialog();
             }
         }
@@ -246,14 +250,14 @@ namespace ImGui
     void EndFileDialog()
     {
         BeeExpects(!g_CurrentFileDialogKey.empty());
-        ImGui::End();
+        ImGui::EndPopup();
         g_CurrentFileDialogKey = "";
     }
     void CloseFileDialog()
     {
         BeeExpects(!g_CurrentFileDialogKey.empty() && g_FileDialogs.contains(g_CurrentFileDialogKey));
         g_FileDialogs.erase(g_CurrentFileDialogKey);
-        // ImGui::CloseCurrentPopup();
+        ImGui::CloseCurrentPopup();
     }
     static void DragAndDropFileToFolder(const BeeEngine::Path& path, const BeeEngine::Path& workingDirectory)
     {
@@ -287,8 +291,16 @@ namespace ImGui
     }
     static void DrawFileDialog()
     {
-        auto& [key, filter, multipleFiles, currentFolder, type, result, ready, inputFieldCurrentFolder] =
-            g_FileDialogs.at(g_CurrentFileDialogKey);
+        auto& [key,
+               filter,
+               multipleFiles,
+               currentFolder,
+               type,
+               result,
+               ready,
+               inputFieldCurrentFolder,
+               newName,
+               selectedFilterIndex] = g_FileDialogs.at(g_CurrentFileDialogKey);
         ImGui::BeginChild(
             "##FileDialogPanel", {0, 0}, ImGuiChildFlags_None | ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY);
 
@@ -595,7 +607,53 @@ namespace ImGui
                 buttonText = g_FileDialogTranslations.OpenFolder.c_str();
                 break;
         }
-        ImGui::TextUnformatted(result.has_value() ? result.value().GetFileName().AsCString() : "");
+        if (type != FileDialogType::FileSave)
+        {
+            ImGui::TextUnformatted(result.has_value() ? result.value().GetFileName().AsCString() : "");
+        }
+        else
+        {
+            bool hasFilters = std::find(filter.begin(), filter.end(), "*") == filter.end();
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * (hasFilters ? 0.75f : 1.0f));
+            if (ImGui::InputText("##FileNameFileDialog", &newName))
+            {
+                if (newName.empty())
+                {
+                    result = {};
+                }
+                else
+                {
+                    result = currentFolder / newName;
+                    if (hasFilters &&
+                        !result.value().AsUTF8().ends_with(static_cast<std::string_view>(filter[selectedFilterIndex])))
+                    {
+                        result.value().ReplaceExtension(filter[selectedFilterIndex]);
+                    }
+                }
+            }
+            if (hasFilters)
+            {
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                if (ImGui::BeginCombo("##Filter", filter[selectedFilterIndex].c_str()))
+                {
+                    for (auto& filterStr : filter)
+                    {
+                        bool selected = filterStr == filter[selectedFilterIndex];
+                        if (ImGui::Selectable(filterStr.c_str(), selected))
+                        {
+                            selectedFilterIndex =
+                                std::distance(filter.begin(), std::find(filter.begin(), filter.end(), filterStr));
+                        }
+                        if (selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+            }
+        }
         ImGui::BeginDisabled(!result.has_value());
         if (ImGui::Button(buttonText))
         {
