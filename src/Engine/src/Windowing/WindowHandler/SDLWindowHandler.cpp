@@ -742,6 +742,7 @@ namespace BeeEngine::Internal
 
     Time::secondsD SDLWindowHandler::UpdateTime()
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         static uint64_t lastTime = 0;
         static uint64_t currentTime = SDL_GetPerformanceCounter();
         lastTime = currentTime;

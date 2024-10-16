@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <exception>
 #include <mutex>
+#include <source_location>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -170,30 +171,35 @@ namespace BeeEngine
     }
     void ScriptGlue::Log_Warn(void* message)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeWarn(msg);
     }
 
     void ScriptGlue::Log_Info(void* message)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeInfo(msg);
     }
 
     void ScriptGlue::Log_Error(void* message)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeError(msg);
     }
 
     void ScriptGlue::Log_Trace(void* message)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto msg = NativeToManaged::StringGetFromManagedString(message);
         BeeCoreTrace(msg);
     }
 
     void ScriptGlue::Entity_GetTranslation(uint64_t id, glm::vec3* outTranslation)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto* scene = ScriptingEngine::GetSceneContext();
         Entity entity = scene->GetEntityByUUID(id);
         *outTranslation = entity.GetComponent<TransformComponent>().Translation;
@@ -201,6 +207,7 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_SetTranslation(uint64_t id, glm::vec3* inTranslation)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto* scene = ScriptingEngine::GetSceneContext();
         Entity entity = scene->GetEntityByUUID(id);
         entity.GetComponent<TransformComponent>().Translation = *inTranslation;
@@ -208,32 +215,38 @@ namespace BeeEngine
 
     int32_t ScriptGlue::Input_IsKeyDown(Key key)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         return Input::KeyPressed(key);
     }
     void ScriptGlue::Input_GetMouseWheelDelta(glm::vec2* outWheelDelta)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         *outWheelDelta = {Input::GetMouseWheelX(), Input::GetMouseWheelY()};
     }
 
     int32_t ScriptGlue::Input_IsMouseButtonDown(MouseButton button)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         return Input::MouseKeyPressed(button);
     }
 
     void* ScriptGlue::Entity_GetTransformComponent(uint64_t id)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto* scene = ScriptingEngine::GetSceneContext();
         Entity entity = scene->GetEntityByUUID(id);
         return &entity.GetComponent<TransformComponent>();
     }
     class Entity ScriptGlue::GetEntity(UUID id)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto* scene = ScriptingEngine::GetSceneContext();
         return scene->GetEntityByUUID(id);
     }
 
     void* ScriptGlue::Entity_CreateComponent(uint64_t id, ComponentType componentType)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto entity = GetEntity(id);
         BeeExpects(entity);
         return s_CreateComponentFunctions.at(componentType)(entity);
@@ -241,6 +254,7 @@ namespace BeeEngine
 
     int32_t ScriptGlue::Entity_HasComponent(uint64_t id, ComponentType componentType)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto entity = GetEntity(id);
         BeeExpects(entity);
         return s_HasComponentFunctions.at(componentType)(entity);
@@ -248,6 +262,7 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_RemoveComponent(uint64_t id, ComponentType componentType)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto entity = GetEntity(id);
         BeeExpects(entity);
         s_RemoveComponentFunctions.at(componentType)(entity);
@@ -255,6 +270,7 @@ namespace BeeEngine
 
     void* ScriptGlue::Entity_GetComponent(uint64_t id, ComponentType componentType)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto entity = GetEntity(id);
         BeeExpects(entity);
         return s_GetComponentFunctions.at(componentType)(entity);
@@ -262,6 +278,7 @@ namespace BeeEngine
 
     uint64_t ScriptGlue::Entity_FindEntityByName(void* name)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto nameStr = NativeToManaged::StringGetFromManagedString(name);
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByName(std::string_view(nameStr));
@@ -277,6 +294,7 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_Destroy(uint64_t id)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByUUID(id);
         scene->DestroyEntity(entity);
@@ -284,6 +302,7 @@ namespace BeeEngine
 
     void* ScriptGlue::TextRendererComponent_GetText(uint64_t id)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto entity = GetEntity(id);
         GCHandle handle = NativeToManaged::StringCreateManaged(entity.GetComponent<TextRendererComponent>().Text);
         return handle;
@@ -291,6 +310,7 @@ namespace BeeEngine
 
     void ScriptGlue::TextRendererComponent_SetText(uint64_t id, void* text)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto textStr = NativeToManaged::StringGetFromManagedString(text);
         auto entity = GetEntity(id);
         if (!entity)
@@ -303,11 +323,13 @@ namespace BeeEngine
 
     void ScriptGlue::Asset_Load(AssetHandle* handle)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         AssetManager::GetAsset<Asset>(*handle, ScriptingEngine::GetScriptingLocale());
     }
 
     void ScriptGlue::Asset_Unload(AssetHandle* handle)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         if (AssetManager::IsAssetLoaded(*handle))
         {
             AssetManager::UnloadAsset(*handle);
@@ -316,16 +338,19 @@ namespace BeeEngine
 
     int32_t ScriptGlue::Asset_IsLoaded(AssetHandle* handle)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         return AssetManager::IsAssetLoaded(*handle);
     }
 
     int32_t ScriptGlue::Asset_IsValid(AssetHandle* handle)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         return AssetManager::IsAssetHandleValid(*handle);
     }
 
     uint64_t ScriptGlue::Entity_GetParent(uint64_t id)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto entity = GetEntity(id);
         auto parent = entity.GetParent();
         if (parent)
@@ -337,6 +362,7 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_SetParent(uint64_t childId, uint64_t parentId)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto child = GetEntity(childId);
         if (parentId == 0)
         {
@@ -349,6 +375,7 @@ namespace BeeEngine
 
     uint64_t ScriptGlue::Entity_GetNextChild(uint64_t id, uint64_t prevChildId)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto entity = GetEntity(id);
         auto& children = entity.GetComponent<HierarchyComponent>().Children;
         if (prevChildId == 0)
@@ -371,6 +398,7 @@ namespace BeeEngine
 
     int32_t ScriptGlue::Entity_HasChild(uint64_t parentId, uint64_t childId)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto parent = GetEntity(parentId);
         auto child = GetEntity(childId);
         return parent.HasChild(child);
@@ -378,6 +406,7 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_AddChild(uint64_t parentId, uint64_t childId)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto parent = GetEntity(parentId);
         auto child = GetEntity(childId);
         child.SetParent(parent);
@@ -385,6 +414,7 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_RemoveChild(uint64_t parentId, uint64_t childId)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto parent = GetEntity(parentId);
         auto child = GetEntity(childId);
         BeeCoreAssert(parent.HasChild(child), "Parent does not have child!");
@@ -393,6 +423,7 @@ namespace BeeEngine
 
     void* ScriptGlue::Entity_GetName(uint64_t id)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto entity = GetEntity(id);
         GCHandle handle = NativeToManaged::StringCreateManaged(entity.GetComponent<TagComponent>().Tag);
         return handle;
@@ -400,6 +431,7 @@ namespace BeeEngine
 
     void ScriptGlue::Entity_SetName(uint64_t id, void* name)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto nameStr = NativeToManaged::StringGetFromManagedString(name);
         auto entity = GetEntity(id);
         if (!entity)
@@ -412,6 +444,7 @@ namespace BeeEngine
 
     uint64_t ScriptGlue::Entity_Duplicate(uint64_t id)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByUUID(id);
         auto newEntity = scene->DuplicateEntity(entity);
@@ -420,6 +453,7 @@ namespace BeeEngine
 
     uint64_t ScriptGlue::Entity_InstantiatePrefab(AssetHandle* handlePtr, uint64_t parentId)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto* scene = ScriptingEngine::GetSceneContext();
         auto parentEntity = parentId == 0 ? Entity::Null : scene->GetEntityByUUID(parentId);
         auto& prefab = AssetManager::GetAsset<Prefab>(*handlePtr);
@@ -429,6 +463,7 @@ namespace BeeEngine
 
     uint64_t ScriptGlue::Physics2D_CastRay(glm::vec2* start, glm::vec2* end)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto* scene = ScriptingEngine::GetSceneContext();
         auto result = scene->RayCast2D(*start, *end);
         if (!result)
@@ -438,11 +473,13 @@ namespace BeeEngine
 
     void ScriptGlue::Input_GetMousePosition(glm::vec2* outPosition)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         *outPosition = ScriptingEngine::GetMousePosition();
     }
 
     void ScriptGlue::Input_GetMousePositionInWorldSpace(uint64_t id, glm::vec2* outPosition)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto* scene = ScriptingEngine::GetSceneContext();
         auto entity = scene->GetEntityByUUID(id);
         auto& transform = entity.GetComponent<TransformComponent>();
@@ -462,18 +499,21 @@ namespace BeeEngine
 
     void* ScriptGlue::Locale_GetLocale()
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         GCHandle handle = NativeToManaged::StringCreateManaged(ScriptingEngine::GetScriptingLocale());
         return handle;
     }
 
     void ScriptGlue::Locale_SetLocale(void* locale)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto localeStr = NativeToManaged::StringGetFromManagedString(locale);
         ScriptingEngine::GetLocaleDomain().SetLocale(localeStr);
     }
 
     void* ScriptGlue::Locale_TranslateStatic(void* key)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto keyStr = NativeToManaged::StringGetFromManagedString(key);
         String translated = ScriptingEngine::GetLocaleDomain().Translate(keyStr.c_str());
         GCHandle handle = NativeToManaged::StringCreateManaged(translated);
@@ -498,6 +538,7 @@ namespace BeeEngine
 
     void* ScriptGlue::Locale_TranslateDynamic(void* keyM, ArrayInfo argsM)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         String key = NativeToManaged::StringGetFromManagedString(keyM);
         std::vector<VariantType> args;
         std::span<ReflectionTypeInfo> argsSpan{reinterpret_cast<ReflectionTypeInfo*>(argsM.data), argsM.size};
@@ -612,6 +653,7 @@ namespace BeeEngine
     void ScriptGlue::Renderer_SubmitInstance(
         BindingSet* cameraBindingSet, CommandBuffer cmd, ModelType modelType, AssetHandle* handle, ArrayInfo data)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         Model& model = *s_Data->Models[modelType];
         BindingSet* bindingSet;
         if (modelType == ModelType::Framebuffer)
@@ -643,6 +685,7 @@ namespace BeeEngine
                                          TextRenderingConfiguration* config,
                                          int32_t entityId)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         String text = NativeToManaged::StringGetFromManagedString(textPtr);
         Model& model = *s_Data->Models[ModelType::Text];
         Font& font = AssetManager::GetAsset<Font>(*handle, ScriptingEngine::GetScriptingLocale());
@@ -657,13 +700,14 @@ namespace BeeEngine
 
     uint64_t ScriptGlue::Entity_GetEnttID(uint64_t uuid)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         Entity entity = GetEntity(uuid);
-        BeeCoreTrace("Entity_GetEnttID");
         return static_cast<uint64_t>(static_cast<uint32_t>(entity));
     }
 
     FrameBuffer* ScriptGlue::Framebuffer_CreateDefault(uint32_t width, uint32_t height, Color4 clearColor)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         FrameBufferPreferences preferences;
         preferences.Width = width;   // * WindowHandler::GetInstance()->GetScaleFactor();
         preferences.Height = height; // * WindowHandler::GetInstance()->GetScaleFactor();
@@ -680,26 +724,31 @@ namespace BeeEngine
     }
     void ScriptGlue::Framebuffer_Resize(FrameBuffer* framebuffer, uint32_t width, uint32_t height)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         // width = width * WindowHandler::GetInstance()->GetScaleFactor();
         // height = height * WindowHandler::GetInstance()->GetScaleFactor();
         framebuffer->Resize(width, height);
     }
     void ScriptGlue::Framebuffer_Destroy(FrameBuffer* framebuffer)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         std::unique_lock lock(s_Data->AllocatedFramebuffersLock);
         s_Data->AllocatedFramebuffers.erase(framebuffer);
     }
     void ScriptGlue::Framebuffer_Bind(FrameBuffer* framebuffer, CommandBuffer* cmd)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         *cmd = framebuffer->Bind();
     }
     void ScriptGlue::Framebuffer_Unbind(FrameBuffer* framebuffer, CommandBuffer* cmd)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         framebuffer->Unbind(*cmd);
     }
 
     UniformBuffer* ScriptGlue::UniformBuffer_CreateDefault(uint32_t sizeBytes)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         auto uniformBuffer = UniformBuffer::Create(sizeBytes);
         UniformBuffer* result = uniformBuffer.get();
         std::unique_lock lock(s_Data->AllocatedUniformBuffersLock);
@@ -708,15 +757,18 @@ namespace BeeEngine
     }
     void ScriptGlue::UniformBuffer_Destroy(UniformBuffer* buffer)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         std::unique_lock lock(s_Data->AllocatedUniformBuffersLock);
         s_Data->AllocatedUniformBuffers.erase(buffer);
     }
     void ScriptGlue::UniformBuffer_SetData(UniformBuffer* buffer, void* data, uint32_t sizeBytes)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         buffer->SetData(data, sizeBytes);
     }
     BindingSet* ScriptGlue::BindingSet_Create(ArrayInfo elements)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         std::vector<BindingSetElement> bindingSetElements;
         bindingSetElements.reserve(elements.size);
         IBindable** bindables = static_cast<IBindable**>(elements.data);
@@ -732,6 +784,7 @@ namespace BeeEngine
     }
     void ScriptGlue::BindingSet_Destroy(BindingSet* bindingSet)
     {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
         std::unique_lock lock(s_Data->AllocatedBindingSetsLock);
         s_Data->AllocatedBindingSets.erase(bindingSet);
     }

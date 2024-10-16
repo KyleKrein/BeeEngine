@@ -79,8 +79,10 @@ namespace BeeEngine
         void UpdateDeltaTime(Time::secondsD currentTime) { Time::Update(currentTime); }
         void SetDeltaTime(Time::secondsD deltaTime, Time::secondsD totalTime)
         {
+            BeeCoreTrace("{}", std::source_location::current().function_name());
             Time::Set(deltaTime, totalTime);
 #if defined(BEE_ENABLE_SCRIPTING)
+            BeeCoreTrace("Updating time in scripting Engine");
             ScriptingEngine::UpdateTime(deltaTime, totalTime);
 #endif
         }

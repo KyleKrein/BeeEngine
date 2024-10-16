@@ -781,9 +781,11 @@ internal static class BridgeToNative
     public static void FieldSetData(ulong contextId, ulong assemblyId, ulong classId, ulong fieldId,
         IntPtr instanceGcHandle, IntPtr valuePtr)
     {
+        s_Logger.Trace("FieldSetData");
         GCHandle? handle = null;
         if (instanceGcHandle != IntPtr.Zero)
         {
+            s_Logger.Trace("instanceGcHandle != IntPtr.Zero");
             handle = GCHandle.FromIntPtr(instanceGcHandle);
         }
         object? obj = handle?.Target;
@@ -810,11 +812,16 @@ internal static class BridgeToNative
         }
         if (field.FieldType.IsValueType)
         {
+            s_Logger.Trace("field.FieldType.IsValueType == true");
             field.SetValue(obj, Marshal.PtrToStructure(valuePtr, field.FieldType));
+            s_Logger.Trace("Setting value success");
             return;
         }
+        s_Logger.Trace("field.FieldType.IsValueType == false");
         GCHandle valueHandle = GCHandle.FromIntPtr(valuePtr);
+        s_Logger.Trace(string.Format("valueHandle.Target: {0}", valueHandle.Target));
         field.SetValue(obj, valueHandle.Target);
+        s_Logger.Trace("Setting value success");
         return;
     error:
         s_Logger.Error(string.Format("Unable to set field data from Class. Message: {0}", errorMessage));
@@ -855,6 +862,7 @@ internal static class BridgeToNative
         GCHandle handle = GCHandle.FromIntPtr(handlePtr);
         handle.Free();
     }
+    [UnmanagedCallersOnly]
     public static IntPtr ObjectGetAdressFromGCHandle(IntPtr handlePtr)
     {
         GCHandle handle = GCHandle.FromIntPtr(handlePtr);
@@ -896,7 +904,7 @@ internal static class BridgeToNative
         var parameters = method.Method.GetParameters();
         var returnType = method.Method.ReturnType;
         object? result = null;
-        //Debug.WriteLine("MethodInvoke: {0} on instance {1} with parameters: {2}", method.Method.Name, instance is null ? "null" : instance.ToString(), parameters.Length);
+        s_Logger.Trace(string.Format("MethodInvoke: {0} on instance {1} with parameters: {2}", method.Method.Name, instance is null ? "null" : instance.ToString(), parameters.Length));
         if (parameters.Length == 0)
         {
             try
@@ -921,11 +929,15 @@ internal static class BridgeToNative
             //Debug.Write("Parameter: ", i.ToString());
             var paramType = parameters[i].ParameterType;
             if (paramType.IsValueType)
+            {
                 argsArray[i] = Marshal.PtrToStructure((IntPtr)args[i], paramType);
+                s_Logger.Trace(string.Format("Param {0} Value: {0}", i, argsArray[i]));
+            }
             else
             {
                 GCHandle handle = GCHandle.FromIntPtr((IntPtr)args[i]);
                 argsArray[i] = handle.Target;
+                s_Logger.Trace(string.Format("Param {0} Value: {0}", i, argsArray[i]));
             }
             //Debug.WriteLine("{0}", (UIntPtr)args[i]);
         }
@@ -944,12 +956,13 @@ internal static class BridgeToNative
             return IntPtr.Zero;
         }
     returnResult:
-        //Debug.WriteLine("MethodInvoke Success");
+        s_Logger.Trace("MethodInvoke Success");
         if (result == null)
         {
+            s_Logger.Trace("MethodInvoke: Result is null, returning IntPtr.Zero");
             return IntPtr.Zero;
         }
-
+        s_Logger.Trace($"MethodInvoke: Result is {result}");
         IntPtr resultPtr;
         if (returnType.IsValueType)
         {
