@@ -11,7 +11,6 @@
 #include "Core/AssetManagement/EngineAssetRegistry.h"
 #include "Core/Events/EventImplementations.h"
 #include "Core/Logging/Log.h"
-#include "Core/ResourceManager.h"
 #include "Core/TypeDefines.h"
 #include "Debug/Instrumentor.h"
 #include "FileSystem/File.h"
@@ -26,6 +25,7 @@
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
+#include "Scene/SceneSerializer.h"
 #include "Scripting/MAssembly.h"
 #include "Scripting/MClass.h"
 #include "Scripting/NativeToManaged.h"
@@ -324,7 +324,7 @@ namespace BeeEngine::Editor
         }
 
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x / 2);
-        ImGui::TextWrapped(m_EditorLocaleDomain.Translate("editorSettings.fontSize").c_str());
+        ImGui::TextWrapped("%s", m_EditorLocaleDomain.Translate("editorSettings.fontSize").c_str());
         // ImGui::SameLine();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         if (ImGui::SliderFloat("##fontSizeFloat", &m_Config.FontSize, 12, 100, "%.3f", ImGuiSliderFlags_AlwaysClamp))

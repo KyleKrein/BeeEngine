@@ -246,7 +246,7 @@ namespace BeeEngine
             NativeToManaged::ObjectFreeGCHandle(m_Value);
     }
 
-    MObject::MObject(const MClass& object)
+    MObject::MObject(const MClass& object) : m_Class(&object)
     {
         m_Handle = NativeToManaged::ObjectNewGCHandle(
             object.m_ContextID, object.m_AssemblyID, object.m_ClassID, GCHandleType::Normal);
@@ -257,7 +257,7 @@ namespace BeeEngine
         NativeToManaged::ObjectFreeGCHandle(m_Handle);
     }
 
-    MClass& MObject::GetClass()
+    const MClass& MObject::GetClass() const
     {
         return *m_Class;
     }

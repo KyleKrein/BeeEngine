@@ -5,6 +5,7 @@
 #include "SceneRenderer.h"
 #include "BindingSet.h"
 #include "Core/Application.h"
+#include "Core/Logging/Log.h"
 #include "Debug/Instrumentor.h"
 #include "IBindable.h"
 #include "Renderer.h"
@@ -284,7 +285,7 @@ namespace BeeEngine
                 }
             }
         }
-
+        BeeCoreTrace("SceneTreeRenderer::AddEntities done");
         // auto& statistics = Internal::RenderingQueue::GetInstance().m_Statistics;
         // statistics.OpaqueInstanceCount += sceneTreeRenderer.m_NotTransparent.size();
         // statistics.TransparentInstanceCount += sceneTreeRenderer.m_Transparent.size();
@@ -302,6 +303,7 @@ namespace BeeEngine
             commandBuffer.SubmitInstance(*entity.Model, entity.BindingSets, entity.InstancedData);
         }
         commandBuffer.Flush();
+        BeeCoreTrace("Finished Rendering scene");
     }
 
     void SceneRenderer::RenderScene(Scene& scene, CommandBuffer& commandBuffer, const Locale::Localization& locale)

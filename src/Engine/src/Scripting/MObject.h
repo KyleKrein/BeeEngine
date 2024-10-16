@@ -8,7 +8,6 @@
 #include "MTypes.h"
 #include <glm/glm.hpp>
 
-
 #define BEE_RETURN_FROM_MTYPE(mtype, actualType)                                                                       \
     if constexpr (type == MType::mtype)                                                                                \
     {                                                                                                                  \
@@ -76,7 +75,7 @@ namespace BeeEngine
         MObject(const MClass& object);
         // MObject(MonoObject* object);
         ~MObject();
-        MClass& GetClass();
+        const MClass& GetClass() const;
         void* Invoke(class MMethod& method, void** params);
 
         void SetFieldValue(MField& field, void* value);
@@ -89,7 +88,7 @@ namespace BeeEngine
     private:
         // MonoObject* m_MonoObject = nullptr;
         void* m_Handle = nullptr;
-        MClass* m_Class = nullptr;
+        const MClass* m_Class = nullptr;
     };
 } // namespace BeeEngine
 #undef BEE_RETURN_FROM_MTYPE

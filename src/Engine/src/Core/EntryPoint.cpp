@@ -47,7 +47,7 @@ namespace BeeEngine
             g_Restart = false;
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
             Internal::InitEngine();
-            BeeEngine::Internal::Job::Initialize();
+            BeeEngine::Internal::Job::Initialize(4);
             Internal::WindowsUTF8ConsoleOutput consoleOutput;
             Application* application = CreateApplication({argc, argv});
             BEE_DEBUG_END_PROFILING_SESSION();

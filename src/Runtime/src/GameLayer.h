@@ -1,4 +1,5 @@
 #pragma once
+#include "Core/Logging/Log.h"
 #include "DebugLayer.h"
 #include "Scene/Entity.h"
 #include <BeeEngine.h>
@@ -12,14 +13,18 @@ namespace BeeEngine::Runtime
     public:
         GameLayer(Ref<Scene> activeScene, Ref<FrameBuffer> frameBuffer, Locale::Domain& localeDomain);
 
-        void OnAttach() override { m_ActiveScene->StartRuntime(); }
+        void OnAttach() override;
         void OnDetach() override {}
         void OnUpdate(FrameData& frameData) override;
         void OnEvent(EventDispatcher& e) override;
         void OnGUIRendering() override
         {
+            BeeCoreTrace("{}", std::source_location::current().function_name());
             if (m_RenderImGui)
+            {
+                BeeCoreTrace("RenderImGui");
                 m_ImGuiLayer->OnGUIRendering();
+            }
         }
         void SetScene(Ref<Scene> scene) { m_ActiveScene = std::move(scene); }
 
