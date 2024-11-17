@@ -1,20 +1,41 @@
 cmake_minimum_required(VERSION 3.25)
 include(cmake/UniversalAppleBuild.cmake)
-project(
-        BeeEngine_CPP
-        DESCRIPTION "BeeEngine"
-        LANGUAGES CXX C
-)
 
-if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+if(WIN32)
+    execute_process(
+        COMMAND wmic OS get OSArchitecture
+        OUTPUT_VARIABLE HOST_ARCH
+        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(HOST_ARCH MATCHES "64-bit")
         set(BEE_ARCH "x64")
+    else()
+        set(TARGET_ARCH ${HOST_ARCH})
+    endif()
 else()
-        set(BEE_ARCH ${CMAKE_HOST_SYSTEM_PROCESSOR})
+    execute_process(
+        COMMAND uname -m
+        OUTPUT_VARIABLE HOST_ARCH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(HOST_ARCH STREQUAL "x86_64")
+        set(BEE_ARCH "x64")
+    elseif(HOST_ARCH STREQUAL "aarch64" OR HOST_ARCH STREQUAL "arm64")
+        set(BEE_ARCH "arm64")
+    else()
+        set(BEE_ARCH ${HOST_ARCH})
+    endif()
 endif()
+
+message(STATUS "Detected processor architecture: ${BEE_ARCH}")
+
 
 if(UNIX AND NOT APPLE)
         set(VCPKG_TARGET_TRIPLET ${BEE_ARCH}-linux)
+        add_compile_options(-march=nehalem)
         add_compile_options(-march=native)
+        set(SDL_WAYLAND ON)
 endif()
 
 set(VCPKG_LIBRARY_LINKAGE static CACHE STRING "Linkage of vcpkg libraries" FORCE)
@@ -37,6 +58,11 @@ set(VCPKG_ROOT "src/Engine/vendor/vcpkg")
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 include(${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
 
+project(
+        BeeEngine_CPP
+        DESCRIPTION "BeeEngine"
+        LANGUAGES CXX C
+)
 if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
         include(CheckIPOSupported)
         # Optional IPO. Do not use IPO if it's not supported by compiler.

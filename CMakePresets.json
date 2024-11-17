@@ -35,9 +35,13 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++"
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_WITH_INSTALL_RPATH": "ON"
             },
-            "environment": {},
+            "environment": {
+                "CC": "clang",
+                "CXX": "clang++"
+            },
             "vendor": {},
             "condition": {
                 "type": "notEquals",
@@ -55,9 +59,13 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++"
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_WITH_INSTALL_RPATH": "ON"
             },
-            "environment": {},
+            "environment": {
+                "CC": "clang",
+                "CXX": "clang++"
+            },
             "vendor": {},
             "condition": {
                 "type": "notEquals",

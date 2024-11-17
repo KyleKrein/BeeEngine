@@ -4,15 +4,22 @@
 // clang-format off
 #include "NativeToManaged.h"
 
+#include "Core/Application.h"
+#include "Core/Format.h"
+#include "Core/OsPlatform.h"
+#include "Core/ResourceManager.h"
 #include "Gui/MessageBox.h"
+#include "Utils/Commands.h"
 #include "Utils/DynamicLibrary.h"
 #include "Core/String.h"
 #include "MTypes.h"
 
 #include <cstdint>
+#include <cstring>
 #include <nethost.h>
 #include <dotnethost/coreclr_delegates.h>
 #include <dotnethost/hostfxr.h>
+#include <string>
 
 #include "Core/Logging/Log.h"
 #if defined(WINDOWS)
@@ -118,6 +125,31 @@ namespace BeeEngine
         BeeCoreTrace("C# : {}", NativeToManaged::StringGetFromManagedString(message));
     }
 
+    std::optional<std::filesystem::path> get_nix_shell_dotnet_hostfxr_path()
+    {
+        std::string pathBuf = {RunCommand("which dotnet").c_str()};
+        std::filesystem::path path = std::filesystem::path{pathBuf};
+        path = path.parent_path().parent_path() / "host" / "fxr";
+        if (!std::filesystem::exists(path))
+        {
+            return {};
+        }
+        for (const auto& p : std::filesystem::directory_iterator(path))
+        {
+            if(p.is_directory())
+            {
+                path = p;
+                break;
+            }
+        }
+        path = path / ResourceManager::GetDynamicLibraryName("hostfxr").c_str();
+        if (!std::filesystem::exists(path))
+        {
+            return {};
+        }
+        return path;
+    }
+
     // Using the nethost library, discover the location of hostfxr and get exports
     bool NativeToManaged::init_hostfxr(const Path& assembly_path)
     {
@@ -131,7 +163,24 @@ namespace BeeEngine
         if (rc != 0)
         {
             BeeCoreError("get_hostfxr_path failed: {0}", rc);
-            return false;
+            if (Application::GetOsPlatform() == OSPlatform::Linux)
+            {
+                BeeCoreTrace("Trying to use .Net hostfxr from nix shell");
+                auto pathOpt = get_nix_shell_dotnet_hostfxr_path();
+                if (!pathOpt.has_value())
+                {
+                    BeeCoreError("Unable to find .Net hostfxr from nix shell");
+                    return false;
+                }
+                path = pathOpt.value();
+                size_t copiedBytes = std::min(strlen(path.c_str()), buffer_size - 1);
+                memcpy(buffer, path.c_str(), copiedBytes);
+                buffer[copiedBytes] = '\0';
+            }
+            else
+            {
+                return false;
+            }
         }
         auto hostfxr_path = std::filesystem::path{buffer};
         auto versionPath = Path{hostfxr_path.parent_path().filename()};

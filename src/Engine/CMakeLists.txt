@@ -408,7 +408,7 @@ add_subdirectory(vendor/KDBindings)
 CPMAddPackage(
         NAME fastgltf
         GITHUB_REPOSITORY spnda/fastgltf
-        GIT_TAG 45cadf78895521b0379832830e628a215772d204
+        GIT_TAG 5278229d48e06d4770ecfea97402bbe1c8380038
 )
 
 find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)

@@ -92,7 +92,7 @@ namespace BeeEngine::Editor
                                    ((m_SelectedEntity == entity) ? ImGuiTreeNodeFlags_Selected : 0) |
                                    ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 
-        bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
+        bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, "%s", tag.c_str());
         entt::entity entityID = entity;
         ImGui::StartDragAndDrop("ENTITY_ID", entityID);
         ImGui::AcceptDragAndDrop<entt::entity>("ENTITY_ID",

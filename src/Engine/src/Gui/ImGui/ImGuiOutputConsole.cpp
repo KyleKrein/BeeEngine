@@ -61,12 +61,13 @@ namespace BeeEngine
                     continue;
                 if (message.Level == ConsoleOutput::Level::Trace and not m_ShowTrace)
                     continue;
-                ImGui::TextColored(Level2Color(message.Level), message.TimeFormatted.c_str());
+                ImGui::TextColored(Level2Color(message.Level), "%s", message.TimeFormatted.c_str());
                 ImGui::SameLine();
                 ImGui::TextColored(Level2Color(message.Level),
+                                   "%s",
                                    message.Input == ConsoleOutput::Input::Engine ? "Engine: " : "App: ");
                 ImGui::SameLine();
-                ImGui::TextColored(Level2Color(message.Level), message.Text.c_str());
+                ImGui::TextColored(Level2Color(message.Level), "%s", message.Text.c_str());
             }
             ImGui::EndChild();
         }

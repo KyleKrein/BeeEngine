@@ -1,12 +1,13 @@
 //
 // Created by alexl on 10.11.2023.
 //
+#include "Core/Logging/Log.h"
 #include "Utils/Commands.h"
 #include "WindowsString.h"
 #include <windows.h>
 namespace BeeEngine
 {
-    void RunCommand(const String& command)
+    String RunCommand(const String& command)
     {
         STARTUPINFOW si;
         PROCESS_INFORMATION pi;
@@ -31,7 +32,8 @@ namespace BeeEngine
                             ))
         {
             // std::cerr << "Ошибка при создании процесса: " << GetLastError() << std::endl;
-            return;
+            BeeCoreError("Failed to create process: {}", GetLastError());
+            return "";
         }
 
         // Ожидание завершения команды
@@ -40,5 +42,6 @@ namespace BeeEngine
         // Закрытие дескрипторов процесса и потока
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
+        return {};
     }
 } // namespace BeeEngine

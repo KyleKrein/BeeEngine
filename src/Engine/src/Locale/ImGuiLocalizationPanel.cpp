@@ -79,7 +79,7 @@ namespace BeeEngine::Locale
             ImGui::InputText("##New Key 123", &newKey);
             if (!errorMessage.empty())
             {
-                ImGui::TextColored(Color4::Red, errorMessage.c_str());
+                ImGui::TextColored(Color4::Red, "%s", errorMessage.c_str());
             }
             if (ImGui::Button("Add"))
             {
@@ -314,6 +314,7 @@ namespace BeeEngine::Locale
             if (isIncorrectLocale)
             {
                 ImGui::TextColored(Color4::Red,
+                                   "%s",
                                    newLocale.empty() ? "Locale name cannot be empty"
                                    : newLocale.size() != 2
                                        ? "Locale name must be 2 characters long"

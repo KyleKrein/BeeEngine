@@ -7,7 +7,7 @@
 
 namespace BeeEngine
 {
-    void RunCommand(const String& command);
+    String RunCommand(const String& command);
 
 #if defined(IOS) || defined(ANDROID)
     void RunCommand(const String& command)
