@@ -9,7 +9,6 @@
 #include "VulkanGraphicsDevice.h"
 #include "VulkanSwapChain.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
-#include "shaderc/shaderc.hpp"
 #if defined(BEE_COMPILE_SDL)
 #include "SDL3/SDL_vulkan.h"
 #endif

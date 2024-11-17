@@ -252,16 +252,33 @@ namespace BeeEngine::Internal
     {
         s_Instance = this;
         m_vsync = properties.Vsync;
+        int32_t result = -1;
         if (Application::GetOsPlatform() == OSPlatform::Linux)
         {
-            SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "wayland");
+            std::array videoDrivers = {"wayland", "x11"};
+            for (const char* driver : videoDrivers)
+            {
+                SDL_SetHint(SDL_HINT_VIDEO_DRIVER, driver);
+                result = SDL_Init(SDL_INIT_VIDEO);
+                if (result == 0)
+                {
+                    bool isWayland = strcmp(driver, "wayland") == 0;
+                    if (!isWayland)
+                    {
+                        BeeCoreWarn("Wayland is not available, falling back to {}", driver);
+                    }
+                    break;
+                }
+            }
         }
-        auto result = SDL_Init(SDL_INIT_VIDEO);
+        else
+        {
+            result = SDL_Init(SDL_INIT_VIDEO);
+        }
         if (result != 0)
         {
             BeeCoreError("Failed to initialize SDL3! {}", SDL_GetError());
         }
-
         int windowFlags = SDL_WINDOW_RESIZABLE;
 
         switch (properties.PreferredRenderAPI)

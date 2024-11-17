@@ -143,7 +143,7 @@ namespace BeeEngine::Editor
 
             ImGui::PopStyleColor();
 
-            ImGui::TextWrapped(metadata.Name.data());
+            ImGui::TextWrapped("%s", metadata.Name.data());
 
             ImGui::NextColumn();
 

@@ -39,20 +39,19 @@ namespace BeeEngine
             fastgltf::Parser parser{};
 
             constexpr auto gltfOptions = fastgltf::Options::DontRequireValidAssetMember |
-                                         fastgltf::Options::AllowDouble | fastgltf::Options::LoadGLBBuffers |
-                                         fastgltf::Options::LoadExternalBuffers;
+                                         fastgltf::Options::AllowDouble | fastgltf::Options::LoadExternalBuffers;
 
             fastgltf::GltfDataBuffer data;
 
             auto filepath = path.ToStdPath();
-            data.loadFromFile(filepath);
+            data.FromPath(filepath);
 
             fastgltf::Asset gltf;
 
-            auto type = fastgltf::determineGltfFileType(&data);
+            auto type = fastgltf::determineGltfFileType(data);
             if (type == fastgltf::GltfType::glTF)
             {
-                auto load = parser.loadGltf(&data, filepath.parent_path(), gltfOptions);
+                auto load = parser.loadGltf(data, filepath.parent_path(), gltfOptions);
                 if (load)
                 {
                     gltf = std::move(load.get());
@@ -65,7 +64,7 @@ namespace BeeEngine
             }
             else if (type == fastgltf::GltfType::GLB)
             {
-                auto load = parser.loadGltfBinary(&data, filepath.parent_path(), gltfOptions);
+                auto load = parser.loadGltfBinary(data, filepath.parent_path(), gltfOptions);
                 if (load)
                 {
                     gltf = std::move(load.get());
@@ -115,7 +114,7 @@ namespace BeeEngine
 
                     // load vertex positions
                     {
-                        fastgltf::Accessor& posAccessor = gltf.accessors[p.findAttribute("POSITION")->second];
+                        fastgltf::Accessor& posAccessor = gltf.accessors[p.findAttribute("POSITION")->accessorIndex];
                         vertices.resize(vertices.size() + posAccessor.count);
 
                         fastgltf::iterateAccessorWithIndex<glm::vec3>(gltf,
@@ -137,7 +136,7 @@ namespace BeeEngine
                     if (normals != p.attributes.end())
                     {
                         fastgltf::iterateAccessorWithIndex<glm::vec3>(gltf,
-                                                                      gltf.accessors[(*normals).second],
+                                                                      gltf.accessors[(*normals).accessorIndex],
                                                                       [&](glm::vec3 v, size_t index)
                                                                       { vertices[initialVtx + index].normal = v; });
                     }
@@ -147,7 +146,7 @@ namespace BeeEngine
                     if (uv != p.attributes.end())
                     {
                         fastgltf::iterateAccessorWithIndex<glm::vec2>(gltf,
-                                                                      gltf.accessors[(*uv).second],
+                                                                      gltf.accessors[(*uv).accessorIndex],
                                                                       [&](glm::vec2 v, size_t index)
                                                                       {
                                                                           vertices[initialVtx + index].uv_x = v.x;
@@ -160,7 +159,7 @@ namespace BeeEngine
                     if (colors != p.attributes.end())
                     {
                         fastgltf::iterateAccessorWithIndex<glm::vec4>(gltf,
-                                                                      gltf.accessors[(*colors).second],
+                                                                      gltf.accessors[(*colors).accessorIndex],
                                                                       [&](glm::vec4 v, size_t index)
                                                                       { vertices[initialVtx + index].color = v; });
                     }
