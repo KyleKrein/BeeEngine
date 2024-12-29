@@ -8,12 +8,13 @@
       ccache 
       ninja 
       python3 
-      clang-tools 
+      llvmPackages_18.clang-tools
       dotnetCorePackages.sdk_8_0_3xx
       #triton-llvm
       #llvmPackages_19.libcxxClang
       #llvmPackages_19.clangNoLibcxx
-      clang_18
+      llvmPackages_18.libllvm
+      llvmPackages_18.clang-unwrapped
       curl
       zip
       unzip
@@ -28,8 +29,8 @@
       vulkan-headers
       vulkan-loader
       vulkan-validation-layers
-      lld
-      lldb
+      lld_18
+      lldb_18
       gdb
       wayland-utils
       wayland-scanner
