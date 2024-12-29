@@ -3,8 +3,6 @@
     "icu",
     "boost-context",
     "nethost",
-    "freetype",
-    "libpng",
-    "skia"
+    "freetype"
   ]
 }

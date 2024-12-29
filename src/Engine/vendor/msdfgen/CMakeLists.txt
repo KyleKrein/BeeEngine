@@ -96,10 +96,13 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 else()
         set(MSDF_ATLAS_DYNAMIC_RUNTIME FALSE)
 endif()
+set(MSDFGEN_DISABLE_PNG ON)
+set(MSDF_ATLAS_USE_SKIA OFF)
+
 CPMAddPackage(
         NAME msdfatlasgen
         GITHUB_REPOSITORY Chlumsky/msdf-atlas-gen
-        GIT_TAG c27de5988d7ecfbc9936ee5f936429e2dbc077b9
+        GIT_TAG 7e8d34645a67c6e4def5d281f7adec1c2501dc49
 )
 #[[
 project(msdf-atlas-gen VERSION 1.2 LANGUAGES CXX)

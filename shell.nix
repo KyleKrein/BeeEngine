@@ -14,7 +14,7 @@
       #llvmPackages_19.libcxxClang
       #llvmPackages_19.clangNoLibcxx
       llvmPackages_18.libllvm
-      llvmPackages_18.clang-unwrapped
+      llvmPackages_18.clangUseLLVM
       curl
       zip
       unzip
