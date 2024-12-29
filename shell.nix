@@ -10,7 +10,7 @@
       python3 
       clang-tools 
       dotnetCorePackages.sdk_8_0_3xx
-      triton-llvm
+      #triton-llvm
       #llvmPackages_19.libcxxClang
       #llvmPackages_19.clangNoLibcxx
       clang_18
