@@ -1,45 +1,43 @@
-{ pkgs ? import <nixpkgs> {} }:
-  pkgs.mkShell {
-    # nativeBuildInputs is usually what you want -- tools you need to run
-    nativeBuildInputs = with pkgs.buildPackages; [ 
-      nixd 
-      git 
-      cmake 
-      ccache 
-      ninja 
-      python3 
-      llvmPackages_18.clang-tools
-      dotnetCorePackages.sdk_8_0_3xx
-      #triton-llvm
-      #llvmPackages_19.libcxxClang
-      #llvmPackages_19.clangNoLibcxx
-      llvmPackages_18.libllvm
-      llvmPackages_18.clangUseLLVM
-      curl
-      zip
-      unzip
-      gnutar
-      pkg-config
-      autoconf
-      automake
-      autoconf-archive
-      libGL
-      xorg.libX11
-      xorg.libXext
-      vulkan-headers
-      vulkan-loader
-      vulkan-validation-layers
-      lld_18
-      lldb_18
-      gdb
-      wayland-utils
-      wayland-scanner
-      #vscode-fhs
-      ];
-     shellHook = 
-     ''
-  echo 'LD_LIBRARY_PATH=${pkgs.wayland}/lib:$LD_LIBRARY_PATH'
-	code .
-     '';
-     NIXPKGS_ALLOW_UNFREE=1;
+{pkgs ? import <nixpkgs> {}}:
+pkgs.mkShell {
+  # nativeBuildInputs is usually what you want -- tools you need to run
+  nativeBuildInputs = with pkgs.buildPackages; [
+    nixd
+    git
+    cmake
+    ccache
+    ninja
+    python3
+    llvmPackages_18.clang-tools
+    dotnetCorePackages.sdk_8_0_3xx
+    #triton-llvm
+    #llvmPackages_19.libcxxClang
+    #llvmPackages_19.clangNoLibcxx
+    llvmPackages_18.libllvm
+    llvmPackages_18.clangUseLLVM
+    curl
+    zip
+    unzip
+    gnutar
+    pkg-config
+    autoconf
+    automake
+    autoconf-archive
+    gdb
+    wayland-utils
+    wayland-scanner
+    libGL
+    xorg.libX11
+    xorg.libXext
+    vulkan-headers
+    vulkan-loader
+    vulkan-validation-layers
+    lld_18
+    lldb_18
+    #vscode-fhs
+  ];
+  shellHook = ''
+    export LD_LIBRARY_PATH=${pkgs.wayland}/lib:$LD_LIBRARY_PATH
+  '';
+  NIXPKGS_ALLOW_UNFREE = 1;
 }

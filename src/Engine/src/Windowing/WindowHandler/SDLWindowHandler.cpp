@@ -255,11 +255,13 @@ namespace BeeEngine::Internal
         int32_t result = -1;
         if (Application::GetOsPlatform() == OSPlatform::Linux)
         {
+            BeeCoreInfo("Choosing backend for Linux");
             std::array videoDrivers = {"wayland", "x11"};
             for (const char* driver : videoDrivers)
             {
                 SDL_SetHint(SDL_HINT_VIDEO_DRIVER, driver);
                 result = SDL_Init(SDL_INIT_VIDEO);
+                BeeCoreInfo("Initializing with {}. Result: {}", driver, result);
                 if (result == 0)
                 {
                     bool isWayland = strcmp(driver, "wayland") == 0;

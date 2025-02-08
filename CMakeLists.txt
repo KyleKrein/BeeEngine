@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 include(cmake/UniversalAppleBuild.cmake)
-
+option(BEE_USE_VCPKG ON)
 if(WIN32)
     execute_process(
         COMMAND wmic OS get OSArchitecture
@@ -34,7 +34,7 @@ message(STATUS "Detected processor architecture: ${BEE_ARCH}")
 
 if(UNIX AND NOT APPLE)
         set(VCPKG_TARGET_TRIPLET ${BEE_ARCH}-linux)
-        add_compile_options(-march=nehalem)
+	#add_compile_options(-march=nehalem) #doesnt build on arm
         add_compile_options(-march=native)
         set(SDL_WAYLAND ON)
 endif()
