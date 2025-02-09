@@ -53,3 +53,6 @@
 [submodule "src/Engine/vendor/Box2D/box2d"]
 	path = src/Engine/vendor/Box2D/box2d
 	url = https://github.com/erincatto/Box2D
+[submodule "src/Engine/vendor/msdfgen/msdf-atlas-gen"]
+	path = src/Engine/vendor/msdfgen/msdf-atlas-gen
+	url = https://github.com/Chlumsky/msdf-atlas-gen

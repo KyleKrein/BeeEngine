@@ -2,16 +2,16 @@
   lib,
   pkgs,
   src,
+  buildInputsFile,
   cmakeBuildType ? "Release"
 }:
 assert pkgs.lib.assertMsg (src.submodules == true)
   "Unable to build without submodules. Append '?submodules=1#' to the URL.";
 let
-  buildInputsFile = (import ./buildInputs.nix pkgs);
 in
   pkgs.llvmPackages_18.stdenv.mkDerivation rec {
     pname = "BeeEngineEditor";
-    version = "0.1.0";
+    version = "1.0.0-alpha.1.2";
   
     inherit src;
 
@@ -24,9 +24,9 @@ in
     ];
 
     meta = with lib; {
-      homepage = "https://github.com/nixvital/nix-based-cpp-starterkit";
+      homepage = "https://github.com/KyleKrein/BeeEngine";
       description = ''
-      A template for Nix based C++ project setup.";
+      A GUI Editor app for building games, powered by BeeEngine
       '';
       licencse = licenses.mit;
       platforms = with platforms; linux ++ darwin;

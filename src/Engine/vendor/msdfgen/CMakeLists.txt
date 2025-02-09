@@ -99,11 +99,7 @@ endif()
 set(MSDFGEN_DISABLE_PNG ON)
 set(MSDF_ATLAS_USE_SKIA OFF)
 
-CPMAddPackage(
-        NAME msdfatlasgen
-        GITHUB_REPOSITORY Chlumsky/msdf-atlas-gen
-        GIT_TAG 7e8d34645a67c6e4def5d281f7adec1c2501dc49
-)
+add_subdirectory(msdf-atlas-gen)
 #[[
 project(msdf-atlas-gen VERSION 1.2 LANGUAGES CXX)
 

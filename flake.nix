@@ -14,7 +14,7 @@
     pkgs = import nixpkgs {
       inherit system;
     };
-    buildInputsFile = (import ./nix/buildInputs.nix pkgs);
+    buildInputsFile = (import ./nix/buildInputs.nix {inherit pkgs;});
     src = self;
   in {
     devShells.default = pkgs.mkShell rec {
@@ -26,6 +26,6 @@
     };
 
     packages.default = self.packages.${system}.BeeEngineEditor;
-    packages.BeeEngineEditor = pkgs.callPackage ./nix/editor.nix { inherit src; };
+    packages.BeeEngineEditor = pkgs.callPackage ./nix/editor.nix { inherit src; inherit buildInputsFile; };
   });
 }
