@@ -1,5 +1,5 @@
-{pkgs ? import <nixpkgs> {}}:
-pkgs.mkShell {
+pkgs :
+{
   # nativeBuildInputs is usually what you want -- tools you need to run
   nativeBuildInputs = with pkgs.buildPackages; [
     nixd
@@ -36,8 +36,5 @@ pkgs.mkShell {
     lldb_18
     #vscode-fhs
   ];
-  shellHook = ''
-    export LD_LIBRARY_PATH=${pkgs.wayland}/lib:$LD_LIBRARY_PATH
-  '';
-  NIXPKGS_ALLOW_UNFREE = 1;
+  buildInputs = with pkgs; [];
 }

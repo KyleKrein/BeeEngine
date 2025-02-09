@@ -388,11 +388,7 @@ if (BEE_COMPILE_SDL)
     #)
     target_link_libraries(BeeEngine PRIVATE SDL3::SDL3)
 endif ()
-CPMAddPackage(
-        NAME spdlog
-        GITHUB_REPOSITORY gabime/spdlog
-        GIT_TAG 134f9194bb93072b72b8cfa27ac3bb30a0fb5b57
-)
+add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glm)
 add_subdirectory(vendor/ImGui) # Must be after DesktopPlatformsOnlyPostTarget
 add_subdirectory(vendor/gsl)
@@ -405,11 +401,7 @@ add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
 add_subdirectory(vendor/KDBindings)
-CPMAddPackage(
-        NAME fastgltf
-        GITHUB_REPOSITORY spnda/fastgltf
-        GIT_TAG 5278229d48e06d4770ecfea97402bbe1c8380038
-)
+add_subdirectory(vendor/fastgltf)
 
 find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)
 find_package(Boost REQUIRED COMPONENTS context)
