@@ -263,8 +263,9 @@ list(APPEND SOURCE_FILES ${SCRIPTING_SOURCE_FILES})
 add_library(BeeEngine ${SOURCE_FILES})
 
 message(STATUS "Building C# libraries for scripting support")
+set(BEE_CSHARP_LIBRARY_PATH ${CMAKE_BINARY_DIR}/src/Engine/net${BEEENGINE_DOTNET_VERSION} CACHE STRING "Path, where built C# libraries are stored")
 execute_process(
-    COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE}
+    COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE} -o ${BEE_CSHARP_LIBRARY_PATH}
     WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting"
     RESULT_VARIABLE dotnet_result
     OUTPUT_VARIABLE dotnet_output
@@ -275,6 +276,7 @@ if(NOT dotnet_result EQUAL "0")
     message(FATAL_ERROR "Failed to build BeeEngineScripting: ${dotnet_error}")
 else()
     message(STATUS "C# libraries for scripting support built successfully")
+  message(STATUS "Output ${dotnet_output}")
 endif()
 #[[if(IOS OR APPLE)
     set(CMAKE_Swift_LANGUAGE_VERSION 5)
@@ -316,7 +318,7 @@ endfunction(DesktopPlatformsOnlyPostTarget)
 
 #set_property(TARGET BeeEngine PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+#target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
 add_subdirectory(vendor/glslang)
 
@@ -351,34 +353,7 @@ if(BEE_COMPILE_WEBGPU)
 endif ()
 
 function(add_sdl_subdirectory)
-    file(READ vendor/sdl/CMakeLists.txt SDL_CMAKELISTS)
-
-    string(REPLACE "# Note: The clang toolset for Visual Studio does not support the '-idirafter' option.\nif(USE_GCC OR USE_INTELCC OR (USE_CLANG AND NOT MSVC_CLANG))"
-            "# Note: The clang toolset for Visual Studio does not support the '-idirafter' option.\nif((USE_GCC OR USE_INTELCC OR (USE_CLANG AND NOT MSVC_CLANG)) AND NOT IOS AND NOT APPLE)"
-            MODIFIED_SDL_CMAKELISTS
-            "${SDL_CMAKELISTS}")
-
-    file(WRITE vendor/sdl/CMakeLists.txt "${MODIFIED_SDL_CMAKELISTS}")
-
-    if(NOT SDL3_PATCHED)
-    file(READ vendor/sdl/src/video/cocoa/SDL_cocoakeyboard.m SDL_cocoakeyboard)
-    string(REPLACE "![[data.fieldEdit superview] isEqual:parentView]"
-            "false"
-            MODIFIED_SDL_cocoakeyboard
-            "${SDL_cocoakeyboard}")
-    file(WRITE vendor/sdl/src/video/cocoa/SDL_cocoakeyboard.m "${MODIFIED_SDL_cocoakeyboard}") #This is a fix for crashes, that happen on MacOs when input text field is unfocused due to a double removal from superview
-    set(SDL3_PATCHED ON CACHE BOOL "SDL3 Patched" FORCE)
-    endif()
-    add_subdirectory(vendor/sdl)
-
-    file(READ vendor/sdl/CMakeLists.txt SDL_CMAKELISTS)
-
-    string(REPLACE "# Note: The clang toolset for Visual Studio does not support the '-idirafter' option.\nif((USE_GCC OR USE_INTELCC OR (USE_CLANG AND NOT MSVC_CLANG)) AND NOT IOS AND NOT APPLE)"
-            "# Note: The clang toolset for Visual Studio does not support the '-idirafter' option.\nif(USE_GCC OR USE_INTELCC OR (USE_CLANG AND NOT MSVC_CLANG))"
-            ORIGINAL_SDL_CMAKELISTS
-            "${SDL_CMAKELISTS}")
-
-    file(WRITE vendor/sdl/CMakeLists.txt "${ORIGINAL_SDL_CMAKELISTS}")
+  add_subdirectory(vendor/sdl)
 endfunction()
 if (BEE_COMPILE_SDL)
     add_sdl_subdirectory()
@@ -513,7 +488,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Publish")
     add_compile_options(-O3)
 endif()
 
-add_compile_options(-static-libstdc++)
+#add_compile_options(-static-libstdc++)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Использование максимального уровня предупреждений

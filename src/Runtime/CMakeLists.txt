@@ -11,9 +11,9 @@ target_include_directories(GameRuntime PRIVATE "src")
 
 target_link_libraries(GameRuntime PRIVATE BeeEngine::WithScripting)
 
-configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.Core.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.Core.dll COPYONLY)
-configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.NativeBridge.runtimeconfig.json ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.runtimeconfig.json COPYONLY)
-configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.NativeBridge.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.dll COPYONLY)
+configure_file(${BEE_CSHARP_LIBRARY_PATH}/BeeEngine.Core.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.Core.dll COPYONLY)
+configure_file(${BEE_CSHARP_LIBRARY_PATH}/BeeEngine.NativeBridge.runtimeconfig.json ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.runtimeconfig.json COPYONLY)
+configure_file(${BEE_CSHARP_LIBRARY_PATH}/BeeEngine.NativeBridge.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.dll COPYONLY)
 
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 

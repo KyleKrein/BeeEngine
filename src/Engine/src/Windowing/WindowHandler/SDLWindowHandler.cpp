@@ -6,7 +6,7 @@
 #include "Core/Events/EventImplementations.h"
 #include "Core/Logging/Log.h"
 #include "Core/OsPlatform.h"
-#include "SDL_events.h"
+#include "SDL3/SDL_events.h"
 #include "imgui.h"
 #include "magic_enum.hpp"
 #include <chrono>
@@ -64,8 +64,8 @@ namespace BeeEngine
                 return "SDL_EVENT_DISPLAY_MOVED";
             case SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED:
                 return "SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED";
-            case SDL_EVENT_DISPLAY_HDR_STATE_CHANGED:
-                return "SDL_EVENT_DISPLAY_HDR_STATE_CHANGED";
+            case SDL_EVENT_WINDOW_HDR_STATE_CHANGED:
+                return "SDL_EVENT_WINDOW_HDR_STATE_CHANGED";
             case SDL_EVENT_WINDOW_SHOWN:
                 return "SDL_EVENT_WINDOW_SHOWN";
             case SDL_EVENT_WINDOW_HIDDEN:
@@ -94,8 +94,6 @@ namespace BeeEngine
                 return "SDL_EVENT_WINDOW_FOCUS_LOST";
             case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
                 return "SDL_EVENT_WINDOW_CLOSE_REQUESTED";
-            case SDL_EVENT_WINDOW_TAKE_FOCUS:
-                return "SDL_EVENT_WINDOW_TAKE_FOCUS";
             case SDL_EVENT_WINDOW_HIT_TEST:
                 return "SDL_EVENT_WINDOW_HIT_TEST";
             case SDL_EVENT_WINDOW_ICCPROF_CHANGED:
@@ -112,10 +110,6 @@ namespace BeeEngine
                 return "SDL_EVENT_WINDOW_LEAVE_FULLSCREEN";
             case SDL_EVENT_WINDOW_DESTROYED:
                 return "SDL_EVENT_WINDOW_DESTROYED";
-            case SDL_EVENT_WINDOW_PEN_ENTER:
-                return "SDL_EVENT_WINDOW_PEN_ENTER";
-            case SDL_EVENT_WINDOW_PEN_LEAVE:
-                return "SDL_EVENT_WINDOW_PEN_LEAVE";
             case SDL_EVENT_KEY_DOWN:
                 return "SDL_EVENT_KEY_DOWN";
             case SDL_EVENT_KEY_UP:
@@ -210,16 +204,6 @@ namespace BeeEngine
                 return "SDL_EVENT_AUDIO_DEVICE_FORMAT_CHANGED";
             case SDL_EVENT_SENSOR_UPDATE:
                 return "SDL_EVENT_SENSOR_UPDATE";
-            case SDL_EVENT_PEN_DOWN:
-                return "SDL_EVENT_PEN_DOWN";
-            case SDL_EVENT_PEN_UP:
-                return "SDL_EVENT_PEN_UP";
-            case SDL_EVENT_PEN_MOTION:
-                return "SDL_EVENT_PEN_MOTION";
-            case SDL_EVENT_PEN_BUTTON_DOWN:
-                return "SDL_EVENT_PEN_BUTTON_DOWN";
-            case SDL_EVENT_PEN_BUTTON_UP:
-                return "SDL_EVENT_PEN_BUTTON_UP";
             case SDL_EVENT_CAMERA_DEVICE_ADDED:
                 return "SDL_EVENT_CAMERA_DEVICE_ADDED";
             case SDL_EVENT_CAMERA_DEVICE_REMOVED:
@@ -482,10 +466,6 @@ namespace BeeEngine::Internal
                     Close();
                     break;
                 }
-                case SDL_EVENT_WINDOW_TAKE_FOCUS:
-                {
-                    break;
-                }
                 case SDL_EVENT_WINDOW_MOVED:
                 {
                     m_XPosition = sdlEvent.window.data1;
@@ -500,14 +480,14 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_KEY_UP:
                 {
-                    auto event = CreateScope<KeyReleasedEvent>(ConvertKeyCode(sdlEvent.key.keysym.scancode));
+                    auto event = CreateScope<KeyReleasedEvent>(ConvertKeyCode(sdlEvent.key.key));
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
                 case SDL_EVENT_KEY_DOWN:
                 {
                     auto event =
-                        CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.keysym.scancode), sdlEvent.key.repeat);
+                        CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.key), sdlEvent.key.repeat);
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
@@ -562,7 +542,7 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_DROP_FILE:
                 {
-                    char* path = sdlEvent.drop.data;
+                    const char* path = sdlEvent.drop.data;
                     fileDropEvent->AddFile(path);
                     break;
                 }
@@ -780,7 +760,7 @@ namespace BeeEngine::Internal
         m_IsClosing = true;
     }
 
-    Key SDLWindowHandler::ConvertKeyCode(SDL_Scancode key)
+    Key SDLWindowHandler::ConvertKeyCode(SDL_Keycode key)
     {
         switch (key)
         {
@@ -1423,111 +1403,6 @@ namespace BeeEngine::Internal
             case SDL_SCANCODE_RGUI:
                 return Key::RightSuper;
                 break;
-            case SDL_SCANCODE_MODE:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AUDIONEXT:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AUDIOPREV:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AUDIOSTOP:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AUDIOPLAY:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AUDIOMUTE:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_MEDIASELECT:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_WWW:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_MAIL:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_CALCULATOR:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_COMPUTER:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AC_SEARCH:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AC_HOME:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AC_BACK:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AC_FORWARD:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AC_STOP:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AC_REFRESH:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AC_BOOKMARKS:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_BRIGHTNESSDOWN:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_BRIGHTNESSUP:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_DISPLAYSWITCH:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_KBDILLUMTOGGLE:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_KBDILLUMDOWN:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_KBDILLUMUP:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_EJECT:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_SLEEP:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_APP1:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_APP2:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AUDIOREWIND:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_AUDIOFASTFORWARD:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_SOFTLEFT:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_SOFTRIGHT:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_CALL:
-                return Key::Unknown;
-                break;
-            case SDL_SCANCODE_ENDCALL:
-                return Key::Unknown;
-                break;
-            case SDL_NUM_SCANCODES:
-                return Key::Unknown;
-                break;
             default:
                 return Key::Unknown;
                 break;
@@ -1557,17 +1432,17 @@ namespace BeeEngine::Internal
     {
         WindowNativeInfo info;
 #if defined(WINDOWS)
-        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.win32.hwnd", NULL);
-        info.instance = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.win32.hinstance", NULL);
+        info.window = SDL_GetPointerProperty(SDL_GetWindowProperties(m_Window), "SDL.window.win32.hwnd", NULL);
+        info.instance = SDL_GetPointerProperty(SDL_GetWindowProperties(m_Window), "SDL.window.win32.hinstance", NULL);
 #elif defined(LINUX)
-        info.display = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.display", NULL);
-        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.window", NULL);
+        info.display = SDL_GetPointerProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.display", NULL);
+        info.window = SDL_GetPointerProperty(SDL_GetWindowProperties(m_Window), "SDL.window.x11.window", NULL);
 #elif defined(MACOS)
-        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.cocoa.window", NULL);
+        info.window = SDL_GetPointerProperty(SDL_GetWindowProperties(m_Window), "SDL.window.cocoa.window", NULL);
 #elif defined(IOS)
-        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.uikit.window", NULL);
+        info.window = SDL_GetPointerProperty(SDL_GetWindowProperties(m_Window), "SDL.window.uikit.window", NULL);
 #elif defined(ANDROID)
-        info.window = SDL_GetProperty(SDL_GetWindowProperties(m_Window), "SDL.window.android.window", NULL);
+        info.window = SDL_GetPointerProperty(SDL_GetWindowProperties(m_Window), "SDL.window.android.window", NULL);
 #endif
         return info;
     }

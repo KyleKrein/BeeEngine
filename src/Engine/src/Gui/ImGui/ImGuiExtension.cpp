@@ -138,7 +138,7 @@ namespace ImGui
     BeeEngine::String g_CurrentFileDialogKey;
     struct FileDialogImage
     {
-        ImTextureID Icon = nullptr;
+        ImTextureID Icon = 0;
         float Width = 1;
         float Height = 1;
     };

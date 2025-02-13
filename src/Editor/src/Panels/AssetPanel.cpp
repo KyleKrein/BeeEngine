@@ -90,7 +90,6 @@ namespace BeeEngine::Editor
         for (const auto& [handle, metadataPtr] : m_Filter.FilterAssets())
         {
             const auto& metadata = *metadataPtr;
-            ImGui::PushID(metadata.Name.data());
             GPUTextureResource* icon = nullptr;
             switch (metadata.Type)
             {
@@ -120,7 +119,8 @@ namespace BeeEngine::Editor
             // activeColor.w = 0.5f;
             // ImGui::PushStyleColor(ImGuiCol_ButtonActive, activeColor);
             float aspectRatio = (float)icon->GetWidth() / icon->GetHeight();
-            ImGui::ImageButton(
+            ImGui::ImageButton(metadata.Name.data(),
+			       
                 (ImTextureID)icon->GetRendererID(), {thumbnailSize, thumbnailSize / aspectRatio}, {0, 1}, {1, 0});
 
             if (handle.RegistryID == m_Project->GetAssetRegistryID())
@@ -146,8 +146,6 @@ namespace BeeEngine::Editor
             ImGui::TextWrapped("%s", metadata.Name.data());
 
             ImGui::NextColumn();
-
-            ImGui::PopID();
         }
 
         ImGui::Columns(1);

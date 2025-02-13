@@ -9,7 +9,7 @@ assert pkgs.lib.assertMsg (src.submodules == true)
   "Unable to build without submodules. Append '?submodules=1#' to the URL.";
 let
 in
-  pkgs.llvmPackages_18.stdenv.mkDerivation rec {
+  pkgs.llvmPackages_19.libcxxStdenv.mkDerivation rec {
     pname = "BeeEngineEditor";
     version = "1.0.0-alpha.1.2";
   

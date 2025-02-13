@@ -115,7 +115,7 @@ namespace BeeEngine::Editor
         }
         else
         {
-            ImGui::ImageButton((ImTextureID)AssetManager::GetAsset<Texture2D>(m_IconHandle, m_Domain.GetLocale())
+            ImGui::ImageButton("Project Settings Icon",(ImTextureID)AssetManager::GetAsset<Texture2D>(m_IconHandle, m_Domain.GetLocale())
                                    .GetGPUResource()
                                    .GetRendererID(),
                                ImVec2(32, 32));

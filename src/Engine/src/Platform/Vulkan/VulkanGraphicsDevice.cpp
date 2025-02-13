@@ -13,7 +13,7 @@
 #endif
 #include <vulkan/vulkan.hpp>
 #if defined(BEE_COMPILE_SDL)
-#include <SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 #endif
 #include "VulkanGraphicsDevice.h"
 #include "Renderer/QueueFamilyIndices.h"
@@ -465,7 +465,7 @@ namespace BeeEngine::Internal
             {
                 auto sdlWindow = (SDL_Window*)WindowHandler::GetInstance()->GetWindow();
                 auto result = SDL_Vulkan_CreateSurface(sdlWindow, instance.GetHandle(), nullptr, &cSurface);
-                if (result != SDL_TRUE)
+                if (result != true)
                 {
                     BeeCoreFatalError("Failed to create Vulkan surface!");
                 }

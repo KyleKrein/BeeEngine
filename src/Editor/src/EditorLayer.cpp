@@ -559,7 +559,7 @@ namespace BeeEngine::Editor
                                                            : m_StopButtonTexture->GetGPUResource().GetRendererID());
         float size = ImGui::GetWindowHeight() - 4;
         ImGui::SetCursorPosX((ImGui::GetContentRegionMax().x * 0.5f) - (size * 0.5f));
-        if (ImGui::ImageButton(textureID, ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0))
+        if (ImGui::ImageButton("Scene Play Button", textureID, ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1)))
         {
             if (m_SceneState == SceneState::Edit)
             {

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "SDL_events.h"
+#include "SDL3/SDL_events.h"
 #include "WindowHandler.h"
 #if defined(BEE_COMPILE_SDL)
 #include "KeyCodes.h"
@@ -40,7 +40,7 @@ namespace BeeEngine::Internal
         GlobalMouseState GetGlobalMouseState() const override;
 
     private:
-        static Key ConvertKeyCode(SDL_Scancode key);
+        static Key ConvertKeyCode(SDL_Keycode key);
         static MouseButton ConvertMouseButton(uint8_t button);
         void InitializeVulkan();
         void InitializeWebGPU();

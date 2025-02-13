@@ -9,12 +9,14 @@ in
     ninja
     python3
     dotnetCorePackages.sdk_8_0_3xx
+    llvmPackages.clang-tools
   ];
   buildInputs = with pkgs; [
     freetype
     icu
     boost
     libGL
+    simdjson
     xorg.libX11
     xorg.libXext
     vulkan-headers

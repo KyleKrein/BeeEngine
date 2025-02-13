@@ -32,9 +32,9 @@ file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 #file(COPY libs DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) #this is for NativeScripting
 
 #file(COPY ../Engine/vendor/mono/dotnet-libs/4.5 DESTINATION ../lib/mono)
-configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.Core.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.Core.dll COPYONLY)
-configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.NativeBridge.runtimeconfig.json ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.runtimeconfig.json COPYONLY)
-configure_file(${CMAKE_CURRENT_BINARY_DIR}/../Engine/net${BEEENGINE_DOTNET_VERSION}/BeeEngine.NativeBridge.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.dll COPYONLY)
+configure_file(${BEE_CSHARP_LIBRARY_PATH}/BeeEngine.Core.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.Core.dll COPYONLY)
+configure_file(${BEE_CSHARP_LIBRARY_PATH}/BeeEngine.NativeBridge.runtimeconfig.json ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.runtimeconfig.json COPYONLY)
+configure_file(${BEE_CSHARP_LIBRARY_PATH}/BeeEngine.NativeBridge.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.NativeBridge.dll COPYONLY)
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/Localization/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Localization)
 file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/Platforms/)
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/Platforms/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Platforms)
