@@ -43,6 +43,11 @@ if(UNIX AND NOT APPLE)
 	#add_compile_options(-march=nehalem) #doesnt build on arm
         #add_compile_options(-march=native)
         set(SDL_WAYLAND ON)
+  if(BEE_ARCH STREQUAL "x64")
+    add_compile_options(-march=x86-64-v3)
+  elseif(BEE_ARCH STREQUAL "arm64")
+    #add_compile_options(-march=)
+  endif()
 endif()
 
 set(VCPKG_LIBRARY_LINKAGE static CACHE STRING "Linkage of vcpkg libraries" FORCE)
