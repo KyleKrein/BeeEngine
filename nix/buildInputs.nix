@@ -16,7 +16,7 @@ in
     icu
     boost
     libGL
-    simdjson
+    (simdjson.override {stdenv = llvmPackages_19.libcxxStdenv;})
     xorg.libX11
     xorg.libXext
     vulkan-headers

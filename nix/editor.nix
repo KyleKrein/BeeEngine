@@ -21,6 +21,8 @@ in
     cmakeFlags = [
       "-DCMAKE_BUILD_TYPE=${cmakeBuildType}"
       "-DBEE_USE_VCPKG=OFF"
+      "-DBEE_BUILD_TESTS=OFF"
+      "-DBEE_BUILD_EDITOR=ON"
     ];
 
     meta = with lib; {

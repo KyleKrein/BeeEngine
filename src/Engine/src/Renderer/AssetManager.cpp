@@ -4,7 +4,6 @@
 
 #include "AssetManager.h"
 #include "../../Assets/EmbeddedResources.h"
-#include "Utils/ModelLoader.h"
 #include "Vertex.h"
 #include <glm.hpp>
 
@@ -26,8 +25,10 @@ BeeEngine::Mesh& BeeEngine::InternalAssetManager::LoadMesh(const String& name, c
     {
         std::vector<BeeEngine::Vertex> vertices;
         std::vector<uint32_t> indices;
-        auto result = Internal::ModelLoader::LoadglTF(path.string(), vertices, indices);
-        BeeEnsures(result);
+       // auto result = Internal::ModelLoader::LoadglTF(path.string(), vertices, indices);
+        //BeeEnsures(result);
+      BeeCoreError("Loading of meshes using internal Asset manager is not supported");
+      BeeEnsures(false);
         return *m_Meshes.emplace(name, Mesh::Create(vertices, indices)).first->second;
     }
 }
