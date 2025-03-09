@@ -379,8 +379,13 @@ add_subdirectory(vendor/fastgltf)
 
 find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)
 find_package(Boost REQUIRED COMPONENTS context)
-find_package(unofficial-nethost CONFIG REQUIRED)
-
+if(NETHOST_LIB)
+  target_link_libraries(BeeEngine PRIVATE ${NETHOST_LIB})
+  target_include_directories(BeeEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/vendor/dotnethost)
+else()
+  find_package(unofficial-nethost CONFIG REQUIRED)
+  target_link_libraries(BeeEngine PRIVATE unofficial::nethost::nethost)
+endif()
 if(BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
     target_compile_definitions(BeeEngine PUBLIC BEE_COMPILE_VULKAN)
@@ -389,6 +394,7 @@ if(BEE_COMPILE_VULKAN)
             )
     target_link_libraries(BeeEngine PUBLIC Vulkan::Vulkan)
 endif ()
+if (${BEE_USE_VCPKG})
 function(extract_vcpkg_path ICU_LIB_LIST RESULT_VAR)
     list(GET ICU_LIB_LIST 0 ICU_LIB_PATH)
     string(REGEX REPLACE "(.*/vcpkg_installed/[^/]+).*$" "\\1" EXTRACTED_PATH ${ICU_LIB_PATH})
@@ -396,6 +402,8 @@ function(extract_vcpkg_path ICU_LIB_LIST RESULT_VAR)
 endfunction()
 
 extract_vcpkg_path("${ICU_LIBRARIES}" ICU_VCPKG_PATH)
+target_include_directories(BeeEngine PUBLIC ${ICU_VCPKG_PATH}/include)
+endif()
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
         PUBLIC src
@@ -414,7 +422,6 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/magic_enum/include
 
         PUBLIC vendor/utfcpp/include
-        PUBLIC ${ICU_VCPKG_PATH}/include
         PUBLIC ${ICU_INCLUDE_DIR}
         )
 target_link_libraries( ${PROJECT_NAME}
@@ -435,7 +442,6 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC ${ICU_LIBRARIES}
         PUBLIC Boost::context
         PRIVATE fastgltf
-        PRIVATE unofficial::nethost::nethost
         PUBLIC KDAB::KDBindings
         )
 

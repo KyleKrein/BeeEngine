@@ -139,7 +139,7 @@ namespace BeeEngine
                     case 4:
                         return ShaderDataType::Float4; // vec4
                     default:
-                        // return ShaderDataType::NoneData; // Неверный размер
+                        break;
                 }
                 if (type.getMatrixCols() == 4 && type.getMatrixRows() == 4)
                 {
@@ -162,7 +162,7 @@ namespace BeeEngine
                     case 4:
                         return ShaderDataType::Int4; // ivec4
                     default:
-                        // return ShaderDataType::NoneData; // Неверный размер
+                        break;
                 }
                 break;
             case glslang::EbtUint:
@@ -177,7 +177,7 @@ namespace BeeEngine
                     case 4:
                         return ShaderDataType::UInt4; // uvec4
                     default:
-                        // return ShaderDataType::NoneData; // Неверный размер
+                        break;
                 }
                 break;
             case glslang::EbtBool:

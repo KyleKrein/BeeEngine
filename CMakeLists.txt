@@ -48,6 +48,7 @@ if(UNIX AND NOT APPLE)
   elseif(BEE_ARCH STREQUAL "arm64")
     #add_compile_options(-march=)
   endif()
+  add_compile_options(-Wno-changes-meaning) #fix for gcc giving error when i use ex. MeshSource MeshSource(); Function declaration
 endif()
 
 set(VCPKG_LIBRARY_LINKAGE static CACHE STRING "Linkage of vcpkg libraries" FORCE)

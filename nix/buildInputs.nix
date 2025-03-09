@@ -1,6 +1,5 @@
 { pkgs }:
 let 
-unofficial-nethost = pkgs.callPackage ./unofficial-nethost.nix {};
 in
 {
   # nativeBuildInputs is usually what you want -- tools you need to run
@@ -9,20 +8,20 @@ in
     ninja
     python3
     dotnetCorePackages.sdk_8_0_3xx
-    llvmPackages.clang-tools
+    #llvmPackages.clang-tools
   ];
   buildInputs = with pkgs; [
     freetype
-    icu
+    icu.dev
     boost
     libGL
-    (simdjson.override {stdenv = llvmPackages_19.libcxxStdenv;})
+    simdjson
+   # (simdjson.override {stdenv = llvmPackages_19.libcxxStdenv;})
     xorg.libX11
     xorg.libXext
     vulkan-headers
     vulkan-loader
     vulkan-validation-layers
     dotnetCorePackages.sdk_8_0_3xx
-    unofficial-nethost
   ];
 }

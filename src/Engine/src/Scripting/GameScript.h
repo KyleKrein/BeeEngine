@@ -25,11 +25,6 @@ namespace BeeEngine
             static_assert(sizeof(T) <= MAX_FIELD_SIZE, "Type is too large");
             memcpy(m_Buffer, &data, sizeof(T));
         }
-        template <>
-        void SetData<MFieldValue>(const MFieldValue& data)
-        {
-            memcpy(m_Buffer, data.GetValuePtr(), MUtils::SizeOfMType(data.GetType()));
-        }
 
         void SetData(void* data) { memcpy(m_Buffer, data, MAX_FIELD_SIZE); }
 
@@ -46,6 +41,13 @@ namespace BeeEngine
         MField* m_Field;
         byte m_Buffer[MAX_FIELD_SIZE];
     };
+
+  template <>
+  inline void GameScriptField::SetData<MFieldValue>(const MFieldValue& data)
+  {
+    memcpy(m_Buffer, data.GetValuePtr(), MUtils::SizeOfMType(data.GetType()));
+  }  
+    
     class GameScript
     {
     public:
