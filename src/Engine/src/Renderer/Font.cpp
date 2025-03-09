@@ -239,6 +239,13 @@ namespace BeeEngine
     struct Font::StaticData
     {
         msdfgen::FreetypeHandle* FreeType = msdfgen::initializeFreetype();
+        StaticData()
+        {
+          if (!File::Exists(g_CacheFolder))
+            {
+              File::CreateDirectory(g_CacheFolder);
+            }
+        }
         // Ref<Pipeline> AtlasPipeline =
         //     Pipeline::Create(ShaderModule::Create("Shaders/MSDFGenerator.comp", ShaderType::Compute));
         ~StaticData()

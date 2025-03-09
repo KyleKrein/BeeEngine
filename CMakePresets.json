@@ -49,6 +49,29 @@
                 "rhs": "Windows"
             }
         },
+      {
+            "name": "Debug-NixOS",
+            "displayName": "Debug-NixOS Config",
+            "description": "Debug build using Ninja generator",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/Debug-NixOS",
+            "installDir": "${sourceDir}/install/Debug-NixOS",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_BUILD_WITH_INSTALL_RPATH": "ON",
+	      "BEE_USE_VCPKG": "OFF",
+	      "NETHOST_LIB": "$env{NETHOST_LIB}",
+	      "BEE_BUILD_EDITOR": "ON"
+            },
+            "vendor": {},
+            "condition": {
+                "type": "notEquals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
         {
             "name": "Release",
             "displayName": "Release Config",

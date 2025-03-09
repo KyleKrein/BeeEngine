@@ -17,15 +17,17 @@
     buildInputsFile = (import ./nix/buildInputs.nix {inherit pkgs;});
     src = self;
   in {
-    devShells.default = pkgs.mkShell rec {
+    devShells.default = pkgs.mkShell.override { stdenv = pkgs.gcc14Stdenv; } rec {
       # Update the name to something that suites your project.
       name = "BeeEngine";
 
-      nativeBuildInputs = buildInputsFile.nativeBuildInputs;
+      nativeBuildInputs = buildInputsFile.nativeBuildInputs ++ [pkgs.ccache];
       buildInputs = buildInputsFile.buildInputs;
+      "NETHOST_LIB" = (import ./nix/unofficial-nethost.nix {inherit pkgs; inherit (pkgs) lib;}).nethost-lib-path;
     };
 
     packages.default = self.packages.${system}.BeeEngineEditor;
     packages.BeeEngineEditor = pkgs.callPackage ./nix/editor.nix { inherit src; inherit buildInputsFile; };
+    packages.BeeEngineEditor-Debug = pkgs.callPackage ./nix/editor.nix { inherit src; inherit buildInputsFile; cmakeBuildType = "Debug"; };
   });
 }

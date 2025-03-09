@@ -1,11 +1,28 @@
 #include "Environment.h"
 #include <cstdlib>
+#include "FileSystem/File.h"
 
 namespace BeeEngine
 {
     static Path CreatePath(const String& first, const String& name)
     {
-      return Path(first) / "BeeEngine" / name;
+        auto result = Path(first);
+        std::error_code err;
+        if (!File::Exists(result))
+        {
+          File::CreateDirectory(result);
+        }
+        result /= "BeeEngine";
+	if (!File::Exists(result))
+        {
+          File::CreateDirectory(result);
+        }
+        result /= name;
+	if (!File::Exists(result))
+        {
+          File::CreateDirectory(result);
+        }
+      return result;
     }        
     Environment::Environment(const String& name)
     {

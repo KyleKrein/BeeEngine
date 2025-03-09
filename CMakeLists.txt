@@ -7,6 +7,12 @@ option(BEE_BUILD_LOC_TOOL OFF)
 option(BEE_BUILD_EDITOR ON)
 option(BEE_BUILD_RUNTIME ON)
 
+message("Build Tests? ${BEE_BUILD_TESTS}")
+message("Build Sandbox? ${BEE_BUILD_SANDBOX}")
+message("Build Localization Tool? ${BEE_BUILD_LOC_TOOL}")
+message("Build Editor? ${BEE_BUILD_EDITOR}")
+message("Build Runtime? ${BEE_BUILD_RUNTIME}")
+
 if(WIN32)
     execute_process(
         COMMAND wmic OS get OSArchitecture
@@ -68,6 +74,7 @@ if(WIN32 AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
         add_link_options(/LTCG:STATUS)
 endif()
 set(VCPKG_ROOT "src/Engine/vendor/vcpkg")
+message("Using VCPKG? ${BEE_USE_VCPKG}")
 if (${BEE_USE_VCPKG})
   set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
   include(${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)

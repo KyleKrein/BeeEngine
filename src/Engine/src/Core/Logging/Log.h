@@ -35,11 +35,13 @@ namespace BeeEngine
         {
             std::error_code err;
 #if defined(LINUX)
-const char* logfileName = "/tmp/beeengine/log.txt";
+            const char* logfileName = "/tmp/beeengine/log.txt";
+            std::filesystem::create_directory("/tmp/beeengine", err);            
 #elif defined(WINDOWS)
 const char* logfileName = "log.txt";
 #elif defined(MACOS)
 const char* logfileName = "/tmp/beeengine/log.txt";
+  std::filesystem::create_directory("/tmp/beeengine", err);
 #else
 const char* logfileName = "log.txt";
 #endif
