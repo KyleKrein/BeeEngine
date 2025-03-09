@@ -115,18 +115,17 @@ cmake --preset Release
 #+end_src
 3. Build the needed target:
    - For the editor:
-     #+BEGIN_SRC shell
+     #+begin_src shell
      cmake --build build/Release --target BeeEngineEditor --parallel
-     #+END_SRC
+     #+end_src
    - For the localization app:
-     #+BEGIN_SRC shell
+     #+begin_src shell
      cmake --build build/Release --target BeeLocalization --parallel
-     #+END_SRC
+     #+end_src
    - For the Runtime:
-     #+BEGIN_SRC shell
+     #+begin_src shell
      cmake --build build/Release --target GameRuntime --parallel
-     #+END_SRC
-
+     #+end_src
 4. The binaries can be found inside build/Release/src
 ** Developing the Games
 There're no special first party guides created yet. It's in plans after the creation of Website.
@@ -155,15 +154,12 @@ Note: This documentation is far from being complete and is meant to be used for 
 3. Install Graphviz from https://graphviz.org/download/
 
 4. Open terminal at project/docs directory and type
-
-   #+BEGIN_SRC shell
+   #+begin_src shell
    doxygen DoxyfileCpp
-   #+END_SRC
-
-   #+BEGIN_SRC shell
+   #+end_src
+   #+begin_src shell
    doxygen DoxyfileCs
-   #+END_SRC
-
+   #+end_src
 5. Wait for generation to complete, go to folder docs and open index.html
 ** Roadmap / Future Plans
 The TODOs are placed not in order they're going to be developed.
