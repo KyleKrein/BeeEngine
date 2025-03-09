@@ -167,22 +167,21 @@ Note: This documentation is far from being complete and is meant to be used for 
 5. Wait for generation to complete, go to folder docs and open index.html
 ** Roadmap / Future Plans
 The TODOs are placed not in order they're going to be developed.
-*** TODO Website for the BeeEngine
-**** TODO Runtime build CI with cache
-**** TODO Published Code Documentation
-**** TODO Text/Video guides, how to create games with BeeEngine
+*** Website for the BeeEngine
+- Runtime build CI with cache
+- Published Code Documentation
+- Text/Video guides, how to create games with BeeEngine
 *** Features
-**** TODO UI For Games
-**** TODO Native Compilation of game code
-AOT for C# or another language?
-This is needed for Mobile Platforms (JIT is not allowed on iOS)
-**** TODO Audio System
-**** TODO Complete 2D Physics
-**** TODO Project Templates in Editor
-**** TODO Steam Integration
-**** TODO Networking
+- UI For Games
+- Native Compilation of game code
+  AOT for C# or another language? This is needed for Mobile Platforms (JIT is not allowed on iOS)
+- Audio System
+- Complete 2D Physics
+- Project Templates in Editor
+- Steam Integration
+- Networking
 *** Platform Support
-**** TODO Nix build support for MacOS
-**** TODO Cross Compilation Support for Windows
-**** TODO Android Support (Distant Future)
-**** TODO iOS Support (Distant Future)
+- Nix build support for MacOS
+- Cross Compilation Support for Windows
+- Android Support (Distant Future)
+- iOS Support (Distant Future)
