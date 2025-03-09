@@ -9,12 +9,13 @@
 #include "Renderer.h"
 #include "Utils/ShaderConverter.h"
 #include <filesystem>
+#include "Core/Application.h"
 
 #include "Platform/Vulkan/VulkanShaderModule.h"
 
 namespace BeeEngine
 {
-    Path ShaderModule::s_CachePath = "Cache/";
+    Path ShaderModule::s_CachePath = Application::GetInstance().Environment().CacheDirectory() / "Shaders/";
     Ref<ShaderModule> BeeEngine::ShaderModule::Create(const Path& path, ShaderType type)
     {
         if (!std::filesystem::directory_entry(s_CachePath.ToStdPath()).exists())

@@ -34,12 +34,21 @@ namespace BeeEngine
         static void Init()
         {
             std::error_code err;
-            std::filesystem::remove_all("logfile.txt", err);
+#if defined(LINUX)
+const char* logfileName = "/tmp/beeengine/log.txt";
+#elif defined(WINDOWS)
+const char* logfileName = "log.txt";
+#elif defined(MACOS)
+const char* logfileName = "/tmp/beeengine/log.txt";
+#else
+const char* logfileName = "log.txt";
+#endif
+std::filesystem::remove_all(logfileName, err);
             std::string pattern = "%^[%T] [%l] %n: %v%$";
             spdlog::set_pattern(pattern);
             std::vector<spdlog::sink_ptr> sinks{
                 std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
-                std::make_shared<spdlog::sinks::daily_file_format_sink_mt>("logfile.txt", 23, 59)};
+                std::make_shared<spdlog::sinks::daily_file_format_sink_mt>(logfileName, 23, 59)};
 
             s_CoreLogger = std::make_shared<spdlog::logger>("BeeEngine", std::begin(sinks), std::end(sinks));
             s_CoreLogger->set_level(spdlog::level::trace);

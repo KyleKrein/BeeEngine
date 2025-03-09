@@ -17,6 +17,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Renderer/MSDFData.h
         src/Renderer/TextRenderingConfiguration.h
         src/Threading/ThreadPool.h
+  src/Core/Environment.h
+  src/Core/Environment.cpp
         src/Core/AssetManagement/Asset.h
         src/Core/AssetManagement/IAssetManager.h
         src/Core/AssetManagement/AssetImporter.cpp

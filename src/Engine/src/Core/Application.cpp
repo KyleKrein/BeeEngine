@@ -90,7 +90,7 @@ namespace BeeEngine
     }
 
     Application::Application(const ApplicationProperties& properties)
-        : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers)
+        : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers), Environment{properties.Title}
     {
         BEE_PROFILE_FUNCTION();
         BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");

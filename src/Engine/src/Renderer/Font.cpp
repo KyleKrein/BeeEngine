@@ -24,6 +24,7 @@
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <mutex>
 #include <stb_image_write.h>
+#include "Core/Application.h"
 #include <unordered_map>
 #include <vector>
 
@@ -170,7 +171,7 @@ namespace BeeEngine
     {
         int Width, Height;
     };
-    static const Path g_CacheFolder = "Cache";
+    static const Path g_CacheFolder = Application::GetInstance().Environment().CacheDirectory() / "FontAtlases";
     bool IsCacheValid(const Path& cachedPath)
     {
         return File::Exists(cachedPath);
