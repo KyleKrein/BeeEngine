@@ -1,6 +1,7 @@
 #include "Environment.h"
 #include <cstdlib>
 #include "FileSystem/File.h"
+#include "Logging/Log.h"
 
 namespace BeeEngine
 {
@@ -27,13 +28,22 @@ namespace BeeEngine
     Environment::Environment(const String& name)
     {
 #if defined(LINUX)
-        CacheDirectory = CreatePath(Environment::GetEnvVariable("XDG_CACHE_HOME"), name);
+      HomeDirectory = Environment::GetEnvVariable("HOME").value_or("~");
+        CacheDirectory = CreatePath(Environment::GetEnvVariable("XDG_CACHE_HOME").value_or(HomeDirectory() / ".cache"), name);
         TempDirectory = CreatePath("/tmp", name);
-      ConfigDirectory = CreatePath(Environment::GetEnvVariable("XDG_CONFIG_HOME"), name);
+      ConfigDirectory = CreatePath(Environment::GetEnvVariable("XDG_CONFIG_HOME").value_or(HomeDirectory() / ".config"), name);
 #endif
     }
-    String Environment::GetEnvVariable(const String& name)
+    std::optional<String> Environment::GetEnvVariable(const String& name)
     {
-      return {std::getenv(name.c_str())};
+      //TODO: make this code thread/job safe and add caching
+        const char* result = std::getenv(name.c_str());
+        if (result == nullptr)
+        {
+          BeeCoreTrace("{} environmental variable is not set", name);
+          return std::nullopt;
+        }
+       BeeCoreTrace("{} environmental variable is {}", name, result); 
+      return String{result};
     }
 }    

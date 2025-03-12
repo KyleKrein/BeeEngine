@@ -25,6 +25,7 @@ in
       "-DBEE_BUILD_TESTS=OFF"
       "-DBEE_BUILD_EDITOR=ON"
       "-DNETHOST_LIB=${nethost-lib-path}"
+      "-DBEE_USE_SYSTEM_SDL3=ON"
       #"-DICU_INCLUDE_DIR=${pkgs.icu.dev}/include"
     ];
 

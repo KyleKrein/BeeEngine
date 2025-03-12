@@ -319,6 +319,7 @@ namespace BeeEngine::Internal
             vk::PhysicalDevice device;
             uint64_t vram = 0;
             vk::PhysicalDeviceType type = vk::PhysicalDeviceType::eOther;
+          String name;
         };
         DeviceScore bestDevice = {nullptr, 0};
         for (auto& device : physicalDevices)
@@ -328,16 +329,17 @@ namespace BeeEngine::Internal
             // #endif
             if (IsSuitableDevice(device))
             {
+              String name = device.getProperties().deviceName.data();
                 auto type = device.getProperties().deviceType;
                 auto vram = device.getMemoryProperties().memoryHeaps[0].size;
                 if (bestDevice.device == nullptr /*|| vram > bestDevice.vram*/)
                 {
-                    bestDevice = {device, vram, type};
+                    bestDevice = {device, vram, type, name};
                 }
                 else if (bestDevice.type != vk::PhysicalDeviceType::eDiscreteGpu &&
                          type == vk::PhysicalDeviceType::eDiscreteGpu)
                 {
-                    bestDevice = {device, vram, type};
+                    bestDevice = {device, vram, type, name};
                 }
             }
         }
@@ -354,8 +356,10 @@ namespace BeeEngine::Internal
             ShowMessageBox("Unable to choose GPU",
                            "It's likely that your graphics driver is outdated. Please update it and try again",
                            MessageBoxType::Error);
-            throw std::runtime_error("No suitable physical device found");
+            BeeCoreError("No suitable physical device found");
+          exit(300);
         }
+      BeeCoreInfo("{} was chosen", bestDevice.name);
     }
 
     void VulkanGraphicsDevice::CreateLogicalDevice()

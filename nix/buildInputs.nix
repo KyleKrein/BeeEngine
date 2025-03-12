@@ -15,6 +15,7 @@ in
     icu.dev
     boost
     libGL
+    sdl3
     simdjson
    # (simdjson.override {stdenv = llvmPackages_19.libcxxStdenv;})
     xorg.libX11

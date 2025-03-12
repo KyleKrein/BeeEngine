@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 include(cmake/UniversalAppleBuild.cmake)
 option(BEE_USE_VCPKG ON)
+option(BEE_USE_SYSTEM_SDL3 OFF)
 option(BEE_BUILD_TESTS ON)
 option(BEE_BUILD_SANDBOX OFF)
 option(BEE_BUILD_LOC_TOOL OFF)

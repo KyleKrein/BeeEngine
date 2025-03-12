@@ -170,7 +170,7 @@ The TODOs are placed not in order they're going to be developed.
 *** Features
 - UI For Games
 - Native Compilation of game code
-  AOT for C# or another language? This is needed for Mobile Platforms (JIT is not allowed on iOS)
+  + AOT for C# or another language? This is needed for Mobile Platforms (JIT is not allowed on iOS)
 - Audio System
 - Complete 2D Physics
 - Project Templates in Editor

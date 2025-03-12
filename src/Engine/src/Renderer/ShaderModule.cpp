@@ -3,21 +3,25 @@
 //
 #include "ShaderModule.h"
 #include "BufferLayoutSerializer.hpp"
+#include "Core/Application.h"
 #include "Core/ResourceManager.h"
 #include "FileSystem/File.h"
 #include "Platform/WebGPU/WebGPUShaderModule.h"
 #include "Renderer.h"
 #include "Utils/ShaderConverter.h"
 #include <filesystem>
-#include "Core/Application.h"
 
 #include "Platform/Vulkan/VulkanShaderModule.h"
 
 namespace BeeEngine
 {
-    Path ShaderModule::s_CachePath = Application::GetInstance().Environment().CacheDirectory() / "Shaders/";
+    Path ShaderModule::s_CachePath = "";
     Ref<ShaderModule> BeeEngine::ShaderModule::Create(const Path& path, ShaderType type)
     {
+        if (s_CachePath.IsEmpty())
+        {
+            s_CachePath = Application::GetInstance().Environment().CacheDirectory() / "Shaders/";
+        }
         if (!std::filesystem::directory_entry(s_CachePath.ToStdPath()).exists())
         {
             std::filesystem::create_directory(s_CachePath.ToStdPath());
