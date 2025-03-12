@@ -9,6 +9,6 @@
 
 gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication(const BeeEngine::ApplicationArgs& args)
 {
-    Editor::ConfigFile config = Editor::ConfigFile::Load(Editor::ConfigFile::DefaultPath);
+    Editor::ConfigFile config = Editor::ConfigFile::Load(Editor::ConfigFile::DefaultPath());
     return new BeeEngine::Editor::EditorApplication(BeeMove(config));
 }

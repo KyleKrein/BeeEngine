@@ -24,6 +24,6 @@ namespace BeeEngine::Editor
         m_Config.X = WindowHandler::GetInstance()->GetXPosition();
         m_Config.Y = WindowHandler::GetInstance()->GetYPosition();
         m_Config.IsMaximized = IsMaximized();
-        m_Config.Save(ConfigFile::DefaultPath);
+        m_Config.Save(ConfigFile::DefaultPath());
     }
 } // namespace BeeEngine::Editor

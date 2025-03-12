@@ -23,6 +23,6 @@ namespace BeeEngine::Editor
         static ConfigFile Load(const Path& path);
         [[nodiscard]] ApplicationProperties GetApplicationProperties() noexcept;
         static std::filesystem::path LoadCompilerConfiguration() noexcept;
-        static inline const Path DefaultPath = "config.yaml";
+        static Path DefaultPath();
     };
 } // namespace BeeEngine::Editor

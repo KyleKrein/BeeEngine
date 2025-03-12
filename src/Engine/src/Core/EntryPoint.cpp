@@ -5,17 +5,30 @@
 #include "Debug/Instrumentor.h"
 #include "RestartApplication.h"
 // #include "SDL_main.h"
+#include "Environment.h"
 #include "Platform/Windows/WindowsUTF8ConsoleOutput.h"
 #include "Utils/ShaderConverter.h"
 
 // AllocatorInitializer AllocatorInitializer::instance = AllocatorInitializer();
 #include "JobSystem/JobScheduler.h"
+#include <filesystem>
 namespace BeeEngine
 {
     static bool g_Initialized = false;
     static bool g_Restart = false;
     namespace Internal
     {
+        void SetCorrectCurrentPath()
+        {
+            auto prev = std::filesystem::current_path();
+            auto next = Environment::GetResourcesDirectory();
+            auto nextStd = next.ToStdPath();
+            if (prev != nextStd && !next.IsEmpty())
+            {
+                std::filesystem::current_path(nextStd);
+                BeeCoreTrace("Changed current directory from {} to {}", Path{prev}, next);
+            }
+        }
         void InitEngine()
         {
             BEE_PROFILE_FUNCTION();
@@ -49,6 +62,7 @@ namespace BeeEngine
             Internal::InitEngine();
             BeeEngine::Internal::Job::Initialize(4);
             Internal::WindowsUTF8ConsoleOutput consoleOutput;
+            Internal::SetCorrectCurrentPath();
             Application* application = CreateApplication({argc, argv});
             BEE_DEBUG_END_PROFILING_SESSION();
             application->Run();

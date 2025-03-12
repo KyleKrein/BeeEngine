@@ -2,6 +2,15 @@
 #include <cstdlib>
 #include "FileSystem/File.h"
 #include "Logging/Log.h"
+#include <Platform/MacOS/MacOSInternal.h>
+#include <filesystem>
+
+#ifdef WINDOWS
+#include <windows.h>    //GetModuleFileNameW
+#elif defined(LINUX)
+#include <limits.h>
+#include <unistd.h>     //readlink
+#endif
 
 namespace BeeEngine
 {
@@ -46,4 +55,20 @@ namespace BeeEngine
        BeeCoreTrace("{} environmental variable is {}", name, result); 
       return String{result};
     }
+    Path Environment::GetResourcesDirectory()
+    {
+#if defined(MACOS)
+        return BeeEngine::Internal::MacOS::GetResourcesPathForCurrentBundle();
+#elif defined(WINDOWS)
+      wchar_t path[MAX_PATH] = { 0 };
+      GetModuleFileNameW(NULL, path, MAX_PATH);
+      return Path{std::filesystem::path{path}}.GetParent();      
+#elif defined(LINUX)
+      char result[PATH_MAX];
+      ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+      return Path{String(result, (count > 0) ? count : 0)}.GetParent();
+#else
+      return Path{std::filesystem::current_path()};
+#endif
+    }        
 }    
