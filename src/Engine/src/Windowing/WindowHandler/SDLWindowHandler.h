@@ -26,6 +26,7 @@ namespace BeeEngine::Internal
 
         void HideCursor() override;
         void DisableCursor() override;
+        void EnableCursor() override;
         void ShowCursor() override;
         void ProcessEvents() override;
         [[nodiscard]] bool IsRunning() const override;

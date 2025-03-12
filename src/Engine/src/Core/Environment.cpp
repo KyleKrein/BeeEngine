@@ -1,15 +1,16 @@
 #include "Environment.h"
-#include <cstdlib>
 #include "FileSystem/File.h"
+#include "Gui/ImGui/ImGuiExtension.h"
 #include "Logging/Log.h"
 #include <Platform/MacOS/MacOSInternal.h>
+#include <cstdlib>
 #include <filesystem>
 
 #ifdef WINDOWS
-#include <windows.h>    //GetModuleFileNameW
+#include <windows.h> //GetModuleFileNameW
 #elif defined(LINUX)
 #include <limits.h>
-#include <unistd.h>     //readlink
+#include <unistd.h> //readlink
 #endif
 
 namespace BeeEngine
@@ -20,55 +21,57 @@ namespace BeeEngine
         std::error_code err;
         if (!File::Exists(result))
         {
-          File::CreateDirectory(result);
+            File::CreateDirectory(result);
         }
         result /= "BeeEngine";
-	if (!File::Exists(result))
+        if (!File::Exists(result))
         {
-          File::CreateDirectory(result);
+            File::CreateDirectory(result);
         }
         result /= name;
-	if (!File::Exists(result))
+        if (!File::Exists(result))
         {
-          File::CreateDirectory(result);
+            File::CreateDirectory(result);
         }
-      return result;
-    }        
+        return result;
+    }
     Environment::Environment(const String& name)
     {
 #if defined(LINUX)
-      HomeDirectory = Environment::GetEnvVariable("HOME").value_or("~");
-        CacheDirectory = CreatePath(Environment::GetEnvVariable("XDG_CACHE_HOME").value_or(HomeDirectory() / ".cache"), name);
+        HomeDirectory = Environment::GetEnvVariable("HOME").value_or("~");
+        CacheDirectory =
+            CreatePath(Environment::GetEnvVariable("XDG_CACHE_HOME").value_or(HomeDirectory() / ".cache"), name);
         TempDirectory = CreatePath("/tmp", name);
-      ConfigDirectory = CreatePath(Environment::GetEnvVariable("XDG_CONFIG_HOME").value_or(HomeDirectory() / ".config"), name);
+        ConfigDirectory =
+            CreatePath(Environment::GetEnvVariable("XDG_CONFIG_HOME").value_or(HomeDirectory() / ".config"), name);
 #endif
     }
     std::optional<String> Environment::GetEnvVariable(const String& name)
     {
-      //TODO: make this code thread/job safe and add caching
+        // TODO: make this code thread/job safe and add caching
         const char* result = std::getenv(name.c_str());
         if (result == nullptr)
         {
-          BeeCoreTrace("{} environmental variable is not set", name);
-          return std::nullopt;
+            BeeCoreTrace("{} environmental variable is not set", name);
+            return std::nullopt;
         }
-       BeeCoreTrace("{} environmental variable is {}", name, result); 
-      return String{result};
+        BeeCoreTrace("{} environmental variable is {}", name, result);
+        return String{result};
     }
     Path Environment::GetResourcesDirectory()
     {
 #if defined(MACOS)
         return BeeEngine::Internal::MacOS::GetResourcesPathForCurrentBundle();
 #elif defined(WINDOWS)
-      wchar_t path[MAX_PATH] = { 0 };
-      GetModuleFileNameW(NULL, path, MAX_PATH);
-      return Path{std::filesystem::path{path}}.GetParent();      
+        wchar_t path[MAX_PATH] = {0};
+        GetModuleFileNameW(NULL, path, MAX_PATH);
+        return Path{std::filesystem::path{path}}.GetParent();
 #elif defined(LINUX)
-      char result[PATH_MAX];
-      ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-      return Path{String(result, (count > 0) ? count : 0)}.GetParent();
+        char result[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+        return Path{String(result, (count > 0) ? count : 0)}.GetParent();
 #else
-      return Path{std::filesystem::current_path()};
+        return Path{std::filesystem::current_path()};
 #endif
-    }        
-}    
+    }
+} // namespace BeeEngine

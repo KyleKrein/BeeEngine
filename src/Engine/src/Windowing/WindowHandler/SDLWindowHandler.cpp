@@ -17,6 +17,7 @@
 #include "Platform/Vulkan/VulkanInstance.h"
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 #include "Platform/WebGPU/WebGPUInstance.h"
+#include "Utils/Threading.hpp"
 #include "backends/imgui_impl_sdl3.h"
 
 #if defined(WINDOWS)
@@ -230,13 +231,23 @@ namespace BeeEngine
 
 namespace BeeEngine::Internal
 {
-
+    int SDLCALL iOSBackgroundEventFilter(void* userdata, SDL_Event* event)
+    {
+        if (event->type == SDL_EVENT_WILL_ENTER_BACKGROUND)
+        {
+            // free up resources, DON'T DRAW ANY MORE until you're in the foreground again!
+            // TODO
+        }
+        // etc
+        return 1;
+    }
     SDLWindowHandler::SDLWindowHandler(const ApplicationProperties& properties, EventQueue& eventQueue)
         : WindowHandler(eventQueue), m_Finalizer()
     {
+        SDL_AddEventWatch((SDL_EventFilter)iOSBackgroundEventFilter, this);
         s_Instance = this;
         m_vsync = properties.Vsync;
-        int32_t result = -1;
+        bool result = false;
         if (Application::GetOsPlatform() == OSPlatform::Linux)
         {
             BeeCoreInfo("Choosing backend for Linux");
@@ -246,7 +257,7 @@ namespace BeeEngine::Internal
                 SDL_SetHint(SDL_HINT_VIDEO_DRIVER, driver);
                 result = SDL_Init(SDL_INIT_VIDEO);
                 BeeCoreInfo("Initializing with {}. Result: {}", driver, result);
-                if (result == 0)
+                if (result)
                 {
                     bool isWayland = strcmp(driver, "wayland") == 0;
                     if (!isWayland)
@@ -261,7 +272,7 @@ namespace BeeEngine::Internal
         {
             result = SDL_Init(SDL_INIT_VIDEO);
         }
-        if (result != 0)
+        if (!result)
         {
             BeeCoreError("Failed to initialize SDL3! {}", SDL_GetError());
         }
@@ -298,11 +309,17 @@ namespace BeeEngine::Internal
         {
             BeeCoreError("Failed to create SDL3 window! {}", SDL_GetError());
         }
+        int width, height;
+        SDL_GetWindowSize(m_Window, &width, &height);
+        m_Width = width;
+        m_Height = height;
         int widthInPixels, heightInPixels;
         SDL_GetWindowSizeInPixels(m_Window, &widthInPixels, &heightInPixels);
         m_WidthInPixels = widthInPixels;
         m_HeightInPixels = heightInPixels;
-        m_ScaleFactor = (float32_t)m_WidthInPixels / (float32_t)m_Width;
+        m_ScaleFactor = SDL_GetWindowDisplayScale(m_Window);
+        BeeCoreTrace(
+            "Inputs: {}x{} Pixels: {}x{} Scale: {}", m_Width, m_Height, widthInPixels, heightInPixels, m_ScaleFactor);
         SDL_SetWindowPosition(m_Window, properties.WindowXPosition, properties.WindowYPosition);
         if (properties.IsMaximized)
         {
@@ -380,14 +397,22 @@ namespace BeeEngine::Internal
 
     void SDLWindowHandler::HideCursor()
     {
-        SDL_HideCursor();
+        BeeDoOnMainThread([]() { SDL_HideCursor(); });
     }
 
-    void SDLWindowHandler::DisableCursor() {}
+    void SDLWindowHandler::DisableCursor()
+    {
+        BeeDoOnMainThread([this]() { SDL_SetWindowRelativeMouseMode(m_Window, false); });
+    }
+
+    void SDLWindowHandler::EnableCursor()
+    {
+        BeeDoOnMainThread([this]() { SDL_SetWindowRelativeMouseMode(m_Window, true); });
+    }
 
     void SDLWindowHandler::ShowCursor()
     {
-        SDL_ShowCursor();
+        BeeDoOnMainThread([]() { SDL_ShowCursor(); });
     }
 
     void SDLWindowHandler::ProcessEvents()
@@ -417,7 +442,7 @@ namespace BeeEngine::Internal
                     SDL_GetWindowSizeInPixels(m_Window, &width, &height);
                     m_WidthInPixels = width;
                     m_HeightInPixels = height;
-                    m_ScaleFactor = (float32_t)m_WidthInPixels / (float32_t)m_Width;
+                    m_ScaleFactor = SDL_GetWindowDisplayScale(m_Window);
                     m_GraphicsDevice->RequestSwapChainRebuild();
                     auto event = CreateScope<WindowResizeEvent>(m_Width, m_Height, m_WidthInPixels, m_HeightInPixels);
                     m_Events.AddEvent(std::move(event));
@@ -486,8 +511,7 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_KEY_DOWN:
                 {
-                    auto event =
-                        CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.key), sdlEvent.key.repeat);
+                    auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.key), sdlEvent.key.repeat);
                     m_Events.AddEvent(std::move(event));
                     break;
                 }

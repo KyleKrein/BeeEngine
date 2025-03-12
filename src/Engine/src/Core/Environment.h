@@ -10,7 +10,7 @@ namespace BeeEngine
     public:
         Environment(const String& name);
         static std::optional<String> GetEnvVariable(const String& name);
-      static Path GetResourcesDirectory(); //returns path, where all Shaders/Libs should be found
+        static Path GetResourcesDirectory(); // returns path, where all Shaders/Libs should be found
         Property<Path> HomeDirectory;
         Property<Path> CacheDirectory;
         Property<Path> TempDirectory;

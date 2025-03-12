@@ -18,5 +18,6 @@ namespace BeeEngine
 
         static void SetDefaultTheme(float fontSize = 18.0f);
         static void CreateFontsWithSize(float fontSize);
+        static void SetupConfigPath();
     };
 } // namespace BeeEngine

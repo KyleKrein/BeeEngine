@@ -61,6 +61,7 @@ namespace BeeEngine
 
         virtual void HideCursor() = 0;
         virtual void DisableCursor() = 0;
+        virtual void EnableCursor() = 0;
         virtual void ShowCursor() = 0;
         virtual void ProcessEvents() = 0;
         [[nodiscard]] virtual bool IsRunning() const = 0;
@@ -74,7 +75,7 @@ namespace BeeEngine
         static WindowHandler* s_Instance;
         static WindowHandlerAPI s_API;
         WindowHandler() = delete;
-        WindowHandler(EventQueue& eventQueue) : m_Width(0), m_Height(0), m_Events(eventQueue){};
+        WindowHandler(EventQueue& eventQueue) : m_Width(0), m_Height(0), m_Events(eventQueue) {};
 
         void UpdateDeltaTime(Time::secondsD currentTime) { Time::Update(currentTime); }
         void SetDeltaTime(Time::secondsD deltaTime, Time::secondsD totalTime)

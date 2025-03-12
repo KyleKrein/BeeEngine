@@ -879,8 +879,8 @@ DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X
 
     void EditorLayer::SetDefaultImGuiWindowLayoutIfNotPresent()
     {
-        auto iniPath = std::filesystem::current_path() / "imgui.ini";
-        if (std::filesystem::exists(iniPath))
+        const Path iniPath = ImGui::GetIO().IniFilename;
+        if (File::Exists(iniPath))
         {
             // Check if current locale is correct
             auto content = File::ReadFile(iniPath);

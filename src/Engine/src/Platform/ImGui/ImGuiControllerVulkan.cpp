@@ -50,6 +50,7 @@ namespace BeeEngine::Internal
 
         // this initializes the core structures of imgui
         ImGui::CreateContext();
+	ImGuiController::SetupConfigPath();
 
         ImGuiIO& io = ImGui::GetIO();
         (void)io;
