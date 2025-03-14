@@ -23,7 +23,8 @@
 
       nativeBuildInputs = buildInputsFile.nativeBuildInputs ++ [pkgs.ccache];
       buildInputs = buildInputsFile.buildInputs;
-      "NETHOST_LIB" = (import ./nix/unofficial-nethost.nix {inherit pkgs; inherit (pkgs) lib;}).nethost-lib-path;
+      NETHOST_LIB = (import ./nix/unofficial-nethost.nix {inherit pkgs; inherit (pkgs) lib;}).nethost-lib-path;
+      VK_LAYER_PATH = "${pkgs.vulkan-validation-layers}/share/vulkan/explicit_layer.d";
     };
 
     packages.default = self.packages.${system}.BeeEngineEditor;

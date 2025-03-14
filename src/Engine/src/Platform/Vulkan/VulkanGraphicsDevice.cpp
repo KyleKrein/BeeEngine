@@ -21,17 +21,234 @@
 #include "Core/Application.h"
 #include "Core/DeletionQueue.h"
 #include "Utils.h"
+#include "Core/Expected.h"
+#include <unordered_set>
+#include <algorithm>
+#include <ranges>
 
 // clang-format on
 namespace BeeEngine::Internal
 {
-    static std::vector<const char*> requiredExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-                                                          VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
-                                                          VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-                                                          VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-                                                          VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-                                                          VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
-                                                          VK_KHR_COPY_COMMANDS_2_EXTENSION_NAME};
+    class GPU
+    {
+    public:
+        GPU(vk::PhysicalDevice device)
+            : m_Device(device),
+              m_Name(device.getProperties().deviceName.data())
+        {
+            m_Sufficient = CheckRequiredFeatures() && CheckRequiredExtensions().HasValue();
+            BeeCoreTrace("Sufficient {}", m_Sufficient);
+            m_RayTracing = CheckRayTracingSupport();
+            CalculateScore();
+        }
+        bool IsSufficient() const { return m_Sufficient; }
+        bool SupportsRayTracing() const { return m_RayTracing; }
+        const String& Name() const { return m_Name; }
+        uint64_t Score() const { return m_Score; }
+        uint64_t VRAM() const
+        {
+            return (uint64_t)(m_Device.getMemoryProperties().memoryHeaps.size() == 0
+                                  ? 0
+                                  : m_Device.getMemoryProperties().memoryHeaps[0].size);
+        }
+        vk::PhysicalDevice Device() const { return m_Device; }
+        std::optional<vk::Device> CreateLogicalDevice(const std::vector<vk::DeviceQueueCreateInfo>& queueCreateInfos)
+        {
+            if (!m_Sufficient)
+            {
+                return {};
+            }
+            std::vector<const char*> deviceExtensions;
+            deviceExtensions.reserve(s_RequiredExtensions.size());
+            for (const auto& ext : s_RequiredExtensions)
+            {
+                deviceExtensions.emplace_back(ext.c_str());
+            }
+
+            if (BeeEngine::Application::GetOsPlatform() == OSPlatform::Mac)
+            {
+                deviceExtensions.push_back("VK_KHR_portability_subset");
+            }
+
+            vk::PhysicalDeviceVulkan11Features deviceVulkan11Features = {};
+            vk::PhysicalDeviceVulkan12Features deviceVulkan12Features = {};
+            vk::PhysicalDeviceVulkan13Features deviceVulkan13Features = {};
+
+            deviceVulkan11Features.pNext = &deviceVulkan12Features;
+            deviceVulkan12Features.pNext = &deviceVulkan13Features;
+
+            vk::PhysicalDeviceFeatures2 deviceFeatures2 = {};
+            deviceFeatures2.pNext = &deviceVulkan11Features;
+
+            deviceFeatures2.features.samplerAnisotropy = vk::True;
+            deviceFeatures2.features.independentBlend = vk::True;
+
+            deviceVulkan12Features.bufferDeviceAddress = vk::True;
+            deviceVulkan12Features.descriptorIndexing = vk::True;
+
+            deviceVulkan13Features.synchronization2 = vk::True;
+            deviceVulkan13Features.dynamicRendering = vk::True;
+
+            vk::PhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures = {};
+            rayTracingFeatures.rayTracingPipeline = m_RayTracing ? vk::True : vk::False;
+            void** next = &deviceVulkan13Features.pNext;
+            if (m_RayTracing)
+            {
+                *next = &rayTracingFeatures;
+                next = &rayTracingFeatures.pNext;
+            }
+            vk::PhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures = {};
+            accelerationStructureFeatures.accelerationStructure = m_RayTracing ? vk::True : vk::False;
+
+            if (m_RayTracing)
+            {
+                *next = &accelerationStructureFeatures;
+                next = &accelerationStructureFeatures.pNext;
+            }
+
+            std::vector<const char*> enabledLayers;
+
+#if defined(BEE_VULKAN_ENABLE_VALIDATION_LAYERS)
+            enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
+#endif
+
+            vk::DeviceCreateInfo deviceInfo(vk::DeviceCreateFlags(),
+                                            queueCreateInfos.size(),
+                                            queueCreateInfos.data(),
+                                            enabledLayers.size(),
+                                            enabledLayers.data(),
+                                            deviceExtensions.size(),
+                                            deviceExtensions.data(),
+                                            nullptr);
+            deviceInfo.pNext = &deviceFeatures2;
+
+            try
+            {
+                auto device = m_Device.createDevice(deviceInfo);
+                BeeCoreInfo("Logical device created successfully");
+                return device;
+            }
+            catch (vk::SystemError& e)
+            {
+                BeeCoreError("Failed to create logical device: {}", e.what());
+                return {};
+            }
+        }
+
+    private:
+        void CalculateScore()
+        {
+            m_Score = 0;
+            if (!m_Sufficient)
+            {
+                return;
+            }
+            auto type = m_Device.getProperties().deviceType;
+            switch (type)
+            {
+                case vk::PhysicalDeviceType::eIntegratedGpu:
+                    [[fallthrough]];
+                case vk::PhysicalDeviceType::eVirtualGpu:
+                    m_Score += 50;
+                case vk::PhysicalDeviceType::eDiscreteGpu:
+                    m_Score += 100;
+                    break;
+                case vk::PhysicalDeviceType::eCpu:
+                    [[fallthrough]];
+                case vk::PhysicalDeviceType::eOther:
+                    m_Score += 10;
+                    break;
+            }
+            auto vram = VRAM();
+            m_Score += (vram / 8 / 1024 / 1024 / 1024) * 10;
+        }
+        Expected<void, std::vector<String>> CheckExtensions(const std::vector<String>& required)
+        {
+            std::vector<String> result = required;
+            auto extensions = m_Device.enumerateDeviceExtensionProperties();
+
+            std::unordered_set<String> available;
+            for (const auto& ext : extensions)
+            {
+                available.insert(ext.extensionName.data());
+            }
+
+            std::erase_if(result, [&](const String& ext) { return available.contains(ext); });
+
+            if (result.empty())
+            {
+                return {};
+            }
+            BeeCoreTrace("{} unsupported extensions: {}", Name(), result.size());
+            for (const auto& ext : result)
+            {
+                BeeCoreTrace(ext);
+            }
+            return Unexpected{result};
+        }
+        Expected<void, std::vector<String>> CheckRequiredExtensions() { return CheckExtensions(s_RequiredExtensions); }
+        bool CheckRequiredFeatures()
+        {
+            vk::PhysicalDeviceFeatures2 deviceFeatures2;
+            vk::PhysicalDeviceVulkan11Features deviceVulkan11Features;
+            vk::PhysicalDeviceVulkan12Features deviceVulkan12Features;
+            vk::PhysicalDeviceVulkan13Features deviceVulkan13Features;
+            deviceFeatures2.pNext = &deviceVulkan11Features;
+            deviceVulkan11Features.pNext = &deviceVulkan12Features;
+            deviceVulkan12Features.pNext = &deviceVulkan13Features;
+            vkGetPhysicalDeviceFeatures2(m_Device, (VkPhysicalDeviceFeatures2*)&deviceFeatures2);
+            bool result = false;
+            if (deviceFeatures2.features.samplerAnisotropy == vk::True &&
+                deviceVulkan12Features.bufferDeviceAddress == vk::True &&
+#if !defined(MACOS) && !defined(IOS)
+                deviceVulkan13Features.dynamicRendering == vk::True &&
+                deviceVulkan13Features.synchronization2 == vk::True &&
+#endif
+                deviceVulkan12Features.descriptorIndexing == vk::True)
+            {
+                result = true;
+            }
+#if !defined(MACOS) && !defined(IOS)
+            if (deviceVulkan13Features.synchronization2 != vk::True)
+            {
+                BeeCoreError("Device does not support synchronization2");
+            }
+            if (deviceVulkan13Features.dynamicRendering != vk::True)
+            {
+                BeeCoreError("Device does not support dynamic rendering");
+            }
+#endif
+            if (deviceVulkan12Features.descriptorIndexing != vk::True)
+            {
+                BeeCoreError("Device does not support descriptor indexing");
+            }
+            if (deviceVulkan12Features.bufferDeviceAddress != vk::True)
+            {
+                BeeCoreError("Device does not support buffer device address");
+            }
+            return result;
+        }
+        bool CheckRayTracingSupport()
+        {
+            static std::vector<String> rayTracingExtensions = {VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+                                                               VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+                                                               VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+                                                               VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
+                                                               VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+                                                               VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME};
+            return CheckExtensions(rayTracingExtensions).HasValue();
+        }
+        vk::PhysicalDevice m_Device;
+        String m_Name;
+        bool m_Sufficient;
+        bool m_RayTracing;
+        uint64_t m_Score;
+        static inline std::vector<String> s_RequiredExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+                                                               //VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+                                                               VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+                                                               VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+                                                               VK_KHR_COPY_COMMANDS_2_EXTENSION_NAME};
+    };
     VulkanGraphicsDevice* VulkanGraphicsDevice::s_Instance = nullptr;
     PFN_vkCmdTraceRaysKHR CmdTraceRaysKHR = nullptr;
     PFN_vkDestroyAccelerationStructureKHR DestroyAccelerationStructureKHR = nullptr;
@@ -90,8 +307,8 @@ namespace BeeEngine::Internal
         s_Instance = this;
         m_DeviceHandle.instance = instance.GetHandle();
         CreateSurface(instance);
-        SelectPhysicalDevice(instance);
-        CreateLogicalDevice();
+        GPU gpu = SelectPhysicalDevice(instance);
+        CreateLogicalDevice(gpu);
 
         DeletionQueue::Main().PushFunction([device = m_Device] { device.waitIdle(); });
         if (HasRayTracingSupport())
@@ -143,133 +360,6 @@ namespace BeeEngine::Internal
         BeeCoreInfo("Device device ID: {}", deviceProperties.deviceID);
     }
 
-    bool VulkanGraphicsDevice::CheckDeviceFeaturesSupport(const vk::PhysicalDevice& device) const
-    {
-        vk::PhysicalDeviceFeatures2 deviceFeatures2;
-        vk::PhysicalDeviceVulkan11Features deviceVulkan11Features;
-        vk::PhysicalDeviceVulkan12Features deviceVulkan12Features;
-        vk::PhysicalDeviceVulkan13Features deviceVulkan13Features;
-        deviceFeatures2.pNext = &deviceVulkan11Features;
-        deviceVulkan11Features.pNext = &deviceVulkan12Features;
-        deviceVulkan12Features.pNext = &deviceVulkan13Features;
-        vkGetPhysicalDeviceFeatures2(device, (VkPhysicalDeviceFeatures2*)&deviceFeatures2);
-
-        if (deviceFeatures2.features.samplerAnisotropy == vk::True &&
-            deviceVulkan12Features.bufferDeviceAddress == vk::True &&
-#if !defined(MACOS) && !defined(IOS)
-            deviceVulkan13Features.dynamicRendering == vk::True &&
-            deviceVulkan13Features.synchronization2 == vk::True &&
-#endif
-            deviceVulkan12Features.descriptorIndexing == vk::True)
-        {
-            return true;
-        }
-#if !defined(MACOS) && !defined(IOS)
-        if (deviceVulkan13Features.synchronization2 != vk::True)
-        {
-            BeeCoreError("Device does not support synchronization2");
-        }
-        if (deviceVulkan13Features.dynamicRendering != vk::True)
-        {
-            BeeCoreError("Device does not support dynamic rendering");
-        }
-#endif
-        if (deviceVulkan12Features.descriptorIndexing != vk::True)
-        {
-            BeeCoreError("Device does not support descriptor indexing");
-        }
-        if (deviceVulkan12Features.bufferDeviceAddress != vk::True)
-        {
-            BeeCoreError("Device does not support buffer device address");
-        }
-        return false;
-    }
-
-    bool VulkanGraphicsDevice::IsSuitableDevice(const vk::PhysicalDevice& device) const
-    {
-        if (!CheckDeviceExtensionSupport(device, requiredExtensions))
-        {
-            BeeCoreInfo("Device {} does not support all required extensions", device.getProperties().deviceName.data());
-            return false;
-        }
-        BeeCoreInfo("Device {} supports all required extensions", device.getProperties().deviceName.data());
-
-        if (!CheckDeviceFeaturesSupport(device))
-        {
-            BeeCoreInfo("Device {} does not support all required features", device.getProperties().deviceName.data());
-            return false;
-        }
-        BeeCoreInfo("Device {} supports all required features", device.getProperties().deviceName.data());
-        return true;
-    }
-
-    bool IsRayTracingExtension(const std::string& ext)
-    {
-        return ext == VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME ||
-               ext == VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME ||
-               ext == VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME || ext == VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME ||
-               ext == VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME ||
-               ext == VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME;
-    }
-
-    bool AreRayTracingOnlyExtensionsPresent(const std::set<std::string>& set)
-    {
-        return std::ranges::all_of(set, IsRayTracingExtension);
-    }
-
-    bool VulkanGraphicsDevice::CheckDeviceExtensionSupport(const vk::PhysicalDevice& device,
-                                                           std::vector<const char*>& extensions) const
-    {
-        std::vector<vk::ExtensionProperties> availableExtensions = device.enumerateDeviceExtensionProperties();
-
-        std::set<std::string> requiredExtensions(extensions.begin(), extensions.end());
-
-        BeeCoreTrace("Required Extensions for Graphics Device:");
-        for (const auto& extension : requiredExtensions)
-        {
-            BeeCoreTrace("- {}", extension);
-        }
-
-        for (const auto& extension : availableExtensions)
-        {
-            requiredExtensions.erase(extension.extensionName);
-        }
-
-        if (!requiredExtensions.empty())
-        {
-            if (AreRayTracingOnlyExtensionsPresent(requiredExtensions))
-            {
-                m_HasRayTracingSupport = false;
-                for (auto& ext : requiredExtensions)
-                {
-                    for (auto it = extensions.begin(); it != extensions.end();)
-                    {
-                        if (strcmp(*it, ext.c_str()) == 0)
-                        {
-                            it = extensions.erase(it);
-                        }
-                        else
-                        {
-                            ++it;
-                        }
-                    }
-                }
-                requiredExtensions.clear();
-            }
-        }
-        else
-        {
-            m_HasRayTracingSupport = true;
-        }
-
-        for (auto& ext : requiredExtensions)
-        {
-            BeeCoreTrace("Extension: {} is unsupported", ext);
-        }
-
-        return requiredExtensions.empty();
-    }
-
     QueueFamilyIndices VulkanGraphicsDevice::FindQueueFamilies()
     {
         QueueFamilyIndices indices;
@@ -301,7 +391,7 @@ namespace BeeEngine::Internal
         return indices;
     }
 
-    void VulkanGraphicsDevice::SelectPhysicalDevice(const VulkanInstance& instance)
+    GPU VulkanGraphicsDevice::SelectPhysicalDevice(const VulkanInstance& instance)
     {
         /*
          * Choose a suitable physical device from a list of available devices
@@ -319,35 +409,27 @@ namespace BeeEngine::Internal
             vk::PhysicalDevice device;
             uint64_t vram = 0;
             vk::PhysicalDeviceType type = vk::PhysicalDeviceType::eOther;
-          String name;
+            String name;
         };
-        DeviceScore bestDevice = {nullptr, 0};
+        std::optional<GPU> bestDevice = {};
         for (auto& device : physicalDevices)
         {
             // #if defined(DEBUG)
             LogDeviceProperties(device);
             // #endif
-            if (IsSuitableDevice(device))
+            GPU gpu{device};
+            if (!gpu.IsSufficient())
             {
-              String name = device.getProperties().deviceName.data();
-                auto type = device.getProperties().deviceType;
-                auto vram = device.getMemoryProperties().memoryHeaps[0].size;
-                if (bestDevice.device == nullptr /*|| vram > bestDevice.vram*/)
-                {
-                    bestDevice = {device, vram, type, name};
-                }
-                else if (bestDevice.type != vk::PhysicalDeviceType::eDiscreteGpu &&
-                         type == vk::PhysicalDeviceType::eDiscreteGpu)
-                {
-                    bestDevice = {device, vram, type, name};
-                }
+                BeeCoreWarn("Device {} is not suitable", gpu.Name());
+                continue;
+            }
+            if (!bestDevice.has_value() || (bestDevice.value().Score() < gpu.Score()))
+            {
+                bestDevice = gpu;
             }
         }
 
-        m_PhysicalDevice = bestDevice.device;
-        m_VRAM = bestDevice.vram;
-
-        if (!m_PhysicalDevice)
+        if (!bestDevice)
         {
             using namespace std::chrono_literals;
             BeeCoreError("No suitable physical device found. It's likely that your graphics driver is outdated. Please "
@@ -357,12 +439,18 @@ namespace BeeEngine::Internal
                            "It's likely that your graphics driver is outdated. Please update it and try again",
                            MessageBoxType::Error);
             BeeCoreError("No suitable physical device found");
-          exit(300);
+            exit(300);
         }
-      BeeCoreInfo("{} was chosen", bestDevice.name);
+
+        m_PhysicalDevice = bestDevice.value().Device();
+        m_VRAM = bestDevice.value().VRAM();
+        m_HasRayTracingSupport = bestDevice.value().SupportsRayTracing();
+
+        BeeCoreInfo("{} was chosen", bestDevice.value().Name());
+        return bestDevice.value();
     }
 
-    void VulkanGraphicsDevice::CreateLogicalDevice()
+    void VulkanGraphicsDevice::CreateLogicalDevice(GPU gpu)
     {
         m_QueueFamilyIndices = FindQueueFamilies();
 
@@ -383,80 +471,14 @@ namespace BeeEngine::Internal
         {
             m_PresentQueue = m_GraphicsQueue;
         }
-
-        std::vector<const char*> deviceExtensions = requiredExtensions;
-
-        if (BeeEngine::Application::GetOsPlatform() == OSPlatform::Mac)
-        {
-            deviceExtensions.push_back("VK_KHR_portability_subset");
-        }
-
-        vk::PhysicalDeviceVulkan11Features deviceVulkan11Features = {};
-        vk::PhysicalDeviceVulkan12Features deviceVulkan12Features = {};
-        vk::PhysicalDeviceVulkan13Features deviceVulkan13Features = {};
-
-        deviceVulkan11Features.pNext = &deviceVulkan12Features;
-        deviceVulkan12Features.pNext = &deviceVulkan13Features;
-
-        vk::PhysicalDeviceFeatures2 deviceFeatures2 = {};
-        deviceFeatures2.pNext = &deviceVulkan11Features;
-
-        deviceFeatures2.features.samplerAnisotropy = vk::True;
-        deviceFeatures2.features.independentBlend = vk::True;
-
-        deviceVulkan12Features.bufferDeviceAddress = vk::True;
-        deviceVulkan12Features.descriptorIndexing = vk::True;
-
-        deviceVulkan13Features.synchronization2 = vk::True;
-        deviceVulkan13Features.dynamicRendering = vk::True;
-
-        vk::PhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures = {};
-        rayTracingFeatures.rayTracingPipeline = HasRayTracingSupport() ? vk::True : vk::False;
-
-        deviceVulkan13Features.pNext = &rayTracingFeatures;
-
-        vk::PhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures = {};
-        accelerationStructureFeatures.accelerationStructure = HasRayTracingSupport() ? vk::True : vk::False;
-
-        rayTracingFeatures.pNext = &accelerationStructureFeatures;
-        if (!HasRayTracingSupport())
-        {
-            deviceVulkan13Features.pNext = nullptr;
-        }
-
-        std::vector<const char*> enabledLayers;
-
-#if defined(BEE_VULKAN_ENABLE_VALIDATION_LAYERS)
-        enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
-#endif
         std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
         queueCreateInfos.push_back(graphicsQueueCreateInfo);
         if (numberOfQueuesToCreate > 1)
         {
             queueCreateInfos.push_back(presentQueueCreateInfo);
         }
-
-        vk::DeviceCreateInfo deviceInfo(vk::DeviceCreateFlags(),
-                                        numberOfQueuesToCreate,
-                                        queueCreateInfos.data(),
-                                        enabledLayers.size(),
-                                        enabledLayers.data(),
-                                        deviceExtensions.size(),
-                                        deviceExtensions.data(),
-                                        nullptr);
-        deviceInfo.pNext = &deviceFeatures2;
-
-        try
-        {
-            m_Device = m_PhysicalDevice.createDevice(deviceInfo);
-            BeeCoreInfo("Logical device created successfully");
-            m_DeviceHandle.device = m_Device;
-            return;
-        }
-        catch (vk::SystemError& e)
-        {
-            BeeCoreError("Failed to create logical device: {}", e.what());
-        }
+        m_DeviceHandle.device = gpu.CreateLogicalDevice(queueCreateInfos).value();
+        m_Device = m_DeviceHandle.device;
     }
 
     void VulkanGraphicsDevice::CreateSurface(VulkanInstance& instance)

@@ -35,7 +35,7 @@ namespace BeeEngine::Internal
                     VK_API_VERSION_PATCH(version));
 
         version &= ~(0xFFFU);
-        version = VK_MAKE_API_VERSION(0, 1, 3, 0);
+        version = VK_MAKE_API_VERSION(0, 1, 4, 0);
 
         /*
          * from vulkan_structs.hpp:
