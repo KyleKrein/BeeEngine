@@ -129,7 +129,8 @@ namespace BeeEngine
     {
         std::string pathBuf = {RunCommand("which dotnet").c_str()};
         std::filesystem::path path = std::filesystem::path{pathBuf};
-        path = path.parent_path().parent_path() / "host" / "fxr";
+      BeeCoreTrace("Dotnet path from nix: {}", path);
+        path = std::filesystem::canonical(path.parent_path().parent_path()) / "share" / "dotnet" / "host" / "fxr";
         if (!std::filesystem::exists(path))
         {
             return {};
@@ -155,7 +156,7 @@ namespace BeeEngine
     {
         std::filesystem::path path;
         path = assembly_path.ToStdPath();
-        get_hostfxr_parameters params = {sizeof(get_hostfxr_parameters), assembly_path.IsEmpty() ? nullptr : path.c_str(), nullptr};
+        get_hostfxr_parameters params = {.size=sizeof(get_hostfxr_parameters), .assembly_path=assembly_path.IsEmpty() ? nullptr : path.c_str(), .dotnet_root=nullptr};
         // Pre-allocate a large buffer for the path to hostfxr
         char_t buffer[256];
         size_t buffer_size = sizeof(buffer) / sizeof(char_t);

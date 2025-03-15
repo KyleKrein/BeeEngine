@@ -17,7 +17,17 @@ in
     inherit src;
 
     nativeBuildInputs = buildInputsFile.nativeBuildInputs;
-    buildInputs = buildInputsFile.buildInputs ++ [pkgs.dotnet-sdk];
+    buildInputs = buildInputsFile.buildInputs;
+
+      wrapperPath = with lib; makeBinPath ([
+      pkgs.dotnet-sdk
+    ]);
+    postFixup = ''
+      # Ensure all dependencies are in PATH
+      wrapProgram $out/bin/BeeEngineEditor \
+        --prefix PATH : "${wrapperPath}"
+    '';
+
 
     cmakeFlags = [
       "-DCMAKE_BUILD_TYPE=${cmakeBuildType}"
@@ -28,7 +38,6 @@ in
       "-DBEE_USE_SYSTEM_SDL3=ON"
       #"-DICU_INCLUDE_DIR=${pkgs.icu.dev}/include"
     ];
-
     meta = with lib; {
       homepage = "https://github.com/KyleKrein/BeeEngine";
       description = ''

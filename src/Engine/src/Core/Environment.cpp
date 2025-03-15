@@ -69,7 +69,20 @@ namespace BeeEngine
 #elif defined(LINUX)
         char result[PATH_MAX];
         ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-        return Path{String(result, (count > 0) ? count : 0)}.GetParent();
+        auto executable = Path{String(result, (count > 0) ? count : 0)};
+        BeeCoreTrace("Exe: {}", executable);
+        auto appName = executable.GetFileName().AsUTF8();
+        if (appName.starts_with('.') && appName.ends_with("-wrapped"))
+        {
+            appName = appName.erase(0, 1);
+            appName = appName.erase(appName.find("-wrapped"));
+        }
+
+        if (executable.GetParent().GetFileName() == "bin")
+        {
+            return executable.GetParent().GetParent() / "share" / appName;
+        }
+        return executable.GetParent();
 #else
         return Path{std::filesystem::current_path()};
 #endif

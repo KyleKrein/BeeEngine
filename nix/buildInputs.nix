@@ -7,6 +7,7 @@ in
     cmake
     ninja
     python3
+    makeWrapper
     dotnetCorePackages.sdk_8_0_3xx
     #llvmPackages.clang-tools
   ];
