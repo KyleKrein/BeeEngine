@@ -22,7 +22,7 @@
       name = "BeeEngine";
 
       nativeBuildInputs = buildInputsFile.nativeBuildInputs ++ [pkgs.ccache];
-      buildInputs = buildInputsFile.buildInputs;
+      buildInputs = buildInputsFile.buildInputs ++ [pkgs.dotnet-sdk];
       NETHOST_LIB = (import ./nix/unofficial-nethost.nix {inherit pkgs; inherit (pkgs) lib;}).nethost-lib-path;
       VK_LAYER_PATH = "${pkgs.vulkan-validation-layers}/share/vulkan/explicit_layer.d";
     };

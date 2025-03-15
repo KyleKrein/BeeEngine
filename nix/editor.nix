@@ -17,7 +17,7 @@ in
     inherit src;
 
     nativeBuildInputs = buildInputsFile.nativeBuildInputs;
-    buildInputs = buildInputsFile.buildInputs;
+    buildInputs = buildInputsFile.buildInputs ++ [pkgs.dotnet-sdk];
 
     cmakeFlags = [
       "-DCMAKE_BUILD_TYPE=${cmakeBuildType}"
