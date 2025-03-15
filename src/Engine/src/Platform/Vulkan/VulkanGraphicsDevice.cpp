@@ -32,9 +32,7 @@ namespace BeeEngine::Internal
     class GPU
     {
     public:
-        GPU(vk::PhysicalDevice device)
-            : m_Device(device),
-              m_Name(device.getProperties().deviceName.data())
+        GPU(vk::PhysicalDevice device) : m_Device(device), m_Name(device.getProperties().deviceName.data())
         {
             m_Sufficient = CheckRequiredFeatures() && CheckRequiredExtensions().HasValue();
             BeeCoreTrace("Sufficient {}", m_Sufficient);
@@ -59,15 +57,31 @@ namespace BeeEngine::Internal
                 return {};
             }
             std::vector<const char*> deviceExtensions;
-            deviceExtensions.reserve(s_RequiredExtensions.size());
+            size_t numberOfExtensions = s_RequiredExtensions.size();
+            if (m_RayTracing)
+            {
+                numberOfExtensions += s_RayTracingExtensions.size();
+            }
+            if (BeeEngine::Application::GetOsPlatform() == OSPlatform::Mac)
+            {
+                numberOfExtensions += 1;
+            }
+            deviceExtensions.reserve(numberOfExtensions);
             for (const auto& ext : s_RequiredExtensions)
             {
                 deviceExtensions.emplace_back(ext.c_str());
             }
+            if (m_RayTracing)
+            {
+                for (const auto& ext : s_RayTracingExtensions)
+                {
+                    deviceExtensions.emplace_back(ext.c_str());
+                }
+            }
 
             if (BeeEngine::Application::GetOsPlatform() == OSPlatform::Mac)
             {
-                deviceExtensions.push_back("VK_KHR_portability_subset");
+                deviceExtensions.emplace_back("VK_KHR_portability_subset");
             }
 
             vk::PhysicalDeviceVulkan11Features deviceVulkan11Features = {};
@@ -228,27 +242,24 @@ namespace BeeEngine::Internal
             }
             return result;
         }
-        bool CheckRayTracingSupport()
-        {
-            static std::vector<String> rayTracingExtensions = {VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-                                                               VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
-                                                               VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-                                                               VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
-                                                               VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
-                                                               VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME};
-            return CheckExtensions(rayTracingExtensions).HasValue();
-        }
+        bool CheckRayTracingSupport() { return CheckExtensions(s_RayTracingExtensions).HasValue(); }
         vk::PhysicalDevice m_Device;
         String m_Name;
         bool m_Sufficient;
         bool m_RayTracing;
         uint64_t m_Score;
         static inline std::vector<String> s_RequiredExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-                                                               //VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+                                                               // VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
                                                                VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
                                                                VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
                                                                VK_KHR_COPY_COMMANDS_2_EXTENSION_NAME};
-    };
+        static inline std::vector<String> s_RayTracingExtensions{VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+                                                                 VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+                                                                 VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+                                                                 VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
+                                                                 VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+                                                                 VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME};
+};        
     VulkanGraphicsDevice* VulkanGraphicsDevice::s_Instance = nullptr;
     PFN_vkCmdTraceRaysKHR CmdTraceRaysKHR = nullptr;
     PFN_vkDestroyAccelerationStructureKHR DestroyAccelerationStructureKHR = nullptr;
