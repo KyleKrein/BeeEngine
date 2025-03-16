@@ -1,9 +1,9 @@
 name: "x86_64-windows"
 on:
-  #pull_request:
-  #  branches: [ "master", "dev" ]
-  #push:
-  #  branches: [ "master", "dev" ]
+  pull_request:
+    branches: [ "master", "dev" ]
+  push:
+    branches: [ "master", "dev" ]
 jobs:
   build:
     runs-on: windows-latest
