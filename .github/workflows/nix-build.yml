@@ -1,4 +1,4 @@
-name: "Nix"
+name: "x86_64-linux Nix"
 on:
   pull_request:
     branches: [ "master", "dev" ]
@@ -11,5 +11,5 @@ jobs:
     - uses: actions/checkout@v4
     - run: git submodule update --init --recursive
     - uses: cachix/install-nix-action@v31
-    - run: nix build ".?submodules=1#"
-    - run: nix flake check
+    - run: nix build ".?submodules=1#" -L
+    - run: nix flake check ".?submodules=1#"

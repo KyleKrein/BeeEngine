@@ -1,6 +1,4 @@
 { pkgs }:
-let 
-in
 {
   # nativeBuildInputs is usually what you want -- tools you need to run
   nativeBuildInputs = with pkgs.buildPackages; [
@@ -8,9 +6,9 @@ in
     ninja
     python3
     makeWrapper
-    dotnetCorePackages.sdk_8_0_3xx
-    #llvmPackages.clang-tools
+    dotnet-sdk
   ];
+  # libraries
   buildInputs = with pkgs; [
     freetype
     icu.dev
@@ -18,12 +16,10 @@ in
     libGL
     sdl3
     simdjson
-   # (simdjson.override {stdenv = llvmPackages_19.libcxxStdenv;})
     xorg.libX11
     xorg.libXext
     vulkan-headers
     vulkan-loader
     vulkan-validation-layers
-    dotnetCorePackages.sdk_8_0_3xx
   ];
 }
