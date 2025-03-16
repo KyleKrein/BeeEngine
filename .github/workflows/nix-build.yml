@@ -1,9 +1,9 @@
 name: "Nix"
 on:
   pull_request:
-	branches: [ "master", "dev" ]
+    branches: [ "master", "dev" ]
   push:
-	branches: [ "master", "dev" ]
+    branches: [ "master", "dev" ]
 jobs:
   build:
     runs-on: ubuntu-latest
