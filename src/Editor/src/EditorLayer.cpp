@@ -788,19 +788,19 @@ DockId=0x0000000E,0)";
 Pos=910,34
 Size=370,486
 Collapsed=0
-DockId=0x00000007,0)";
+DockId=0x00000007,2)";
         result << '\n' << '\n';
         result << R"([Window][Renderer Statistics]
 Pos=910,34
 Size=370,486
 Collapsed=0
-DockId=0x00000007,2)";
+DockId=0x00000007,1)";
         result << '\n' << '\n';
         result << R"([Window][Allocator statistics]
 Pos=910,34
 Size=370,486
 Collapsed=0
-DockId=0x00000007,1)";
+DockId=0x00000007,3)";
         result << '\n' << '\n';
         result << R"([Window][##Toolbar]
 Pos=371,34
@@ -824,54 +824,65 @@ DockId=0x0000000B,0)";
 Pos=910,34
 Size=370,486
 Collapsed=0
-DockId=0x00000007,3)";
+DockId=0x00000007,0)";
         result << '\n' << '\n';
         result << "[Window][" << m_EditorLocaleDomain.Translate("contentBrowserPanel") << R"(]
 Pos=0,381
 Size=536,339
 Collapsed=0
-DockId=0x00000005,0)";
+DockId=0x00000009,0)";
         result << '\n' << '\n';
         result << "[Window][" << m_EditorLocaleDomain.Translate("assetPanel") << R"(]
 Pos=538,381
 Size=370,339
 Collapsed=0
-DockId=0x00000006,0)";
+DockId=0x0000000A,0)";
         result << '\n' << '\n';
         result << R"([Window][FPS]
 Pos=910,623
 Size=370,97
 Collapsed=0
-DockId=0x0000000A,0)";
+DockId=0x00000006,0)";
         result << '\n' << '\n';
         result << R"([Window][Output Console]
 Pos=0,381
 Size=536,339
 Collapsed=0
-DockId=0x00000005,1)";
+DockId=0x00000009,1)";
         result << '\n' << '\n';
         result << "[Window][" << m_EditorLocaleDomain.Translate("settings") << R"(]
 Pos=910,522
 Size=370,99
 Collapsed=0
-DockId=0x00000009,0)";
+DockId=0x00000009,1)";
+        result << '\n' << '\n';
+        result << "[Window][" << m_EditorLocaleDomain.Translate("loadProject") << R"(]
+Pos=391,307
+Size=715,363
+Collapsed=0)";
+        result << '\n' << '\n';
+        result << "[Window][" << m_EditorLocaleDomain.Translate("newProject") << R"(]
+Pos=391,307
+Size=715,363
+Collapsed=0)";
         result << '\n' << '\n';
         result << R"([Docking][Data]
-DockSpace         ID=0x3BC79352 Window=0x4647B76E Pos=0,34 Size=1280,686 Split=X Selected=0xD04A4B96
-  DockNode        ID=0x00000002 Parent=0x3BC79352 SizeRef=908,686 Split=Y Selected=0xD04A4B96
-    DockNode      ID=0x00000003 Parent=0x00000002 SizeRef=908,345 Split=X
-      DockNode    ID=0x0000000B Parent=0x00000003 SizeRef=369,345 Selected=0xCB122D77
-      DockNode    ID=0x0000000C Parent=0x00000003 SizeRef=537,345 Split=Y Selected=0x064DAA9B
-        DockNode  ID=0x0000000D Parent=0x0000000C SizeRef=537,31 HiddenTabBar=1 Selected=0x766B88B3
-        DockNode  ID=0x0000000E Parent=0x0000000C SizeRef=537,312 CentralNode=1 HiddenTabBar=1 Selected=0x064DAA9B
-    DockNode      ID=0x00000004 Parent=0x00000002 SizeRef=908,339 Split=X Selected=0x93769EF8
-      DockNode    ID=0x00000005 Parent=0x00000004 SizeRef=536,339 Selected=0x98E83348
-      DockNode    ID=0x00000006 Parent=0x00000004 SizeRef=370,339 Selected=0x53414144
-  DockNode        ID=0x00000001 Parent=0x3BC79352 SizeRef=370,686 Split=Y Selected=0x1B782AF8
-    DockNode      ID=0x00000007 Parent=0x00000001 SizeRef=370,486 Selected=0x1B782AF8
-    DockNode      ID=0x00000008 Parent=0x00000001 SizeRef=370,198 Split=Y Selected=0x54723243
-      DockNode    ID=0x00000009 Parent=0x00000008 SizeRef=370,99 Selected=0x54723243
-      DockNode    ID=0x0000000A Parent=0x00000008 SizeRef=370,97 Selected=0x6108FA95
+DockSpace         ID=0x3BC79352 Pos=0,34 Size=1280,686 CentralNode=1 HiddenTabBar=1 Selected=0xD04A4B96
+DockSpace         ID=0xC0DFADC4 Window=0xD0388BC8 Pos=0,30 Size=1600,870 Split=X Selected=0x15710A0A
+  DockNode        ID=0x00000003 Parent=0xC0DFADC4 SizeRef=1228,870 Split=Y
+    DockNode      ID=0x00000001 Parent=0x00000003 SizeRef=1600,529 Split=X Selected=0x965B0582
+      DockNode    ID=0x0000000B Parent=0x00000001 SizeRef=368,529 Selected=0x9E1F237C
+      DockNode    ID=0x0000000C Parent=0x00000001 SizeRef=858,529 Split=Y Selected=0x965B0582
+        DockNode  ID=0x0000000D Parent=0x0000000C SizeRef=858,30 HiddenTabBar=1 Selected=0x2C127B96
+        DockNode  ID=0x0000000E Parent=0x0000000C SizeRef=858,497 CentralNode=1 HiddenTabBar=1 Selected=0x965B0582
+    DockNode      ID=0x00000002 Parent=0x00000003 SizeRef=1600,339 Split=X Selected=0x9C7FA112
+      DockNode    ID=0x00000009 Parent=0x00000002 SizeRef=535,339 Selected=0x7C52D1A0
+      DockNode    ID=0x0000000A Parent=0x00000002 SizeRef=691,339 Selected=0x9C7FA112
+  DockNode        ID=0x00000004 Parent=0xC0DFADC4 SizeRef=370,870 Split=Y Selected=0x7D0BF9E6
+    DockNode      ID=0x00000005 Parent=0x00000004 SizeRef=370,771 Split=Y Selected=0x7D0BF9E6
+      DockNode    ID=0x00000007 Parent=0x00000005 SizeRef=370,659 Selected=0x1F0E1DF7
+      DockNode    ID=0x00000008 Parent=0x00000005 SizeRef=370,110 Selected=0x4400743D
+    DockNode      ID=0x00000006 Parent=0x00000004 SizeRef=370,97 Selected=0x5ACCD6C9
 )";
         result << '\n' << '\n';
         return String{result.str()};

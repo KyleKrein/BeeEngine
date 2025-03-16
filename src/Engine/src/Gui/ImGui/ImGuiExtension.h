@@ -100,6 +100,7 @@ namespace ImGui
         BeeEngine::String DeletePopupTitle = "Are you sure that you want to delete";
     };
     void SetFileDialogTranslations(FileDialogTranslations translations);
+    const FileDialogTranslations& GetFileDialogTranslations();
 
     void OpenFileDialog(const char* key,
                         const char* filter,

@@ -101,6 +101,10 @@ To build BeeEngine with nix package manager on Linux you need to:
 nix build ".?submodules=1#BeeEngineEditor"
 #+end_src
 2. The binaries can be found inside result/BeeEngineEditor
+***** Runnin without installing and cloning
+#+begin_src shell
+nix run 'git+https://github.com/KyleKrein/BeeEngine?submodules=1#BeeEngineEditor'
+#+end_src
 **** Linux (Without Nix)
 Building on Linux without Nix package manager is possible, but it's not a priority.
 1. Install all the dependencies depending on your distro:

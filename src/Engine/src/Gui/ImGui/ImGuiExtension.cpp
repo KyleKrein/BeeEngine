@@ -155,6 +155,10 @@ namespace ImGui
     {
         g_FileDialogTranslations = BeeMove(translations);
     }
+    const FileDialogTranslations& GetFileDialogTranslations()
+    {
+        return g_FileDialogTranslations;
+    }
 
     void SetDefaultFileIcon(ImTextureID icon, float width, float height)
     {
