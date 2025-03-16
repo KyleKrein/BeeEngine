@@ -275,7 +275,7 @@ execute_process(
 )
 
 if(NOT dotnet_result EQUAL "0")
-    message(FATAL_ERROR "Failed to build BeeEngineScripting: ${dotnet_error}")
+    message(FATAL_ERROR "Failed to build BeeEngineScripting: ${dotnet_error}: ${dotnet_output}")
 else()
     message(STATUS "C# libraries for scripting support built successfully")
   message(STATUS "Output ${dotnet_output}")
