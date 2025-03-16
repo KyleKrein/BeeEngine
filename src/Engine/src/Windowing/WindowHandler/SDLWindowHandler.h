@@ -41,7 +41,7 @@ namespace BeeEngine::Internal
         GlobalMouseState GetGlobalMouseState() const override;
 
     private:
-        static Key ConvertKeyCode(SDL_Keycode key);
+        static Key ConvertKeyCode(SDL_Scancode key);
         static MouseButton ConvertMouseButton(uint8_t button);
         void InitializeVulkan();
         void InitializeWebGPU();

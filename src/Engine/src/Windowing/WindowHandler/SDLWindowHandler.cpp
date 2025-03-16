@@ -505,13 +505,13 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_KEY_UP:
                 {
-                    auto event = CreateScope<KeyReleasedEvent>(ConvertKeyCode(sdlEvent.key.key));
+                    auto event = CreateScope<KeyReleasedEvent>(ConvertKeyCode(sdlEvent.key.scancode));
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
                 case SDL_EVENT_KEY_DOWN:
                 {
-                    auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.key), sdlEvent.key.repeat);
+                    auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.scancode), sdlEvent.key.repeat);
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
@@ -783,8 +783,8 @@ namespace BeeEngine::Internal
         m_Events.AddEvent(std::move(event));
         m_IsClosing = true;
     }
-
-    Key SDLWindowHandler::ConvertKeyCode(SDL_Keycode key)
+//Scancode - layout independent. Keycode - layout dependent. Which is better?
+    Key SDLWindowHandler::ConvertKeyCode(SDL_Scancode key)
     {
         switch (key)
         {
