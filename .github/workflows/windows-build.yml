@@ -14,11 +14,11 @@ jobs:
         python-version: '3.x'
     - name: Set up MSVC
       uses: ilammy/msvc-dev-cmd@v1    
-    -name: Install Vulkan SDK
-     uses: humbletim/install-vulkan-sdk@v1.2
-     with:
-       version: 1.4.309.0
-       cache: true
+    - name: Install Vulkan SDK
+      uses: humbletim/install-vulkan-sdk@v1.2
+      with:
+        version: 1.4.309.0
+        cache: true
     - uses: actions/checkout@v4
     - run: git submodule update --init --recursive
     - name: Run Setup.py
