@@ -19,9 +19,6 @@
 [submodule "src/Engine/vendor/yaml-cpp"]
 	path = src/Engine/vendor/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
-[submodule "src/Engine/vendor/tinyobjloader"]
-	path = src/Engine/vendor/tinyobjloader
-	url = https://github.com/tinyobjloader/tinyobjloader.git
 [submodule "src/Engine/vendor/sdl"]
 	path = src/Engine/vendor/sdl
 	url = https://github.com/libsdl-org/SDL.git
