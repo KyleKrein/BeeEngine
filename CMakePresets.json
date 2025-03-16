@@ -123,7 +123,9 @@
             "binaryDir": "${sourceDir}/build/Release",
             "installDir": "${sourceDir}/install/Release",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+	      "BEE_USE_VCPKG": "ON",
+	      "BEE_BUILD_EDITOR": "ON"
             },
             "environment": {},
             "vendor": {},
