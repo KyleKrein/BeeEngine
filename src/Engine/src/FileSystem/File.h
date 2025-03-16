@@ -28,6 +28,8 @@ namespace BeeEngine
         static bool Exists(const Path& path);
         static bool CreateDirectory(const Path& path);
         static bool CopyFile(const Path& from, const Path& to);
+        static void Copy(const Path& from, const Path& to);
+        static bool EnsureDirectory(const Path& path);
         static bool IsDirectory(const Path& path);
     };
 } // namespace BeeEngine

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Core/Application.h"
 #include "Core/Logging/Log.h"
 #include "Core/Path.h"
 #include "Core/String.h"
@@ -103,11 +104,21 @@ namespace ImGui
     void OpenFileDialog(const char* key,
                         const char* filter,
                         bool multipleFiles = false,
-                        const BeeEngine::Path& currentFolder = std::filesystem::current_path());
+                        const BeeEngine::Path& currentFolder =
+                            (&BeeEngine::Application::GetInstance()
+                                 ? BeeEngine::Application::GetInstance().Environment().HomeDirectory()
+                                 : std::filesystem::current_path()));
     void OpenFileSaveDialog(const char* key,
                             const char* filter,
-                            const BeeEngine::Path& currentFolder = std::filesystem::current_path());
-    void OpenFolderFileDialog(const char* key, const BeeEngine::Path& currentFolder = std::filesystem::current_path());
+                            const BeeEngine::Path& currentFolder =
+                                (&BeeEngine::Application::GetInstance()
+                                     ? BeeEngine::Application::GetInstance().Environment().HomeDirectory()
+                                     : std::filesystem::current_path()));
+    void OpenFolderFileDialog(const char* key,
+                              const BeeEngine::Path& currentFolder =
+                                  (&BeeEngine::Application::GetInstance()
+                                       ? BeeEngine::Application::GetInstance().Environment().HomeDirectory()
+                                       : std::filesystem::current_path()));
     bool BeginFileDialog(const char* key);
     bool IsFileDialogReady();
     std::optional<BeeEngine::Path> GetResultFileDialog();

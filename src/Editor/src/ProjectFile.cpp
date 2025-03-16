@@ -53,23 +53,10 @@ namespace BeeEngine::Editor
         BeeCoreTrace("ProjectPath: {0}", FolderPath.get().AsUTF8());
         ResourceManager::ProjectName = Name.get();
         LoadLocalizationFiles();
-        if (!File::Exists(FolderPath.get() / ".beeengine"))
-        {
-            File::CreateDirectory(FolderPath.get() / ".beeengine");
-        }
-        if (!File::Exists(FolderPath.get() / ".beeengine" / "build"))
-        {
-            GameAssemblyPath = FolderPath.get() / ".beeengine" / "build";
-            File::CreateDirectory(GameAssemblyPath.get());
-            GameAssemblyPath = GameAssemblyPath.get() / dotNetVersion;
-            File::CreateDirectory(GameAssemblyPath.get());
-        }
-        else
-            GameAssemblyPath = FolderPath.get() / ".beeengine" / "build" / dotNetVersion;
-        GameAssemblyPath = GameAssemblyPath.get() / "GameLibrary.dll";
-        std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll",
-                                   FolderPath.get().ToStdPath() / ".beeengine" / "BeeEngine.Core.dll",
-                                   std::filesystem::copy_options::overwrite_existing);
+        GameAssemblyPath = FolderPath() / ".beeengine" / "build" / dotNetVersion / "GameLibrary.dll";
+        File::EnsureDirectory(GameAssemblyPath().GetParent());
+        File::CopyFile(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll",
+                       FolderPath.get().ToStdPath() / ".beeengine" / "BeeEngine.Core.dll");
         if (!File::Exists(FilePath.get()))
         {
         init:
@@ -245,10 +232,7 @@ namespace BeeEngine::Editor
         {
             const auto platformOutputPath = outputPath / ToString(platform).c_str();
             std::filesystem::create_directory(platformOutputPath);
-            std::filesystem::copy(pathToTemplate.ToStdPath(),
-                                  platformOutputPath,
-                                  std::filesystem::copy_options::recursive |
-                                      std::filesystem::copy_options::overwrite_existing);
+            File::Copy(pathToTemplate, platformOutputPath);
             Path gameFilesPath;
             switch (platform)
             {
