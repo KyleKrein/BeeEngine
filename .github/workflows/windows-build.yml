@@ -12,7 +12,7 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
-    - name Set up MSVC
+    - name: Set up MSVC
       uses: ilammy/msvc-dev-cmd@v1    
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.1
