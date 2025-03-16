@@ -9,8 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: true
+    - run: git submodule update --init --recursive
     - uses: cachix/install-nix-action@v31
     - run: nix build ".?submodules=1#"
     - run: nix flake check
