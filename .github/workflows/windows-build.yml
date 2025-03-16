@@ -22,9 +22,9 @@ jobs:
         vulkan-use-cache: true
     - uses: actions/checkout@v4
     - run: git submodule update --init --recursive
-    - name Run Setup.py
+    - name: Run Setup.py
       run: python Setup.py
-    - name Configure
+    - name: Configure
       run: cmake --preset Release-Windows
-    - name Build
+    - name: Build
       run: cmake --build build/Release --target BeeEngineEditor
