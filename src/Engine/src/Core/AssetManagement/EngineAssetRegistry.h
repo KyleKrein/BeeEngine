@@ -20,6 +20,7 @@ namespace BeeEngine
         static constexpr AssetHandle ManropeRegular = {0, 786587689586932544};
         static constexpr AssetHandle ManropeBold = {0, 54646863746848};
 
+        static constexpr AssetHandle BeeEngineLogo{0, 21342154325123};
         static constexpr AssetHandle StopButtonTexture = {0, 52345743905231234};
         static constexpr AssetHandle PlayButtonTexture = {0, 899864344847468468};
         static constexpr AssetHandle DirectoryTexture = {0, 849648416847684646};

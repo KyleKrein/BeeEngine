@@ -72,7 +72,7 @@ namespace BeeEngine::Editor
         // Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
         // BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
         // void*(*InitFunction)(void*) = nullptr;
-
+        Ref<Texture2D> m_BeeEngineLogo = nullptr;
         Ref<Texture2D> m_PlayButtonTexture = nullptr;
         Ref<Texture2D> m_StopButtonTexture = nullptr;
 

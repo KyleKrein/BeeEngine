@@ -23,6 +23,9 @@ namespace BeeEngine
     }
     static void LoadTextures(IAssetManager* assetManager)
     {
+        auto beeEngineLogo = Internal::GetEmbeddedResource(EmbeddedResource::BeeEngineLogo);
+        assetManager->LoadAsset(
+            beeEngineLogo, EngineAssetRegistry::BeeEngineLogo, "BeeEngine Logo", AssetType::Texture2D);
         auto stopButtonTexture = Internal::GetEmbeddedResource(EmbeddedResource::StopButtonTexture);
         assetManager->LoadAsset(
             stopButtonTexture, EngineAssetRegistry::StopButtonTexture, "Stop Button Texture", AssetType::Texture2D);

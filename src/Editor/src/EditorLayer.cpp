@@ -13,6 +13,7 @@
 #include "Core/Logging/Log.h"
 #include "Core/TypeDefines.h"
 #include "Debug/Instrumentor.h"
+#include "EditorApplication.h"
 #include "FileSystem/File.h"
 #include "Gui/ImGui/ImGuiExtension.h"
 #include "Gui/MessageBox.h"
@@ -62,6 +63,8 @@ namespace BeeEngine::Editor
         SetDefaultImGuiWindowLayoutIfNotPresent();
         ConsoleOutput::SetOutputProvider(&m_Console);
         SetUpMenuBar();
+        m_BeeEngineLogo =
+            AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::BeeEngineLogo, Locale::Localization::Default);
         m_PlayButtonTexture =
             AssetManager::GetAssetRef<Texture2D>(EngineAssetRegistry::PlayButtonTexture, Locale::Localization::Default);
         m_StopButtonTexture =
@@ -229,22 +232,28 @@ namespace BeeEngine::Editor
                                 LoadScene(sceneHandle);
                             }
                             Project()->StartFileWatchers();
+                            static_cast<EditorApplication&>(Application::GetInstance()).AddDebugOverlay();
                         });
                 });
             Jobs::Schedule(BeeMove(loadProjectJob));
         };
         ImGui::Begin(m_EditorLocaleDomain.Translate("projectSelection").c_str());
-
-        if (ImGui::Button(m_EditorLocaleDomain.Translate("loadProject").c_str()))
+        ImGui::BeginChild("##BlankUpStartMenu", {-1, ImGui::GetContentRegionAvail().y * 0.3f});
+        ImGui::EndChild();
+        ImGui::BeginChild("##StartMenu");
+        float logoSize = std::min(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y) * 0.3f;
+      float aspectRatio = (float) m_BeeEngineLogo->GetWidth() / (float) m_BeeEngineLogo->GetHeight();
+        ImGui::ImageCentered((ImTextureID)m_BeeEngineLogo->GetGPUResource().GetRendererID(), {logoSize, logoSize/aspectRatio}, 0.5, {0, 1}, {1, 0});
+        if (ImGui::ButtonCentered(m_EditorLocaleDomain.Translate("loadProject").c_str()))
         {
             ImGui::OpenFileDialog(m_EditorLocaleDomain.Translate("loadProject").c_str(), ".beeproj");
         }
-        if (ImGui::Button(m_EditorLocaleDomain.Translate("newProject").c_str()))
+        if (ImGui::ButtonCentered(m_EditorLocaleDomain.Translate("newProject").c_str()))
         {
             ImGui::OpenFolderFileDialog(m_EditorLocaleDomain.Translate("newProject").c_str());
         }
         ImGui::PushID("editorSettingsButton");
-        if (ImGui::Button(m_EditorLocaleDomain.Translate("editorSettings").c_str()))
+        if (ImGui::ButtonCentered(m_EditorLocaleDomain.Translate("editorSettings").c_str()))
         {
             m_ShowEditorSettings = !m_ShowEditorSettings;
         }
@@ -259,6 +268,7 @@ namespace BeeEngine::Editor
             loadProject(ProjAction::Create);
             ImGui::EndFileDialog();
         }
+        ImGui::EndChild();
         ImGui::End();
     }
 

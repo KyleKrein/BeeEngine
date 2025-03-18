@@ -16,8 +16,11 @@ namespace BeeEngine::Editor
     EditorApplication::EditorApplication(ConfigFile&& config) noexcept
         : Application(config.GetApplicationProperties()), m_Config(BeeMove(config))
     {
-        PushOverlay(CreateRef<Debug::DebugLayer>());
         PushLayer(CreateRef<EditorLayer>(m_Config));
+    }
+    void EditorApplication::AddDebugOverlay()
+    {
+        PushOverlay(CreateRef<Debug::DebugLayer>());
     }
     EditorApplication::~EditorApplication()
     {

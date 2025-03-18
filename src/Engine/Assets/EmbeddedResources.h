@@ -12,11 +12,12 @@ enum class EmbeddedResource
     OpenSansBold = 1,
     ManropeRegular = 2,
     ManropeBold = 3,
-    DirectoryTexture = 100,
-    FileTexture = 101,
-    PlayButtonTexture = 102,
-    PauseButtonTexture = 103,
-    StopButtonTexture = 104,
+    BeeEngineLogo = 100,
+    DirectoryTexture = 101,
+    FileTexture = 102,
+    PlayButtonTexture = 103,
+    PauseButtonTexture = 104,
+    StopButtonTexture = 105,
     Standart2DShaderVertex = 200,
     Standart2DShaderFragment = 201
 };

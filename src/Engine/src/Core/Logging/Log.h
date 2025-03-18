@@ -101,7 +101,7 @@ std::filesystem::remove_all(logfileName, err);
                                         ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Information,                                    \
                                     ::BeeEngine::ConsoleOutput::Input::Engine)
-#if defined(Debug)
+#if 0 //defined(Debug)
 #define BeeCoreTrace(...)                                                                                              \
     ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
                                         ::BeeEngine::FormatString(__VA_ARGS__),                                        \

@@ -62,6 +62,7 @@ namespace BeeEngine::Internal
 #else
 extern "C"
 {
+#include <BeeEngineLogo_png.h>
 #include <Manrope_Bold_ttf.h>
 #include <Manrope_Regular_ttf.h>
 #include <OpenSans_Bold_ttf.h>
@@ -90,6 +91,8 @@ namespace BeeEngine::Internal
                 return {(std::byte*)Manrope_Regular_ttf_data, Manrope_Regular_ttf_size};
             case EmbeddedResource::ManropeBold:
                 return {(std::byte*)Manrope_Bold_ttf_data, Manrope_Bold_ttf_size};
+            case EmbeddedResource::BeeEngineLogo:
+                return {(std::byte*)BeeEngineLogo_png_data, BeeEngineLogo_png_size};
             case EmbeddedResource::DirectoryTexture:
                 return {(std::byte*)directory_png_data, directory_png_size};
             case EmbeddedResource::FileTexture:

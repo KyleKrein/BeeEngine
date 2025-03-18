@@ -60,7 +60,7 @@ namespace BeeEngine
             g_Restart = false;
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineStart", "startup.json");
             Internal::InitEngine();
-            BeeEngine::Internal::Job::Initialize(4);
+            BeeEngine::Internal::Job::Initialize(4); // More cores -> More performance & less battery life
             Internal::WindowsUTF8ConsoleOutput consoleOutput;
             Internal::SetCorrectCurrentPath();
             Application* application = CreateApplication({argc, argv});
