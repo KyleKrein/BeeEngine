@@ -7,7 +7,7 @@
 namespace BeeEngine::Editor
 {
 
-    void DockSpace::Start() noexcept
+    void DockSpace::Start(bool showMenubar) noexcept
     {
         // Note: Switch this to true to enable dockspace
         static bool dockspaceOpen = true;
@@ -17,7 +17,11 @@ namespace BeeEngine::Editor
 
         // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
         // because it would be confusing to have two docking targets within each others.
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
+        if (showMenubar)
+        {
+            window_flags |= ImGuiWindowFlags_MenuBar;
+        }
         if (opt_fullscreen)
         {
             ImGuiViewport* viewport = ImGui::GetMainViewport();

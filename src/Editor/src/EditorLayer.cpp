@@ -242,8 +242,12 @@ namespace BeeEngine::Editor
         ImGui::EndChild();
         ImGui::BeginChild("##StartMenu");
         float logoSize = std::min(ImGui::GetWindowSize().x, ImGui::GetWindowSize().y) * 0.3f;
-      float aspectRatio = (float) m_BeeEngineLogo->GetWidth() / (float) m_BeeEngineLogo->GetHeight();
-        ImGui::ImageCentered((ImTextureID)m_BeeEngineLogo->GetGPUResource().GetRendererID(), {logoSize, logoSize/aspectRatio}, 0.5, {0, 1}, {1, 0});
+        float aspectRatio = (float)m_BeeEngineLogo->GetWidth() / (float)m_BeeEngineLogo->GetHeight();
+        ImGui::ImageCentered((ImTextureID)m_BeeEngineLogo->GetGPUResource().GetRendererID(),
+                             {logoSize, logoSize / aspectRatio},
+                             0.5,
+                             {0, 1},
+                             {1, 0});
         if (ImGui::ButtonCentered(m_EditorLocaleDomain.Translate("loadProject").c_str()))
         {
             ImGui::OpenFileDialog(m_EditorLocaleDomain.Translate("loadProject").c_str(), ".beeproj");
@@ -356,13 +360,14 @@ namespace BeeEngine::Editor
     void EditorLayer::OnGUIRendering() noexcept
     {
         std::unique_lock lock(m_BigLock);
-        m_DockSpace.Start();
         if (Project())
         {
+            m_DockSpace.Start(true);
             RenderEditor();
         }
         else
         {
+            m_DockSpace.Start(false);
             RenderChooseProjectScreen();
         }
         m_UIEditor.Render();

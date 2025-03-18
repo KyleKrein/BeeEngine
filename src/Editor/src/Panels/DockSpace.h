@@ -11,7 +11,7 @@ namespace BeeEngine::Editor
     class DockSpace
     {
     public:
-        void Start() noexcept;
+        void Start(bool showMenubar) noexcept;
         void End() noexcept;
     };
 } // namespace BeeEngine::Editor
