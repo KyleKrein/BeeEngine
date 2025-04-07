@@ -1,15 +1,8 @@
 {
   "dependencies": [
-    {
-      "name": "icu",
-      "features": [
-        "tools"
-      ]
-    },
+    "icu",
     "boost-context",
     "nethost",
-    "freetype",
-    "libpng",
-    "skia"
+    "freetype"
   ]
 }

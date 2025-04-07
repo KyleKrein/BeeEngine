@@ -4,11 +4,13 @@
 //@file: src/Engine/src/Locale/Locale.h Main file for localization system.
 #pragma once
 
+#include <string_view>
 #include <utility>
 #include <variant>
 
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Logging/Log.h"
+#include "Core/Move.h"
 #include "Core/Path.h"
 #include "Core/String.h"
 #include "Core/ToString.h"
@@ -37,13 +39,31 @@ namespace BeeEngine::Locale
     {
     public:
         const static Localization Default;
-        Localization() : Localization("en_Us"){};
+        Localization() : Localization("en_US"){};
         Localization(UTF8String&& locale) : m_Locale(std::move(locale)), m_Language(m_Locale.substr(0, 2))
         {
-            BeeExpects(m_Locale.size() == 2 || m_Locale.size() == 5);
+            BeeExpects(m_Locale.size() == 2 || m_Locale.size() == 5 || m_Locale.contains('.'));
+            if (m_Locale.contains('.'))
+            {
+                m_Locale = m_Locale.substr(0, m_Locale.find('.'));
+            }
+            if (m_Locale.contains('-'))
+            {
+                size_t pos = m_Locale.find('-');
+                auto language = m_Locale.substr(0, pos);
+                if (language.size() == 5)
+                {
+                    m_Locale = language + '_' + ToUppercase(m_Locale.substr(pos + 1));
+                }
+                else
+                {
+                    m_Locale = BeeMove(language);
+                }
+            }
             if (m_Locale.size() != 5) // does not contain both language and country
             {
-                m_Locale += '_' + ToUppercase({m_Locale.begin(), m_Locale.begin() + 1}) + *(m_Locale.begin() + 1);
+                m_Locale += '_' + ToUppercase(std::string_view{m_Locale.begin(), m_Locale.begin() + 1}) +
+                            *(m_Locale.begin() + 1);
             }
         }
         Localization(const UTF8String& locale) : m_Locale(locale), m_Language(m_Locale.substr(0, 2))

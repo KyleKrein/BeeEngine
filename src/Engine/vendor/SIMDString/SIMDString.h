@@ -331,9 +331,9 @@ protected:
         u64x2_t* d = reinterpret_cast<u64x2_t*>(dst);
 
 #ifdef SSE_x64
-        const u64x2_t* s = reinterpret_cast<const u64x2_t*>(src);
+        u64x2_t* s = reinterpret_cast<u64x2_t*>(const_cast<void*>(src)); //without const cast gcc does not compile
 #else
-        const uint64_t* s = reinterpret_cast<const uint64_t*>(src);
+        uint64_t* s = reinterpret_cast<uint64_t*>(const_cast<void*>(src)); // without const cast gcc does not compile
 #endif
 
         size_t i = count / SSO_ALIGNMENT;

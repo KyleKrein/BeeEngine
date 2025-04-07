@@ -24,6 +24,7 @@
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <mutex>
 #include <stb_image_write.h>
+#include "Core/Application.h"
 #include <unordered_map>
 #include <vector>
 
@@ -170,7 +171,6 @@ namespace BeeEngine
     {
         int Width, Height;
     };
-    static const Path g_CacheFolder = "Cache";
     bool IsCacheValid(const Path& cachedPath)
     {
         return File::Exists(cachedPath);
@@ -180,9 +180,9 @@ namespace BeeEngine
                                                          float fontSize,
                                                          const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
                                                          const msdf_atlas::FontGeometry& fontGeometry,
-                                                         const Configuration& config)
+                                                         const Configuration& config, const Path& cacheFolder)
     {
-        auto cachedPath = g_CacheFolder / (Path(fontName).GetFileName().AsUTF8() + ".png");
+        auto cachedPath = cacheFolder / (Path(fontName).GetFileName().AsUTF8() + ".png");
         if (IsCacheValid(cachedPath))
         {
             auto result = GPUTextureResource::Create(cachedPath);
@@ -238,6 +238,14 @@ namespace BeeEngine
     struct Font::StaticData
     {
         msdfgen::FreetypeHandle* FreeType = msdfgen::initializeFreetype();
+      Path CacheFolder = Application::GetInstance().Environment().CacheDirectory() / "FontAtlases";
+        StaticData()
+        {
+          if (!File::Exists(CacheFolder))
+            {
+              File::CreateDirectory(CacheFolder);
+            }
+        }
         // Ref<Pipeline> AtlasPipeline =
         //     Pipeline::Create(ShaderModule::Create("Shaders/MSDFGenerator.comp", ShaderType::Compute));
         ~StaticData()
@@ -427,7 +435,7 @@ namespace BeeEngine
 #undef LCG_INCREMENT
 
         m_AtlasTexture = CreateAndCacheAtlas<uint8_t, float, 4, msdf_atlas::mtsdfGenerator>(
-            name, emSize, m_Data->Glyphs, m_Data->FontGeometry, {width, height});
+            name, emSize, m_Data->Glyphs, m_Data->FontGeometry, {width, height}, s_Handle->CacheFolder);
         m_BindingSet = BindingSet::Create({{0, *m_AtlasTexture}});
 #if 0
         msdfgen::Shape shape;

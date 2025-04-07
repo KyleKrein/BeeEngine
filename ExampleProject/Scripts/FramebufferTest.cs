@@ -39,7 +39,6 @@ namespace Example
 			graphics.DrawSprite(m_SceneCameraBuffer, ref transform, Color.Red, Texture2, 1, child);
 			m_Framebuffer.Unbind();
 		}
-
 		void OnRender(Graphics graphics)
 		{
 			var transform = new Transform { Scale = new Vector3(3, 3, 1) };

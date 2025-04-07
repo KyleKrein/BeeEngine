@@ -4,6 +4,8 @@
 #include "ImGuiController.h"
 #include "../../../Assets/EmbeddedResources.h"
 #include "../../Core/Color4.h"
+#include "Core/Application.h"
+#include "Core/Property.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "imgui.h"
@@ -210,6 +212,18 @@ namespace BeeEngine
         // io.FontGlobalScale = 1.0f/scale; //TODO: uncomment this when dynamic font change is implemented
 
         io.Fonts->Build();
+    }
+    void ImGuiController::SetupConfigPath()
+    {
+        static auto changePath = [](const Path& path)
+        {
+            static Path configPath;
+            configPath = path / "imgui.ini";
+            ImGui::GetIO().IniFilename = configPath.AsCString();
+        };
+        const auto& configDir = Application::GetInstance().Environment().ConfigDirectory;
+        configDir.valueChanged().connect(changePath);
+        changePath(configDir());
     }
 
 } // namespace BeeEngine

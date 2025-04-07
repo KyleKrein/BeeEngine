@@ -4,14 +4,22 @@
 // clang-format off
 #include "NativeToManaged.h"
 
+#include "Core/Application.h"
+#include "Core/Format.h"
+#include "Core/OsPlatform.h"
+#include "Core/ResourceManager.h"
 #include "Gui/MessageBox.h"
+#include "Utils/Commands.h"
 #include "Utils/DynamicLibrary.h"
 #include "Core/String.h"
 #include "MTypes.h"
 
+#include <cstdint>
+#include <cstring>
 #include <nethost.h>
 #include <dotnethost/coreclr_delegates.h>
 #include <dotnethost/hostfxr.h>
+#include <string>
 
 #include "Core/Logging/Log.h"
 #if defined(WINDOWS)
@@ -117,12 +125,38 @@ namespace BeeEngine
         BeeCoreTrace("C# : {}", NativeToManaged::StringGetFromManagedString(message));
     }
 
+    std::optional<std::filesystem::path> get_nix_shell_dotnet_hostfxr_path()
+    {
+        std::string pathBuf = {RunCommand("which dotnet").c_str()};
+        std::filesystem::path path = std::filesystem::path{pathBuf};
+      BeeCoreTrace("Dotnet path from nix: {}", path);
+        path = std::filesystem::canonical(path.parent_path().parent_path()) / "share" / "dotnet" / "host" / "fxr";
+        if (!std::filesystem::exists(path))
+        {
+            return {};
+        }
+        for (const auto& p : std::filesystem::directory_iterator(path))
+        {
+            if(p.is_directory())
+            {
+                path = p;
+                break;
+            }
+        }
+        path = path / ResourceManager::GetDynamicLibraryName("hostfxr").c_str();
+        if (!std::filesystem::exists(path))
+        {
+            return {};
+        }
+        return path;
+    }
+
     // Using the nethost library, discover the location of hostfxr and get exports
     bool NativeToManaged::init_hostfxr(const Path& assembly_path)
     {
         std::filesystem::path path;
         path = assembly_path.ToStdPath();
-        get_hostfxr_parameters params = {sizeof(get_hostfxr_parameters), assembly_path.IsEmpty() ? nullptr : path.c_str(), nullptr};
+        get_hostfxr_parameters params = {.size=sizeof(get_hostfxr_parameters), .assembly_path=assembly_path.IsEmpty() ? nullptr : path.c_str(), .dotnet_root=nullptr};
         // Pre-allocate a large buffer for the path to hostfxr
         char_t buffer[256];
         size_t buffer_size = sizeof(buffer) / sizeof(char_t);
@@ -130,10 +164,29 @@ namespace BeeEngine
         if (rc != 0)
         {
             BeeCoreError("get_hostfxr_path failed: {0}", rc);
-            return false;
+            if (Application::GetOsPlatform() == OSPlatform::Linux)
+            {
+                BeeCoreTrace("Trying to use .Net hostfxr from nix shell");
+                auto pathOpt = get_nix_shell_dotnet_hostfxr_path();
+                if (!pathOpt.has_value())
+                {
+                    BeeCoreError("Unable to find .Net hostfxr from nix shell");
+                    return false;
+                }
+                path = pathOpt.value();
+                size_t copiedBytes = std::min(strlen(path.c_str()), buffer_size - 1);
+                memcpy(buffer, path.c_str(), copiedBytes);
+                buffer[copiedBytes] = '\0';
+            }
+            else
+            {
+                return false;
+            }
         }
         auto hostfxr_path = std::filesystem::path{buffer};
-        auto version = Path{hostfxr_path.parent_path().filename()}.AsUTF8()[0] - '0';
+        auto versionPath = Path{hostfxr_path.parent_path().filename()};
+        BeeCoreTrace("Using .Net {0}", versionPath);
+        auto version = versionPath.AsUTF8()[0] - '0';
         if (version < 8) // dotnet 8.0
         {
             BeeCoreError("HostFxr version {0} is not supported", version);
@@ -248,11 +301,13 @@ namespace BeeEngine
 #undef ObtainDelegate
     ManagedAssemblyContextID NativeToManaged::CreateContext(const String& contextName, bool canBeUnloaded)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->CreateAssemblyContext(contextName.c_str(), canBeUnloaded?1:0);
     }
 
     void NativeToManaged::UnloadContext(ManagedAssemblyContextID contextID)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         s_Data->UnloadContext(contextID);
     }
 
@@ -263,12 +318,14 @@ namespace BeeEngine
 
     ManagedAssemblyID NativeToManaged::LoadAssemblyFromPath(ManagedAssemblyContextID contextID, const Path& path, const std::optional<Path>& debugSymbolsPath)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->LoadAssemblyFromPath(contextID, path.AsCString(), debugSymbolsPath.has_value() ? debugSymbolsPath->AsCString() : nullptr);
     }
 
     std::vector<ManagedClassID> NativeToManaged::GetClassesFromAssembly(ManagedAssemblyContextID contextID,
         ManagedAssemblyID assemblyID)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         ArrayInfo info = s_Data->GetClassesFromAssembly(contextID, assemblyID);
         std::vector<ManagedClassID> result;
         result.resize(info.Length);
@@ -288,6 +345,7 @@ namespace BeeEngine
     String NativeToManaged::GetClassName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         void* ptr = s_Data->GetClassName(contextID, assemblyId, classID);
         return StringGetFromManagedString(ptr);
     }
@@ -295,6 +353,7 @@ namespace BeeEngine
     String NativeToManaged::GetClassNamespace(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         void* ptr = s_Data->GetClassNamespace(contextID, assemblyId, classID);
         return StringGetFromManagedString(ptr);
     }
@@ -302,12 +361,14 @@ namespace BeeEngine
     bool NativeToManaged::ClassIsValueType(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->ClassIsValueType(contextID, assemblyId, classID) != 0;
     }
 
     bool NativeToManaged::ClassIsEnum(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->ClassIsEnum(contextID, assemblyId, classID) != 0;
     }
 
@@ -315,18 +376,21 @@ namespace BeeEngine
         ManagedAssemblyID assemblyIdDerived, ManagedClassID classIdDerived, ManagedAssemblyContextID contextIdBase,
         ManagedAssemblyID assemblyIdBase, ManagedClassID classIdBase)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->ClassIsDerivedFrom(contextIdDerived, assemblyIdDerived, classIdDerived, contextIdBase, assemblyIdBase, classIdBase) != 0;
     }
 
     ManagedMethodID NativeToManaged::MethodGetByName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, const String& methodName, ManagedBindingFlags flags)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->MethodGetByName(contextID, assemblyId, classID, methodName.c_str(), std::to_underlying(flags));
     }
 
     std::vector<ManagedFieldID> NativeToManaged::ClassGetFields(ManagedAssemblyContextID contextID,
         ManagedAssemblyID assemblyId, ManagedClassID classID, ManagedBindingFlags flags)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         ArrayInfo info = s_Data->ClassGetFields(contextID, assemblyId, classID, std::to_underlying(flags));
         std::vector<ManagedFieldID> result;
         result.resize(info.Length);
@@ -338,6 +402,7 @@ namespace BeeEngine
     String NativeToManaged::FieldGetName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, ManagedFieldID fieldID)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         void* ptr = s_Data->FieldGetName(contextID, assemblyId, classID, fieldID);
         return StringGetFromManagedString(ptr);
     }
@@ -345,6 +410,7 @@ namespace BeeEngine
     String NativeToManaged::FieldGetTypeName(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, ManagedFieldID fieldID)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         void* ptr = s_Data->FieldGetTypeName(contextID, assemblyId, classID, fieldID);
         return StringGetFromManagedString(ptr);
     }
@@ -352,63 +418,75 @@ namespace BeeEngine
     MFieldFlags NativeToManaged::FieldGetFlags(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, ManagedFieldID fieldID)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return static_cast<MFieldFlags>(s_Data->FieldGetFlags(contextID, assemblyId, classID, fieldID));
     }
 
     GCHandle NativeToManaged::ObjectNewGCHandle(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, GCHandleType type)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->ObjectNewGCHandle(contextID, assemblyId, classID, std::to_underlying(type));
     }
 
     void NativeToManaged::ObjectFreeGCHandle(GCHandle handle)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         s_Data->ObjectFreeGCHandle(handle);
     }
 
     void* NativeToManaged::FieldGetData(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, ManagedFieldID fieldID, GCHandle objectHandle)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->FieldGetData(contextID, assemblyId, classID, fieldID, objectHandle);
     }
 
     void NativeToManaged::FieldSetData(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, ManagedFieldID fieldID, GCHandle objectHandle, void* data)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         s_Data->FieldSetData(contextID, assemblyId, classID, fieldID, objectHandle, data);
     }
 
     void* NativeToManaged::MethodInvoke(ManagedAssemblyContextID contextID, ManagedAssemblyID assemblyId,
         ManagedClassID classID, ManagedMethodID methodID, GCHandle objectHandle, void** args)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->MethodInvoke(contextID, assemblyId, classID, methodID, objectHandle, args);
     }
 
     String NativeToManaged::StringGetFromManagedString(void* managedString)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         String result = GetStringFromPtr(managedString);
         s_Data->FreeIntPtr(managedString);
         return result;
     }
     GCHandle NativeToManaged::StringCreateManaged(const String &string)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->StringCreateManaged((void*)(string.c_str()));
     }
     void NativeToManaged::FreeIntPtr(void* ptr)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         s_Data->FreeIntPtr(ptr);
     }
     void NativeToManaged::SetupLogger()
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         s_Data->SetupLogger((void*)Log_Info, (void*)Log_Warn, (void*)Log_Trace, (void*)Log_Error);
     }
 
     NativeToManaged::GCInfo NativeToManaged::GetGCInfo()
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         return s_Data->GetGCInfo();
     }
     void NativeToManaged::GCCollect()
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         s_Data->GCCollect();
     }
 }

@@ -14,7 +14,9 @@ namespace BeeEngine::Editor
         for (const auto& entry : std::filesystem::recursive_directory_iterator(workingDirectory.ToStdPath()))
         {
             if (entry.path().string().contains(".beeengine"))
+            {
                 continue;
+            }
             if (ResourceManager::IsAssetExtension(entry.path().extension()))
             {
                 files.emplace_back(entry.path());

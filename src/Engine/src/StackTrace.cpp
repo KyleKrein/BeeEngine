@@ -12,7 +12,7 @@
 
 namespace BeeEngine
 {
-#if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L
+#if defined(__cpp_lib_stacktrace) && __cpp_lib_stacktrace >= 202011L && !defined(LINUX)
     StackTrace::StackTrace(const std::stacktrace& stacktrace)
     {
         m_Entries.reserve(stacktrace.size());

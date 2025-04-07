@@ -270,9 +270,9 @@ namespace BeeEngine
             for (int i = -1; i < ImGuiDir_COUNT; i++)
             {
                 bool isSelected = style.WindowMenuButtonPosition == i;
-                if (ImGui::Selectable(ToString((ImGuiDir_)i).c_str(), isSelected))
+                if (ImGui::Selectable(ToString((ImGuiDir)i).c_str(), isSelected))
                 {
-                    style.WindowMenuButtonPosition = static_cast<ImGuiDir_>(i);
+                    style.WindowMenuButtonPosition = static_cast<ImGuiDir>(i);
                 }
                 if (isSelected)
                 {
@@ -306,9 +306,9 @@ namespace BeeEngine
             for (int i = -1; i < ImGuiDir_COUNT; i++)
             {
                 bool isSelected = style.ColorButtonPosition == i;
-                if (ImGui::Selectable(ToString((ImGuiDir_)i).c_str(), isSelected))
+                if (ImGui::Selectable(ToString((ImGuiDir)i).c_str(), isSelected))
                 {
-                    style.ColorButtonPosition = static_cast<ImGuiDir_>(i);
+                    style.ColorButtonPosition = static_cast<ImGuiDir>(i);
                 }
                 if (isSelected)
                 {

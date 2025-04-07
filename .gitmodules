@@ -19,9 +19,6 @@
 [submodule "src/Engine/vendor/yaml-cpp"]
 	path = src/Engine/vendor/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
-[submodule "src/Engine/vendor/tinyobjloader"]
-	path = src/Engine/vendor/tinyobjloader
-	url = https://github.com/tinyobjloader/tinyobjloader.git
 [submodule "src/Engine/vendor/sdl"]
 	path = src/Engine/vendor/sdl
 	url = https://github.com/libsdl-org/SDL.git
@@ -37,3 +34,22 @@
 [submodule "src/Engine/vendor/KDBindings"]
 	path = src/Engine/vendor/KDBindings
 	url = https://github.com/KDAB/KDBindings.git
+[submodule "src/Engine/vendor/spdlog"]
+	path = src/Engine/vendor/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "src/Engine/vendor/fastgltf"]
+	path = src/Engine/vendor/fastgltf
+	url = https://github.com/spnda/fastgltf
+[submodule "src/Engine/vendor/ImGui/imgui"]
+	path = src/Engine/vendor/ImGui/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
+[submodule "src/Engine/vendor/ImGuizmo/imguizmo"]
+	path = src/Engine/vendor/ImGuizmo/imguizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo
+[submodule "src/Engine/vendor/Box2D/box2d"]
+	path = src/Engine/vendor/Box2D/box2d
+	url = https://github.com/erincatto/Box2D
+[submodule "src/Engine/vendor/msdfgen/msdf-atlas-gen"]
+	path = src/Engine/vendor/msdfgen/msdf-atlas-gen
+	url = https://github.com/Chlumsky/msdf-atlas-gen

@@ -4,7 +4,9 @@
 
 #include "VulkanShaderModule.h"
 
+#include "Renderer/BufferLayout.h"
 #include "VulkanInstancedBuffer.h"
+#include <cstdint>
 #include <map>
 #include <vulkan/vulkan_enums.hpp>
 
@@ -155,20 +157,43 @@ namespace BeeEngine::Internal
 
     void VulkanShaderModule::InitData()
     {
+        auto processElement = [this](const BufferElement& element, size_t binding)
+        {
+            auto addVertexInputAttribute = [this, binding](auto format, auto offset, auto location)
+            {
+                vk::VertexInputAttributeDescription attribute{};
+                attribute.format = format;
+                attribute.offset = offset;
+                attribute.location = location;
+                attribute.binding = binding;
+                m_VertexAttributeDescriptions.push_back(attribute);
+            };
+            if (element.GetType() == ShaderDataType::Mat4 || element.GetType() == ShaderDataType::Mat3)
+            {
+                const uint32_t matSize = element.GetType() == ShaderDataType::Mat4 ? 4 : 3;
+                ShaderDataType type =
+                    element.GetType() == ShaderDataType::Mat4 ? ShaderDataType::Float4 : ShaderDataType::Float3;
+
+                for (uint32_t i = 0; i < matSize; ++i)
+                {
+                    addVertexInputAttribute(ShaderDataTypeToVulkan(type),
+                                            element.GetOffset() + sizeof(float) * matSize * i,
+                                            element.GetLocation() + i);
+                }
+                return;
+            }
+            addVertexInputAttribute(
+                ShaderDataTypeToVulkan(element.GetType()), element.GetOffset(), element.GetLocation());
+        };
         if (m_Type == ShaderType::Vertex)
         {
             m_VertexBindingDescription.stride = m_Layout.GetStride();
             m_VertexBindingDescription.binding = 0;
             m_VertexBindingDescription.inputRate = vk::VertexInputRate::eVertex;
-            auto& inElements = m_Layout.GetInputElements();
-            for (auto& element : inElements)
+            const auto& inElements = m_Layout.GetInputElements();
+            for (const auto& element : inElements)
             {
-                vk::VertexInputAttributeDescription attribute{};
-                attribute.format = ShaderDataTypeToVulkan(element.GetType());
-                attribute.offset = element.GetOffset();
-                attribute.location = element.GetLocation();
-                attribute.binding = 0;
-                m_VertexAttributeDescriptions.push_back(attribute);
+                processElement(element, 0);
             }
 
             // Instance buffer
@@ -184,15 +209,10 @@ namespace BeeEngine::Internal
             }
             m_InstanceBindingDescription.binding = 1;
             m_InstanceBindingDescription.inputRate = vk::VertexInputRate::eInstance;
-            auto& instancedElements = m_Layout.GetInstancedElements();
-            for (auto& element : instancedElements)
+            const auto& instancedElements = m_Layout.GetInstancedElements();
+            for (const auto& element : instancedElements)
             {
-                vk::VertexInputAttributeDescription attribute{};
-                attribute.format = ShaderDataTypeToVulkan(element.GetType());
-                attribute.offset = element.GetOffset();
-                attribute.location = element.GetLocation();
-                attribute.binding = 1;
-                m_VertexAttributeDescriptions.push_back(attribute);
+                processElement(element, 1);
             }
             m_VertexInputState = vk::PipelineVertexInputStateCreateInfo{};
             m_VertexInputState.vertexBindingDescriptionCount = 2;

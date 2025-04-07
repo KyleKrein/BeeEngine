@@ -14,6 +14,7 @@
 
 namespace BeeEngine::Internal
 {
+  class GPU;
     class VulkanGraphicsDevice final : public GraphicsDevice
     {
     public:
@@ -169,16 +170,9 @@ namespace BeeEngine::Internal
         bool m_SwapChainRebuildRequested = false;
 
         void LogDeviceProperties(vk::PhysicalDevice& device) const;
-
-        bool CheckDeviceFeaturesSupport(const vk::PhysicalDevice& device) const;
-
-        bool IsSuitableDevice(const vk::PhysicalDevice& device) const;
-
-        bool CheckDeviceExtensionSupport(const vk::PhysicalDevice& device, std::vector<const char*>& extensions) const;
-
         QueueFamilyIndices FindQueueFamilies();
-        void SelectPhysicalDevice(const VulkanInstance& instance);
-        void CreateLogicalDevice();
+        GPU SelectPhysicalDevice(const VulkanInstance& instance);
+        void CreateLogicalDevice(GPU gpu);
         void CreateSurface(VulkanInstance& instance);
         void InitializeVulkanMemoryAllocator(VulkanInstance& instance);
 

@@ -33,9 +33,39 @@
             "binaryDir": "${sourceDir}/build/Debug",
             "installDir": "${sourceDir}/install/Debug",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_WITH_INSTALL_RPATH": "ON"
             },
-            "environment": {},
+            "environment": {
+                "CC": "clang",
+                "CXX": "clang++"
+            },
+            "vendor": {},
+            "condition": {
+                "type": "notEquals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+      {
+            "name": "Debug-NixOS",
+            "displayName": "Debug-NixOS Config",
+            "description": "Debug build using Ninja generator",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/Debug-NixOS",
+            "installDir": "${sourceDir}/install/Debug-NixOS",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_BUILD_WITH_INSTALL_RPATH": "ON",
+	      "BEE_USE_VCPKG": "OFF",
+	      "NETHOST_LIB": "$env{NETHOST_LIB}",
+	      "BEE_BUILD_EDITOR": "ON",
+	      "BEE_USE_SYSTEM_SDL3": "ON"
+            },
             "vendor": {},
             "condition": {
                 "type": "notEquals",
@@ -51,9 +81,15 @@
             "binaryDir": "${sourceDir}/build/Release",
             "installDir": "${sourceDir}/install/Release",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_WITH_INSTALL_RPATH": "ON"
             },
-            "environment": {},
+            "environment": {
+                "CC": "clang",
+                "CXX": "clang++"
+            },
             "vendor": {},
             "condition": {
                 "type": "notEquals",
@@ -87,7 +123,9 @@
             "binaryDir": "${sourceDir}/build/Release",
             "installDir": "${sourceDir}/install/Release",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+	      "BEE_USE_VCPKG": "ON",
+	      "BEE_BUILD_EDITOR": "ON"
             },
             "environment": {},
             "vendor": {},

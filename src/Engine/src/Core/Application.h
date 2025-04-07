@@ -8,6 +8,7 @@
 #include "Core/Events/EventQueue.h"
 #include "Core/LayerStack.h"
 #include "Core/Logging/Log.h"
+#include "Core/Environment.h"
 #include "OsPlatform.h"
 #include "Renderer/AssetManager.h"
 #include "Renderer/ShaderModule.h"
@@ -71,6 +72,7 @@ namespace BeeEngine
 
         bool IsFocused() { return m_IsFocused; }
         bool IsMaximized() { return m_IsMaximized; }
+      Property<Environment> Environment;
 
     protected:
         virtual void Update(FrameData& frameData) {};

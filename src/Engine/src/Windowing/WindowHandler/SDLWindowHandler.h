@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "SDL3/SDL_events.h"
 #include "WindowHandler.h"
 #if defined(BEE_COMPILE_SDL)
 #include "KeyCodes.h"
@@ -25,6 +26,7 @@ namespace BeeEngine::Internal
 
         void HideCursor() override;
         void DisableCursor() override;
+        void EnableCursor() override;
         void ShowCursor() override;
         void ProcessEvents() override;
         [[nodiscard]] bool IsRunning() const override;
@@ -43,6 +45,7 @@ namespace BeeEngine::Internal
         static MouseButton ConvertMouseButton(uint8_t button);
         void InitializeVulkan();
         void InitializeWebGPU();
+        void HandleDragDropLinux(const SDL_Event& event);
 
         struct sdlFinalizer
         {

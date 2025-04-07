@@ -1,0 +1,15 @@
+name: "x86_64-linux Nix"
+on:
+  pull_request:
+    branches: [ "master", "dev" ]
+  push:
+    branches: [ "master", "dev" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: git submodule update --init --recursive
+    - uses: cachix/install-nix-action@v31
+    - run: nix build ".?submodules=1#" -L
+    - run: nix flake check ".?submodules=1#"

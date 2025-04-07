@@ -1,0 +1,187 @@
+* BeeEngine
+This is a General Purpose 2D (and in the future 3D also) cross-platform game engine, that is in early stages of development.
+
+* Table of Contents :toc:
+- [[#beeengine][BeeEngine]]
+  - [[#ui-screenshots][UI Screenshots]]
+  - [[#platforms-and-building][Platforms and Building]]
+  - [[#developing-the-games][Developing the Games]]
+  - [[#developing-the-engine][Developing the Engine]]
+  - [[#documentation-generation][Documentation Generation]]
+  - [[#roadmap--future-plans][Roadmap / Future Plans]]
+
+** UI Screenshots
+*** BeeEngine Editor: Flappy Bird example
+  [[file:screenshots/MainUI.jpg]]
+*** BeeEngine Editor: Example Project
+  [[file:screenshots/MainUI2.jpg]]
+*** BeeEngine Editor: 2D Civilization Game
+  [[file:screenshots/MainUI3.png]]
+
+*** Features
+- Cross-platform
+- Fully featured Editor
+- Written in C++, but games can be written in C#
+- Can be used for standalone applications (BeeEngineEditor and BeeLocalization apps are powered by the BeeEngine)
+- Projects
+- Asset management system
+- Uses Vulkan as renderer backend
+- ECS with entt backend
+
+** Platforms and Building
+
+*** Supported Platforms
+Windows, Linux and MacOS are main platforms for now. Mobile platforms are in development.
+
+Tested on AppleClang 15 compiler on MacOS, on MSVC compiler on Windows and on Clang and GCC 14 compilers on Linux.
+
+*** Building
+The first step towards building BeeEngine is cloning of git repo
+Clone github repository recursively:
+#+BEGIN_SRC shell
+git clone https://github.com/KyleKrein/BeeEngine.git --recursive
+#+END_SRC
+**** Windows
+1. Run install script with admin rights from terminal:
+#+BEGIN_SRC shell
+windows_install.bat
+#+END_SRC
+2. Download and install Vulkan SDK from https://vulkan.lunarg.com/sdk/home
+3. Download and install .Net SDK 8 from https://dotnet.microsoft.com
+4. In terminal go into the folder that contains the cloned repo and type:
+#+BEGIN_SRC shell
+cmake --preset Release-Windows
+#+END_SRC
+ P.s. On Windows there're always problems with MSVC not being correctly accessible from terminal, so you might need to configure this preset, setting variables for C and CXX compilers manually.
+5. Build the needed target:
+   - For the editor:
+     #+BEGIN_SRC shell
+     cmake --build build/Release --target BeeEngineEditor --parallel
+     #+END_SRC
+   - For the localization app:
+     #+BEGIN_SRC shell
+     cmake --build build/Release --target BeeLocalization --parallel
+     #+END_SRC
+   - For the Runtime:
+     #+BEGIN_SRC shell
+     cmake --build build/Release --target GameRuntime --parallel
+     #+END_SRC
+
+6. The binaries can be found inside build/Release/src
+**** Mac
+1. Run install script with admin rights from terminal:
+#+BEGIN_SRC shell
+./macos_install.sh
+#+END_SRC
+2. Download and install Vulkan SDK from https://vulkan.lunarg.com/sdk/home
+3. Download and install .Net SDK 8 from https://dotnet.microsoft.com
+4. In terminal go into the folder that contains the cloned repo and type:
+#+BEGIN_SRC shell
+cmake --preset Release
+#+END_SRC
+5. Build the needed target:
+   - For the editor:
+     #+BEGIN_SRC shell
+     cmake --build build/Release --target BeeEngineEditor --parallel
+     #+END_SRC
+   - For the localization app:
+     #+BEGIN_SRC shell
+     cmake --build build/Release --target BeeLocalization --parallel
+     #+END_SRC
+   - For the Runtime:
+     #+BEGIN_SRC shell
+     cmake --build build/Release --target GameRuntime --parallel
+     #+END_SRC
+
+6. The binaries can be found inside build/Release/src
+**** Linux (Nix)
+To build BeeEngine with nix package manager on Linux you need to:
+1. Enter the directory with cloned repo and build the Editor with submodules:
+#+begin_src shell
+nix build ".?submodules=1#BeeEngineEditor"
+#+end_src
+2. The binaries can be found inside result/BeeEngineEditor
+***** Runnin without installing and cloning
+#+begin_src shell
+nix run 'git+https://github.com/KyleKrein/BeeEngine?submodules=1#BeeEngineEditor'
+#+end_src
+**** Linux (Without Nix)
+Building on Linux without Nix package manager is possible, but it's not a priority.
+1. Install all the dependencies depending on your distro:
+   - Vulkan SDK
+   - dotnet 8
+   - CMake
+   - Ninja
+   - ??? (Not completed)
+2. Configure project
+#+begin_src shell
+cmake --preset Release
+#+end_src
+3. Build the needed target:
+   - For the editor:
+     #+begin_src shell
+     cmake --build build/Release --target BeeEngineEditor --parallel
+     #+end_src
+   - For the localization app:
+     #+begin_src shell
+     cmake --build build/Release --target BeeLocalization --parallel
+     #+end_src
+   - For the Runtime:
+     #+begin_src shell
+     cmake --build build/Release --target GameRuntime --parallel
+     #+end_src
+4. The binaries can be found inside build/Release/src
+** Developing the Games
+There're no special first party guides created yet. It's in plans after the creation of Website.
+But there're example scripts and scenes in [[./ExampleProject]] directory, that you can use to look, how to implement certain features and how it all works.
+There's also a [[#documentation-generation][Documentation Generation]] instructions, that can help you create the Code Documentation for the Engine API (You need the C# Documentation).
+** Developing the Engine
+If you want to help me with development of this game engine, follow these tips:
+*** Use Nix package manager
+[[https://nixos.org/][Nix]] allows the reproducible builds to exist. Allows to pin dependencies and toolchains.
+If you cloned the repo and are in the root it, you can use
+#+begin_src shell
+nix develop
+#+end_src
+in order to enter development environment with all the tools you need.
+
+/P.s. it's for now only for Linux. MacOS and Windows builds with nix are in Plans./
+*** Look at Editor, Sandbox and Runtime
+These are the projects empowered by BeeEngine. You can use their code as an example for future developments.
+** Documentation Generation
+Note: This documentation is far from being complete and is meant to be used for internal development only.
+
+1. Install doxygen from https://www.doxygen.nl/download.html
+
+2. Install MiKTeX from https://miktex.org/download
+
+3. Install Graphviz from https://graphviz.org/download/
+
+4. Open terminal at project/docs directory and type
+   #+begin_src shell
+   doxygen DoxyfileCpp
+   #+end_src
+   #+begin_src shell
+   doxygen DoxyfileCs
+   #+end_src
+5. Wait for generation to complete, go to folder docs and open index.html
+** Roadmap / Future Plans
+The TODOs are placed not in order they're going to be developed.
+*** Website for the BeeEngine
+- Runtime build CI with cache
+- Published Code Documentation
+- Text/Video guides, how to create games with BeeEngine
+*** Features
+- UI For Games
+- Native Compilation of game code
+  + AOT for C# or another language? This is needed for Mobile Platforms (JIT is not allowed on iOS)
+- Audio System
+- Complete 2D Physics
+- Project Templates in Editor
+- Steam Integration
+- Networking
+*** Platform Support
+- Nix build support for MacOS
+- Cross Compilation Support for Windows
+- Android Support (Distant Future)
+- iOS Support (Distant Future)

@@ -18,6 +18,7 @@
 #include "MTypes.h"
 #include "MUtils.h"
 #include "NativeToManaged.h"
+#include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
 #include "ScriptGlue.h"
@@ -416,7 +417,9 @@ namespace BeeEngine
             return;
         }
         auto& script = s_Data.EntityObjects.at(uuid);
+        BeeCoreTrace("Rendering Entity {}:{}", uuid, entity.GetComponent<TagComponent>().Tag);
         script->InvokeOnRender(cmd);
+        BeeCoreTrace("Entity {}:{} rendered", uuid, entity.GetComponent<TagComponent>().Tag);
     }
 
     Scene* ScriptingEngine::GetSceneContext()
@@ -557,8 +560,12 @@ namespace BeeEngine
 
     void ScriptingEngine::UpdateTime(Time::secondsD deltaTime, Time::secondsD totalTime)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         if (!s_Data.Handles.DeltaTimeField)
+        {
+            BeeCoreTrace("DeltaTimeField not found in ScriptingEngine");
             return;
+        }
         double deltaTimeDouble = deltaTime.count();
         double totalTimeDouble = totalTime.count();
         auto& mclass = s_Data.Handles.DeltaTimeField->GetClass();
@@ -645,11 +652,13 @@ namespace BeeEngine
 
     void ScriptingEngine::RequestSceneChange(AssetHandle sceneHandle)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         s_Data.OnSceneChangeCallback(sceneHandle);
     }
 
     void ScriptingEngine::OnCollisionStart(UUID entity1, UUID entity2)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         uint64_t id1 = entity1;
         uint64_t id2 = entity2;
         void* params[] = {&id1, &id2};
@@ -657,6 +666,7 @@ namespace BeeEngine
     }
     void ScriptingEngine::OnCollisionEnd(UUID entity1, UUID entity2)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         uint64_t id1 = entity1;
         uint64_t id2 = entity2;
         void* params[] = {&id1, &id2};
@@ -665,6 +675,7 @@ namespace BeeEngine
 
     void ScriptingEngine::OnMouseClick(UUID entity, MouseButton button)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         Entity camera = s_Data.CurrentScene->GetPrimaryCameraEntity();
         uint64_t id1 = camera.GetUUID();
         uint64_t id2 = entity;
@@ -673,6 +684,7 @@ namespace BeeEngine
     }
     void ScriptingEngine::OnMouseEnter(UUID entity)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         Entity camera = s_Data.CurrentScene->GetPrimaryCameraEntity();
         uint64_t id1 = camera.GetUUID();
         uint64_t id2 = entity;
@@ -681,6 +693,7 @@ namespace BeeEngine
     }
     void ScriptingEngine::OnMouseLeave(UUID entity)
     {
+        BeeCoreTrace("{}", std::source_location::current().function_name());
         Entity camera = s_Data.CurrentScene->GetPrimaryCameraEntity();
         uint64_t id1 = camera.GetUUID();
         uint64_t id2 = entity;

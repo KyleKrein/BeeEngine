@@ -1,0 +1,29 @@
+name: "x86_64-windows"
+on:
+  pull_request:
+    branches: [ "master", "dev" ]
+  push:
+    branches: [ "master", "dev" ]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Set up MSVC
+      uses: ilammy/msvc-dev-cmd@v1    
+    - name: Install Vulkan SDK
+      uses: humbletim/install-vulkan-sdk@v1.2
+      with:
+        version: 1.4.309.0
+        cache: true
+    - uses: actions/checkout@v4
+    - run: git submodule update --init --recursive
+    - name: Run Setup.py
+      run: python Setup.py
+    - name: Configure
+      run: cmake --preset Release-Windows
+    - name: Build
+      run: cmake --build build/Release --target BeeEngineEditor

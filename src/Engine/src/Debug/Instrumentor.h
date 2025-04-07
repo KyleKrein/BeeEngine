@@ -78,7 +78,11 @@ namespace BeeEngine
             inline bool IsSessionActive() { return m_CurrentSession != nullptr; }
             void BeginSession(const std::string& name, const std::string& filepath = "results.json")
             {
+#if defined(LINUX)
+                m_OutputStream.open("/tmp/beeengine/" + filepath);
+#else
                 m_OutputStream.open(filepath);
+#endif                
                 WriteHeader();
                 m_CurrentSession = new InstrumentationSession{name};
             }

@@ -34,7 +34,7 @@ namespace BeeEngine
         bool IsRelative() const noexcept;
 
         bool IsEmpty() const noexcept { return m_Path.empty(); }
-#if __has_cpp_attribute(__cpp_explicit_this_parameter)
+#if 0//__has_attribute(__cpp_explicit_this_parameter)
         template <typename Self>
         auto&& AsUTF8(this Self&& self) noexcept
         {
@@ -42,6 +42,7 @@ namespace BeeEngine
         }
 #else
         const UTF8String& AsUTF8() const& noexcept { return m_Path; }
+        UTF8String& AsUTF8() & noexcept { return m_Path; }
         UTF8String&& AsUTF8() && noexcept { return BeeMove(m_Path); }
 #endif
         const char* AsCString() const noexcept { return m_Path.c_str(); }

@@ -1,9 +1,9 @@
 #pragma once
 #include <BeeEngine.h>
-#include <Gui/ImGui/FpsCounter.h>
-#include <Gui/ImGui/RendererStatisticsGUI.h>
-#include <Gui/ImGui/ImGuiOutputConsole.h>
 #include <FileSystem/File.h>
+#include <Gui/ImGui/FpsCounter.h>
+#include <Gui/ImGui/ImGuiOutputConsole.h>
+#include <Gui/ImGui/RendererStatisticsGUI.h>
 
 namespace BeeEngine::Runtime
 {
@@ -44,25 +44,23 @@ namespace BeeEngine::Runtime
         }
         void OnUpdate(FrameData& frameData) override
         {
+            BeeCoreTrace("{}", std::source_location::current().function_name());
             m_FpsCounter.Update();
         }
         void OnGUIRendering() override
         {
+            BeeCoreTrace("{}", std::source_location::current().function_name());
             m_FpsCounter.Render();
             m_RendererStatisticsGUI.Render();
             m_Console.RenderGUI();
+            BeeCoreTrace("Finished {}", std::source_location::current().function_name());
         }
-        ~DebugLayer() noexcept override
-        {
-            ConsoleOutput::SetOutputProvider(nullptr);
-        }
-        BeeEngine::ImGuiOutputConsole& GetConsole()
-        {
-            return m_Console;
-        }
+        ~DebugLayer() noexcept override { ConsoleOutput::SetOutputProvider(nullptr); }
+        BeeEngine::ImGuiOutputConsole& GetConsole() { return m_Console; }
+
     private:
-        BeeEngine::Internal::FpsCounter m_FpsCounter {};
-        BeeEngine::Internal::RendererStatisticsGUI m_RendererStatisticsGUI {};
-        BeeEngine::ImGuiOutputConsole m_Console {};
+        BeeEngine::Internal::FpsCounter m_FpsCounter{};
+        BeeEngine::Internal::RendererStatisticsGUI m_RendererStatisticsGUI{};
+        BeeEngine::ImGuiOutputConsole m_Console{};
     };
-}
+} // namespace BeeEngine::Runtime

@@ -11,9 +11,11 @@
 #include "memory.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
+#include <filesystem>
 #include <iterator>
 #include <memory>
 #include <spdlog/sinks/daily_file_sink.h>
+#include <system_error>
 #include <vector>
 #include <version>
 
@@ -31,11 +33,24 @@ namespace BeeEngine
     public:
         static void Init()
         {
+            std::error_code err;
+#if defined(LINUX)
+            const char* logfileName = "/tmp/beeengine/log.txt";
+            std::filesystem::create_directory("/tmp/beeengine", err);            
+#elif defined(WINDOWS)
+const char* logfileName = "log.txt";
+#elif defined(MACOS)
+const char* logfileName = "/tmp/beeengine/log.txt";
+  std::filesystem::create_directory("/tmp/beeengine", err);
+#else
+const char* logfileName = "log.txt";
+#endif
+std::filesystem::remove_all(logfileName, err);
             std::string pattern = "%^[%T] [%l] %n: %v%$";
             spdlog::set_pattern(pattern);
             std::vector<spdlog::sink_ptr> sinks{
                 std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
-                std::make_shared<spdlog::sinks::daily_file_format_sink_mt>("logfile.txt", 23, 59)};
+                std::make_shared<spdlog::sinks::daily_file_format_sink_mt>(logfileName, 23, 59)};
 
             s_CoreLogger = std::make_shared<spdlog::logger>("BeeEngine", std::begin(sinks), std::end(sinks));
             s_CoreLogger->set_level(spdlog::level::trace);
@@ -66,30 +81,40 @@ namespace BeeEngine
     ::BeeEngine::Log::GetCoreLogger()->error(final, location.file_name(), location.line());
 }*/
 #define BeeCoreFatalError(...)                                                                                         \
-    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                            \
+    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
+                                        ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Error,                                          \
                                     ::BeeEngine::ConsoleOutput::Input::Engine);                                        \
     throw std::runtime_error(__VA_ARGS__)
 #define BeeCoreError(...)                                                                                              \
-    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                            \
+    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
+                                        ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Error,                                          \
                                     ::BeeEngine::ConsoleOutput::Input::Engine)
 #define BeeCoreWarn(...)                                                                                               \
-    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                            \
+    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
+                                        ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Warning,                                        \
                                     ::BeeEngine::ConsoleOutput::Input::Engine)
 #define BeeCoreInfo(...)                                                                                               \
-    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                            \
+    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
+                                        ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Information,                                    \
                                     ::BeeEngine::ConsoleOutput::Input::Engine)
+#if 0 //defined(Debug)
 #define BeeCoreTrace(...)                                                                                              \
-    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                            \
+    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
+                                        ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Trace,                                          \
                                     ::BeeEngine::ConsoleOutput::Input::Engine)
+#else
+#define BeeCoreTrace(...)
+#endif
 #define BeeCoreAssert(x, ...)                                                                                          \
     if (!(x))                                                                                                          \
     {                                                                                                                  \
-        ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                        \
+        ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +       \
+                                            ::BeeEngine::FormatString(__VA_ARGS__),                                    \
                                         ::BeeEngine::ConsoleOutput::Level::Error,                                      \
                                         ::BeeEngine::ConsoleOutput::Input::Engine);                                    \
         debug_break();                                                                                                 \
@@ -104,19 +129,23 @@ if(!(x)) {::BeeEngine::Log::GetCoreLogger()->error(::BeeEngine::FormatString(__V
 
 // Client log
 #define BeeError(...)                                                                                                  \
-    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                            \
+    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
+                                        ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Error,                                          \
                                     ::BeeEngine::ConsoleOutput::Input::App)
 #define BeeWarn(...)                                                                                                   \
-    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                            \
+    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
+                                        ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Warning,                                        \
                                     ::BeeEngine::ConsoleOutput::Input::App)
 #define BeeInfo(...)                                                                                                   \
-    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                            \
+    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
+                                        ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Information,                                    \
                                     ::BeeEngine::ConsoleOutput::Input::App)
 #define BeeTrace(...)                                                                                                  \
-    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString(__VA_ARGS__),                                            \
+    ::BeeEngine::ConsoleOutput::Log(::BeeEngine::FormatString("[Thread {0}] ", std::this_thread::get_id()) +           \
+                                        ::BeeEngine::FormatString(__VA_ARGS__),                                        \
                                     ::BeeEngine::ConsoleOutput::Level::Trace,                                          \
                                     ::BeeEngine::ConsoleOutput::Input::App)
 // #define BeeAssert(x, ...) if(!(x)) ::BeeEngine::Log::GetClientLogger()->error(__VA_ARGS__); debug_break()

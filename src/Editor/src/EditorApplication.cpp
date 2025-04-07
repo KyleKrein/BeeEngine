@@ -16,14 +16,17 @@ namespace BeeEngine::Editor
     EditorApplication::EditorApplication(ConfigFile&& config) noexcept
         : Application(config.GetApplicationProperties()), m_Config(BeeMove(config))
     {
-        PushOverlay(CreateRef<Debug::DebugLayer>());
         PushLayer(CreateRef<EditorLayer>(m_Config));
+    }
+    void EditorApplication::AddDebugOverlay()
+    {
+        PushOverlay(CreateRef<Debug::DebugLayer>());
     }
     EditorApplication::~EditorApplication()
     {
         m_Config.X = WindowHandler::GetInstance()->GetXPosition();
         m_Config.Y = WindowHandler::GetInstance()->GetYPosition();
         m_Config.IsMaximized = IsMaximized();
-        m_Config.Save(ConfigFile::DefaultPath);
+        m_Config.Save(ConfigFile::DefaultPath());
     }
 } // namespace BeeEngine::Editor

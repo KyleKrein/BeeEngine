@@ -8,6 +8,7 @@
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Format.h"
 #include "Core/Logging/Log.h"
+#include "Core/OsPlatform.h"
 #include "Core/ResourceManager.h"
 #include "Core/ScopeGuard.h"
 #include "FileSystem/File.h"
@@ -52,23 +53,10 @@ namespace BeeEngine::Editor
         BeeCoreTrace("ProjectPath: {0}", FolderPath.get().AsUTF8());
         ResourceManager::ProjectName = Name.get();
         LoadLocalizationFiles();
-        if (!File::Exists(FolderPath.get() / ".beeengine"))
-        {
-            File::CreateDirectory(FolderPath.get() / ".beeengine");
-        }
-        if (!File::Exists(FolderPath.get() / ".beeengine" / "build"))
-        {
-            GameAssemblyPath = FolderPath.get() / ".beeengine" / "build";
-            File::CreateDirectory(GameAssemblyPath.get());
-            GameAssemblyPath = GameAssemblyPath.get() / dotNetVersion;
-            File::CreateDirectory(GameAssemblyPath.get());
-        }
-        else
-            GameAssemblyPath = FolderPath.get() / ".beeengine" / "build" / dotNetVersion;
-        GameAssemblyPath = GameAssemblyPath.get() / "GameLibrary.dll";
-        std::filesystem::copy_file(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll",
-                                   FolderPath.get().ToStdPath() / ".beeengine" / "BeeEngine.Core.dll",
-                                   std::filesystem::copy_options::overwrite_existing);
+        GameAssemblyPath = FolderPath() / ".beeengine" / "build" / dotNetVersion / "GameLibrary.dll";
+        File::EnsureDirectory(GameAssemblyPath().GetParent());
+        File::CopyFile(std::filesystem::current_path() / "libs" / "BeeEngine.Core.dll",
+                       FolderPath.get().ToStdPath() / ".beeengine" / "BeeEngine.Core.dll");
         if (!File::Exists(FilePath.get()))
         {
         init:
@@ -244,10 +232,7 @@ namespace BeeEngine::Editor
         {
             const auto platformOutputPath = outputPath / ToString(platform).c_str();
             std::filesystem::create_directory(platformOutputPath);
-            std::filesystem::copy(pathToTemplate.ToStdPath(),
-                                  platformOutputPath,
-                                  std::filesystem::copy_options::recursive |
-                                      std::filesystem::copy_options::overwrite_existing);
+            File::Copy(pathToTemplate, platformOutputPath);
             Path gameFilesPath;
             switch (platform)
             {
@@ -256,6 +241,9 @@ namespace BeeEngine::Editor
                     break;
                 case OSPlatform::Mac:
                     gameFilesPath = BuildMacOSGame(gameLibraryPath, platformOutputPath);
+                    break;
+                case OSPlatform::Linux:
+                    gameFilesPath = BuildLinuxGame(gameLibraryPath, platformOutputPath);
                     break;
                 default:
                     BeeCoreWarn("[BUILDING] Cannot build for platform {0}", platform);
@@ -371,6 +359,17 @@ namespace BeeEngine::Editor
         File::CopyFile(gameLibraryPath, outputDirectory / "libs" / "GameLibrary.dll");
         std::filesystem::rename((outputDirectory / "GameRuntime.exe").ToStdPath(),
                                 (outputDirectory / (Name.get() + ".exe")).ToStdPath());
+        return outputDirectory;
+    }
+    Path ProjectFile::BuildLinuxGame(const Path& gameLibraryPath, const Path& outputDirectory)
+    {
+        if (!File::Exists(outputDirectory / "libs"))
+        {
+            File::CreateDirectory(outputDirectory / "libs");
+        }
+        File::CopyFile(gameLibraryPath, outputDirectory / "libs" / "GameLibrary.dll");
+        std::filesystem::rename((outputDirectory / "GameRuntime").ToStdPath(),
+                                (outputDirectory / (Name.get())).ToStdPath());
         return outputDirectory;
     }
     Path ProjectFile::BuildMacOSGame(const Path& gameLibraryPath, const Path& outputDirectory)

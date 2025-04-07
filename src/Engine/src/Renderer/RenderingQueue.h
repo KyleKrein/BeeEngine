@@ -38,8 +38,6 @@ namespace BeeEngine::Internal
         }
     };
 } // namespace BeeEngine::Internal
-namespace std
-{
     template <>
     struct std::hash<BeeEngine::Internal::RenderInstance>
     {
@@ -56,7 +54,6 @@ namespace std
             return hashResult >> 1;
         }
     };
-} // namespace std
 namespace BeeEngine
 {
     class SceneRenderer;

@@ -121,7 +121,7 @@ namespace BeeEngine
         if (str.contains("::"))
         {
             auto parts = SplitString(static_cast<std::string_view>(str), "::");
-            return static_cast<T>(std::stoi(parts[parts.size()-1].data()));
+            return static_cast<T>(std::stoi(parts[parts.size() - 1].data()));
         }
         else
         {
@@ -236,11 +236,20 @@ namespace BeeEngine
     }
     */
     template <>
+    CONSTEXPR_FUNC String ToString<short>(const short& obj)
+    {
+        return String(std::to_string(obj));
+    }
+    template <>
     CONSTEXPR_FUNC String ToString<int>(const int& obj)
     {
         return String(std::to_string(obj));
     }
-
+    template <>
+    CONSTEXPR_FUNC String ToString<unsigned short>(const unsigned short& obj)
+    {
+        return String(std::to_string(obj));
+    }
     template <>
     CONSTEXPR_FUNC String ToString<unsigned int>(const unsigned int& obj)
     {

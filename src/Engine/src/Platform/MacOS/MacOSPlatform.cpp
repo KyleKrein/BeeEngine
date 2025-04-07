@@ -11,13 +11,24 @@ namespace BeeEngine
         mach_timebase_info_data_t info = {0, 0};
         TimeInfo() { mach_timebase_info(&info); }
     };
-    void RunCommand(const String& command)
+    String RunCommand(const String& command)
     {
-        int result = system(command.c_str());
-        if (result != 0)
+        char buffer[128];
+        std::string result;
+
+        // Открываем процесс для чтения
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+        if (!pipe)
         {
-            BeeCoreError("Command failed: {0}. Error code: {1}", command, result);
+            BeeCoreError("popen() was unable to open process.");
         }
+
+        while (fgets(buffer, sizeof(buffer), pipe.get()) != nullptr)
+        {
+            result += buffer;
+        }
+
+        return String{result};
     }
     void* PlatformMemoryAllocate(size_t size, size_t alignment)
     {

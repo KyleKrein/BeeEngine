@@ -11,12 +11,14 @@ project(
 
 set(BEE_ENABLE_RUNTIME_COMPILER OFF)
 
-set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cpp src/Core/Application.cpp src/Core/Application.h src/Core/EntryPoint.h src/Windowing/WindowHandler/WindowHandler.cpp src/Windowing/WindowHandler/WindowHandler.h src/Windowing/ApplicationProperties.h src/Core/Logging/Log.h src/Core/Logging/Log.cpp src/Core/Events/Event.h src/Core/Events/EventQueue.cpp src/Core/Events/EventQueue.h src/Core/Layer.h src/Core/LayerStack.cpp src/Core/LayerStack.h src/Core/Input.cpp src/Core/Input.h src/KeyCodes.h src/Core/Events/EventImplementations.h src/Windowing/VSync.h src/Renderer/Renderer.cpp src/Renderer/Renderer.h src/Renderer/RendererAPI.h src/Platform/ImGui/ImGuiController.h src/Core/Layer.cpp src/Renderer/RendererAPI.cpp src/Core/Color4.cpp src/Core/Color4.h src/Renderer/BufferLayout.cpp src/Renderer/BufferLayout.h src/Renderer/Texture.cpp src/Renderer/Texture.h src/Core/Events/Event.cpp src/Allocator/Allocator.h src/Debug/MemoryProfiler.cpp src/Debug/MemoryProfiler.h src/Debug/DebugLayer.cpp src/Debug/DebugLayer.h src/Core/SharedPointer.cpp src/Core/SharedPointer.h src/Renderer/FrameBuffer.cpp src/Renderer/FrameBuffer.h src/Core/ResourceManager.cpp src/Core/ResourceManager.h src/Core/Cameras/ICamera.cpp src/Core/Cameras/ICamera.h src/Renderer/RectangleProperties.h src/Core/Time.cpp src/Core/Time.h src/Debug/Timer.h src/Debug/Instrumentor.h src/Core/CodeSafety/Expects.h src/Gui/ImGui/FpsCounter.cpp src/Gui/ImGui/FpsCounter.h src/Scene/Scene.cpp src/Scene/Scene.h src/Scene/EntityID.h src/Scene/Components.h src/Scene/Entity.cpp src/Scene/Entity.h src/Core/Cameras/Camera.cpp src/Core/Cameras/Camera.h src/Scene/SceneCamera.cpp src/Scene/SceneCamera.h src/Scene/ScriptableEntity.cpp src/Scene/ScriptableEntity.h src/Platform/ImGui/ImGuiController.cpp vendor/Incbin/incbin.h Assets/EmbeddedResources.h src/Gui/ImGuiFonts.h src/Scene/SceneSerializer.cpp src/Scene/SceneSerializer.h src/source_location.h src/Property.h src/Utils/FileDialogs.h src/Core/Math/Math.h src/Core/Math/Math.cpp src/Renderer/EditorCamera.cpp src/Renderer/EditorCamera.h Assets/EmbeddedResources.cpp src/Core/CodeSafety/DebugLog.cpp src/Core/CodeSafety/DebugLog.h src/Core/OsPlatform.h src/Renderer/RenderAPI.h src/Renderer/Surface.cpp src/Renderer/Surface.h src/Renderer/DeviceID.cpp src/Renderer/DeviceID.h src/Renderer/SwapChain.cpp src/Renderer/SwapChain.h src/Platform/Vulkan/VulkanGraphicsDevice.cpp src/Platform/Vulkan/VulkanGraphicsDevice.h src/Platform/Vulkan/VulkanSwapChain.cpp src/Platform/Vulkan/VulkanSwapChain.h src/Renderer/Instance.cpp src/Renderer/Instance.h src/Platform/Vulkan/VulkanInstance.cpp src/Platform/Vulkan/VulkanInstance.h src/Renderer/QueueFamilyIndices.cpp src/Renderer/QueueFamilyIndices.h src/FileSystem/File.cpp src/FileSystem/File.h src/Platform/ImGui/ImGuiControllerVulkan.h src/Platform/ImGui/ImGuiControllerVulkan.cpp src/Utils/ShaderConverter.h src/Utils/ShaderConverter.cpp vendor/VulkanMemoryAllocator/vk_mem_alloc.h src/Core/CodeSafety/NotNull.h src/Core/CodeSafety/BoundsChecking.h src/Platform/Vulkan/VulkanBuffer.h src/Renderer/Vertex.h src/Core/DeletionQueue.cpp src/Core/DeletionQueue.h src/Utils/ModelLoader.cpp src/Utils/ModelLoader.h src/Platform/Vulkan/Utils.h src/Platform/Vulkan/Utils.cpp src/Renderer/AssetManager.cpp src/Renderer/AssetManager.h src/Renderer/Mesh.h src/Renderer/Mesh.cpp src/Renderer/Material.cpp src/Renderer/Material.h src/Windowing/WindowHandler/SDLWindowHandler.cpp src/Windowing/WindowHandler/SDLWindowHandler.h src/Platform/WebGPU/WebGPUInstance.cpp src/Platform/WebGPU/WebGPUInstance.h src/Platform/WebGPU/WebGPUGraphicsDevice.cpp src/Platform/WebGPU/WebGPUGraphicsDevice.h src/Platform/WebGPU/WebGPUSwapchain.cpp src/Platform/WebGPU/WebGPUSwapchain.h src/Platform/WebGPU/WebGPURendererAPI.cpp src/Platform/WebGPU/WebGPURendererAPI.h src/Renderer/CommandBuffer.h src/Platform/WebGPU/WebGPUCommandBuffer.cpp src/Platform/WebGPU/WebGPUCommandBuffer.h src/Platform/ImGui/ImGuiControllerWebGPU.h src/Platform/ImGui/ImGuiControllerWebGPU.cpp src/Renderer/RenderPass.h src/Platform/WebGPU/WebGPUPipeline.cpp src/Platform/WebGPU/WebGPUPipeline.h src/Renderer/Pipeline.h src/Renderer/ShaderTypes.h src/Renderer/ShaderModule.h src/Renderer/ShaderModule.cpp src/Platform/WebGPU/WebGPUShaderModule.cpp src/Platform/WebGPU/WebGPUShaderModule.h src/Renderer/Pipeline.cpp src/Platform/WebGPU/WebGPUMesh.cpp src/Platform/WebGPU/WebGPUMesh.h src/Renderer/UniformBuffer.cpp src/Renderer/UniformBuffer.h src/Platform/WebGPU/WebGPUUniformBuffer.cpp src/Platform/WebGPU/WebGPUUniformBuffer.h src/Renderer/InstancedBuffer.h src/Platform/WebGPU/WebGPUInstancedBuffer.cpp src/Platform/WebGPU/WebGPUInstancedBuffer.h src/Core/RestartApplication.h src/Renderer/Model.h src/Platform/WebGPU/WebGPUMaterial.cpp src/Platform/WebGPU/WebGPUMaterial.h src/Renderer/Model.cpp src/Platform/WebGPU/WebGPUModel.cpp src/Platform/WebGPU/WebGPUTexture2D.cpp src/Platform/WebGPU/WebGPUTexture2D.h vendor/Implementations.cpp src/Renderer/BindingSet.cpp src/Renderer/BindingSet.h src/Renderer/IBindable.h src/Renderer/MaterialDescriptor.h src/Core/ValueType.h src/Platform/WebGPU/WebGPUBindingSet.cpp src/Platform/WebGPU/WebGPUBindingSet.h src/Platform/WebGPU/WebGPUBufferPool.cpp src/Platform/WebGPU/WebGPUBufferPool.h src/Renderer/RenderingQueue.cpp src/Renderer/RenderingQueue.h src/Renderer/InstancedBuffer.cpp src/Renderer/RendererStatistics.h src/Gui/ImGui/RendererStatisticsGUI.cpp src/Gui/ImGui/RendererStatisticsGUI.h src/Platform/WebGPU/WebGPUFramebuffer.cpp src/Platform/WebGPU/WebGPUFramebuffer.h src/Core/FramePtr.cpp src/Core/FramePtr.h src/Scene/INativeScriptRegistry.h src/Scene/NativeScriptFactory.cpp src/Scene/NativeScriptFactory.h src/Scene/INativeScriptFactory.h src/Utils/DynamicLibrary.cpp src/Utils/DynamicLibrary.h src/Core/Logging/GameLogger.cpp src/Core/Logging/GameLogger.h src/Scene/DefaultNativeScript.h src/Core/UUID.cpp src/Core/UUID.h src/Scene/Components.cpp src/Allocator/AllocatorStatistics.h src/Allocator/AllocatorStatistics.h
+set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cpp src/Core/Application.cpp src/Core/Application.h src/Core/EntryPoint.h src/Windowing/WindowHandler/WindowHandler.cpp src/Windowing/WindowHandler/WindowHandler.h src/Windowing/ApplicationProperties.h src/Core/Logging/Log.h src/Core/Logging/Log.cpp src/Core/Events/Event.h src/Core/Events/EventQueue.cpp src/Core/Events/EventQueue.h src/Core/Layer.h src/Core/LayerStack.cpp src/Core/LayerStack.h src/Core/Input.cpp src/Core/Input.h src/KeyCodes.h src/Core/Events/EventImplementations.h src/Windowing/VSync.h src/Renderer/Renderer.cpp src/Renderer/Renderer.h src/Renderer/RendererAPI.h src/Platform/ImGui/ImGuiController.h src/Core/Layer.cpp src/Renderer/RendererAPI.cpp src/Core/Color4.cpp src/Core/Color4.h src/Renderer/BufferLayout.cpp src/Renderer/BufferLayout.h src/Renderer/Texture.cpp src/Renderer/Texture.h src/Core/Events/Event.cpp src/Allocator/Allocator.h src/Debug/MemoryProfiler.cpp src/Debug/MemoryProfiler.h src/Debug/DebugLayer.cpp src/Debug/DebugLayer.h src/Core/SharedPointer.cpp src/Core/SharedPointer.h src/Renderer/FrameBuffer.cpp src/Renderer/FrameBuffer.h src/Core/ResourceManager.cpp src/Core/ResourceManager.h src/Core/Cameras/ICamera.cpp src/Core/Cameras/ICamera.h src/Renderer/RectangleProperties.h src/Core/Time.cpp src/Core/Time.h src/Debug/Timer.h src/Debug/Instrumentor.h src/Core/CodeSafety/Expects.h src/Gui/ImGui/FpsCounter.cpp src/Gui/ImGui/FpsCounter.h src/Scene/Scene.cpp src/Scene/Scene.h src/Scene/EntityID.h src/Scene/Components.h src/Scene/Entity.cpp src/Scene/Entity.h src/Core/Cameras/Camera.cpp src/Core/Cameras/Camera.h src/Scene/SceneCamera.cpp src/Scene/SceneCamera.h src/Scene/ScriptableEntity.cpp src/Scene/ScriptableEntity.h src/Platform/ImGui/ImGuiController.cpp vendor/Incbin/incbin.h Assets/EmbeddedResources.h src/Gui/ImGuiFonts.h src/Scene/SceneSerializer.cpp src/Scene/SceneSerializer.h src/source_location.h src/Property.h src/Utils/FileDialogs.h src/Core/Math/Math.h src/Core/Math/Math.cpp src/Renderer/EditorCamera.cpp src/Renderer/EditorCamera.h Assets/EmbeddedResources.cpp src/Core/CodeSafety/DebugLog.cpp src/Core/CodeSafety/DebugLog.h src/Core/OsPlatform.h src/Renderer/RenderAPI.h src/Renderer/Surface.cpp src/Renderer/Surface.h src/Renderer/DeviceID.cpp src/Renderer/DeviceID.h src/Renderer/SwapChain.cpp src/Renderer/SwapChain.h src/Platform/Vulkan/VulkanGraphicsDevice.cpp src/Platform/Vulkan/VulkanGraphicsDevice.h src/Platform/Vulkan/VulkanSwapChain.cpp src/Platform/Vulkan/VulkanSwapChain.h src/Renderer/Instance.cpp src/Renderer/Instance.h src/Platform/Vulkan/VulkanInstance.cpp src/Platform/Vulkan/VulkanInstance.h src/Renderer/QueueFamilyIndices.cpp src/Renderer/QueueFamilyIndices.h src/FileSystem/File.cpp src/FileSystem/File.h src/Platform/ImGui/ImGuiControllerVulkan.h src/Platform/ImGui/ImGuiControllerVulkan.cpp src/Utils/ShaderConverter.h src/Utils/ShaderConverter.cpp vendor/VulkanMemoryAllocator/vk_mem_alloc.h src/Core/CodeSafety/NotNull.h src/Core/CodeSafety/BoundsChecking.h src/Platform/Vulkan/VulkanBuffer.h src/Renderer/Vertex.h src/Core/DeletionQueue.cpp src/Core/DeletionQueue.h src/Platform/Vulkan/Utils.h src/Platform/Vulkan/Utils.cpp src/Renderer/AssetManager.cpp src/Renderer/AssetManager.h src/Renderer/Mesh.h src/Renderer/Mesh.cpp src/Renderer/Material.cpp src/Renderer/Material.h src/Windowing/WindowHandler/SDLWindowHandler.cpp src/Windowing/WindowHandler/SDLWindowHandler.h src/Platform/WebGPU/WebGPUInstance.cpp src/Platform/WebGPU/WebGPUInstance.h src/Platform/WebGPU/WebGPUGraphicsDevice.cpp src/Platform/WebGPU/WebGPUGraphicsDevice.h src/Platform/WebGPU/WebGPUSwapchain.cpp src/Platform/WebGPU/WebGPUSwapchain.h src/Platform/WebGPU/WebGPURendererAPI.cpp src/Platform/WebGPU/WebGPURendererAPI.h src/Renderer/CommandBuffer.h src/Platform/WebGPU/WebGPUCommandBuffer.cpp src/Platform/WebGPU/WebGPUCommandBuffer.h src/Platform/ImGui/ImGuiControllerWebGPU.h src/Platform/ImGui/ImGuiControllerWebGPU.cpp src/Renderer/RenderPass.h src/Platform/WebGPU/WebGPUPipeline.cpp src/Platform/WebGPU/WebGPUPipeline.h src/Renderer/Pipeline.h src/Renderer/ShaderTypes.h src/Renderer/ShaderModule.h src/Renderer/ShaderModule.cpp src/Platform/WebGPU/WebGPUShaderModule.cpp src/Platform/WebGPU/WebGPUShaderModule.h src/Renderer/Pipeline.cpp src/Platform/WebGPU/WebGPUMesh.cpp src/Platform/WebGPU/WebGPUMesh.h src/Renderer/UniformBuffer.cpp src/Renderer/UniformBuffer.h src/Platform/WebGPU/WebGPUUniformBuffer.cpp src/Platform/WebGPU/WebGPUUniformBuffer.h src/Renderer/InstancedBuffer.h src/Platform/WebGPU/WebGPUInstancedBuffer.cpp src/Platform/WebGPU/WebGPUInstancedBuffer.h src/Core/RestartApplication.h src/Renderer/Model.h src/Platform/WebGPU/WebGPUMaterial.cpp src/Platform/WebGPU/WebGPUMaterial.h src/Renderer/Model.cpp src/Platform/WebGPU/WebGPUModel.cpp src/Platform/WebGPU/WebGPUTexture2D.cpp src/Platform/WebGPU/WebGPUTexture2D.h vendor/Implementations.cpp src/Renderer/BindingSet.cpp src/Renderer/BindingSet.h src/Renderer/IBindable.h src/Renderer/MaterialDescriptor.h src/Core/ValueType.h src/Platform/WebGPU/WebGPUBindingSet.cpp src/Platform/WebGPU/WebGPUBindingSet.h src/Platform/WebGPU/WebGPUBufferPool.cpp src/Platform/WebGPU/WebGPUBufferPool.h src/Renderer/RenderingQueue.cpp src/Renderer/RenderingQueue.h src/Renderer/InstancedBuffer.cpp src/Renderer/RendererStatistics.h src/Gui/ImGui/RendererStatisticsGUI.cpp src/Gui/ImGui/RendererStatisticsGUI.h src/Platform/WebGPU/WebGPUFramebuffer.cpp src/Platform/WebGPU/WebGPUFramebuffer.h src/Core/FramePtr.cpp src/Core/FramePtr.h src/Scene/INativeScriptRegistry.h src/Scene/NativeScriptFactory.cpp src/Scene/NativeScriptFactory.h src/Scene/INativeScriptFactory.h src/Utils/DynamicLibrary.cpp src/Utils/DynamicLibrary.h src/Core/Logging/GameLogger.cpp src/Core/Logging/GameLogger.h src/Scene/DefaultNativeScript.h src/Core/UUID.cpp src/Core/UUID.h src/Scene/Components.cpp src/Allocator/AllocatorStatistics.h src/Allocator/AllocatorStatistics.h
         src/Renderer/Font.cpp
         src/Renderer/Font.h
         src/Renderer/MSDFData.h
         src/Renderer/TextRenderingConfiguration.h
         src/Threading/ThreadPool.h
+  src/Core/Environment.h
+  src/Core/Environment.cpp
         src/Core/AssetManagement/Asset.h
         src/Core/AssetManagement/IAssetManager.h
         src/Core/AssetManagement/AssetImporter.cpp
@@ -227,7 +229,8 @@ elseif (UNIX AND NOT APPLE)
     # Covers Linux implementation
     set(LINUX_SOURCE_FILES
             src/Platform/Linux/FileDialogsLinux.cpp
-            src/Platform/Linux/LinuxThreads.cpp)
+            src/Platform/Linux/LinuxThreads.cpp
+            src/Platform/Linux/LinuxPlatform.cpp)
     list(APPEND SOURCE_FILES ${LINUX_SOURCE_FILES})
     DesktopPlatformsOnly()
     set(BEE_COMPILE_WEBGPU OFF)
@@ -248,6 +251,7 @@ if(NOT BEE_DONT_REGENERATE_EMBEDDED_FILES)
     FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Textures/PauseButton.png)
     FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Textures/PlayButton.png)
     FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Textures/StopButton.png)
+FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Textures/BeeEngineLogo.png)
     FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Textures/SimulateButton.png)
     FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Shaders/Standart2DFragment.glsl)
     FileEmbedAdd(${CMAKE_CURRENT_LIST_DIR}/Assets/Shaders/Standart2DVertex.glsl)
@@ -262,8 +266,9 @@ list(APPEND SOURCE_FILES ${SCRIPTING_SOURCE_FILES})
 add_library(BeeEngine ${SOURCE_FILES})
 
 message(STATUS "Building C# libraries for scripting support")
+set(BEE_CSHARP_LIBRARY_PATH ${CMAKE_BINARY_DIR}/src/Engine/net${BEEENGINE_DOTNET_VERSION} CACHE STRING "Path, where built C# libraries are stored")
 execute_process(
-    COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE}
+    COMMAND dotnet build "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting/BeeEngineScripting.sln" -c ${CMAKE_BUILD_TYPE} -o ${BEE_CSHARP_LIBRARY_PATH}
     WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../BeeEngineScripting"
     RESULT_VARIABLE dotnet_result
     OUTPUT_VARIABLE dotnet_output
@@ -271,9 +276,10 @@ execute_process(
 )
 
 if(NOT dotnet_result EQUAL "0")
-    message(FATAL_ERROR "Failed to build BeeEngineScripting: ${dotnet_error}")
+    message(FATAL_ERROR "Failed to build BeeEngineScripting: ${dotnet_error}: ${dotnet_output}")
 else()
     message(STATUS "C# libraries for scripting support built successfully")
+  message(STATUS "Output ${dotnet_output}")
 endif()
 #[[if(IOS OR APPLE)
     set(CMAKE_Swift_LANGUAGE_VERSION 5)
@@ -315,7 +321,7 @@ endfunction(DesktopPlatformsOnlyPostTarget)
 
 #set_property(TARGET BeeEngine PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+#target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
 add_subdirectory(vendor/glslang)
 
@@ -347,55 +353,24 @@ if(BEE_COMPILE_WEBGPU)
     message("Compiling WebGPU")
     enable_webgpu(BeeEngine)
     target_compile_definitions(BeeEngine PUBLIC BEE_COMPILE_WEBGPU)
-else ()
-    #adding tint to the project
-    add_subdirectory(vendor/tint)
 endif ()
-target_link_libraries( ${PROJECT_NAME} PRIVATE libtint)
 
 function(add_sdl_subdirectory)
-    file(READ vendor/sdl/CMakeLists.txt SDL_CMAKELISTS)
-
-    string(REPLACE "# Note: The clang toolset for Visual Studio does not support the '-idirafter' option.\nif(USE_GCC OR USE_INTELCC OR (USE_CLANG AND NOT MSVC_CLANG))"
-            "# Note: The clang toolset for Visual Studio does not support the '-idirafter' option.\nif((USE_GCC OR USE_INTELCC OR (USE_CLANG AND NOT MSVC_CLANG)) AND NOT IOS AND NOT APPLE)"
-            MODIFIED_SDL_CMAKELISTS
-            "${SDL_CMAKELISTS}")
-
-    file(WRITE vendor/sdl/CMakeLists.txt "${MODIFIED_SDL_CMAKELISTS}")
-
-    if(NOT SDL3_PATCHED)
-    file(READ vendor/sdl/src/video/cocoa/SDL_cocoakeyboard.m SDL_cocoakeyboard)
-    string(REPLACE "![[data.fieldEdit superview] isEqual:parentView]"
-            "false"
-            MODIFIED_SDL_cocoakeyboard
-            "${SDL_cocoakeyboard}")
-    file(WRITE vendor/sdl/src/video/cocoa/SDL_cocoakeyboard.m "${MODIFIED_SDL_cocoakeyboard}") #This is a fix for crashes, that happen on MacOs when input text field is unfocused due to a double removal from superview
-    set(SDL3_PATCHED ON CACHE BOOL "SDL3 Patched" FORCE)
-    endif()
-    add_subdirectory(vendor/sdl)
-
-    file(READ vendor/sdl/CMakeLists.txt SDL_CMAKELISTS)
-
-    string(REPLACE "# Note: The clang toolset for Visual Studio does not support the '-idirafter' option.\nif((USE_GCC OR USE_INTELCC OR (USE_CLANG AND NOT MSVC_CLANG)) AND NOT IOS AND NOT APPLE)"
-            "# Note: The clang toolset for Visual Studio does not support the '-idirafter' option.\nif(USE_GCC OR USE_INTELCC OR (USE_CLANG AND NOT MSVC_CLANG))"
-            ORIGINAL_SDL_CMAKELISTS
-            "${SDL_CMAKELISTS}")
-
-    file(WRITE vendor/sdl/CMakeLists.txt "${ORIGINAL_SDL_CMAKELISTS}")
+  add_subdirectory(vendor/sdl)
 endfunction()
-if (BEE_COMPILE_SDL)
-    add_sdl_subdirectory()
+if (${BEE_COMPILE_SDL})
+    if(${BEE_USE_SYSTEM_SDL3})
+      find_package(SDL3 REQUIRED)
+    else()
+      add_sdl_subdirectory()
+    endif()
     target_compile_definitions(BeeEngine PUBLIC BEE_COMPILE_SDL)
     #target_include_directories(BeeEngine
     #        PUBLIC vendor/sdl/include
     #)
     target_link_libraries(BeeEngine PRIVATE SDL3::SDL3)
 endif ()
-CPMAddPackage(
-        NAME spdlog
-        GITHUB_REPOSITORY gabime/spdlog
-        GIT_TAG 134f9194bb93072b72b8cfa27ac3bb30a0fb5b57
-)
+add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glm)
 add_subdirectory(vendor/ImGui) # Must be after DesktopPlatformsOnlyPostTarget
 add_subdirectory(vendor/gsl)
@@ -403,21 +378,22 @@ add_subdirectory(vendor/gsl)
 add_subdirectory(vendor/entt)
 add_subdirectory(vendor/yaml-cpp)
 add_subdirectory(vendor/ImGuizmo)
-add_subdirectory(vendor/tinyobjloader)
 add_subdirectory(vendor/magic_enum)
 add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
 add_subdirectory(vendor/KDBindings)
-CPMAddPackage(
-        NAME fastgltf
-        GITHUB_REPOSITORY spnda/fastgltf
-        GIT_TAG 45cadf78895521b0379832830e628a215772d204
-)
+add_subdirectory(vendor/fastgltf)
 
 find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)
 find_package(Boost REQUIRED COMPONENTS context)
-find_package(unofficial-nethost CONFIG REQUIRED)
-
+if(NETHOST_LIB)
+  message("Using provided nethost library: ${NETHOST_LIB}")
+  target_link_libraries(BeeEngine PRIVATE ${NETHOST_LIB})
+  target_include_directories(BeeEngine PRIVATE ${CMAKE_CURRENT_LIST_DIR}/vendor/dotnethost)
+else()
+  find_package(unofficial-nethost CONFIG REQUIRED)
+  target_link_libraries(BeeEngine PRIVATE unofficial::nethost::nethost)
+endif()
 if(BEE_COMPILE_VULKAN)
     find_package(Vulkan REQUIRED)
     target_compile_definitions(BeeEngine PUBLIC BEE_COMPILE_VULKAN)
@@ -426,6 +402,7 @@ if(BEE_COMPILE_VULKAN)
             )
     target_link_libraries(BeeEngine PUBLIC Vulkan::Vulkan)
 endif ()
+if (${BEE_USE_VCPKG})
 function(extract_vcpkg_path ICU_LIB_LIST RESULT_VAR)
     list(GET ICU_LIB_LIST 0 ICU_LIB_PATH)
     string(REGEX REPLACE "(.*/vcpkg_installed/[^/]+).*$" "\\1" EXTRACTED_PATH ${ICU_LIB_PATH})
@@ -433,6 +410,8 @@ function(extract_vcpkg_path ICU_LIB_LIST RESULT_VAR)
 endfunction()
 
 extract_vcpkg_path("${ICU_LIBRARIES}" ICU_VCPKG_PATH)
+target_include_directories(BeeEngine PUBLIC ${ICU_VCPKG_PATH}/include)
+endif()
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
         PUBLIC src
@@ -448,11 +427,9 @@ target_include_directories( ${PROJECT_NAME}
         PUBLIC vendor/yaml-cpp/include
         PUBLIC ${ImGuizmo_SOURCE_DIR}
         PUBLIC vendor/glslang
-        PUBLIC vendor/tinyobjloader
         PUBLIC vendor/magic_enum/include
 
         PUBLIC vendor/utfcpp/include
-        PUBLIC ${ICU_VCPKG_PATH}/include
         PUBLIC ${ICU_INCLUDE_DIR}
         )
 target_link_libraries( ${PROJECT_NAME}
@@ -467,14 +444,12 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC ImGuizmo
         PUBLIC SPIRV
         PUBLIC glslang
-        PUBLIC tinyobjloader
         PUBLIC magic_enum
         PUBLIC Box2D
         PUBLIC MSDFGEN
         PUBLIC ${ICU_LIBRARIES}
         PUBLIC Boost::context
         PRIVATE fastgltf
-        PRIVATE unofficial::nethost::nethost
         PUBLIC KDAB::KDBindings
         )
 
@@ -524,17 +499,12 @@ if(CMAKE_BUILD_TYPE STREQUAL "Publish")
     add_compile_options(-O3)
 endif()
 
-add_compile_options(-static-libstdc++)
+#add_compile_options(-static-libstdc++)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Использование максимального уровня предупреждений
     add_compile_options(-Wall -Wextra -pedantic -Wmost -Wmost-extra)
 endif ()
-
-# Добавляем команду сборки, которая будет собирать все конфигурации
-add_custom_target(build_all ALL
-        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all --config $<CONFIG>
-        )
 
 target_link_libraries(BeeEngine PRIVATE file_embed)
 # for embedding assets

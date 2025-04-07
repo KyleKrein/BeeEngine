@@ -124,27 +124,6 @@ def install_dependencies():
             logging.info("Installing autoconf-archive...")
             subprocess.run(['brew', 'install', 'autoconf-archive'])
 
-    elif os_name == 'Linux':
-        if not check_version_installed('git'):
-            logging.info("Installing Git...")
-            subprocess.run(['sudo', 'apt-get', 'install', '-y', 'git'])
-        if not check_version_installed('cmake', '3.26'):
-            logging.info("Installing CMake...")
-            subprocess.run(['sudo', 'apt-get', 'install', '-y', 'cmake'])
-        if not check_version_installed('gcc'):
-            logging.info("Installing GCC...")
-            subprocess.run(['sudo', 'apt-get', 'install', '-y', 'build-essential'])
-        if not check_version_installed('ccache'):
-            logging.info("Installing ccache...")
-            subprocess.run(["sudo", "apt", "update"], check=True)
-            subprocess.run(["sudo", "apt", "install", "-y", "ccache"], check=True)
-        if not check_version_installed('ninja'):
-            logging.info("Installing Ninja...")
-            subprocess.run(["sudo", "apt", "install", "-y", "ninja-build"], check=True)
-        if not check_version_installed('dotnet'):
-            logging.info("Installing .NET SDK...")
-            subprocess.run(["sudo", "apt-get", "install", "-y", "dotnet-sdk"], check=True)
-
 
 def init_git_submodules():
     try:

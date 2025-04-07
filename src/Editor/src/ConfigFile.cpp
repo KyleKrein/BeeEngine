@@ -8,9 +8,16 @@
 #include "Locale/Locale.h"
 #include "Serialization/YAMLHelper.h"
 #include "Windowing/VSync.h"
+#include "Core/Application.h"
+
+#include "Core/Environment.h"
 
 namespace BeeEngine::Editor
 {
+    Path ConfigFile::DefaultPath()
+    {
+      return (&Application::GetInstance() ? Application::GetInstance().Environment().ConfigDirectory() : Environment("BeeEngine Editor").ConfigDirectory()) / "config.yaml" ;
+    }        
     void ConfigFile::Save(const Path& path) const
     {
         YAML::Emitter out;

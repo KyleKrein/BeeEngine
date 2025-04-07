@@ -30,24 +30,28 @@ namespace BeeEngine
         std::condition_variable cv;
         std::mutex mutex;
         GraphicsDevice& device = m_Window->GetGraphicsDevice();
+        device.RequestSwapChainRebuild();
         while (m_Window->IsRunning())
         {
             BEE_PROFILE_SCOPE("Application::Run One Frame");
+            BeeCoreTrace("Start Frame");
+            BeeCoreTrace("Executing main thread queue");
             ExecuteMainThreadQueue();
+            BeeCoreTrace("Processing events");
             m_Window->ProcessEvents();
             if (device.SwapChainRequiresRebuild())
             {
                 Renderer::RebuildSwapchain();
-                continue;
             }
             std::unique_lock lock(mutex);
             auto frameJob = Jobs::CreateJob<Jobs::Priority::Normal, 1024 * 1024>(
                 [this](std::condition_variable& cv)
                 {
+                    BeeCoreTrace("Dispatching events");
                     m_EventQueue.Dispatch();
+                    BeeCoreTrace("Update Time");
                     auto deltaTime = m_Window->UpdateTime();
-                    // if(!self.IsMinimized())
-                    //{
+                    BeeCoreTrace("Trying to begin frame");
                     auto result = Renderer::BeginFrame();
                     if (!result.HasValue())
                     {
@@ -57,26 +61,28 @@ namespace BeeEngine
                         return;
                     }
                     auto frameData = BeeMove(result).Value();
+                    BeeCoreTrace("SetDeltaTime {}", deltaTime);
                     frameData.SetDeltaTime(deltaTime);
+                    BeeCoreTrace("StartMainCommandBuffer");
                     Renderer::StartMainCommandBuffer(frameData);
+                    BeeCoreTrace("UpdateLayers");
                     m_Layers.Update(frameData);
+                    BeeCoreTrace("Update Application");
                     Update(frameData);
+                    BeeCoreTrace("EndMainCommandBuffer");
                     Renderer::EndMainCommandBuffer(frameData);
+                    BeeCoreTrace("EndFrame");
                     Renderer::EndFrame(frameData);
-                    //}
-                    // else
-                    //{
-                    //    self.m_Layers.Update();
-                    //    self.Update();
-                    //}
-
+                    BeeCoreTrace("Flush frame queue");
                     DeletionQueue::Frame().Flush();
+                    BeeCoreTrace("Flushed");
 
                     cv.notify_one();
                 },
                 cv);
             Jobs::Schedule(frameJob);
             cv.wait(lock);
+            BeeCoreTrace("End Frame");
         }
         DeletionQueue::Main().Flush();
         BeeEnsures(DeletionQueue::Main().IsEmpty() && DeletionQueue::Frame().IsEmpty() &&
@@ -84,7 +90,7 @@ namespace BeeEngine
     }
 
     Application::Application(const ApplicationProperties& properties)
-        : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers)
+        : m_IsMinimized(false), m_Layers(), m_EventQueue(m_Layers), Environment{properties.Title}
     {
         BEE_PROFILE_FUNCTION();
         BeeCoreAssert(!s_Instance, "You can't have multiple instances of application");

@@ -13,6 +13,7 @@ namespace BeeEngine::Editor
     public:
         explicit EditorApplication(ConfigFile&& config) noexcept;
         ~EditorApplication() override;
+        void AddDebugOverlay();
 
     private:
         ConfigFile m_Config;

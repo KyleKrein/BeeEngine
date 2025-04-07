@@ -5,6 +5,7 @@
 #include "AssetEditPanel.h"
 #include "Core/AssetManagement/AssetManager.h"
 #include "Gui/ImGui/ImGuiExtension.h"
+#include "imgui.h"
 
 namespace BeeEngine::Editor
 {
@@ -25,8 +26,9 @@ namespace BeeEngine::Editor
         }
         auto& metadata = m_AssetManager.GetAssetMetadata(m_Handle);
         ImGui::Begin(m_Domain->Translate("assetEditPanel").c_str(), &m_IsOpened);
-        ImGui::Text(m_Domain->Translate("assetEditPanel.name", "name", metadata.Name.c_str()).c_str());
-        ImGui::Text(m_Domain->Translate("assetEditPanel.type", "type", ToString(metadata.Type).c_str()).c_str());
+        ImGui::TextUnformatted(m_Domain->Translate("assetEditPanel.name", "name", metadata.Name.c_str()).c_str());
+        ImGui::TextUnformatted(
+            m_Domain->Translate("assetEditPanel.type", "type", ToString(metadata.Type).c_str()).c_str());
         if (metadata.Type == AssetType::Localized)
         {
             RenderLocalizedAssetSettings();

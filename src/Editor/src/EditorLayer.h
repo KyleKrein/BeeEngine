@@ -8,14 +8,11 @@
 #include "ConfigFile.h"
 #include "Core/AssetManagement/Asset.h"
 #include "Core/AssetManagement/EditorAssetManager.h"
-#include "Core/Logging/ConsoleOutput.h"
 #include "Gui/ImGui/FpsCounter.h"
 #include "Gui/ImGui/ImGuiOutputConsole.h"
 #include "ImGuiNativeDragAndDrop.h"
-#include "JobSystem/AdaptiveMutex.h"
 #include "Locale/ImGuiLocalizationPanel.h"
 #include "Locale/Locale.h"
-#include "NativeScripting/GameBuilder.h"
 #include "Panels/AssetPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/DockSpace.h"
@@ -26,10 +23,8 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ViewPort.h"
 #include "ProjectFile.h"
-#include "Scene/NativeScriptFactory.h"
-#include "Scene/SceneSerializer.h"
-#include "Utils/DynamicLibrary.h"
 #include "kdbindings/property.h"
+#include <functional>
 
 namespace BeeEngine::Editor
 {
@@ -77,7 +72,7 @@ namespace BeeEngine::Editor
         // Scope<NativeScriptFactory> m_NativeScriptFactory = nullptr;
         // BeeEngineNativeScriptRegistryData m_NativeScriptData = {};
         // void*(*InitFunction)(void*) = nullptr;
-
+        Ref<Texture2D> m_BeeEngineLogo = nullptr;
         Ref<Texture2D> m_PlayButtonTexture = nullptr;
         Ref<Texture2D> m_StopButtonTexture = nullptr;
 
@@ -92,6 +87,8 @@ namespace BeeEngine::Editor
         bool m_ShowBuildProjectPopup = false;
         ImGuiUIEditor m_UIEditor{};
         bool m_ShowEditorSettings = false;
+
+        std::function<void()> m_SaveSceneAsFunc;
 
         // std::vector<NativeScriptInfo> m_NativeScripts = {};
 

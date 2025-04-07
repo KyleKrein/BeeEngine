@@ -4,6 +4,7 @@
 #include "Core/Move.h"
 #include "GameLayer.h"
 #include "Scene/Scene.h"
+#include "Scripting/ScriptingEngine.h"
 namespace BeeEngine::Runtime
 {
     GameApplication::GameApplication(RuntimeConfiguration config)
@@ -12,15 +13,15 @@ namespace BeeEngine::Runtime
           m_LocaleDomain(m_Config.GameConfig.Name)
     {
         LoadLocalizationFiles();
-        InitializeScripting();
         LoadAssetRegistry();
+        InitializeScripting();
         LoadStartingScene();
 
         FrameBufferPreferences preferences;
         auto& window = *WindowHandler::GetInstance().get();
         preferences.Width = window.GetWidthInPixels();
         preferences.Height = window.GetHeightInPixels();
-        preferences.SwapChainTarget = true;
+        preferences.SwapChainTarget = false;
         preferences.Attachments = {
             FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 

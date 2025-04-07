@@ -6,10 +6,18 @@ namespace BeeEngine
     class ScopeGuard final
     {
     public:
+        void Cancel() { m_Cancelled = true; }
         ScopeGuard(func&& f) : m_Func(BeeMove(f)) {}
-        ~ScopeGuard() { m_Func(); }
+        ~ScopeGuard()
+        {
+            if (!m_Cancelled)
+            {
+                m_Func();
+            }
+        }
 
     private:
         func m_Func;
+        bool m_Cancelled = false;
     };
 } // namespace BeeEngine
