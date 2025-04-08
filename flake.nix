@@ -10,7 +10,7 @@
   outputs = { self, nixpkgs, ... }@inputs: inputs.utils.lib.eachSystem [
     # Add the system/architecture you would like to support here. Note that not
     # all packages in the official nixpkgs support all platforms.
-    "x86_64-linux" "i686-linux" "aarch64-linux" "x86_64-darwin"
+    "x86_64-linux" "aarch64-linux" "x86_64-darwin"
   ] (system: let
     pkgs = import nixpkgs {
       inherit system;
@@ -31,5 +31,7 @@
     packages.default = self.packages.${system}.BeeEngineEditor;
     packages.BeeEngineEditor = pkgs.callPackage ./nix/editor.nix { inherit src; inherit buildInputsFile; };
     packages.BeeEngineEditor-Debug = pkgs.callPackage ./nix/editor.nix { inherit src; inherit buildInputsFile; cmakeBuildType = "Debug"; };
+    packages.BeeLocalization = pkgs.callPackage ./nix/localizationtool.nix { inherit src; inherit buildInputsFile; };
+    packages.BeeLocalization-Debug = pkgs.callPackage ./nix/localizationtool.nix { inherit src; inherit buildInputsFile; cmakeBuildType = "Debug"; };
   });
 }
