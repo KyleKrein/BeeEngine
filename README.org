@@ -97,14 +97,21 @@ cmake --preset Release
 **** Linux (Nix)
 To build BeeEngine with nix package manager on Linux you need to:
 1. Enter the directory with cloned repo and build the Editor with submodules:
-#+begin_src shell
-nix build ".?submodules=1#BeeEngineEditor"
-#+end_src
-2. The binaries can be found inside result/BeeEngineEditor
-***** Runnin without installing and cloning
+   - For the editor:
+     #+begin_src shell
+     nix build ".?submodules=1#BeeEngineEditor"
+     #+end_src
+   - For the localization tool:
+     #+begin_src shell
+     nix build ".?submodules=1#BeeLocalization"
+     #+end_src
+2. The files can be found inside ~result~ folder
+***** Running without installing and cloning
 #+begin_src shell
 nix run 'git+https://github.com/KyleKrein/BeeEngine?submodules=1#BeeEngineEditor'
 #+end_src
+***** Including in your Nix flake 
+WIP
 **** Linux (Without Nix)
 Building on Linux without Nix package manager is possible, but it's not a priority.
 1. Install all the dependencies depending on your distro:
