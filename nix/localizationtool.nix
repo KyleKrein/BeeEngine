@@ -23,8 +23,9 @@ tool = pkgs.gcc14Stdenv.mkDerivation rec {
       "-DCMAKE_BUILD_TYPE=${cmakeBuildType}"
       "-DBEE_USE_VCPKG=OFF"
       "-DBEE_BUILD_TESTS=OFF"
-      "-DBEE_BUILD_LOC_TOOL=OFF"
+      "-DBEE_BUILD_LOC_TOOL=ON"
       "-DBEE_USE_SYSTEM_SDL3=ON"
+      "-DBEE_NO_DOTNET=ON"
     ];
     meta = with lib; {
       homepage = "https://github.com/KyleKrein/BeeEngine";

@@ -12,6 +12,11 @@ set_property(TARGET BeeLocalization PROPERTY CXX_STANDARD 23)
 target_include_directories(BeeLocalization PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src)
 target_link_libraries(BeeLocalization PUBLIC BeeEngine)
 
-add_compile_definitions(BEE_ENABLE_CHECKS)
+#add_compile_definitions(BEE_ENABLE_CHECKS)
 
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+set(BEE_LOC_INSTALL_PATH share/BeeLocalization)
+install(TARGETS BeeLocalization DESTINATION bin)
+
+install(DIRECTORY ../Engine/Assets/Shaders/ DESTINATION ${BEE_LOC_INSTALL_PATH}/Shaders)

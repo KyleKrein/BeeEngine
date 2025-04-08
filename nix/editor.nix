@@ -19,8 +19,7 @@ let
     nativeBuildInputs = buildInputsFile.dotnetNativeBuildInputs;
     buildInputs = buildInputsFile.buildInputs;
 
-    inherit (buildInputsFile) wrapperPath;
-    inherit (buildInputsFile) postFixup;
+    postFixup = buildInputsFile.dotnetPostFixup pname;
 
 
     cmakeFlags = [
@@ -30,7 +29,6 @@ let
       "-DBEE_BUILD_EDITOR=ON"
       "-DNETHOST_LIB=${nethost-lib-path}"
       "-DBEE_USE_SYSTEM_SDL3=ON"
-      #"-DICU_INCLUDE_DIR=${pkgs.icu.dev}/include"
     ];
     meta = with lib; {
       homepage = "https://github.com/KyleKrein/BeeEngine";

@@ -33,10 +33,9 @@ in
   inherit nativeBuildInputs;
  
   dotnetNativeBuildInputs = nativeBuildInputs ++ [ pkgs.dotnet-sdk pkgs.makeWrapper ];
-  inherit wrapperPath;
-  postFixup = ''
+  dotnetPostFixup = binary: ''
       # Ensure all dependencies are in PATH
-      wrapProgram $out/bin/BeeEngineEditor \
+      wrapProgram $out/bin/${binary} \
         --prefix PATH : "${wrapperPath}"
   '';
   # libraries
