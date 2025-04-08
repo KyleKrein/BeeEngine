@@ -7,7 +7,9 @@
 }:
 assert pkgs.lib.assertMsg (src.submodules == true)
   "Unable to build without submodules. Append '?submodules=1#' to the URL.";
-  pkgs.gcc14Stdenv.mkDerivation rec {
+  let
+icon = ../src/Engine/Assets/Textures/BeeEngineLogo.png;
+tool = pkgs.gcc14Stdenv.mkDerivation rec {
     pname = "BeeLocalization";
     version = "1.0.0-alpha.1.2";
   
@@ -33,4 +35,6 @@ assert pkgs.lib.assertMsg (src.submodules == true)
       platforms = with platforms; linux ++ darwin;
       maintainers = [ maintainers.KyleKrein ];    
     };
-  }
+  };
+in
+  buildInputsFile.makeDesktopApp { app = tool; name = "BeeLocalization"; inherit icon; }

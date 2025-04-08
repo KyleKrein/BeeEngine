@@ -9,8 +9,8 @@ assert pkgs.lib.assertMsg (src.submodules == true)
   "Unable to build without submodules. Append '?submodules=1#' to the URL.";
 let
   nethost-lib-path = (import ./unofficial-nethost.nix {inherit pkgs; inherit lib;}).nethost-lib-path;
-in
-  pkgs.gcc14Stdenv.mkDerivation rec {
+  icon = ../src/Engine/Assets/Textures/BeeEngineLogo.png;
+  editor = pkgs.gcc14Stdenv.mkDerivation rec {
     pname = "BeeEngineEditor";
     version = "1.0.0-alpha.1.2";
   
@@ -41,4 +41,6 @@ in
       platforms = with platforms; linux ++ darwin;
       maintainers = [ maintainers.KyleKrein ];    
     };
-  }
+  };
+in
+  buildInputsFile.makeDesktopApp { app = editor; name = "BeeEngineEditor"; inherit icon; }
