@@ -26,9 +26,9 @@ namespace BeeEngine::Locale
         auto locale = filename.AsUTF8().substr(0, filename.AsUTF8().find('.'));
         return {locale};
     }
-    ImGuiLocalizationPanel::ImGuiLocalizationPanel(Domain& domain, const Path& path)
-        : m_Domain(&domain), m_SelectedLocale(domain.m_Locale), m_WorkingDirectory(path)
+    void ImGuiLocalizationPanel::RegenerateDomainInfo()
     {
+        std::unique_lock lock(m_DomainLock);
         std::vector<Path> files = LocalizationGenerator::GetLocalizationFiles(m_WorkingDirectory);
         for (auto&& file : files)
         {
@@ -36,6 +36,11 @@ namespace BeeEngine::Locale
             m_LocaleFiles[loc] = BeeMoveAlways(file);
         }
         UpdateLocaleKeys();
+    }
+    ImGuiLocalizationPanel::ImGuiLocalizationPanel(Domain& domain, const Path& path)
+        : m_Domain(&domain), m_SelectedLocale(domain.m_Locale), m_WorkingDirectory(path)
+    {
+        RegenerateDomainInfo();
     }
     void ImGuiLocalizationPanel::Render(ImGuiWindowFlags flags, bool canBeClosed)
     {
@@ -49,6 +54,7 @@ namespace BeeEngine::Locale
         {
             ImGui::Begin("Localization", nullptr, flags);
         }
+        std::unique_lock lock(m_DomainLock);
         RenderUpperPanel();
 
         bool removeKey = false;

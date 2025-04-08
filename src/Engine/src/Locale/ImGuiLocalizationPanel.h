@@ -25,8 +25,10 @@ namespace BeeEngine::Locale
         void Render(ImGuiWindowFlags flags = ImGuiWindowFlags_None, bool canBeClosed = true);
         void SwitchOpened() { m_IsOpened = !m_IsOpened; }
         void UpdateLocaleKeys();
+        void RegenerateDomainInfo();
 
     private:
+        Jobs::SpinLock m_DomainLock;
         Domain* m_Domain;
         Path m_WorkingDirectory;
         Localization m_SelectedLocale;

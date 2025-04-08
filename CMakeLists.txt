@@ -105,9 +105,9 @@ include(cmake/StandardProjectSettings.cmake)
 
 # Link project_warnings as "library" to use the warnings
 # specified in CompilerWarnings.cmake.
-add_library(project_warnings INTERFACE)
-include(cmake/CompilerWarnings.cmake)
-set_project_warnings(project_warnings)
+#add_library(project_warnings INTERFACE)
+#include(cmake/CompilerWarnings.cmake)
+#set_project_warnings(project_warnings)
 
 add_subdirectory(src/Engine)
 if(${BEE_BUILD_SANDBOX})

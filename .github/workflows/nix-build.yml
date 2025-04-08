@@ -11,5 +11,9 @@ jobs:
     - uses: actions/checkout@v4
     - run: git submodule update --init --recursive
     - uses: cachix/install-nix-action@v31
-    - run: nix build ".?submodules=1#" -L
-    - run: nix flake check ".?submodules=1#"
+    - name: Check flake
+      run: nix flake check ".?submodules=1#"
+    - name: build BeeEngineEditor
+      run: nix build ".?submodules=1#BeeEngineEditor" -L
+    - name: build BeeLocalization
+      run: nix build ".?submodules=1#BeeLocalization" -L
