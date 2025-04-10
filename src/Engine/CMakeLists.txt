@@ -459,3 +459,6 @@ if(NOT ${BEE_NO_DOTNET})
   target_compile_definitions(BeeEngine PRIVATE BEE_ENABLE_SCRIPTING)
 endif()
 target_compile_definitions(BeeEngine PUBLIC _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING) # for spdlog
+
+include(cmake/install_target_includes.cmake)
+install_target_public_headers(BeeEngine)
