@@ -13,8 +13,8 @@
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 #include "Renderer.h"
 #include "SceneRenderer.h"
-#include "ext/matrix_transform.hpp"
-#include "gtx/quaternion.hpp"
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace BeeEngine::Internal
 {

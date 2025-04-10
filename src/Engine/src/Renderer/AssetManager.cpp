@@ -5,7 +5,7 @@
 #include "AssetManager.h"
 #include "../../Assets/EmbeddedResources.h"
 #include "Vertex.h"
-#include <glm.hpp>
+#include <glm/glm.hpp>
 
 BeeEngine::Material& BeeEngine::InternalAssetManager::LoadMaterial(const String& name,
                                                                    const std::filesystem::path& vertexShader,

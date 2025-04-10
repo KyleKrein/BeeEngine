@@ -13,7 +13,7 @@
 #include "Scene/Components.h"
 #include "Scripting/ScriptingEngine.h"
 #include "UniformBuffer.h"
-#include "gtc/type_ptr.hpp"
+#include <glm/gtc/type_ptr.hpp>
 #include <cmath>
 #include <glm/glm.hpp>
 

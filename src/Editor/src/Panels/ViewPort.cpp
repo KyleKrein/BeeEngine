@@ -19,7 +19,7 @@
 #include "Scene/SceneSerializer.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
-#include "gtc/type_ptr.hpp"
+#include <glm/gtc/type_ptr.hpp>
 #include "imgui.h"
 
 namespace BeeEngine::Editor

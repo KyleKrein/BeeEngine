@@ -147,8 +147,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/GameConfig.cpp
         src/Gui/ImGui/ImGuiOutputConsole.cpp
         src/Gui/ImGui/ImGuiOutputConsole.h
-        vendor/SIMDString/SIMDString.h
-        vendor/SIMDString/SIMDString.cpp
+        src/Core/SIMDString.h
+        src/Core/SIMDString.cpp
         src/Gui/MessageBox.h
         src/Gui/MessageBox.cpp
         src/Core/Property.h
@@ -413,24 +413,12 @@ function(extract_vcpkg_path ICU_LIB_LIST RESULT_VAR)
 endfunction()
 
 extract_vcpkg_path("${ICU_LIBRARIES}" ICU_VCPKG_PATH)
-target_include_directories(BeeEngine PUBLIC ${ICU_VCPKG_PATH}/include)
+set(ICU_INCLUDE_DIR ${ICU_VCPKG_PATH}/include)
 endif()
 target_include_directories( ${PROJECT_NAME}
         PUBLIC include
         PUBLIC src
-        PUBLIC vendor
-        PUBLIC vendor/spdlog/include
-        PUBLIC vendor/debugbreak
-        PUBLIC vendor/glm/glm
-        PUBLIC vendor/stb
-        PUBLIC vendor/gsl/include
-        #PUBLIC vendor/BeeAlloc/include
-        PUBLIC vendor/entt/single_include
-        PUBLIC vendor/Incbin
-        PUBLIC vendor/yaml-cpp/include
-        PUBLIC vendor/glslang
-        PUBLIC vendor/magic_enum/include
-        PUBLIC vendor/utfcpp/include
+        PRIVATE vendor
         PUBLIC ${ICU_INCLUDE_DIR}
         )
 target_link_libraries( ${PROJECT_NAME}
@@ -442,11 +430,11 @@ target_link_libraries( ${PROJECT_NAME}
         #PUBLIC BeeAlloc
         PUBLIC EnTT
         PUBLIC yaml-cpp
-        PUBLIC SPIRV
-        PUBLIC glslang
+        PRIVATE SPIRV
+        PRIVATE glslang
         PUBLIC magic_enum
-        PUBLIC Box2D
-        PUBLIC MSDFGEN
+        PRIVATE Box2D
+        PRIVATE MSDFGEN
         PUBLIC ${ICU_LIBRARIES}
         PUBLIC Boost::context
         PRIVATE fastgltf

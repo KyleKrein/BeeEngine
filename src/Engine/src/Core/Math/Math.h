@@ -4,15 +4,16 @@
 
 #pragma once
 
-#include "glm.hpp"
+#include <glm/glm.hpp>
 #include <Scene/Entity.h>
 #include <cmath>
+#include <numbers>
 
 namespace BeeEngine::Math
 {
     consteval float32_t PI()
     {
-        return 3.141592653589793238462643383279502884197169399375105820974944592307816406286f;
+        return std::numbers::pi_v<float32_t>;
     }
     struct DecomposedTransform
     {

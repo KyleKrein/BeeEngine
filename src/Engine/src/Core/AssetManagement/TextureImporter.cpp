@@ -11,7 +11,7 @@
 #define STBI_WINDOWS_UTF8
 #include "Platform/Windows/WindowsString.h"
 #endif
-#include <stb_image.h>
+#include <stb/stb_image.h>
 #if defined(WINDOWS)
 STBIDEF stbi_uc* stbi_load(const wchar_t* filename, int* x, int* y, int* comp, int req_comp);
 #endif

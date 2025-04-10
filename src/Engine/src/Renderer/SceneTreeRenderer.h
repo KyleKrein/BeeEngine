@@ -10,7 +10,7 @@
 #include "Renderer/Model.h"
 #include "TextRenderingConfiguration.h"
 #include "gsl/gsl"
-#include <glm.hpp>
+#include <glm/glm.hpp>
 #include <vector>
 
 namespace BeeEngine

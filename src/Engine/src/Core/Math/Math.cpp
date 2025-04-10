@@ -4,9 +4,9 @@
 
 #include "Math.h"
 #include "Scene/Components.h"
-#include "ext/scalar_constants.hpp"
-#include "gtc/epsilon.hpp"
-#include "gtx/matrix_decompose.inl"
+#include <glm/ext/scalar_constants.hpp>
+#include <glm/gtc/epsilon.hpp>
+#include <glm/gtx/matrix_decompose.inl>
 
 namespace BeeEngine::Math
 {

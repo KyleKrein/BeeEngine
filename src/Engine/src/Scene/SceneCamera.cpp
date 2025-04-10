@@ -3,7 +3,7 @@
 //
 
 #include "SceneCamera.h"
-#include "ext/matrix_clip_space.hpp"
+#include <glm/ext/matrix_clip_space.hpp>
 #include <gsl/gsl>
 
 namespace BeeEngine

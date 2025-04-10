@@ -6,8 +6,8 @@
 #if defined(WINDOWS)
 #define STBI_WINDOWS_UTF8
 #endif
-#include "stb_image.h"
-#include "stb_image_write.h"
+#include <stb/stb_image.h>
+#include <stb/stb_image_write.h>
 #if defined(WINDOWS)
 STBIDEF stbi_uc* stbi_load(const wchar_t* filename, int* x, int* y, int* comp, int req_comp)
 {
