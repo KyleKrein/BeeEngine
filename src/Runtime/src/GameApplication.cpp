@@ -18,7 +18,7 @@ namespace BeeEngine::Runtime
         LoadStartingScene();
 
         FrameBufferPreferences preferences;
-        auto& window = *WindowHandler::GetInstance().get();
+        auto& window = *WindowHandler::GetInstance();
         preferences.Width = window.GetWidthInPixels();
         preferences.Height = window.GetHeightInPixels();
         preferences.SwapChainTarget = false;

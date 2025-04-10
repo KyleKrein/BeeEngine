@@ -38,8 +38,8 @@ namespace BeeEngine
         }
         else if (metadata.Location == AssetLocation::Embedded)
         {
-            String content = String((char*)std::get<gsl::span<byte>>(metadata.Data).data(),
-                                    std::get<gsl::span<byte>>(metadata.Data).size());
+            String content = String((char*)std::get<std::span<byte>>(metadata.Data).data(),
+                                    std::get<std::span<byte>>(metadata.Data).size());
             return LocalizedAssetSerializer::Deserialize(content);
         }
         BeeCoreError("Unknown asset location: {}", metadata.Location);

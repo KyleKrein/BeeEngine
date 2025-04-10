@@ -14,7 +14,7 @@
 #include "Scripting/GameScript.h"
 #include "Scripting/MClass.h"
 #include "Scripting/ScriptingEngine.h"
-#include "gtc/type_ptr.hpp"
+#include <glm/gtc/type_ptr.hpp>
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <misc/cpp/imgui_stdlib.h>

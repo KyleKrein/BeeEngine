@@ -5,9 +5,9 @@
 #include "EditorCamera.h"
 #include "Core/Input.h"
 #include "Debug/Instrumentor.h"
-#include "detail/type_quat.hpp"
-#include "ext/matrix_clip_space.hpp"
-#include "gtx/quaternion.hpp"
+#include <glm/detail/type_quat.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace BeeEngine
 {

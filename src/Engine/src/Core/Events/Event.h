@@ -1,6 +1,6 @@
 #pragma once
-
-#include <gsl/gsl>
+#include <type_traits>
+#include "Core/CodeSafety/Expects.h"
 
 namespace BeeEngine
 {
@@ -49,27 +49,15 @@ namespace BeeEngine
     protected:
         bool m_Handled = false;
         EventType m_Type;
-
-    public:
-        /*    //Events pool
-            static void* operator new(size_t size);
-            static void operator delete(void* ptr, size_t size) noexcept;
-            static void* operator new[](size_t size);
-            static void operator delete[](void* ptr, size_t size) noexcept;
-
-            static void ClearPool()
-            {
-                s_EventPool.Clear();
-            }
-
-        private:
-            static ObjectPool s_EventPool;*/
     };
 
     class EventDispatcher
     {
     public:
-        explicit EventDispatcher(gsl::not_null<Event*> event) : m_event(event) {}
+        explicit EventDispatcher(Event* event) : m_event(event)
+        {
+          BeeExpects(event != nullptr);
+        }
         [[nodiscard]] inline EventCategory GetCategory() const { return m_event->Category; }
         [[nodiscard]] inline EventType GetType() const { return m_event->GetType(); }
 

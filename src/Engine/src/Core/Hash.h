@@ -44,6 +44,17 @@ namespace BeeEngine
     {
         return value.Hash(seed);
     }
+
+    inline uint64_t Hash(const String& value, uint64_t seed = 0)
+    {
+        return HashAlgorithm::MurmurHash2_64(value.data(), value.size(), seed);
+    }
+
+    template <PrimitiveType T>
+    uint64_t Hash(const T& value, uint64_t seed = 0)
+    {
+        return HashAlgorithm::MurmurHash2_64(&value, sizeof(T), seed);
+    }
     template <std::ranges::range T>
         requires(!std::convertible_to<T, String>)
     uint64_t Hash(const T& value, uint64_t seed = 0)
@@ -55,17 +66,6 @@ namespace BeeEngine
             hash = HashAlgorithm::MurmurHash2_64(&h, sizeof(uint64_t), hash);
         }
         return hash;
-    }
-
-    inline uint64_t Hash(const String& value, uint64_t seed = 0)
-    {
-        return HashAlgorithm::MurmurHash2_64(value.data(), value.size(), seed);
-    }
-
-    template <PrimitiveType T>
-    uint64_t Hash(const T& value, uint64_t seed = 0)
-    {
-        return HashAlgorithm::MurmurHash2_64(&value, sizeof(T), seed);
     }
     namespace Reflection
     {

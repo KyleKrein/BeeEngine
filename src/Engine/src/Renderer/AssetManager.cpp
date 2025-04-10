@@ -5,7 +5,8 @@
 #include "AssetManager.h"
 #include "../../Assets/EmbeddedResources.h"
 #include "Vertex.h"
-#include <glm.hpp>
+#include <glm/glm.hpp>
+#include <span>
 
 BeeEngine::Material& BeeEngine::InternalAssetManager::LoadMaterial(const String& name,
                                                                    const std::filesystem::path& vertexShader,
@@ -132,7 +133,7 @@ bool BeeEngine::InternalAssetManager::HasModel(const String& name) const
 }
 
 BeeEngine::Texture2D&
-BeeEngine::InternalAssetManager::LoadTexture(const String& name, uint32_t width, uint32_t height, gsl::span<byte> data)
+BeeEngine::InternalAssetManager::LoadTexture(const String& name, uint32_t width, uint32_t height, std::span<byte> data)
 {
     m_Textures.emplace(name, Texture2D::Create(width, height, data));
     return *m_Textures.at(name);
@@ -146,7 +147,7 @@ BeeEngine::Font& BeeEngine::InternalAssetManager::LoadFont(const String& name, c
         return *m_Fonts.emplace(name, CreateRef<Font>(path)).first->second;
 }
 
-BeeEngine::Font& BeeEngine::InternalAssetManager::LoadFont(const String& name, gsl::span<byte> data)
+BeeEngine::Font& BeeEngine::InternalAssetManager::LoadFont(const String& name, std::span<byte> data)
 {
     if (HasFont(name))
         return GetFont(name);

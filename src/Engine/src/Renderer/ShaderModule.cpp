@@ -112,7 +112,7 @@ namespace BeeEngine
     std::vector<uint32_t> ShaderModule::LoadSpirVFromCache(const Path& path)
     {
         auto result = File::ReadBinaryFile(path);
-        gsl::span<uint32_t> span((uint32_t*)result.data(), result.size() / sizeof(uint32_t));
+        std::span<uint32_t> span((uint32_t*)result.data(), result.size() / sizeof(uint32_t));
         BeeCoreTrace("Loaded SPIRV from cache");
         return {span.begin(), span.end()};
     }

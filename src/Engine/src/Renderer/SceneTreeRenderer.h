@@ -9,9 +9,9 @@
 #include "Renderer/BindingSet.h"
 #include "Renderer/Model.h"
 #include "TextRenderingConfiguration.h"
-#include "gsl/gsl"
-#include <glm.hpp>
+#include <glm/glm.hpp>
 #include <vector>
+#include <span>
 
 namespace BeeEngine
 {
@@ -26,7 +26,7 @@ namespace BeeEngine
                        bool isTransparent,
                        Model& model,
                        const std::vector<BindingSet*>& bindingSets,
-                       gsl::span<byte> instancedData);
+                       std::span<byte> instancedData);
         void AddText(const UTF8String& text,
                      Font* font,
                      const glm::mat4& transform,

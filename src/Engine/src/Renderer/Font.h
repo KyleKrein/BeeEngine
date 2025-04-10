@@ -37,7 +37,7 @@ namespace BeeEngine
          * @param name The name of the font.
          * @param data The raw font data as a span of bytes.
          */
-        Font(const String& name, gsl::span<byte> data);
+        Font(const String& name, std::span<byte> data);
 
         /// Deleted copy constructor to prevent copying.
         Font(const Font&) = delete;

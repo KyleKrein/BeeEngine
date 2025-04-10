@@ -6,6 +6,7 @@
 #include "AssetMetadata.h"
 #include "Core/TypeDefines.h"
 #include "Renderer/Texture.h"
+#include <span>
 
 namespace BeeEngine
 {
@@ -14,6 +15,6 @@ namespace BeeEngine
     public:
         static Ref<Texture2D> ImportTexture2D(AssetHandle handle, const AssetMetadata& metadata);
         static Scope<GPUTextureResource> LoadTextureFromFile(const Path& path);
-        static Scope<GPUTextureResource> LoadTextureFromMemory(gsl::span<byte> data);
+        static Scope<GPUTextureResource> LoadTextureFromMemory(std::span<byte> data);
     };
 } // namespace BeeEngine

@@ -1,6 +1,3 @@
-[submodule "src/Engine/vendor/debugbreak"]
-	path = src/Engine/vendor/debugbreak
-	url = https://github.com/scottt/debugbreak.git
 [submodule "src/Engine/vendor/glm"]
 	path = src/Engine/vendor/glm
 	url = https://github.com/g-truc/glm
@@ -10,9 +7,6 @@
 [submodule "src/tests/vendor/gtest"]
 	path = src/tests/vendor/gtest
 	url = https://github.com/google/googletest
-[submodule "src/Engine/vendor/gsl"]
-	path = src/Engine/vendor/gsl
-	url = https://github.com/microsoft/GSL.git
 [submodule "src/Engine/vendor/entt"]
 	path = src/Engine/vendor/entt
 	url = https://github.com/skypjack/entt.git

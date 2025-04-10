@@ -25,7 +25,7 @@ namespace BeeEngine
         GetAssetHandleByName(
             const String& name) const; // TODO write the replacement, that works on path, not on the name
 
-        void LoadAsset(gsl::span<byte> data, AssetHandle handle, const String& name, AssetType type) final;
+        void LoadAsset(std::span<byte> data, AssetHandle handle, const String& name, AssetType type) final;
 
         void LoadAsset(const Path& path, AssetHandle handle) final;
 

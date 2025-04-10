@@ -13,13 +13,13 @@ namespace BeeEngine
 {
 
     Ref<Texture2D>
-    Texture2D::Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels)
+    Texture2D::Create(uint32_t width, uint32_t height, std::span<std::byte> data, uint32_t numberOfChannels)
     {
         return CreateRef<Texture2D>(
             CreateScope<Internal::VulkanGPUTextureResource>(width, height, data, numberOfChannels));
     }
     Scope<GPUTextureResource>
-    GPUTextureResource::Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels)
+    GPUTextureResource::Create(uint32_t width, uint32_t height, std::span<std::byte> data, uint32_t numberOfChannels)
     {
         BEE_PROFILE_FUNCTION();
         switch (Renderer::GetAPI())

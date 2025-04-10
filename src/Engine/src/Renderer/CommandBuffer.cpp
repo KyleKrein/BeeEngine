@@ -43,7 +43,7 @@ namespace BeeEngine
     }
 
     void
-    CommandBuffer::SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, gsl::span<byte> instanceData)
+    CommandBuffer::SubmitInstance(Model& model, std::vector<BindingSet*>& bindingSets, std::span<byte> instanceData)
     {
         BeeExpects(IsValid());
         m_RenderingQueue->SubmitInstance({&model, bindingSets}, instanceData);

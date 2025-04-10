@@ -64,6 +64,7 @@ namespace BeeEngine
             Internal::WindowsUTF8ConsoleOutput consoleOutput;
             Internal::SetCorrectCurrentPath();
             Application* application = CreateApplication({argc, argv});
+            BeeExpects(application != nullptr);
             BEE_DEBUG_END_PROFILING_SESSION();
             application->Run();
             BEE_DEBUG_START_PROFILING_SESSION("BeeEngineShutdown", "shutdown.json");

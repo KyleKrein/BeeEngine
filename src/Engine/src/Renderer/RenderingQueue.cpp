@@ -13,8 +13,8 @@
 #include "Platform/WebGPU/WebGPUGraphicsDevice.h"
 #include "Renderer.h"
 #include "SceneRenderer.h"
-#include "ext/matrix_transform.hpp"
-#include "gtx/quaternion.hpp"
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace BeeEngine::Internal
 {
@@ -50,7 +50,7 @@ namespace BeeEngine::Internal
         s_Statistics.AllocatedGPUBuffers++;
     }
 
-    void RenderingQueue::SubmitInstance(RenderInstance&& instance, gsl::span<byte> instanceData)
+    void RenderingQueue::SubmitInstance(RenderInstance&& instance, std::span<byte> instanceData)
     {
         if (!m_SubmittedInstances.contains(instance))
         {

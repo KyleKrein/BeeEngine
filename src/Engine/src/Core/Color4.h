@@ -6,8 +6,8 @@
 #if defined(BEE_COMPILE_VULKAN)
 #include <vulkan/vulkan.hpp>
 #endif
-#if __has_include(<vec4.hpp>)
-#include <vec4.hpp>
+#if __has_include(<glm/glm.hpp>)
+#include <glm/glm.hpp>
 #endif
 #if __has_include(<gsl/gsl>)
 #include <gsl/gsl>
@@ -62,7 +62,7 @@ namespace BeeEngine
 
         [[nodiscard]] inline constexpr float* ValuePtr() { return static_cast<float*>(&m_R); }
 
-#if __has_include(<vec4.hpp>)
+#if __has_include(<glm/glm.hpp>)
         constexpr inline operator glm::vec4() const { return {m_R, m_G, m_B, m_A}; }
 #endif
 
