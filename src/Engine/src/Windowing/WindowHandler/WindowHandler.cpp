@@ -15,7 +15,7 @@ namespace BeeEngine
 {
     WindowHandler* WindowHandler::s_Instance = nullptr;
     WindowHandlerAPI WindowHandler::s_API = WindowHandlerAPI::SDL;
-    gsl::not_null<WindowHandler*>
+    WindowHandler*
     WindowHandler::Create(WindowHandlerAPI api, const ApplicationProperties& properties, EventQueue& eventQueue)
     {
         BEE_PROFILE_FUNCTION();

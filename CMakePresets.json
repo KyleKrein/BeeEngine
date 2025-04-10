@@ -65,6 +65,7 @@
 	      "NETHOST_LIB": "$env{NETHOST_LIB}",
 	      "BEE_BUILD_EDITOR": "ON",
 	      "BEE_BUILD_LOC_TOOL": "ON",
+	      "BEE_BUILD_RUNTIME": "ON",
 	      "BEE_USE_SYSTEM_SDL3": "ON"
             },
             "vendor": {},

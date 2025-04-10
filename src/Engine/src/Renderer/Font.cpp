@@ -308,7 +308,7 @@ namespace BeeEngine
         }
     }
 
-    Font::Font(const String& name, gsl::span<byte> data) : m_Data(new Internal::MSDFData())
+    Font::Font(const String& name, std::span<byte> data) : m_Data(new Internal::MSDFData())
     {
         {
             std::unique_lock lock(s_Lock);

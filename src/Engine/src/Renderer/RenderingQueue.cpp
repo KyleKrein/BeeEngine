@@ -50,7 +50,7 @@ namespace BeeEngine::Internal
         s_Statistics.AllocatedGPUBuffers++;
     }
 
-    void RenderingQueue::SubmitInstance(RenderInstance&& instance, gsl::span<byte> instanceData)
+    void RenderingQueue::SubmitInstance(RenderInstance&& instance, std::span<byte> instanceData)
     {
         if (!m_SubmittedInstances.contains(instance))
         {

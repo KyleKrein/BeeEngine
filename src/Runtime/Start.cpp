@@ -2,7 +2,7 @@
 #include <BeeEngine.h>
 #include <Core/GameConfig.h>
 
-gsl::not_null<BeeEngine::Application*> BeeEngine::CreateApplication(const ApplicationArgs& args)
+BeeEngine::Application* BeeEngine::CreateApplication(const ApplicationArgs& args)
 {
     BeeEngine::Runtime::RuntimeConfiguration config{
         .GameConfig = BeeEngine::GameConfig::Deserialize(), .ApplicationProperties = {}, .ApplicationArgs = args};

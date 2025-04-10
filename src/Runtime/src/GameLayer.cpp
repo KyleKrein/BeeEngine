@@ -126,8 +126,8 @@ namespace BeeEngine::Runtime
 
     Entity GameLayer::GetHoveredEntity()
     {
-        int mouseX = gsl::narrow_cast<int>(m_MousePosition.x * WindowHandler::GetInstance()->GetScaleFactor());
-        int mouseY = gsl::narrow_cast<int>(m_MousePosition.y * WindowHandler::GetInstance()->GetScaleFactor());
+        int mouseX = narrow_cast<int>(m_MousePosition.x * WindowHandler::GetInstance()->GetScaleFactor());
+        int mouseY = narrow_cast<int>(m_MousePosition.y * WindowHandler::GetInstance()->GetScaleFactor());
         int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
         pixelData--; // I make it -1 because entt starts from 0 and clear value for red integer in webgpu is
                      // 0 and I need to make invalid number -1 too, so in scene I make + 1

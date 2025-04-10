@@ -357,7 +357,7 @@ namespace BeeEngine
         }
 
         m_2DPhysicsWorld->Step(
-            gsl::narrow_cast<float>(Time::secondsD(Time::DeltaTime()).count()), velocityIterations, positionIterations);
+            narrow_cast<float>(Time::secondsD(Time::DeltaTime()).count()), velocityIterations, positionIterations);
 
         for (auto e : view)
         {

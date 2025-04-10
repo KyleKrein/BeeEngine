@@ -375,8 +375,6 @@ endif ()
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glm)
 add_subdirectory(vendor/ImGui) # Must be after DesktopPlatformsOnlyPostTarget
-add_subdirectory(vendor/gsl)
-#add_subdirectory(vendor/BeeAlloc)
 add_subdirectory(vendor/entt)
 add_subdirectory(vendor/yaml-cpp)
 add_subdirectory(vendor/magic_enum)
@@ -426,7 +424,6 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC spdlog::spdlog
         PUBLIC glm
         PUBLIC ImGui
-        PUBLIC GSL
         #PUBLIC BeeAlloc
         PUBLIC EnTT
         PUBLIC yaml-cpp

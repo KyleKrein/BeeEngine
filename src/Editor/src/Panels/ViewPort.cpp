@@ -93,8 +93,8 @@ namespace BeeEngine::Editor
 
         if (IsMouseInViewport())
         {
-            mouseX = gsl::narrow_cast<int>(mouseX * WindowHandler::GetInstance()->GetScaleFactor());
-            mouseY = gsl::narrow_cast<int>(mouseY * WindowHandler::GetInstance()->GetScaleFactor());
+            mouseX = narrow_cast<int>(mouseX * WindowHandler::GetInstance()->GetScaleFactor());
+            mouseY = narrow_cast<int>(mouseY * WindowHandler::GetInstance()->GetScaleFactor());
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
         }
 
@@ -162,8 +162,8 @@ namespace BeeEngine::Editor
 
         if (IsMouseInViewport())
         {
-            int mouseX = gsl::narrow_cast<int>(mx * WindowHandler::GetInstance()->GetScaleFactor());
-            int mouseY = gsl::narrow_cast<int>(my * WindowHandler::GetInstance()->GetScaleFactor());
+            int mouseX = narrow_cast<int>(mx * WindowHandler::GetInstance()->GetScaleFactor());
+            int mouseY = narrow_cast<int>(my * WindowHandler::GetInstance()->GetScaleFactor());
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
             m_HoveredEntity = GetHoveredEntity();
         }
@@ -243,10 +243,10 @@ namespace BeeEngine::Editor
         auto size = ImGui::GetContentRegionAvail();
         size.x = size.x > 0 ? size.x : 1;
         size.y = size.y > 0 ? size.y : 1;
-        if (gsl::narrow_cast<float>(m_Width) != size.x || gsl::narrow_cast<float>(m_Height) != size.y)
+        if (narrow_cast<float>(m_Width) != size.x || narrow_cast<float>(m_Height) != size.y)
         {
-            m_Width = gsl::narrow_cast<uint32_t>(size.x);
-            m_Height = gsl::narrow_cast<uint32_t>(size.y);
+            m_Width = narrow_cast<uint32_t>(size.x);
+            m_Height = narrow_cast<uint32_t>(size.y);
             m_FrameBuffer->Resize(m_Width * WindowHandler::GetInstance()->GetScaleFactor(),
                                   m_Height * WindowHandler::GetInstance()->GetScaleFactor());
             CurrentScene()->OnViewPortResize(m_Width, m_Height);
@@ -358,8 +358,8 @@ namespace BeeEngine::Editor
 
     Entity ViewPort::GetHoveredEntity()
     {
-        int mouseX = gsl::narrow_cast<int>(m_MousePosition.x * WindowHandler::GetInstance()->GetScaleFactor());
-        int mouseY = gsl::narrow_cast<int>(m_MousePosition.y * WindowHandler::GetInstance()->GetScaleFactor());
+        int mouseX = narrow_cast<int>(m_MousePosition.x * WindowHandler::GetInstance()->GetScaleFactor());
+        int mouseY = narrow_cast<int>(m_MousePosition.y * WindowHandler::GetInstance()->GetScaleFactor());
         int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
         pixelData--; // I make it -1 because entt starts from 0 and clear value for red integer in webgpu is
                      // 0 and I need to make invalid number -1 too, so in scene I make + 1

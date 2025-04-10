@@ -73,7 +73,7 @@ namespace BeeEngine
      * @param args The arguments to be passed to the application.
      * @return A non-null pointer to the created application instance.
      */
-    extern gsl::not_null<Application*> CreateApplication(const ApplicationArgs& args);
+    extern Application* CreateApplication(const ApplicationArgs& args);
 } // namespace BeeEngine
 
 #ifdef __cplusplus

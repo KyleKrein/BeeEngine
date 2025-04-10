@@ -3,8 +3,8 @@
 //
 
 #include "SceneCamera.h"
+#include "Core/Casts.h"
 #include <glm/ext/matrix_clip_space.hpp>
-#include <gsl/gsl>
 
 namespace BeeEngine
 {
@@ -31,7 +31,7 @@ namespace BeeEngine
 
     void SceneCamera::SetViewportSize(uint32_t width, uint32_t height)
     {
-        const float newAspectRatio = gsl::narrow_cast<float>(width) / gsl::narrow_cast<float>(height);
+        const float newAspectRatio = narrow_cast<float>(width) / narrow_cast<float>(height);
         if (m_AspectRatio != newAspectRatio)
         {
             m_AspectRatio = newAspectRatio;

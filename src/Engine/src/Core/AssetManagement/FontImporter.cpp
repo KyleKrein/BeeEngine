@@ -16,7 +16,7 @@ namespace BeeEngine
         }
         else
         {
-            result = CreateRef<Font>(metadata.Name, std::get<gsl::span<byte>>(metadata.Data));
+            result = CreateRef<Font>(metadata.Name, std::get<std::span<byte>>(metadata.Data));
         }
         result->Handle = handle;
         result->Location = metadata.Location;

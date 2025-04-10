@@ -20,6 +20,7 @@
 // You will probably want to macro-fy this, to switch on/off easily and use things like __FUNCSIG__ for the profile
 // name.
 //
+#include "Core/Casts.h"
 #include "version"
 
 #ifdef BEE_ENABLE_PROFILING
@@ -45,7 +46,6 @@
 #include <algorithm>
 #include <chrono>
 #include <fstream>
-#include <gsl/gsl>
 #include <string>
 
 #include <thread>
@@ -163,7 +163,7 @@ namespace BeeEngine
                     std::chrono::time_point_cast<std::chrono::microseconds>(endTimepoint).time_since_epoch().count();
 
                 uint32_t threadID =
-                    gsl::narrow_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
+                    narrow_cast<uint32_t>(std::hash<std::thread::id>{}(std::this_thread::get_id()));
                 Instrumentor::Get().WriteProfile({m_Name, start, end, threadID});
 
                 m_Stopped = true;

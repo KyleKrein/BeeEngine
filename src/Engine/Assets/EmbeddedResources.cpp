@@ -79,7 +79,7 @@ extern "C"
 
 namespace BeeEngine::Internal
 {
-    gsl::span<std::byte> GetEmbeddedResource(EmbeddedResource resource) noexcept
+    std::span<std::byte> GetEmbeddedResource(EmbeddedResource resource) noexcept
     {
         switch (resource)
         {

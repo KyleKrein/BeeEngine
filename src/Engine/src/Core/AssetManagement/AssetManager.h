@@ -10,6 +10,7 @@
 #include "LocalizedAsset.h"
 #include <type_traits>
 #include <utility>
+#include <span>
 
 namespace BeeEngine
 {
@@ -77,7 +78,7 @@ namespace BeeEngine
             BeeExpects(s_AssetManager);
             s_AssetManager->UnloadAsset(handle);
         }
-        static void LoadAsset(gsl::span<byte> data, AssetHandle handle, const String& name, AssetType type)
+        static void LoadAsset(std::span<byte> data, AssetHandle handle, const String& name, AssetType type)
         {
             BeeExpects(s_AssetManager);
             s_AssetManager->LoadAsset(data, std::move(handle), name, type);
