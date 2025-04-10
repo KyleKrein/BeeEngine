@@ -283,19 +283,6 @@ if(NOT ${BEE_NO_DOTNET})
 else()
   message("Building BeeEngine without C# support")
 endif()
-#[[if(IOS OR APPLE)
-    set(CMAKE_Swift_LANGUAGE_VERSION 5)
-    add_library(BeeEngine_Internal_Swift STATIC
-            src/Platform/MacOS/SwiftToCpp.h
-            #src/Platform/MacOS/FileDialogs.swift
-    )
-    target_compile_options(BeeEngine_Internal_Swift PUBLIC
-            "$<$<COMPILE_LANGUAGE:Swift>:-cxx-interoperability-mode=default>")
-    target_include_directories(BeeEngine_Internal_Swift
-            PUBLIC src/Platform/MacOS
-            )
-    target_link_libraries(BeeEngine PRIVATE BeeEngine_Internal_Swift)
-endif ()]]
 
 target_link_libraries(BeeEngine PRIVATE file_embed)
 
@@ -311,19 +298,6 @@ function(DesktopPlatformsOnlyPostTarget)
 
 
 endfunction(DesktopPlatformsOnlyPostTarget)
-
-#if(XCODE)
-#    set_target_properties(BeeEngine PROPERTIES
-#            XCODE_GENERATE_SCHEME ON
-#            XCODE_SCHEME_ENABLE_GPU_FRAME_CAPTURE_MODE "Metal"
-#            XCODE_STD_CXX "c++23")
-#endif()
-
-#set(CMAKE_WARN_DEPRECATED FALSE)
-
-#set_property(TARGET BeeEngine PROPERTY COMPILE_WARNING_AS_ERROR ON)
-
-#target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
 add_subdirectory(vendor/glslang)
 
@@ -367,9 +341,6 @@ if (${BEE_COMPILE_SDL})
       add_sdl_subdirectory()
     endif()
     target_compile_definitions(BeeEngine PUBLIC BEE_COMPILE_SDL)
-    #target_include_directories(BeeEngine
-    #        PUBLIC vendor/sdl/include
-    #)
     target_link_libraries(BeeEngine PRIVATE SDL3::SDL3)
 endif ()
 add_subdirectory(vendor/spdlog)
@@ -424,7 +395,6 @@ target_link_libraries( ${PROJECT_NAME}
         PUBLIC spdlog::spdlog
         PUBLIC glm
         PUBLIC ImGui
-        #PUBLIC BeeAlloc
         PUBLIC EnTT
         PUBLIC yaml-cpp
         PRIVATE SPIRV
@@ -479,13 +449,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Publish")
     add_compile_options(-O3)
 endif()
 
-#add_compile_options(-static-libstdc++)
-
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # Использование максимального уровня предупреждений
-    add_compile_options(-Wall -Wextra -pedantic -Wmost -Wmost-extra)
-endif ()
-
 target_link_libraries(BeeEngine PRIVATE file_embed)
 # for embedding assets
 add_compile_definitions(ASSETS_PATH="${PROJECT_SOURCE_DIR}/Assets/")
@@ -496,5 +459,3 @@ if(NOT ${BEE_NO_DOTNET})
   target_compile_definitions(BeeEngine PRIVATE BEE_ENABLE_SCRIPTING)
 endif()
 target_compile_definitions(BeeEngine PUBLIC _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING) # for spdlog
-
-#clang_format(BeeEngine "${SOURCE_FILES}")
