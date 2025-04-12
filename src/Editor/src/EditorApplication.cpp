@@ -3,12 +3,12 @@
 //
 
 #include "EditorApplication.h"
-#include "Core/Application.h"
-#include "Core/Move.h"
-#include "Debug/DebugLayer.h"
+#include <Core/Application.h>
+#include <Core/Move.h>
+#include <Debug/DebugLayer.h>
 #include "EditorLayer.h"
-#include "Locale/Locale.h"
-#include "Windowing/WindowHandler/WindowHandler.h"
+#include <Locale/Locale.h>
+#include <Windowing/WindowHandler/WindowHandler.h>
 
 namespace BeeEngine::Editor
 {

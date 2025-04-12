@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "BeeEngine.h"
+#include <BeeEngine.h>
 #include "ConfigFile.h"
 
 namespace BeeEngine::Editor

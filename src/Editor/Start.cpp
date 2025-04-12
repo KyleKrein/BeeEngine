@@ -2,8 +2,8 @@
 // Created by alexl on 26.05.2023.
 //
 
-#include "BeeEngine.h"
-#include "Core/Move.h"
+#include <BeeEngine.h>
+#include <Core/Move.h>
 #include "src/ConfigFile.h"
 #include "src/EditorApplication.h"
 

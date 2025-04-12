@@ -3,18 +3,18 @@
 //
 
 #include "ProjectFile.h"
-#include "Core/AssetManagement/Asset.h"
-#include "Core/AssetManagement/AssetRegistrySerializer.h"
-#include "Core/CodeSafety/Expects.h"
-#include "Core/Format.h"
-#include "Core/Logging/Log.h"
-#include "Core/OsPlatform.h"
-#include "Core/ResourceManager.h"
-#include "Core/ScopeGuard.h"
-#include "FileSystem/File.h"
-#include "Locale/LocalizationGenerator.h"
-#include "Utils/Commands.h"
-#include "VSProjectGeneration.h"
+#include <Core/AssetManagement/Asset.h>
+#include <Core/AssetManagement/AssetRegistrySerializer.h>
+#include <Core/CodeSafety/Expects.h>
+#include <Core/Format.h>
+#include <Core/Logging/Log.h>
+#include <Core/OsPlatform.h>
+#include <Core/ResourceManager.h>
+#include <Core/ScopeGuard.h>
+#include <FileSystem/File.h>
+#include <Locale/LocalizationGenerator.h>
+#include <Utils/Commands.h>
+#include <VSProjectGeneration.h>
 #include <Core/GameConfig.h>
 #include <Serialization/YAMLHelper.h>
 #include <filesystem>

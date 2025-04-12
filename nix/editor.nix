@@ -16,8 +16,8 @@ let
   
     inherit src;
 
-    nativeBuildInputs = buildInputsFile.dotnetNativeBuildInputs;
-    buildInputs = buildInputsFile.buildInputs;
+    nativeBuildInputs = buildInputsFile.nativeBuildInputs;
+    buildInputs = buildInputsFile.buildInputs ++ [ pkgs.beeengine ];
 
     postFixup = buildInputsFile.dotnetPostFixup pname;
 
@@ -27,9 +27,11 @@ let
       "-DBEE_USE_VCPKG=OFF"
       "-DBEE_BUILD_TESTS=OFF"
       "-DBEE_BUILD_EDITOR=ON"
+      "-DBEE_BUILD_BEEENGINE=OFF"
       "-DNETHOST_LIB=${nethost-lib-path}"
       "-DBEE_USE_SYSTEM_SDL3=ON"
     ];
+    enableParallelBuilding = true;
     meta = with lib; {
       homepage = "https://github.com/KyleKrein/BeeEngine";
       description = ''

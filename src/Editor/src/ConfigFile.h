@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "BeeEngine.h"
-#include "Windowing/VSync.h"
+#include <BeeEngine.h>
+#include <Windowing/VSync.h>
 #include <Locale/Locale.h>
 #include <cstdint>
 

@@ -9,7 +9,7 @@ def copy_headers(src_dir, dst_dir):
 
     for root, _, files in os.walk(src_dir):
         for file in files:
-            if file.endswith(('.h', '.hpp')):
+            if file.endswith(('.h', '.hpp', '.inl')):
                 src_file_path = os.path.join(root, file)
                 relative_path = os.path.relpath(root, src_dir)
                 dst_folder_path = os.path.join(dst_dir, relative_path)

@@ -17,9 +17,6 @@ configure_file(${BEE_CSHARP_LIBRARY_PATH}/BeeEngine.NativeBridge.dll ${CMAKE_CUR
 
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-add_compile_definitions(BEE_ENABLE_CHECKS)
-add_compile_definitions($<$<CONFIG:Debug>:BEE_ENABLE_PROFILING>)
-
 include(InstallRequiredSystemLibraries)
 install(TARGETS GameRuntime DESTINATION bin)
 #install(FILES "${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}" DESTINATION bin)
