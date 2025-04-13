@@ -767,7 +767,7 @@ namespace BeeEngine::Internal
             });
     }
 
-    void VulkanGraphicsDevice::CopyToBuffer(gsl::span<byte> data, VulkanBuffer& outBuffer) const
+    void VulkanGraphicsDevice::CopyToBuffer(std::span<byte> data, VulkanBuffer& outBuffer) const
     {
         void* mappedData;
         vmaMapMemory(m_DeviceHandle.allocator, outBuffer.Memory, &mappedData);

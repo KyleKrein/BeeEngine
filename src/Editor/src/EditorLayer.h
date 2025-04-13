@@ -4,15 +4,15 @@
 
 #pragma once
 
-#include "BeeEngine.h"
+#include <BeeEngine.h>
 #include "ConfigFile.h"
-#include "Core/AssetManagement/Asset.h"
-#include "Core/AssetManagement/EditorAssetManager.h"
-#include "Gui/ImGui/FpsCounter.h"
-#include "Gui/ImGui/ImGuiOutputConsole.h"
+#include <Core/AssetManagement/Asset.h>
+#include <Core/AssetManagement/EditorAssetManager.h>
+#include <Gui/ImGui/FpsCounter.h>
+#include <Gui/ImGui/ImGuiOutputConsole.h>
 #include "ImGuiNativeDragAndDrop.h"
-#include "Locale/ImGuiLocalizationPanel.h"
-#include "Locale/Locale.h"
+#include <Locale/ImGuiLocalizationPanel.h>
+#include <Locale/Locale.h>
 #include "Panels/AssetPanel.h"
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/DockSpace.h"
@@ -23,7 +23,7 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ViewPort.h"
 #include "ProjectFile.h"
-#include "kdbindings/property.h"
+#include <kdbindings/property.h>
 #include <functional>
 
 namespace BeeEngine::Editor

@@ -9,10 +9,17 @@
   outputs = { self, nixpkgs, ... }@inputs: let
     inherit (nixpkgs) lib;
     eachSystem = lib.genAttrs [ "x86_64-linux" "aarch64-linux" ];
+    defaultOverlay = system: 
+      final: _prev: {
+	beeengineeditor = self.packages.${system}.BeeEngineEditor;
+	beelocalization = self.packages.${system}.BeeLocalization;
+        beeengine = self.packages.${system}.BeeEngine;
+    };
     pkgsFor = eachSystem (system:
       import nixpkgs {
         localSystem = system;
         overlays = with self.overlays; [
+	  (defaultOverlay system)
         ];
       });
     pkgsCrossFor = eachSystem (system: crossSystem:
@@ -20,15 +27,12 @@
         localSystem = system;
         inherit crossSystem;
         overlays = with self.overlays; [
+	  (defaultOverlay system)
         ];
       });
     src = self;
   in {
-    overlays = eachSystem (system: 
-      final: _prev: {
-	beeengineeditor = self.packages.${system}.BeeEngineEditor;
-	beelocalization = self.packages.${system}.BeeLocalization;
-    });
+    overlays = eachSystem defaultOverlay;
     devShells = eachSystem (system: let 
 	pkgs = pkgsFor.${system}; 
 	buildInputsFile = (import ./nix/buildInputs.nix {inherit pkgs;});
@@ -52,6 +56,7 @@
 	BeeEngineEditor-Debug = pkgs.callPackage ./nix/editor.nix { inherit src; inherit buildInputsFile; cmakeBuildType = "Debug"; };
 	BeeLocalization = pkgs.callPackage ./nix/localizationtool.nix { inherit src; inherit buildInputsFile; };
 	BeeLocalization-Debug = pkgs.callPackage ./nix/localizationtool.nix { inherit src; inherit buildInputsFile; cmakeBuildType = "Debug"; };
+        BeeEngine = pkgs.callPackage ./nix/libbeeengine.nix { inherit src; inherit buildInputsFile; };
   });
 };
 }

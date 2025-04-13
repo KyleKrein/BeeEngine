@@ -3,7 +3,7 @@
 //
 
 #include "AssetScanner.h"
-#include "Core/ResourceManager.h"
+#include <Core/ResourceManager.h>
 
 namespace BeeEngine::Editor
 {

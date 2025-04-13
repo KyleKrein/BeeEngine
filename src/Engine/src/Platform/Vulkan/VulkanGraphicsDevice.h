@@ -73,7 +73,7 @@ namespace BeeEngine::Internal
         void DestroyImage(VulkanImage& image) const;
         void DestroyImageWithView(VulkanImage& image, vk::ImageView imageView) const;
 
-        void CopyToBuffer(gsl::span<byte> data, VulkanBuffer& outBuffer) const;
+        void CopyToBuffer(std::span<byte> data, VulkanBuffer& outBuffer) const;
 
         vk::CommandBuffer BeginSingleTimeCommands();
 

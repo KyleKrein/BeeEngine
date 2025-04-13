@@ -59,7 +59,7 @@ namespace BeeEngine::Internal
         return {imageWrite, samplerWrite};
     }
 
-    void VulkanGPUTextureResource::SetData(gsl::span<std::byte> data, uint32_t numberOfChannels)
+    void VulkanGPUTextureResource::SetData(std::span<std::byte> data, uint32_t numberOfChannels)
     {
         std::vector<std::byte> dataWithAlpha;
         if (numberOfChannels == 3)
@@ -158,7 +158,7 @@ namespace BeeEngine::Internal
 
     VulkanGPUTextureResource::VulkanGPUTextureResource(uint32_t width,
                                                        uint32_t height,
-                                                       gsl::span<std::byte> data,
+                                                       std::span<std::byte> data,
                                                        uint32_t numberOfChannels)
         : m_Device(VulkanGraphicsDevice::GetInstance())
     {

@@ -10,7 +10,7 @@
 #include "Model.h"
 #include "RendererStatistics.h"
 #include "TextRenderingConfiguration.h"
-#include <gsl/span>
+#include <span>
 
 namespace BeeEngine::Internal
 {
@@ -68,7 +68,7 @@ namespace BeeEngine::Internal
         RenderingQueue();
         RenderingQueue(size_t sizeInBytes);
         ~RenderingQueue();
-        void SubmitInstance(RenderInstance&& instance, gsl::span<byte> instanceData);
+        void SubmitInstance(RenderInstance&& instance, std::span<byte> instanceData);
         void SubmitLine(const glm::vec3& start,
                         const glm::vec3& end,
                         const Color4& color,

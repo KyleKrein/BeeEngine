@@ -225,6 +225,8 @@ namespace BeeEngine
                 return "SDL_EVENT_LAST";
             case SDL_EVENT_ENUM_PADDING:
                 return "SDL_EVENT_ENUM_PADDING";
+            default:
+              return "Unknown SDL Event";
         }
     }
 } // namespace BeeEngine
@@ -304,7 +306,7 @@ namespace BeeEngine::Internal
         m_Title = properties.Title;
 
         m_Window = SDL_CreateWindow(
-            properties.Title.c_str(), gsl::narrow_cast<int>(m_Width), gsl::narrow_cast<int>(m_Height), windowFlags);
+            properties.Title.c_str(), narrow_cast<int>(m_Width), narrow_cast<int>(m_Height), windowFlags);
         if (m_Window == nullptr)
         {
             BeeCoreError("Failed to create SDL3 window! {}", SDL_GetError());
@@ -774,7 +776,7 @@ namespace BeeEngine::Internal
         SetDeltaTime(Time::secondsD(deltatime),
                      Time::secondsD(((double)currentTime) / (double)SDL_GetPerformanceFrequency()));
         return Time::secondsD(deltatime);
-        // UpdateDeltaTime(gsl::narrow_cast<float>(SDL_GetPerformanceCounter()));
+        // UpdateDeltaTime(narrow_cast<float>(SDL_GetPerformanceCounter()));
     }
 
     void SDLWindowHandler::Close()

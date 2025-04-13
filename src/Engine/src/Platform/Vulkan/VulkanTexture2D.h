@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <span>
 #include "Renderer/Texture.h"
 #include "VulkanGraphicsDevice.h"
 
@@ -15,14 +16,14 @@ namespace BeeEngine::Internal
 
         std::vector<IBindable::BindGroupEntryType> GetBindGroupEntry() const override;
 
-        void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels) override;
+        void SetData(std::span<std::byte> data, uint32_t numberOfChannels) override;
         VulkanGPUTextureResource(
             uint32_t width, uint32_t height, VulkanImage image, vk::ImageView view, vk::Sampler sampler);
         VulkanImage& GetVulkanImage() { return m_Image; }
         VulkanImage GetVulkanImage() const { return m_Image; }
         vk::ImageView& GetVulkanImageView() { return m_ImageView; }
 
-        VulkanGPUTextureResource(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels);
+        VulkanGPUTextureResource(uint32_t width, uint32_t height, std::span<std::byte> data, uint32_t numberOfChannels);
         ~VulkanGPUTextureResource() override;
 
     private:

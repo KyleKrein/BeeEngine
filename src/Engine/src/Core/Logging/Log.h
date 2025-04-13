@@ -7,7 +7,7 @@
 #include "Core/Format.h"
 #include "Core/Logging/ConsoleOutput.h"
 #include "Core/ToString.h"
-#include "debugbreak.h"
+#include "Core/debugbreak.h"
 #include "memory.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"

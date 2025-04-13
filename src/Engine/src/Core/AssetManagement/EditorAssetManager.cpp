@@ -24,7 +24,7 @@ namespace BeeEngine
         return m_AssetMap.at(handle);
     }
 
-    void EditorAssetManager::LoadAsset(gsl::span<byte> data, AssetHandle handle, const String& name, AssetType type)
+    void EditorAssetManager::LoadAsset(std::span<byte> data, AssetHandle handle, const String& name, AssetType type)
     {
         BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
         AssetMetadata metadata;

@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include "ApplicationInit.h"
 using namespace BeeEngine;
-gsl::not_null<Application*> BeeEngine::CreateApplication(const ApplicationArgs& args)
+Application* BeeEngine::CreateApplication(const ApplicationArgs& args)
 {
     auto windowProperties = BeeEngine::ApplicationProperties{1280, 720, "BeeEngineTests", VSync::On};
     int argc = args.GetArgc();

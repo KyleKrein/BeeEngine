@@ -4,6 +4,7 @@
 
 #include "TextureImporter.h"
 #include "Core/AssetManagement/Asset.h"
+#include "Core/Casts.h"
 #include "Core/CodeSafety/Expects.h"
 #include "Core/ScopeGuard.h"
 #include "Renderer/Texture.h"
@@ -11,7 +12,7 @@
 #define STBI_WINDOWS_UTF8
 #include "Platform/Windows/WindowsString.h"
 #endif
-#include <stb_image.h>
+#include <stb/stb_image.h>
 #if defined(WINDOWS)
 STBIDEF stbi_uc* stbi_load(const wchar_t* filename, int* x, int* y, int* comp, int req_comp);
 #endif
@@ -41,13 +42,13 @@ namespace BeeEngine
         }
         return GPUTextureResource::Create(width, height, {(byte*)data, size_t(width * height * channels)}, channels);
     }
-    Scope<GPUTextureResource> TextureImporter::LoadTextureFromMemory(gsl::span<byte> textureData)
+    Scope<GPUTextureResource> TextureImporter::LoadTextureFromMemory(std::span<byte> textureData)
     {
         BeeExpects(!textureData.empty());
         int width, height, channels;
         stbi_set_flip_vertically_on_load(true);
         stbi_uc* data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(textureData.data()),
-                                              gsl::narrow_cast<int>(textureData.size()),
+                                              narrow_cast<int>(textureData.size()),
                                               &width,
                                               &height,
                                               &channels,
@@ -75,7 +76,7 @@ namespace BeeEngine
                 case AssetLocation::FileSystem:
                     return CreateRef<Texture2D>(LoadTextureFromFile(std::get<Path>(metadata.Data)));
                 case AssetLocation::Embedded:
-                    return CreateRef<Texture2D>(LoadTextureFromMemory(std::get<gsl::span<byte>>(metadata.Data)));
+                    return CreateRef<Texture2D>(LoadTextureFromMemory(std::get<std::span<byte>>(metadata.Data)));
             }
             BeeEnsures(false && "Unknown location of asset");
         }();

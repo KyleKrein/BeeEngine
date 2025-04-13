@@ -7,7 +7,6 @@
 #include "AssetMetadata.h"
 #include "Core/Path.h"
 #include "Core/String.h"
-#include "gsl/span"
 #include <map>
 
 namespace BeeEngine
@@ -19,7 +18,7 @@ namespace BeeEngine
     public:
         virtual Ref<Asset> GetAssetRef(AssetHandle handle) const = 0;
         virtual Asset* GetAsset(AssetHandle handle) const = 0;
-        virtual void LoadAsset(gsl::span<byte> data, AssetHandle handle, const String& name, AssetType type) = 0;
+        virtual void LoadAsset(std::span<byte> data, AssetHandle handle, const String& name, AssetType type) = 0;
         virtual void LoadAsset(const Path& path, AssetHandle handle) = 0;
         virtual void UnloadAsset(AssetHandle handle) = 0;
 

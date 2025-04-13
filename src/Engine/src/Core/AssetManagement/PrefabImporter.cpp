@@ -27,7 +27,7 @@ namespace BeeEngine
         }
         else if (metadata.Location == AssetLocation::Embedded)
         {
-            auto& data = std::get<gsl::span<byte>>(metadata.Data);
+            auto& data = std::get<std::span<byte>>(metadata.Data);
             prefabFile = String((char*)data.data(), data.size());
         }
         else

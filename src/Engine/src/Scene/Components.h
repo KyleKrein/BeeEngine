@@ -25,9 +25,9 @@
 #include "Scripting/GameScript.h"
 #include "Scripting/MObject.h"
 #include "Serialization/ISerializer.h"
-#include "ext/matrix_transform.hpp"
-#include "glm.hpp"
-#include "gtx/quaternion.hpp"
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace BeeEngine
 {

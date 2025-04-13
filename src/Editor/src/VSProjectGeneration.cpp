@@ -3,8 +3,8 @@
 //
 
 #include "VSProjectGeneration.h"
-#include "Core/CodeSafety/Expects.h"
-#include "FileSystem/File.h"
+#include <Core/CodeSafety/Expects.h>
+#include <FileSystem/File.h>
 #include <fstream>
 #include <sstream>
 namespace BeeEngine

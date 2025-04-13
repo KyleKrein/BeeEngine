@@ -9,7 +9,7 @@
 #include "Core/TypeDefines.h"
 #include "IBindable.h"
 #include "Renderer/BindingSet.h"
-#include "gsl/gsl"
+#include <span>
 
 namespace BeeEngine
 {
@@ -30,7 +30,7 @@ namespace BeeEngine
          * @param data The texture data to be uploaded to the GPU.
          * @param numberOfChannels The number of color channels in the texture (default is 4).
          */
-        virtual void SetData(gsl::span<std::byte> data, uint32_t numberOfChannels = 4) = 0;
+        virtual void SetData(std::span<std::byte> data, uint32_t numberOfChannels = 4) = 0;
 
         /**
          * @brief Gets the width of the texture.
@@ -79,7 +79,7 @@ namespace BeeEngine
          * @return A scoped pointer to the created GPU texture resource.
          */
         static Scope<GPUTextureResource>
-        Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels = 4);
+        Create(uint32_t width, uint32_t height, std::span<std::byte> data, uint32_t numberOfChannels = 4);
 
         /**
          * @brief Creates a new GPU texture resource from a file path.
@@ -168,7 +168,7 @@ namespace BeeEngine
          * @return A reference-counted pointer to the created Texture2D asset.
          */
         static Ref<Texture2D>
-        Create(uint32_t width, uint32_t height, gsl::span<std::byte> data, uint32_t numberOfChannels = 4);
+        Create(uint32_t width, uint32_t height, std::span<std::byte> data, uint32_t numberOfChannels = 4);
 
     private:
         Scope<GPUTextureResource> m_TextureResource; ///< The GPU texture resource managed by this asset.

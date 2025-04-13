@@ -3,15 +3,15 @@
 //
 
 #pragma once
-#include "Core/AssetManagement/Asset.h"
-#include "Core/AssetManagement/EditorAssetManager.h"
-#include "Core/Coroutines/Generator.h"
-#include "Core/OsPlatform.h"
-#include "Core/Property.h"
-#include "Core/TypeDefines.h"
-#include "Core/UUID.h"
-#include "FileSystem/FileWatcher.h"
-#include "Locale/Locale.h"
+#include <Core/AssetManagement/Asset.h>
+#include <Core/AssetManagement/EditorAssetManager.h>
+#include <Core/Coroutines/Generator.h>
+#include <Core/OsPlatform.h>
+#include <Core/Property.h>
+#include <Core/TypeDefines.h>
+#include <Core/UUID.h>
+#include <FileSystem/FileWatcher.h>
+#include <Locale/Locale.h>
 #include <filesystem>
 
 namespace BeeEngine::Editor

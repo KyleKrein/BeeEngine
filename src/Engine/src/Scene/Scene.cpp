@@ -13,7 +13,7 @@
 #include "Renderer/Renderer.h"
 #include "Scripting/ScriptingEngine.h"
 #include "box2d/b2_world_callbacks.h"
-#include "gtc/type_ptr.hpp"
+#include <glm/gtc/type_ptr.hpp>
 #include <cstdint>
 #include <glm/glm.hpp>
 
@@ -357,7 +357,7 @@ namespace BeeEngine
         }
 
         m_2DPhysicsWorld->Step(
-            gsl::narrow_cast<float>(Time::secondsD(Time::DeltaTime()).count()), velocityIterations, positionIterations);
+            narrow_cast<float>(Time::secondsD(Time::DeltaTime()).count()), velocityIterations, positionIterations);
 
         for (auto e : view)
         {

@@ -44,7 +44,7 @@ namespace BeeEngine
         return buffer;
     }
 
-    void File::WriteBinaryFile(const Path& path, gsl::span<std::byte> content)
+    void File::WriteBinaryFile(const Path& path, std::span<std::byte> content)
     {
         std::ofstream ofs(path.ToStdPath(), std::ios::out | std::ios::binary);
         if (!ofs)

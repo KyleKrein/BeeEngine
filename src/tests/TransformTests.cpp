@@ -7,8 +7,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include "gtc/epsilon.hpp"
-#include "gtx/matrix_decompose.inl"
+#include <glm/gtc/epsilon.hpp>
+#include <glm/gtx/matrix_decompose.inl>
 using namespace BeeEngine;
 TEST(TransformComponentTest, GetTransform)
 {

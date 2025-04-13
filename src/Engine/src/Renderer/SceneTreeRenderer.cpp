@@ -21,7 +21,7 @@ namespace BeeEngine
                                       bool isTransparent,
                                       Model& model,
                                       const std::vector<BindingSet*>& bindingSets,
-                                      gsl::span<byte> instancedData)
+                                      std::span<byte> instancedData)
     {
         auto& vec = isTransparent ? m_Transparent : m_Opaque;
         std::vector<byte> instancedDataVector(instancedData.size());

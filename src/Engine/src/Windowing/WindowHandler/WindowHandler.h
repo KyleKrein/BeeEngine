@@ -40,7 +40,7 @@ namespace BeeEngine
         virtual ~WindowHandler() = default;
         WindowHandler(const WindowHandler&) = delete;
         WindowHandler& operator=(const WindowHandler&) = delete;
-        static gsl::not_null<WindowHandler*>
+        static WindowHandler*
         Create(WindowHandlerAPI api, const ApplicationProperties& properties, EventQueue& eventQueue);
         uint16_t GetWidth() const { return m_Width; }
         uint16_t GetHeight() const { return m_Height; }
@@ -53,7 +53,7 @@ namespace BeeEngine
         virtual WindowNativeInfo GetNativeInfo() = 0;
         virtual void SetWidth(uint16_t width) = 0;
         virtual void SetHeight(uint16_t height) = 0;
-        static gsl::not_null<WindowHandler*> GetInstance() { return s_Instance; }
+        static WindowHandler* GetInstance() { return s_Instance; }
         static WindowHandlerAPI GetAPI() { return s_API; }
         virtual uint64_t GetWindow() = 0;
         VSync GetVSync() const { return m_vsync; }

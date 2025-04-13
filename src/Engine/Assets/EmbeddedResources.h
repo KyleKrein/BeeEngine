@@ -3,8 +3,7 @@
 //
 
 #pragma once
-
-#include "gsl/gsl"
+#include <span>
 
 enum class EmbeddedResource
 {
@@ -24,5 +23,5 @@ enum class EmbeddedResource
 
 namespace BeeEngine::Internal
 {
-    gsl::span<std::byte> GetEmbeddedResource(EmbeddedResource resource) noexcept;
+    std::span<std::byte> GetEmbeddedResource(EmbeddedResource resource) noexcept;
 }

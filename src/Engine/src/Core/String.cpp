@@ -7,7 +7,7 @@
 #define UTF_CPP_CPLUSPLUS 201703L
 #include <unicode/ucnv.h>
 #include <unicode/unistr.h>
-#include <utf8.h>
+#include <utfcpp/include/utf8.h>
 
 namespace BeeEngine
 {

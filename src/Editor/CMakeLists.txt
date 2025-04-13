@@ -15,22 +15,28 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
         src/Panels/ProjectSettings.cpp)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 
-add_subdirectory(vendor/ImGuizmo)
+if(NOT ${BEE_BUILD_BEEENGINE})
+  find_library(BeeEngine_LIB BeeEngine REQUIRED)
+  message("Found BeeEngine: ${BeeEngine_LIB}")
+  get_filename_component(BeeEngineLibDir "${BeeEngine_LIB}" DIRECTORY)
+  get_filename_component(BeeEnginePrefix "${BeeEngineLibDir}" DIRECTORY)
+  set(BEE_CSHARP_LIBRARY_PATH ${BeeEnginePrefix}/share/BeeEngine/libs)
+  add_library(BeeEngine STATIC IMPORTED GLOBAL)
+  set_target_properties(BeeEngine PROPERTIES
+    IMPORTED_LOCATION ${BeeEngine_LIB}
+    INTERFACE_INCLUDE_DIRECTORIES ${BeeEnginePrefix}/include/BeeEngine
+  )
+  set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER>  <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> -Wl,--start-group -Wl,--whole-archive <LINK_LIBRARIES> -Wl,--no-whole-archive -Wl,--end-group")
+
+endif()
+
 target_include_directories(BeeEngineEditor
-        PUBLIC ../Engine/include/
-        PRIVATE ../Engine/vendor/
-        PRIVATE vendor/FileWatcher
         PUBLIC src
-        PUBLIC ${ImGuizmo_SOURCE_DIR}
         )
 
 target_link_libraries(BeeEngineEditor 
-  PUBLIC BeeEngine::WithScripting
-  PUBLIC ImGuizmo
+  PUBLIC BeeEngine
 )
-add_compile_definitions(BEE_ENABLE_CHECKS)
-add_compile_definitions($<$<CONFIG:Debug>:BEE_ENABLE_PROFILING>)
-add_compile_definitions($<$<CONFIG:Release>:BEE_ENABLE_PROFILING>)
 file(COPY ../Engine/Assets/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 configure_file(${BEE_CSHARP_LIBRARY_PATH}/BeeEngine.Core.dll ${CMAKE_CURRENT_BINARY_DIR}/libs/BeeEngine.Core.dll COPYONLY)

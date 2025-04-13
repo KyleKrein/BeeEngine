@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include <SIMDString/SIMDString.h>
+#include "SIMDString.h"
 #include <cstddef>
 #include <filesystem>
 #include <string>

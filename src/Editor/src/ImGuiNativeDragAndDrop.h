@@ -3,10 +3,10 @@
 //
 
 #pragma once
-#include "Core/Events/Event.h"
-#include "Core/Events/EventImplementations.h"
-#include "Core/Path.h"
-#include "Gui/ImGui/ImGuiExtension.h"
+#include <Core/Events/Event.h>
+#include <Core/Events/EventImplementations.h>
+#include <Core/Path.h>
+#include <Gui/ImGui/ImGuiExtension.h>
 #include <vector>
 
 namespace BeeEngine

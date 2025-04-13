@@ -10,7 +10,7 @@
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/UniformBuffer.h"
 #include "Scene/Components.h"
-#include "vec3.hpp"
+#include <glm/glm.hpp>
 #include <cstdint>
 
 namespace BeeEngine
