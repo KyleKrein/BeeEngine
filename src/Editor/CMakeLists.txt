@@ -16,13 +16,18 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 
 if(NOT ${BEE_BUILD_BEEENGINE})
-  find_library(BeeEngine BeeEngine REQUIRED)
-  message("Found BeeEngine: ${BeeEngine}")
-  get_filename_component(BeeEngineLibDir "${BeeEngine}" DIRECTORY)
+  find_library(BeeEngine_LIB BeeEngine REQUIRED)
+  message("Found BeeEngine: ${BeeEngine_LIB}")
+  get_filename_component(BeeEngineLibDir "${BeeEngine_LIB}" DIRECTORY)
   get_filename_component(BeeEnginePrefix "${BeeEngineLibDir}" DIRECTORY)
   set(BEE_CSHARP_LIBRARY_PATH ${BeeEnginePrefix}/share/BeeEngine/libs)
-  message("Including ${BeeEnginePrefix}/include/BeeEngine")
-  target_include_directories(BeeEngineEditor PRIVATE ${BeeEnginePrefix}/include/BeeEngine)
+  add_library(BeeEngine STATIC IMPORTED GLOBAL)
+  set_target_properties(BeeEngine PROPERTIES
+    IMPORTED_LOCATION ${BeeEngine_LIB}
+    INTERFACE_INCLUDE_DIRECTORIES ${BeeEnginePrefix}/include/BeeEngine
+  )
+  set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER>  <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> -Wl,--start-group -Wl,--whole-archive <LINK_LIBRARIES> -Wl,--no-whole-archive -Wl,--end-group")
+
 endif()
 
 target_include_directories(BeeEngineEditor

@@ -78,6 +78,34 @@
             }
         },
         {
+            "name": "Release-NixOS",
+            "displayName": "Release-NixOS Config",
+            "description": "Release build using Ninja generator",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/Release-NixOS",
+            "installDir": "${sourceDir}/install/Release-NixOS",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_BUILD_WITH_INSTALL_RPATH": "ON",
+	      "BEE_USE_VCPKG": "OFF",
+	      "NETHOST_LIB": "$env{NETHOST_LIB}",
+	      "BEE_BUILD_BEEENGINE": "ON",
+	      "BEE_BUILD_EDITOR": "OFF",
+	      "BEE_BUILD_LOC_TOOL": "OFF",
+	      "BEE_BUILD_RUNTIME": "OFF",
+	      "BEE_BUILD_TESTS": "OFF",
+	      "BEE_USE_SYSTEM_SDL3": "ON"
+            },
+            "vendor": {},
+            "condition": {
+                "type": "notEquals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
             "name": "Release",
             "displayName": "Release Config",
             "description": "Release build using Ninja generator",

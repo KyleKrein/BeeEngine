@@ -113,6 +113,7 @@ include(cmake/StandardProjectSettings.cmake)
 #set_project_warnings(project_warnings)
 
 include(cmake/set_compile_definitions.cmake)
+
 if(${BEE_BUILD_BEEENGINE})
   add_subdirectory(src/Engine)
 endif()

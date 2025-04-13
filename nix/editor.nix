@@ -16,8 +16,8 @@ let
   
     inherit src;
 
-    nativeBuildInputs = buildInputsFile.nativeBuildInputs;
-    buildInputs = buildInputsFile.buildInputs ++ [ pkgs.beeengine ];
+    nativeBuildInputs = buildInputsFile.dotnetNativeBuildInputs;
+    buildInputs = buildInputsFile.buildInputs;
 
     postFixup = buildInputsFile.dotnetPostFixup pname;
 
@@ -27,7 +27,7 @@ let
       "-DBEE_USE_VCPKG=OFF"
       "-DBEE_BUILD_TESTS=OFF"
       "-DBEE_BUILD_EDITOR=ON"
-      "-DBEE_BUILD_BEEENGINE=OFF"
+      "-DBEE_BUILD_BEEENGINE=ON"
       "-DNETHOST_LIB=${nethost-lib-path}"
       "-DBEE_USE_SYSTEM_SDL3=ON"
     ];
