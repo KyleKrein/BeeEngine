@@ -250,9 +250,9 @@ namespace BeeEngine::Internal
                         colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
                         // In tutorial it's eOne and eZero for alpha blend factor, but in webgpu tutorial it's
                         // eZero and eOne. And the second method works
-                        colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eZero;
-                        colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eOne;
-                        colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;
+                        colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne;
+                        colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
+                        colorBlendAttachment.alphaBlendOp = vk::BlendOp::eSubtract;
                     }
                     break;
                     default:

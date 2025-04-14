@@ -64,6 +64,7 @@
 	      "BEE_USE_VCPKG": "OFF",
 	      "NETHOST_LIB": "$env{NETHOST_LIB}",
 	      "BEE_BUILD_BEEENGINE": "ON",
+	      "BEE_BUILD_SANDBOX": "ON",
 	      "BEE_BUILD_EDITOR": "ON",
 	      "BEE_BUILD_LOC_TOOL": "ON",
 	      "BEE_BUILD_RUNTIME": "ON",

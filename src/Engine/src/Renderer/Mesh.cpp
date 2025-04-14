@@ -44,7 +44,7 @@ namespace BeeEngine
         }
     }
 
-    Ref<Mesh> Mesh::Create(void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices)
+    Ref<Mesh> Mesh::Create(const void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices)
     {
         switch (Renderer::GetAPI())
         {

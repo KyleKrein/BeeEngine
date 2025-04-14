@@ -242,7 +242,7 @@ namespace BeeEngine::Internal
             }
             return result;
         }
-        bool CheckRayTracingSupport() { return CheckExtensions(s_RayTracingExtensions).HasValue(); }
+        bool CheckRayTracingSupport() { return false; return CheckExtensions(s_RayTracingExtensions).HasValue(); }
         vk::PhysicalDevice m_Device;
         String m_Name;
         bool m_Sufficient;

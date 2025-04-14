@@ -68,7 +68,7 @@ namespace BeeEngine::Internal
         CreateAccelerationStructure(sizeof(Vertex));
     }
 
-    VulkanMesh::VulkanMesh(void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices)
+    VulkanMesh::VulkanMesh(const void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices)
         : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertexCount), m_IndexCount(indices.size())
     {
         CreateVertexBuffer(verticesData, size, vertexCount);

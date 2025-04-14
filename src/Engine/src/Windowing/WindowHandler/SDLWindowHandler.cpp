@@ -20,6 +20,8 @@
 #include "Utils/Threading.hpp"
 #include "backends/imgui_impl_sdl3.h"
 
+#include "Platform/RmlUi/interfaces.hpp"
+
 #if defined(WINDOWS)
 #include "Platform/Windows/WindowsDropSource.h"
 #endif
@@ -226,7 +228,7 @@ namespace BeeEngine
             case SDL_EVENT_ENUM_PADDING:
                 return "SDL_EVENT_ENUM_PADDING";
             default:
-              return "Unknown SDL Event";
+                return "Unknown SDL Event";
         }
     }
 } // namespace BeeEngine
@@ -423,6 +425,10 @@ namespace BeeEngine::Internal
         static Scope<FileDropEvent> fileDropEvent = nullptr;
         while (SDL_PollEvent(&sdlEvent) != 0)
         {
+            if (!RmlUi::InputEventHandler(m_Window, sdlEvent))
+            {
+                continue;
+            }
             ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
             if constexpr (Application::GetOsPlatform() == OSPlatform::Linux)
             {
@@ -513,7 +519,8 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_KEY_DOWN:
                 {
-                    auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.scancode), sdlEvent.key.repeat);
+                    auto event =
+                        CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.scancode), sdlEvent.key.repeat);
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
@@ -785,7 +792,7 @@ namespace BeeEngine::Internal
         m_Events.AddEvent(std::move(event));
         m_IsClosing = true;
     }
-//Scancode - layout independent. Keycode - layout dependent. Which is better?
+    // Scancode - layout independent. Keycode - layout dependent. Which is better?
     Key SDLWindowHandler::ConvertKeyCode(SDL_Scancode key)
     {
         switch (key)

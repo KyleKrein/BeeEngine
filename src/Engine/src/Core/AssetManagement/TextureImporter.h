@@ -16,5 +16,6 @@ namespace BeeEngine
         static Ref<Texture2D> ImportTexture2D(AssetHandle handle, const AssetMetadata& metadata);
         static Scope<GPUTextureResource> LoadTextureFromFile(const Path& path);
         static Scope<GPUTextureResource> LoadTextureFromMemory(std::span<byte> data);
+      static Scope<GPUTextureResource> LoadTextureBitmapFromMemory(std::span<byte> data, uint32_t width, uint32_t height, uint32_t channels);
     };
 } // namespace BeeEngine

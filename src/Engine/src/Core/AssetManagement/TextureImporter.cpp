@@ -66,6 +66,13 @@ namespace BeeEngine
         }
         return GPUTextureResource::Create(width, height, {(byte*)data, size_t(width * height * channels)}, channels);
     }
+  Scope<GPUTextureResource> TextureImporter::LoadTextureBitmapFromMemory(std::span<byte> data, uint32_t width, uint32_t height, uint32_t channels)
+    {
+        BeeExpects(!data.empty());
+        BeeExpects(channels != 0);
+        BeeExpects(width != 0 && height != 0);
+        return GPUTextureResource::Create(width, height, {data.data(), data.size()}, channels);
+    }
 
     Ref<Texture2D> TextureImporter::ImportTexture2D(AssetHandle handle, const AssetMetadata& metadata)
     {
@@ -91,4 +98,5 @@ namespace BeeEngine
         result->Location = metadata.Location;
         return result;
     }
+    
 } // namespace BeeEngine

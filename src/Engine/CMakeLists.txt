@@ -153,6 +153,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Core/Property.h
         src/Renderer/BufferLayoutSerializer.cpp
         src/Renderer/BufferLayoutSerializer.hpp
+        src/Platform/RmlUi/interfaces.hpp
+        src/Platform/RmlUi/interfaces.cpp
 )
 
 if(IOS)
@@ -228,6 +230,9 @@ if(NOT ${BEE_NO_DOTNET})
   list(APPEND SOURCE_FILES ${SCRIPTING_SOURCE_FILES})
 endif()
 
+ list(APPEND SOURCE_FILES src/Platform/RmlUi/RmlUi_Platform_SDL.cpp
+ src/Platform/RmlUi/RmlUi_Platform_SDL.h)
+
 add_library(BeeEngine ${SOURCE_FILES})
 if(NOT ${BEE_NO_DOTNET})
   message("Building BeeEngine with C# support")
@@ -269,6 +274,16 @@ if (${BEE_COMPILE_SDL})
     endif()
     target_link_libraries(BeeEngine PRIVATE SDL3::SDL3)
 endif ()
+function(add_rmlui_subdirectory)
+  message("Building with RmlUi")
+  set(RMLUI_CUSTOM_CONFIGURATION OFF)
+  set(RMLUI_CUSTOM_CONFIGURATION_FILE "" CACHE STRING "Custom type file")
+  set(RMLUI_FONT_ENGINE "freetype")
+  set(RMLUI_BACKEND "SDL_VK" CACHE STRING "Backend to use when building the RmlUi samples. Choose one from ./CMake/OptionsLists.cmake." FORCE)
+  set(BUILD_SHARED_LIBS OFF)
+  add_subdirectory(vendor/RmlUi)
+  target_link_libraries(BeeEngine PUBLIC RmlUi::RmlUi)
+endfunction()
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/glm)
 add_subdirectory(vendor/ImGui) # Must be after DesktopPlatformsOnlyPostTarget
@@ -280,6 +295,7 @@ add_subdirectory(vendor/Box2D)
 add_subdirectory(vendor/msdfgen)
 add_subdirectory(vendor/KDBindings)
 add_subdirectory(vendor/fastgltf)
+add_rmlui_subdirectory()
 
 find_package(ICU REQUIRED COMPONENTS data uc in io i18n dt)
 find_package(Boost REQUIRED COMPONENTS context)

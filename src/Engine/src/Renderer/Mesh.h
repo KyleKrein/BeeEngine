@@ -42,6 +42,6 @@ namespace BeeEngine
         static Ref<Mesh> Create(in<std::vector<Vertex>> vertices);
         static Ref<Mesh> Create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
         static Ref<Mesh>
-        Create(void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices);
+        Create(const void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices);
     };
 } // namespace BeeEngine
