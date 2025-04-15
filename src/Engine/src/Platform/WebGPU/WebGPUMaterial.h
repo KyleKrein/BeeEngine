@@ -13,6 +13,7 @@ namespace BeeEngine::Internal
     public:
         WebGPUMaterial(const std::filesystem::path& vertexShader, const std::filesystem::path& fragmentShader);
         ~WebGPUMaterial() override;
+        size_t GetInputDataSize() const override { return m_Pipeline->GetInputDataSize(); }
         [[nodiscard]] InstancedBuffer& GetInstancedBuffer() const override;
 
         void Bind(CommandBuffer& cmd) override { m_Pipeline->Bind(cmd); }

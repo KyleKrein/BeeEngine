@@ -6,14 +6,19 @@
 #include "Renderer/Renderer.h"
 #include "Windowing/ApplicationProperties.h"
 // #include "BeeEngine.h"
+#include "../../Runtime/src/DebugLayer.h"
 #include "RmlUiLayer.hpp"
 using namespace BeeEngine;
 class Game : public BeeEngine::Application
 {
 public:
-    Game(const ApplicationProperties& properties) : Application(properties) { PushLayer(CreateRef<RmlUiLayer>()); }
+    Game(const ApplicationProperties& properties) : Application(properties)
+    {
+        PushLayer(CreateRef<RmlUiLayer>());
+        PushOverlay(CreateRef<Runtime::DebugLayer>());
+    }
 
-    void Update(FrameData& data) override {  }
+    void Update(FrameData& data) override {}
 
     virtual ~Game() override {}
 };

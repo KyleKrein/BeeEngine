@@ -6,6 +6,8 @@
 #include "Core/Events/EventImplementations.h"
 #include "Core/Logging/Log.h"
 #include "Core/OsPlatform.h"
+#include "Platform/RmlUi/RmlUi_Platform_SDL.h"
+#include "RmlUi/Core/Core.h"
 #include "SDL3/SDL_events.h"
 #include "imgui.h"
 #include "magic_enum.hpp"
@@ -425,9 +427,12 @@ namespace BeeEngine::Internal
         static Scope<FileDropEvent> fileDropEvent = nullptr;
         while (SDL_PollEvent(&sdlEvent) != 0)
         {
-            if (!RmlUi::InputEventHandler(m_Window, sdlEvent))
+            if (auto* context = Rml::GetContext("default"))
             {
-                continue;
+                if (!RmlSDL::InputEventHandler(context, m_Window, sdlEvent))
+                {
+                    //continue;
+                }
             }
             ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
             if constexpr (Application::GetOsPlatform() == OSPlatform::Linux)

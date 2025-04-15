@@ -4,8 +4,8 @@
 #include "Renderer/FrameBuffer.h"
 #include <RmlUi/Core/RenderInterface.h>
 #include <RmlUi/Core/SystemInterface.h>
-#include <glm/glm.hpp>
 #include <SDL3/SDL.h>
+#include <glm/glm.hpp>
 
 namespace BeeEngine::Internal::RmlUi
 {
@@ -24,6 +24,7 @@ namespace BeeEngine::Internal::RmlUi
 
     class RenderInterface : public Rml::RenderInterface
     {
+public:        
         Rml::CompiledGeometryHandle CompileGeometry(Rml::Span<const Rml::Vertex> vertices,
                                                     Rml::Span<const int> indices) override;
         void RenderGeometry(Rml::CompiledGeometryHandle geometry,
@@ -37,5 +38,9 @@ namespace BeeEngine::Internal::RmlUi
 
         void EnableScissorRegion(bool enable) override;
         void SetScissorRegion(Rml::Rectanglei region) override;
+        void SetTransform(const Rml::Matrix4f* transform) override;
+
+    private:
+        Rml::Matrix4f m_CurrentTransform = Rml::Matrix4f::Identity();
     };
 } // namespace BeeEngine::Internal::RmlUi

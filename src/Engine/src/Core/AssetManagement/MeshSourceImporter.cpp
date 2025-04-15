@@ -177,7 +177,7 @@ namespace BeeEngine
                     }
                 }
                 Ref<Mesh> newMesh = Mesh::Create(
-                    vertices.data(), vertices.size() * sizeof(MeshDefaultVertex), vertices.size(), indices);
+                    {(byte*)vertices.data(), vertices.size() * sizeof(MeshDefaultVertex)}, vertices.size(), indices);
                 newMesh->Surfaces = std::move(surfaces);
                 newMesh->Name = mesh.name;
                 // newMesh->Location = AssetLocation::MeshSource;

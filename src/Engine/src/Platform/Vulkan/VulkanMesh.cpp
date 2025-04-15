@@ -54,26 +54,26 @@ namespace BeeEngine::Internal
     }
 
     VulkanMesh::VulkanMesh(const std::vector<Vertex>& vertices)
-        : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexCount(0)
+        : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexCount(0), m_VertexSize(sizeof(Vertex))
     {
         CreateVertexBuffer(vertices);
-        CreateAccelerationStructure(sizeof(Vertex));
+        CreateAccelerationStructure(m_VertexSize);
     }
 
     VulkanMesh::VulkanMesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
-        : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexCount(indices.size())
+        : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertices.size()), m_IndexCount(indices.size()), m_VertexSize(sizeof(Vertex))
     {
         CreateVertexBuffer(vertices);
         CreateIndexBuffer(indices);
-        CreateAccelerationStructure(sizeof(Vertex));
+        CreateAccelerationStructure(m_VertexSize);
     }
 
     VulkanMesh::VulkanMesh(const void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices)
-        : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertexCount), m_IndexCount(indices.size())
+        : m_Device(VulkanGraphicsDevice::GetInstance()), m_VertexCount(vertexCount), m_IndexCount(indices.size()), m_VertexSize(size / vertexCount)
     {
         CreateVertexBuffer(verticesData, size, vertexCount);
         CreateIndexBuffer(indices);
-        CreateAccelerationStructure(size / vertexCount);
+        CreateAccelerationStructure(m_VertexSize);
     }
 
     void VulkanMesh::CreateVertexBuffer(const std::vector<Vertex>& vertices)

@@ -22,6 +22,7 @@ namespace BeeEngine
         virtual ~Material() = default;
         Material(const Material& other) = delete;
         Material& operator=(const Material& other) = delete;
+        virtual size_t GetInputDataSize() const = 0;
 
         [[nodiscard]] virtual InstancedBuffer& GetInstancedBuffer() const = 0;
 

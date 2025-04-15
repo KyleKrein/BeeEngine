@@ -33,6 +33,7 @@ namespace BeeEngine
         Mesh() = default;
         virtual ~Mesh() = default;
         [[nodiscard]] virtual uint32_t GetVertexCount() const = 0;
+        virtual size_t GetVertexSize() const = 0;
         [[nodiscard]] virtual uint32_t GetIndexCount() const = 0;
         virtual void Bind(CommandBuffer& commandBuffer) = 0;
         [[nodiscard]] virtual bool IsIndexed() const = 0;
@@ -42,6 +43,6 @@ namespace BeeEngine
         static Ref<Mesh> Create(in<std::vector<Vertex>> vertices);
         static Ref<Mesh> Create(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
         static Ref<Mesh>
-        Create(const void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices);
+        Create(std::span<const byte> verticesData, size_t vertexCount, const std::vector<uint32_t>& indices);
     };
 } // namespace BeeEngine

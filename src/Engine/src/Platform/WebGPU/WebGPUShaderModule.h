@@ -17,6 +17,7 @@ namespace BeeEngine::Internal
         WebGPUShaderModule(in<std::string> wgsl, ShaderType type, in<BufferLayout> layout);
         [[nodiscard]] ShaderType GetType() const override { return m_Type; }
         [[nodiscard]] WGPUShaderModule GetHandle() const { return m_ShaderModule; }
+        size_t GetInstanceDataSize() const override { BeeCoreAssert(false, "Not Implemented"); }
         [[nodiscard]] WGPUVertexBufferLayout GetPointBufferLayout() const { return m_PointBufferLayout; }
         [[nodiscard]] WGPUVertexBufferLayout GetInstanceBufferLayout() const { return m_InstanceBufferLayout; }
 

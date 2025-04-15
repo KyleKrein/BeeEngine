@@ -1,7 +1,4 @@
-#version 330
-
-#extension GL_ARB_separate_shader_objects : enable
-#extension GL_ARB_shading_language_420pack : enable
+#version 450 core
 
 layout(set=0, binding=0) uniform UserData 
 {
@@ -21,5 +18,5 @@ void main() {
 	fragColor = inColor0;
 	vec2 translatedPos = inPosition + userdata.m_translate.xy;
 	vec4 outPos = userdata.m_transform * vec4(translatedPos, 0, 1);
-    gl_Position = outPos;
+    	gl_Position = outPos;
 }

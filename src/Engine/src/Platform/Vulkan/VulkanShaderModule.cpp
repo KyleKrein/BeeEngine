@@ -244,8 +244,20 @@ namespace BeeEngine::Internal
                     break;
                     case vk::Format::eR8G8B8A8Unorm:
                     {
+                        /*
+                                                colorBlendAttachment.blendEnable = vk::True;
+                                                colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+                                                colorBlendAttachment.dstColorBlendFactor =
+                           vk::BlendFactor::eOneMinusSrcAlpha; colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
+                                                // In tutorial it's eOne and eZero for alpha blend factor, but in webgpu
+                           tutorial it's
+                                                // eZero and eOne. And the second method works
+                                                colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eZero;
+                                                colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eOne;
+                                                colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd;*/
+
                         colorBlendAttachment.blendEnable = vk::True;
-                        colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
+                        colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eOne;
                         colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
                         colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd;
                         // In tutorial it's eOne and eZero for alpha blend factor, but in webgpu tutorial it's

@@ -22,6 +22,7 @@ namespace BeeEngine::Internal
         [[nodiscard]] uint32_t GetVertexCount() const override;
 
         [[nodiscard]] uint32_t GetIndexCount() const override;
+        size_t GetVertexSize() const override { return m_VertexSize; }
 
         void Bind(CommandBuffer& commandBuffer) override;
 
@@ -41,6 +42,7 @@ namespace BeeEngine::Internal
         VulkanGraphicsDevice& m_Device;
         VulkanBuffer m_VertexBuffer;
         VulkanBuffer m_IndexBuffer;
+        size_t m_VertexSize;
         size_t m_VertexCount;
         size_t m_IndexCount;
         VulkanAccelerationStructure m_AccelerationStructure;

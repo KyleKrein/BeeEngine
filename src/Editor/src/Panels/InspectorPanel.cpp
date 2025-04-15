@@ -160,7 +160,7 @@ namespace BeeEngine::Editor
                 else if (camera.Camera.GetProjectionType() == SceneCamera::CameraType::Orthographic)
                 {
                     float size = camera.Camera.GetOrthographicSize();
-                    if (ImGui::DragFloat(m_EditorDomain->Translate("size").c_str(), &size, 0.1f))
+                    if (ImGui::DragFloat(m_EditorDomain->Translate("size").c_str(), &size, 0.1f, 0.01f))
                     {
                         camera.Camera.SetOrthographicSize(size);
                     }

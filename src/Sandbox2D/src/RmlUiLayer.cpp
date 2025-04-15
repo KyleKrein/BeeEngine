@@ -43,16 +43,19 @@ void RmlUiLayer::OnDetach()
 void RmlUiLayer::OnUpdate(BeeEngine::FrameData& data)
 {
     Layer::OnUpdate(data);
-    context->Update();
-    BeeEngine::Internal::RmlUi::BeginRendering();
-    context->Render();
-    BeeEngine::Internal::RmlUi::EndRendering();
-    data.CopyFrameBufferImageToSwapchain(BeeEngine::Internal::RmlUi::GetFrameBuffer(context), 0);
+    if (auto* rmluiContext = Rml::GetContext("default"))
+    {
+        rmluiContext->Update();
+        BeeEngine::Internal::RmlUi::BeginRendering();
+        rmluiContext->Render();
+        BeeEngine::Internal::RmlUi::EndRendering();
+        data.CopyFrameBufferImageToSwapchain(BeeEngine::Internal::RmlUi::GetFrameBuffer(rmluiContext), 0);
+    }
 }
 
 void RmlUiLayer::OnGUIRendering()
 {
-     //ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 }
 
 void RmlUiLayer::OnEvent(BeeEngine::EventDispatcher& e)
@@ -60,6 +63,7 @@ void RmlUiLayer::OnEvent(BeeEngine::EventDispatcher& e)
     e.Dispatch<BeeEngine::WindowResizeEvent>(
         [](BeeEngine::WindowResizeEvent& event)
         {
+            // context->SetDimensions({event.GetWidthInPixels(), event.GetHeightInPixels()});
             BeeEngine::Internal::RmlUi::ResizeFramebuffer(context,
                                                           {event.GetWidthInPixels(), event.GetHeightInPixels()});
             return false;

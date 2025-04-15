@@ -13,6 +13,7 @@ namespace BeeEngine::Internal
     {
     public:
         VulkanComputePipeline(const Ref<ShaderModule>& computeShader);
+        size_t GetInputDataSize() const override { return m_ComputeShader->GetInstanceDataSize(); }
         PipelineType GetType() const override { return PipelineType::Compute; }
 
         void Bind(CommandBuffer& commandBuffer) override;

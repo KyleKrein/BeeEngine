@@ -53,7 +53,7 @@ BeeEngine::Mesh& BeeEngine::InternalAssetManager::LoadMesh(const String& name,
     size_t vertexCount = vertices.size();
     size_t size = vertexCount * sizeof(VertexType);
     void* data = (void*)vertices.data();
-    return *m_Meshes.emplace(name, Mesh::Create(data, size, vertexCount, indices)).first->second;
+    return *m_Meshes.emplace(name, Mesh::Create({(byte*)data, size}, vertexCount, indices)).first->second;
 }
 
 BeeEngine::Texture2D& BeeEngine::InternalAssetManager::LoadTexture(const String& name,
