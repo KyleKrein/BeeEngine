@@ -27,10 +27,35 @@
  */
 
 #include "RmlUi_Platform_SDL.h"
+#include "Core/Logging/Log.h"
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Input.h>
 #include <RmlUi/Core/StringUtilities.h>
 #include <RmlUi/Core/SystemInterface.h>
+
+bool SystemInterface_SDL::LogMessage(Rml::Log::Type type, const Rml::String& message)
+{
+    switch (type)
+    {
+        case Rml::Log::LT_ERROR:
+            BeeCoreError("RmlUi: {}", message);
+            return true;
+        case Rml::Log::LT_WARNING:
+            BeeCoreWarn("RmlUi: {}", message);
+            return true;
+        case Rml::Log::LT_INFO:
+            BeeCoreInfo("RmlUi: {}", message);
+            return true;
+        case Rml::Log::LT_ASSERT:
+            BeeCoreError("RmlUi ASSERT: {}", message);
+            return false;
+        case Rml::Log::LT_DEBUG:
+        case Rml::Log::LT_ALWAYS:
+        case Rml::Log::LT_MAX:
+            BeeCoreTrace("RmlUi: {}", message);
+            return true;
+    }
+}
 
 SystemInterface_SDL::SystemInterface_SDL()
 {
@@ -151,7 +176,8 @@ bool RmlSDL::InputEventHandler(Rml::Context* context, SDL_Window* window, SDL_Ev
     {
         case event_mouse_motion:
         {
-            result = context->ProcessMouseMove(int(ev.motion.x * dpiScaleX), int(ev.motion.y * dpiScaleY), GetKeyModifierState());
+            result = context->ProcessMouseMove(
+                int(ev.motion.x * dpiScaleX), int(ev.motion.y * dpiScaleY), GetKeyModifierState());
         }
         break;
         case event_mouse_down:

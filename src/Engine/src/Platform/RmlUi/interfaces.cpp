@@ -74,6 +74,7 @@ namespace BeeEngine::Internal::RmlUi
     static Rml::Context* g_CurrentContext = nullptr;
     static CommandBuffer g_CurrentBuffer;
     static std::unordered_map<Rml::TextureHandle, Scope<BindingSet>> g_BindingSets;
+    static std::unordered_map<Rml::TextureHandle, AssetHandle> g_Assets;
 
     bool Init(void* window)
     {
@@ -152,6 +153,7 @@ namespace BeeEngine::Internal::RmlUi
         g_ColorMaterial.reset();
         g_TextureMaterial.reset();
         g_BindingSets.clear();
+        g_Assets.clear();
     }
 
     bool InputEventHandler(SDL_Window* window, SDL_Event& ev)
@@ -185,11 +187,22 @@ namespace BeeEngine::Internal::RmlUi
                                              .m_translate = translation};
         geometryData.Buffer->SetData(&vertexData, sizeof(shader_vertex_user_data_t));
         std::vector<BindingSet*> bindingSets = {geometryData.Set.get()};
+        int32_t flipUv = 0;
         if (texture != 0)
         {
-            bindingSets.emplace_back(g_BindingSets.at(texture).get());
+            if (g_Assets.contains(texture))
+            {
+                flipUv = 1;
+                bindingSets.emplace_back(
+                    &AssetManager::GetAsset<Texture2D>(g_Assets.at(texture), Locale::Localization::Default)
+                         .GetBindingSet());
+            }
+            else
+            {
+                bindingSets.emplace_back(g_BindingSets.at(texture).get());
+            }
         }
-        cmd.SubmitInstance(model, bindingSets, {(byte*)nullptr, 0});
+        cmd.SubmitInstance(model, bindingSets, {(byte*)&flipUv, sizeof(int32_t)});
         cmd.Flush();
     }
 
@@ -201,7 +214,7 @@ namespace BeeEngine::Internal::RmlUi
 
     void RenderInterface::SetTransform(const Rml::Matrix4f* transform)
     {
-        BeeCoreInfo("Called SetTransform");
+        BeeCoreTrace("Called RenderInterface::SetTransform");
         if (transform)
         {
             m_CurrentTransform = *transform;
@@ -212,10 +225,18 @@ namespace BeeEngine::Internal::RmlUi
 
     Rml::TextureHandle RenderInterface::LoadTexture(Rml::Vector2i& texture_dimensions, const Rml::String& source)
     {
-        auto texture = TextureImporter::LoadTextureFromFile(source.c_str());
-        auto* ptr = texture.release();
-        auto result = reinterpret_cast<uintptr_t>(ptr);
-        g_BindingSets[result] = BindingSet::Create({{.Binding = 0, .Data = *ptr}});
+        auto* asset = &AssetManager::GetAsset<Texture2D>(Path{source.c_str()}, Locale::Localization::Default);
+        if (!asset)
+        {
+            return 0;
+        }
+        Rml::TextureHandle result = UUID{};
+        BeeExpects(!g_Assets.contains(result) &&
+                   "This should never happen. If it happens, your are unlucky. Also it can mean, that using one range "
+                   "of uint64_t for both pointers and UUIDs is not enough. Please make an Issue on github and attach a "
+                   "screenshot of this message");
+        g_Assets[result] = asset->Handle;
+        texture_dimensions = {static_cast<int>(asset->GetWidth()), static_cast<int>(asset->GetHeight())};
         return result;
     }
     Rml::TextureHandle RenderInterface::GenerateTexture(Rml::Span<const Rml::byte> source,
@@ -228,10 +249,24 @@ namespace BeeEngine::Internal::RmlUi
         auto* ptr = texture.release();
         auto result = reinterpret_cast<uintptr_t>(ptr);
         g_BindingSets[result] = BindingSet::Create({{.Binding = 0, .Data = *ptr}});
+        BeeEnsures(!g_Assets.contains(result) &&
+                   "This should never happen. If it happens, your are unlucky. Also it can mean, that using one range "
+                   "of uint64_t for both pointers and UUIDs is not enough. Please make an Issue on github and attach a "
+                   "screenshot of this message");
         return result;
     }
     void RenderInterface::ReleaseTexture(Rml::TextureHandle texture)
     {
+        BeeExpects((g_Assets.contains(texture) || g_BindingSets.contains(texture)) &&
+                   !(g_Assets.contains(texture) && g_BindingSets.contains(texture)) &&
+                   "This should never happen. If it happens, your are unlucky. Also it can mean, that using one range "
+                   "of uint64_t for both pointers and UUIDs is not enough. Please make an Issue on github and attach a "
+                   "screenshot of this message");
+        if (g_Assets.contains(texture))
+        {
+            g_Assets.erase(texture);
+            return;
+        }
         g_BindingSets.erase(texture);
         delete (GPUTextureResource*)texture;
     }

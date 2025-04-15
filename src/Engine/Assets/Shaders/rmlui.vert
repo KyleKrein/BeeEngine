@@ -9,12 +9,17 @@ layout(set=0, binding=0) uniform UserData
 layout (location = 0) in vec2 inPosition;
 layout (location = 1) in vec4 inColor0;
 layout (location = 2) in vec2 inTexCoord0;
+layout (instanced location = 3) in int flipUv;
 
 layout (location = 0) out vec2 fragTexCoord;
 layout (location = 1) out vec4 fragColor;
 
 void main() {
-	fragTexCoord = inTexCoord0;
+        fragTexCoord = inTexCoord0;
+        if(flipUv != 0)
+	{
+	  fragTexCoord.y = 1.0f - inTexCoord0.y;
+	}
 	fragColor = inColor0;
 	vec2 translatedPos = inPosition + userdata.m_translate.xy;
 	vec4 outPos = userdata.m_transform * vec4(translatedPos, 0, 1);

@@ -21,11 +21,6 @@ void RmlUiLayer::OnAttach()
     BeeEnsures(context != nullptr);
     BeeEngine::Internal::RmlUi::SetCurrentContext(context);
     auto opensans = BeeEngine::Internal::GetEmbeddedResource(EmbeddedResource::OpenSansRegular);
-    Rml::LoadFontFace(Rml::Span<const Rml::byte>{(Rml::byte*)opensans.data(), opensans.size()},
-                      "",
-                      Rml::Style::FontStyle::Normal,
-                      Rml::Style::FontWeight::Auto,
-                      true);
     if (Rml::DataModelConstructor constructor = context->CreateDataModel("animals"))
     {
         constructor.Bind("show_text", &my_data.show_text);

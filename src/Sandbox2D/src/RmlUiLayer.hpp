@@ -1,4 +1,5 @@
 #pragma once
+#include "Core/AssetManagement/EditorAssetManager.h"
 #include "Core/Layer.h"
 #include "Renderer/Renderer.h"
 
@@ -16,4 +17,7 @@ public:
     void OnGUIRendering() override;
 
     void OnEvent(BeeEngine::EventDispatcher& e) override;
+
+private:
+    BeeEngine::EditorAssetManager m_AssetManager;
 };

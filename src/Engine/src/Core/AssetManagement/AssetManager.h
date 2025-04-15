@@ -61,6 +61,48 @@ namespace BeeEngine
             return dynamic_cast<T&>(*s_AssetManager->GetAsset(handle));
         }
 
+        template <typename T>
+            requires std::is_same_v<T, Font> || std::is_same_v<T, Texture2D> || std::is_same_v<T, Asset>
+        static Ref<T> GetAssetRef(const Path& path, const Locale::Localization& locale)
+        {
+            BeeExpects(s_AssetManager);
+            Ref<Asset> asset = s_AssetManager->GetAssetRef(path);
+            if (asset->GetType() == AssetType::Localized)
+            {
+                return std::dynamic_pointer_cast<T>(
+                    std::static_pointer_cast<LocalizedAsset>(asset)->GetAssetRef(locale.GetLanguageString()));
+            }
+            return std::dynamic_pointer_cast<T>(asset);
+        }
+        template <typename T>
+            requires std::is_same_v<T, Texture2D> || std::is_same_v<T, Font> || std::is_same_v<T, Asset>
+        static T& GetAsset(const Path& path, const Locale::Localization& locale)
+        {
+            BeeExpects(s_AssetManager);
+            Asset* asset = s_AssetManager->GetAsset(path);
+            if (asset->GetType() == AssetType::Localized)
+            {
+                return dynamic_cast<T&>(dynamic_cast<LocalizedAsset*>(asset)->GetAsset(locale.GetLanguageString()));
+            }
+            return dynamic_cast<T&>(*asset);
+        }
+        template <typename T>
+            requires(std::is_base_of_v<Asset, T> || std::is_same_v<Asset, T>) && (!std::is_same_v<T, Texture2D>) &&
+                    (!std::is_same_v<T, Font>)
+        static Ref<T> GetAssetRef(const Path& path)
+        {
+            BeeExpects(s_AssetManager);
+            return std::dynamic_pointer_cast<T>(s_AssetManager->GetAssetRef(path));
+        }
+        template <typename T>
+            requires(std::is_base_of_v<Asset, T> || std::is_same_v<Asset, T>) && (!std::is_same_v<T, Texture2D>) &&
+                    (!std::is_same_v<T, Font>)
+        static T& GetAsset(const Path& path)
+        {
+            BeeExpects(s_AssetManager);
+            return dynamic_cast<T&>(*s_AssetManager->GetAsset(path));
+        }
+
         static bool IsAssetHandleValid(const AssetHandle& handle)
         {
             BeeExpects(s_AssetManager);

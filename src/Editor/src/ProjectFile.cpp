@@ -204,6 +204,8 @@ namespace BeeEngine::Editor
     public:
         Ref<Asset> GetAssetRef(AssetHandle handle) const { return nullptr; }
         Asset* GetAsset(AssetHandle handle) const { return nullptr; }
+        Ref<Asset> GetAssetRef(const Path& path) { return nullptr; }
+        Asset* GetAsset(const Path& path) { return nullptr; }
         void LoadAsset(std::span<byte> data, AssetHandle handle, const String& name, AssetType type) {}
         void LoadAsset(const Path& path, AssetHandle handle) {}
         void UnloadAsset(AssetHandle handle) {}
