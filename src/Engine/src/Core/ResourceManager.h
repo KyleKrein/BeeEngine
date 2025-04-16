@@ -128,6 +128,11 @@ namespace BeeEngine
             return String{script.str()};
         }
 
+        static bool IsShaderExtension(const Path& extension)
+        {
+            return extension == ".vert" || extension == (".frag") || extension == (".comp");
+        }
+
         static bool IsTexture2DExtension(const Path& extension)
         {
             auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
