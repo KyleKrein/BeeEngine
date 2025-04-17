@@ -6,6 +6,7 @@
 #include "Core/Application.h"
 #include "FileSystem/File.h"
 #include "JobSystem/JobScheduler.h"
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 
@@ -34,14 +35,14 @@ namespace BeeEngine::Internal
             for (auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
             {
                 auto& path = file.path();
-                paths[path] = {std::filesystem::last_write_time(file),
-                               std::filesystem::is_directory(file) ? 0 : std::filesystem::file_size(file)};
+                paths[path] = {.LastWriteTime = std::filesystem::last_write_time(file),
+                               .FileSize = std::filesystem::is_directory(file) ? 0 : std::filesystem::file_size(file)};
             }
         }
         else
         {
-            paths[watcher.m_Path] = {std::filesystem::last_write_time(watcher.m_Path),
-                                     std::filesystem::file_size(watcher.m_Path)};
+            paths[watcher.m_Path] = {.LastWriteTime = std::filesystem::last_write_time(watcher.m_Path),
+                                     .FileSize = std::filesystem::file_size(watcher.m_Path)};
         }
         Jobs::this_job::SleepFor(delay);
         while (watcher.IsRunning())
@@ -69,7 +70,7 @@ namespace BeeEngine::Internal
                 auto currentFileSize = std::filesystem::file_size(watcher.m_Path);
                 if (paths.at(watcher.m_Path).LastWriteTime != currentLastWriteTime)
                 {
-                    paths[watcher.m_Path] = {currentLastWriteTime, currentFileSize};
+                    paths[watcher.m_Path] = {.LastWriteTime = currentLastWriteTime, .FileSize = currentFileSize};
                     watcher.onAnyEvent.emit(watcher.m_Path, FileWatcher::Event::Modified);
                     watcher.onFileModified.emit(watcher.m_Path);
                 }
@@ -78,20 +79,32 @@ namespace BeeEngine::Internal
             {
                 for (auto& file : std::filesystem::recursive_directory_iterator(watcher.m_Path))
                 {
-                    Path path = file.path();
-                    auto currentLastWriteTime = std::filesystem::last_write_time(file);
-                    auto currentFileSize = std::filesystem::is_directory(file) ? 0 : std::filesystem::file_size(file);
-                    if (!paths.contains(path))
+                    try
                     {
-                        paths[path] = {currentLastWriteTime, currentFileSize};
-                        // watcher.m_Callback(path, FileWatcher::Event::Added);
-                        added[path] = {currentLastWriteTime, currentFileSize};
+                        Path path = file.path();
+                        if (path.GetFileName().AsUTF8().starts_with(".#"))
+                        {
+                            continue;
+                        }
+                        auto currentLastWriteTime = std::filesystem::last_write_time(file);
+                        auto currentFileSize =
+                            std::filesystem::is_directory(file) ? 0 : std::filesystem::file_size(file);
+                        if (!paths.contains(path))
+                        {
+                            paths[path] = {.LastWriteTime = currentLastWriteTime, .FileSize = currentFileSize};
+                            // watcher.m_Callback(path, FileWatcher::Event::Added);
+                            added[path] = {.LastWriteTime = currentLastWriteTime, .FileSize = currentFileSize};
+                        }
+                        else if (paths.at(path).LastWriteTime != currentLastWriteTime)
+                        {
+                            paths[path] = {.LastWriteTime = currentLastWriteTime, .FileSize = currentFileSize};
+                            watcher.onAnyEvent.emit(path, FileWatcher::Event::Modified);
+                            watcher.onFileModified.emit(path);
+                        }
                     }
-                    else if (paths.at(path).LastWriteTime != currentLastWriteTime)
+                    catch (const std::exception& exception)
                     {
-                        paths[path] = {currentLastWriteTime, currentFileSize};
-                        watcher.onAnyEvent.emit(path, FileWatcher::Event::Modified);
-                        watcher.onFileModified.emit(path);
+                        BeeCoreError("STDFileWatcher exception: {}", exception.what());
                     }
                 }
             }
@@ -122,8 +135,10 @@ namespace BeeEngine::Internal
             }
             for (auto& [path, info] : added)
             {
-                if (std::find(renamed.begin(), renamed.end(), path) != renamed.end())
+                if (std::ranges::find(renamed, path) != renamed.end())
+                {
                     continue;
+                }
                 watcher.onAnyEvent.emit(path, FileWatcher::Event::Added);
                 watcher.onFileAdded.emit(path);
             }

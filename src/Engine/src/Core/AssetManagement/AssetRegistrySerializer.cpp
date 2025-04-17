@@ -24,14 +24,16 @@ namespace BeeEngine
                 return "AssetType::Prefab";
             case AssetType::Scene:
                 return "AssetType::Scene";
-                /*case AssetType::Shader:
-                    return "AssetType::Shader";
-                case AssetType::Mesh:
-                    return "AssetType::Mesh";
-                case AssetType::Material:
-                    return "AssetType::Material";
-                case AssetType::Model:
-                    return "AssetType::Model";*/
+            case AssetType::Mesh:
+                return "AssetType::Mesh";
+            case AssetType::RmlDocument:
+                return "AssetType::RmlDocument";
+            case AssetType::RcssStyle:
+                return "AssetType::RcssStyle";
+            case AssetType::MeshSource:
+                return "AssetType::MeshSource";
+            case AssetType::Localized:
+                return "AssetType::Localized";
         }
         BeeCoreError("Unknown AssetType: {0}", ToString(type));
         return "AssetType::None";
@@ -40,23 +42,45 @@ namespace BeeEngine
     static AssetType AssetTypeFromString(const std::string& type)
     {
         if (type == "AssetType::None")
+        {
             return AssetType::None;
+        }
         if (type == "AssetType::Texture2D")
+        {
             return AssetType::Texture2D;
+        }
         if (type == "AssetType::Font")
+        {
             return AssetType::Font;
+        }
         if (type == "AssetType::Prefab")
+        {
             return AssetType::Prefab;
+        }
         if (type == "AssetType::Scene")
+        {
             return AssetType::Scene;
-        /*if (type == "AssetType::Shader")
-            return AssetType::Shader;
+        }
         if (type == "AssetType::Mesh")
+        {
             return AssetType::Mesh;
-        if (type == "AssetType::Material")
-            return AssetType::Material;
-        if (type == "AssetType::Model")
-            return AssetType::Model;*/
+        }
+        if (type == "AssetType::MeshSource")
+        {
+            return AssetType::MeshSource;
+        }
+        if (type == "AssetType::RmlDocument")
+        {
+            return AssetType::RmlDocument;
+        }
+        if (type == "AssetType::RcssStyle")
+        {
+            return AssetType::RcssStyle;
+        }
+        if (type == "AssetType::Localized")
+        {
+            return AssetType::Localized;
+        }
         BeeCoreError("Unknown AssetType: {0}", type);
         return AssetType::None;
     }
@@ -65,7 +89,9 @@ namespace BeeEngine
     {
         auto& registry = m_AssetManager->GetAssetRegistry();
         if (!registry.contains(m_ProjectRegistryID))
+        {
             return;
+        }
         YAML::Emitter out;
         out << YAML::BeginMap;
         out << YAML::Key << "Registry ID" << YAML::Value << m_ProjectRegistryID;

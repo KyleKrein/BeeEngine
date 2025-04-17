@@ -3,20 +3,21 @@
 //
 
 #include "ProjectFile.h"
+#include "Gui/RmlDocument.hpp"
 #include <Core/AssetManagement/Asset.h>
 #include <Core/AssetManagement/AssetRegistrySerializer.h>
 #include <Core/CodeSafety/Expects.h>
 #include <Core/Format.h>
+#include <Core/GameConfig.h>
 #include <Core/Logging/Log.h>
 #include <Core/OsPlatform.h>
 #include <Core/ResourceManager.h>
 #include <Core/ScopeGuard.h>
 #include <FileSystem/File.h>
 #include <Locale/LocalizationGenerator.h>
+#include <Serialization/YAMLHelper.h>
 #include <Utils/Commands.h>
 #include <VSProjectGeneration.h>
-#include <Core/GameConfig.h>
-#include <Serialization/YAMLHelper.h>
 #include <filesystem>
 #include <fstream>
 
@@ -429,8 +430,14 @@ namespace BeeEngine::Editor
     void ProjectFile::OnAssetFileSystemEvent(const Path& path, FileWatcher::Event changeType)
     {
         Path p = path;
+        if (p.GetFileName().AsUTF8().starts_with(".#")) // emacs temporary files
+        {
+            return;
+        }
         if (p.IsRelative())
+        {
             p = FolderPath.get() / p;
+        }
         if (p.AsUTF8().contains(".git") || p.AsUTF8().contains(".beeengine"))
         {
             return;
@@ -474,7 +481,9 @@ namespace BeeEngine::Editor
             return;
         }
         if (!ResourceManager::IsAssetExtension(p.GetExtension()))
+        {
             return;
+        }
         String name = p.GetFileNameWithoutExtension();
         const AssetHandle* handlePtr = m_AssetManager->GetAssetHandleByName(name);
         bool changed = false;
@@ -540,7 +549,15 @@ namespace BeeEngine::Editor
                             [this, handle]()
                             {
                                 if (m_AssetManager->IsAssetLoaded(handle))
+                                {
                                     m_AssetManager->UnloadAsset(handle);
+                                }
+                                auto& metadata = m_AssetManager->GetAssetMetadata(handle);
+                                if (metadata.Type == AssetType::RcssStyle || metadata.Type == AssetType::RmlDocument)
+                                {
+                                    BeeCoreInfo("Reloading all ui elements");
+                                    ReloadAllRmlDocuments(*m_AssetManager);
+                                }
                             });
                     }
                     break;
