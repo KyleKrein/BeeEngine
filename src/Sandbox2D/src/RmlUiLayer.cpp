@@ -1,6 +1,7 @@
 #include "RmlUiLayer.hpp"
 #include "../../Engine/Assets/EmbeddedResources.h"
 #include "Core/Events/EventImplementations.h"
+#include "Gui/RmlDocument.hpp"
 #include "Platform/Platform.h"
 #include "Platform/RmlUi/interfaces.hpp"
 #include "imgui.h"
@@ -20,13 +21,15 @@ void RmlUiLayer::OnAttach()
                                                          BeeEngine::WindowHandler::GetInstance()->GetHeightInPixels()});
     BeeEnsures(context != nullptr);
     BeeEngine::Internal::RmlUi::SetCurrentContext(context);
-    auto opensans = BeeEngine::Internal::GetEmbeddedResource(EmbeddedResource::OpenSansRegular);
     if (Rml::DataModelConstructor constructor = context->CreateDataModel("animals"))
     {
         constructor.Bind("show_text", &my_data.show_text);
         constructor.Bind("animal", &my_data.animal);
     }
-    auto* document = context->LoadDocument("hello_world.rml");
+    m_AssetManager.SetEditedAssetRegistryID({});
+    m_AssetManager.GetAsset("rml.rcss");
+    m_AssetManager.GetAsset("window.rcss");
+    auto* document = BeeEngine::AssetManager::GetAsset<BeeEngine::RmlDocument>("hello_world.rml").GetDocument();
     document->Show();
 }
 

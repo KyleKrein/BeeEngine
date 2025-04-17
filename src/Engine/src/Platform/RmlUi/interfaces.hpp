@@ -2,6 +2,7 @@
 
 #include "Core/String.h"
 #include "Renderer/FrameBuffer.h"
+#include "RmlUi/Core/FileInterface.h"
 #include <RmlUi/Core/RenderInterface.h>
 #include <RmlUi/Core/SystemInterface.h>
 #include <SDL3/SDL.h>
@@ -12,6 +13,7 @@ namespace BeeEngine::Internal::RmlUi
     bool Init(void* window);
     Rml::Context* CreateContext(const String& name, glm::i32vec2 size);
     void SetCurrentContext(Rml::Context* context);
+    Rml::Context* GetCurrentContext();
     FrameBuffer& GetFrameBuffer(Rml::Context* context);
     void BeginRendering();
     void EndRendering();
@@ -24,7 +26,7 @@ namespace BeeEngine::Internal::RmlUi
 
     class RenderInterface : public Rml::RenderInterface
     {
-public:        
+    public:
         Rml::CompiledGeometryHandle CompileGeometry(Rml::Span<const Rml::Vertex> vertices,
                                                     Rml::Span<const int> indices) override;
         void RenderGeometry(Rml::CompiledGeometryHandle geometry,
@@ -42,5 +44,32 @@ public:
 
     private:
         Rml::Matrix4f m_CurrentTransform = Rml::Matrix4f::Identity();
+    };
+    class FileInterface final : public Rml::FileInterface
+    {
+    public:
+        // Opens a file.
+        Rml::FileHandle Open(const Rml::String& path) final;
+
+        // Closes a previously opened file.
+        void Close(Rml::FileHandle file) final;
+
+        // Reads data from a previously opened file.
+        size_t Read(void* buffer, size_t size, Rml::FileHandle file) final;
+
+        // Seeks to a point in a previously opened file.
+        bool Seek(Rml::FileHandle file, long offset, int origin) final;
+
+        // Returns the current position of the file pointer.
+        size_t Tell(Rml::FileHandle file) final;
+        virtual bool LoadFile(const String& path, String& out_data) final;
+
+    private:
+        struct VirtualFile
+        {
+            String content;
+            size_t position = 0;
+        };
+        std::unordered_map<Rml::FileHandle, VirtualFile> m_FilesInFlight;
     };
 } // namespace BeeEngine::Internal::RmlUi

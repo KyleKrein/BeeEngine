@@ -1,12 +1,15 @@
 #include "interfaces.hpp"
 #include "Core/Application.h"
 #include "Core/AssetManagement/TextureImporter.h"
+#include "Core/ResourceManager.h"
+#include "Gui/RmlDocument.hpp"
 #include "Renderer/EditorCamera.h"
 #include "Renderer/Model.h"
 #include "Renderer/UniformBuffer.h"
 #include "glm/ext/matrix_transform.hpp"
 
 #define RMLUI_SDL_VERSION_MAJOR 3
+#include "FileSystem/File.h"
 #include "RmlUi_Platform_SDL.h"
 #include <RmlUi/Core.h>
 #include <unordered_map>
@@ -27,6 +30,7 @@ namespace BeeEngine::Internal::RmlUi
     };
     static SystemInterface_SDL* g_SystemInterface = nullptr;
     static RenderInterface* g_RenderInterface = nullptr;
+    static FileInterface* g_FileInterface = nullptr;
     static Ref<Material> g_TextureMaterial = nullptr;
     static Ref<Material> g_ColorMaterial = nullptr;
     struct Geometry
@@ -83,6 +87,8 @@ namespace BeeEngine::Internal::RmlUi
         Rml::SetSystemInterface(g_SystemInterface);
         g_RenderInterface = new RenderInterface();
         Rml::SetRenderInterface(g_RenderInterface);
+        g_FileInterface = new FileInterface();
+        Rml::SetFileInterface(g_FileInterface);
         g_TextureMaterial = Material::Create("Shaders/rmlui.vert", "Shaders/rmlui_texture.frag");
         g_ColorMaterial = Material::Create("Shaders/rmlui.vert", "Shaders/rmlui_color.frag");
 
@@ -126,6 +132,10 @@ namespace BeeEngine::Internal::RmlUi
     {
         g_CurrentContext = context;
     }
+    Rml::Context* GetCurrentContext()
+    {
+        return g_CurrentContext;
+    }
     void BeginRendering()
     {
         BeeExpects(g_CurrentContext != nullptr && "Forgot to call SetCurrentContext(Rml::Context* context)?");
@@ -146,6 +156,7 @@ namespace BeeEngine::Internal::RmlUi
     void Shutdown()
     {
         Rml::Shutdown();
+        delete g_FileInterface;
         delete g_RenderInterface;
         delete g_SystemInterface;
         g_ContextData.clear();
@@ -273,4 +284,107 @@ namespace BeeEngine::Internal::RmlUi
 
     void RenderInterface::EnableScissorRegion(bool enable) {}
     void RenderInterface::SetScissorRegion(Rml::Rectanglei region) {}
+
+    Rml::FileHandle FileInterface::Open(const Rml::String& pathStr)
+    {
+        Path path{pathStr};
+        BeeCoreInfo("Open {}", path);
+        String content;
+        if (ResourceManager::IsRcssExtension(path.GetExtension()))
+        {
+            content = AssetManager::GetAsset<Rcss>(path).GetFileContent();
+        }
+        else
+        {
+            content = File::ReadFile(path);
+        }
+        if (content.empty())
+        {
+            return 0;
+        }
+        Rml::FileHandle handle = UUID{};
+        m_FilesInFlight[handle] = VirtualFile{.content = content};
+        return handle;
+    }
+
+    void FileInterface::Close(Rml::FileHandle file)
+    {
+        m_FilesInFlight.erase(file);
+    }
+
+    size_t FileInterface::Read(void* buffer, size_t size, Rml::FileHandle file)
+    {
+        auto it = m_FilesInFlight.find(file);
+        if (it == m_FilesInFlight.end())
+        {
+            return 0;
+        }
+
+        VirtualFile& virtualFile = it->second;
+        size_t remaining = virtualFile.content.size() - virtualFile.position;
+        size_t toRead = std::min(size, remaining);
+        memcpy(buffer, virtualFile.content.data() + virtualFile.position, toRead);
+        virtualFile.position += toRead;
+        return toRead;
+    }
+
+    bool FileInterface::Seek(Rml::FileHandle file, long offset, int origin)
+    {
+        auto it = m_FilesInFlight.find(file);
+        if (it == m_FilesInFlight.end())
+        {
+            return false;
+        }
+
+        VirtualFile& virtualFile = it->second;
+        size_t newPos = 0;
+
+        switch (origin)
+        {
+            case SEEK_SET:
+                newPos = offset;
+                break;
+            case SEEK_CUR:
+                newPos = virtualFile.position + offset;
+                break;
+            case SEEK_END:
+                newPos = virtualFile.content.size() + offset;
+                break;
+            default:
+                return false;
+        }
+
+        if (newPos > virtualFile.content.size())
+        {
+            return false;
+        }
+
+        virtualFile.position = newPos;
+        return true;
+    }
+
+    size_t FileInterface::Tell(Rml::FileHandle file)
+    {
+        auto it = m_FilesInFlight.find(file);
+        if (it == m_FilesInFlight.end())
+        {
+            return -1;
+        }
+
+        return it->second.position;
+    }
+
+    bool FileInterface::LoadFile(const String& pathStr, String& out_data)
+    {
+        Path path = {pathStr};
+        BeeCoreInfo("Loading file from {}", path);
+        if (ResourceManager::IsRcssExtension(path.GetExtension()))
+        {
+            out_data = AssetManager::GetAsset<Rcss>(path).GetFileContent();
+            return !out_data.empty();
+        }
+        out_data = File::ReadFile(Path{path});
+        return !out_data.empty();
+    }
+
 } // namespace BeeEngine::Internal::RmlUi

@@ -128,45 +128,56 @@ namespace BeeEngine
             return String{script.str()};
         }
 
+        static bool IsRmlExtension(const Path& extension)
+        {
+            auto ext = ToLowercase(extension.AsUTF8());
+            return ext == ".rml";
+        }
+        static bool IsRcssExtension(const Path& extension)
+        {
+            auto ext = ToLowercase(extension.AsUTF8());
+            return ext == ".rcss";
+        }
+
         static bool IsShaderExtension(const Path& extension)
         {
-            return extension == ".vert" || extension == (".frag") || extension == (".comp");
+            auto ext = ToLowercase(extension.AsUTF8());
+            return ext == ".vert" || ext == (".frag") || ext == (".comp");
         }
 
         static bool IsTexture2DExtension(const Path& extension)
         {
-            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
+            auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".png" or ext == ".jpg" or ext == ".jpeg" or ext == ".bmp";
         }
 
         static bool IsSceneExtension(const Path& extension) noexcept
         {
-            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
+            auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".beescene";
         }
 
         static bool IsFontExtension(const Path& extension) noexcept
         {
-            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
+            auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".ttf";
         }
 
         static bool IsPrefabExtension(const Path& extension) noexcept
         {
-            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
+            auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".beeprefab";
         }
 
         static bool IsMeshSourceExtension(const Path& extension) noexcept
         {
-            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
+            auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".gltf" or ext == ".glb";
         }
 
         static bool IsAssetExtension(const Path& extension) noexcept
         {
-            return IsTexture2DExtension(extension) || IsFontExtension(extension) || IsPrefabExtension(extension) ||
-                   IsMeshSourceExtension(extension) || IsSceneExtension(extension);
+            return GetAssetTypeFromExtension(extension) != AssetType::None;
         }
 
         static AssetType GetAssetTypeFromExtension(const Path& extension)
@@ -191,12 +202,20 @@ namespace BeeEngine
             {
                 return AssetType::Scene;
             }
+            if (IsRmlExtension(extension))
+            {
+                return AssetType::RmlDocument;
+            }
+            if (IsRcssExtension(extension))
+            {
+                return AssetType::RcssStyle;
+            }
             return AssetType::None;
         }
 
         static bool IsScriptExtension(const Path& extension)
         {
-            auto ext = ToLowercase(std::string_view{extension.AsUTF8()});
+            auto ext = ToLowercase(extension.AsUTF8());
             return ext == ".cs";
         }
     };
