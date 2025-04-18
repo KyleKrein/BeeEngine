@@ -155,6 +155,8 @@ set(SOURCE_FILES src/BeeEngine.cpp src/Core/TypeDefines.h src/Core/EntryPoint.cp
         src/Renderer/BufferLayoutSerializer.hpp
         src/Platform/RmlUi/interfaces.hpp
         src/Platform/RmlUi/interfaces.cpp
+        src/Platform/RmlUi/RmlUi.cpp
+        src/Platform/RmlUi/RmlUi.hpp
         src/Core/AssetManagement/RmlImporter.hpp
         src/Core/AssetManagement/RmlImporter.cpp
         src/Gui/RmlDocument.hpp

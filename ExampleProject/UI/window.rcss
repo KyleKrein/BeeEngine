@@ -1,0 +1,54 @@
+body {
+    font-family: Open Sans;
+    font-size: 2.5vw;
+    color: #02475e;
+    background: #fefecc;
+    text-align: center;
+    padding: 4vh 2vw;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+h1 {
+    color: #f6470a;
+    font-size: 3vw;
+    margin-bottom: 2vh;
+}
+
+p { 
+    margin: 2vh 0;
+    font-size: 2vw;
+}
+
+input.text {
+    background-color: #fff;
+    color: #555;
+    border: 0.3vw solid #999;
+    padding: 1vh 1vw;
+    width: 30vw;
+    font-size: 2vw;
+    box-sizing: border-box;
+}
+
+#logo-container
+{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.01f);
+    border: 2px dashed red;
+}
+
+#bee-logo
+{
+    max-width: 100%;
+    max-height: 100%;
+}

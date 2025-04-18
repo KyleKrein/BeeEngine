@@ -22,7 +22,7 @@
 #include "Utils/Threading.hpp"
 #include "backends/imgui_impl_sdl3.h"
 
-#include "Platform/RmlUi/interfaces.hpp"
+#include "Platform/RmlUi/RmlUi.hpp"
 
 #if defined(WINDOWS)
 #include "Platform/Windows/WindowsDropSource.h"
@@ -427,11 +427,11 @@ namespace BeeEngine::Internal
         static Scope<FileDropEvent> fileDropEvent = nullptr;
         while (SDL_PollEvent(&sdlEvent) != 0)
         {
-            if (auto* context = Rml::GetContext("default"))
+            if (auto* context = RmlUi::GetMainContext())
             {
                 if (!RmlSDL::InputEventHandler(context, m_Window, sdlEvent))
                 {
-                    //continue;
+                    // continue;
                 }
             }
             ImGui_ImplSDL3_ProcessEvent(&sdlEvent);

@@ -4,6 +4,7 @@
 
 #include "ProjectFile.h"
 #include "Gui/RmlDocument.hpp"
+#include "Platform/RmlUi/RmlUi.hpp"
 #include <Core/AssetManagement/Asset.h>
 #include <Core/AssetManagement/AssetRegistrySerializer.h>
 #include <Core/CodeSafety/Expects.h>
@@ -553,10 +554,10 @@ namespace BeeEngine::Editor
                                     m_AssetManager->UnloadAsset(handle);
                                 }
                                 auto& metadata = m_AssetManager->GetAssetMetadata(handle);
-                                if (metadata.Type == AssetType::RcssStyle || metadata.Type == AssetType::RmlDocument)
+                                if (metadata.Type == AssetType::RcssStyle)
                                 {
-                                    BeeCoreInfo("Reloading all ui elements");
-                                    ReloadAllRmlDocuments(*m_AssetManager);
+                                    BeeCoreInfo("Reloading style sheets");
+                                    RmlUi::HotReloadStyles();
                                 }
                             });
                     }

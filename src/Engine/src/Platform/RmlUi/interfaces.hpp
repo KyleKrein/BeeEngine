@@ -11,10 +11,10 @@
 namespace BeeEngine::Internal::RmlUi
 {
     bool Init(void* window);
-    Rml::Context* CreateContext(const String& name, glm::i32vec2 size);
+    Rml::Context* CreateContext(const String& name, glm::i32vec2 sizeInPixels);
+    FrameBuffer& GetFrameBuffer(Rml::Context* context);
     void SetCurrentContext(Rml::Context* context);
     Rml::Context* GetCurrentContext();
-    FrameBuffer& GetFrameBuffer(Rml::Context* context);
     void BeginRendering();
     void EndRendering();
     void ResizeFramebuffer(Rml::Context* context, glm::i32vec2 size);

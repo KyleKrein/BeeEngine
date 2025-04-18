@@ -3,7 +3,7 @@
 #include "Core/Events/EventImplementations.h"
 #include "Gui/RmlDocument.hpp"
 #include "Platform/Platform.h"
-#include "Platform/RmlUi/interfaces.hpp"
+#include "Platform/RmlUi/RmlUi.hpp"
 #include "imgui.h"
 #include <RmlUi/Core.h>
 RmlUiLayer::~RmlUiLayer() {}
@@ -16,11 +16,11 @@ struct ApplicationData
 void RmlUiLayer::OnAttach()
 {
     Layer::OnAttach();
-    context = BeeEngine::Internal::RmlUi::CreateContext("default",
-                                                        {BeeEngine::WindowHandler::GetInstance()->GetWidthInPixels(),
-                                                         BeeEngine::WindowHandler::GetInstance()->GetHeightInPixels()});
+    context = BeeEngine::RmlUi::CreateContext("default",
+                                              {BeeEngine::WindowHandler::GetInstance()->GetWidthInPixels(),
+                                               BeeEngine::WindowHandler::GetInstance()->GetHeightInPixels()});
     BeeEnsures(context != nullptr);
-    BeeEngine::Internal::RmlUi::SetCurrentContext(context);
+    BeeEngine::RmlUi::SetMainContext(context);
     if (Rml::DataModelConstructor constructor = context->CreateDataModel("animals"))
     {
         constructor.Bind("show_text", &my_data.show_text);
@@ -29,8 +29,12 @@ void RmlUiLayer::OnAttach()
     m_AssetManager.SetEditedAssetRegistryID({});
     m_AssetManager.GetAsset("rml.rcss");
     m_AssetManager.GetAsset("window.rcss");
-    auto* document = BeeEngine::AssetManager::GetAsset<BeeEngine::RmlDocument>("hello_world.rml").GetDocument();
-    document->Show();
+    auto documentHandle = m_AssetManager.GetAsset("hello_world.rml")->Handle;
+    auto documentPtr = BeeEngine::RmlUi::LoadDocument(context, documentHandle);
+    if (auto document = documentPtr.lock())
+    {
+        (*document)->Show();
+    }
 }
 
 void RmlUiLayer::OnDetach()
@@ -41,14 +45,8 @@ void RmlUiLayer::OnDetach()
 void RmlUiLayer::OnUpdate(BeeEngine::FrameData& data)
 {
     Layer::OnUpdate(data);
-    if (auto* rmluiContext = Rml::GetContext("default"))
-    {
-        rmluiContext->Update();
-        BeeEngine::Internal::RmlUi::BeginRendering();
-        rmluiContext->Render();
-        BeeEngine::Internal::RmlUi::EndRendering();
-        data.CopyFrameBufferImageToSwapchain(BeeEngine::Internal::RmlUi::GetFrameBuffer(rmluiContext), 0);
-    }
+    BeeEngine::RmlUi::UpdateAndRender(context);
+    data.CopyFrameBufferImageToSwapchain(BeeEngine::RmlUi::GetFrameBuffer(context), 0);
 }
 
 void RmlUiLayer::OnGUIRendering()
@@ -61,9 +59,7 @@ void RmlUiLayer::OnEvent(BeeEngine::EventDispatcher& e)
     e.Dispatch<BeeEngine::WindowResizeEvent>(
         [](BeeEngine::WindowResizeEvent& event)
         {
-            // context->SetDimensions({event.GetWidthInPixels(), event.GetHeightInPixels()});
-            BeeEngine::Internal::RmlUi::ResizeFramebuffer(context,
-                                                          {event.GetWidthInPixels(), event.GetHeightInPixels()});
+            BeeEngine::RmlUi::ResizeFramebuffer(context, {event.GetWidthInPixels(), event.GetHeightInPixels()});
             return false;
         });
     Layer::OnEvent(e);

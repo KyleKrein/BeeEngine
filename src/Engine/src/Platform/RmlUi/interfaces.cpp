@@ -294,6 +294,10 @@ namespace BeeEngine::Internal::RmlUi
         {
             content = AssetManager::GetAsset<Rcss>(path).GetFileContent();
         }
+        else if (ResourceManager::IsRmlExtension(path.GetExtension()))
+        {
+            content = AssetManager::GetAsset<RmlDocument>(path).GetFileContent();
+        }
         else
         {
             content = File::ReadFile(path);
