@@ -7,9 +7,8 @@
 namespace BeeEngine::RmlUi
 {
     Rml::Context* CreateContext(const String& name, glm::i32vec2 sizeInPixels);
-    FrameBuffer& GetFrameBuffer(Rml::Context* context);
-    void ResizeFramebuffer(Rml::Context* context, glm::i32vec2 sizeInPixels);
-    void UpdateAndRender(Rml::Context* context);
+    void ResizeViewport(Rml::Context* context, glm::i32vec2 sizeInPixels);
+    void UpdateAndRender(Rml::Context* context, CommandBuffer& cmd);
     WeakRef<Rml::ElementDocument*> LoadDocument(Rml::Context* context, AssetHandle handle);
     void HotReloadStyles();
     void HotReloadAll();
@@ -17,4 +16,4 @@ namespace BeeEngine::RmlUi
     // Main context must be rendered on top and must get all events.
     void SetMainContext(Rml::Context* context);
     Rml::Context* GetMainContext();
-} // namespace BeeEngine::RmlUI
+} // namespace BeeEngine::RmlUi

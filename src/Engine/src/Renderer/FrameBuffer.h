@@ -54,8 +54,9 @@ namespace BeeEngine
         FrameBufferTextureSpecification(FrameBufferTextureFormat format) : TextureFormat(format) {}
 
         FrameBufferTextureFormat TextureFormat = FrameBufferTextureFormat::None; ///< Format of the texture.
-        Color4 ClearColor = Color4::CornflowerBlue;                              ///< Clear color used for this texture.
-        float ClearDepth = 1.0f;                                                 ///< Clear depth value.
+        Color4 ClearColor =
+            Color4::Transparent; // CornflowerBlue;                              ///< Clear color used for this texture.
+        float ClearDepth = 1.0f; ///< Clear depth value.
         int32_t ClearRedInteger = -1; ///< Clear value for red integer textures.
         FrameBufferTextureUsage TextureUsage = FrameBufferTextureUsage::GPUOnly; ///< Texture usage mode.
     };
@@ -193,6 +194,8 @@ namespace BeeEngine
     public:
         FrameBuffer() = default;
         virtual ~FrameBuffer() = default;
+        virtual size_t GetWidth() const = 0;
+        virtual size_t GetHeight() const = 0;
 
         /**
          * @brief Binds the framebuffer and returns the associated command buffer.

@@ -5,24 +5,18 @@
 #include "RmlUi/Core/FileInterface.h"
 #include <RmlUi/Core/RenderInterface.h>
 #include <RmlUi/Core/SystemInterface.h>
-#include <SDL3/SDL.h>
 #include <glm/glm.hpp>
 
 namespace BeeEngine::Internal::RmlUi
 {
     bool Init(void* window);
     Rml::Context* CreateContext(const String& name, glm::i32vec2 sizeInPixels);
-    FrameBuffer& GetFrameBuffer(Rml::Context* context);
     void SetCurrentContext(Rml::Context* context);
     Rml::Context* GetCurrentContext();
-    void BeginRendering();
+    void BeginRendering(CommandBuffer& cmd);
     void EndRendering();
-    void ResizeFramebuffer(Rml::Context* context, glm::i32vec2 size);
+    void ResizeViewport(Rml::Context* context, glm::i32vec2 size);
     void Shutdown();
-
-    // Applies input on all contexts based on the given SDL event.
-    // @return True if the event is still propagating, false if it was handled by the context.
-    bool InputEventHandler(SDL_Window* window, SDL_Event& ev);
 
     class RenderInterface : public Rml::RenderInterface
     {

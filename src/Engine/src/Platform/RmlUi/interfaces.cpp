@@ -70,7 +70,6 @@ namespace BeeEngine::Internal::RmlUi
     };
     struct ContextData
     {
-        Scope<FrameBuffer> Framebuffer;
         Rml::Matrix4f Projection;
     };
     static std::unordered_map<UUID, Geometry> g_Geometry;
@@ -110,23 +109,17 @@ namespace BeeEngine::Internal::RmlUi
     Rml::Context* CreateContext(const String& name, glm::i32vec2 size)
     {
         auto* result = Rml::CreateContext(name.c_str(), Rml::Vector2i(size.x, size.y));
-        FrameBufferPreferences preferences;
-        preferences.Width = size.x;
-        preferences.Height = size.y;
-        preferences.Attachments = {FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::Depth24};
-        preferences.Attachments.Attachments[0].ClearColor = Color4::Transparent;
         auto& contextData = g_ContextData[result];
-        contextData.Framebuffer = BeeMoveAlways(FrameBuffer::Create(BeeMove(preferences)));
         contextData.Projection = MakeVulkanOrtho(size.x, size.y);
         return result;
     }
 
-    void ResizeFramebuffer(Rml::Context* context, glm::i32vec2 size)
+    void ResizeViewport(Rml::Context* context, glm::i32vec2 size)
     {
         BeeExpects(g_ContextData.contains(context));
         auto& contextData = g_ContextData.at(context);
-        contextData.Framebuffer->Resize(size.x, size.y);
         contextData.Projection = MakeVulkanOrtho(size.x, size.y);
+        context->SetDimensions({size.x, size.y});
     }
     void SetCurrentContext(Rml::Context* context)
     {
@@ -136,22 +129,15 @@ namespace BeeEngine::Internal::RmlUi
     {
         return g_CurrentContext;
     }
-    void BeginRendering()
+    void BeginRendering(CommandBuffer& cmd)
     {
         BeeExpects(g_CurrentContext != nullptr && "Forgot to call SetCurrentContext(Rml::Context* context)?");
-        auto& framebuffer = *g_ContextData.at(g_CurrentContext).Framebuffer;
-        g_CurrentBuffer = framebuffer.Bind();
+        g_CurrentBuffer = cmd;
     }
     void EndRendering()
     {
         BeeExpects(g_CurrentContext != nullptr && "Forgot to call SetCurrentContext(Rml::Context* context)?");
-        auto& framebuffer = *g_ContextData.at(g_CurrentContext).Framebuffer;
-        framebuffer.Unbind(g_CurrentBuffer);
-    }
-    FrameBuffer& GetFrameBuffer(Rml::Context* context)
-    {
-        BeeExpects(g_ContextData.contains(context));
-        return *g_ContextData.at(context).Framebuffer;
+        g_CurrentBuffer = {};
     }
     void Shutdown()
     {
@@ -165,16 +151,6 @@ namespace BeeEngine::Internal::RmlUi
         g_TextureMaterial.reset();
         g_BindingSets.clear();
         g_Assets.clear();
-    }
-
-    bool InputEventHandler(SDL_Window* window, SDL_Event& ev)
-    {
-        for (auto& [context, _] : g_ContextData)
-        {
-            if (!RmlSDL::InputEventHandler(context, window, ev))
-                return false;
-        }
-        return true;
     }
     Rml::CompiledGeometryHandle RenderInterface::CompileGeometry(Rml::Span<const Rml::Vertex> vertices,
                                                                  Rml::Span<const int> indices)
@@ -192,7 +168,7 @@ namespace BeeEngine::Internal::RmlUi
         BeeExpects(g_CurrentContext != nullptr && "Forgot to call SetCurrentContext(Rml::Context* context)?");
         auto& geometryData = g_Geometry.at(geometry);
         auto& model = texture == 0 ? *geometryData.ModelColor : *geometryData.ModelTexture;
-        auto& [_, projection] = g_ContextData.at(g_CurrentContext);
+        auto& [projection] = g_ContextData.at(g_CurrentContext);
         auto cmd = g_CurrentBuffer;
         shader_vertex_user_data_t vertexData{.m_transform = projection * m_CurrentTransform,
                                              .m_translate = translation};

@@ -10,6 +10,7 @@
 #include "Gui/ImGui/IImGuiElement.h"
 #include "Locale/Locale.h"
 #include "ProjectFile.h"
+#include "RmlUi/Core/Context.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
 #include "Scene/SceneCamera.h"
@@ -77,7 +78,12 @@ namespace BeeEngine::Editor
         AssetHandle m_SceneHandle;
 
         Ref<UniformBuffer> m_CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
-        Ref<BindingSet> m_CameraBindingSet = BindingSet::Create({{0, *m_CameraUniformBuffer}});
+        Ref<BindingSet> m_CameraBindingSet = BindingSet::Create({{.Binding = 0, .Data = *m_CameraUniformBuffer}});
+
+        Ref<UniformBuffer> m_UICameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
+        Ref<BindingSet> m_UICameraBindingSet = BindingSet::Create({{.Binding = 0, .Data = *m_UICameraUniformBuffer}});
+
+        Rml::Context* m_GameContext = nullptr;
 
         bool OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept;
         bool OnKeyButtonPressed(KeyPressedEvent* event) noexcept;

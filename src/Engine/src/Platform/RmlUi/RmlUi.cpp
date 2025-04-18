@@ -16,20 +16,16 @@ namespace BeeEngine::RmlUi
         g_Contexts[context] = {};
         return context;
     }
-    FrameBuffer& GetFrameBuffer(Rml::Context* context)
+    void ResizeViewport(Rml::Context* context, glm::i32vec2 sizeInPixels)
     {
-        return Internal::RmlUi::GetFrameBuffer(context);
+        Internal::RmlUi::ResizeViewport(context, sizeInPixels);
     }
-    void ResizeFramebuffer(Rml::Context* context, glm::i32vec2 sizeInPixels)
-    {
-        Internal::RmlUi::ResizeFramebuffer(context, sizeInPixels);
-    }
-    void UpdateAndRender(Rml::Context* context)
+    void UpdateAndRender(Rml::Context* context, CommandBuffer& cmd)
     {
         std::unique_lock lock(g_ContextLock);
         Internal::RmlUi::SetCurrentContext(context);
         context->Update();
-        Internal::RmlUi::BeginRendering();
+        Internal::RmlUi::BeginRendering(cmd);
         context->Render();
         Internal::RmlUi::EndRendering();
     }

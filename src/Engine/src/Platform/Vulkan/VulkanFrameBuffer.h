@@ -21,6 +21,9 @@ namespace BeeEngine::Internal
         VulkanFrameBuffer(const FrameBufferPreferences& preferences);
         ~VulkanFrameBuffer() override;
 
+        size_t GetWidth() const final { return m_Preferences.Width; }
+        size_t GetHeight() const final { return m_Preferences.Height; }
+
         CommandBuffer Bind() override;
 
         void Unbind(CommandBuffer& commandBuffer) override;

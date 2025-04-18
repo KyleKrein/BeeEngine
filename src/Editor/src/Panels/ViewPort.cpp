@@ -13,18 +13,28 @@
 #include "Core/ResourceManager.h"
 #include "Debug/Instrumentor.h"
 #include "Gui/ImGui/ImGuiExtension.h"
+#include "Platform/RmlUi/RmlUi.hpp"
 #include "Renderer/SceneRenderer.h"
+#include "RmlUi/Core/Context.h"
+#include "RmlUi/Core/DataModelHandle.h"
+#include "RmlUi/Core/ElementDocument.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scene/SceneSerializer.h"
 #include "Scripting/ScriptingEngine.h"
 #include "Windowing/WindowHandler/WindowHandler.h"
-#include <glm/gtc/type_ptr.hpp>
 #include "imgui.h"
+#include <array>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace BeeEngine::Editor
 {
-
+    static auto PhysicalSize(auto size)
+    {
+        return static_cast<int32_t>(size) *
+               static_cast<int32_t>(WindowHandler::GetInstance()->GetScaleFactor() +
+                                    1.6); //+1.6 as dirty fix, because everything looks like shit in imgui :/
+    }
     ViewPort::ViewPort(Property<Scope<ProjectFile>>& project,
                        uint32_t width,
                        uint32_t height,
@@ -48,14 +58,19 @@ namespace BeeEngine::Editor
                 m_GameDomain = &newProject->GetProjectLocaleDomain();
             });
         FrameBufferPreferences preferences;
-        preferences.Width = m_Width * WindowHandler::GetInstance()->GetScaleFactor();
-        preferences.Height = m_Height * WindowHandler::GetInstance()->GetScaleFactor();
+        preferences.Width = PhysicalSize(m_Width);
+        preferences.Height = PhysicalSize(m_Height);
         preferences.Attachments = {
             FrameBufferTextureFormat::RGBA8, FrameBufferTextureFormat::RedInteger, FrameBufferTextureFormat::Depth24};
 
         preferences.Attachments.Attachments[1].TextureUsage = FrameBufferTextureUsage::CPUAndGPU; // RedInteger
 
         m_FrameBuffer = FrameBuffer::Create(preferences);
+    }
+
+    glm::mat4 MakeUIMatrix(float width, float height)
+    {
+        return glm::ortho(0.0f, width, height, 0.0f, -10000.f, 10000.f);
     }
 
     void ViewPort::OnEvent(EventDispatcher& event) noexcept
@@ -93,15 +108,40 @@ namespace BeeEngine::Editor
 
         if (IsMouseInViewport())
         {
-            mouseX = narrow_cast<int>(mouseX * WindowHandler::GetInstance()->GetScaleFactor());
-            mouseY = narrow_cast<int>(mouseY * WindowHandler::GetInstance()->GetScaleFactor());
+            mouseX = narrow_cast<int>(PhysicalSize(mouseX));
+            mouseY = narrow_cast<int>(PhysicalSize(mouseY));
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
         }
+        RmlUi::SetMainContext(m_GameContext);
 
         CurrentScene()->UpdateRuntime();
         if (m_SelectedEntity && !m_SelectedEntity.IsValid())
         {
             m_SelectedEntity = Entity::Null;
+        }
+        static bool testStarted = false;
+        static struct ApplicationData
+        {
+            bool show_text = true;
+            Rml::String animal = "dog";
+        } my_data;
+        if (!testStarted)
+        {
+            testStarted = true;
+            m_GameContext = RmlUi::CreateContext("test", {m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight()});
+            auto uimat4 = MakeUIMatrix(m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight());
+            m_UICameraUniformBuffer->SetData(&uimat4, sizeof(glm::mat4));
+            RmlUi::SetMainContext(m_GameContext);
+            if (Rml::DataModelConstructor constructor = m_GameContext->CreateDataModel("animals"))
+            {
+                constructor.Bind("show_text", &my_data.show_text);
+                constructor.Bind("animal", &my_data.animal);
+            }
+            if (auto document =
+                    RmlUi::LoadDocument(m_GameContext, *m_AssetManager.GetAssetHandleByName("hello_world")).lock())
+            {
+                (*document)->Show();
+            }
         }
         SceneRenderer::RenderScene(*CurrentScene(), cmd, m_GameDomain->GetLocale());
 
@@ -117,7 +157,14 @@ namespace BeeEngine::Editor
             if (renderPhysicsColliders)
                 SceneRenderer::RenderPhysicsColliders(*CurrentScene(), cmd, *m_CameraBindingSet);
         }
+        m_GameContext = RmlUi::GetMainContext();
+        if (m_GameContext)
+        {
+            cmd.Flush();
+            RmlUi::UpdateAndRender(m_GameContext, cmd);
+        }
         m_FrameBuffer->Unbind(cmd);
+        RmlUi::SetMainContext(nullptr);
         if (IsMouseInViewport())
         {
             Entity hovered = GetHoveredEntity();
@@ -160,14 +207,15 @@ namespace BeeEngine::Editor
         my -= m_ViewportBounds[0].y;
         m_MousePosition = {mx, my};
 
+        m_FrameBuffer->Unbind(cmd);
+
         if (IsMouseInViewport())
         {
-            int mouseX = narrow_cast<int>(mx * WindowHandler::GetInstance()->GetScaleFactor());
-            int mouseY = narrow_cast<int>(my * WindowHandler::GetInstance()->GetScaleFactor());
+            int mouseX = narrow_cast<int>(PhysicalSize(mx));
+            int mouseY = narrow_cast<int>(PhysicalSize(my));
             ScriptingEngine::SetMousePosition(mouseX, mouseY);
             m_HoveredEntity = GetHoveredEntity();
         }
-        m_FrameBuffer->Unbind(cmd);
     }
 
     void ViewPort::RenderImGuizmo(EditorCamera& camera)
@@ -240,23 +288,33 @@ namespace BeeEngine::Editor
         m_IsFocused = ImGui::IsWindowFocused();
         m_IsHovered = ImGui::IsWindowHovered();
 
-        auto size = ImGui::GetContentRegionAvail();
-        size.x = size.x > 0 ? size.x : 1;
-        size.y = size.y > 0 ? size.y : 1;
-        if (narrow_cast<float>(m_Width) != size.x || narrow_cast<float>(m_Height) != size.y)
+        auto& io = ImGui::GetIO();
+        auto logicalSize = ImGui::GetContentRegionAvail();
+
+        if (narrow_cast<float>(m_Width) != logicalSize.x || narrow_cast<float>(m_Height) != logicalSize.y)
         {
-            m_Width = narrow_cast<uint32_t>(size.x);
-            m_Height = narrow_cast<uint32_t>(size.y);
-            m_FrameBuffer->Resize(m_Width * WindowHandler::GetInstance()->GetScaleFactor(),
-                                  m_Height * WindowHandler::GetInstance()->GetScaleFactor());
-            CurrentScene()->OnViewPortResize(m_Width, m_Height);
-            camera.SetViewportSize(m_Width, m_Height);
+            m_Width = narrow_cast<uint32_t>(logicalSize.x);
+            m_Height = narrow_cast<uint32_t>(logicalSize.y);
+            auto scaledWidth = PhysicalSize(logicalSize.x);
+            auto scaledHeight = PhysicalSize(logicalSize.y);
+            m_FrameBuffer->Resize(scaledWidth, scaledHeight);
+            if (m_GameContext)
+            {
+                auto uimat4 = MakeUIMatrix(m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight());
+                Rml::Vector2i dimensions(scaledWidth, scaledHeight);
+                m_GameContext->SetDimensions(dimensions);
+                m_GameContext->SetDensityIndependentPixelRatio(PhysicalSize(logicalSize.x) /
+                                                               static_cast<int32_t>(logicalSize.x));
+                m_UICameraUniformBuffer->SetData(&uimat4, sizeof(glm::mat4));
+                RmlUi::ResizeViewport(m_GameContext, {m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight()});
+            }
+            CurrentScene()->OnViewPortResize(PhysicalSize(logicalSize.x), PhysicalSize(logicalSize.y));
+            camera.SetViewportSize(PhysicalSize(logicalSize.x), PhysicalSize(logicalSize.y));
             ScriptingEngine::SetViewportSize(m_Width, m_Height);
         }
         auto textureID = m_FrameBuffer->GetColorAttachmentImGuiRendererID(0);
         BeeExpects(textureID != 0);
-        ImGui::Image((ImTextureID)textureID,
-                     {static_cast<float>(m_Width), static_cast<float>(m_Height)} /*, ImVec2{0, 1}, ImVec2{1, 0}*/);
+        ImGui::Image((ImTextureID)textureID, {static_cast<float>(m_Width), static_cast<float>(m_Height)});
 
         if (ImGui::BeginDragDropTarget())
         {
@@ -287,7 +345,6 @@ namespace BeeEngine::Editor
 
         ImGui::End();
         ImGui::PopStyleVar();
-        // m_FrameBuffer->Unbind();
     }
 
     bool ViewPort::OnKeyButtonPressed(KeyPressedEvent* event) noexcept
@@ -358,8 +415,8 @@ namespace BeeEngine::Editor
 
     Entity ViewPort::GetHoveredEntity()
     {
-        int mouseX = narrow_cast<int>(m_MousePosition.x * WindowHandler::GetInstance()->GetScaleFactor());
-        int mouseY = narrow_cast<int>(m_MousePosition.y * WindowHandler::GetInstance()->GetScaleFactor());
+        int mouseX = narrow_cast<int>(PhysicalSize(m_MousePosition.x));
+        int mouseY = narrow_cast<int>(PhysicalSize(m_MousePosition.y));
         int pixelData = m_FrameBuffer->ReadPixel(1, mouseX, mouseY);
         pixelData--; // I make it -1 because entt starts from 0 and clear value for red integer in webgpu is
                      // 0 and I need to make invalid number -1 too, so in scene I make + 1

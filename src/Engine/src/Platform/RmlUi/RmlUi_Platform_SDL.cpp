@@ -32,6 +32,7 @@
 #include <RmlUi/Core/Input.h>
 #include <RmlUi/Core/StringUtilities.h>
 #include <RmlUi/Core/SystemInterface.h>
+#include "RmlUi.hpp"
 
 bool SystemInterface_SDL::LogMessage(Rml::Log::Type type, const Rml::String& message)
 {
@@ -216,8 +217,7 @@ bool RmlSDL::InputEventHandler(Rml::Context* context, SDL_Window* window, SDL_Ev
         break;
         case event_window_size_changed:
         {
-            Rml::Vector2i dimensions(ev.window.data1, ev.window.data2);
-            context->SetDimensions(dimensions);
+            BeeEngine::RmlUi::ResizeViewport(context, {pixelWidth, pixelHeight});
         }
         break;
         case event_window_leave:

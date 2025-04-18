@@ -8,6 +8,7 @@
 #include <RmlUi/Core.h>
 RmlUiLayer::~RmlUiLayer() {}
 static Rml::Context* context = nullptr;
+static BeeEngine::Ref<BeeEngine::FrameBuffer> framebuffer;
 struct ApplicationData
 {
     bool show_text = true;
@@ -21,6 +22,13 @@ void RmlUiLayer::OnAttach()
                                                BeeEngine::WindowHandler::GetInstance()->GetHeightInPixels()});
     BeeEnsures(context != nullptr);
     BeeEngine::RmlUi::SetMainContext(context);
+    BeeEngine::FrameBufferPreferences prefs;
+    prefs.Width = BeeEngine::WindowHandler::GetInstance()->GetWidthInPixels();
+    prefs.Height = BeeEngine::WindowHandler::GetInstance()->GetHeightInPixels();
+    prefs.Attachments = {{BeeEngine::FrameBufferTextureFormat::RGBA8,
+                          BeeEngine::FrameBufferTextureFormat::RedInteger,
+                          BeeEngine::FrameBufferTextureFormat::Depth}};
+    framebuffer = BeeEngine::FrameBuffer::Create(BeeMove(prefs));
     if (Rml::DataModelConstructor constructor = context->CreateDataModel("animals"))
     {
         constructor.Bind("show_text", &my_data.show_text);
@@ -40,13 +48,16 @@ void RmlUiLayer::OnAttach()
 void RmlUiLayer::OnDetach()
 {
     Layer::OnDetach();
+    framebuffer.reset();
 }
 
 void RmlUiLayer::OnUpdate(BeeEngine::FrameData& data)
 {
     Layer::OnUpdate(data);
-    BeeEngine::RmlUi::UpdateAndRender(context);
-    data.CopyFrameBufferImageToSwapchain(BeeEngine::RmlUi::GetFrameBuffer(context), 0);
+    auto cmd = framebuffer->Bind();
+    BeeEngine::RmlUi::UpdateAndRender(context, cmd);
+    framebuffer->Unbind(cmd);
+    data.CopyFrameBufferImageToSwapchain(*framebuffer, 0);
 }
 
 void RmlUiLayer::OnGUIRendering()
@@ -59,7 +70,7 @@ void RmlUiLayer::OnEvent(BeeEngine::EventDispatcher& e)
     e.Dispatch<BeeEngine::WindowResizeEvent>(
         [](BeeEngine::WindowResizeEvent& event)
         {
-            BeeEngine::RmlUi::ResizeFramebuffer(context, {event.GetWidthInPixels(), event.GetHeightInPixels()});
+            framebuffer->Resize(event.GetWidthInPixels(), event.GetHeightInPixels());
             return false;
         });
     Layer::OnEvent(e);
