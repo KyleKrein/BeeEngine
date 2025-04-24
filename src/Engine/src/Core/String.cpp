@@ -31,6 +31,19 @@ namespace BeeEngine
         return result;
     }
 
+    UTF32String ConvertUTF8ToUTF32(const UTF8String& string)
+    {
+        BeeExpects(IsValidString(string));
+        return utf8::utf8to32(static_cast<std::string_view>(string));
+    }
+    UTF8String ConvertUTF32ToUTF8(const UTF32String& string)
+    {
+        UTF8String result;
+        utf8::utf32to8(string.begin(), string.end(), std::back_inserter(result));
+        BeeEnsures(IsValidString(result));
+        return result;
+    }
+
     const unsigned char kFirstBitMask = 128; // 1000000
     const unsigned char kSecondBitMask = 64; // 0100000
     const unsigned char kThirdBitMask = 32;  // 0010000

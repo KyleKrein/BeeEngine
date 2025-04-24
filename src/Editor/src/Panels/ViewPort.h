@@ -98,5 +98,6 @@ namespace BeeEngine::Editor
 
         bool IsMouseInViewport();
         Entity GetHoveredEntity();
+        void HandleRmlUiEvents(Rml::Context* context, EventDispatcher& event);
     };
 } // namespace BeeEngine::Editor

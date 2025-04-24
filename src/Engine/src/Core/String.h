@@ -16,6 +16,7 @@ namespace BeeEngine
     using String = SIMDString<>;
     using UTF8String = String;
     using UTF16String = std::u16string;
+    using UTF32String = std::u32string;
 
     namespace StringLiterals
     {
@@ -40,6 +41,8 @@ namespace BeeEngine
     bool IsValidString(const UTF8String& string);
     UTF16String ConvertUTF8ToUTF16(const UTF8String& string);
     UTF8String ConvertUTF16ToUTF8(const UTF16String& string);
+    UTF32String ConvertUTF8ToUTF32(const UTF8String& string);
+    UTF8String ConvertUTF32ToUTF8(const UTF32String& string);
 
     /**
      * @brief a string_view like class
