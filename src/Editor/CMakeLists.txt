@@ -12,7 +12,10 @@ add_executable(BeeEngineEditor Start.cpp src/EditorApplication.cpp src/EditorApp
         src/Panels/ImGuiUIEditor.h
         src/Panels/ImGuiUIEditor.cpp
         src/Panels/ProjectSettings.h
-        src/Panels/ProjectSettings.cpp)
+        src/Panels/ProjectSettings.cpp
+        src/Panels/RmlUiViewport.cpp
+        src/Panels/RmlUiViewport.hpp
+)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 
 if(NOT ${BEE_BUILD_BEEENGINE})

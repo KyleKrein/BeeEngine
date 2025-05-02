@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Events/Event.h"
 #include "Core/String.h"
 #include "Locale/Locale.h"
 #include "Renderer/FrameBuffer.h"
@@ -17,4 +18,8 @@ namespace BeeEngine::RmlUi
     // Main context must be rendered on top and must get all events.
     void SetMainContext(Rml::Context* context);
     Rml::Context* GetMainContext();
+    bool HandleEvents(
+        Rml::Context* context,
+        EventDispatcher& event,
+        const std::function<float(float)>& getPhysicalSize = [](float number) { return number; });
 } // namespace BeeEngine::RmlUi
