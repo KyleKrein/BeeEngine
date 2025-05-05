@@ -10,8 +10,8 @@
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/UniformBuffer.h"
 #include "Scene/Components.h"
-#include <glm/glm.hpp>
 #include <cstdint>
+#include <glm/glm.hpp>
 
 namespace BeeEngine
 {
@@ -131,6 +131,8 @@ namespace BeeEngine
         static void UniformBuffer_SetData(UniformBuffer* buffer, void* data, uint32_t sizeBytes);
         static BindingSet* BindingSet_Create(ArrayInfo elements);
         static void BindingSet_Destroy(BindingSet* bindingSet);
+
+        static void* UI_CreateDocument(void* name);
 
     private:
         struct ScriptGlueInternalState;

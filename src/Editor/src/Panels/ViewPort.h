@@ -80,9 +80,6 @@ namespace BeeEngine::Editor
         Ref<UniformBuffer> m_CameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
         Ref<BindingSet> m_CameraBindingSet = BindingSet::Create({{.Binding = 0, .Data = *m_CameraUniformBuffer}});
 
-        Ref<UniformBuffer> m_UICameraUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4));
-        Ref<BindingSet> m_UICameraBindingSet = BindingSet::Create({{.Binding = 0, .Data = *m_UICameraUniformBuffer}});
-
         Rml::Context* m_GameContext = nullptr;
 
         bool OnMouseButtonPressed(MouseButtonPressedEvent* event) noexcept;

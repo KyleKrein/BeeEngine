@@ -11,9 +11,11 @@
 #include "Core/Logging/GameLogger.h"
 #include "Core/Logging/Log.h"
 #include "Core/Numbers.h"
+#include "Gui/RmlDocument.hpp"
 #include "JobSystem/SpinLock.h"
 #include "MAssembly.h"
 #include "NativeToManaged.h"
+#include "Platform/RmlUi/RmlUi.hpp"
 #include "Renderer/BindingSet.h"
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/FrameBuffer.h"
@@ -787,6 +789,22 @@ namespace BeeEngine
         BeeCoreTrace("{0}", std::source_location::current().function_name());
         std::unique_lock lock(s_Data->AllocatedBindingSetsLock);
         s_Data->AllocatedBindingSets.erase(bindingSet);
+    }
+
+    void* ScriptGlue::UI_CreateDocument(void* name)
+    {
+        auto* context = RmlUi::GetMainContext();
+        if (!context)
+        {
+            return 0;
+        }
+        auto nameString = NativeToManaged::StringGetFromManagedString(name);
+        auto asset = AssetManager::GetAssetRef<RmlDocument>(nameString);
+        if (!asset)
+        {
+            return 0;
+        }
+        return RmlUi::LoadDocument(context, asset->Handle).lock().get();
     }
 
     void ScriptGlue::Init()

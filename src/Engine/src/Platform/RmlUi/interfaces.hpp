@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/String.h"
+#include "Locale/Locale.h"
 #include "Renderer/FrameBuffer.h"
 #include "RmlUi/Core/FileInterface.h"
 #include <RmlUi/Core/RenderInterface.h>
@@ -13,6 +14,7 @@ namespace BeeEngine::Internal::RmlUi
     Rml::Context* CreateContext(const String& name, glm::i32vec2 sizeInPixels);
     void SetCurrentContext(Rml::Context* context);
     Rml::Context* GetCurrentContext();
+    void SetLocaleDomain(Locale::Domain* domain);
     void BeginRendering(CommandBuffer& cmd);
     void EndRendering();
     void ResizeViewport(Rml::Context* context, glm::i32vec2 size);

@@ -29,6 +29,7 @@
 #ifndef RMLUI_BACKENDS_PLATFORM_SDL_H
 #define RMLUI_BACKENDS_PLATFORM_SDL_H
 
+#include "Locale/Locale.h"
 #include <RmlUi/Core/Input.h>
 #include <RmlUi/Core/SystemInterface.h>
 #include <RmlUi/Core/Types.h>
@@ -55,6 +56,10 @@ public:
     // Optionally, provide or change the window to be used for setting the mouse cursors.
     void SetWindow(SDL_Window* window);
 
+    void SetLocalizationDomain(BeeEngine::Locale::Domain& domain) { m_Domain = &domain; }
+
+    int TranslateString(Rml::String& translated, const Rml::String& input) override;
+
     // -- Inherited from Rml::SystemInterface  --
 
     double GetElapsedTime() override;
@@ -77,6 +82,8 @@ private:
     SDL_Cursor* cursor_cross = nullptr;
     SDL_Cursor* cursor_text = nullptr;
     SDL_Cursor* cursor_unavailable = nullptr;
+
+    BeeEngine::Locale::Domain* m_Domain = nullptr;
 };
 
 namespace RmlSDL

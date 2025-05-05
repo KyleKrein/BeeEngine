@@ -7,13 +7,21 @@
 namespace BeeEngine::RmlUi
 {
     using DocumentMap = std::unordered_map<AssetHandle, Ref<Rml::ElementDocument*>>;
-    static std::unordered_map<Rml::Context*, DocumentMap> g_Contexts;
+    namespace
+    {
+        struct ContextData
+        {
+            DocumentMap Documents;
+            Locale::Domain* Domain;
+        };
+    } // namespace
+    static std::unordered_map<Rml::Context*, ContextData> g_Contexts;
     static Jobs::SpinLock g_ContextLock;
     static Rml::Context* g_MainContext = nullptr;
-    Rml::Context* CreateContext(const String& name, glm::i32vec2 sizeInPixels)
+    Rml::Context* CreateContext(const String& name, glm::i32vec2 sizeInPixels, Locale::Domain* domain)
     {
         auto* context = Internal::RmlUi::CreateContext(name, sizeInPixels);
-        g_Contexts[context] = {};
+        g_Contexts[context] = {.Domain = domain};
         return context;
     }
     void ResizeViewport(Rml::Context* context, glm::i32vec2 sizeInPixels)
@@ -23,11 +31,14 @@ namespace BeeEngine::RmlUi
     void UpdateAndRender(Rml::Context* context, CommandBuffer& cmd)
     {
         std::unique_lock lock(g_ContextLock);
+        auto* domain = g_Contexts.at(context).Domain;
+        Internal::RmlUi::SetLocaleDomain(domain);
         Internal::RmlUi::SetCurrentContext(context);
         context->Update();
         Internal::RmlUi::BeginRendering(cmd);
         context->Render();
         Internal::RmlUi::EndRendering();
+        Internal::RmlUi::SetLocaleDomain(nullptr);
     }
     Rml::ElementDocument* LoadDocumentPtr(Rml::Context* context, AssetHandle handle)
     {

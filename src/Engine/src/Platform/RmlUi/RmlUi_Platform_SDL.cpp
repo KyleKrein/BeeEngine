@@ -28,11 +28,11 @@
 
 #include "RmlUi_Platform_SDL.h"
 #include "Core/Logging/Log.h"
+#include "RmlUi.hpp"
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Input.h>
 #include <RmlUi/Core/StringUtilities.h>
 #include <RmlUi/Core/SystemInterface.h>
-#include "RmlUi.hpp"
 
 bool SystemInterface_SDL::LogMessage(Rml::Log::Type type, const Rml::String& message)
 {
@@ -117,6 +117,21 @@ void SystemInterface_SDL::SetMouseCursor(const Rml::String& cursor_name)
 
     if (cursor)
         SDL_SetCursor(cursor);
+}
+
+int SystemInterface_SDL::TranslateString(Rml::String& translated, const Rml::String& input)
+{
+    if (!m_Domain)
+    {
+        translated = input;
+        return 0;
+    }
+    translated = m_Domain->Translate(input.c_str()).c_str();
+    if (translated != input)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 void SystemInterface_SDL::SetClipboardText(const Rml::String& text)

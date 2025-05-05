@@ -396,30 +396,6 @@ namespace BeeEngine::Editor
         {
             m_SelectedEntity = Entity::Null;
         }
-        static bool testStarted = false;
-        static struct ApplicationData
-        {
-            bool show_text = true;
-            Rml::String animal = "dog";
-        } my_data;
-        if (!testStarted)
-        {
-            testStarted = true;
-            m_GameContext = RmlUi::CreateContext("test", {m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight()});
-            auto uimat4 = MakeUIMatrix(m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight());
-            m_UICameraUniformBuffer->SetData(&uimat4, sizeof(glm::mat4));
-            RmlUi::SetMainContext(m_GameContext);
-            if (Rml::DataModelConstructor constructor = m_GameContext->CreateDataModel("animals"))
-            {
-                constructor.Bind("show_text", &my_data.show_text);
-                constructor.Bind("animal", &my_data.animal);
-            }
-            if (auto document =
-                    RmlUi::LoadDocument(m_GameContext, *m_AssetManager.GetAssetHandleByName("hello_world")).lock())
-            {
-                (*document)->Show();
-            }
-        }
         SceneRenderer::RenderScene(*CurrentScene(), cmd, m_GameDomain->GetLocale());
 
         auto primaryCameraEntity = CurrentScene()->GetPrimaryCameraEntity();
@@ -588,7 +564,6 @@ namespace BeeEngine::Editor
                 m_GameContext->SetDimensions(dimensions);
                 m_GameContext->SetDensityIndependentPixelRatio(PhysicalSize(logicalSize.x) /
                                                                static_cast<int32_t>(logicalSize.x));
-                m_UICameraUniformBuffer->SetData(&uimat4, sizeof(glm::mat4));
                 RmlUi::ResizeViewport(m_GameContext, {m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight()});
             }
             CurrentScene()->OnViewPortResize(PhysicalSize(logicalSize.x), PhysicalSize(logicalSize.y));

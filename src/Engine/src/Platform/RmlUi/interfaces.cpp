@@ -129,6 +129,10 @@ namespace BeeEngine::Internal::RmlUi
     {
         return g_CurrentContext;
     }
+    void SetLocaleDomain(Locale::Domain* domain)
+    {
+        g_SystemInterface->SetLocalizationDomain(*domain);
+    }
     void BeginRendering(CommandBuffer& cmd)
     {
         BeeExpects(g_CurrentContext != nullptr && "Forgot to call SetCurrentContext(Rml::Context* context)?");
