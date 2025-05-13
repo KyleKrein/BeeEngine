@@ -82,7 +82,9 @@ namespace BeeEngine::Editor
     void ViewPort::OnEvent(EventDispatcher& event) noexcept
     {
         if (!m_IsFocused && !m_IsHovered)
+        {
             return;
+        }
         if (!CurrentScene()->IsRuntime() && m_LastHoveredRuntime)
         {
             m_LastHoveredRuntime = Entity::Null;

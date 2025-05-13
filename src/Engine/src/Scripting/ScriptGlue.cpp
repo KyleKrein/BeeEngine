@@ -175,6 +175,7 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(UI_CloseDocument);
             BEE_NATIVE_FUNCTION(UI_ShowDocument);
             BEE_NATIVE_FUNCTION(UI_HideDocument);
+            BEE_NATIVE_FUNCTION(UI_SetText);
         }
     }
     void ScriptGlue::Log_Warn(void* message)
@@ -612,7 +613,11 @@ namespace BeeEngine
         AssetHandle handle = *static_cast<AssetHandle*>(scene);
         Application::SubmitToMainThread([handle]() { ScriptingEngine::RequestSceneChange(handle); });
     }
-
+    struct RmlDocumentInfo
+    {
+        WeakRef<Rml::ElementDocument*> Document;
+        AssetHandle Handle;
+    };
     struct ScriptGlue::ScriptGlueInternalState
     {
         std::unordered_map<ScriptGlue::ModelType, Model*> Models;
@@ -623,7 +628,7 @@ namespace BeeEngine
         Jobs::SpinLock AllocatedUniformBuffersLock;
         std::unordered_map<BindingSet*, Scope<BindingSet>> AllocatedBindingSets;
         Jobs::SpinLock AllocatedBindingSetsLock;
-        std::unordered_map<UUID, WeakRef<Rml::ElementDocument*>> RmlDocuments;
+        std::unordered_map<UUID, RmlDocumentInfo> RmlDocuments;
         Jobs::SpinLock RmlDocumentsLock;
     };
 
@@ -816,7 +821,7 @@ namespace BeeEngine
         auto document = RmlUi::LoadDocument(context, asset->Handle);
         UUID id;
         BeeCoreInfo("Created Document {} with id {}", nameString, id);
-        s_Data->RmlDocuments[id] = document;
+        s_Data->RmlDocuments[id] = {.Document=document, .Handle=asset->Handle};
         return id;
     }
 
@@ -833,8 +838,9 @@ namespace BeeEngine
             return;
         }
         std::unique_lock lock(s_Data->RmlDocumentsLock);
-        auto document = s_Data->RmlDocuments.at(id).lock();
-        (*document)->Close();
+        auto& [documentWeakPtr, handle] = s_Data->RmlDocuments.at(id);
+        auto document = documentWeakPtr.lock();
+        RmlUi::UnloadDocument((*document)->GetContext(), handle);
         s_Data->RmlDocuments.erase(id);
     }
     void ScriptGlue::UI_ShowDocument(uint64_t id)
@@ -850,7 +856,7 @@ namespace BeeEngine
             return;
         }
         std::unique_lock lock(s_Data->RmlDocumentsLock);
-        auto document = s_Data->RmlDocuments.at(id).lock();
+        auto document = s_Data->RmlDocuments.at(id).Document.lock();
         (*document)->Show();
     }
     void ScriptGlue::UI_HideDocument(uint64_t id)
@@ -866,8 +872,36 @@ namespace BeeEngine
             return;
         }
         std::unique_lock lock(s_Data->RmlDocumentsLock);
-        auto document = s_Data->RmlDocuments.at(id).lock();
+        auto document = s_Data->RmlDocuments.at(id).Document.lock();
         (*document)->Hide();
+    }
+    void ScriptGlue::UI_SetText(uint64_t id, void* elementIdPtr, void* textPtr)
+    {
+        auto* context = RmlUi::GetMainContext();
+        if (!context)
+        {
+            return;
+        }
+        if (id == 0)
+        {
+            BeeCoreWarn("Trying to use non existing document");
+            return;
+        }
+        if (!elementIdPtr || !textPtr)
+        {
+            return;
+        }
+        auto elementId = NativeToManaged::StringGetFromManagedString(elementIdPtr);
+        auto text = NativeToManaged::StringGetFromManagedString(textPtr);
+        std::unique_lock lock(s_Data->RmlDocumentsLock);
+        auto document = s_Data->RmlDocuments.at(id).Document.lock();
+        auto* element = (*document)->GetElementById(elementId.c_str());
+        if (!element)
+        {
+            BeeCoreError("Element {} does not exist", elementId);
+            return;
+        }
+        element->SetInnerRML(text.c_str());
     }
 
     void ScriptGlue::Init()

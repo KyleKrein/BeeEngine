@@ -123,13 +123,15 @@ int SystemInterface_SDL::TranslateString(Rml::String& translated, const Rml::Str
 {
     if (!m_Domain)
     {
+        BeeCoreInfo("{} goes without translation", input);
         translated = input;
         return 0;
     }
     translated = m_Domain->Translate(input.c_str()).c_str();
-    if (translated != input)
+    BeeCoreInfo("{} was translated into {}", input, translated);
+    // if (translated != input)
     {
-        return 1;
+        return translated.size();
     }
     return 0;
 }

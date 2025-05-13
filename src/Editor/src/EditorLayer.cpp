@@ -4,6 +4,9 @@
 #include "EditorLayer.h"
 #include "AssetScanner.h"
 #include "ConfigFile.h"
+#include "EditorApplication.h"
+#include "Panels/ProjectSettings.h"
+#include "Platform/RmlUi/RmlUi.hpp"
 #include <Core/Application.h>
 #include <Core/AssetManagement/Asset.h>
 #include <Core/AssetManagement/AssetManager.h>
@@ -13,14 +16,12 @@
 #include <Core/Logging/Log.h>
 #include <Core/TypeDefines.h>
 #include <Debug/Instrumentor.h>
-#include "EditorApplication.h"
 #include <FileSystem/File.h>
 #include <Gui/ImGui/ImGuiExtension.h>
 #include <Gui/MessageBox.h>
 #include <JobSystem/JobScheduler.h>
 #include <Locale/Locale.h>
 #include <Locale/LocalizationGenerator.h>
-#include "Panels/ProjectSettings.h"
 #include <Platform/ImGui/ImGuiController.h>
 #include <Renderer/Texture.h>
 #include <Scene/Components.h>
@@ -36,9 +37,9 @@
 #if defined(BEE_COMPILE_VULKAN)
 #include <backends/imgui_impl_vulkan.h>
 #endif
-#include <imgui.h>
 #include "../../Engine/Assets/EmbeddedResources.h"
 #include <Core/Move.h>
+#include <imgui.h>
 #include <string_view>
 
 namespace BeeEngine::Editor
@@ -298,6 +299,14 @@ namespace BeeEngine::Editor
         DrawBuildProjectPopup();
         ImGui::Begin(m_EditorLocaleDomain.Translate("settings").c_str());
         ImGui::Checkbox("Render physics colliders", &m_RenderPhysicsColliders);
+        if (ImGui::Button("Hot Reload RmlUi"))
+        {
+            RmlUi::HotReloadAll();
+        }
+        if (ImGui::Button("Hot Reload RmlUi Styles"))
+        {
+            RmlUi::HotReloadStyles();
+        }
         if (ImGui::Button("GC Collect"))
         {
             NativeToManaged::GCCollect();

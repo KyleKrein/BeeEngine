@@ -136,6 +136,7 @@ namespace BeeEngine
         static void UI_CloseDocument(uint64_t id);
         static void UI_ShowDocument(uint64_t id);
         static void UI_HideDocument(uint64_t id);
+        static void UI_SetText(uint64_t id, void* elementIdPtr, void* textPtr);
 
     private:
         struct ScriptGlueInternalState;

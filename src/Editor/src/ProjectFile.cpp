@@ -559,6 +559,11 @@ namespace BeeEngine::Editor
                                     BeeCoreInfo("Reloading style sheets");
                                     RmlUi::HotReloadStyles();
                                 }
+                                /*else if (metadata.Type == AssetType::RmlDocument)
+                                {
+                                    BeeCoreInfo("Reloading all UI Documents");
+                                    RmlUi::HotReloadAll();
+                                }*/
                             });
                     }
                     break;

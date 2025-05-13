@@ -64,7 +64,11 @@ Entities:
       Rotation: [0, -0, 0]
       Scale: [1, 1, 1]
     ScriptComponent:
-      FullName: Example.ScoreUI
+      FullName: Example.SetScore
+      Fields:
+        - Name: Score
+          Type: int
+          Data: 0
     HierarchyComponent:
       []
   - Entity: 8997853163735663429
@@ -83,7 +87,7 @@ Entities:
         OrthographicSize: 10
         OrthographicNearClip: -1
         OrthographicFarClip: 1
-        AspectRatio: 1.72635818
+        AspectRatio: 1.8309859
       Primary: true
       FixedAspectRatio: false
     ScriptComponent:
@@ -119,7 +123,7 @@ Entities:
       Tag: Right
     TransformComponent:
       Translation: [4.5573988, 1.98630512, -9.53673009e-07]
-      Rotation: [0, -0, 0.0122172367]
+      Rotation: [0, -0, 0.012217233]
       Scale: [1.30000114, 1.30000114, 0.999998331]
     ScriptComponent:
       FullName: Example.RandomColor
@@ -135,7 +139,7 @@ Entities:
       Tag: Left
     TransformComponent:
       Translation: [-2.37495756, 1.91758609, 0]
-      Rotation: [0, -0, 0.0122172367]
+      Rotation: [0, -0, 0.012217233]
       Scale: [1.30000114, 1.30000114, 0.999998331]
     ScriptComponent:
       FullName: Example.Helper

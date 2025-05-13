@@ -393,6 +393,10 @@ namespace BeeEngine.Internal
 						{
 								s_UI_HideDocument = (delegate* unmanaged<ulong, void>)functionPtr;
 						}
+						else if (functionName == "UI_SetText")
+						{
+								s_UI_SetText = (delegate* unmanaged<ulong, IntPtr, IntPtr, void>)functionPtr;
+						}
 						else
 								throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
 						Debug.WriteLine($"Native function {functionName} registered");

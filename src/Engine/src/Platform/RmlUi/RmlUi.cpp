@@ -1,10 +1,10 @@
 #include "RmlUi.hpp"
 #include "Core/AssetManagement/AssetManager.h"
+#include "Core/Events/EventImplementations.h"
 #include "Gui/RmlDocument.hpp"
+#include "Platform/RmlUi/RmlUi_Platform_SDL.h"
 #include "Platform/RmlUi/interfaces.hpp"
 #include "RmlUi/Core/ElementDocument.h"
-#include "Core/Events/EventImplementations.h"
-#include "Platform/RmlUi/RmlUi_Platform_SDL.h"
 #include <unordered_map>
 namespace BeeEngine::RmlUi
 {
@@ -33,14 +33,11 @@ namespace BeeEngine::RmlUi
     void UpdateAndRender(Rml::Context* context, CommandBuffer& cmd)
     {
         std::unique_lock lock(g_ContextLock);
-        auto* domain = g_Contexts.at(context).Domain;
-        Internal::RmlUi::SetLocaleDomain(domain);
         Internal::RmlUi::SetCurrentContext(context);
         context->Update();
         Internal::RmlUi::BeginRendering(cmd);
         context->Render();
         Internal::RmlUi::EndRendering();
-        Internal::RmlUi::SetLocaleDomain(nullptr);
     }
     Rml::ElementDocument* LoadDocumentPtr(Rml::Context* context, AssetHandle handle)
     {
@@ -91,13 +88,19 @@ namespace BeeEngine::RmlUi
         std::vector<std::pair<Rml::Context*, AssetHandle>> toDelete;
         for (auto& [context, documents] : g_Contexts)
         {
+            Internal::RmlUi::SetLocaleDomain(documents.Domain);
             for (auto& [handle, document] : documents.Documents)
             {
+                bool isShown = (*document)->IsVisible();
                 (*document)->Close();
                 *document = LoadDocumentPtr(context, handle);
                 if (*document == nullptr)
                 {
                     toDelete.emplace_back(context, handle);
+                }
+                else if (isShown)
+                {
+                    (*document)->Show();
                 }
             }
         }
@@ -109,6 +112,15 @@ namespace BeeEngine::RmlUi
     // Main context must be rendered on top and must get all events.
     void SetMainContext(Rml::Context* context)
     {
+        if (context)
+        {
+            auto* domain = g_Contexts.at(context).Domain;
+            Internal::RmlUi::SetLocaleDomain(domain);
+        }
+        else
+        {
+            Internal::RmlUi::SetLocaleDomain(nullptr);
+        }
         g_MainContext = context;
     }
     Rml::Context* GetMainContext()
