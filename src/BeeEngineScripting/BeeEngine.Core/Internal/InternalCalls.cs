@@ -74,6 +74,7 @@ namespace BeeEngine.Internal
 				private static delegate* unmanaged<ulong, void> s_UI_HideDocument = null;
 				private static delegate* unmanaged<ulong, IntPtr, IntPtr, void> s_UI_SetText = null;
 				private static delegate* unmanaged<ulong, IntPtr, int, void> s_UI_SetVisibility = null;
+				private static delegate* unmanaged<ulong, IntPtr, UI.UIEventId, int> s_UI_BindEvent = null;
 
 				enum ReflectionType : UInt32
 				{
@@ -137,7 +138,7 @@ namespace BeeEngine.Internal
 				///
 				/// </summary>
 				[StructLayout(LayoutKind.Sequential)]
-				struct ArrayInfo
+				internal struct ArrayInfo
 				{
 						public IntPtr Ptr;
 						public ulong Length;
@@ -397,9 +398,26 @@ namespace BeeEngine.Internal
 						{
 								s_UI_SetText = (delegate* unmanaged<ulong, IntPtr, IntPtr, void>)functionPtr;
 						}
+						else if (functionName == "UI_BindEvent")
+						{
+								s_UI_BindEvent = (delegate* unmanaged<ulong, IntPtr, UI.UIEventId, int>)functionPtr;
+						}
 						else
 								throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
 						Debug.WriteLine($"Native function {functionName} registered");
+				}
+
+				internal static void UI_EmitEvent(ulong id, IntPtr elementIdPtr, ushort eventType)
+				{
+						GCHandle elementIdHandle = GCHandle.FromIntPtr(elementIdPtr);
+						string? elementId = (string?)elementIdHandle.Target;
+						elementIdHandle.Free();
+						if (elementId is null)
+						{
+								Log.Error("Emitted UI event, but the information is missing/corrupted");
+								return;
+						}
+						UI.Document.EmitEvent(id, elementId, (UI.UIEventId)eventType, new());
 				}
 
 				internal static void Log_Warn(string message)
@@ -815,9 +833,9 @@ namespace BeeEngine.Internal
 				{
 						throw new NotImplementedException();
 				}
-				internal static void UI_BindEvent(ulong handle, string elementId, string eventType, BeeEngine.UI.UIEventCallback callback)
+				internal static bool UI_BindEvent(ulong handle, string elementId, UI.UIEventId eventType)
 				{
-						throw new NotImplementedException();
+						return s_UI_BindEvent(handle, Marshal.StringToHGlobalUni(elementId), eventType) != 0;
 				}
 				internal static string? UI_CreateElement(ulong handle, string parentId, string tagName, string elementId)
 				{

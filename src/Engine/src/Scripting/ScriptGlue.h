@@ -9,6 +9,7 @@
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/UniformBuffer.h"
+#include "RmlUi/Core/ID.h"
 #include "Scene/Components.h"
 #include <cstdint>
 #include <glm/glm.hpp>
@@ -137,6 +138,7 @@ namespace BeeEngine
         static void UI_ShowDocument(uint64_t id);
         static void UI_HideDocument(uint64_t id);
         static void UI_SetText(uint64_t id, void* elementIdPtr, void* textPtr);
+        static int32_t UI_BindEvent(uint64_t id, void* elementIdPtr, Rml::EventId eventType);
 
     private:
         struct ScriptGlueInternalState;

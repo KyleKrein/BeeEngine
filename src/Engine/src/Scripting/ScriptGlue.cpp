@@ -24,6 +24,7 @@
 #include "Renderer/Texture.h"
 #include "Renderer/UniformBuffer.h"
 #include "RmlUi/Core/ElementDocument.h"
+#include "RmlUi/Core/EventListener.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scene/Prefab.h"
@@ -176,6 +177,7 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(UI_ShowDocument);
             BEE_NATIVE_FUNCTION(UI_HideDocument);
             BEE_NATIVE_FUNCTION(UI_SetText);
+            BEE_NATIVE_FUNCTION(UI_BindEvent);
         }
     }
     void ScriptGlue::Log_Warn(void* message)
@@ -821,7 +823,7 @@ namespace BeeEngine
         auto document = RmlUi::LoadDocument(context, asset->Handle);
         UUID id;
         BeeCoreInfo("Created Document {} with id {}", nameString, id);
-        s_Data->RmlDocuments[id] = {.Document=document, .Handle=asset->Handle};
+        s_Data->RmlDocuments[id] = {.Document = document, .Handle = asset->Handle};
         return id;
     }
 
@@ -830,6 +832,7 @@ namespace BeeEngine
         auto* context = RmlUi::GetMainContext();
         if (!context)
         {
+            BeeCoreError("RmlContext is not set");
             return;
         }
         if (id == 0)
@@ -839,8 +842,10 @@ namespace BeeEngine
         }
         std::unique_lock lock(s_Data->RmlDocumentsLock);
         auto& [documentWeakPtr, handle] = s_Data->RmlDocuments.at(id);
-        auto document = documentWeakPtr.lock();
-        RmlUi::UnloadDocument((*document)->GetContext(), handle);
+        if (auto document = documentWeakPtr.lock())
+        {
+            RmlUi::UnloadDocument((*document)->GetContext(), handle);
+        }
         s_Data->RmlDocuments.erase(id);
     }
     void ScriptGlue::UI_ShowDocument(uint64_t id)
@@ -848,6 +853,7 @@ namespace BeeEngine
         auto* context = RmlUi::GetMainContext();
         if (!context)
         {
+            BeeCoreError("RmlContext is not set");
             return;
         }
         if (id == 0)
@@ -864,6 +870,7 @@ namespace BeeEngine
         auto* context = RmlUi::GetMainContext();
         if (!context)
         {
+            BeeCoreError("RmlContext is not set");
             return;
         }
         if (id == 0)
@@ -880,6 +887,7 @@ namespace BeeEngine
         auto* context = RmlUi::GetMainContext();
         if (!context)
         {
+            BeeCoreError("RmlContext is not set");
             return;
         }
         if (id == 0)
@@ -902,6 +910,78 @@ namespace BeeEngine
             return;
         }
         element->SetInnerRML(text.c_str());
+    }
+
+    class UIEventListener final : public Rml::EventListener
+    {
+    public:
+        UIEventListener(std::function<UUID(Rml::ElementDocument*)> getDocumentId)
+            : m_GetDocumentId(BeeMove(getDocumentId))
+        {
+        }
+        /// Process the incoming Event
+        void ProcessEvent(Rml::Event& event) override
+        {
+            auto* element = event.GetCurrentElement();
+            auto* document = element->GetOwnerDocument();
+            UUID documentId = m_GetDocumentId(document);
+            auto eventType = event.GetId();
+            ScriptingEngine::UI_EmitEvent(documentId, element->GetId().c_str(), eventType, {});
+        }
+
+        /// Called when the listener has been attached to a new Element
+        void OnAttach(Rml::Element* element) override {}
+
+        /// Called when the listener has been detached from an Element
+        void OnDetach(Rml::Element* element) override {}
+
+    private:
+        std::function<UUID(Rml::ElementDocument*)> m_GetDocumentId;
+    };
+
+    int32_t ScriptGlue::UI_BindEvent(uint64_t id, void* elementIdPtr, Rml::EventId eventType)
+    {
+        auto* context = RmlUi::GetMainContext();
+        if (!context)
+        {
+            BeeCoreError("RmlContext is not set");
+            return 0;
+        }
+        if (id == 0)
+        {
+            BeeCoreWarn("Trying to use non existing document");
+            return 0;
+        }
+        if (!elementIdPtr)
+        {
+            return 0;
+        }
+        auto elementId = NativeToManaged::StringGetFromManagedString(elementIdPtr);
+        std::unique_lock lock(s_Data->RmlDocumentsLock);
+        auto document = s_Data->RmlDocuments.at(id).Document.lock();
+        auto* element = (*document)->GetElementById(elementId.c_str());
+        if (!element)
+        {
+            BeeCoreError("Element {} does not exist", elementId);
+            return 0;
+        }
+        static UIEventListener eventListener{[](Rml::ElementDocument* documentPtr) -> UUID
+                                             {
+                                                 std::unique_lock lock(s_Data->RmlDocumentsLock);
+                                                 for (auto& [id, document] : s_Data->RmlDocuments)
+                                                 {
+                                                     auto documentShared = document.Document.lock();
+                                                     if (*documentShared == documentPtr)
+                                                     {
+                                                         return id;
+                                                     }
+                                                 }
+                                                 BeeExpects(false &&
+                                                            "Impossible. There must always be a found document");
+                                                 std::unreachable();
+                                             }};
+        element->AddEventListener(eventType, &eventListener);
+        return 1;
     }
 
     void ScriptGlue::Init()

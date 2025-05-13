@@ -9,7 +9,7 @@ body
     padding: 20px;
     box-sizing: border-box;
     font-family: Open Sans;
-    font-size: 2vw;
+    font-size: 3vw;
 }
 
 #hud-container

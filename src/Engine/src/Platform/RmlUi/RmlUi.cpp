@@ -131,6 +131,8 @@ namespace BeeEngine::RmlUi
     bool HandleEvents(Rml::Context* context, EventDispatcher& event, const std::function<float(float)>& getPhysicalSize)
     {
         BeeExpects(context);
+        auto* prevContext = GetMainContext();
+        SetMainContext(context);
         bool wasHandled = event.IsHandled();
         event.Dispatch<MouseButtonReleasedEvent>(
             [context](MouseButtonReleasedEvent& event)
@@ -397,6 +399,7 @@ namespace BeeEngine::RmlUi
             { return context->ProcessKeyUp(convertKey(event.GetKey()), RmlSDL::GetKeyModifierState()); });
         event.Dispatch<CharTypedEvent>([context](CharTypedEvent& event)
                                        { return context->ProcessTextInput(Rml::String{event.AsString().c_str()}); });
+        SetMainContext(prevContext);
         return !wasHandled && event.IsHandled();
     }
 } // namespace BeeEngine::RmlUi
