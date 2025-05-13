@@ -23,6 +23,7 @@
 #include "Renderer/RenderingQueue.h"
 #include "Renderer/Texture.h"
 #include "Renderer/UniformBuffer.h"
+#include "RmlUi/Core/ElementDocument.h"
 #include "Scene/Components.h"
 #include "Scene/Entity.h"
 #include "Scene/Prefab.h"
@@ -169,6 +170,11 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(UniformBuffer_Destroy);
             BEE_NATIVE_FUNCTION(BindingSet_Create);
             BEE_NATIVE_FUNCTION(BindingSet_Destroy);
+
+            BEE_NATIVE_FUNCTION(UI_CreateDocument);
+            BEE_NATIVE_FUNCTION(UI_CloseDocument);
+            BEE_NATIVE_FUNCTION(UI_ShowDocument);
+            BEE_NATIVE_FUNCTION(UI_HideDocument);
         }
     }
     void ScriptGlue::Log_Warn(void* message)
@@ -617,6 +623,8 @@ namespace BeeEngine
         Jobs::SpinLock AllocatedUniformBuffersLock;
         std::unordered_map<BindingSet*, Scope<BindingSet>> AllocatedBindingSets;
         Jobs::SpinLock AllocatedBindingSetsLock;
+        std::unordered_map<UUID, WeakRef<Rml::ElementDocument*>> RmlDocuments;
+        Jobs::SpinLock RmlDocumentsLock;
     };
 
     BindingSet* ScriptGlue::GetBindingSetForModelType(ScriptGlue::ModelType modelType, AssetHandle* handle)
@@ -791,7 +799,7 @@ namespace BeeEngine
         s_Data->AllocatedBindingSets.erase(bindingSet);
     }
 
-    void* ScriptGlue::UI_CreateDocument(void* name)
+    uint64_t ScriptGlue::UI_CreateDocument(void* name)
     {
         auto* context = RmlUi::GetMainContext();
         if (!context)
@@ -804,7 +812,62 @@ namespace BeeEngine
         {
             return 0;
         }
-        return RmlUi::LoadDocument(context, asset->Handle).lock().get();
+        std::unique_lock lock(s_Data->RmlDocumentsLock);
+        auto document = RmlUi::LoadDocument(context, asset->Handle);
+        UUID id;
+        BeeCoreInfo("Created Document {} with id {}", nameString, id);
+        s_Data->RmlDocuments[id] = document;
+        return id;
+    }
+
+    void ScriptGlue::UI_CloseDocument(uint64_t id)
+    {
+        auto* context = RmlUi::GetMainContext();
+        if (!context)
+        {
+            return;
+        }
+        if (id == 0)
+        {
+            BeeCoreWarn("Trying to close non existing document");
+            return;
+        }
+        std::unique_lock lock(s_Data->RmlDocumentsLock);
+        auto document = s_Data->RmlDocuments.at(id).lock();
+        (*document)->Close();
+        s_Data->RmlDocuments.erase(id);
+    }
+    void ScriptGlue::UI_ShowDocument(uint64_t id)
+    {
+        auto* context = RmlUi::GetMainContext();
+        if (!context)
+        {
+            return;
+        }
+        if (id == 0)
+        {
+            BeeCoreWarn("Trying to use non existing document");
+            return;
+        }
+        std::unique_lock lock(s_Data->RmlDocumentsLock);
+        auto document = s_Data->RmlDocuments.at(id).lock();
+        (*document)->Show();
+    }
+    void ScriptGlue::UI_HideDocument(uint64_t id)
+    {
+        auto* context = RmlUi::GetMainContext();
+        if (!context)
+        {
+            return;
+        }
+        if (id == 0)
+        {
+            BeeCoreWarn("Trying to use non existing document");
+            return;
+        }
+        std::unique_lock lock(s_Data->RmlDocumentsLock);
+        auto document = s_Data->RmlDocuments.at(id).lock();
+        (*document)->Hide();
     }
 
     void ScriptGlue::Init()

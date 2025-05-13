@@ -68,19 +68,19 @@ namespace BeeEngine::RmlUi
         {
             return {};
         }
-        g_Contexts.at(context)[handle] = CreateRef<Rml::ElementDocument*>(document);
-        return g_Contexts.at(context).at(handle);
+        g_Contexts.at(context).Documents[handle] = CreateRef<Rml::ElementDocument*>(document);
+        return g_Contexts.at(context).Documents.at(handle);
     }
     void UnloadDocument(Rml::Context* context, AssetHandle handle)
     {
-        (*(g_Contexts.at(context).at(handle)))->Close();
-        g_Contexts.at(context).erase(handle);
+        (*(g_Contexts.at(context).Documents.at(handle)))->Close();
+        g_Contexts.at(context).Documents.erase(handle);
     }
     void HotReloadStyles()
     {
         for (auto& [context, documents] : g_Contexts)
         {
-            for (auto& [handle, document] : documents)
+            for (auto& [handle, document] : documents.Documents)
             {
                 (*document)->ReloadStyleSheet();
             }
@@ -91,7 +91,7 @@ namespace BeeEngine::RmlUi
         std::vector<std::pair<Rml::Context*, AssetHandle>> toDelete;
         for (auto& [context, documents] : g_Contexts)
         {
-            for (auto& [handle, document] : documents)
+            for (auto& [handle, document] : documents.Documents)
             {
                 (*document)->Close();
                 *document = LoadDocumentPtr(context, handle);
@@ -103,7 +103,7 @@ namespace BeeEngine::RmlUi
         }
         for (auto& [context, handle] : toDelete)
         {
-            g_Contexts.at(context).erase(handle);
+            g_Contexts.at(context).Documents.erase(handle);
         }
     }
     // Main context must be rendered on top and must get all events.

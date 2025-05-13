@@ -1,8 +1,8 @@
 using BeeEngine.Internal;
 
 namespace BeeEngine.UI;
-delegate void UIEventCallback();
-class Document
+public delegate void UIEventCallback();
+public class Document
 {
 		public Document(string name)
 		{
@@ -85,5 +85,5 @@ class Document
 		{
 				Log.AssertAndThrow(m_Handle != 0, "Document is invalid");
 		}
-		private IntPtr m_Handle;
+		private ulong m_Handle;
 }

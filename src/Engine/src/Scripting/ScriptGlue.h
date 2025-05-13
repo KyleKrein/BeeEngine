@@ -132,7 +132,10 @@ namespace BeeEngine
         static BindingSet* BindingSet_Create(ArrayInfo elements);
         static void BindingSet_Destroy(BindingSet* bindingSet);
 
-        static void* UI_CreateDocument(void* name);
+        static uint64_t UI_CreateDocument(void* name);
+        static void UI_CloseDocument(uint64_t id);
+        static void UI_ShowDocument(uint64_t id);
+        static void UI_HideDocument(uint64_t id);
 
     private:
         struct ScriptGlueInternalState;

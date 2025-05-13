@@ -67,6 +67,14 @@ namespace BeeEngine.Internal
 				private static delegate* unmanaged<IntPtr, IntPtr, uint, void> s_UniformBuffer_SetData = null;
 				private static delegate* unmanaged<ArrayInfo, IntPtr> s_BindingSet_Create = null;
 				private static delegate* unmanaged<IntPtr, void> s_BindingSet_Destroy = null;
+
+				private static delegate* unmanaged<IntPtr, ulong> s_UI_CreateDocument = null;
+				private static delegate* unmanaged<ulong, void> s_UI_CloseDocument = null;
+				private static delegate* unmanaged<ulong, void> s_UI_ShowDocument = null;
+				private static delegate* unmanaged<ulong, void> s_UI_HideDocument = null;
+				private static delegate* unmanaged<ulong, IntPtr, IntPtr, void> s_UI_SetText = null;
+				private static delegate* unmanaged<ulong, IntPtr, int, void> s_UI_SetVisibility = null;
+
 				enum ReflectionType : UInt32
 				{
 						None = 0x00,
@@ -368,6 +376,22 @@ namespace BeeEngine.Internal
 						else if (functionName == "BindingSet_Destroy")
 						{
 								s_BindingSet_Destroy = (delegate* unmanaged<IntPtr, void>)functionPtr;
+						}
+						else if (functionName == "UI_CreateDocument")
+						{
+								s_UI_CreateDocument = (delegate* unmanaged<IntPtr, ulong>)functionPtr;
+						}
+						else if (functionName == "UI_CloseDocument")
+						{
+								s_UI_CloseDocument = (delegate* unmanaged<ulong, void>)functionPtr;
+						}
+						else if (functionName == "UI_ShowDocument")
+						{
+								s_UI_ShowDocument = (delegate* unmanaged<ulong, void>)functionPtr;
+						}
+						else if (functionName == "UI_HideDocument")
+						{
+								s_UI_HideDocument = (delegate* unmanaged<ulong, void>)functionPtr;
 						}
 						else
 								throw new NotImplementedException($"Function {functionName} is not implemented in C# on Engine side");
@@ -755,44 +779,57 @@ namespace BeeEngine.Internal
 						s_BindingSet_Destroy(bindingSet);
 				}
 
-				internal static IntPtr UI_CreateDocument(string name)
+				internal static ulong UI_CreateDocument(string name)
 				{
+						return s_UI_CreateDocument(Marshal.StringToHGlobalUni(name));
 				}
-				internal static void UI_ShowDocument(IntPtr handle)
+				internal static void UI_ShowDocument(ulong handle)
 				{
+						s_UI_ShowDocument(handle);
 				}
-				internal static void UI_HideDocument(IntPtr handle)
+				internal static void UI_HideDocument(ulong handle)
 				{
+						s_UI_HideDocument(handle);
 				}
-				internal static void UI_CloseDocument(IntPtr handle)
+				internal static void UI_CloseDocument(ulong handle)
 				{
+						s_UI_CloseDocument(handle);
 				}
-				internal static void UI_SetText(IntPtr handle, string elementId, string text)
+				internal static void UI_SetText(ulong handle, string elementId, string text)
 				{
+						s_UI_SetText(handle, Marshal.StringToHGlobalUni(elementId), Marshal.StringToHGlobalUni(text));
 				}
-				internal static void UI_SetVisibility(IntPtr handle, string elementId, bool visible)
+				internal static void UI_SetVisibility(ulong handle, string elementId, bool visible)
 				{
+						s_UI_SetVisibility(handle, Marshal.StringToHGlobalUni(elementId), visible ? 1 : 0);
 				}
-				internal static void UI_SetClass(IntPtr handle, string elementId, string className, bool add)
+				internal static void UI_SetClass(ulong handle, string elementId, string className, bool add)
 				{
+						throw new NotImplementedException();
 				}
-				internal static void UI_SetAttribute(IntPtr handle, string elementId, string attributeName, string value)
+				internal static void UI_SetAttribute(ulong handle, string elementId, string attributeName, string value)
 				{
+						throw new NotImplementedException();
 				}
-				internal static void UI_BindEvent(IntPtr handle, string elementId, string eventType, BeeEngine.UI.UIEventCallback callback)
+				internal static void UI_BindEvent(ulong handle, string elementId, string eventType, BeeEngine.UI.UIEventCallback callback)
 				{
+						throw new NotImplementedException();
 				}
-				internal static string? UI_CreateElement(IntPtr handle, string parentId, string tagName, string elementId)
+				internal static string? UI_CreateElement(ulong handle, string parentId, string tagName, string elementId)
 				{
+						throw new NotImplementedException();
 				}
-				internal static void UI_DeleteElement(IntPtr handle, string elementId)
+				internal static void UI_DeleteElement(ulong handle, string elementId)
 				{
+						throw new NotImplementedException();
 				}
-				internal static void UI_SetStyle(IntPtr handle, string elementId, string property, string value)
+				internal static void UI_SetStyle(ulong handle, string elementId, string property, string value)
 				{
+						throw new NotImplementedException();
 				}
-				internal static void UI_ClearChildren(IntPtr handle, string elementId)
+				internal static void UI_ClearChildren(ulong handle, string elementId)
 				{
+						throw new NotImplementedException();
 				}
 		}
 }

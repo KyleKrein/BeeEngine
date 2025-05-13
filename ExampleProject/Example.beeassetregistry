@@ -20,6 +20,10 @@ Assets:
     Type: AssetType::Prefab
     Handle: 4826114485800703668
     FilePath: Prefabs/Bee Generator Renderer.beeprefab
+  - Name: rml
+    Type: AssetType::RcssStyle
+    Handle: 6362397264285044309
+    FilePath: UI/rml.rcss
   - Name: PhysicsTest
     Type: AssetType::Scene
     Handle: 7586138150448856676
@@ -64,6 +68,14 @@ Assets:
     Type: AssetType::Scene
     Handle: 14163096334939169538
     FilePath: Scenes/Textures.beescene
+  - Name: hello_world
+    Type: AssetType::RmlDocument
+    Handle: 15636435155331079861
+    FilePath: UI/hello_world.rml
+  - Name: window
+    Type: AssetType::RcssStyle
+    Handle: 16615247419220128772
+    FilePath: UI/window.rcss
   - Name: Bee Prefab
     Type: AssetType::Prefab
     Handle: 16877448585992915076

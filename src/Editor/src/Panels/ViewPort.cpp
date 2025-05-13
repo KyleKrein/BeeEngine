@@ -58,6 +58,10 @@ namespace BeeEngine::Editor
             {
                 m_WorkingDirectory = newProject->FolderPath.get();
                 m_GameDomain = &newProject->GetProjectLocaleDomain();
+                m_GameContext = RmlUi::CreateContext(
+                    newProject->Name(),
+                    {PhysicalSize(m_Width), PhysicalSize(m_Height)},
+                    &newProject->GetProjectLocaleDomain()); // FIXME: Old context doesn't get deleted
             });
         FrameBufferPreferences preferences;
         preferences.Width = PhysicalSize(m_Width);
