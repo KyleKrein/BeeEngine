@@ -113,16 +113,13 @@ namespace BeeEngine
         {
             std::ostringstream script;
             script << "using BeeEngine;\n";
-            script << "using System;\n";
             script << "\n";
-            script << "namespace " << ProjectName << "\n";
+            script << "namespace " << ProjectName << ";\n";
+            script << "public class " << scriptName << ": Behaviour\n";
             script << "{\n";
-            script << "\tpublic class " << scriptName << ": Behaviour\n";
+            script << "\tvoid OnUpdate()\n";
             script << "\t{\n";
-            script << "\t\tvoid OnUpdate()\n";
-            script << "\t\t{\n";
-            script << "\t\t\t// TODO: Add your code here\n";
-            script << "\t\t}\n";
+            script << "\t\t// TODO: Add your code here\n";
             script << "\t}\n";
             script << "}\n";
             return String{script.str()};

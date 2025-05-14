@@ -147,6 +147,7 @@ namespace BeeEngine
             BEE_NATIVE_FUNCTION(Asset_Unload);
             BEE_NATIVE_FUNCTION(Asset_IsValid);
             BEE_NATIVE_FUNCTION(Asset_IsLoaded);
+            BEE_NATIVE_FUNCTION(Asset_GetByName);
 
             BEE_NATIVE_FUNCTION(Physics2D_CastRay);
 
@@ -357,6 +358,29 @@ namespace BeeEngine
     {
         BeeCoreTrace("{0}", std::source_location::current().function_name());
         return AssetManager::IsAssetHandleValid(*handle);
+    }
+    int32_t ScriptGlue::Asset_GetByName(AssetHandle* outHandle, void* nameStr, AssetType type)
+    {
+        BeeCoreTrace("{0}", std::source_location::current().function_name());
+        auto name = NativeToManaged::StringGetFromManagedString(nameStr);
+        try
+        {
+            auto asset = AssetManager::GetAssetRef<Asset>(name);
+            if (!asset)
+            {
+                return 0;
+            }
+            if (asset->GetType() != type)
+            {
+                return 0;
+            }
+            *outHandle = asset->Handle;
+        }
+        catch (...)
+        {
+            return 0;
+        }
+        return 1;
     }
 
     uint64_t ScriptGlue::Entity_GetParent(uint64_t id)
@@ -862,8 +886,10 @@ namespace BeeEngine
             return;
         }
         std::unique_lock lock(s_Data->RmlDocumentsLock);
-        auto document = s_Data->RmlDocuments.at(id).Document.lock();
-        (*document)->Show();
+        if (auto document = s_Data->RmlDocuments.at(id).Document.lock())
+        {
+            (*document)->Show();
+        }
     }
     void ScriptGlue::UI_HideDocument(uint64_t id)
     {
@@ -879,8 +905,10 @@ namespace BeeEngine
             return;
         }
         std::unique_lock lock(s_Data->RmlDocumentsLock);
-        auto document = s_Data->RmlDocuments.at(id).Document.lock();
-        (*document)->Hide();
+        if (auto document = s_Data->RmlDocuments.at(id).Document.lock())
+        {
+            (*document)->Hide();
+        }
     }
     void ScriptGlue::UI_SetText(uint64_t id, void* elementIdPtr, void* textPtr)
     {
@@ -902,14 +930,16 @@ namespace BeeEngine
         auto elementId = NativeToManaged::StringGetFromManagedString(elementIdPtr);
         auto text = NativeToManaged::StringGetFromManagedString(textPtr);
         std::unique_lock lock(s_Data->RmlDocumentsLock);
-        auto document = s_Data->RmlDocuments.at(id).Document.lock();
-        auto* element = (*document)->GetElementById(elementId.c_str());
-        if (!element)
+        if (auto document = s_Data->RmlDocuments.at(id).Document.lock())
         {
-            BeeCoreError("Element {} does not exist", elementId);
-            return;
+            auto* element = (*document)->GetElementById(elementId.c_str());
+            if (!element)
+            {
+                BeeCoreError("Element {} does not exist", elementId);
+                return;
+            }
+            element->SetInnerRML(text.c_str());
         }
-        element->SetInnerRML(text.c_str());
     }
 
     class UIEventListener final : public Rml::EventListener
@@ -971,7 +1001,7 @@ namespace BeeEngine
                                                  for (auto& [id, document] : s_Data->RmlDocuments)
                                                  {
                                                      auto documentShared = document.Document.lock();
-                                                     if (*documentShared == documentPtr)
+                                                     if (documentShared && *documentShared == documentPtr)
                                                      {
                                                          return id;
                                                      }

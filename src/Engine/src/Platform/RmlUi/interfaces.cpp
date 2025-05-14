@@ -270,17 +270,30 @@ namespace BeeEngine::Internal::RmlUi
         Path path{pathStr};
         BeeCoreInfo("Open {}", path);
         String content;
-        if (ResourceManager::IsRcssExtension(path.GetExtension()))
+        try
         {
-            content = AssetManager::GetAsset<Rcss>(path).GetFileContent();
+            if (ResourceManager::IsRcssExtension(path.GetExtension()))
+            {
+                content = AssetManager::GetAsset<Rcss>(path).GetFileContent();
+            }
+            else if (ResourceManager::IsRmlExtension(path.GetExtension()))
+            {
+                content = AssetManager::GetAsset<RmlDocument>(path).GetFileContent();
+            }
+            else
+            {
+                content = File::ReadFile(path);
+            }
         }
-        else if (ResourceManager::IsRmlExtension(path.GetExtension()))
+        catch (const std::bad_cast& exception)
         {
-            content = AssetManager::GetAsset<RmlDocument>(path).GetFileContent();
+            BeeCoreWarn("Unable to load {}. Check, if the name of the asset is correct", pathStr);
+            return 0;
         }
-        else
+        catch (...)
         {
-            content = File::ReadFile(path);
+            BeeCoreError("Unknown error when trying to load {}", pathStr);
+            return 0;
         }
         if (content.empty())
         {

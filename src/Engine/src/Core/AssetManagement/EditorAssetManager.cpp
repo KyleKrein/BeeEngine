@@ -14,9 +14,8 @@ namespace BeeEngine
 {
     [[nodiscard]] Ref<Asset> EditorAssetManager::GetAssetRef(const Path& path)
     {
+        bool hasExtension = !path.GetExtension().IsEmpty();
         auto name = path.GetFileNameWithoutExtension().AsUTF8();
-        BeeCoreInfo("{}", name);
-        AssetType type = ResourceManager::GetAssetTypeFromExtension(path.GetExtension());
         auto* handlePtr = GetAssetHandleByName(name);
         if (!handlePtr)
         {
@@ -24,7 +23,8 @@ namespace BeeEngine
             {
                 BeeCoreWarn("Trying to load not registered asset {} . If you want to edit asset registry, call "
                             "SetEditedAssetRegistryID() with your AssetRegistry ID. Note: it's not for production, "
-                            "only for development", path);
+                            "only for development",
+                            path);
                 return nullptr;
             }
             AssetHandle handle = {m_EditedRegistryID};
@@ -32,8 +32,12 @@ namespace BeeEngine
             return GetAssetRef(handle);
         }
         auto handle = *handlePtr;
-        BeeExpects(GetAssetMetadata(handle).Type == type &&
-                   "There should be only one file with this filename. (Unique name needed)");
+        if (hasExtension)
+        {
+            AssetType type = ResourceManager::GetAssetTypeFromExtension(path.GetExtension());
+            BeeExpects(GetAssetMetadata(handle).Type == type &&
+                       "There should be only one file with this filename. (Unique name needed)");
+        }
         return GetAssetRef(handle);
     }
     Asset* EditorAssetManager::GetAsset(const Path& path)

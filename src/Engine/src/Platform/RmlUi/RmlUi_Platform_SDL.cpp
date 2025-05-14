@@ -129,9 +129,9 @@ int SystemInterface_SDL::TranslateString(Rml::String& translated, const Rml::Str
     }
     translated = m_Domain->Translate(input.c_str()).c_str();
     BeeCoreInfo("{} was translated into {}", input, translated);
-    // if (translated != input)
+    if (translated != input)
     {
-        return translated.size();
+        return 1;
     }
     return 0;
 }

@@ -40,6 +40,7 @@ namespace BeeEngine.Internal
 				private static delegate* unmanaged<void*, void> s_Asset_Unload = null;
 				private static delegate* unmanaged<void*, int> s_Asset_IsValid = null;
 				private static delegate* unmanaged<void*, int> s_Asset_IsLoaded = null;
+				private static delegate* unmanaged<void*, void*, ushort, int> s_Asset_GetByName = null;
 				private static delegate* unmanaged<void*, void*, ulong> s_Physics2D_CastRay = null;
 				private static delegate* unmanaged<IntPtr> s_Locale_GetLocale = null;
 				private static delegate* unmanaged<IntPtr, void> s_Locale_SetLocale = null;
@@ -282,6 +283,10 @@ namespace BeeEngine.Internal
 						{
 								s_Asset_IsLoaded = (delegate* unmanaged<void*, int>)functionPtr;
 						}
+						else if (functionName == "Asset_GetByName")
+						{
+								s_Asset_GetByName = (delegate* unmanaged<void*, void*, ushort, int>)functionPtr;
+						}
 						else if (functionName == "Physics2D_CastRay")
 						{
 								s_Physics2D_CastRay = (delegate* unmanaged<void*, void*, ulong>)functionPtr;
@@ -439,6 +444,26 @@ namespace BeeEngine.Internal
 				{
 						s_Log_Trace(Marshal.StringToHGlobalUni(message));
 				}
+
+				internal enum AssetType : ushort
+				{
+						None = 0,
+						Texture2D = 1,
+						Font = 2,
+						Prefab = 3,
+						Scene = 4,
+						Mesh = 5,
+						RmlDocument = 6,
+						RcssStyle = 7,
+						MeshSource = 10,
+
+						/*Shader = 3,
+						Mesh = 4,
+						Material = 5,
+						Model = 6,*/
+						Localized = 100,
+				}
+
 				/// <summary>
 				/// Enum for component types
 				/// IMPORTANT: If this enum is changed, the corresponding C++ enum in
@@ -615,6 +640,13 @@ namespace BeeEngine.Internal
 				internal static bool Asset_IsLoaded(ref AssetHandle handle)
 				{
 						return s_Asset_IsLoaded(Unsafe.AsPointer(ref handle)) == 1;
+				}
+				internal static bool Asset_GetByName(string name, AssetType type, out AssetHandle outHandle)
+				{
+						AssetHandle handle;
+						bool result = s_Asset_GetByName(&handle, (void*)Marshal.StringToHGlobalUni(name), (ushort)type) != 0;
+						outHandle = handle;
+						return result;
 				}
 
 				internal static ulong Physics2D_CastRay(ref Vector2 start, ref Vector2 end)

@@ -103,6 +103,7 @@ namespace BeeEngine
         static void Asset_Unload(AssetHandle* handle);
         static int32_t Asset_IsLoaded(AssetHandle* handle);
         static int32_t Asset_IsValid(AssetHandle* handle);
+        static int32_t Asset_GetByName(AssetHandle* outHandle, void* nameStr, AssetType type);
         static uint64_t Physics2D_CastRay(glm::vec2* start, glm::vec2* end);
         static void* Locale_GetLocale();
         static void Locale_SetLocale(void* locale);
