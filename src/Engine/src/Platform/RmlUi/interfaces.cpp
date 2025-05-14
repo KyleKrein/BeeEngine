@@ -216,11 +216,20 @@ namespace BeeEngine::Internal::RmlUi
 
     Rml::TextureHandle RenderInterface::LoadTexture(Rml::Vector2i& texture_dimensions, const Rml::String& source)
     {
-        auto* asset = &AssetManager::GetAsset<Texture2D>(Path{source.c_str()}, Locale::Localization::Default);
-        if (!asset)
+        Ref<Texture2D> assetRef;
+        try
+        {
+            assetRef = AssetManager::GetAssetRef<Texture2D>(Path{source.c_str()}, Locale::Localization::Default);
+        }
+        catch (...)
         {
             return 0;
         }
+        if (!assetRef)
+        {
+            return 0;
+        }
+        auto* asset = assetRef.get();
         Rml::TextureHandle result = UUID{};
         BeeExpects(!g_Assets.contains(result) &&
                    "This should never happen. If it happens, your are unlucky. Also it can mean, that using one range "

@@ -8,9 +8,9 @@
 #include "IAssetManager.h"
 #include "Locale/Locale.h"
 #include "LocalizedAsset.h"
+#include <span>
 #include <type_traits>
 #include <utility>
-#include <span>
 
 namespace BeeEngine
 {
@@ -67,6 +67,10 @@ namespace BeeEngine
         {
             BeeExpects(s_AssetManager);
             Ref<Asset> asset = s_AssetManager->GetAssetRef(path);
+            if (!asset)
+            {
+                return nullptr;
+            }
             if (asset->GetType() == AssetType::Localized)
             {
                 return std::dynamic_pointer_cast<T>(
