@@ -16,6 +16,7 @@ namespace BeeEngine::Internal
         ~VulkanMaterial() override;
 
         [[nodiscard]] InstancedBuffer& GetInstancedBuffer() const override;
+        size_t GetInputDataSize() const override { return m_Pipeline->GetInputDataSize(); }
         void Bind(CommandBuffer& cmd) override { m_Pipeline->Bind(cmd); }
 
         [[nodiscard]] Pipeline& GetPipeline() const { return *m_Pipeline; }

@@ -61,12 +61,15 @@ namespace BeeEngine
         {
             Category = static_cast<EventCategory>(EventCategory::Keyboard & EventCategory::Input);
             m_Character = character;
+            m_String = ConvertUTF32ToUTF8({character});
             m_Type = EventType::KeyTyped;
         }
         [[nodiscard]] char32_t GetCharacter() const { return m_Character; }
+        const String& AsString() const { return m_String; }
 
     private:
         char32_t m_Character;
+        String m_String;
     };
 
     struct MouseButtonPressedEvent : public Event

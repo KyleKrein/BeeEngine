@@ -7,6 +7,7 @@
 #include "FontImporter.h"
 #include "LocalizedAsset.h"
 #include "PrefabImporter.h"
+#include "RmlImporter.hpp"
 #include "SceneImporter.h"
 #include "TextureImporter.h"
 #include <map>
@@ -20,6 +21,8 @@ namespace BeeEngine
         {AssetType::Texture2D, TextureImporter::ImportTexture2D},
         {AssetType::Font, FontImporter::ImportFont},
         {AssetType::Prefab, PrefabImporter::ImportPrefab},
+        {AssetType::RmlDocument, RmlImporter::ImportRmlDocument},
+        {AssetType::RcssStyle, RmlImporter::ImportRcss},
 
         {AssetType::MeshSource, MeshSourceImporter::ImportMeshSource},
 

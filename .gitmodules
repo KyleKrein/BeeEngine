@@ -47,3 +47,6 @@
 [submodule "src/Engine/vendor/ImGuizmo/imguizmo"]
 	path = src/Engine/vendor/ImGuizmo/imguizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo.git
+[submodule "src/Engine/vendor/RmlUi"]
+	path = src/Engine/vendor/RmlUi
+	url = https://github.com/mikke89/RmlUi

@@ -44,7 +44,7 @@ namespace BeeEngine
         }
     }
 
-    Ref<Mesh> Mesh::Create(void* verticesData, size_t size, size_t vertexCount, const std::vector<uint32_t>& indices)
+    Ref<Mesh> Mesh::Create(std::span<const byte> verticesData, size_t vertexCount, const std::vector<uint32_t>& indices)
     {
         switch (Renderer::GetAPI())
         {
@@ -54,7 +54,7 @@ namespace BeeEngine
 #endif
 #if defined(BEE_COMPILE_VULKAN)
             case Vulkan:
-                return CreateRef<Internal::VulkanMesh>(verticesData, size, vertexCount, indices);
+                return CreateRef<Internal::VulkanMesh>(verticesData.data(), verticesData.size(), vertexCount, indices);
 #endif
             default:
                 BeeCoreError("Unknown API!");

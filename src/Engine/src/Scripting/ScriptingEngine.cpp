@@ -54,6 +54,8 @@ namespace BeeEngine
 
         MClass* InternalCallsClass = nullptr;
 
+        MMethod* UI_EmitEventMethod = nullptr;
+
         MField* DeltaTimeField = nullptr;
         MField* TotalTimeField = nullptr;
     };
@@ -74,6 +76,7 @@ namespace BeeEngine
     REFLECT_STRUCT_MEMBER(PrefabClass)
     REFLECT_STRUCT_MEMBER(SceneClass)
     REFLECT_STRUCT_MEMBER(InternalCallsClass)
+    REFLECT_STRUCT_MEMBER(UI_EmitEventMethod)
     REFLECT_STRUCT_MEMBER(DeltaTimeField)
     REFLECT_STRUCT_MEMBER(TotalTimeField)
     REFLECT_STRUCT_END()
@@ -128,45 +131,11 @@ namespace BeeEngine
         // s_Data.EntityWasRemovedMethod = nullptr;
         NativeToManaged::GCCollect();
         ScriptGlue::Shutdown();
-        MonoShutdown();
     }
 
     bool ScriptingEngine::IsInitialized()
     {
         return s_Data.AppDomain != 0;
-    }
-
-    void ScriptingEngine::InitMono()
-    {
-        /*mono_set_assemblies_path("mono/lib");
-        if(s_Data.EnableDebugging)
-        {
-            const char* argv[2] = {
-                    "--debugger-agent=transport=dt_socket,address=127.0.0.1:2550,server=y,suspend=n,loglevel=3,logfile=MonoDebugger.log",
-                    "--soft-breakpoints"
-            };
-            mono_jit_parse_options(2, (char**)argv);
-            mono_debug_init(MONO_DEBUG_FORMAT_MONO);
-        }
-
-        if constexpr (Application::GetOsPlatform() != OSPlatform::Windows)
-        {
-            //mono_set_crash_chaining(true);
-            mono_config_parse("config");
-        }
-
-        s_Data.RootDomain = mono_jit_init("BeeEngineJITRuntime");
-        BeeCoreAssert(s_Data.RootDomain, "Failed to initialize Mono JIT!");
-
-        if(s_Data.EnableDebugging)
-        {
-            mono_debug_domain_create(s_Data.RootDomain);
-        }
-        mono_thread_set_main(mono_thread_current());
-
-        CreateAppDomain();
-
-        BeeCoreInfo("Mono JIT initialized successfully!");*/
     }
 
     void ScriptingEngine::CreateAppDomain()
@@ -182,20 +151,6 @@ namespace BeeEngine
         s_Data.Assemblies[name] = {
             s_Data.AppDomain, path.IsAbsolute() ? path : path.GetAbsolutePath(), debugSymbolsPath};
         return s_Data.Assemblies.at(name);
-    }
-
-    void ScriptingEngine::MonoShutdown()
-    {
-        /*
-        MUtils::RegisterThread();
-        mono_domain_set(mono_get_root_domain(), false);
-        mono_domain_unload(s_Data.AppDomain);
-        mono_jit_cleanup(s_Data.RootDomain);
-
-        s_Data.RootDomain = nullptr;
-        s_Data.AppDomain = nullptr;
-        BeeCoreInfo("Mono JIT shutdown successfully!");
-        */
     }
     bool ScriptingEngine::IsGameScript(const MClass& klass)
     {
@@ -338,7 +293,10 @@ namespace BeeEngine
             }
             if (mClass->GetName() == "InternalCalls")
             {
+                static constexpr auto flags = static_cast<ManagedBindingFlags>(
+                    ManagedBindingFlags_Public | ManagedBindingFlags_Static | ManagedBindingFlags_NonPublic);
                 s_Data.Handles.InternalCallsClass = mClass.get();
+                s_Data.Handles.UI_EmitEventMethod = &mClass->GetMethod("UI_EmitEvent", flags);
             }
 
             if (AreAllManagedHandlesLoaded())
@@ -380,7 +338,6 @@ namespace BeeEngine
     }
     void ScriptingEngine::OnEntityDestroyed(UUID uuid)
     {
-        // MonoException *exc = nullptr;
         bool contains = s_Data.EntityObjects.contains(uuid);
         if (contains)
         {
@@ -388,14 +345,6 @@ namespace BeeEngine
         }
         void* params[] = {&uuid};
         s_Data.Handles.EntityWasRemovedMethod->InvokeStatic(params);
-        // s_Data.EntityWasRemovedMethod(uuid, &exc);
-        // if(exc)
-        {
-            // MonoString* msg = mono_object_to_string(reinterpret_cast<MonoObject*>(exc), nullptr);
-            // char* message = mono_string_to_utf8(msg);
-            // BeeCoreError("Exception while removing entity {} from C#: {}", uuid, message);
-            // mono_free(message);
-        }
         s_Data.EntityObjects.erase(uuid);
     }
     void ScriptingEngine::OnEntityUpdate(BeeEngine::Entity entity)
@@ -699,5 +648,16 @@ namespace BeeEngine
         uint64_t id2 = entity;
         void* params[] = {&id1, &id2};
         s_Data.Handles.OnMouseLeaveMethod->InvokeStatic(params);
+    }
+
+    void ScriptingEngine::UI_EmitEvent(UUID id,
+                                       String elementId,
+                                       Rml::EventId eventType,
+                                       [[maybe_unused]] std::span<byte> eventData)
+    {
+        uint64_t ulongId = id;
+        GCHandle elementIdHandle = NativeToManaged::StringCreateManaged(elementId);
+        void* params[] = {&ulongId, &elementIdHandle, &eventType};
+        s_Data.Handles.UI_EmitEventMethod->InvokeStatic(params);
     }
 } // namespace BeeEngine

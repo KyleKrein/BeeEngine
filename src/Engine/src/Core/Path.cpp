@@ -185,7 +185,12 @@ namespace BeeEngine
         auto slash = m_Path.find_last_of('/');
         if (slash == BeeEngine::UTF8String::npos)
         {
-            return {};
+            auto dot = m_Path.find_last_of('.');
+            if (dot == BeeEngine::UTF8String::npos)
+            {
+                return {UTF8String(m_Path.begin(), m_Path.end())};
+            }
+            return {UTF8String(m_Path.begin(), m_Path.begin() + dot)};
         }
         auto dot = m_Path.find_last_of('.');
         if (dot == BeeEngine::UTF8String::npos)

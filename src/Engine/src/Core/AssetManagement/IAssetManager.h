@@ -16,8 +16,10 @@ namespace BeeEngine
     class IAssetManager
     {
     public:
-        virtual Ref<Asset> GetAssetRef(AssetHandle handle) const = 0;
+        [[nodiscard]] virtual Ref<Asset> GetAssetRef(AssetHandle handle) const = 0;
         virtual Asset* GetAsset(AssetHandle handle) const = 0;
+        [[nodiscard]] virtual Ref<Asset> GetAssetRef(const Path& path) = 0;
+        virtual Asset* GetAsset(const Path& path) = 0;
         virtual void LoadAsset(std::span<byte> data, AssetHandle handle, const String& name, AssetType type) = 0;
         virtual void LoadAsset(const Path& path, AssetHandle handle) = 0;
         virtual void UnloadAsset(AssetHandle handle) = 0;

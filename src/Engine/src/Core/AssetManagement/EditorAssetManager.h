@@ -17,6 +17,8 @@ namespace BeeEngine
         [[nodiscard]] Ref<Asset> GetAssetRef(AssetHandle handle) const final;
 
         Asset* GetAsset(AssetHandle handle) const final;
+        [[nodiscard]] Ref<Asset> GetAssetRef(const Path& path) final;
+        Asset* GetAsset(const Path& path) final;
 
         AssetMetadata& GetAssetMetadata(const AssetHandle& handle);
 
@@ -38,6 +40,7 @@ namespace BeeEngine
         [[nodiscard]] AssetRegistry& GetAssetRegistry() final { return m_AssetRegistry; }
 
         void RemoveAsset(AssetHandle handle);
+        void SetEditedAssetRegistryID(UUID id) { m_EditedRegistryID = id; }
 
         std::span<const AssetHandle> GetAssetHandlesByType(AssetType type) const;
 
@@ -47,6 +50,7 @@ namespace BeeEngine
         Generator<std::pair<AssetHandle, const AssetMetadata*>> IterateAssetsData() const;
 
     private:
+        UUID m_EditedRegistryID = {0};
         mutable AssetMap m_AssetMap;
         AssetRegistry m_AssetRegistry;
         std::map<String, AssetHandle> m_AssetNameMap;

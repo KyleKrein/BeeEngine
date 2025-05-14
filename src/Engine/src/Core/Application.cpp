@@ -9,6 +9,7 @@
 #include "DeletionQueue.h"
 #include "JobSystem/JobScheduler.h"
 #include "Move.h"
+#include "Platform/RmlUi/interfaces.hpp"
 #include "Renderer/GraphicsDevice.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RendererAPI.h"
@@ -106,6 +107,7 @@ namespace BeeEngine
 
         Prefab::InitPrefabScene();
         m_AssetManager.LoadStandardAssets();
+        Internal::RmlUi::Init((void*)m_Window->GetWindow());
         SceneRenderer::Init();
     }
 
@@ -113,6 +115,7 @@ namespace BeeEngine
     {
         s_Instance = nullptr;
         Prefab::ResetPrefabScene();
+        Internal::RmlUi::Shutdown();
         Renderer::Shutdown();
     }
 

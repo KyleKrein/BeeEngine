@@ -68,3 +68,11 @@ Assets:
     Type: AssetType::Prefab
     Handle: 16877448585992915076
     FilePath: Prefabs/Bee Prefab.beeprefab
+  - Name: game_score_overlay
+    Type: AssetType::RmlDocument
+    Handle: 17514454904658650095
+    FilePath: UI/game_score_overlay.rml
+  - Name: game_score_overlay_style
+    Type: AssetType::RcssStyle
+    Handle: 18173360702029050125
+    FilePath: UI/game_score_overlay_style.rcss

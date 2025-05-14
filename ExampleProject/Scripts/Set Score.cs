@@ -1,60 +1,48 @@
 using BeeEngine;
+using BeeEngine.UI;
 using System;
 using BeeEngine.Math;
 
 namespace Example
 {
-    public class SetScore : Behaviour
-    {
-        private TextRendererComponent m_Text;
-        public int Score = 0;
-        private TransformComponent m_Transform;
-        private Camera m_Camera;
-        public Vector3 Offset = Vector3.Zero;
+		public class SetScore : Behaviour
+		{
+				private Document m_UI;
+				public int Score = 0;
 
-        private void OnCreate()
-        {
-            m_Text = GetComponent<TextRendererComponent>();
-            m_Transform = GetComponent<TransformComponent>();
-            Entity cameraEntity = FindEntityByName("Camera");
-            m_Camera = cameraEntity.GetBehaviour<Camera>();
-            m_Camera.PositionChanged += Camera_PositionChanged;
-            Camera_PositionChanged(m_Camera, cameraEntity.GetComponent<TransformComponent>());
-            SetTextScore();
-        }
+				private void OnCreate()
+				{
+						m_UI = new Document("game_score_overlay");
+						m_UI.Show(); 
+						SetTextScore();
+				}
 
-        void OnUpdate()
-        {
-            if(Input.IsKeyDown(Key.KeyPadSubtract))
-            {
-                --Score;
-                SetTextScore();
-            }
-            if (Input.IsKeyDown(Key.KeyPadAdd))
-            {
-                ++Score;
-                SetTextScore();
-            }
-        }
+				void OnUpdate()
+				{
+						if (Input.IsKeyDown(Key.KeyPadSubtract))
+						{
+								--Score;
+								SetTextScore();
+						}
+						if (Input.IsKeyDown(Key.KeyPadAdd))
+						{
+								++Score;
+								SetTextScore();
+						}
+				}
 
-        private void OnDestroy()
-        {
-            m_Camera.PositionChanged -= Camera_PositionChanged;
-        }
-
-        private void Camera_PositionChanged(object sender, TransformComponent e)
-        {
-            m_Transform.Translation.Xy = e.Translation.Xy + Offset.Xy;
-        }
-
-        public void IncreaseScore()
-        {
-            ++Score;
-            SetTextScore();
-        }
-        private void SetTextScore()
-        {
-            m_Text.Text = Localization.Translate("test_scene.score", "score", Score);
-        }
-    }
+				private void OnDestroy()
+				{
+						m_UI.Close();
+				}
+				public void IncreaseScore()
+				{
+						++Score;
+						SetTextScore();
+				}
+				private void SetTextScore()
+				{
+						m_UI.SetText("score-text", Localization.Translate("test_scene.score", "score", Score));
+				}
+		}
 }

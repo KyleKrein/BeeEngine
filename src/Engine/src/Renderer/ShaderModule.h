@@ -17,6 +17,7 @@ namespace BeeEngine
     public:
         virtual ~ShaderModule() = default;
         [[nodiscard]] virtual ShaderType GetType() const = 0;
+        size_t virtual GetInstanceDataSize() const = 0;
         [[nodiscard]] static Ref<ShaderModule> Create(const Path& path, ShaderType type);
         [[nodiscard]] static Path GetCachePath() { return s_CachePath; }
         static void SetCachePath(const Path& path) { s_CachePath = path; }

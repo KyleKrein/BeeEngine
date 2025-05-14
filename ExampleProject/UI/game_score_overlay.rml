@@ -1,0 +1,12 @@
+<rml>
+<head>
+    <link type="text/rcss" href="game_score_overlay_style.rcss"/>
+</head>
+<body>
+    <div id="hud-container">
+        <div id="score-container">
+            <p id="score-text">Score: 0</p>
+        </div>
+    </div>
+</body>
+</rml>

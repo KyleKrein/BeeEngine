@@ -8,9 +8,42 @@
 #include "Core/AssetManagement/AssetMetadata.h"
 #include "Core/ResourceManager.h"
 #include "EngineAssetRegistry.h"
+#include "RmlUi/Core/Core.h"
 
 namespace BeeEngine
 {
+    [[nodiscard]] Ref<Asset> EditorAssetManager::GetAssetRef(const Path& path)
+    {
+        bool hasExtension = !path.GetExtension().IsEmpty();
+        auto name = path.GetFileNameWithoutExtension().AsUTF8();
+        auto* handlePtr = GetAssetHandleByName(name);
+        if (!handlePtr)
+        {
+            if (m_EditedRegistryID == 0)
+            {
+                BeeCoreWarn("Trying to load not registered asset {} . If you want to edit asset registry, call "
+                            "SetEditedAssetRegistryID() with your AssetRegistry ID. Note: it's not for production, "
+                            "only for development",
+                            path);
+                return nullptr;
+            }
+            AssetHandle handle = {m_EditedRegistryID};
+            LoadAsset(path, handle);
+            return GetAssetRef(handle);
+        }
+        auto handle = *handlePtr;
+        if (hasExtension)
+        {
+            AssetType type = ResourceManager::GetAssetTypeFromExtension(path.GetExtension());
+            BeeExpects(GetAssetMetadata(handle).Type == type &&
+                       "There should be only one file with this filename. (Unique name needed)");
+        }
+        return GetAssetRef(handle);
+    }
+    Asset* EditorAssetManager::GetAsset(const Path& path)
+    {
+        return GetAssetRef(path).get();
+    }
 
     Ref<Asset> EditorAssetManager::GetAssetRef(AssetHandle handle) const
     {
@@ -27,6 +60,14 @@ namespace BeeEngine
     void EditorAssetManager::LoadAsset(std::span<byte> data, AssetHandle handle, const String& name, AssetType type)
     {
         BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
+        if (type == AssetType::Font)
+        {
+            Rml::LoadFontFace(Rml::Span<const Rml::byte>{(Rml::byte*)data.data(), data.size()},
+                              "",
+                              Rml::Style::FontStyle::Normal, // Assuming that it's always not Italic :/
+                              Rml::Style::FontWeight::Auto,
+                              true);
+        }
         AssetMetadata metadata;
         metadata.Name = name;
         metadata.Type = type;
@@ -40,7 +81,6 @@ namespace BeeEngine
 
     void EditorAssetManager::LoadAsset(const Path& path, AssetHandle handle)
     {
-        // BeeExpects(!IsAssetHandleValid(handle) && !IsAssetLoaded(handle));
         if (IsAssetHandleValid(handle) && IsAssetLoaded(handle))
         {
             auto& metadata = m_AssetRegistry.at(handle.RegistryID).at(handle.AssetID);
@@ -50,6 +90,10 @@ namespace BeeEngine
                 m_AssetNameMap.erase(metadata.Name);
                 metadata.Name = path.GetFileNameWithoutExtension();
                 m_AssetNameMap[metadata.Name] = handle;
+                if (metadata.Type == AssetType::Font)
+                {
+                    Rml::LoadFontFace(path.AsCString(), true);
+                }
             }
             UnloadAsset(handle);
             return;
@@ -62,6 +106,11 @@ namespace BeeEngine
         m_AssetRegistry[handle.RegistryID][handle.AssetID] = metadata;
         m_AssetNameMap[metadata.Name] = handle;
         m_TypeMap[metadata.Type].push_back(handle);
+        if (metadata.Type == AssetType::Font)
+        {
+            Rml::LoadFontFace(path.AsCString(), true);
+        }
+
         BeeEnsures(IsAssetHandleValid(handle));
 
         BeeCoreTrace("Loaded asset: {0}", metadata.Name);

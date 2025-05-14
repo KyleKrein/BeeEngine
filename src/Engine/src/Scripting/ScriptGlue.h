@@ -9,9 +9,10 @@
 #include "Renderer/CommandBuffer.h"
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/UniformBuffer.h"
+#include "RmlUi/Core/ID.h"
 #include "Scene/Components.h"
-#include <glm/glm.hpp>
 #include <cstdint>
+#include <glm/glm.hpp>
 
 namespace BeeEngine
 {
@@ -102,6 +103,7 @@ namespace BeeEngine
         static void Asset_Unload(AssetHandle* handle);
         static int32_t Asset_IsLoaded(AssetHandle* handle);
         static int32_t Asset_IsValid(AssetHandle* handle);
+        static int32_t Asset_GetByName(AssetHandle* outHandle, void* nameStr, AssetType type);
         static uint64_t Physics2D_CastRay(glm::vec2* start, glm::vec2* end);
         static void* Locale_GetLocale();
         static void Locale_SetLocale(void* locale);
@@ -131,6 +133,13 @@ namespace BeeEngine
         static void UniformBuffer_SetData(UniformBuffer* buffer, void* data, uint32_t sizeBytes);
         static BindingSet* BindingSet_Create(ArrayInfo elements);
         static void BindingSet_Destroy(BindingSet* bindingSet);
+
+        static uint64_t UI_CreateDocument(void* name);
+        static void UI_CloseDocument(uint64_t id);
+        static void UI_ShowDocument(uint64_t id);
+        static void UI_HideDocument(uint64_t id);
+        static void UI_SetText(uint64_t id, void* elementIdPtr, void* textPtr);
+        static int32_t UI_BindEvent(uint64_t id, void* elementIdPtr, Rml::EventId eventType);
 
     private:
         struct ScriptGlueInternalState;

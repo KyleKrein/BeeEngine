@@ -13,6 +13,7 @@
 #include "MTypes.h"
 #include "MUtils.h"
 #include "Renderer/CommandBuffer.h"
+#include "RmlUi/Core/ID.h"
 #include <functional>
 #include <glm/glm.hpp>
 
@@ -86,16 +87,15 @@ namespace BeeEngine
         static void OnMouseEnter(UUID entity);
         static void OnMouseLeave(UUID entity);
 
+        static void UI_EmitEvent(UUID id, String elementId, Rml::EventId eventType, std::span<byte> eventData);
+
     private:
         static void InitDotNetHost();
         static class MAssembly& LoadAssembly(const Path& path, const Path& debugSymbolsPath);
-        static void InitMono();
         static bool IsGameScript(const MClass& klass);
         static bool AreAllManagedHandlesLoaded();
-        static struct ScriptingEngineData s_Data;
-
-        static void MonoShutdown();
-
         static void CreateAppDomain();
+
+        static struct ScriptingEngineData s_Data;
     };
 } // namespace BeeEngine

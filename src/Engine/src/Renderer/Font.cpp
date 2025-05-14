@@ -3,6 +3,7 @@
 //
 
 #include "Font.h"
+#include "Core/Application.h"
 #include "Core/AssetManagement/TextureImporter.h"
 #include "Core/CodeSafety/Expects.h"
 #include "Core/Logging/Log.h"
@@ -14,6 +15,7 @@
 #include "Renderer/BindingSet.h"
 #include "Renderer/Pipeline.h"
 #include "Renderer/ShaderModule.h"
+#include "RmlUi/Core/Core.h"
 #include "Texture.h"
 #include "ext/import-font.h"
 #include "ext/save-png.h"
@@ -24,7 +26,6 @@
 #include <msdf-atlas-gen/msdf-atlas-gen.h>
 #include <mutex>
 #include <stb/stb_image_write.h>
-#include "Core/Application.h"
 #include <unordered_map>
 #include <vector>
 
@@ -180,7 +181,8 @@ namespace BeeEngine
                                                          float fontSize,
                                                          const std::vector<msdf_atlas::GlyphGeometry>& glyphs,
                                                          const msdf_atlas::FontGeometry& fontGeometry,
-                                                         const Configuration& config, const Path& cacheFolder)
+                                                         const Configuration& config,
+                                                         const Path& cacheFolder)
     {
         auto cachedPath = cacheFolder / (Path(fontName).GetFileName().AsUTF8() + ".png");
         if (IsCacheValid(cachedPath))
@@ -238,12 +240,12 @@ namespace BeeEngine
     struct Font::StaticData
     {
         msdfgen::FreetypeHandle* FreeType = msdfgen::initializeFreetype();
-      Path CacheFolder = Application::GetInstance().Environment().CacheDirectory() / "FontAtlases";
+        Path CacheFolder = Application::GetInstance().Environment().CacheDirectory() / "FontAtlases";
         StaticData()
         {
-          if (!File::Exists(CacheFolder))
+            if (!File::Exists(CacheFolder))
             {
-              File::CreateDirectory(CacheFolder);
+                File::CreateDirectory(CacheFolder);
             }
         }
         // Ref<Pipeline> AtlasPipeline =

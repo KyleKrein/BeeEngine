@@ -16,8 +16,14 @@ namespace BeeEngine
         auto stdpath = path.ToStdPath();
         for (const auto& entry : std::filesystem::recursive_directory_iterator(stdpath))
         {
-            if (entry.path().string().contains(".beeengine"))
+            if (entry.path().string().contains(".#"))
+            {
                 continue;
+            }
+            if (entry.path().string().contains(".beeengine"))
+            {
+                continue;
+            }
             if (entry.path().extension() == ".cs")
             {
                 sources.emplace_back(entry.path());

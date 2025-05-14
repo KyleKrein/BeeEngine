@@ -21,10 +21,7 @@ namespace BeeEngine
         if (s_CachePath.IsEmpty())
         {
             s_CachePath = Application::GetInstance().Environment().CacheDirectory() / "Shaders/";
-        }
-        if (!std::filesystem::directory_entry(s_CachePath.ToStdPath()).exists())
-        {
-            std::filesystem::create_directory(s_CachePath.ToStdPath());
+            File::EnsureDirectory(s_CachePath);
         }
         BufferLayout layout;
 #if defined(BEE_COMPILE_WEBGPU)
@@ -187,43 +184,42 @@ namespace BeeEngine
     {
         // auto name = ResourceManager::GetNameFromFilePath(path);
         // auto newFilepath = s_CachePath + name + GetExtension(type) + ".spv";
-        if (path.GetExtension() == (".vert") || path.GetExtension() == (".frag") || path.GetExtension() == (".comp"))
-        {
-            auto name = path.GetFileNameWithoutExtension().AsUTF8();
-            auto newFilepath = s_CachePath + name + GetExtension(type);
-            struct CacheData
-            {
-                Path spv;
-                Path layout;
-                bool load;
-            };
-            auto shouldLoadFromCache = [newFilepath]()
-            {
-                CacheData data{.spv = newFilepath + ".spv", .layout = newFilepath + ".layout", .load = false};
-                data.load = File::Exists(data.spv) && File::Exists(data.layout);
-                return data; // TODO: add better cache invalidation
-            };
-            auto cacheData = shouldLoadFromCache();
-            if (cacheData.load)
-            {
-                spirv = LoadSpirVFromCache(cacheData.spv);
-                layout = LoadBufferLayoutFromCache(cacheData.layout);
-                if (!spirv.empty())
-                {
-                    return true;
-                }
-            }
-            BufferLayoutBuilder builder;
-            auto glsl = ReadGLSLShader(path);
-            String glslString(glsl.data(), glsl.size());
-            ShaderConverter::AnalyzeGLSL(type, builder, glslString);
-            spirv = CompileGLSLToSpirVAndCache(cacheData.spv, cacheData.layout, type, glslString, builder, layout);
-        }
-        else
+        if (!ResourceManager::IsShaderExtension(path.GetExtension()))
         {
             BeeCoreError("Unknown shader type");
             return false;
         }
+        auto name = path.GetFileNameWithoutExtension().AsUTF8();
+        auto newFilepath = s_CachePath + name + GetExtension(type);
+        struct CacheData
+        {
+            Path spv;
+            Path layout;
+            bool load;
+        };
+        auto shouldLoadFromCache = [newFilepath, &path]()
+        {
+            CacheData data{.spv = newFilepath + ".spv", .layout = newFilepath + ".layout", .load = false};
+            data.load = File::Exists(data.spv) && File::Exists(data.layout) &&
+                        std::filesystem::last_write_time(path.ToStdPath()).time_since_epoch() <=
+                            std::filesystem::last_write_time(data.spv.ToStdPath()).time_since_epoch();
+            return data; // TODO: add cache invalidation on gpu change
+        };
+        auto cacheData = shouldLoadFromCache();
+        if (cacheData.load)
+        {
+            spirv = LoadSpirVFromCache(cacheData.spv);
+            layout = LoadBufferLayoutFromCache(cacheData.layout);
+            if (!spirv.empty())
+            {
+                return true;
+            }
+        }
+        BufferLayoutBuilder builder;
+        auto glsl = ReadGLSLShader(path);
+        String glslString(glsl.data(), glsl.size());
+        ShaderConverter::AnalyzeGLSL(type, builder, glslString);
+        spirv = CompileGLSLToSpirVAndCache(cacheData.spv, cacheData.layout, type, glslString, builder, layout);
         if (spirv.empty())
         {
             BeeCoreError("Unable to create shader module");

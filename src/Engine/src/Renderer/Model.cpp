@@ -14,6 +14,15 @@ namespace BeeEngine
     }
     Ref<Model> BeeEngine::Model::Load(Mesh& mesh, Material& material)
     {
+#if defined(DEBUG)        
+        if (mesh.GetVertexSize() != material.GetInputDataSize())
+        {
+            BeeCoreError("mesh.GetVertexSize() != material.GetInputDataSize(): {}!={}",
+                         mesh.GetVertexSize(),
+                         material.GetInputDataSize());
+        }
+#endif        
+        BeeExpects(mesh.GetVertexSize() == material.GetInputDataSize());
         return CreateRef<Model>(mesh, material);
     }
 

@@ -16,6 +16,7 @@ namespace BeeEngine::Internal
         ~WebGPUPipeline() override;
         WebGPUPipeline(const Ref<ShaderModule>& vertexShader, const Ref<ShaderModule>& fragmentShader);
         void Bind(void* commandBuffer) override;
+        size_t GetInputDataSize() const override { BeeCoreAssert(false, "Not implemented"); }
         WGPUBindGroupLayout GetBindGroupLayout(uint32_t index) const { return m_BindGroupLayouts.at(index); }
 
         static const WebGPUPipeline& GetCurrentPipeline() { return *s_CurrentPipeline; }

@@ -20,6 +20,7 @@ namespace BeeEngine::Internal
         [[nodiscard]] Scope<InstancedBuffer> CreateInstancedBuffer() override;
 
         [[nodiscard]] vk::ShaderModule GetShaderModule() const { return m_ShaderModule; }
+        size_t GetInstanceDataSize() const override { return m_OneInstanceSize; }
         [[nodiscard]] vk::PipelineVertexInputStateCreateInfo GetVertexInputState() const { return m_VertexInputState; }
         [[nodiscard]] const std::vector<vk::DescriptorSetLayout>& GetDescriptorSetLayouts() const
         {
@@ -33,7 +34,7 @@ namespace BeeEngine::Internal
         [[nodiscard]] ColorAttachmentData GetColorAttachmentData() const
         {
             BeeExpects(m_Type == ShaderType::Fragment);
-            return {m_ColorAttachmentFormats, m_ColorBlendAttachments};
+            return {.formats = m_ColorAttachmentFormats, .attachments = m_ColorBlendAttachments};
         }
 
     private:

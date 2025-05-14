@@ -55,6 +55,8 @@ namespace BeeEngine
         Prefab = 3,
         Scene = 4,
         Mesh = 5,
+        RmlDocument = 6,
+        RcssStyle = 7,
         MeshSource = 10,
 
         /*Shader = 3,

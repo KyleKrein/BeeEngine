@@ -6,6 +6,8 @@
 #include "Core/Events/EventImplementations.h"
 #include "Core/Logging/Log.h"
 #include "Core/OsPlatform.h"
+#include "Platform/RmlUi/RmlUi_Platform_SDL.h"
+#include "RmlUi/Core/Core.h"
 #include "SDL3/SDL_events.h"
 #include "imgui.h"
 #include "magic_enum.hpp"
@@ -19,6 +21,8 @@
 #include "Platform/WebGPU/WebGPUInstance.h"
 #include "Utils/Threading.hpp"
 #include "backends/imgui_impl_sdl3.h"
+
+#include "Platform/RmlUi/RmlUi.hpp"
 
 #if defined(WINDOWS)
 #include "Platform/Windows/WindowsDropSource.h"
@@ -226,7 +230,7 @@ namespace BeeEngine
             case SDL_EVENT_ENUM_PADDING:
                 return "SDL_EVENT_ENUM_PADDING";
             default:
-              return "Unknown SDL Event";
+                return "Unknown SDL Event";
         }
     }
 } // namespace BeeEngine
@@ -423,6 +427,13 @@ namespace BeeEngine::Internal
         static Scope<FileDropEvent> fileDropEvent = nullptr;
         while (SDL_PollEvent(&sdlEvent) != 0)
         {
+            if (auto* context = RmlUi::GetMainContext())
+            {
+                if (!RmlSDL::InputEventHandler(context, m_Window, sdlEvent))
+                {
+                    // continue;
+                }
+            }
             ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
             if constexpr (Application::GetOsPlatform() == OSPlatform::Linux)
             {
@@ -513,7 +524,8 @@ namespace BeeEngine::Internal
                 }
                 case SDL_EVENT_KEY_DOWN:
                 {
-                    auto event = CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.scancode), sdlEvent.key.repeat);
+                    auto event =
+                        CreateScope<KeyPressedEvent>(ConvertKeyCode(sdlEvent.key.scancode), sdlEvent.key.repeat);
                     m_Events.AddEvent(std::move(event));
                     break;
                 }
@@ -785,7 +797,7 @@ namespace BeeEngine::Internal
         m_Events.AddEvent(std::move(event));
         m_IsClosing = true;
     }
-//Scancode - layout independent. Keycode - layout dependent. Which is better?
+    // Scancode - layout independent. Keycode - layout dependent. Which is better?
     Key SDLWindowHandler::ConvertKeyCode(SDL_Scancode key)
     {
         switch (key)

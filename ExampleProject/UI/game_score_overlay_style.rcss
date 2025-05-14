@@ -1,0 +1,34 @@
+body
+{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    font-family: Open Sans;
+    font-size: 3vw;
+}
+
+#hud-container
+{
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+#score-container
+{
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px 20px;
+}
+
+#score-text
+{
+    font-size: 100%;
+    color: #ffffff;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #000000aa;
+}

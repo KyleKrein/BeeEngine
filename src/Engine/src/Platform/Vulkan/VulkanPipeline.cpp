@@ -75,11 +75,12 @@ namespace BeeEngine::Internal
         viewportState.pScissors = &scissor;
 
         vk::PipelineDepthStencilStateCreateInfo depthStencil{};
-        depthStencil.depthTestEnable = vk::True;
+        depthStencil.depthTestEnable = vk::False;//vk::True; //Disabled for RmlUi
         depthStencil.depthWriteEnable = vk::True;
-        depthStencil.depthCompareOp = vk::CompareOp::eLess;
+        depthStencil.depthCompareOp = vk::CompareOp::eAlways;//eLess; //Made always for RmlUi
         depthStencil.depthBoundsTestEnable = vk::False;
         depthStencil.stencilTestEnable = vk::False;
+        depthStencil.maxDepthBounds = 1.0f;
 
         auto [colorAttachmentFormats, colorBlendAttachments] = m_FragmentShader->GetColorAttachmentData();
 
